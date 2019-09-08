@@ -1,0 +1,28 @@
+
+find_package( MPI )
+
+if (WITH_MPI AND MPI_CXX_FOUND)
+    set(USE_MPI TRUE )
+    message( STATUS "found MPI ${MPI_CXX_COMPILER}" )
+    add_definitions( -DWITH_MPI )
+    include_directories( SYSTEM ${MPI_CXX_INCLUDE_PATH} )
+
+    # set the MPI_COMMAND
+    if (NOT DEFINED _MPIEXEC_MAX_NUMPROCS_INIT)
+        set( MPIEXEC_MAX_NUMPROCS 4 CACHE STRING "number of processors for unit testing" FORCE )
+    endif()
+    if (RUN_WITH_MPI)
+        macro( RUN_WITH_MPIEXEC NUMPROCS )
+            set( _MPIEXEC_MAX_NUMPROCS_INIT TRUE CACHE INTERNAL "" )
+            set( MPI_COMMAND ${MPIEXEC} --hostfile data/hostfile ${MPIEXEC_NUMPROC_FLAG} ${NUMPROCS} ) 
+        endmacro()
+    else()
+        macro( RUN_WITH_MPIEXEC )
+        endmacro()
+    endif()
+else()
+    message( STATUS "MPI not found" )
+    set(USE_MPI FALSE)
+    macro( RUN_WITH_MPIEXEC )
+    endmacro()
+endif()

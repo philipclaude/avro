@@ -1,0 +1,349 @@
+{
+   <Something with loading shared libraries>
+   Memcheck:Cond
+   fun:strchr
+   fun:realpath$DARWIN_EXTSN
+   fun:_ZN4dyldL10loadPhase3EPKcS1_RKNS_11LoadContextEPNSt3__16vectorIS1_NS5_9allocatorIS1_EEEE
+   fun:_ZN4dyldL10loadPhase1EPKcS1_RKNS_11LoadContextEPNSt3__16vectorIS1_NS5_9allocatorIS1_EEEE
+   fun:_ZN4dyldL10loadPhase0EPKcS1_RKNS_11LoadContextEPNSt3__16vectorIS1_NS5_9allocatorIS1_EEEE
+   fun:_ZN4dyld4loadEPKcRKNS_11LoadContextE
+   fun:_ZN4dyldL14libraryLocatorEPKcbS1_PKN11ImageLoader10RPathChainE
+   fun:_ZN11ImageLoader22recursiveLoadLibrariesERKNS_11LinkContextEbRKNS_10RPathChainE
+   fun:_ZN11ImageLoader22recursiveLoadLibrariesERKNS_11LinkContextEbRKNS_10RPathChainE
+   fun:_ZN11ImageLoader4linkERKNS_11LinkContextEbbbRKNS_10RPathChainE
+   fun:_ZN4dyld4linkEP11ImageLoaderbbRKNS0_10RPathChainE
+   fun:_ZN4dyld5_mainEPK12macho_headermiPPKcS5_S5_Pm
+   fun:_ZN13dyldbootstrap5startEPK12macho_headeriPPKclS2_Pm
+   fun:_dyld_start
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:realpath$DARWIN_EXTSN
+   fun:_ZN4dyldL10loadPhase3EPKcS1_RKNS_11LoadContextEPNSt3__16vectorIS1_NS5_9allocatorIS1_EEEE
+   fun:_ZN4dyldL10loadPhase1EPKcS1_RKNS_11LoadContextEPNSt3__16vectorIS1_NS5_9allocatorIS1_EEEE
+   fun:_ZN4dyldL10loadPhase0EPKcS1_RKNS_11LoadContextEPNSt3__16vectorIS1_NS5_9allocatorIS1_EEEE
+   fun:_ZN4dyld4loadEPKcRKNS_11LoadContextE
+   fun:_ZN4dyldL14libraryLocatorEPKcbS1_PKN11ImageLoader10RPathChainE
+   fun:_ZN11ImageLoader22recursiveLoadLibrariesERKNS_11LinkContextEbRKNS_10RPathChainE
+   fun:_ZN11ImageLoader22recursiveLoadLibrariesERKNS_11LinkContextEbRKNS_10RPathChainE
+   fun:_ZN11ImageLoader4linkERKNS_11LinkContextEbbbRKNS_10RPathChainE
+   fun:_ZN4dyld4linkEP11ImageLoaderbbRKNS0_10RPathChainE
+   fun:_ZN4dyld5_mainEPK12macho_headermiPPKcS5_S5_Pm
+   fun:_ZN13dyldbootstrap5startEPK12macho_headeriPPKclS2_Pm
+   fun:_dyld_start
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:currentlocale
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   fun:_dyld_start
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   ...
+   fun:_PyBuiltin_Init
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:tlv_allocate_and_initialize_for_key
+   fun:tlv_get_addr
+   ...
+}
+
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:calloc
+   fun:__cxa_get_globals
+   fun:__cxa_throw
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:vsnprintf
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:calloc
+   fun:strerror
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:__smakebuf
+   fun:__swsetup
+   fun:__sfvwrite
+   fun:fwrite
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:atexit_register
+   fun:__cxa_atexit
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZNKSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE7compareEmmPKcm
+   fun:_ZNKSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE7compareEPKc
+   ...
+   fun:_ZN6Python15Test1Param_test11test_methodEv
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_platform_memcmp
+   fun:_ZNKSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE7compareEmmPKcm
+   fun:_ZNKSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE7compareEPKc
+   ...
+   fun:_ZN6Python15Test1Param_test11test_methodEv
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc_zone_calloc
+   fun:_ZN7cache_t10reallocateEjj
+   fun:cache_fill
+   fun:lookUpImpOrForward
+   fun:objc_msgSend
+   fun:APL_dgemm
+   fun:cblas_dgemm
+   ...
+}
+
+{
+   <No idea why we get this leak, but it seems to be a bug in OS X>
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:snprintf_l
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr1
+   ...
+   fun:APL_dtrsm
+   fun:cblas_dtrsm
+   fun:DTRSM
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   ...
+   fun:APL_dtrsm
+   fun:cblas_dtrsm
+   fun:DTRSM
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   ...
+   fun:APL_dtrsm
+   fun:cblas_dtrsm
+   fun:DTRSM
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc_zone_memalign
+   fun:_ZN12_GLOBAL__N_119AutoreleasePoolPage4pushEv
+   fun:_dispatch_root_queue_drain
+   fun:_dispatch_worker_thread2
+   fun:_pthread_wqthread
+   fun:start_wqthread
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:__vfprintf
+   fun:__v2printf
+   fun:__xvprintf
+   fun:vfprintf_l
+   fun:fprintf
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:__strtodg
+   fun:__strtopx
+   fun:strtold_l
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:__xvprintf
+   fun:vfprintf_l
+   fun:printf
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:vsprintf_l
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   fun:localtime_r
+   ...
+}
+
+{
+   <El Capitan>
+   Memcheck:Leak
+   ...
+   fun:APL_dgemm
+   fun:cblas_dgemm
+   ...
+}
+
+{
+   <El Cap>
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:__v2printf
+   fun:vsprintf_l
+   ...
+}
+
+{
+   <El Capitan error>
+   Memcheck:Leak
+   ...
+   fun:dlopen
+   fun:_PyImport_GetDynLoadFunc
+   fun:_PyImport_LoadDynamicModule
+   fun:PyImport_AppendInittab
+   fun:PyImport_AppendInittab
+   fun:PyImport_ImportModuleLevel
+   fun:_PyBuiltin_Init
+   fun:PyObject_Call
+   fun:PyEval_CallObjectWithKeywords
+   fun:PyEval_EvalFrameEx
+   fun:PyEval_EvalCodeEx
+   fun:PyEval_EvalCode
+}
+
+{
+   <OS X fscanf problem>
+   Memcheck:Leak
+   fun:malloc
+   fun:__parsefloat_buf
+   fun:__svfscanf_l
+   fun:fscanf
+   ...
+}
+
+{
+   <OSX system problem>
+   Memcheck:Leak
+   fun:malloc
+   fun:__parsefloat_buf
+   fun:__svfscanf_l
+   fun:vsscanf_l
+   fun:sscanf
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:strtod_l
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   ...
+   fun:malloc
+   ...
+   ...
+   fun:__dtoa
+   fun:__vfprintf
+   fun:__v2printf
+   fun:vfprintf_l
+   fun:printf
+   ...
+   fun:main
+}
+
+{
+   <opencl problem 1>
+   Memcheck:Value8
+   fun:bcmp
+   ...
+   fun:_dyld_start
+}
+
+{
+   <opencl problem 2>
+   Memcheck:Cond
+   ...
+   fun:_dyld_start
+}
