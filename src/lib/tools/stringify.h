@@ -10,7 +10,7 @@
 #include <sstream>
 #include <iomanip>
 
-namespace SANS
+namespace numpack 
 {
 
   //Casts type T to string

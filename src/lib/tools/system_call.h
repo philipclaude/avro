@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace SANS
+namespace numpack 
 {
 
 // Functions to for more robust system calls by trying multiple times

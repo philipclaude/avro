@@ -16,7 +16,7 @@
 #include <chrono>
 #endif
 
-namespace SANS
+namespace numpack 
 {
 #if defined(_MPI)
 

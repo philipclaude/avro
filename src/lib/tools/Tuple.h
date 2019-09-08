@@ -9,7 +9,7 @@
 #include <type_traits>
 #include "abs.h"
 
-namespace SANS
+namespace numpack 
 {
 
 // This is a nice discussion on variadic templates

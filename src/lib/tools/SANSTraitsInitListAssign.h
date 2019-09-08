@@ -12,7 +12,7 @@
 #include "tools/SANSnumerics.h"   // Real
 #include <initializer_list>
 
-namespace SANS
+namespace numpack 
 {
 
 //Used to assign list initializer to special types that can take the list initalizer. Otherwise it does nothing
@@ -24,7 +24,7 @@ struct initializer_list_assign
   initializer_list_assign(T& val, const std::initializer_list<U>& s) {}
 };
 
-}  // namespace SANS
+}  // namespace numpack 
 
 #endif
 

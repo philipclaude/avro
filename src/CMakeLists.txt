@@ -11,23 +11,6 @@ add_source_directories(SOURCES "Source Files\\geometrics" lib/geometrics)
 add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
 
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra )
-
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg )
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg/tools )
-
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg/DynamicSize )
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg/DynamicSize/lapack )
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg/DynamicSize/MatMul )
-
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg/StaticSize )
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg/StaticSize/Eigen )
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg/StaticSize/MatMul )
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/DenseLinAlg/StaticSize/SVD )
-
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/BlockLinAlg )
-add_source_directories(SOURCES "Source Files\\numerics" lib/numerics/LinearAlgebra/BlockLinAlg/tools )
-
 add_source_directories(SOURCES "Source Files\\graphics" lib/graphics)
 
 # add the bin sources but remove the ursa.cpp (main) executable source

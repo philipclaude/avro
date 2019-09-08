@@ -6,7 +6,7 @@
 #ifndef ADD_DECORATOR_H
 #define ADD_DECORATOR_H
 
-namespace SANS
+namespace numpack 
 {
 
 // Used to apply a decorator class in template meta functions
@@ -31,6 +31,6 @@ struct add_ND_decorator
   };
 };
 
-} //namespace SANS
+} //namespace numpack 
 
 #endif //ADD_DECORATOR_H

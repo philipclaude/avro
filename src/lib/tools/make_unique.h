@@ -23,7 +23,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace SANS // This namespace is used so that it looks as similar as possible to the std::make_shared choice.
+namespace numpack  // This namespace is used so that it looks as similar as possible to the std::make_shared choice.
 {
   template <typename T, typename... Args>
   std::unique_ptr<T> make_unique_helper(std::false_type, Args&&... args) { return std::unique_ptr<T>(new T(std::forward<Args>(args)...)); }

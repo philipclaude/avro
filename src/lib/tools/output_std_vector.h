@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 
-namespace SANS
+namespace numpack 
 {
 
 template< class T >

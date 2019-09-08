@@ -6,10 +6,10 @@
 #ifndef SANSTRAITSSCALAR_H
 #define SANSTRAITSSCALAR_H
 
-#include "LinearAlgebra/DenseLinAlg/StaticSize/MatrixS_Type.h"
-#include "LinearAlgebra/DenseLinAlg/DynamicSize/MatrixD_Type.h"
+#include "numpack/DenseLinAlg/StaticSize/MatrixS_Type.h"
+#include "numpack/DenseLinAlg/DynamicSize/MatrixD_Type.h"
 
-namespace SANS
+namespace numpack 
 {
 
 //Used to extract the scalar associated with a type. May not be POD, i.e. could be Surreal
@@ -47,6 +47,6 @@ struct Scalar< DLA::VectorS<M,T> >
   typedef typename Scalar<T>::type type;
 };
 
-}  // namespace SANS
+}  // namespace numpack 
 
 #endif  // SANSTRAITSSCALAR_H

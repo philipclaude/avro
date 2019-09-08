@@ -24,7 +24,7 @@ using api::object;
 
 #include <vector>
 
-namespace SANS
+namespace numpack 
 {
 
 struct PyDict;
@@ -47,6 +47,6 @@ template<> struct Type2String<DictKeyPair>           { static std::string str() 
 
 template<> struct Type2String<boost::python::object> { static std::string str() { return "python object"; } };
 
-} //namespace SANS
+} //namespace numpack 
 
 #endif //TYPE2STRING_H

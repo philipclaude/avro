@@ -6,7 +6,7 @@
 #ifndef NONCOPYABLE_H
 #define NONCOPYABLE_H
 
-namespace SANS
+namespace numpack 
 {
 
 // This is a convenient base class that can be used to prevent a class from being copied.

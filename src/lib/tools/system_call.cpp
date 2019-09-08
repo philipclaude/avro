@@ -28,7 +28,7 @@
 #include "SANSException.h"
 #include "timer.h"
 
-namespace SANS
+namespace numpack 
 {
 
 void system_call(const std::string& name, const std::string& exec, const std::string& args)

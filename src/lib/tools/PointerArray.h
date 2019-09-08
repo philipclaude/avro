@@ -10,7 +10,7 @@
 
 #include "SANSException.h"
 
-namespace SANS
+namespace numpack 
 {
 
 //----------------------------------------------------------------------------//

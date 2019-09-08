@@ -17,7 +17,7 @@
 #include "SANSException.h"
 #include "demangle.h"
 
-namespace SANS
+namespace numpack 
 {
 
 namespace detail

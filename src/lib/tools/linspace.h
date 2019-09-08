@@ -11,7 +11,7 @@
 
 #include <vector>
 
-namespace SANS
+namespace numpack 
 {
 
 //returns a vector of consecutive integers in [a, b]

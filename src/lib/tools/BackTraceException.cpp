@@ -176,7 +176,7 @@ BackTraceException::BackTraceException()
       // mangled name is now in [begin_name, begin_offset) and caller
       // offset in [begin_offset, end_offset). now apply
       // __cxa_demangle():
-      std::string name = SANS::demangle(begin_name);
+      std::string name = numpack::demangle(begin_name);
 
       bool whiteSpacesOnly = std::all_of(name.begin(),name.end(),isspace);
       if (whiteSpacesOnly) continue;

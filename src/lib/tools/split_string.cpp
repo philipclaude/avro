@@ -8,7 +8,7 @@
 
 #include "tools/split_string.h"
 
-namespace SANS
+namespace numpack 
 {
 
 // utility function for separating a string by a delimiter

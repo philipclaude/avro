@@ -9,7 +9,7 @@
 #include <iostream>
 #include "tools/SANSnumerics.h"     // Real
 
-namespace SANS
+namespace numpack 
 {
 
 class ProgressBar

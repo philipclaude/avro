@@ -19,4 +19,21 @@ include_directories( tinyexpr )
 #set_source_files_properties( ${GMF_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 #include_directories( libMeshb/libMeshb7 )
 
-add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${ANN_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack )
+
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/tools )
+
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize/lapack )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize/MatMul )
+
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/StaticSize )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/StaticSize/Eigen )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/StaticSize/MatMul )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/StaticSize/SVD )
+
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/BlockLinAlg )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/BlockLinAlg/tools )
+
+add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${ANN_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} )

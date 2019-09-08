@@ -13,7 +13,7 @@
 #include <stdexcept> //std::out_of_range
 #include <boost/preprocessor/stringize.hpp>
 
-namespace SANS
+namespace numpack 
 {
 
 // Always use this macro so file and line numbers get included in the error message

@@ -9,7 +9,7 @@
 #include <fstream>
 #include <limits>
 
-namespace SANS
+namespace numpack 
 {
 
 inline void
@@ -20,6 +20,6 @@ file_skiplines( std::ifstream& input, const int nlines )
     input.ignore(std::numeric_limits<std::streamsize>::max(), input.widen('\n'));
 }
 
-} //namespace SANS
+} //namespace numpack 
 
 #endif //FILE_SKIPLINES_H

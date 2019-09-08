@@ -15,7 +15,7 @@
 
 #include <string>
 
-namespace SANS
+namespace numpack 
 {
 
 #if BOOST_WITH_FILESYSTEM

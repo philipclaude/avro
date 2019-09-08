@@ -6,7 +6,7 @@
 #ifndef INIT_ARRAY_COPY_H
 #define INIT_ARRAY_COPY_H
 
-namespace SANS
+namespace numpack 
 {
   //An empty function that can be used to call special initialization
   //methods of when creating copies of classes

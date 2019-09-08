@@ -11,7 +11,7 @@
 //
 // http://codereview.stackexchange.com/questions/56532/kahan-summation
 //
-namespace SANS
+namespace numpack 
 {
 
 template<class T>

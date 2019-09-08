@@ -6,7 +6,7 @@
 #ifndef TOOLS_REF_H
 #define TOOLS_REF_H
 
-namespace SANS
+namespace numpack 
 {
 
 // A simple class to store a reference to an object

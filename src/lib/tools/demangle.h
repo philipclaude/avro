@@ -8,11 +8,11 @@
 
 #include <string>
 
-namespace SANS
+namespace numpack 
 {
 
 std::string demangle(const char* name);
 
-} //namespace SANS
+} //namespace numpack 
 
 #endif //SANS_DEMANGLE_H

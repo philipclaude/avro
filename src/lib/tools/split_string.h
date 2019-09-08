@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace SANS
+namespace numpack 
 {
 
 // utility function for separating a string by a delimiter

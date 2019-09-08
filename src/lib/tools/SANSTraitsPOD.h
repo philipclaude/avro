@@ -9,7 +9,7 @@
 #include "tools/SANSnumerics.h"   // Real
 #include "tools/SANSException.h"
 
-namespace SANS
+namespace numpack 
 {
 
 // Traits class to allow templated classes to allow Real arguments in arithmetic
@@ -33,6 +33,6 @@ struct POD<int> { typedef SANSDummyType type; };
 template<>
 struct POD<unsigned int> { typedef SANSDummyType type; };
 
-}  // namespace SANS
+}  // namespace numpack 
 
 #endif  // SANSTRAITSPOD_H
