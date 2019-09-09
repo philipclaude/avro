@@ -6,7 +6,7 @@
 #ifndef MATRIXD_TYPE_H
 #define MATRIXD_TYPE_H
 
-namespace numpack 
+namespace numpack
 {
 namespace DLA
 {
@@ -31,6 +31,9 @@ class MatrixDView;
 
 template< class T >
 class MatrixD;
+
+template <class T>
+class MatrixSymD;
 
 template< class MatrixL >
 class MatrixDTuple;

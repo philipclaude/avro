@@ -25,6 +25,7 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLin
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/tools )
 
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize/Eigen )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize/lapack )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize/MatMul )
 

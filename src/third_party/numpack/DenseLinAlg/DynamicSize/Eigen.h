@@ -10,7 +10,7 @@
 
 //Eigen value/vector interface for DenseLinAlg.
 
-namespace numpack 
+namespace numpack
 {
 namespace DLA
 {
@@ -26,7 +26,35 @@ namespace DLA
   inline void
   EigenSystem( MatrixDView<T>& A, MatrixDView<T>& wr, MatrixDView<T>& wi, MatrixDView<T>& vl, MatrixDView<T>& vr );
 
-} //namespace numpack 
+  template<class T >
+  void
+  EigenValues( const MatrixSymD<T>& A, VectorD<T>& L );
+
+  template< class T >
+  void
+  EigenVectors( const MatrixSymD<T>& A, MatrixD<T>& E );
+
+  template< class T >
+  void
+  EigenSystem( const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E );
+
+
+  template<class T>
+  struct EigenSystemPair
+  {
+    // cppcheck-suppress noExplicitConstructor
+    EigenSystemPair(const MatrixSymD<T>& A) { EigenSystem(A, L, E); }
+    EigenSystemPair(const EigenSystemPair<T>& LE ) : L(LE.L), E(LE.E) {}
+    EigenSystemPair& operator=(const EigenSystemPair<T>& LE ) { L = LE.L; E = LE.E; return *this; }
+    VectorD<T> L;
+    MatrixD<T> E;
+  };
+
+  template< class T >
+  void
+  EigenSystem( const MatrixSymD<T>& A, EigenSystemPair<T>& LE ) { EigenSystem(A, LE.L, LE.E); }
+
+} //namespace numpack
 } //namespace DLA
 
 #include "lapack/Eigen.h"
