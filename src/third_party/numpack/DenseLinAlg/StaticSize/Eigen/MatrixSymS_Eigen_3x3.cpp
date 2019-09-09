@@ -92,10 +92,13 @@ void dsyevc3(const MatrixSymS<3,T>& A, VectorS<3,T>& L)
   sqrt_p = sqrt(fabs(p));
 
   phi = 27.0 * ( 0.25*SQR(c1)*(p - c1) + c0*(q + 27.0/4.0*c0));
+
   if (unlikely(phi == 0 && q == 0)) // avoid divide by zero
     phi = 0;
   else
+  {
     phi = (1.0/3.0) * atan2(sqrt(fabs(phi)), q);
+  }
 
   cn = sqrt_p*cos(phi);
   sn = (1.0/M_SQRT3)*sqrt_p*sin(phi);
@@ -116,8 +119,9 @@ EigenSystem(const MatrixSymS<M,T>& A, VectorS<M,T>& L, MatrixS<M,M,T>& E )
 
   // Calculate eigenvalues
   // philip
-  assert(false);
-  //dsyevc3(A, L);
+  //assert(false);
+  #if 0
+  dsyevc3(A, L);
 
   t = fabs(L[0]);
   if ((u=fabs(L[1])) > t)
@@ -192,6 +196,10 @@ EigenSystem(const MatrixSymS<M,T>& A, VectorS<M,T>& L, MatrixS<M,M,T>& E )
   E(0,2) = E(1,0)*E(2,1) - E(2,0)*E(1,1);
   E(1,2) = E(2,0)*E(0,1) - E(0,0)*E(2,1);
   E(2,2) = E(0,0)*E(1,1) - E(1,0)*E(0,1);
+  #else
+  // iterate with Jacobi to find the solution
+  EigenSystem_Jacobi(A, L, E);
+  #endif
 }
 
 #define INSTANTIATE_EIGEN(T) \
