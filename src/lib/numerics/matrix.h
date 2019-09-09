@@ -3,39 +3,15 @@
 
 #include <vector>
 
+#include <numpack/DenseLinAlg/DynamicSize/MatrixD.h>
+
 namespace ursa
 {
 
 namespace numerics
 {
 
-template<typename T> class Vector;
-
-template<typename T>
-class MatrixBase
-{
-
-protected:
-  std::vector<T> data_;
-};
-
-template<typename T>
-class DenseMatrix : public MatrixBase<T>
-{
-
-};
-
-template<typename T>
-class SparseMatrix
-{
-
-};
-
-template<typename T>
-class SymmetricMatrix
-{
-
-};
+template<typename T> using Matrix = numpack::DLA::MatrixD<T>;
 
 } // numerics
 
