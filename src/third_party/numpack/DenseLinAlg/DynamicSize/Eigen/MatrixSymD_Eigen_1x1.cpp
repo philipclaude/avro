@@ -15,6 +15,8 @@
 
 #include "tools/SANSnumerics.h"
 
+#include <cassert>
+
 namespace numpack
 {
 namespace DLA

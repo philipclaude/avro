@@ -1,3 +1,5 @@
+add_subdirectory(third_party)
+
 # add the unit tests in the subdirectories
 add_test_files( TEST_FILES "ut" lib/common )
 add_test_files( TEST_FILES "ut" lib/geometrics )

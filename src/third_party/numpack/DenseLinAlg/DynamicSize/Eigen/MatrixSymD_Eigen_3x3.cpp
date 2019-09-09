@@ -17,6 +17,8 @@
 #include <cmath> // sqrt
 #include <limits>
 
+#include <cassert>
+
 namespace numpack
 {
 namespace DLA
