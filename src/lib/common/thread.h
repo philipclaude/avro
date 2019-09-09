@@ -9,6 +9,7 @@
 #include "common/error.h"
 #include "common/types.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
