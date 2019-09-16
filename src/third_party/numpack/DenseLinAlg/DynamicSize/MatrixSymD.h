@@ -49,13 +49,17 @@ namespace DLA
 //----------------------------------------------------------------------------//
 
 template <class T>
+//class MatrixSymD : public MatrixDType< MatrixSymD<T>, true >
 class MatrixSymD : public MatrixDType< MatrixSymD<T>, true >
 {
 public:
+
+  typedef T node_type;
+
   typedef T Ttype;
-  static const int M = 1;//M_;
-  static const int N = 1;// M_;
-  static const int SIZE = 1;//M*(M+1)/2;
+  static const int M = 2;//M_;
+  static const int N = 2;// M_;
+  static const int SIZE = M*(M+1)/2;
 
   //Default constructor does not initialize the data. This makes it behave more like POD
   //and valgrind can catch any use of uninitialized data
