@@ -32,6 +32,8 @@
 #include "tools/SANSTraitsPOD.h"
 #include "tools/SANSException.h"
 
+#include <vector>
+
 namespace numpack
 {
 namespace DLA
@@ -55,21 +57,25 @@ class MatrixSymD : public MatrixDType< MatrixSymD<T>, true >
 public:
 
   typedef T node_type;
-
   typedef T Ttype;
-  static const int M = 2;//M_;
-  static const int N = 2;// M_;
-  static const int SIZE = M*(M+1)/2;
+
+  int m() const { return m_; }
+  int n() const { return m_; }
 
   //Default constructor does not initialize the data. This makes it behave more like POD
   //and valgrind can catch any use of uninitialized data
   MatrixSymD() {}
+  MatrixSymD( const int _m )
+    : m_(_m)
+  {
+    allocate();
+  }
   MatrixSymD( const MatrixSymD& m );
   MatrixSymD( const Identity& I ) { *this = I; };
-  MatrixSymD( const T s ); // missing 'explicit' allows MatrixSymD<N,Real> q = 0
+  MatrixSymD( const T s , int m ); // missing 'explicit' allows MatrixSymD<N,Real> q = 0
   MatrixSymD( const T s[], int n );
   MatrixSymD( const std::initializer_list< std::initializer_list<T> >& s ) { *this = s; }
-  MatrixSymD( const typename numpack::POD<T>::type& s );
+  MatrixSymD( const typename numpack::POD<T>::type& s , int m );
   MatrixSymD( const EigenSystemPair<T>& LE ) { *this = LE; }
   ~MatrixSymD() {}
 
@@ -78,6 +84,14 @@ public:
         T& operator()( int i, int j )       { return data[INDEX(i,j)]; }
   const T& operator()( int i, int j ) const { return data[INDEX(i,j)]; }
 #undef INDEX
+
+  void allocate()
+  {
+    M = m_;
+    N = M;
+    SIZE = m_*(m_+1)/2;
+    data.resize(SIZE,T(0));
+  }
 
   // assignment
   MatrixSymD& operator=( const MatrixSymD& m );
@@ -265,8 +279,19 @@ public:
   inline const T& value(const int& i) const { return data[i]; }
   inline       T& value(const int& i)       { return data[i]; }
 
+  std::vector<T> data;
+
 protected:
-  T data[SIZE];
+
+  //T data[SIZE];
+  //static const int M = 2;//M_;
+  //static const int N = 2;// M_;
+  //static const int SIZE = M*(M+1)/2;
+
+  int m_;
+  int M;
+  int N;
+  int SIZE;
 
   // Helper functions for all the variations of assignment operators that involve the transpose
   template< class Expr >
@@ -289,16 +314,20 @@ protected:
 
 template <class T>
 inline
-MatrixSymD<T>::MatrixSymD( const MatrixSymD<T>& m )
+MatrixSymD<T>::MatrixSymD( const MatrixSymD<T>& m0 ) :
+  m_(m0.m())
 {
+  allocate();
   for (int i = 0; i < SIZE; i++)
-    data[i] = m.data[i];
+    data[i] = m0.data[i];
 }
 
 template <class T>
 inline
-MatrixSymD<T>::MatrixSymD( const T s[], int n )
+MatrixSymD<T>::MatrixSymD( const T s[], int n ) :
+  m_(n)
 {
+  allocate();
   SANS_ASSERT(n == SIZE);
   for (n = 0; n < SIZE; n++)
     data[n] = s[n];
@@ -306,8 +335,10 @@ MatrixSymD<T>::MatrixSymD( const T s[], int n )
 
 template <class T>
 inline
-MatrixSymD<T>::MatrixSymD( const T s )
+MatrixSymD<T>::MatrixSymD( const T s , int m  ) :
+  m_(m)
 {
+  allocate();
   for (int n = 0; n < SIZE; n++)
     data[n] = s;
 }
@@ -315,8 +346,10 @@ MatrixSymD<T>::MatrixSymD( const T s )
 // needed for MatrixSymD< Surreal<Z>>(Real)
 template <class T>
 inline
-MatrixSymD<T>::MatrixSymD( const typename numpack::POD<T>::type& s )
+MatrixSymD<T>::MatrixSymD( const typename numpack::POD<T>::type& s , int m ) :
+  m_(m)
 {
+  allocate();
   for (int n = 0; n < SIZE; n++)
     data[n] = s;
 }
@@ -325,12 +358,14 @@ MatrixSymD<T>::MatrixSymD( const typename numpack::POD<T>::type& s )
 
 template <class T>
 inline MatrixSymD<T>&
-MatrixSymD<T>::operator=( const MatrixSymD& m )
+MatrixSymD<T>::operator=( const MatrixSymD& m0 )
 {
-  if (this != &m)
+  m_ = m0.m();
+  allocate();
+  if (this != &m0)
   {
     for (int i = 0; i < SIZE; i++)
-      data[i] = m.data[i];
+      data[i] = m0.data[i];
   }
   return *this;
 }
@@ -801,7 +836,7 @@ void
 MatrixSymD<T>::dump( int indentSize, std::ostream& out ) const
 {
   std::string indent(indentSize, ' ');
-  out << indent << "MatrixS<" << M << "," << N << ",T>:" << std::endl;
+  out << indent << "MatrixSymD<" << M << "," << N << ",T>:" << std::endl;
 #if 1
   out << indent << "  data = ";
   for (int n = 0; n < SIZE; n++)

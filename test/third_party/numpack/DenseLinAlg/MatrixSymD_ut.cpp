@@ -71,8 +71,18 @@ UT_TEST_CASE( test1 )
   DLA::MatrixSymD<Real> m1(n);
   DLA::MatrixSymD<Real> m2(n);
 
-  //DLA::MatrixSymD<Real> m3(n);
-  //m3 =  m1+m2;
+  m1 = 1;
+  m2 = 2;
+
+  DLA::MatrixSymD<Real> m3(n);
+  m3 =  m1+m2;
+  m3.dump();
+
+  DLA::MatrixD<Real> m4(2,2);
+
+  //m4 = m1*m2;
+  //m4.dump();
+
 
 }
 UT_TEST_CASE_END( test1 )
