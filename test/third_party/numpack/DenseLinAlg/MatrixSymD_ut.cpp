@@ -676,19 +676,18 @@ UT_TEST_CASE( ATransposeA_ctor )
 UT_TEST_CASE_END( ATransposeA_ctor )
 
 
-#if 0
-
-
-
 //----------------------------------------------------------------------------//
-BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
+UT_TEST_CASE( ATransposeA_rectangle_ctor )
 {
+  MatrixD ma(2,3);
+  ma(0,0) = 2;
+  ma(0,1) = 3;
+  ma(0,2) = 4;
+  ma(1,0) = 5;
+  ma(1,1) = 6;
+  ma(1,2) = 7;
 
-  const Int data[6] = {2,3,4,
-                       5,6,7};
-  MatrixS<2,3,Int> ma(data,6);
-
-  MatrixSymS<2,Int> sm1a;
+  MatrixSymD sm1a(2);
   sm1a = ma*Transpose(ma);
   UT_ASSERT_EQUALS(  29, sm1a(0,0) );
   UT_ASSERT_EQUALS(  56, sm1a(0,1) );
@@ -709,7 +708,7 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS(  56, sm1a(1,0) );
   UT_ASSERT_EQUALS( 110, sm1a(1,1) );
 
-  MatrixSymS<3,Int> sm1b;
+  MatrixSymD sm1b(3);
   sm1b = Transpose(ma)*ma;
 
   UT_ASSERT_EQUALS( 29, sm1b(0,0) );
@@ -749,8 +748,11 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   const Int data2[6] = {7,6,
                         5,4,
                         3,2};
-  MatrixS<3,2,Int> mb(data2,6);
-  MatrixSymS<2,Int> sm2a;
+  MatrixD mb(3,2);
+  mb(0,0) = 7; mb(0,1) = 6;
+  mb(1,0) = 5; mb(1,1) = 4;
+  mb(2,0) = 3; mb(2,1) = 2;
+  MatrixSymD sm2a(2);
 
   sm2a = Transpose(mb)*mb;
 
@@ -773,7 +775,7 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 68, sm2a(1,0) );
   UT_ASSERT_EQUALS( 56, sm2a(1,1) );
 
-  MatrixSymS<3,Int> sm2b;
+  MatrixSymD sm2b(3);
 
   sm2b = mb*Transpose(mb);
 
@@ -811,9 +813,11 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 23, sm2b(2,1) );
   UT_ASSERT_EQUALS( 13, sm2b(2,2) );
 
-  VectorS2 v1 = {1,1};
-  VectorS<3,Int> v2 = {1,1,1};
-  MatrixSymS2 sm3a;
+  VectorD v1(2);
+  v1 = {1,1};
+  VectorD v2(3);
+  v2 = {1,1,1};
+  MatrixSymD sm3a(2);
 
   sm3a = ma*diag(v2)*Transpose(ma);
 
@@ -836,7 +840,7 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS(  56, sm3a(1,0) );
   UT_ASSERT_EQUALS( 110, sm3a(1,1) );
 
-  MatrixSymS<3,Int> sm3b;
+  MatrixSymD sm3b(3);
   sm3b = Transpose(ma)*diag(v1)*ma;
 
   UT_ASSERT_EQUALS( 29, sm3b(0,0) );
@@ -873,7 +877,7 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 54, sm3b(2,1) );
   UT_ASSERT_EQUALS( 65, sm3b(2,2) );
 
-  MatrixSymS<2,Int> sm4a;
+  MatrixSymD sm4a(2);
 
   sm4a = Transpose(mb)*diag(v2)*mb;
 
@@ -896,7 +900,7 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 68, sm2a(1,0) );
   UT_ASSERT_EQUALS( 56, sm2a(1,1) );
 
-  MatrixSymS<3,Int> sm4b;
+  MatrixSymD sm4b(3);
 
   sm4b = mb*diag(v1)*Transpose(mb);
 
@@ -934,9 +938,10 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 23, sm4b(2,1) );
   UT_ASSERT_EQUALS( 13, sm4b(2,2) );
 
-  MatrixSymS2 sma = {{2},{4,3}};
+  MatrixSymD sma(2);
+  sma = {{2},{4,3}};
 
-  MatrixSymS<3,Int> sm5a;
+  MatrixSymD sm5a(3);
 
   sm5a = Transpose(ma)*sma*ma;
 
@@ -974,11 +979,12 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 330, sm5a(2,1) );
   UT_ASSERT_EQUALS( 403, sm5a(2,2) );
 
-  MatrixSymS<3,Int> smb = {{2},
-                           {4,3},
-                           {4,5,8}};
+  MatrixSymD smb(3);
+  smb = {{2},
+         {4,3},
+         {4,5,8}};
 
-  MatrixSymS<2,Int> sm5b;
+  MatrixSymD sm5b(2);
 
   sm5b = ma*smb*Transpose(ma);
 
@@ -1001,7 +1007,7 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS(  767, sm5b(1,0) );
   UT_ASSERT_EQUALS( 1490, sm5b(1,1) );
 
-  MatrixSymS<3,Int> sm6a;
+  MatrixSymD sm6a(3);
 
   sm6a = mb*sma*Transpose(mb);
 
@@ -1039,7 +1045,7 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 142, sm6a(2,1) );
   UT_ASSERT_EQUALS(  78, sm6a(2,2) );
 
-  MatrixSymS<2,Int> sm6b;
+  MatrixSymD sm6b(2);
 
   sm6b = Transpose(mb)*smb*mb;
 
@@ -1062,6 +1068,7 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 662, sm6b(1,0) );
   UT_ASSERT_EQUALS( 520, sm6b(1,1) );
 
+/*
   MatrixS<3,2,Int> mc(data,6);
   MatrixS<2,3,Int> md(data,6);
 
@@ -1077,162 +1084,171 @@ BOOST_AUTO_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_THROW( sm1b  = Transpose(md)*sm6b*ma;, AssertionException );
   UT_ASSERT_THROW( sm1b += Transpose(md)*sm6b*ma;, AssertionException );
   UT_ASSERT_THROW( sm1b -= Transpose(md)*sm6b*ma;, AssertionException );
+  */
 }
-
+UT_TEST_CASE_END( ATransposeA_rectangle_ctor )
 
 //----------------------------------------------------------------------------//
-BOOST_AUTO_TEST_CASE( MatrixSymS_Transpose_xTMx_test )
+UT_TEST_CASE( MatrixSymS_Transpose_xTMx_test )
 {
   Int Mdata[] = {1,
                  3, 4};
 
   Int xdata[] = {3, 4};
 
-  MatrixSymS2 M(Mdata, 3);
-  VectorS2 x(xdata, 2);
+  MatrixSymD M(2);
+  M(0,0) = 1;
+  M(0,1) = 3;
+  M(1,1) = 4;
+  VectorD x(2);
+  x(0) = 3;
+  x(1) = 4;
   Int xTMx;
 
   xTMx = Transpose(x)*M*x;
 
   UT_ASSERT_EQUALS( xTMx , 145 );
 }
+UT_TEST_CASE_END( MatrixSymS_Transpose_xTMx_test )
+
 
 //----------------------------------------------------------------------------//
-BOOST_AUTO_TEST_CASE( matrix_ops2 )
+UT_TEST_CASE( matrix_ops2 )
 {
-  MatrixSymS2 m1 = {{1},
-                    {2,4}};
-  MatrixSymS2 m2(m1), m3, m4, m5;
+  MatrixSymD m1(2);
+  m1 = {{1},{2,4}};
+
+  MatrixSymD m2(m1), m3(2), m4(2), m5(2);
 
   // size
-  UT_ASSERT( m1.M == 2 );
-  UT_ASSERT( m1.N == 2 );
-  UT_ASSERT( m2.M == 2 );
-  UT_ASSERT( m2.N == 2 );
+  UT_ASSERT( m1.m() == 2 );
+  UT_ASSERT( m1.n() == 2 );
+  UT_ASSERT( m2.m() == 2 );
+  UT_ASSERT( m2.n() == 2 );
 
   // ctors
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
 
   // assignment
   m3 = m1;
   m4 = 5;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 5,5,5,5 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 5,5,5,5 ) );
 
   m2 = m3 = 3;
-  UT_ASSERT( chkMatrixSymS22( m2, 3,3,3,3 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 3,3,3,3 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 3,3,3,3 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 3,3,3,3 ) );
 
   // unary
   m2 = +m1;
   m3 = -m1;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, -1,-2,-2,-4 ) );
 
   // binary accumulation
   m4 = m1;
   m4 *= 5;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 5,10,10,20 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 5,10,10,20 ) );
 
   m2 = 5;
   m3 = 5;
   m2 += m1;
   m3 -= m1;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 6,7,7,9 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 4,3,3,1 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 6,7,7,9 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 4,3,3,1 ) );
 
   // binary operators
 //  m2 = m1 + 3;
 //  m3 = m1 - 3;
   m4 = m1 * 3;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-//  UT_ASSERT( chkMatrixSymS22( m2, 4,5,6,7 ) );
-//  UT_ASSERT( chkMatrixSymS22( m3, -2,-1,0,1 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 3,6,6,12 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+//  UT_ASSERT( chkMatrixSymD22( m2, 4,5,6,7 ) );
+//  UT_ASSERT( chkMatrixSymD22( m3, -2,-1,0,1 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 3,6,6,12 ) );
 
 //  m2 = 3 + m1;
 //  m3 = 3 - m1;
   m4 = 3 * m1;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-//  UT_ASSERT( chkMatrixSymS22( m2, 4,5,6,7 ) );
-//  UT_ASSERT( chkMatrixSymS22( m3, 2,1,0,-1 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 3,6,6,12 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+//  UT_ASSERT( chkMatrixSymD22( m2, 4,5,6,7 ) );
+//  UT_ASSERT( chkMatrixSymD22( m3, 2,1,0,-1 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 3,6,6,12 ) );
 
   m2 = 3;
   m3 = m1 + m2;
   m4 = m1 - m2;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 3,3,3,3 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 4,5,5,7 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, -2,-1,-1,1 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 3,3,3,3 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 4,5,5,7 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, -2,-1,-1,1 ) );
 
   // arithmetic combinations
 
   m2 = m1;
   m3 = m1 + m2;
   m4 = m1 + m2 + m3;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 2,4,4,8 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 4,8,8,16 ) );
 
   m2 += m1;
   m3 += m1 + m2;
   m4 += m1 + m2 + m3;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 2,4,4,8 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 5,10,10,20 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 12,24,24,48 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 5,10,10,20 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 12,24,24,48 ) );
 
   m3 = m1 - m2;
   m4 = m1 - m2 - m3;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 2,4,4,8 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, -1,-2,-2,-4 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 0,0,0,0 ) );
 
   m2 -= m1;
   m3 -= m1 - m2;
   m4 -= m1 - m2 - m3;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, -1,-2,-2,-4 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, -1,-2,-2,-4 ) );
 
   m3 = m1 - m2;
   m4 = m1 + m2 - m3;
   m5 = m1 - m2 + m3;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 0,0,0,0 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 2,4,4,8 ) );
-  UT_ASSERT( chkMatrixSymS22( m5, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 0,0,0,0 ) );
 
   m5 = (m1 + m2) + (m3 + m4);
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
   m5 = (m1 + m2) + (m3 - m4);
-  UT_ASSERT( chkMatrixSymS22( m5, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 0,0,0,0 ) );
   m5 = (m1 + m2) - (m3 + m4);
-  UT_ASSERT( chkMatrixSymS22( m5, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 0,0,0,0 ) );
   m5 = (m1 + m2) - (m3 - m4);
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
   m5 = (m1 - m2) + (m3 + m4);
-  UT_ASSERT( chkMatrixSymS22( m5, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 2,4,4,8 ) );
   m5 = (m1 - m2) + (m3 - m4);
-  UT_ASSERT( chkMatrixSymS22( m5, -2,-4,-4,-8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -2,-4,-4,-8 ) );
   m5 = (m1 - m2) - (m3 + m4);
-  UT_ASSERT( chkMatrixSymS22( m5, -2,-4,-4,-8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -2,-4,-4,-8 ) );
   m5 = (m1 - m2) - (m3 - m4);
-  UT_ASSERT( chkMatrixSymS22( m5, 2,4,4,8 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 0,0,0,0 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 2,4,4,8 ) );
 
   m5 += (m1 + m2) + (m3 + m4);
   m5 += (m1 + m2) + (m3 - m4);
@@ -1242,11 +1258,11 @@ BOOST_AUTO_TEST_CASE( matrix_ops2 )
   m5 += (m1 - m2) + (m3 - m4);
   m5 += (m1 - m2) - (m3 + m4);
   m5 += (m1 - m2) - (m3 - m4);
-  UT_ASSERT( chkMatrixSymS22( m5, 10,20,20,40 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 0,0,0,0 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 10,20,20,40 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 2,4,4,8 ) );
 
   m5 -= (m1 + m2) + (m3 + m4);
   m5 -= (m1 + m2) + (m3 - m4);
@@ -1256,313 +1272,320 @@ BOOST_AUTO_TEST_CASE( matrix_ops2 )
   m5 -= (m1 - m2) + (m3 - m4);
   m5 -= (m1 - m2) - (m3 + m4);
   m5 -= (m1 - m2) - (m3 - m4);
-  UT_ASSERT( chkMatrixSymS22( m5, 2,4,4,8 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 0,0,0,0 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 2,4,4,8 ) );
 
   m2 = 1*m1;
   m3 = m2*2;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 2,4,4,8 ) );
 
   m2 += 1*m1;
   m3 += m2*2;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 2,4,4,8 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 6,12,12,24 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 6,12,12,24 ) );
 
   m2 -= 1*m1;
   m3 -= m2*2;
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 4,8,8,16 ) );
 
 
 
   m3 = (2*m2)*2;
-  UT_ASSERT( chkMatrixSymS22( m3, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 4,8,8,16 ) );
 
   m3 += (2*m2)*2;
-  UT_ASSERT( chkMatrixSymS22( m3, 2*4,2*8,2*8,2*16 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 2*4,2*8,2*8,2*16 ) );
 
   m3 = 2*(m2*2);
-  UT_ASSERT( chkMatrixSymS22( m3, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 4,8,8,16 ) );
 
   m3 += 2*(m2*2);
-  UT_ASSERT( chkMatrixSymS22( m3, 2*4,2*8,2*8,2*16 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 2*4,2*8,2*8,2*16 ) );
 
   m3 = (4*m2)/2;
-  UT_ASSERT( chkMatrixSymS22( m3, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 2,4,4,8 ) );
 
   m3 += (4*m2)/2;
-  UT_ASSERT( chkMatrixSymS22( m3, 2*2,2*4,2*4,2*8 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 2*2,2*4,2*4,2*8 ) );
 
 
 
   m5 = 1*(m1 + m2) + (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 14,28,28,56 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 14,28,28,56 ) );
   m5 = 1*(m1 + m2) + (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 6,12,12,24 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 6,12,12,24 ) );
   m5 = 1*(m1 + m2) - (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -10,-20,-20,-40 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -10,-20,-20,-40 ) );
   m5 = 1*(m1 + m2) - (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -2,-4,-4,-8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -2,-4,-4,-8 ) );
   m5 = 1*(m1 - m2) + (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 12,24,24,48 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 12,24,24,48 ) );
   m5 = 1*(m1 - m2) + (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
   m5 = 1*(m1 - m2) - (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -12,-24,-24,-48 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -12,-24,-24,-48 ) );
   m5 = 1*(m1 - m2) - (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -4,-8,-8,-16 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 4,8,8,16 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -4,-8,-8,-16 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 2,4,4,8 ) );
 
   m5 += 1*(m1 + m2) + (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 10,20,20,40 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 10,20,20,40 ) );
   m5 += 1*(m1 + m2) + (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 16,32,32,64 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 16,32,32,64 ) );
   m5 += 1*(m1 + m2) - (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 6,12,12,24 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 6,12,12,24 ) );
   m5 += 1*(m1 + m2) - (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
   m5 += 1*(m1 - m2) + (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 16,32,32,64 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 16,32,32,64 ) );
   m5 += 1*(m1 - m2) + (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 20,40,40,80 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 20,40,40,80 ) );
   m5 += 1*(m1 - m2) - (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 8,16,16,32 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 8,16,16,32 ) );
   m5 += 1*(m1 - m2) - (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 4,8,8,16 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 2,4,4,8 ) );
 
   m5 -= 1*(m1 + m2) + (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -10,-20,-20,-40 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -10,-20,-20,-40 ) );
   m5 -= 1*(m1 + m2) + (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -16,-32,-32,-64 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -16,-32,-32,-64 ) );
   m5 -= 1*(m1 + m2) - (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -6,-12,-12,-24 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -6,-12,-12,-24 ) );
   m5 -= 1*(m1 + m2) - (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -4,-8,-8,-16 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -4,-8,-8,-16 ) );
   m5 -= 1*(m1 - m2) + (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -16,-32,-32,-64 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -16,-32,-32,-64 ) );
   m5 -= 1*(m1 - m2) + (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -20,-40,-40,-80 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -20,-40,-40,-80 ) );
   m5 -= 1*(m1 - m2) - (m3 + m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -8,-16,-16,-32 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -8,-16,-16,-32 ) );
   m5 -= 1*(m1 - m2) - (m3 - m4)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, -4,-8,-8,-16 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, 4,8,8,16 ) );
-  UT_ASSERT( chkMatrixSymS22( m4, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, -4,-8,-8,-16 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 2,4,4,8 ) );
 
   m5 = 1*(m1 + m2)*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
   m5 = 1*2*(m1 + m2);
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
   m5 = (m1 + m2)*1*2;
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
 
   //Need to divide by 1 because we are working with integers
   m5 = (m1 + m2)/1;
-  UT_ASSERT( chkMatrixSymS22( m5, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 2,4,4,8 ) );
 
   m5 = +( 2*(m1 + m2) );
-  UT_ASSERT( chkMatrixSymS22( m5, 4,8,8,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m5, 4,8,8,16 ) );
 
   m2 = +m1;
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
   m3 = -m2;
-  UT_ASSERT( chkMatrixSymS22( m3, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, -1,-2,-2,-4 ) );
   m4 = +(m1 + m2);
-  UT_ASSERT( chkMatrixSymS22( m4, 2,4,4,8 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 2,4,4,8 ) );
   m4 = +(m1 - m2);
-  UT_ASSERT( chkMatrixSymS22( m4, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 0,0,0,0 ) );
   m4 = -(m1 + m2);
-  UT_ASSERT( chkMatrixSymS22( m4, -2,-4,-4,-8 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, -2,-4,-4,-8 ) );
   m4 = -(m1 - m2);
-  UT_ASSERT( chkMatrixSymS22( m4, 0,0,0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 0,0,0,0 ) );
   m4 = +(m1 + m2) + m3;
-  UT_ASSERT( chkMatrixSymS22( m4, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 1,2,2,4 ) );
   m4 = -(m1 + m2) + m3;
-  UT_ASSERT( chkMatrixSymS22( m4, -3,-6,-6,-12 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 1,2,2,4 ) );
-  UT_ASSERT( chkMatrixSymS22( m3, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, -3,-6,-6,-12 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, -1,-2,-2,-4 ) );
 
   m4 = +1*m1;
-  UT_ASSERT( chkMatrixSymS22( m4, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 1,2,2,4 ) );
   m4 = -1*m1;
-  UT_ASSERT( chkMatrixSymS22( m4, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, -1,-2,-2,-4 ) );
   m4 = +m1*1;
-  UT_ASSERT( chkMatrixSymS22( m4, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 1,2,2,4 ) );
   m4 = -m1*1;
-  UT_ASSERT( chkMatrixSymS22( m4, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, -1,-2,-2,-4 ) );
   m4 = +(1*m1);
-  UT_ASSERT( chkMatrixSymS22( m4, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 1,2,2,4 ) );
   m4 = -(1*m1);
-  UT_ASSERT( chkMatrixSymS22( m4, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, -1,-2,-2,-4 ) );
   m4 = +(m1*1);
-  UT_ASSERT( chkMatrixSymS22( m4, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, 1,2,2,4 ) );
   m4 = -(m1*1);
-  UT_ASSERT( chkMatrixSymS22( m4, -1,-2,-2,-4 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 1,2,2,4 ) );
+  UT_ASSERT( chkMatrixSymD22( m4, -1,-2,-2,-4 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
 }
+UT_TEST_CASE_END( matrix_ops2 )
 
 
 //----------------------------------------------------------------------------//
 // matrix-vector multiply
-BOOST_AUTO_TEST_CASE( matrix_vector_multiply2 )
+UT_TEST_CASE( matrix_vector_multiply2 )
 {
-  const Int adata[2] = {1,2};
-  const Int mdata[3] = {3,4,6};
-  MatrixSymS2 m1(mdata, 3);
-  MatrixSymS2 m2(m1), m3;
-  VectorS2 a1(adata, 2);
-  VectorS2 a2(a1), a3;
+  MatrixSymD m1(2);
+  m1(0,0) = 3;
+  m1(0,1) = 4;
+  m1(1,1) = 6;
+  MatrixSymD m2(m1), m3(2);
+  VectorD a1(2);
+  a1(0) = 1;
+  a1(1) = 2;
+  VectorD a2(a1), a3(2);
 
-  UT_ASSERT( chkVectorS2( a1, 1,2 ) );
-  UT_ASSERT( chkVectorS2( a2, 1,2 ) );
+  UT_ASSERT( chkVectorD2( a1, 1,2 ) );
+  UT_ASSERT( chkVectorD2( a2, 1,2 ) );
 
-  UT_ASSERT( chkMatrixSymS22( m1, 3,4,4,6 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 3,4,4,6 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 3,4,4,6 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 3,4,4,6 ) );
 
   a2 = m1*a1;
-  UT_ASSERT( chkVectorS2( a2, 11,16 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 3,4,4,6 ) );
+  UT_ASSERT( chkVectorD2( a2, 11,16 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 3,4,4,6 ) );
 
   a2 = +(m1*a1);
-  UT_ASSERT( chkVectorS2( a2, 11,16 ) );
+  UT_ASSERT( chkVectorD2( a2, 11,16 ) );
 
   a2 += m1*a1;
-  UT_ASSERT( chkVectorS2( a2, 2*11,2*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 2*11,2*16 ) );
 
   a2 -= m1*a1;
-  UT_ASSERT( chkVectorS2( a2, 11,16 ) );
+  UT_ASSERT( chkVectorD2( a2, 11,16 ) );
 
   a2 += m1*a1 + m1*a1;
-  UT_ASSERT( chkVectorS2( a2, 3*11,3*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 3*11,3*16 ) );
 
   a2 += m1*a1 - m1*a1;
-  UT_ASSERT( chkVectorS2( a2, 3*11,3*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 3*11,3*16 ) );
 
 
 
   a2 = (2*m1)*a1;
-  UT_ASSERT( chkVectorS2( a2, 2*11,2*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 2*11,2*16 ) );
 
   a2 = +((2*m1)*a1);
-  UT_ASSERT( chkVectorS2( a2, 2*11,2*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 2*11,2*16 ) );
 
   a2 += (2*m1)*a1;
-  UT_ASSERT( chkVectorS2( a2, 4*11,4*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 4*11,4*16 ) );
 
   a2 = m1*(a1*2);
-  UT_ASSERT( chkVectorS2( a2, 2*11,2*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 2*11,2*16 ) );
 
   a2 = +(m1*(a1*2));
-  UT_ASSERT( chkVectorS2( a2, 2*11,2*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 2*11,2*16 ) );
 
   a2 += m1*(a1*2);
-  UT_ASSERT( chkVectorS2( a2, 4*11,4*16 ) );
+  UT_ASSERT( chkVectorD2( a2, 4*11,4*16 ) );
 
 
 
   a2 = (m1 + m2)*a1;
-  UT_ASSERT( chkVectorS2( a2, 22,32 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 3,4,4,6 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 3,4,4,6 ) );
+  UT_ASSERT( chkVectorD2( a2, 22,32 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 3,4,4,6 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 3,4,4,6 ) );
 
   a2 = +((m1 + m2)*a1);
-  UT_ASSERT( chkVectorS2( a2, 22,32 ) );
+  UT_ASSERT( chkVectorD2( a2, 22,32 ) );
 
   a2 += (m1 + m2)*a1;
-  UT_ASSERT( chkVectorS2( a2, 2*22,2*32 ) );
+  UT_ASSERT( chkVectorD2( a2, 2*22,2*32 ) );
 
   a2 -= (m1 + m2)*a1;
-  UT_ASSERT( chkVectorS2( a2, 22,32 ) );
+  UT_ASSERT( chkVectorD2( a2, 22,32 ) );
 
 //  a2 = a1*(m1 + m2);
-//  UT_ASSERT( chkVectorS2( a2, 26,32 ) );
-//  UT_ASSERT( chkMatrixSymS22( m1, 3,4,5,6 ) );
-//  UT_ASSERT( chkMatrixSymS22( m2, 3,4,5,6 ) );
+//  UT_ASSERT( chkVectorD2( a2, 26,32 ) );
+//  UT_ASSERT( chkMatrixSymD22( m1, 3,4,5,6 ) );
+//  UT_ASSERT( chkMatrixSymD22( m2, 3,4,5,6 ) );
 
   a2 = (m1 - m2)*a1;
-  UT_ASSERT( chkVectorS2( a2, 0,0 ) );
-  UT_ASSERT( chkMatrixSymS22( m1, 3,4,4,6 ) );
-  UT_ASSERT( chkMatrixSymS22( m2, 3,4,4,6 ) );
+  UT_ASSERT( chkVectorD2( a2, 0,0 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 3,4,4,6 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 3,4,4,6 ) );
 
 //  a2 = a1*(m1 - m2);
-//  UT_ASSERT( chkVectorS2( a2, 0,0 ) );
-//  UT_ASSERT( chkMatrixSymS22( m1, 3,4,5,6 ) );
-//  UT_ASSERT( chkMatrixSymS22( m2, 3,4,5,6 ) );
+//  UT_ASSERT( chkVectorD2( a2, 0,0 ) );
+//  UT_ASSERT( chkMatrixSymD22( m1, 3,4,5,6 ) );
+//  UT_ASSERT( chkMatrixSymD22( m2, 3,4,5,6 ) );
 
   a2 = a1;
 
   a3 = m1*(a1 + a2);
-  UT_ASSERT( chkVectorS2( a3, 2*11,2*16 ) );
+  UT_ASSERT( chkVectorD2( a3, 2*11,2*16 ) );
 
   a3 = +(m1*(a1 + a2));
-  UT_ASSERT( chkVectorS2( a3, 2*11,2*16 ) );
+  UT_ASSERT( chkVectorD2( a3, 2*11,2*16 ) );
 
   a3 += m1*(a1 + a2);
-  UT_ASSERT( chkVectorS2( a3, 4*11,4*16 ) );
+  UT_ASSERT( chkVectorD2( a3, 4*11,4*16 ) );
 
   a3 -= m1*(a1 + a2);
-  UT_ASSERT( chkVectorS2( a3, 2*11,2*16 ) );
+  UT_ASSERT( chkVectorD2( a3, 2*11,2*16 ) );
 
 
   a2 = a1;
 
   a3 = (m1 + m2)*(a1 + a2);
-  UT_ASSERT( chkVectorS2( a3, 44,64 ) );
+  UT_ASSERT( chkVectorD2( a3, 44,64 ) );
 
   a3 += (m1 + m2)*(a1 + a2);
-  UT_ASSERT( chkVectorS2( a3, 2*44,2*64 ) );
+  UT_ASSERT( chkVectorD2( a3, 2*44,2*64 ) );
 
   a3 -= (m1 + m2)*(a1 + a2);
-  UT_ASSERT( chkVectorS2( a3, 44,64 ) );
+  UT_ASSERT( chkVectorD2( a3, 44,64 ) );
 
   a3 = +((m1 + m2)*(a1 + a2));
-  UT_ASSERT( chkVectorS2( a3, 44,64 ) );
+  UT_ASSERT( chkVectorD2( a3, 44,64 ) );
 
 //  a3 = (a1 + a2)*(m1 + m2);
-//  UT_ASSERT( chkVectorS2( a3, 52,64 ) );
+//  UT_ASSERT( chkVectorD2( a3, 52,64 ) );
 
   a3 = (m1 + m2)*(a1 - a2);
-  UT_ASSERT( chkVectorS2( a3, 0,0 ) );
+  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
 
 //  a3 = (a1 - a2)*(m1 + m2);
-//  UT_ASSERT( chkVectorS2( a3, 0,0 ) );
+//  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
 
   a3 = (m1 - m2)*(a1 + a2);
-  UT_ASSERT( chkVectorS2( a3, 0,0 ) );
+  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
 
 //  a3 = (a1 + a2)*(m1 - m2);
-//  UT_ASSERT( chkVectorS2( a3, 0,0 ) );
+//  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
 
   a3 = (m1 - m2)*(a1 - a2);
-  UT_ASSERT( chkVectorS2( a3, 0,0 ) );
+  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
 
 //  a3 = (a1 - a2)*(m1 - m2);
-//  UT_ASSERT( chkVectorS2( a3, 0,0 ) );
-//  UT_ASSERT( chkVectorS2( a1, 1,2 ) );
-//  UT_ASSERT( chkVectorS2( a2, 1,2 ) );
-//  UT_ASSERT( chkMatrixSymS22( m1, 3,4,5,6 ) );
-//  UT_ASSERT( chkMatrixSymS22( m2, 3,4,5,6 ) );
+//  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
+//  UT_ASSERT( chkVectorD2( a1, 1,2 ) );
+//  UT_ASSERT( chkVectorD2( a2, 1,2 ) );
+//  UT_ASSERT( chkMatrixSymD22( m1, 3,4,5,6 ) );
+//  UT_ASSERT( chkMatrixSymD22( m2, 3,4,5,6 ) );
 
 }
+UT_TEST_CASE_END( matrix_vector_multiply2 )
+
+#if 0
 
 //----------------------------------------------------------------------------//
 BOOST_AUTO_TEST_CASE( IO )

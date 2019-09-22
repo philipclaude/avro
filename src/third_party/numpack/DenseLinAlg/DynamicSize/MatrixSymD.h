@@ -267,7 +267,8 @@ public:
 
   // Add the value of this matrix to res
   template<class Tres>
-  inline void plus(const T& sgn, MatrixD<Tres>& res) const
+  //pcaplan inline void plus(const T& sgn, MatrixD<Tres>& res) const
+  inline void plus(const T& sgn, MatrixDView<Tres>& res) const
   {
     SANS_ASSERT( ID() != res.ID() ); //The variable on the left of the assignment cannot also appear on the right
 

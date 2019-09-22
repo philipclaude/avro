@@ -456,8 +456,6 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  14, sm1a(1,0) );
   UT_ASSERT_EQUALS(  20, sm1a(1,1) );
 
-  return;
-
   sm1a += Transpose(m1)*m1;
 
   UT_ASSERT_EQUALS( 2*10, sm1a(0,0) );
