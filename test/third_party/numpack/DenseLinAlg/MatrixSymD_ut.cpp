@@ -653,25 +653,27 @@ UT_TEST_CASE( ATransposeA_ctor )
 
 
   //Make sure you can't construct a potentially non-symmetric matrix
-  /*UT_ASSERT_THROW( sm1a  = Transpose(m1)*m2, AssertionException );
-  UT_ASSERT_THROW( sm1a += Transpose(m1)*m2, AssertionException );
-  UT_ASSERT_THROW( sm1a -= Transpose(m1)*m2, AssertionException );
+  m2(1,1) = 100;
+  UT_CATCH_EXCEPTION( sm1a = Transpose(m1)*m2 );
+  UT_CATCH_EXCEPTION( sm1a += Transpose(m1)*m2 );
+  UT_CATCH_EXCEPTION( sm1a -= Transpose(m1)*m2 );
 
-  UT_ASSERT_THROW( sm1b  = Transpose(m1)*diag(v1)*m2, AssertionException );
-  UT_ASSERT_THROW( sm1b += Transpose(m1)*diag(v1)*m2, AssertionException );
-  UT_ASSERT_THROW( sm1b -= Transpose(m1)*diag(v1)*m2, AssertionException );
 
-  UT_ASSERT_THROW( sm1b  = Transpose(m1)*sm4*m2, AssertionException );
-  UT_ASSERT_THROW( sm1b += Transpose(m1)*sm4*m2, AssertionException );
-  UT_ASSERT_THROW( sm1b -= Transpose(m1)*sm4*m2, AssertionException );
+  UT_CATCH_EXCEPTION( sm1b  = Transpose(m1)*diag(v1)*m2 );
+  UT_CATCH_EXCEPTION( sm1b += Transpose(m1)*diag(v1)*m2 );
+  UT_CATCH_EXCEPTION( sm1b -= Transpose(m1)*diag(v1)*m2 );
 
-  UT_ASSERT_THROW( sm1b  = sm1a*sm1b*sm2a, AssertionException );
-  UT_ASSERT_THROW( sm1b += sm1a*sm1b*sm2a, AssertionException );
-  UT_ASSERT_THROW( sm1b -= sm1a*sm1b*sm2a, AssertionException );
+  UT_CATCH_EXCEPTION( sm1b  = Transpose(m1)*sm4*m2 );
+  UT_CATCH_EXCEPTION( sm1b += Transpose(m1)*sm4*m2 );
+  UT_CATCH_EXCEPTION( sm1b -= Transpose(m1)*sm4*m2 );
 
-  UT_ASSERT_THROW( sm1b  = sm1a*sm1b, AssertionException );
-  UT_ASSERT_THROW( sm1b += sm1a*sm1b, AssertionException );
-  UT_ASSERT_THROW( sm1b -= sm1a*sm1b, AssertionException );*/
+  UT_CATCH_EXCEPTION( sm1b  = sm1a*sm1b*sm2a );
+  UT_CATCH_EXCEPTION( sm1b += sm1a*sm1b*sm2a );
+  UT_CATCH_EXCEPTION( sm1b -= sm1a*sm1b*sm2a );
+
+  UT_CATCH_EXCEPTION( sm1b  = sm1a*sm1b );
+  UT_CATCH_EXCEPTION( sm1b += sm1a*sm1b );
+  UT_CATCH_EXCEPTION( sm1b -= sm1a*sm1b );
 }
 UT_TEST_CASE_END( ATransposeA_ctor )
 
@@ -1163,20 +1165,24 @@ UT_TEST_CASE( matrix_ops2 )
   UT_ASSERT( chkMatrixSymD22( m3, 4,3,3,1 ) );
 
   // binary operators
-//  m2 = m1 + 3;
-//  m3 = m1 - 3;
+  m2 = m1;
+  m2 += 3;
+  m3 = m1;
+  m3 -= 3;
   m4 = m1 * 3;
   UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
-//  UT_ASSERT( chkMatrixSymD22( m2, 4,5,6,7 ) );
-//  UT_ASSERT( chkMatrixSymD22( m3, -2,-1,0,1 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 4,5,5,7 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, -2,-1,-1,1 ) );
   UT_ASSERT( chkMatrixSymD22( m4, 3,6,6,12 ) );
 
-//  m2 = 3 + m1;
-//  m3 = 3 - m1;
+  m2 = m1;
+  m2 += 3;
+  m3 = -m1;
+  m3 += 3;
   m4 = 3 * m1;
   UT_ASSERT( chkMatrixSymD22( m1, 1,2,2,4 ) );
-//  UT_ASSERT( chkMatrixSymD22( m2, 4,5,6,7 ) );
-//  UT_ASSERT( chkMatrixSymD22( m3, 2,1,0,-1 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 4,5,5,7 ) );
+  UT_ASSERT( chkMatrixSymD22( m3, 2,1,1,-1 ) );
   UT_ASSERT( chkMatrixSymD22( m4, 3,6,6,12 ) );
 
   m2 = 3;
@@ -1513,20 +1519,10 @@ UT_TEST_CASE( matrix_vector_multiply2 )
   a2 -= (m1 + m2)*a1;
   UT_ASSERT( chkVectorD2( a2, 22,32 ) );
 
-//  a2 = a1*(m1 + m2);
-//  UT_ASSERT( chkVectorD2( a2, 26,32 ) );
-//  UT_ASSERT( chkMatrixSymD22( m1, 3,4,5,6 ) );
-//  UT_ASSERT( chkMatrixSymD22( m2, 3,4,5,6 ) );
-
   a2 = (m1 - m2)*a1;
   UT_ASSERT( chkVectorD2( a2, 0,0 ) );
   UT_ASSERT( chkMatrixSymD22( m1, 3,4,4,6 ) );
   UT_ASSERT( chkMatrixSymD22( m2, 3,4,4,6 ) );
-
-//  a2 = a1*(m1 - m2);
-//  UT_ASSERT( chkVectorD2( a2, 0,0 ) );
-//  UT_ASSERT( chkMatrixSymD22( m1, 3,4,5,6 ) );
-//  UT_ASSERT( chkMatrixSymD22( m2, 3,4,5,6 ) );
 
   a2 = a1;
 
@@ -1542,7 +1538,6 @@ UT_TEST_CASE( matrix_vector_multiply2 )
   a3 -= m1*(a1 + a2);
   UT_ASSERT( chkVectorD2( a3, 2*11,2*16 ) );
 
-
   a2 = a1;
 
   a3 = (m1 + m2)*(a1 + a2);
@@ -1557,30 +1552,21 @@ UT_TEST_CASE( matrix_vector_multiply2 )
   a3 = +((m1 + m2)*(a1 + a2));
   UT_ASSERT( chkVectorD2( a3, 44,64 ) );
 
-//  a3 = (a1 + a2)*(m1 + m2);
-//  UT_ASSERT( chkVectorD2( a3, 52,64 ) );
-
   a3 = (m1 + m2)*(a1 - a2);
   UT_ASSERT( chkVectorD2( a3, 0,0 ) );
-
-//  a3 = (a1 - a2)*(m1 + m2);
-//  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
 
   a3 = (m1 - m2)*(a1 + a2);
   UT_ASSERT( chkVectorD2( a3, 0,0 ) );
 
-//  a3 = (a1 + a2)*(m1 - m2);
-//  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
-
   a3 = (m1 - m2)*(a1 - a2);
   UT_ASSERT( chkVectorD2( a3, 0,0 ) );
 
-//  a3 = (a1 - a2)*(m1 - m2);
-//  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
-//  UT_ASSERT( chkVectorD2( a1, 1,2 ) );
-//  UT_ASSERT( chkVectorD2( a2, 1,2 ) );
-//  UT_ASSERT( chkMatrixSymD22( m1, 3,4,5,6 ) );
-//  UT_ASSERT( chkMatrixSymD22( m2, 3,4,5,6 ) );
+  a3 = (a1 - a2)*(m1 - m2);
+  UT_ASSERT( chkVectorD2( a3, 0,0 ) );
+  UT_ASSERT( chkVectorD2( a1, 1,2 ) );
+  UT_ASSERT( chkVectorD2( a2, 1,2 ) );
+  UT_ASSERT( chkMatrixSymD22( m1, 3,4,4,6 ) );
+  UT_ASSERT( chkMatrixSymD22( m2, 3,4,4,6 ) );
 
 }
 UT_TEST_CASE_END( matrix_vector_multiply2 )

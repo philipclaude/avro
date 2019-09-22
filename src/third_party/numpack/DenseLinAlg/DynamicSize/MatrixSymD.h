@@ -120,6 +120,9 @@ public:
   // C += A + B;
   // C -= A + B;
 
+  MatrixSymD& operator+=( const double& s );
+  MatrixSymD& operator-=( const double& s );
+
   // Lazy expression element-wise assignment and binary accumulation
   template<class Expr>             MatrixSymD( const MatrixDType<Expr, true>& r ) { *this = r; }
   template<class Expr> MatrixSymD& operator= ( const MatrixDType<Expr, true>& );
@@ -127,8 +130,8 @@ public:
   template<class Expr> MatrixSymD& operator-=( const MatrixDType<Expr, true>& );
 
   // Operators for A^T*A
-  template<class T1>             MatrixSymD( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { *this = tree; }
-  template<class T1> MatrixSymD& operator= ( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return assign2(tree); }
+  template<class T1>             MatrixSymD( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { assert( tree.left().ID()==tree.right().ID() ); *this = tree; }
+  template<class T1> MatrixSymD& operator= ( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { assert( tree.left().ID()==tree.right().ID() ); return assign2(tree); }
   template<class T1> MatrixSymD& operator+=( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return addAssign2(tree); }
   template<class T1> MatrixSymD& operator-=( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return subAssign2(tree); }
 
@@ -449,6 +452,23 @@ MatrixSymD<T>::operator-() const
   return m;
 }
 
+template <class T>
+inline MatrixSymD<T>&
+MatrixSymD<T>::operator+=( const double& a )
+{
+  for (int i = 0; i < SIZE; i++)
+    data[i] += a;
+  return *this;
+}
+
+template <class T>
+inline MatrixSymD<T>&
+MatrixSymD<T>::operator-=( const double& a )
+{
+  for (int i = 0; i < SIZE; i++)
+    data[i] -= a;
+  return *this;
+}
 
 // binary accumulation operators
 
@@ -541,8 +561,14 @@ MatrixSymD<T>::assign2( const Expr& Tree )
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) = tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
 
   return *this;
 }
@@ -562,8 +588,14 @@ MatrixSymD<T>::addAssign2( const Expr& Tree )
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) += tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
 
   return *this;
 }
@@ -583,8 +615,14 @@ MatrixSymD<T>::subAssign2( const Expr& Tree )
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) -= tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
 
   return *this;
 }
@@ -604,8 +642,14 @@ MatrixSymD<T>::assign3( const Expr& Tree )
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) = tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
 
   return *this;
 }
@@ -625,8 +669,14 @@ MatrixSymD<T>::addAssign3( const Expr& Tree )
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) += tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
 
   return *this;
 }
@@ -646,8 +696,14 @@ MatrixSymD<T>::subAssign3( const Expr& Tree )
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) -= tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
 
   return *this;
 }
@@ -670,9 +726,16 @@ MatrixSymD<T>::operator=( const MatrixDType<Expr, true>& r )
   allocate();
   MatrixD<T> tmp(r.m(),r.m());
   Tree.value(1., tmp);
+
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) = tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
   #endif
 
   return *this;
@@ -697,8 +760,14 @@ MatrixSymD<T>::operator+=( const MatrixDType<Expr, true>& r )
   MatrixD<T> tmp(r.m(),r.m());
   Tree.value(1., tmp);
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) += tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
   #endif
 
   return *this;
@@ -723,8 +792,14 @@ MatrixSymD<T>::operator-=( const MatrixDType<Expr, true>& r )
   MatrixD<T> tmp(r.m(),r.m());
   Tree.value(1., tmp);
   for (int i = 0; i < M; i++)
+  {
     for (int j = 0; j < i+1; j++)
+    {
       (*this)(i,j) -= tmp(i,j);
+      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";
+    }
+  }
   #endif
 
   return *this;
