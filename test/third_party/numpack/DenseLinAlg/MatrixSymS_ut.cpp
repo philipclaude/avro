@@ -8,10 +8,10 @@
 
 #include "unit_tester.hpp"
 
-#include "numpack/DenseLinAlg/DynamicSize/MatrixD.h"
-#include "numpack/DenseLinAlg/DynamicSize/MatrixD_Sub.h"
-#include "numpack/DenseLinAlg/DynamicSize/MatrixSymD.h"
-#include "numpack/DenseLinAlg/DynamicSize/VectorD.h"
+#include "numpack/DenseLinAlg/StaticSize/MatrixS.h"
+//#include "numpack/DenseLinAlg/StaticSize/MatrixS_Sub.h"
+#include "numpack/DenseLinAlg/StaticSize/MatrixSymS.h"
+#include "numpack/DenseLinAlg/StaticSize/VectorS.h"
 
 #include "chkMatrixD_btest.h"
 
@@ -24,28 +24,28 @@ UT_TEST_SUITE( MatrixSymD_tests )
 
 typedef double Int;
 
-typedef VectorD<Int> VectorD;
-typedef MatrixD<Int> MatrixD;
-typedef MatrixSymD<Int> MatrixSymD;
+/*typedef VectorS<2,Int> VectorS;
+typedef MatrixS<2,2,Int> MatrixS;
+typedef MatrixSymS<2,Int> MatrixSymS;*/
 
 UT_TEST_CASE( test1 )
 {
-/*  const int n = 2;
+  const int n = 2;
 
-  DLA::MatrixSymD<Real> m1(n);
-  DLA::MatrixSymD<Real> m2(n);
+  DLA::MatrixSymS<2,Real> m1;
+  DLA::MatrixSymS<2,Real> m2;
 
   m1 = 1;
   m2 = 2;
 
-  DLA::MatrixSymD<Real> m3(n);
+  DLA::MatrixSymS<2,Real> m3;
   m3 =  m1+m2;
   m3.dump();
 
-  DLA::MatrixD<Real> m4(2,2);
+  DLA::MatrixS<2,2,Real> m4;
 
   m4 = m1*m2;
-  m4.dump();*/
+  m4.dump();
 }
 UT_TEST_CASE_END( test1 )
 
@@ -53,15 +53,19 @@ UT_TEST_CASE_END( test1 )
 UT_TEST_CASE( matrix_ops1 )
 {
   const Int data = 3.;
-  MatrixSymD m1(&data, 1);
-  MatrixSymD m2(m1);
-  MatrixSymD m3(1.,1), m4(2.,1), m5(0.,1);
-/*
+  MatrixSymS<1,double> m1(&data, 1);
+  MatrixSymS<1,double> m2(m1);
+  MatrixSymS<1,double> m3, m4, m5;
+
+  m3 = 1;
+  m4 = 2;
+  m5 = 0;
+
   // size
-  UT_ASSERT( m1.m() == 1 );
-  UT_ASSERT( m1.n() == 1 );
-  UT_ASSERT( m2.m() == 1 );
-  UT_ASSERT( m2.n() == 1 );
+  UT_ASSERT( m1.M == 1 );
+  UT_ASSERT( m1.N == 1 );
+  UT_ASSERT( m2.M == 1 );
+  UT_ASSERT( m2.N == 1 );
 
   // ctors
   UT_ASSERT_EQUALS(  3, m1(0,0) );
@@ -365,8 +369,6 @@ UT_TEST_CASE( matrix_ops1 )
   Int i0 = m1*m1;
   UT_ASSERT_EQUALS( 9, i0 );
 
-  */
-
   /*Int i1 = (m1+m1)*m1;
   UT_ASSERT_EQUALS( 18, i1 );
 
@@ -381,7 +383,7 @@ UT_TEST_CASE_END( matrix_ops1 )
 //----------------------------------------------------------------------------//
 UT_TEST_CASE( identity2 )
 {
-  MatrixSymD m1(2);
+  MatrixSymS<2,double> m1;
   m1 = Identity();
 
   UT_ASSERT_EQUALS(  1, m1(0,0) );
@@ -389,8 +391,8 @@ UT_TEST_CASE( identity2 )
   UT_ASSERT_EQUALS(  0, m1(1,0) );
   UT_ASSERT_EQUALS(  1, m1(1,1) );
 
-  MatrixSymD m2(2);
-  MatrixSymD I(2);
+  MatrixSymS<2,double> m2;
+  MatrixSymS<2,double> I;
   I = Identity();
 
   m2 = 2*I;
@@ -400,7 +402,7 @@ UT_TEST_CASE( identity2 )
   UT_ASSERT_EQUALS(  0, m2(1,0) );
   UT_ASSERT_EQUALS(  2, m2(1,1) );
 
-  MatrixSymD m3(2);
+  MatrixSymS<2,double> m3;
   m3 = Identity();
 
   UT_ASSERT_EQUALS(  1, m3(0,0) );
@@ -424,7 +426,7 @@ UT_TEST_CASE( MatrixSymD_3x3_test )
                  d, e,
                  g, h, i};
 
-  MatrixSymD A(Adata, 3);
+  MatrixSymS<3,double> A(Adata, 6);
 
   UT_ASSERT_EQUALS(A(0,0), a);
   UT_ASSERT_EQUALS(A(0,1), b);
@@ -444,9 +446,9 @@ UT_TEST_CASE_END( MatrixSymD_3x3_test )
 UT_TEST_CASE( ATransposeA_ctor )
 {
   const Int data[4] = {1,2,3,4};
-  MatrixD m1(2,2,data), m2(m1);
+  MatrixS<2,2,double> m1(data,4), m2(m1);
 
-  MatrixSymD sm1a(2);
+  MatrixSymS<2,double> sm1a;
   sm1a = Transpose(m1)*m1;
 
   UT_ASSERT_EQUALS(  10, sm1a(0,0) );
@@ -454,6 +456,7 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  14, sm1a(1,0) );
   UT_ASSERT_EQUALS(  20, sm1a(1,1) );
 
+  return;
 
   sm1a += Transpose(m1)*m1;
 
@@ -469,7 +472,7 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  14, sm1a(1,0) );
   UT_ASSERT_EQUALS(  20, sm1a(1,1) );
 
-  MatrixSymD sm1b(2);
+  MatrixSymS<2,double> sm1b;
   sm1b = m1*Transpose(m1);
 
   UT_ASSERT_EQUALS(   5, sm1b(0,0) );
@@ -492,7 +495,7 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  25, sm1b(1,1) );
 
 
-  MatrixSymD sm2a(2);
+  MatrixSymS<2,double> sm2a;
   sm2a = Transpose(m1)*m1;
 
   UT_ASSERT_EQUALS(  10, sm2a(0,0) );
@@ -500,7 +503,7 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  14, sm2a(1,0) );
   UT_ASSERT_EQUALS(  20, sm2a(1,1) );
 
-  MatrixSymD sm2b(2);
+  MatrixSymS<2,double> sm2b;
   sm2b = m1*Transpose(m1);
 
   UT_ASSERT_EQUALS(   5, sm2b(0,0) );
@@ -509,10 +512,10 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  25, sm2b(1,1) );
 
 
-  VectorD v1(2);
+  VectorS<2,double> v1;
   v1 = {2,3};
 
-  MatrixSymD sm3a(2);
+  MatrixSymS<2,double> sm3a;
   sm3a = Transpose(m1)*diag(v1)*m1;
 
   UT_ASSERT_EQUALS(  29, sm3a(0,0) );
@@ -535,7 +538,7 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  56, sm3a(1,1) );
 
 
-  MatrixSymD sm3b(2);
+  MatrixSymS<2,double> sm3b;
   sm3b = m1*diag(v1)*Transpose(m1);
 
   UT_ASSERT_EQUALS(  14, sm3b(0,0) );
@@ -558,10 +561,10 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  66, sm3b(1,1) );
 
 
-  MatrixSymD sm4(2);
+  MatrixSymS<2,double> sm4;
   sm4 = {{2},{4,3}};
 
-  MatrixSymD sm5a(2);
+  MatrixSymS<2,double> sm5a;
   sm5a = Transpose(m1)*sm4*m1;
   UT_ASSERT_EQUALS(  53, sm5a(0,0) );
   UT_ASSERT_EQUALS(  80, sm5a(0,1) );
@@ -581,7 +584,7 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS( 120, sm5a(1,1) );
 
 
-  MatrixSymD sm5b(2);
+  MatrixSymS<2,double> sm5b;
   sm5b = m1*sm4*Transpose(m1);
   UT_ASSERT_EQUALS(  30, sm5b(0,0) );
   UT_ASSERT_EQUALS(  70, sm5b(0,1) );
@@ -607,7 +610,7 @@ UT_TEST_CASE( ATransposeA_ctor )
   sm1b = {{5},
           {6, 7}};
 
-  MatrixSymD sm6(2);
+  MatrixSymS<2,double> sm6;
   sm6 = sm1a*sm1b*sm1a;
 
   UT_ASSERT_EQUALS(  155, sm6(0,0) );
@@ -629,7 +632,7 @@ UT_TEST_CASE( ATransposeA_ctor )
   UT_ASSERT_EQUALS(  216, sm6(1,0) );
   UT_ASSERT_EQUALS(  301, sm6(1,1) );
 
-  MatrixSymD sm7(2);
+  MatrixSymS<2,double> sm7;
   sm7 = sm1a*sm1a;
 
   UT_ASSERT_EQUALS( 13, sm7(0,0) );

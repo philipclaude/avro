@@ -32,7 +32,7 @@
 #include "tools/SANSTraitsPOD.h"
 #include "tools/SANSException.h"
 
-namespace numpack 
+namespace numpack
 {
 namespace DLA
 {
@@ -496,6 +496,7 @@ MatrixSymS<M,T>::assign2( const Expr& Tree )
   for (int i = 0; i < M; i++)
     for (int j = 0; j < i+1; j++)
       (*this)(i,j) = tmp(i,j);
+  printf("assign2!!\n");
 
   return *this;
 }
@@ -593,7 +594,7 @@ MatrixSymS<M,T>::subAssign3( const Expr& Tree )
 
 //-----------------------------------------------------------------------------
 // Element-wise lazy expression assignment and binary accumulation
-
+#if 1
 template <int M, class T>
 template< class Expr >
 inline MatrixSymS<M,T>&
@@ -604,11 +605,14 @@ MatrixSymS<M,T>::operator=( const MatrixSType<Expr, true, false>& r )
   //BOOST_MPL_ASSERT_RELATION( M, ==, Expr::M );
   //BOOST_MPL_ASSERT_RELATION( N, ==, Expr::N );
 
+  printf("here!!!\n");
+
   for ( int i = 0; i < SIZE; i++ )
     data[i] = Tree.value(i);
 
   return *this;
 }
+#endif
 
 template <int M, class T>
 template< class Expr>
@@ -883,6 +887,6 @@ operator>>( std::istream &in, MatrixSymS<M,T>& m )
 
 
 } //namespace DLA
-} //namespace numpack 
+} //namespace numpack
 
 #endif // MATRIXSYMS_CLASS_H

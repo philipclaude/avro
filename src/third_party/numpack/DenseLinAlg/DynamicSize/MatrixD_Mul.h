@@ -17,7 +17,7 @@
 #include "MatMul/MatMul_Native.h"
 
 
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -258,6 +258,8 @@ public:
     OpMulD_impl<TL, TR, T>::plus( ML, MR, sgn, res );
   }
 
+  /*
+  //removed by pcaplan sept 21, 2019 (doesn't seem to be used in matrixs_mul.h)
   template< class MatrixR >
   inline void value(const Real sgn, MatrixDTuple<MatrixR>& tuple) const
   {
@@ -276,6 +278,7 @@ public:
     OpMulD_impl<TL, TR, TR>::plus( ML, MR, sgn, res );
     tuple = res;
   }
+  */
 
   operator TL() const
   {
@@ -547,7 +550,7 @@ operator*(const MatrixDType<ExprL, useRFL>& eL, const OpMulDScalar<ExprR, useRFR
 }
 
 } //namespace DLA
-} //namespace numpack 
+} //namespace numpack
 
 
 #endif //MATRIXD_MUL_H

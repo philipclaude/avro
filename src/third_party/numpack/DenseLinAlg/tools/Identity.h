@@ -6,7 +6,7 @@
 #ifndef DENSEMATRIX_IDENTITY_H
 #define DENSEMATRIX_IDENTITY_H
 
-namespace numpack 
+namespace numpack
 {
 namespace DLA
 {
@@ -18,7 +18,7 @@ struct Identity
 };
 
 } //namespace DLA
-} //namespace numpack 
+} //namespace numpack
 
 
 #endif //DENSEMATRIX_IDENTITY_H

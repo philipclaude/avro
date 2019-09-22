@@ -127,72 +127,72 @@ public:
   template<class Expr> MatrixSymD& operator-=( const MatrixDType<Expr, true>& );
 
   // Operators for A^T*A
-  template<class T1>             MatrixSymD( const OpMulS< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { *this = tree; }
-  template<class T1> MatrixSymD& operator= ( const OpMulS< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return assign2(tree); }
-  template<class T1> MatrixSymD& operator+=( const OpMulS< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return addAssign2(tree); }
-  template<class T1> MatrixSymD& operator-=( const OpMulS< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return subAssign2(tree); }
+  template<class T1>             MatrixSymD( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { *this = tree; }
+  template<class T1> MatrixSymD& operator= ( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return assign2(tree); }
+  template<class T1> MatrixSymD& operator+=( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return addAssign2(tree); }
+  template<class T1> MatrixSymD& operator-=( const OpMulD< MatrixDTranspose<T1>, MatrixD<T1> >& tree ) { return subAssign2(tree); }
 
   // Operators for A*A^T
-  template<class T1>             MatrixSymD( const OpMulS< MatrixD<T1>, MatrixDTranspose<T1> >& tree ) { *this = tree; }
-  template<class T1> MatrixSymD& operator= ( const OpMulS< MatrixD<T1>, MatrixDTranspose<T1> >& tree ) { return assign2(tree); }
-  template<class T1> MatrixSymD& operator+=( const OpMulS< MatrixD<T1>, MatrixDTranspose<T1> >& tree ) { return addAssign2(tree); }
-  template<class T1> MatrixSymD& operator-=( const OpMulS< MatrixD<T1>, MatrixDTranspose<T1> >& tree ) { return subAssign2(tree); }
+  template<class T1>             MatrixSymD( const OpMulD< MatrixD<T1>, MatrixDTranspose<T1> >& tree ) { *this = tree; }
+  template<class T1> MatrixSymD& operator= ( const OpMulD< MatrixD<T1>, MatrixDTranspose<T1> >& tree ) { return assign2(tree); }
+  template<class T1> MatrixSymD& operator+=( const OpMulD< MatrixD<T1>, MatrixDTranspose<T1> >& tree ) { return addAssign2(tree); }
+  template<class T1> MatrixSymD& operator-=( const OpMulD< MatrixD<T1>, MatrixDTranspose<T1> >& tree ) { return subAssign2(tree); }
 
   // Operators for S*S, where S is a symmetric matrix
-  template<class T1>             MatrixSymD( const OpMulS< MatrixSymD<T1>, MatrixSymD<T1> >& tree ) { *this = tree; }
-  template<class T1> MatrixSymD& operator= ( const OpMulS< MatrixSymD<T1>, MatrixSymD<T1> >& tree ) { return assign2(tree); }
-  template<class T1> MatrixSymD& operator+=( const OpMulS< MatrixSymD<T1>, MatrixSymD<T1> >& tree ) { return addAssign2(tree); }
-  template<class T1> MatrixSymD& operator-=( const OpMulS< MatrixSymD<T1>, MatrixSymD<T1> >& tree ) { return subAssign2(tree); }
+  template<class T1>             MatrixSymD( const OpMulD< MatrixSymD<T1>, MatrixSymD<T1> >& tree ) { *this = tree; }
+  template<class T1> MatrixSymD& operator= ( const OpMulD< MatrixSymD<T1>, MatrixSymD<T1> >& tree ) { return assign2(tree); }
+  template<class T1> MatrixSymD& operator+=( const OpMulD< MatrixSymD<T1>, MatrixSymD<T1> >& tree ) { return addAssign2(tree); }
+  template<class T1> MatrixSymD& operator-=( const OpMulD< MatrixSymD<T1>, MatrixSymD<T1> >& tree ) { return subAssign2(tree); }
 
   // Operators for A^T*D*A
   template<class T1, class T2>
-              MatrixSymD( const OpMulS< OpMulS<MatrixDTranspose<T1>,MatrixDDiag<T2>>, MatrixD<T1> >& tree ) { *this = tree; }
+              MatrixSymD( const OpMulD< OpMulD<MatrixDTranspose<T1>,MatrixDDiag<T2>>, MatrixD<T1> >& tree ) { *this = tree; }
   template<class T1, class T2>
-  MatrixSymD& operator= ( const OpMulS< OpMulS<MatrixDTranspose<T1>,MatrixDDiag<T2>>, MatrixD<T1> >& tree ) { return assign3(tree); }
+  MatrixSymD& operator= ( const OpMulD< OpMulD<MatrixDTranspose<T1>,MatrixDDiag<T2>>, MatrixD<T1> >& tree ) { return assign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator+=( const OpMulS< OpMulS<MatrixDTranspose<T1>,MatrixDDiag<T2>>, MatrixD<T1> >& tree ) { return addAssign3(tree); }
+  MatrixSymD& operator+=( const OpMulD< OpMulD<MatrixDTranspose<T1>,MatrixDDiag<T2>>, MatrixD<T1> >& tree ) { return addAssign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator-=( const OpMulS< OpMulS<MatrixDTranspose<T1>,MatrixDDiag<T2>>, MatrixD<T1> >& tree ) { return subAssign3(tree); }
+  MatrixSymD& operator-=( const OpMulD< OpMulD<MatrixDTranspose<T1>,MatrixDDiag<T2>>, MatrixD<T1> >& tree ) { return subAssign3(tree); }
 
   // Operators for A*D*A^T
   template<class T1, class T2>
-              MatrixSymD( const OpMulS< OpMulS<MatrixD<T1>,MatrixDDiag<T2>>, MatrixDTranspose<T1> >& tree ) { *this = tree; }
+              MatrixSymD( const OpMulD< OpMulD<MatrixD<T1>,MatrixDDiag<T2>>, MatrixDTranspose<T1> >& tree ) { *this = tree; }
   template<class T1, class T2>
-  MatrixSymD& operator= ( const OpMulS< OpMulS<MatrixD<T1>,MatrixDDiag<T2>>, MatrixDTranspose<T1> >& tree ) { return assign3(tree); }
+  MatrixSymD& operator= ( const OpMulD< OpMulD<MatrixD<T1>,MatrixDDiag<T2>>, MatrixDTranspose<T1> >& tree ) { return assign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator+=( const OpMulS< OpMulS<MatrixD<T1>,MatrixDDiag<T2>>, MatrixDTranspose<T1> >& tree ) { return addAssign3(tree); }
+  MatrixSymD& operator+=( const OpMulD< OpMulD<MatrixD<T1>,MatrixDDiag<T2>>, MatrixDTranspose<T1> >& tree ) { return addAssign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator-=( const OpMulS< OpMulS<MatrixD<T1>,MatrixDDiag<T2>>, MatrixDTranspose<T1> >& tree ) { return subAssign3(tree); }
+  MatrixSymD& operator-=( const OpMulD< OpMulD<MatrixD<T1>,MatrixDDiag<T2>>, MatrixDTranspose<T1> >& tree ) { return subAssign3(tree); }
 
   // Operators for A^T*S*A, where S is a symmetric matrix
   template<class T1, class T2>
-              MatrixSymD( const OpMulS< OpMulS< MatrixDTranspose<T1>, MatrixSymD<T2>>, MatrixD<T1>>& tree ) { *this = tree; }
+              MatrixSymD( const OpMulD< OpMulD< MatrixDTranspose<T1>, MatrixSymD<T2>>, MatrixD<T1>>& tree ) { *this = tree; }
   template<class T1, class T2>
-  MatrixSymD& operator= ( const OpMulS< OpMulS< MatrixDTranspose<T1>, MatrixSymD<T2>>, MatrixD<T1>>& tree ) { return assign3(tree); }
+  MatrixSymD& operator= ( const OpMulD< OpMulD< MatrixDTranspose<T1>, MatrixSymD<T2>>, MatrixD<T1>>& tree ) { return assign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator+=( const OpMulS< OpMulS< MatrixDTranspose<T1>, MatrixSymD<T2>>, MatrixD<T1>>& tree ) { return addAssign3(tree); }
+  MatrixSymD& operator+=( const OpMulD< OpMulD< MatrixDTranspose<T1>, MatrixSymD<T2>>, MatrixD<T1>>& tree ) { return addAssign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator-=( const OpMulS< OpMulS< MatrixDTranspose<T1>, MatrixSymD<T2>>, MatrixD<T1>>& tree ) { return subAssign3(tree); }
+  MatrixSymD& operator-=( const OpMulD< OpMulD< MatrixDTranspose<T1>, MatrixSymD<T2>>, MatrixD<T1>>& tree ) { return subAssign3(tree); }
 
   // Operators for A*S*A^T, where S is a symmetric matrix
   template<class T1, class T2>
-              MatrixSymD( const OpMulS< OpMulS< MatrixD<T1>, MatrixSymD<T2>>, MatrixDTranspose<T1>>& tree ) { *this = tree; }
+              MatrixSymD( const OpMulD< OpMulD< MatrixD<T1>, MatrixSymD<T2>>, MatrixDTranspose<T1>>& tree ) { *this = tree; }
   template<class T1, class T2>
-  MatrixSymD& operator= ( const OpMulS< OpMulS< MatrixD<T1>, MatrixSymD<T2>>, MatrixDTranspose<T1>>& tree ) { return assign3(tree); }
+  MatrixSymD& operator= ( const OpMulD< OpMulD< MatrixD<T1>, MatrixSymD<T2>>, MatrixDTranspose<T1>>& tree ) { return assign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator+=( const OpMulS< OpMulS< MatrixD<T1>, MatrixSymD<T2>>, MatrixDTranspose<T1>>& tree ) { return addAssign3(tree); }
+  MatrixSymD& operator+=( const OpMulD< OpMulD< MatrixD<T1>, MatrixSymD<T2>>, MatrixDTranspose<T1>>& tree ) { return addAssign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator-=( const OpMulS< OpMulS< MatrixD<T1>, MatrixSymD<T2>>, MatrixDTranspose<T1>>& tree ) { return subAssign3(tree); }
+  MatrixSymD& operator-=( const OpMulD< OpMulD< MatrixD<T1>, MatrixSymD<T2>>, MatrixDTranspose<T1>>& tree ) { return subAssign3(tree); }
 
   // Operators for S0*S1*S0, where S0, S1 are symmetric matrices
   template<class T1, class T2>
-              MatrixSymD( const OpMulS< OpMulS< MatrixSymD<T1>, MatrixSymD<T2>>, MatrixSymD<T1>>& tree ) { *this = tree; }
+              MatrixSymD( const OpMulD< OpMulD< MatrixSymD<T1>, MatrixSymD<T2>>, MatrixSymD<T1>>& tree ) { *this = tree; }
   template<class T1, class T2>
-  MatrixSymD& operator= ( const OpMulS< OpMulS< MatrixSymD<T1>, MatrixSymD<T2>>, MatrixSymD<T1>>& tree ) { return assign3(tree); }
+  MatrixSymD& operator= ( const OpMulD< OpMulD< MatrixSymD<T1>, MatrixSymD<T2>>, MatrixSymD<T1>>& tree ) { return assign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator+=( const OpMulS< OpMulS< MatrixSymD<T1>, MatrixSymD<T2>>, MatrixSymD<T1>>& tree ) { return addAssign3(tree); }
+  MatrixSymD& operator+=( const OpMulD< OpMulD< MatrixSymD<T1>, MatrixSymD<T2>>, MatrixSymD<T1>>& tree ) { return addAssign3(tree); }
   template<class T1, class T2>
-  MatrixSymD& operator-=( const OpMulS< OpMulS< MatrixSymD<T1>, MatrixSymD<T2>>, MatrixSymD<T1>>& tree ) { return subAssign3(tree); }
+  MatrixSymD& operator-=( const OpMulD< OpMulD< MatrixSymD<T1>, MatrixSymD<T2>>, MatrixSymD<T1>>& tree ) { return subAssign3(tree); }
 
   // Operators for Cholesky inverse
   /*
@@ -253,7 +253,8 @@ public:
   //Lazy Expression Operators
   // Assign the value of this matrix to res
   template<class Tres>
-  inline void value(const T& sgn, MatrixD<Tres>& res) const
+  //pcaplan inline void value(const T& sgn, MatrixD<Tres>& res) const
+  inline void value(const T& sgn, MatrixDView<Tres>& res) const
   {
     if ( ID() == res.ID() && sgn == 1 ) return; //Assigning my this to this, nothing to do.
 
@@ -441,7 +442,7 @@ template <class T>
 inline const MatrixSymD<T>
 MatrixSymD<T>::operator-() const
 {
-  MatrixSymD<T> m;
+  MatrixSymD<T> m(N);
   for (int i = 0; i < SIZE; i++)
     m.data[i] = -data[i];
   return m;
@@ -530,9 +531,12 @@ inline MatrixSymD<T>&
 MatrixSymD<T>::assign2( const Expr& Tree )
 {
   //Make sure the expression is of the form A^T*A which creates a symmetric matrix
-  SANS_ASSERT( Tree.left().ID() == Tree.right().ID() );
+  //pcaplan SANS_ASSERT( Tree.left().ID() == Tree.right().ID() );
 
-  MatrixD<T> tmp;
+  m_ = Tree.m();
+  allocate();
+
+  MatrixD<T> tmp(m_,m_);
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
@@ -548,9 +552,12 @@ inline MatrixSymD<T>&
 MatrixSymD<T>::addAssign2( const Expr& Tree )
 {
   //Make sure the expression is of the form A^T*A which creates a symmetric matrix
-  SANS_ASSERT( Tree.left().ID() == Tree.right().ID() );
+  //pcaplan SANS_ASSERT( Tree.left().ID() == Tree.right().ID() );
 
-  MatrixD<T> tmp;
+  m_ = Tree.m();
+  allocate();
+
+  MatrixD<T> tmp(m_,m_);
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
@@ -566,9 +573,12 @@ inline MatrixSymD<T>&
 MatrixSymD<T>::subAssign2( const Expr& Tree )
 {
   //Make sure the expression is of the form A^T*A which creates a symmetric matrix
-  SANS_ASSERT( Tree.left().ID() == Tree.right().ID() );
+  //pcaplan SANS_ASSERT( Tree.left().ID() == Tree.right().ID() );
 
-  MatrixD<T> tmp;
+  m_ = Tree.m();
+  allocate();
+
+  MatrixD<T> tmp(m_,m_);
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
@@ -584,9 +594,12 @@ inline MatrixSymD<T>&
 MatrixSymD<T>::assign3( const Expr& Tree )
 {
   //Make sure the expression is of the form A^T*M*A which creates a symmetric matrix
-  SANS_ASSERT( Tree.left().left().ID() == Tree.right().ID() );
+  //pcaplan SANS_ASSERT( Tree.left().left().ID() == Tree.right().ID() );
 
-  MatrixD<T> tmp;
+  m_ = Tree.m();
+  allocate();
+
+  MatrixD<T> tmp(m_,m_);
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
@@ -602,9 +615,12 @@ inline MatrixSymD<T>&
 MatrixSymD<T>::addAssign3( const Expr& Tree )
 {
   //Make sure the expression is of the form A^T*M*A which creates a symmetric matrix
-  SANS_ASSERT( Tree.left().left().ID() == Tree.right().ID() );
+  //pcaplan SANS_ASSERT( Tree.left().left().ID() == Tree.right().ID() );
 
-  MatrixD<T> tmp;
+  m_ = Tree.m();
+  allocate();
+
+  MatrixD<T> tmp(m_,m_);
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
@@ -620,9 +636,12 @@ inline MatrixSymD<T>&
 MatrixSymD<T>::subAssign3( const Expr& Tree )
 {
   //Make sure the expression is of the form A^T*M*A which creates a symmetric matrix
-  SANS_ASSERT( Tree.left().left().ID() == Tree.right().ID() );
+  //pcaplan SANS_ASSERT( Tree.left().left().ID() == Tree.right().ID() );
 
-  MatrixD<T> tmp;
+  m_ = Tree.m();
+  allocate();
+
+  MatrixD<T> tmp(m_,m_);
   Tree.value(1., tmp);
 
   for (int i = 0; i < M; i++)
@@ -635,7 +654,6 @@ MatrixSymD<T>::subAssign3( const Expr& Tree )
 
 //-----------------------------------------------------------------------------
 // Element-wise lazy expression assignment and binary accumulation
-
 template <class T>
 template< class Expr >
 inline MatrixSymD<T>&
@@ -643,11 +661,18 @@ MatrixSymD<T>::operator=( const MatrixDType<Expr, true>& r )
 {
   const Expr& Tree = r.cast();
 
-  //BOOST_MPL_ASSERT_RELATION( M, ==, Expr::M );
-  //BOOST_MPL_ASSERT_RELATION( N, ==, Expr::N );
-
+  #if 0
   for ( int i = 0; i < SIZE; i++ )
     data[i] = Tree.value(i);
+  #else
+  m_ = r.m();
+  allocate();
+  MatrixD<T> tmp(r.m(),r.m());
+  Tree.value(1., tmp);
+  for (int i = 0; i < M; i++)
+    for (int j = 0; j < i+1; j++)
+      (*this)(i,j) = tmp(i,j);
+  #endif
 
   return *this;
 }
@@ -662,8 +687,18 @@ MatrixSymD<T>::operator+=( const MatrixDType<Expr, true>& r )
   //BOOST_MPL_ASSERT_RELATION( M, ==, Expr::M );
   //BOOST_MPL_ASSERT_RELATION( N, ==, Expr::N );
 
+  #if 0
   for ( int i = 0; i < SIZE; i++ )
     data[i] += Tree.value(i);
+  #else
+  m_ = r.m();
+  allocate();
+  MatrixD<T> tmp(r.m(),r.m());
+  Tree.value(1., tmp);
+  for (int i = 0; i < M; i++)
+    for (int j = 0; j < i+1; j++)
+      (*this)(i,j) += tmp(i,j);
+  #endif
 
   return *this;
 }
@@ -678,8 +713,18 @@ MatrixSymD<T>::operator-=( const MatrixDType<Expr, true>& r )
   //BOOST_MPL_ASSERT_RELATION( M, ==, Expr::M );
   //BOOST_MPL_ASSERT_RELATION( N, ==, Expr::N );
 
+  #if 0
   for ( int i = 0; i < SIZE; i++ )
     data[i] -= Tree.value(i);
+  #else
+  m_ = r.m();
+  allocate();
+  MatrixD<T> tmp(r.m(),r.m());
+  Tree.value(1., tmp);
+  for (int i = 0; i < M; i++)
+    for (int j = 0; j < i+1; j++)
+      (*this)(i,j) -= tmp(i,j);
+  #endif
 
   return *this;
 }

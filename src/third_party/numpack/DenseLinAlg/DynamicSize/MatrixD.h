@@ -35,7 +35,7 @@
 #include "MatrixD_TupleExpression.h"
 #include "MatrixD_TupleMatrix.h"
 
-namespace numpack 
+namespace numpack
 {
 
 namespace SLA
@@ -266,6 +266,7 @@ protected:
 //----------------------------------------------------------------------------//
 template< class T >
 class MatrixD : public MatrixDView< T >
+//class MatrixD : public MatrixDType< MatrixD<T>, true >
 {
 public:
   typedef T node_type;
@@ -277,9 +278,10 @@ public:
   friend class MatrixD< DenseNonZeroPattern<T> >;
   typedef typename MatrixDView< T >::size_type size_type;
 
-protected:
   // Needed create MatrixD< MatrixD<T> >
   MatrixD() : MatrixDView<T>() {}
+
+protected:
 
   //Used in DLA::MatrixD to allocate an array of MatrixD
   MatrixD& operator=(const DenseNonZeroPattern<T>& nz)
@@ -939,7 +941,7 @@ operator>>( std::istream &in, MatrixDView<T>& M )
 }
 
 } //namespace DLA
-} //namespace numpack 
+} //namespace numpack
 
 
 #endif // MATRIXD_CLASS_H
