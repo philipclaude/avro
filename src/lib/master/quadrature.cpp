@@ -1,5 +1,7 @@
 #include "master/quadrature.h"
 
+#include <stdio.h>
+
 namespace ursa
 {
 
