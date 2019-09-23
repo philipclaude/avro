@@ -5,7 +5,7 @@ namespace ursa
 {
 
 template<typename T> class Data;
-template<typename type> class Topology; 
+template<typename type> class Topology;
 
 // a field of T's defined on a mesh with elements that have a master element M
 template<typename M,typename T>
@@ -13,7 +13,7 @@ class Field
 {
 
 public:
-  Field( const M& master );
+  Field( Topology<M>& topology );
 
 
   T& eval();
@@ -21,6 +21,7 @@ public:
 
 protected:
   Data<T> data_;
+  Topology<M>& topology_;
 
 };
 

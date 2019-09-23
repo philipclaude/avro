@@ -5,13 +5,14 @@ set(CMAKE_CXX_FLAGS ${CXX_FLAGS0})
 # add all the source files
 add_source_directories(SOURCES "Source Files" .)
 add_source_directories(SOURCES "Source Files\\common" lib/common)
-add_source_directories(SOURCES "Source Files\\mesh" lib/mesh)
-add_source_directories(SOURCES "Source Files\\library" lib/library)
 add_source_directories(SOURCES "Source Files\\geometrics" lib/geometrics)
+add_source_directories(SOURCES "Source Files\\graphics" lib/graphics)
+add_source_directories(SOURCES "Source Files\\library" lib/library)
+add_source_directories(SOURCES "Source Files\\mesh" lib/master)
+add_source_directories(SOURCES "Source Files\\mesh" lib/mesh)
 add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
 
-add_source_directories(SOURCES "Source Files\\graphics" lib/graphics)
 
 # add the bin sources but remove the ursa.cpp (main) executable source
 add_source_directories(SOURCES "Source Files\\bin" bin)
