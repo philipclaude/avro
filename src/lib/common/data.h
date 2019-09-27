@@ -3,6 +3,7 @@
 
 #include "common/types.h"
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
