@@ -6,18 +6,20 @@ namespace ursa
 
 template<typename Basis>
 void
-Simplex<Basis>::precalculate()
+SimplexBase<Basis>::precalculate()
 {
   ursa_implement;
 }
 
 template<typename Basis>
 void
-Simplex<Basis>::loadQuadrature( Quadrature& quadrature )
+SimplexBase<Basis>::loadQuadrature( Quadrature& quadrature )
 {
   quadrature.retrieve(xquad_,wquad_);
 }
 
-template class Master< Simplex<LagrangeSimplex> >;
+template class SimplexBase<Lagrange>;
+template class SimplexBase<Bezier>;
+
 
 } // ursa

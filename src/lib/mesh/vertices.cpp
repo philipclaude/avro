@@ -1,8 +1,3 @@
-// ursa: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
 #include "common/array.h"
 #include "common/tools.h"
 #include "common/stringify.h"
@@ -101,10 +96,10 @@ Vertices::copy( Vertices& v , const bool erase , const bool ghosts) const
   for (index_t k=0;k<nb();k++)
   {
     v.body(k)   = body_[k];
-    v.setEntity( k , entity_[k] );
-    v.setMesh( k , mesh_[k] );
+    //v.setEntity( k , entity_[k] );
+    //v.setMesh( k , mesh_[k] );
     v.setFixed( k , fixed_[k] );
-    v.setParam( k , u(k) );
+    //v.setParam( k , u(k) );
   }
 }
 
@@ -127,13 +122,14 @@ Vertices::createGhost()
 	ghost_++;
 }
 
-#if 0
 int&
 Vertices::body( const index_t k )
 {
 	ursa_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
 	return body_[k];
 }
+
+#if 0
 
 void
 Vertices::setMesh( const index_t k , MeshBase* m )
@@ -699,6 +695,8 @@ Vertices::fromJSON( const json& J , const Model* model )
   }
 }
 
+#endif
+
 void
 Vertices::clear()
 {
@@ -709,9 +707,5 @@ Vertices::clear()
   entity_.clear();
   ghost_ = 0;
 }
-
-template void Vertices::print( Topology<Simplex>& topology , index_t k ) const;
-
-#endif
 
 } // ursa

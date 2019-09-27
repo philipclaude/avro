@@ -14,6 +14,6 @@ Field<M,T>::Field( const Topology<M>& topology , int order ) :
 }
 
 
-template class Field< Master<LagrangeSimplex> ,real_t >;
+template class Field< Simplex<Lagrange> , real_t >;
 
 } // ursa

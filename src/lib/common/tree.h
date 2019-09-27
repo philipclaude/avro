@@ -1,6 +1,8 @@
 #ifndef URSA_LIB_COMMON_TREE_H_
 #define URSA_LIB_COMMON_TREE_H_
 
+#include "common/types.h"
+
 #include <memory>
 #include <vector>
 

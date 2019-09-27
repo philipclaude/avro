@@ -29,7 +29,7 @@ public:
 
 
 protected:
-  Master<M> master_;
+  M master_;
   Data<T> data_;
   const Topology<M>& topology_;
 

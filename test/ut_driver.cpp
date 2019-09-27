@@ -7,7 +7,7 @@
 #include "common/info.h"
 #include "common/process.h"
 
-typedef ursa::real REAL;
+typedef ursa::real_t REAL;
 //#include <tetgen1.5.0/predicates.h>
 
 //#include <triangle/predicates.h>

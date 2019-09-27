@@ -1,8 +1,3 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
 #ifndef URSA_MESH_TOPOLOGY_H_
 #define URSA_MESH_TOPOLOGY_H_
 
@@ -46,10 +41,10 @@ public:
   index_t& operator() ( const index_t k , const index_t j )
     { return Data<index_t>::operator()(k,j); }
 
-  virtual void getChildren( std::vector<TopologyBase*>& children ) const = 0;
+  /*virtual void getChildren( std::vector<TopologyBase*>& children ) const = 0;
   virtual void getPoints( std::vector<index_t>& p ) const = 0;
   virtual void getEdges( std::vector<index_t>& e , ClippingPlane* plane ) const = 0;
-  virtual void getTriangles( std::vector<index_t>& t , Vertices& v, std::vector<index_t>& parent , ClippingPlane* plane ) const = 0;
+  virtual void getTriangles( std::vector<index_t>& t , Vertices& v, std::vector<index_t>& parent , ClippingPlane* plane ) const = 0;*/
 
   const std::string& name() const { return name_; }
   void setName( const std::string& _name ) { name_ = _name; }
@@ -66,22 +61,31 @@ protected:
 
 
 template <typename type>
-class Topology : public Tree< Topology<type> >, public TopologyBase
+class _Topology : public Tree< _Topology<type> >, public TopologyBase
 {
 
 public:
-  typedef std::shared_ptr<Topology<type>> Topology_ptr;
+  typedef _Topology<type> Topology_t;
+  typedef std::shared_ptr<Topology_t> Topology_ptr;
 
-  Topology( Vertices& _vertices , const coord_t _number );
-  Topology( Vertices& _vertices , const coord_t _number , const coord_t _order );
-  Topology( Vertices& _vertices , const json& J );
+  using Tree<Topology_t>::nb_children;
+
+  _Topology( Vertices& _vertices , const coord_t _number );
+  _Topology( Vertices& _vertices , const coord_t _number , const coord_t _order );
+  _Topology( Vertices& _vertices , const json& J );
+
+  void do_something() {}
+
+
+  type master_;
 };
 
 
 template<typename Basis>
-class Topology< Master<Simplex<Basis>> >
+class Topology< Simplex<Basis> > : public _Topology< Simplex<Basis> >
 {
-  using Tree< Topology<Master<Simplex<Basis>>> >::nb_children;
+public:
+  Topology( Vertices& vertices );
 };
 
 }

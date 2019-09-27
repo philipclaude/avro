@@ -1,8 +1,3 @@
-// ursa: unstructured adaptation library
-// Copyright 2019-present, Philip Claude Caplan
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
 #ifndef URSA_COMMON_TOOLS_H_
 #define URSA_COMMON_TOOLS_H_
 
