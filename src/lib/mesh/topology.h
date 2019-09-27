@@ -59,13 +59,14 @@ protected:
   std::string name_;
 };
 
+template<typename type> class Topology;
 
 template <typename type>
-class _Topology : public Tree< _Topology<type> >, public TopologyBase
+class _Topology : public Tree<Topology<type> >, public TopologyBase
 {
 
 public:
-  typedef _Topology<type> Topology_t;
+  typedef Topology<type> Topology_t;
   typedef std::shared_ptr<Topology_t> Topology_ptr;
 
   using Tree<Topology_t>::nb_children;
@@ -74,18 +75,26 @@ public:
   _Topology( Vertices& _vertices , const coord_t _number , const coord_t _order );
   _Topology( Vertices& _vertices , const json& J );
 
-  void do_something() {}
+  Topology_t& child( index_t k ) { return Tree<Topology_t>::child(k); }
 
+  void do_something() {}
 
   type master_;
 };
-
 
 template<typename Basis>
 class Topology< Simplex<Basis> > : public _Topology< Simplex<Basis> >
 {
 public:
   Topology( Vertices& vertices );
+};
+
+template<>
+class Topology<ConvexPolytope> : public _Topology<ConvexPolytope>
+{
+
+private:
+  Data<int> facets_;
 };
 
 }

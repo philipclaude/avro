@@ -11,7 +11,7 @@ template<typename Basis>
 Topology< Simplex<Basis> >::Topology( Vertices& vertices ) :
   _Topology< Simplex<Basis> >(vertices,vertices.dim())
 {
-  printf("i'm a topology for %lu-simplices\n",this->master_.number());
+  printf("i'm a topology for %u-simplices\n",this->master_.number());
 }
 
 template class Topology< Simplex<Lagrange> >;

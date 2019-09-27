@@ -8,7 +8,7 @@ template<typename Basis>
 void
 SimplexBase<Basis>::precalculate()
 {
-  ursa_implement;
+  //ursa_implement;
 }
 
 template<typename Basis>

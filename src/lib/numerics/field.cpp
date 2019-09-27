@@ -15,5 +15,6 @@ Field<M,T>::Field( const Topology<M>& topology , int order ) :
 
 
 template class Field< Simplex<Lagrange> , real_t >;
+template class Field< ConvexPolytope , real_t >;
 
 } // ursa

@@ -84,8 +84,24 @@ public:
   void eval() {}
 };
 
-class Polytope : public Master
+class ConvexPolytope : public Master
 {
+
+public:
+  ConvexPolytope( coord_t number , coord_t order ) :
+    Master(number,order),
+    simplex_(number,order)
+  {
+    ursa_assert(order==1);
+  }
+
+  ConvexPolytope( coord_t number ) :
+    ConvexPolytope(number,1)
+  {}
+
+private:
+
+  Simplex<Lagrange> simplex_;
 
 };
 
