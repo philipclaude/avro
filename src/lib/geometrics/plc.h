@@ -30,7 +30,7 @@ private:
   coord_t num_;
   coord_t dim_;
 
-  numerics::MatrixD<real> basis_;
+  numerics::MatrixD<real_t> basis_;
 };
 
 } // PLC

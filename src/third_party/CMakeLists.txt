@@ -14,6 +14,10 @@ add_source_directories( TE_SOURCES "tiny expr source" tinyexpr )
 set_source_files_properties( ${TE_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( tinyexpr )
 
+add_source_directories( JSON_SOURCES "json source" json )
+set_source_files_properties( ${JSON_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
+include_directories( json )
+
 #add_source_directories( GMF_SOURCES "gmf source" libMeshb/libMeshb7 )
 #set_source_files_properties( ${GMF_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" TRANSMESH )
 #set_source_files_properties( ${GMF_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
@@ -37,4 +41,4 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLin
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/BlockLinAlg )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/BlockLinAlg/tools )
 
-add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${ANN_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} )
+add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} )

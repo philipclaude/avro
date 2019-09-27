@@ -1,4 +1,4 @@
-// ursa: unstructured adaptation library 
+// ursa: unstructured adaptation library
 // Copyright 2019-present, Philip Claude Caplan
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
@@ -13,7 +13,7 @@ namespace ursa
 
 #define UNUSED(x) (void)(x);
 
-real randomWithin( const real lo , const real hi );
+real_t randomWithin( const real_t lo , const real_t hi );
 int randomWithin( const int lo , const int hi );
 
 }

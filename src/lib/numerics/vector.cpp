@@ -31,7 +31,7 @@ Vector<T>::operator*( const T& a ) const
   return Y;
 }
 
-template class Vector<real>;
+template class Vector<real_t>;
 
 } // numerics
 

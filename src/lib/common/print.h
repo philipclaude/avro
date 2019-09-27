@@ -38,7 +38,7 @@ printValue( const int& x )
 
 template<>
 inline void
-printValue( const real& x )
+printValue( const real_t& x )
 {
     printf("%g ",x);
 }
@@ -70,7 +70,7 @@ tabbedPrint( const index_t nt , const char *fmt , ... )
 }
 
 template void printInline( const std::vector<index_t>& s , const std::string& name , const int id , const index_t nt );
-template void printInline( const std::vector<real>& s , const std::string& name , const int id , const index_t nt );
+template void printInline( const std::vector<real_t>& s , const std::string& name , const int id , const index_t nt );
 
 } // ursa
 

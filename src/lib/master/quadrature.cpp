@@ -22,7 +22,7 @@ ConicalProductQuadrature::define( const int order )
 }
 
 void
-ConicalProductQuadrature::retrieve( std::vector<real>& x , std::vector<real>& w )
+ConicalProductQuadrature::retrieve( std::vector<real_t>& x , std::vector<real_t>& w )
 {
   if (!defined_) define(order_);
 

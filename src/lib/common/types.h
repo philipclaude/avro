@@ -11,7 +11,7 @@ namespace ursa
 
 typedef unsigned short coord_t;
 typedef unsigned long  index_t;
-typedef double         real;
+typedef double        real_t;
 
 enum Sign {
 

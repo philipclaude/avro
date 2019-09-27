@@ -17,32 +17,32 @@ protected:
     numpack::DLA::VectorD<T>(dim)
   {}
 
-  Coord( real* x , coord_t dim ) :
+  Coord(real_t* x , coord_t dim ) :
     numpack::DLA::VectorD<T>(dim,x)
   {}
 
   coord_t dim() const { return numpack::DLA::VectorD<T>::m(); }
 };
 
-class ParaCoord : public Coord<real> {};
-class PhysCoord : public Coord<real> {};
+class ParaCoord : public Coord<real_t> {};
+class PhysCoord : public Coord<real_t> {};
 
-class HomCoord : public Coord<real>
+class HomCoord : public Coord<real_t>
 {
 public:
   HomCoord( coord_t dim ) :
-    Coord<real>( dim+1 )
+    Coord<real_t>( dim+1 )
   {}
 
-  HomCoord( real* x , coord_t dim ) :
-    Coord<real>( dim+1 )
+  HomCoord(real_t* x , coord_t dim ) :
+    Coord<real_t>( dim+1 )
   {
     for (coord_t d=0;d<dim;d++)
       this->operator()(d) = x[d];
     this->operator()(dim) = 1.0;
   }
 
-  coord_t dim() const { return numpack::DLA::VectorD<real>::m()-1; }
+  coord_t dim() const { return numpack::DLA::VectorD<real_t>::m()-1; }
 };
 
 template<typename T>
@@ -53,7 +53,7 @@ public:
     numpack::DLA::VectorD<T>(dim)
   {}
 
-  Gradient( real* x , coord_t dim ) :
+  Gradient(real_t* x , coord_t dim ) :
     numpack::DLA::VectorD<T>(dim,x)
   {}
 

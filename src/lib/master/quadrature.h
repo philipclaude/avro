@@ -12,7 +12,7 @@ class Quadrature
 {
 public:
   Quadrature( coord_t dim , const int order=-1 ); // default to max quad
-  virtual void retrieve( std::vector<real>& x , std::vector<real>& w ) = 0;
+  virtual void retrieve( std::vector<real_t>& x , std::vector<real_t>& w ) = 0;
   virtual void define( const int order ) = 0;
 
 protected:
@@ -32,7 +32,7 @@ public:
   using Quadrature::Quadrature;
 
   void define( const int order );
-  void retrieve( std::vector<real>& x , std::vector<real>& w );
+  void retrieve( std::vector<real_t>& x , std::vector<real_t>& w );
 };
 
 class GrundmannMollerQuadrature : public Quadrature
@@ -41,7 +41,7 @@ public:
   using Quadrature::Quadrature;
 
   void define( const int order );
-  void retrieve( std::vector<real>& x , std::vector<real>& w );
+  void retrieve( std::vector<real_t>& x , std::vector<real_t>& w );
 };
 
 } // ursa

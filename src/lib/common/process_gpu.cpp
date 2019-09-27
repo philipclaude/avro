@@ -273,9 +273,9 @@ terminate()
 {}
 
 template void add_kernel_arg( float* , index_t );
-template void add_kernel_arg( real* , index_t );
+template void add_kernel_arg(real_t* , index_t );
 template void add_kernel_arg( int* , index_t );
-template void retrieve_kernel_value(index_t,real*,index_t);
+template void retrieve_kernel_value(index_t,real_t*,index_t);
 template void retrieve_kernel_value(index_t,float*,index_t);
 template void retrieve_kernel_value(index_t,int*,index_t);
 

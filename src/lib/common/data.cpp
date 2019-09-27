@@ -530,7 +530,7 @@ Data<type>::setall( const type& value )
 }
 
 template class Data<index_t>;
-template class Data<real>;
+template class Data<real_t>;
 template class Data<int>;
 
 } // avro
