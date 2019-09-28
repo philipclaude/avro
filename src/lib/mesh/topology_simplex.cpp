@@ -7,14 +7,39 @@
 namespace ursa
 {
 
-template<typename Basis>
-Topology< Simplex<Basis> >::Topology( Vertices& vertices ) :
-  _Topology< Simplex<Basis> >(vertices,vertices.dim())
+/*\
+ * Lagrange simplex topology
+\*/
+Topology<Simplex<Lagrange>>::Topology( Vertices& vertices , const Topology<Master_t>& linear , coord_t order ) :
+  _Topology(vertices,linear.number(),order)
 {
-  printf("i'm a topology for %u-simplices\n",this->master_.number());
+  convert(linear);
 }
 
-template class Topology< Simplex<Lagrange> >;
+void
+Topology<Simplex<Lagrange>>::convert( const Topology<Master_t>& linear )
+{
+  printf("converting to order %u...\n",master_.order());
+}
 
+/*\
+ * Bezier simplex topology
+\*/
+Topology<Simplex<Bezier>>::Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange ) :
+  _Topology(vertices,lagrange.number()),
+  lagrange_(lagrange)
+{
+  convert();
+}
+
+void
+Topology<Simplex<Bezier>>::convert()
+{
+  printf("convert lagrange basis of %u-simplices...\n",lagrange_.number());
+  ursa_implement;
+}
+
+template class _Topology< Simplex<Lagrange> >;
+template class Tree< Topology< Simplex<Lagrange> > >;
 
 } // ursa

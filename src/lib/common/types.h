@@ -6,29 +6,26 @@
 #ifndef URSA_COMMON_TYPES_H_
 #define URSA_COMMON_TYPES_H_
 
+#ifndef nil
+#include <cstdlib>
+#define nil NULL
+#endif
+
 namespace ursa
 {
 
 typedef unsigned short coord_t;
 typedef unsigned long  index_t;
-typedef double        real_t;
+typedef double         real_t;
+typedef coord_t        coord_index_t;
 
-enum Sign {
-
-    NEGATIVE = -1,
-
-    ZERO = 0,
-
-    POSITIVE = 1
+enum Sign
+{
+  NEGATIVE = -1,
+  ZERO = 0,
+  POSITIVE = 1
 };
 
-typedef coord_t coord_index_t;
-
-}
-
-#ifndef nil
-#include <cstdlib>
-#define nil NULL
-#endif
+} // ursa
 
 #endif

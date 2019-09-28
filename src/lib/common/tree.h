@@ -1,6 +1,7 @@
 #ifndef URSA_LIB_COMMON_TREE_H_
 #define URSA_LIB_COMMON_TREE_H_
 
+#include "common/error.h"
 #include "common/types.h"
 
 #include <memory>
@@ -9,39 +10,35 @@
 namespace ursa
 {
 
-class TreeNodeBase
-{
-
-};
-
-template<typename T>
+template<typename Node_t>
 class Tree
 {
 public:
-  typedef std::shared_ptr<T> Child_ptr;
+  typedef std::shared_ptr<Node_t> Node_ptr;
 
   index_t nb_children() const { return child_.size(); }
 
-  void addChild( Child_ptr c )
-  {
-    child_.push_back(c);
-  }
+  void addChild( Node_ptr c );
 
-  void children( std::vector<Child_ptr>& c ) const;
-  void children( std::vector<T*>& c ) const;
+  void children( std::vector<Node_ptr>& c ) const;
+  void children( std::vector<Node_t*>& c ) const;
 
-  T* child_ptr( index_t k ) { return child_[k].get(); }
-  const T* child_ptr( index_t k ) const { return child_[k].get(); }
+  Node_t* child_ptr( index_t k ) { return child_[k].get(); }
+  const Node_t* child_ptr( index_t k ) const { return child_[k].get(); }
 
-  T* child_smptr( index_t k ) { return child_[k]; }
-  const T* child_smptr( index_t k ) const { return child_[k]; }
+  Node_ptr child_smptr( index_t k )
+    { ursa_assert(k<nb_children()); return child_[k]; }
+  const Node_ptr child_smptr( index_t k ) const
+    { ursa_assert(k<nb_children()); return child_[k]; }
 
-  T& child( index_t k ) { ursa_assert(k<nb_children()); return *child_[k].get(); }
-  const T& child( index_t k ) const { ursa_assert(k<nb_children()); return *child_[k].get(); }
+  Node_t& child( index_t k )
+    { ursa_assert(k<nb_children()); return *child_[k].get(); }
+  const Node_t& child( index_t k ) const
+    { ursa_assert(k<nb_children()); return *child_[k].get(); }
 
 private:
 
-  std::vector<Child_ptr> child_;
+  std::vector<Node_ptr> child_;
 };
 
 

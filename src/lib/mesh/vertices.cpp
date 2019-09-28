@@ -1,6 +1,4 @@
-#include "common/array.h"
 #include "common/tools.h"
-#include "common/stringify.h"
 
 //#include "geometry/body.h"
 //#include "geometry/entity.h"

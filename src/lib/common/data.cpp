@@ -1,6 +1,5 @@
-#include "common/array.h"
 #include "common/data.h"
-#include "common/print.h"
+#include "common/tools.h"
 
 #include <algorithm>
 

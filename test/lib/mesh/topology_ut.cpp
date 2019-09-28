@@ -13,12 +13,13 @@ UT_TEST_SUITE( TopologySuite )
 UT_TEST_CASE( simplex_tests )
 {
   Vertices vertices(3);
+  coord_t number = 3;
 
-  Topology< Simplex<Lagrange> > topology(vertices);
+  Topology< Simplex<Lagrange> > topology(vertices,number);
 
   topology.do_something();
 
-  std::shared_ptr< Topology<Simplex<Lagrange>> > leaf = std::make_shared<Topology<Simplex<Lagrange>>>(vertices);
+  std::shared_ptr< Topology<Simplex<Lagrange>> > leaf = std::make_shared<Topology<Simplex<Lagrange>>>(vertices,number);
   topology.addChild(leaf);
 
   Topology<Simplex<Lagrange>>& c = topology.child(0);

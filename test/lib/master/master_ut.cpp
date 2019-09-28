@@ -1,6 +1,6 @@
 #include "unit_tester.hpp"
 
-#include "master/master.h"
+#include "master/simplex.h"
 #include "master/quadrature.h"
 
 using namespace ursa;
