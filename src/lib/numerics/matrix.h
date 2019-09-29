@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <numpack/DenseLinAlg/DynamicSize/MatrixD.h>
+#include <numpack/DenseLinAlg/DynamicSize/MatrixSymD.h>
 
 namespace ursa
 {

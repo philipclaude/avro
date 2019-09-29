@@ -1,7 +1,8 @@
+#include "common/tree.hpp"
+
 #include "geometrics/egads.h"
 #include "geometrics/plc.h"
 #include "geometrics/primitive.h"
-#include "geometrics/primitive.hpp"
 
 #include "numerics/coordinate.h"
 
@@ -11,9 +12,18 @@ namespace ursa
 namespace geometrics
 {
 
-template class Primitive<EGADS::Object>;
-template class Primitive<PLC::Object>;
+Primitive::Primitive( coord_t number ) :
+  number_(number),
+  name_("unnamed")
+{}
+
+Primitive::Primitive( coord_t number , const std::string& name ) :
+  number_(number),
+  name_(name)
+{}
 
 } // geometry
+
+template class Tree<geometrics::Primitive>;
 
 } // ursa

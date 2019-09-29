@@ -23,6 +23,8 @@ public:
   void children( std::vector<Node_ptr>& c ) const;
   void children( std::vector<Node_t*>& c ) const;
 
+  bool above( const Node_t* node ) const;
+
   Node_t* child_ptr( index_t k ) { return child_[k].get(); }
   const Node_t* child_ptr( index_t k ) const { return child_[k].get(); }
 

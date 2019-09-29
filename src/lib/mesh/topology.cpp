@@ -5,7 +5,7 @@ namespace ursa
 {
 
 void
-TopologyBase::copy( TopologyBase& topology1 )
+TopologyHolder::copy( TopologyHolder& topology1 )
 {
   dummy_    = topology1.dummy();
   number_   = topology1.number();

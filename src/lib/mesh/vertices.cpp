@@ -1,18 +1,19 @@
 #include "common/tools.h"
 
 //#include "geometry/body.h"
-//#include "geometry/entity.h"
+#include "geometrics/primitive.h"
 //#include "geometry/model.h"
 
-//#include "mesh/geometrics.h"
-//#include "mesh/mesh.h"
 #include "mesh/topology.h"
 #include "mesh/vertices.h"
+
+#include "numerics/geometry.h"
 
 #include <egads.h>
 #include <json/json.hpp>
 
 #include <math.h>
+#include <unordered_map>
 
 namespace ursa
 {
@@ -25,8 +26,7 @@ Vertices::Vertices( const coord_t _dim ) :
 	x_.clear();
 	u_.clear();
 	body_.clear();
-	mesh_.clear();
-	entity_.clear();
+	primitive_.clear();
 	fixed_.clear();
 }
 
@@ -38,8 +38,7 @@ Vertices::Vertices( const coord_t _dim , const coord_t _udim ) :
 	x_.clear();
 	u_.clear();
 	body_.clear();
-	mesh_.clear();
-	entity_.clear();
+	primitive_.clear();
 	fixed_.clear();
 }
 
@@ -63,8 +62,7 @@ Vertices::create( const real_t* x )
   for (index_t i=0;i<udim_;i++)
     u_.push_back(INFTY);
   body_.push_back(0);
-  mesh_.push_back(NULL);
-  entity_.push_back(NULL);
+  primitive_.push_back(NULL);
   const bool f = false;
   fixed_.push_back(f);
 }
@@ -94,8 +92,7 @@ Vertices::copy( Vertices& v , const bool erase , const bool ghosts) const
   for (index_t k=0;k<nb();k++)
   {
     v.body(k)   = body_[k];
-    //v.setEntity( k , entity_[k] );
-    //v.setMesh( k , mesh_[k] );
+    //v.setPrimitive( k , primitive_[k] );
     v.setFixed( k , fixed_[k] );
     //v.setParam( k , u(k) );
   }
@@ -112,8 +109,7 @@ Vertices::createGhost()
 	u_.insert( u_.begin()+ghost_ , u0.begin() , u0.end() );
 
 	body_.insert( body_.begin() +ghost_ , ghost_ );
-	mesh_.insert( mesh_.begin() +ghost_ , NULL );
-	entity_.insert( entity_.begin() +ghost_ , NULL );
+	primitive_.insert( primitive_.begin() +ghost_ , NULL );
 	fixed_.insert( fixed_.begin() + ghost_ , false );
 
 	// increment the ghost counter
@@ -127,20 +123,13 @@ Vertices::body( const index_t k )
 	return body_[k];
 }
 
-#if 0
+#if 1
 
 void
-Vertices::setMesh( const index_t k , MeshBase* m )
+Vertices::setPrimitive( const index_t k , geometrics::Primitive* e )
 {
 	ursa_assert( k<nb() );
-	mesh_[k] = m;
-}
-
-void
-Vertices::setEntity( const index_t k , Entity* e )
-{
-	ursa_assert( k<nb() );
-	entity_[k] = e;
+	primitive_[k] = e;
 }
 
 void
@@ -179,13 +168,13 @@ Vertices::print( std::string pre , bool info ) const
 		if (info)
 		{
       std::string geo;
-  		if (entity_[k]!=NULL)
+  		if (primitive_[k]!=NULL)
   		{
-  			geo = "-"+entity_[k]->objectClassName()+"-"+entity_[k]->memberTypeName();
+  			geo = "-"+primitive_[k]->name();
   		}
   		else geo = "";
   		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<ghost_)? "GHST":"REAL",
-  						body_[k],(void*)entity_[k],geo.c_str());
+  						body_[k],(void*)primitive_[k],geo.c_str());
 			for (index_t d=0;d<udim_;d++)
 				printf(" %12.4e ",u(k)[d]);
 			printf(")");
@@ -204,32 +193,18 @@ Vertices::print( const index_t k , bool info ) const
 	if (info)
 	{
 		std::string geo;
-		if (entity_[k]!=NULL)
+		if (primitive_[k]!=NULL)
 		{
-			geo = "-"+entity_[k]->objectClassName()+"-"+entity_[k]->memberTypeName();
+			geo = "-"+primitive_[k]->name();
 		}
 		else geo = "";
 		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<ghost_)? "GHST":"REAL",
-						body_[k],(void*)entity_[k],geo.c_str());
+						body_[k],(void*)primitive_[k],geo.c_str());
 		for (index_t d=0;d<udim_;d++)
 			printf("%12.4e ",u(k)[d]);
 		printf(")");
 	}
 	printf("\n");
-}
-
-template<typename type>
-void
-Vertices::print( Topology<type>& topology , index_t v ) const
-{
-  print(v,true);
-  std::vector<index_t> ball;
-  topology.allWithSubset( {v} , ball );
-  for (index_t k=0;k<ball.size();k++)
-  {
-    std::string s = (topology.ghost(ball[k])) ? "ghost" : "real";
-    printInline( topology.get(ball[k]) , "\telement["+stringify(ball[k])+"] " + s );
-  }
 }
 
 void
@@ -241,8 +216,7 @@ Vertices::remove( const index_t k )
 	u_.erase( u_.begin()+udim_*k , u_.begin()+udim_*(k+1) );
   if (k<ghost_) ghost_--;
 	body_.erase( body_.begin() +k );
-	mesh_.erase( mesh_.begin() +k );
-	entity_.erase( entity_.begin() + k );
+	primitive_.erase( primitive_.begin() + k );
 	fixed_.erase( fixed_.begin() + k );
 }
 
@@ -260,7 +234,7 @@ Vertices::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 		// look for any vertices up to this one which are too close
 		for (index_t j=0;j<k;j++)
 		{
-			if (geometrics::distance(operator[](k),operator[](j),dim_)<tol)
+			if (numerics::distance(operator[](k),operator[](j),dim_)<tol)
 			{
 				idx[k] = j;
 				break;
@@ -297,7 +271,7 @@ Vertices::duplicates( std::vector<index_t>& idx , const Data<int>& F ) const
 			idx[k] = it->second;
 			printf("symbolic vertex exists! %lu -> %lu\n",k,it->second);
 
-			real d = geometrics::distance( (*this)[k] , (*this)[it->second] , dim_ );
+			real_t d = numerics::distance( (*this)[k] , (*this)[it->second] , dim_ );
 			ursa_assert( d < 1e-6 ); // pretty loose tolerance
 		}
 	}
@@ -318,20 +292,7 @@ Vertices::dump( const std::string& filename ) const
   fclose(fid);
 }
 
-void
-Vertices::intersectGeometry( index_t n0 , index_t n1 , Entity*& e ) const
-{
-  Entity* e0 = entity(n0);
-  Entity* e1 = entity(n1);
-
-  if (e0==NULL || e1==NULL)
-  {
-    e = NULL;
-    return;
-  }
-  e = e0->intersect(e1);
-}
-
+/*
 void
 Vertices::findGeometry( const Body& body , index_t ibody ,real_t tol )
 {
@@ -340,17 +301,17 @@ Vertices::findGeometry( const Body& body , index_t ibody ,real_t tol )
   std::vector<real_t> x(4,0.);
   coord_t dlim = (dim_<=3) ? dim_ : 4;
 
-  Entity *e;
-  std::vector<Entity*> e_candidates;
+  Primitive *e;
+  std::vector<Primitive*> e_candidates;
   std::vector<std::vector<real_t>> u_candidates;
 
   bool recheck;
 
-  // get the full list of entities
-  std::vector<Entity*> entities;
-  body.listTessellatableEntities(entities);
-  std::vector<real_t> distances( entities.size() , 0. );
-  std::vector<real_t> u( udim_*entities.size() );
+  // get the full list of primitives
+  std::vector<Primitive*> primitives;
+  body.listTessellatableEntities(primitives);
+  std::vector<real_t> distances( primitives.size() , 0. );
+  std::vector<real_t> u( udim_*primitives.size() );
 
   if (dim_ != 4) ursa_assert_msg(udim_ > 0, "udim = %u" , udim_ );
   std::vector<real_t> uk(udim_, INFTY);
@@ -365,25 +326,25 @@ Vertices::findGeometry( const Body& body , index_t ibody ,real_t tol )
     e_candidates.clear();
     u_candidates.clear();
 
-    // compute the distance to each entity
-    for (index_t j=0;j<entities.size();j++)
+    // compute the distance to each primitive
+    for (index_t j=0;j<primitives.size();j++)
     {
       // re-assign the original coordinates
       for (coord_t d=0;d<dlim;d++)
         x[d] = xk[d];
 
-      e = entities[j];
+      e = primitives[j];
 
-      // project to the entity and compute the distance
-      entities[j]->projectToGeometry( x.data() , uk.data() );
+      // project to the primitive and compute the distance
+      primitives[j]->projectToGeometry( x.data() , uk.data() );
 
-      distances[j] = geometrics::distance2( xk , x.data() , dim_ );
+      distances[j] = numerics::distance2( xk , x.data() , dim_ );
 
       #if 0
-      if (entities[j]->number()==2 && !entities[j]->tesseractGeometry())
+      if (primitives[j]->number()==2 && !primitives[j]->tesseractGeometry())
       {
         // better to use inTopology for surface fit
-        int icode = EG_inTopology( entities[j]->object() , xk );
+        int icode = EG_inTopology( primitives[j]->object() , xk );
         if (icode==EGADS_SUCCESS)
         {
           recheck = false;
@@ -403,13 +364,13 @@ Vertices::findGeometry( const Body& body , index_t ibody ,real_t tol )
     // no candidates, stay null (interior)
     if (e_candidates.size()==0)
     {
-      ursa_assert(entity_[k] == NULL);
+      ursa_assert(primitive_[k] == NULL);
 			printf("no candidiates for vertex %lu\n",k);
       continue;
     }
 
     // find the candidate with the lowest topological number
-    Entity* ek = e_candidates[0];
+    Primitive* ek = e_candidates[0];
     uk = u_candidates[0];
     for (index_t j=1;j<e_candidates.size();j++)
     {
@@ -419,17 +380,17 @@ Vertices::findGeometry( const Body& body , index_t ibody ,real_t tol )
         uk = u_candidates[j];
       }
     }
-    if (entity_[k] != NULL)
+    if (primitive_[k] != NULL)
     {
-      ursa_assert(ek == entity_[k]);
+      ursa_assert(ek == primitive_[k]);
     }
     else
-      setEntity(k,ek);
+      setPrimitive(k,ek);
 
     setParam(k,uk);
     body_[k] = ibody;
 
-    // get the entity coordinates
+    // get the primitive coordinates
     if (ek->tesseractGeometry())
     {
       // re-assign the original coordinates
@@ -442,7 +403,7 @@ Vertices::findGeometry( const Body& body , index_t ibody ,real_t tol )
       ek->evaluate( uk.data() , x.data() );
 
     // check the distance is lower than the tolerance
-   real_t d = geometrics::distance2(xk,x.data(),dim_);
+   real_t d = numerics::distance2(xk,x.data(),dim_);
     if (recheck) ursa_assert_msg( d < tol , "d = %1.16e" , d );
   }
 }
@@ -461,33 +422,33 @@ Vertices::projectToGeometry( Body& body )
   std::vector<real_t> x(4,0.);
   coord_t dlim = (dim_<=3) ? dim_ : 4;
 
-  std::vector<Entity*> e_candidates;
+  std::vector<Primitive*> e_candidates;
   std::vector<std::vector<real_t>> u_candidates;
 
-  // get the full list of entities
-  std::vector<Entity*> entities;
-  body.listTessellatableEntities(entities);
-  std::vector<real_t> distances( entities.size() , 0. );
-  std::vector<real_t> u( udim_*entities.size() );
+  // get the full list of primitives
+  std::vector<Primitive*> primitives;
+  body.listTessellatableEntities(primitives);
+  std::vector<real_t> distances( primitives.size() , 0. );
+  std::vector<real_t> u( udim_*primitives.size() );
 
   if (dim_ != 4) ursa_assert(udim_ > 0);
   std::vector<real_t> uk(udim_);
 
   for (index_t k=0;k<nb();k++)
   {
-    // find the closest entity with lowest topological dimension
+    // find the closest primitive with lowest topological dimension
     const real_t* xk = this->operator[](k);
 
-    // compute the distance to each entity
-    for (index_t j=0;j<entities.size();j++)
+    // compute the distance to each primitive
+    for (index_t j=0;j<primitives.size();j++)
     {
       // re-assign the original coordinates
       for (coord_t d=0;d<dlim;d++)
         x[d] = xk[d];
 
-      // project to the entity and compute the distance
-      entities[j]->projectToGeometry(x.data(), u.data() + udim_*j);
-      distances[j] = geometrics::distance2( xk , x.data() , dim_ );
+      // project to the primitive and compute the distance
+      primitives[j]->projectToGeometry(x.data(), u.data() + udim_*j);
+      distances[j] = numerics::distance2( xk , x.data() , dim_ );
 
     }
 
@@ -499,7 +460,7 @@ Vertices::projectToGeometry( Body& body )
     {
       if (distances[j]<dmin+1e-12)
       {
-        e_candidates.push_back( entities[j] );
+        e_candidates.push_back( primitives[j] );
         u_candidates.push_back( std::vector<real_t>(u.begin() + udim_*j, u.begin() + udim_*(j+1)) );
       }
     }
@@ -511,7 +472,7 @@ Vertices::projectToGeometry( Body& body )
 		}
 
     // find the candidate with the lowest topological number
-    Entity* ek = e_candidates[0];
+    Primitive* ek = e_candidates[0];
     uk = u_candidates[0];
     for (index_t j=1;j<e_candidates.size();j++)
     {
@@ -523,7 +484,7 @@ Vertices::projectToGeometry( Body& body )
     }
 
     //print(k,true);
-    setEntity(k,ek);
+    setPrimitive(k,ek);
     setParam(k,uk);
 
     // recall the projection (this is only so we don't have to save all the coordinates)
@@ -616,16 +577,7 @@ Vertices::computePartition( Data<index_t>& data ,
   }
 
 }
-
-void
-Vertices::reserve( index_t nvert )
-{
-  x_.reserve( nvert*dim_ );
-  u_.reserve( nvert*udim_ );
-  body_.reserve( nvert );
-  mesh_.reserve( nvert );
-  entity_.reserve( nvert );
-}
+*/
 
 void
 Vertices::toJSON( json& J ) const
@@ -638,12 +590,13 @@ Vertices::toJSON( json& J ) const
   std::vector<int> geometry(nb(),-1);
   for (index_t k=0;k<nb();k++)
   {
-    if (entity_[k]==NULL) continue;
-    geometry[k] = entity_[k]->bodyIndex();
+    if (primitive_[k]==NULL) continue;
+    geometry[k] = primitive_[k]->identifier();
   }
   J["geometry"] = geometry;
 }
 
+/*
 void
 Vertices::fromJSON( const json& J , const Model* model )
 {
@@ -654,44 +607,30 @@ Vertices::fromJSON( const json& J , const Model* model )
   u_ = U;
   ghost_ = J["nb_ghost"];
 
-  entity_.resize( nb() , NULL );
+  primitive_.resize( nb() , NULL );
   body_.resize( nb() );
-  mesh_.resize( nb() );
-  tag_.resize( nb() );
 
   if (model!=NULL)
   {
-    std::vector<Entity*> entities;
-    model->listEntities(entities);
+    std::vector<geometrics::Primitive*> primitives;
+    model->listEntities(primitives);
     std::vector<int> geometry = J.at("geometry");
     ursa_assert(geometry.size()==nb());
     for (index_t k=0;k<nb();k++)
     {
-      tag_[k] = 0;
       if (geometry[k]<0) continue;
-      tag_[k] = 1;
-      for (index_t j=0;j<entities.size();j++)
+      for (index_t j=0;j<primitives.size();j++)
       {
-        if ((int)entities[j]->bodyIndex()==geometry[j])
+        if ((int)primitives[j]->bodyIndex()==geometry[j])
         {
-          setEntity(k,entities[j]);
+          setPrimitive(k,primitives[j]);
           break;
         }
       }
     }
   }
-  else
-  {
-    std::vector<int> geometry = J.at("geometry");
-    for (index_t k=0;k<nb();k++)
-    {
-      if (geometry[k]<0)
-        tag_[k] = 0;
-      else
-        tag_[k] = 1;
-    }
-  }
 }
+*/
 
 #endif
 
@@ -701,8 +640,7 @@ Vertices::clear()
   x_.clear();
   u_.clear();
   body_.clear();
-  mesh_.clear();
-  entity_.clear();
+  primitive_.clear();
   ghost_ = 0;
 }
 

@@ -2,9 +2,8 @@
 #define URSA_MESH_VERTICES_H_
 
 #include "common/error.h"
+#include "common/json.h"
 #include "common/types.h"
-
-#include <json/json_fwd.hpp>
 
 #include <memory>
 #include <vector>
@@ -12,10 +11,13 @@
 namespace ursa
 {
 
-class MeshBase;
-class Entity;
 class Body;
 class Model;
+
+namespace geometrics
+{
+  class Primitive;
+}
 
 template<typename type> class Data;
 template<typename type> class Topology;
@@ -36,8 +38,7 @@ public:
   void setDimension( const coord_t _dim ) { dim_ = _dim; }
   void setParameterDimension( const coord_t _udim ) { udim_ = _udim; }
 
-  void reduce( const coord_t _dim );
-
+  // vertex creation
   void create( const std::vector<real_t>& x );
   void create( const real_t* x );
 
@@ -56,22 +57,18 @@ public:
 
   void print( std::string pre="\0" , bool info=false ) const;
   void print( const index_t k , bool info=false ) const;
-  template<typename type> void print( Topology<type>& topology , const index_t k ) const;
 
 	void clear();
 
   // read/write body function
   int& body( const index_t k );
-  void setMesh( const index_t k , MeshBase* m );
-  void setEntity( const index_t k , Entity* e );
+  void setPrimitive( const index_t k , geometrics::Primitive* e );
   void setParam( const index_t k , const std::vector<real_t>& u );
   void setParam( const index_t k , const real_t* u );
   void setFixed( const index_t k , bool f ) { fixed_[k] = f; }
-  void setTag( const index_t k , const index_t t ) { tag_[k] = t; }
 
-  Entity* entity( const index_t k ) const { return entity_[k]; }
+  geometrics::Primitive* primitive( const index_t k ) const { return primitive_[k]; }
   bool fixed( const index_t k ) const { return fixed_[k]; }
-  index_t tag( const index_t k ) const { return tag_[k]; }
 
   // boundary vertex query function
   bool boundary( const index_t k ) const;
@@ -91,8 +88,6 @@ public:
 
   void dump( const std::string& filename ) const;
 
-  void intersectGeometry( index_t n0 , index_t n1 , Entity*& e ) const;
-
   void findGeometry( const Body& body , index_t ibody=1 ,real_t tol=1e-12 );
   void findGeometry( const Model& model ,real_t tol=1e-12 );
   void projectToGeometry( Body& body );
@@ -110,8 +105,6 @@ public:
 
   const std::vector<real_t>& coordinates() const { return x_; }
 
-  void reserve( index_t nvert );
-
   void toJSON( json& J ) const;
   void fromJSON( const json& J , const Model* model=NULL );
 
@@ -124,13 +117,9 @@ protected:
 
   std::vector<real_t> x_; // vertex coordinates
   std::vector<real_t> u_; // geometry parameter coordinates
-  std::vector<MeshBase*> mesh_; // which mesh each vertex is on
-  std::vector<Entity*> entity_; // which geometric entity this vertex is on
+  std::vector<geometrics::Primitive*> primitive_; // which geometric primitive this vertex is on
   std::vector<int> body_; // which body this vertex lies on (<0 means it is a partition boundary, 0 = volume point, >0 means it is on a geometry body)
   std::vector<bool> fixed_; // flag if the vertex is fixed
-  std::vector<int> tag_; // tag of this vertex
-    // 0 : volume point
-    // > 0 : index of the corresponding geometry entity +1
 
   std::vector<index_t> periodic_; // which vertex coordinate this one is
                                   // periodic "with"

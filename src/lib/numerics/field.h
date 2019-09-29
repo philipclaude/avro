@@ -14,17 +14,21 @@ template<typename type> class Topology;
 class Parameter;
 class Coordinate;
 
-class FieldBase
+class FieldHolder
 {};
 
-// a field of T's defined on a mesh with elements that have a master element Master_t
 template<typename T>
-class _Field : public FieldBase
+class FieldBase : public FieldHolder
 {
 public:
   T& eval( index_t elem , const Parameter& u ) const;
   T& eval( index_t elem , const Coordinate& x ) const;
   T& eval( const Coordinate& x ) const;
+
+  void add( const T& x );
+  void remove( index_t k );
+
+  index_t nb() const { return data_.nb(); }
 
 protected:
   Data<T> data_;
@@ -32,22 +36,22 @@ protected:
 
 template<typename Master_t,typename T> class Field;
 
-template<typename Basis,typename T>
-class Field<Simplex<Basis>,T> : public _Field<T>
+template<typename Basis_t,typename T>
+class Field<Simplex<Basis_t>,T> : public FieldBase<T>
 {
-  typedef Simplex<Basis>    Master_t;
+  typedef Simplex<Basis_t>  Master_t;
   typedef Simplex<Lagrange> Shape_t;
 
 public:
-  Field( const Topology<Shape_t>& , coord_t order );
+  Field( const Topology<Shape_t>& topology , coord_t order );
 
 private:
-  const Master_t master_;
   const Topology<Shape_t>& topology_;
+  const Master_t master_;
 };
 
 template<typename T>
-class Field<Polytope,T> : public _Field<T>
+class Field<Polytope,T> : public FieldBase<T>
 {
   typedef Polytope Shape_t;
   typedef Polytope Master_t;

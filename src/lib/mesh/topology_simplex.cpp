@@ -11,7 +11,7 @@ namespace ursa
  * Lagrange simplex topology
 \*/
 Topology<Simplex<Lagrange>>::Topology( Vertices& vertices , const Topology<Master_t>& linear , coord_t order ) :
-  _Topology(vertices,linear.number(),order)
+ TopologyBase(vertices,linear.number(),order)
 {
   convert(linear);
 }
@@ -26,7 +26,7 @@ Topology<Simplex<Lagrange>>::convert( const Topology<Master_t>& linear )
  * Bezier simplex topology
 \*/
 Topology<Simplex<Bezier>>::Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange ) :
-  _Topology(vertices,lagrange.number()),
+  TopologyBase(vertices,lagrange.number()),
   lagrange_(lagrange)
 {
   convert();
@@ -39,7 +39,7 @@ Topology<Simplex<Bezier>>::convert()
   ursa_implement;
 }
 
-template class _Topology< Simplex<Lagrange> >;
+template class TopologyBase< Simplex<Lagrange> >;
 template class Tree< Topology< Simplex<Lagrange> > >;
 
 } // ursa

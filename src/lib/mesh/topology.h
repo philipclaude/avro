@@ -17,14 +17,14 @@ namespace ursa
 class Vertices;
 class ClippingPlane;
 
-class TopologyBase : public Data<index_t>
+class TopologyHolder : public Data<index_t>
 {
 public:
-  TopologyBase( Vertices& vertices , const coord_t number ) :
+  TopologyHolder( Vertices& vertices , const coord_t number ) :
     Data<index_t>(true) , vertices_(vertices) , number_(number)
   {}
 
-  virtual ~TopologyBase() {}
+  virtual ~TopologyHolder() {}
 
   Vertices& vertices() const { return vertices_; }
 
@@ -32,7 +32,7 @@ public:
   coord_t order() const { return order_; }
 
   // virtual functions for leaf
-  void copy( TopologyBase& topology );
+  void copy( TopologyHolder& topology );
 
   // index/cell retrieval
   std::vector<index_t> get( const index_t k ) const
@@ -64,7 +64,7 @@ template<typename Master_t> class Topology;
 template<typename Basis> class Topology<Simplex<Basis>>;
 
 template <typename type>
-class _Topology : public Tree<Topology<type> >, public TopologyBase
+class TopologyBase : public Tree<Topology<type> >, public TopologyHolder
 {
 
 public:
@@ -73,11 +73,11 @@ public:
 
   using Tree<Topology_t>::nb_children;
 
-  _Topology( Vertices& _vertices , const coord_t _number );
-  _Topology( Vertices& _vertices , const coord_t _number , const coord_t _order );
-  _Topology( Vertices& _vertices , const json& J );
+  TopologyBase( Vertices& _vertices , const coord_t _number );
+  TopologyBase( Vertices& _vertices , const coord_t _number , const coord_t _order );
+  TopologyBase( Vertices& _vertices , const json& J );
 
-  Topology_t& child( index_t k ) { return Tree<Topology_t>::child(k); }
+  Topology_t& topology( index_t k ) { return Tree<Topology_t>::child(k); }
 
   type& master() { return master_; }
   const type& master() const { return master_; }
@@ -96,12 +96,12 @@ public:
 
 
 template<>
-class Topology< Simplex<Lagrange> > : public _Topology<Simplex<Lagrange>>
+class Topology< Simplex<Lagrange> > : public TopologyBase<Simplex<Lagrange>>
 {
 public:
   typedef Simplex<Lagrange> Master_t;
-  using _Topology<Master_t>::_Topology;
-  using _Topology<Master_t>::master_;
+  using TopologyBase<Master_t>::TopologyBase;
+  using TopologyBase<Master_t>::master_;
 
   Topology( Vertices& vertices , const Topology<Master_t>& linear , coord_t order );
 
@@ -109,7 +109,7 @@ public:
 };
 
 template<>
-class Topology< Simplex<Bezier> > : public _Topology<Simplex<Bezier>>
+class Topology< Simplex<Bezier> > : public TopologyBase<Simplex<Bezier>>
 {
 public:
   Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange );
@@ -121,7 +121,7 @@ private:
 };
 
 template<>
-class Topology<Polytope> : public _Topology<Polytope>
+class Topology<Polytope> : public TopologyBase<Polytope>
 {
 private:
   Data<int> incidence_;

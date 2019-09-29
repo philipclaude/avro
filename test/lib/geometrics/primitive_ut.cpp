@@ -11,14 +11,14 @@ UT_TEST_SUITE(PrimitiveSuite)
 
 UT_TEST_CASE(test1)
 {
-  typedef geometrics::EGADS::Object GObject;
+  geometrics::EGADS::Context context;
+  ego obj;
+  geometrics::EGADS::Object prim(context,&obj);
 
-  GObject obj;
-  geometrics::Primitive<GObject> prim(obj);
+  numerics::Coordinate x(3),u(2);
+  prim.inverse(x,u);
 
-  numerics::Coordinate x(3);
-  prim.project(x);
-
+  prim.evaluate(u,x);
 }
 UT_TEST_CASE_END(test1)
 

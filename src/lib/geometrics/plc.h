@@ -24,7 +24,8 @@ class Object
 public:
   Object( coord_t num , coord_t dim );
 
-  void project( numerics::Coordinate& x ) const {}
+  void inverse( numerics::Coordinate& x , numerics::Coordinate& u ) const;
+  void evaluate( const numerics::Coordinate& u , numerics::Coordinate& p ) const;
 
 private:
   coord_t num_;
