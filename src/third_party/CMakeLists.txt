@@ -21,6 +21,7 @@ include_directories( json )
 set( GLFW_SOURCES )
 if (URSA_BUILTIN_GLFW)
 	add_subdirectory( glfw )
+	include_directories( glfw/include )
 endif()
 
 set( GLAD_SOURCES )
