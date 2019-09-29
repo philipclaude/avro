@@ -6,9 +6,9 @@
 #ifndef SANS_TRANSPOSETRAITS_H
 #define SANS_TRANSPOSETRAITS_H
 
-#include "numpack/DenseLinAlg/DynamicSize/MatrixD_Type.h"
-#include "numpack/DenseLinAlg/StaticSize/MatrixS_Type.h"
-#include "numpack/SparseLinAlg/SparseLinAlg_Type.h"
+#include "numpack/dense/dynamic/MatrixD_Type.h"
+#include "numpack/dense/static/MatrixS_Type.h"
+#include "numpack/sparse/sparse_Type.h"
 #include "numpack/types/SurrealS_Type.h"
 
 namespace numpack 

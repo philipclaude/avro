@@ -1,9 +1,16 @@
 #ifndef URSA_LIB_NUMERICS_FIELD_H_
 #define URSA_LIB_NUMERICS_FIELD_H_
 
+#include "common/json.h"
 #include "common/types.h"
 
 #include "master/master.h"
+#include "master/polytope.h"
+#include "master/simplex.h"
+
+#include <map>
+#include <string>
+#include <vector>
 
 namespace ursa
 {
@@ -15,7 +22,10 @@ class Parameter;
 class Coordinate;
 
 class FieldHolder
-{};
+{
+private:
+//  const TopologyHolder& topology_;
+};
 
 template<typename T>
 class FieldBase : public FieldHolder
@@ -62,6 +72,16 @@ public:
 private:
   const Topology<Shape_t>& topology_;
   const Master_t master_;
+};
+
+class Fields
+{
+
+public:
+    Fields() {}
+    Fields( const json& J );
+
+    void fromJSON( const json& J );
 };
 
 

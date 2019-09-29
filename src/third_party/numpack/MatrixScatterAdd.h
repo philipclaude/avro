@@ -10,8 +10,8 @@
 
 #include "tools/SANSException.h"
 #include "TransposeTraits.h"
-#include "DenseLinAlg/DynamicSize/MatrixD_Type.h"
-#include "SparseLinAlg/SparseLinAlg_Type.h"
+#include "dense/dynamic/MatrixD_Type.h"
+#include "sparse/sparse_Type.h"
 
 namespace numpack 
 {

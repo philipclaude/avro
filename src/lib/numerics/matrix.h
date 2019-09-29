@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include <numpack/DenseLinAlg/DynamicSize/MatrixD.h>
-#include <numpack/DenseLinAlg/DynamicSize/MatrixSymD.h>
+#include <numpack/dense/dynamic/MatrixD.h>
+#include <numpack/dense/dynamic/MatrixSymD.h>
 
 namespace ursa
 {

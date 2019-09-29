@@ -12,6 +12,7 @@ option(URSA_WITH_MPI "compile for distributed computing support" false)
 option(URSA_RUN_WITH_MPI "run with mpi. might be difficult to debug with mpirun" false)
 option(URSA_WITH_FPG "compile FPG needed to make new predicates" false)
 set(URSA_TEST_DATA "data/" CACHE STRING "location for ursa test files relative to test/" )
+set(URSA_WITH_GL "option to compile OpenGL-based visualizer (along with WebGL-based one)" true)
 
 
 # PkgConfig is used by many Finds/*.cmake
@@ -43,6 +44,8 @@ if (URSA_WITH_MPI)
   include(cmake/FindMPI.cmake)
   include(cmake/FindPARMETIS.cmake)
 endif()
+
+include(cmake/FindGraphics.cmake)
 
 # compiler flags
 include(cmake/flags.cmake)

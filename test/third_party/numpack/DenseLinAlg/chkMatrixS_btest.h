@@ -6,9 +6,9 @@
 #ifndef CHKMATRIXS_BTEST_H
 #define CHKMATRIXS_BTEST_H
 
-#include "numpack/DenseLinAlg/StaticSize/MatrixS.h"
-#include "numpack/DenseLinAlg/StaticSize/MatrixSymS.h"
-#include "numpack/DenseLinAlg/StaticSize/VectorS.h"
+#include "numpack/dense/static/MatrixS.h"
+#include "numpack/dense/static/MatrixSymS.h"
+#include "numpack/dense/static/VectorS.h"
 
 //----------------------------------------------------------------------------//
 template< class T, class Int>

@@ -12,18 +12,10 @@ namespace ursa
 namespace graphics
 {
 
-template<typename Framework>
 class Plotter
 {
 
-
-
-private:
-  Server<Framework> server_;
-  std::vector< Client<Framework> > client_;
-
 };
-
 
 } // graphics
 

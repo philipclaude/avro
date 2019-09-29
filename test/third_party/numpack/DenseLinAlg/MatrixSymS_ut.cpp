@@ -8,10 +8,10 @@
 
 #include "unit_tester.hpp"
 
-#include "numpack/DenseLinAlg/StaticSize/MatrixS.h"
-//#include "numpack/DenseLinAlg/StaticSize/MatrixS_Sub.h"
-#include "numpack/DenseLinAlg/StaticSize/MatrixSymS.h"
-#include "numpack/DenseLinAlg/StaticSize/VectorS.h"
+#include "numpack/dense/static/MatrixS.h"
+//#include "numpack/dense/static/MatrixS_Sub.h"
+#include "numpack/dense/static/MatrixSymS.h"
+#include "numpack/dense/static/VectorS.h"
 
 #include "chkMatrixD_btest.h"
 
@@ -1569,7 +1569,7 @@ BOOST_AUTO_TEST_CASE( matrix_vector_multiply2 )
 BOOST_AUTO_TEST_CASE( IO )
 {
   //Set the 2nd argument to false to regenerate the pattern file
-  output_test_stream output( "IO/DenseLinAlg/MatrixSymS_pattern.txt", true );
+  output_test_stream output( "IO/dense/MatrixSymS_pattern.txt", true );
 
   MatrixSymS2 m = Identity();
 

@@ -8,10 +8,10 @@
 
 #include "tools/SANSnumerics.h"
 
-#include "DenseLinAlg/DynamicSize/MatrixD_Type.h"
-#include "DenseLinAlg/StaticSize/MatrixS_Type.h"
-#include "BlockLinAlg/BlockLinAlg_Type.h"
-#include "SparseLinAlg/SparseLinAlg_Type.h"
+#include "dense/dynamic/MatrixD_Type.h"
+#include "dense/static/MatrixS_Type.h"
+#include "block/block_Type.h"
+#include "sparse/sparse_Type.h"
 
 namespace numpack 
 {

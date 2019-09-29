@@ -1,7 +1,7 @@
 include_directories( ${CMAKE_SOURCE_DIR}/test )
 
 # add the unit tests in the subdirectories
-add_test_files( TEST_FILES "ut" numpack/DenseLinAlg )
+add_test_files( TEST_FILES "ut" numpack/dense )
 
 # the master unit test file
 set( MASTER_UNIT ${CMAKE_SOURCE_DIR}/test/ut_driver.cpp )

@@ -6,8 +6,8 @@
 #ifndef SANSTRAITSSCALAR_H
 #define SANSTRAITSSCALAR_H
 
-#include "numpack/DenseLinAlg/StaticSize/MatrixS_Type.h"
-#include "numpack/DenseLinAlg/DynamicSize/MatrixD_Type.h"
+#include "numpack/dense/static/MatrixS_Type.h"
+#include "numpack/dense/dynamic/MatrixD_Type.h"
 
 namespace numpack 
 {

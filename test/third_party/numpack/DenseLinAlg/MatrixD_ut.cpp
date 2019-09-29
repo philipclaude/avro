@@ -5,9 +5,9 @@
 
 #include "unit_tester.hpp"
 
-#include "numpack/DenseLinAlg/DynamicSize/MatrixD.h"
-#include "numpack/DenseLinAlg/DynamicSize/MatrixD_Sub.h"
-#include "numpack/DenseLinAlg/StaticSize/MatrixS.h"
+#include "numpack/dense/dynamic/MatrixD.h"
+#include "numpack/dense/dynamic/MatrixD_Sub.h"
+#include "numpack/dense/static/MatrixS.h"
 
 #include "chkMatrixD_btest.h"
 
@@ -45,7 +45,7 @@ template class OpMulDFactor< OpMulDScalar<Mat, false>, Mat >;
 }
 
 //############################################################################//
-UT_TEST_SUITE( DenseLinAlg_MatrixD )
+UT_TEST_SUITE( dense_MatrixD )
 
 //----------------------------------------------------------------------------//
 UT_TEST_CASE( MatrixD_ctor )
@@ -1592,4 +1592,4 @@ UT_TEST_CASE_END( MatrixD_sub_matrix )
 
 
 //############################################################################//
-UT_TEST_SUITE_END(DenseLinAlg_MatrixD)
+UT_TEST_SUITE_END(dense_MatrixD)

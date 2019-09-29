@@ -25,20 +25,20 @@ include_directories( json )
 
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/tools )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/tools )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize/Eigen )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize/lapack )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/DynamicSize/MatMul )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/dynamic )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/dynamic/Eigen )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/dynamic/lapack )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/dynamic/MatMul )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/StaticSize )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/StaticSize/Eigen )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/StaticSize/MatMul )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/DenseLinAlg/StaticSize/SVD )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/static )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/static/Eigen )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/static/MatMul )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/static/SVD )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/BlockLinAlg )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/BlockLinAlg/tools )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
 
 add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} )

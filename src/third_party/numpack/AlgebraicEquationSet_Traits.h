@@ -8,13 +8,13 @@
 
 #include "AlgebraicEquationSetBase.h"
 
-#include "numpack/SparseLinAlg/SparseMatrix_CRS.h"
-#include "numpack/SparseLinAlg/SparseVector.h"
-#include "numpack/SparseLinAlg/SparseNonZeroPattern.h"
+#include "numpack/sparse/SparseMatrix_CRS.h"
+#include "numpack/sparse/SparseVector.h"
+#include "numpack/sparse/SparseNonZeroPattern.h"
 
-#include "numpack/DenseLinAlg/DynamicSize/MatrixD.h"
-#include "numpack/DenseLinAlg/DynamicSize/VectorD.h"
-#include "numpack/DenseLinAlg/DynamicSize/MatrixD_NonZeroPattern.h"
+#include "numpack/dense/dynamic/MatrixD.h"
+#include "numpack/dense/dynamic/VectorD.h"
+#include "numpack/dense/dynamic/MatrixD_NonZeroPattern.h"
 
 namespace numpack 
 {
