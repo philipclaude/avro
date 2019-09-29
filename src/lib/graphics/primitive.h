@@ -46,10 +46,6 @@ public:
   void write();
 
 private:
-  class ShaderProgram
-  {
-
-  };
 
 };
 

@@ -18,6 +18,17 @@ add_source_directories( JSON_SOURCES "json source" json )
 set_source_files_properties( ${JSON_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( json )
 
+set( GLFW_SOURCES )
+if (URSA_BUILTIN_GLFW)
+	add_subdirectory( glfw )
+endif()
+
+set( GLAD_SOURCES )
+if (URSA_WITH_GL)
+	add_source_directories( GLAD_SOURCES "glad source" glad/src )
+	include_directories( glad/include )
+endif()
+
 #add_source_directories( GMF_SOURCES "gmf source" libMeshb/libMeshb7 )
 #set_source_files_properties( ${GMF_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" TRANSMESH )
 #set_source_files_properties( ${GMF_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
@@ -41,4 +52,4 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
 
-add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} )
+add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLFW_SOURCES} ${GLAD_SOURCES} )

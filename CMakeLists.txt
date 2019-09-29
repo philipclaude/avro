@@ -1,9 +1,20 @@
 cmake_minimum_required(VERSION 2.8.8)
 
+# this allows setting the version number
+if (POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+endif()
+
 # setup libraries and build type
 include(cmake/setup.cmake)
 include(cmake/compiler.cmake)
-project(ursa)
+project(ursa VERSION 1.0)
+
+
+
+if (POLICY CMP0077)
+    cmake_policy(SET CMP0077 NEW)
+endif()
 
 # default options
 option(URSA_STATIC_LINK_CXX "statically link to c++ libraries (probably because you're using voyager)" false)
@@ -68,7 +79,7 @@ include(cmake/coverage.cmake)
 
 set(URSA_VERSION_MAJOR 1)
 set(URSA_VERSION_MINOR 0)
-set(URSA_VERSION_PATCH 1)
+set(URSA_VERSION_PATCH 0)
 set(URSA_VERSION ${URSA_VERSION_MAJOR}.${URSA_VERSION_MINOR}.${URSA_VERSION_PATCH})
 
 # Determine the current build date
