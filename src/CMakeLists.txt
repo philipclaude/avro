@@ -30,11 +30,11 @@ set_target_properties( ursa_static PROPERTIES OUTPUT_NAME ursa CLEAN_DIRECT_OUTP
 # create a target to build both shared and static libraries
 add_custom_target( ursa_lib DEPENDS ursa_shared ursa_static )
 
-include_directories( lib/numerics )
-
 # add include directories for third party softwares
 include_directories( ${ESP_INCLUDE_DIRS} )
 include_directories( ${NLOPT_INCLUDE_DIRS} )
+include_directories( ${THIRD_PARTY_INCLUDE} )
+message( STATUS ${THIRD_PARTY_INCLUDE} )
 
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )

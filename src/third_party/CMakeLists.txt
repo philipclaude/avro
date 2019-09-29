@@ -2,6 +2,8 @@ if (URSA_WITH_FPG)
 	add_subdirectory(PCK/fpg)
 endif()
 
+set( THIRD_PARTY_INCLUDE PARENT_SCOPE )
+
 #add_source_directories( TET_SOURCES "tetgen source" tetgen1.5.0 )
 #set_source_files_properties( ${TET_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 #set_source_files_properties( ${TET_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" TETLIBRARY )
@@ -18,16 +20,17 @@ add_source_directories( JSON_SOURCES "json source" json )
 set_source_files_properties( ${JSON_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( json )
 
-set( GLFW_SOURCES )
 if (URSA_BUILTIN_GLFW)
 	add_subdirectory( glfw )
-	include_directories( glfw/include )
+	set( THIRD_PARTY_INCLUDE ${THIRD_PARTY_INCLUDE} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
+	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
 endif()
 
 set( GLAD_SOURCES )
 if (URSA_WITH_GL)
 	add_source_directories( GLAD_SOURCES "glad source" glad/src )
-	include_directories( glad/include )
+	set( THIRD_PARTY_INCLUDE ${THIRD_PARTY_INCLUDE} ${CMAKE_SOURCE_DIR}/src/third_party/glad/include PARENT_SCOPE )
+	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
 endif()
 
 #add_source_directories( GMF_SOURCES "gmf source" libMeshb/libMeshb7 )
@@ -53,4 +56,4 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
 
-add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLFW_SOURCES} ${GLAD_SOURCES} )
+add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} )
