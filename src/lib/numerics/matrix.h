@@ -6,6 +6,9 @@
 #include <numpack/dense/dynamic/MatrixD.h>
 #include <numpack/dense/dynamic/MatrixSymD.h>
 
+#include <numpack/dense/static/MatrixS.h>
+#include <numpack/dense/static/VectorS.h>
+
 namespace ursa
 {
 
@@ -17,6 +20,8 @@ template<typename T> using SymMatrixD = numpack::DLA::MatrixSymD<T>;
 
 template<int M, int N, typename T> using MatrixS = numpack::DLA::MatrixS<M,N,T>;
 template<int M, typename T> using SymMatrixS = numpack::DLA::MatrixSymS<M,T>;
+
+template<int M,typename T> using VectorS = numpack::DLA::VectorS<M,T>;
 
 using Mat4f = numpack::DLA::MatrixS<4,4,float>;
 using Vec4f = numpack::DLA::VectorS<4,float>;
