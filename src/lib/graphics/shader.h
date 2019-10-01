@@ -2,27 +2,67 @@
 #define URSA_LIB_GRAPHICS_SHADER_H_
 
 #include "graphics/gl.h"
-
-#include "numerics/matrix.h"
+#include "graphics/math.h"
 
 #include <string>
+
+const std::string __basic_vs_src__ =
+#include "shaders/basic.vs"
+;
+
+const std::string __basic_fs_src__ =
+#include "shaders/basic.fs"
+;
+
+/*
+const std::string patch_vs_src =
+#include "glsl/patch.vs"
+;
+
+const std::string patch_fs_src =
+#include "glsl/patch.fs"
+;
+
+const std::string pnt_vs_src =
+#include "glsl/pnt.vs"
+;
+
+const std::string pnt_fs_src =
+#include "glsl/pnt.fs"
+;
+
+const std::string tri_vs_src =
+#include "glsl/tri.vs"
+;
+
+const std::string edg_vs_src =
+#include "glsl/edg.fs"
+;
+
+const std::string edg_fs_src =
+#include "glsl/edg.fs"
+;
+
+const std::string edg_gs_src =
+#include "glsl/edg.gs"
+;
+
+const std::string tri_fs_src =
+#include "glsl/tri.fs"
+;
+
+const std::string tri_gs_src =
+#include "glsl/tri.gs"
+;
+*/
 
 namespace ursa
 {
 
-namespace numerics
-{
-
-typedef VectorS<2,float> vec2;
-typedef VectorS<3,float> vec3;
-typedef VectorS<4,float> vec4;
-typedef MatrixS<3,3,float> mat3;
-typedef MatrixS<4,4,float> mat4;
-
-} // numerics
-
 namespace graphics
 {
+
+class Window;
 
 enum GLSLShaderType
 {
@@ -33,7 +73,7 @@ enum GLSLShaderType
 class ShaderProgram
 {
 public:
-  ShaderProgram();
+  ShaderProgram( const std::string& name );
 
   bool compileShaderFromFile( const char* filename, GLSLShaderType type );
   bool compileShaderFromFile( const std::string& filename, GLSLShaderType type );
@@ -51,6 +91,8 @@ public:
   int handle();
   bool linked();
 
+  void setUniforms( const Window& window );
+
   void bindAttribLocation( GLuint location, const char* name);
   void bindFragDataLocation( GLuint location, const char* name );
 
@@ -58,11 +100,11 @@ public:
   void setUniform( const char *name, float x, float y, float z, float w);
   void setUniform( const char *name, int n, float* v);
 
-  void setUniform( const char *name, const numerics::vec2& v);
-  void setUniform( const char *name, const numerics::vec3& v);
-  void setUniform( const char *name, const numerics::vec4& v);
-  void setUniform( const char *name, const numerics::mat3& m);
-  void setUniform( const char *name, const numerics::mat4& m);
+  void setUniform( const char *name, const vec2& v);
+  void setUniform( const char *name, const vec3& v);
+  void setUniform( const char *name, const vec4& v);
+  void setUniform( const char *name, mat3& m);
+  void setUniform( const char *name, mat4& m);
 
   void setUniform( const char *name, float val );
   void setUniform( const char *name, int val );
@@ -74,13 +116,13 @@ public:
   void printActiveAttribs();
 
   int getUniformLocation(const char* name );
-  bool fileExists( const std::string& fileName );
+  bool fileExists( const std::string& filename );
 
 private:
   int handle_;
   bool linked_;
   std::string log_;
-
+  std::string name_;
 };
 
 } // graphics

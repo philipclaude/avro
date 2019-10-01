@@ -1,4 +1,8 @@
+#include "graphics/plotter.h"
 #include "graphics/primitive.h"
+#include "graphics/shader.h"
+
+#include "mesh/topology.h"
 
 #include "numerics/field.h"
 
@@ -9,11 +13,32 @@ namespace graphics
 {
 
 Primitive::Primitive( const TopologyHolder& topology , const Fields* fields ) :
+  number_(topology.number()),
   topology_(topology),
   fields_(fields),
-  identifier_(-1),
-  active_(-1)
+  active_(-1),
+  shader_(NULL)
 {}
+
+void
+Primitive::selectShader( Plotter* plotter )
+{
+  if (number_==2)
+  {
+    shader_ = &plotter->shader("basic");
+    printf("selecting basic shader!\n");
+  }
+  else
+    ursa_implement;
+
+  // TODO: assign the shaders for the children too
+}
+
+ShaderProgram&
+Primitive::shader()
+{
+  return *shader_;
+}
 
 void
 WebGLPrimitive::write()
@@ -27,16 +52,15 @@ WebGLPrimitive::write()
   // get the triangles
 
   // send to wv
-  identifier_ = -1;
+  handle_ = -1;
 
+  ursa_implement;
 }
 
 void
-OpenGLPrimitive::write()
+WebGLPrimitive::draw()
 {
-  // bind the buffers to the opengl context
-
-
+  ursa_implement;
 }
 
 } // graphics

@@ -82,7 +82,6 @@ public:
   type& master() { return master_; }
   const type& master() const { return master_; }
 
-  coord_t number() const { return master_.number(); }
   coord_t order() const { return master_.order(); }
 
   void do_something() {}

@@ -1,4 +1,7 @@
+#include "common/error.h"
+
 #include "graphics/shader.h"
+#include "graphics/window.h"
 
 namespace ursa
 {
@@ -6,87 +9,23 @@ namespace ursa
 namespace graphics
 {
 
-ShaderProgram::ShaderProgram() :
-  handle_(0),
-  linked_(false)
-{}
+ShaderProgram::ShaderProgram( const std::string& name ) :
+  handle_(-1),
+  linked_(false),
+  name_(name)
+{
+  if (name_=="basic")
+  {
+    ursa_assert_msg( compile(name_.c_str(),__basic_vs_src__,__basic_fs_src__) , "error compiling basic shaders" );
+  }
+  else
+    ursa_implement;
+}
 
 int
 ShaderProgram::check()
 {
-  return 1; // TODO
-}
-
-bool
-ShaderProgram::compileShaderFromString( const std::string& source, GLSLShaderType type )
-{
-  if (!check()) return false;
-
-  if (handle_ <= 0)
-  {
-    handle_ = glCreateProgram();
-    if (handle_ == 0)
-    {
-      log_ = "Unable to create shader program.\n";
-      return false;
-    }
-  }
-
-  GLuint shaderHandle = 0;
-
-  switch (type)
-  {
-    case VERTEX:
-      shaderHandle = glCreateShader(GL_VERTEX_SHADER);
-      break;
-    case FRAGMENT:
-      shaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
-      break;
-    case GEOMETRY:
-      shaderHandle = glCreateShader(GL_GEOMETRY_SHADER);
-      break;
-    case TESS_CONTROL:
-      shaderHandle = glCreateShader(GL_TESS_CONTROL_SHADER);
-      break;
-    case TESS_EVALUATION:
-      shaderHandle = glCreateShader(GL_TESS_EVALUATION_SHADER);
-      break;
-    default:
-      return false;
-  }
-
-  const char* c_code = source.c_str();
-  glShaderSource( shaderHandle, 1, &c_code, NULL );
-
-  // compile the shader
-  glCompileShader(shaderHandle );
-
-  // check for errors
-  int result;
-  glGetShaderiv( shaderHandle, GL_COMPILE_STATUS, &result );
-  if (result == GL_FALSE)
-  {
-    // Compile failed, store log and return false
-    int length = 0;
-    log_ = "";
-    glGetShaderiv(shaderHandle, GL_INFO_LOG_LENGTH, &length );
-    if (length > 0)
-    {
-      char * c_log = new char[length];
-      int written = 0;
-      glGetShaderInfoLog(shaderHandle, length, &written, c_log);
-      log_ = c_log;
-      delete [] c_log;
-    }
-
-    return false;
-  }
-  else
-  {
-    // Compile succeeded, attach shader and return true
-    glAttachShader(handle_, shaderHandle);
-    return true;
-  }
+  return true; // TODO
 }
 
 bool
@@ -116,10 +55,12 @@ ShaderProgram::link()
       log_ = c_log;
       delete [] c_log;
     }
+    printf("not linked :(\n");
     return false;
   }
   else
   {
+    printf("linked!!\n");
     linked_ = true;
     return linked_;
   }
@@ -226,48 +167,48 @@ ShaderProgram::setUniform( const char *name, int n, std::vector<int> v)
 }
 
 void
-ShaderProgram::setUniform( const char *name, const numerics::vec2& v)
+ShaderProgram::setUniform( const char *name, const vec2& v)
 {
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform2f(loc,v(0),v(1));
+    glUniform2f(loc,v[0],v[1]);
 }
 
 void
-ShaderProgram::setUniform( const char *name, const numerics::vec3& v)
+ShaderProgram::setUniform( const char *name, const vec3& v)
 {
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform3f(loc,v(0),v(1),v(2));
+    glUniform3f(loc,v[0],v[1],v[2]);
 }
 
 void
-ShaderProgram::setUniform( const char *name, const numerics::vec4& v)
+ShaderProgram::setUniform( const char *name, const vec4& v)
 {
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform4f(loc,v(0),v(1),v(2),v[3]);
+    glUniform4f(loc,v[0],v[1],v[2],v[3]);
 }
 
 void
-ShaderProgram::setUniform( const char *name, const numerics::mat3& m)
+ShaderProgram::setUniform( const char *name, mat3& m)
 {
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniformMatrix3fv(loc, 1, GL_FALSE, &m(0,0)); // TODO is this subscripting correct???
+    glUniformMatrix3fv(loc, 1, GL_FALSE, m.value_ptr() );
 }
 
 void
-ShaderProgram::setUniform( const char *name, const numerics::mat4& m)
+ShaderProgram::setUniform( const char *name, mat4& m)
 {
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &m(0,0)); // TODO is this subscripting correct???
+    glUniformMatrix4fv(loc, 1, GL_FALSE, m.value_ptr() );
 }
 
 void
@@ -295,6 +236,12 @@ ShaderProgram::setUniform( const char *name, bool val )
   int loc = getUniformLocation(name);
   if (loc >= 0)
     glUniform1i(loc, val);
+}
+
+void
+ShaderProgram::setUniforms( const Window& window )
+{
+  //ursa_implement;
 }
 
 void
@@ -392,7 +339,79 @@ ShaderProgram::getUniformLocation(const char * name )
 }
 
 bool
-ShaderProgram::compile(const char *namProg,
+ShaderProgram::compileShaderFromString( const std::string& source, GLSLShaderType type )
+{
+  if (!check()) return false;
+
+  if (handle_ <= 0)
+  {
+    handle_ = glCreateProgram();
+    if (handle_ == 0)
+    {
+      log_ = "Unable to create shader program.\n";
+      return false;
+    }
+  }
+
+  GLuint shaderHandle = 0;
+
+  switch (type)
+  {
+    case VERTEX:
+      shaderHandle = glCreateShader(GL_VERTEX_SHADER);
+      break;
+    case FRAGMENT:
+      shaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
+      break;
+    case GEOMETRY:
+      shaderHandle = glCreateShader(GL_GEOMETRY_SHADER);
+      break;
+    case TESS_CONTROL:
+      shaderHandle = glCreateShader(GL_TESS_CONTROL_SHADER);
+      break;
+    case TESS_EVALUATION:
+      shaderHandle = glCreateShader(GL_TESS_EVALUATION_SHADER);
+      break;
+    default:
+      return false;
+  }
+
+  const char* c_code = source.c_str();
+  glShaderSource( shaderHandle, 1, &c_code, NULL );
+
+  // compile the shader
+  glCompileShader(shaderHandle );
+
+  // check for errors
+  int result;
+  glGetShaderiv( shaderHandle, GL_COMPILE_STATUS, &result );
+  if (result == GL_FALSE)
+  {
+    // Compile failed, store log and return false
+    int length = 0;
+    log_ = "";
+    glGetShaderiv(shaderHandle, GL_INFO_LOG_LENGTH, &length );
+    if (length > 0)
+    {
+      char * c_log = new char[length];
+      int written = 0;
+      glGetShaderInfoLog(shaderHandle, length, &written, c_log);
+      log_ = c_log;
+      delete [] c_log;
+    }
+
+    return false;
+  }
+  else
+  {
+    // Compile succeeded, attach shader and return true
+    glAttachShader(handle_, shaderHandle);
+    return true;
+  }
+}
+
+bool
+ShaderProgram::compile(const char *name,
                      const std::string& vs,
                      const std::string& fs,
                      const std::string& gs,
@@ -403,46 +422,48 @@ ShaderProgram::compile(const char *namProg,
 
   if (vs.empty() || fs.empty())
   {
-   printf("  GLSL programm error: %s: vertex and fragment shaders are mandatory to compile a GLSL programm \n",namProg);
+   printf("GLSL programm error: %s: vertex and fragment shaders are mandatory to compile a GLSL programm \n",name);
    exit(1);
   }
 
+  bool error = false;
   if (!compileShaderFromString(vs,VERTEX))
   {
-     printf("  GLSL programm error: %s: Vertex shader(%s) failed to compile !\n%s",namProg,vs.c_str(),log().c_str());
-     exit(1);
+     printf("GLSL programm error: %s: Vertex shader(%s) failed to compile !\n%s",name,vs.c_str(),log().c_str());
+     error = true;
   }
   if (!tcs.empty() && !tes.empty()  )
   {
     if (!compileShaderFromString(tcs,TESS_CONTROL))
     {
-       printf("  GLSL programm error: %s: Tesselation control shader(%s) failed to compile !\n%s",namProg,tcs.c_str(),log().c_str());
-       exit(1);
+       printf("GLSL programm error: %s: Tesselation control shader(%s) failed to compile !\n%s",name,tcs.c_str(),log().c_str());
+       error = true;
     }
     if (!compileShaderFromString(tes,TESS_EVALUATION))
     {
-       printf("  GLSL programm error: %s: Tesselation evaluation shader(%s) failed to compile !\n%s",namProg,tes.c_str(),log().c_str());
-       exit(1);
+       printf("GLSL programm error: %s: Tesselation evaluation shader(%s) failed to compile !\n%s",name,tes.c_str(),log().c_str());
+       error = true;
     }
   }
   if (!gs.empty())
   {
    if (!compileShaderFromString(gs,GEOMETRY))
    {
-       printf("  GLSL programm error: %s: Geometry shader(%s) failed to compile !\n%s",namProg,gs.c_str(),log().c_str());
-       exit(1);
+       printf("GLSL programm error: %s: Geometry shader(%s) failed to compile !\n%s",name,gs.c_str(),log().c_str());
+       error = true;
    }
   }
   if (!compileShaderFromString(fs,FRAGMENT))
   {
-     printf("  GLSL programm error: %s: Fragment shader(%s) failed to compile !\n%s",namProg,fs.c_str(),log().c_str());
-     exit(1);
+     printf("GLSL programm error: %s: Fragment shader(%s) failed to compile !\n%s",name,fs.c_str(),log().c_str());
+     error = true;
   }
   if (!link())
   {
-     printf("  GLSL programm error: %s: Shader failed to link!\n%s",namProg,log().c_str());
-     exit(1);
+     printf("GLSL programm error: %s: Shader failed to link!\n%s",name,log().c_str());
+     error = true;
   }
+  ursa_assert(!error);
   return true;
 }
 

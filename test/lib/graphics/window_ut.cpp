@@ -9,9 +9,12 @@ UT_TEST_SUITE( WindowSuite )
 
 UT_TEST_CASE( test1 )
 {
-  Window window( "ursa plotter" );
+  // must be run before the window starts
+  glfwInit();
 
-  window.initialize();
+  Window window( "ursa plotter" , NULL );
+
+  //window.run();
 
 }
 UT_TEST_CASE_END( test1 )

@@ -1,0 +1,49 @@
+#version 410
+
+// triangles, quads, or isolines
+layout (triangles, equal_spacing, ccw) in;
+
+//in vec3 evaluationpoint_wor[6];
+
+// could use a displacement map here
+
+//out vec3 VEdgeDistance;
+noperspective out vec3 VEdgeDistance;
+noperspective out vec2 VBarycentric;
+out vec3 VPosition;
+out vec3 RPosition;
+out vec3 VNormal;
+//out vec3 opt[3];
+
+uniform mat3 NormalMatrix;
+uniform mat4 ModelViewMatrix;
+uniform mat4 MVP;
+uniform mat4  ViewportMatrix;
+uniform int   tess_level;
+uniform float shrink;
+
+void main () {
+
+  //--- barycentric (with shrink)
+  float us3 =  1.0/3.0;
+  float u = us3 + shrink*(gl_TessCoord.x - us3);
+  float v = us3 + shrink*(gl_TessCoord.y - us3);
+  float w = 1.0 - u - v;
+
+  //--- control points
+  vec3 P100 = gl_in[0].gl_Position.xyz;
+  vec3 P010 = gl_in[1].gl_Position.xyz;
+  vec3 P001 = gl_in[2].gl_Position.xyz;
+
+   vec3 pos = u*P100 + v*P010  + w*P001   ;
+
+
+  //--- we use the initial barycentri to keep the same distance with shrink
+  VEdgeDistance   =  vec3(u,v,w);
+  VBarycentric    =  vec2(u,v);
+  VNormal         =  NormalMatrix*normalize(cross(P100 - P001,P010-P001));
+  RPosition       =  pos;
+  VPosition       =  vec3(ModelViewMatrix * vec4(pos,1.0));
+  gl_Position     =  MVP * vec4(pos,1.0);
+
+}

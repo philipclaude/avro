@@ -3,6 +3,10 @@
 
 #include "common/tree.h"
 
+#include "graphics/gl.h"
+
+#include <map>
+
 namespace ursa
 {
 
@@ -13,6 +17,9 @@ class Fields;
 namespace graphics
 {
 
+class ShaderProgram;
+class Plotter;
+
 class Primitive : public Tree<Primitive>
 {
 public:
@@ -20,13 +27,18 @@ public:
   virtual ~Primitive() {}
 
   virtual void write() = 0;
+  virtual void draw() = 0;
+
+  void selectShader( Plotter* plotter );
+  ShaderProgram& shader();
 
 protected:
+  coord_t number_;
   const TopologyHolder& topology_;
   const Fields* fields_;
 
-  int identifier_;
   int active_;
+  ShaderProgram* shader_;
 };
 
 class WebGLPrimitive : public Primitive
@@ -35,6 +47,10 @@ public:
   using Primitive::Primitive;
 
   void write();
+  void draw();
+
+private:
+  int handle_;
 
 };
 
@@ -44,8 +60,11 @@ public:
   using Primitive::Primitive;
 
   void write();
+  void draw();
 
 private:
+  std::vector<GLuint> vbo_;
+  GLuint vao_;
 
 };
 

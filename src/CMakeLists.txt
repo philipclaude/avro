@@ -33,8 +33,11 @@ add_custom_target( ursa_lib DEPENDS ursa_shared ursa_static )
 # add include directories for third party softwares
 include_directories( ${ESP_INCLUDE_DIRS} )
 include_directories( ${NLOPT_INCLUDE_DIRS} )
-include_directories( ${THIRD_PARTY_INCLUDE} )
-message( STATUS ${THIRD_PARTY_INCLUDE} )
+include_directories( ${THIRD_PARTY_INCLUDE_DIRS} )
+message( STATUS "tp incldue = " ${THIRD_PARTY_INCLUDE_DIRS} )
+
+include_directories( third_party/glad/include )
+include_directories( third_party/glfw/include )
 
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )

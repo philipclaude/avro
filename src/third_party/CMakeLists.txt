@@ -2,7 +2,7 @@ if (URSA_WITH_FPG)
 	add_subdirectory(PCK/fpg)
 endif()
 
-set( THIRD_PARTY_INCLUDE PARENT_SCOPE )
+#set( THIRD_PARTY_INCLUDE PARENT_SCOPE )
 
 #add_source_directories( TET_SOURCES "tetgen source" tetgen1.5.0 )
 #set_source_files_properties( ${TET_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
@@ -22,14 +22,14 @@ include_directories( json )
 
 if (URSA_BUILTIN_GLFW)
 	add_subdirectory( glfw )
-	set( THIRD_PARTY_INCLUDE ${THIRD_PARTY_INCLUDE} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
+	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
 	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
 endif()
 
 set( GLAD_SOURCES )
 if (URSA_WITH_GL)
 	add_source_directories( GLAD_SOURCES "glad source" glad/src )
-	set( THIRD_PARTY_INCLUDE ${THIRD_PARTY_INCLUDE} ${CMAKE_SOURCE_DIR}/src/third_party/glad/include PARENT_SCOPE )
+	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
 	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
 endif()
 

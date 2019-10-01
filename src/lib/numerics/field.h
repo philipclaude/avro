@@ -25,6 +25,7 @@ class FieldHolder
 {
 private:
 //  const TopologyHolder& topology_;
+std::string name_;
 };
 
 template<typename T>
@@ -82,6 +83,9 @@ public:
     Fields( const json& J );
 
     void fromJSON( const json& J );
+private:
+  std::map<std::string,std::shared_ptr<FieldHolder>> fields_;
+
 };
 
 
