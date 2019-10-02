@@ -208,14 +208,14 @@ template<>
 inline void
 printValue( const index_t& x )
 {
-    printf("%d ",int(x));
+  printf("%d ",int(x));
 }
 
 template<>
 inline void
 printValue( const int& x )
 {
-    printf("%d ",int(x));
+  printf("%d ",int(x));
 }
 
 
@@ -223,7 +223,14 @@ template<>
 inline void
 printValue( const real_t& x )
 {
-    printf("%g ",x);
+  printf("%g ",x);
+}
+
+template<>
+inline void
+printValue( const float& x )
+{
+  printf("%g ",x);
 }
 
 template<typename type>
@@ -253,7 +260,8 @@ tabbedPrint( const index_t nt , const char *fmt , ... )
 }
 
 template void printInline( const std::vector<index_t>& s , const std::string& name , const int id , const index_t nt );
-template void printInline( const std::vector<real_t>& s , const std::string& name , const int id , const index_t nt );
+template void printInline( const std::vector<double>& s , const std::string& name , const int id , const index_t nt );
+template void printInline( const std::vector<float>& s , const std::string& name , const int id , const index_t nt );
 
 }
 

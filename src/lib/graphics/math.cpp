@@ -11,6 +11,10 @@ namespace ursa
 namespace graphics
 {
 
+#if USE_GLM
+
+#else
+
 float*
 mat3::value_ptr()
 {
@@ -31,6 +35,7 @@ mat4::value_ptr()
   return mt_;
 }
 
+#endif
 
 } // graphics
 

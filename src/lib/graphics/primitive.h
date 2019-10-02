@@ -12,18 +12,18 @@ namespace ursa
 
 template<typename Master_t> class Topology;
 class TopologyHolder;
-class Fields;
 
 namespace graphics
 {
 
 class ShaderProgram;
 class Plotter;
+class Window;
 
 class Primitive : public Tree<Primitive>
 {
 public:
-  Primitive( const TopologyHolder& topology , const Fields* fields=nil );
+  Primitive( const TopologyHolder& topology , Window* window );
   virtual ~Primitive() {}
 
   virtual void write() = 0;
@@ -35,10 +35,10 @@ public:
 protected:
   coord_t number_;
   const TopologyHolder& topology_;
-  const Fields* fields_;
 
   int active_;
   ShaderProgram* shader_;
+  Window* window_;
 };
 
 class WebGLPrimitive : public Primitive
@@ -56,15 +56,26 @@ private:
 
 class OpenGLPrimitive : public Primitive
 {
+private:
+  typedef struct
+  {
+    std::vector<float> coordinates;
+    std::vector<unsigned int> indices;
+    std::vector<float> colours;
+  } glData;
+
 public:
   using Primitive::Primitive;
 
   void write();
   void draw();
+  void convert( glData& data );
 
 private:
   std::vector<GLuint> vbo_;
   GLuint vao_;
+
+  glData data_;
 
 };
 

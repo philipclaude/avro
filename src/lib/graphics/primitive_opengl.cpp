@@ -3,6 +3,7 @@
 #include "graphics/gl.h"
 #include "graphics/primitive.h"
 #include "graphics/shader.h"
+#include "graphics/window.h"
 
 #include "mesh/topology.h"
 #include "mesh/vertices.h"
@@ -13,71 +14,94 @@ namespace ursa
 namespace graphics
 {
 
-typedef struct
-{
-  std::vector<float> coordinates;
-  std::vector<unsigned int> indices;
-} glData;
-
 void
-glConvert( const TopologyHolder& topology , glData& data )
+OpenGLPrimitive::convert( glData& data )
 {
 
-  index_t nb_elem = topology.nb();
-  index_t nb_vert = topology.vertices().nb();
-  coord_t dim = topology.vertices().dim();
+  index_t nb_elem = topology_.nb();
+  index_t nb_vert = topology_.vertices().nb();
+  coord_t dim = topology_.vertices().dim();
+  coord_t nv = topology_.number()+1;
 
-  const Vertices& vertices = topology.vertices();
+  const Vertices& vertices = topology_.vertices();
 
   ursa_assert( dim==3 );
 
   data.coordinates.resize( 3*nb_vert );
-  data.indices.resize( 3*nb_elem ); // TODO generalize by using getTriangles...
+  data.indices.resize( nv*nb_elem ); // TODO generalize by using getTriangles...
+  data.colours.resize( 3*nb_vert, 0 );
 
   index_t n = 0;
   for (index_t k=0;k<nb_elem;k++)
-  for (index_t j=0;j<3;j++)
-    data.indices[n++] = topology(k,j);
+  for (index_t j=0;j<nv;j++)
+    data.indices[n++] = topology_(k,j);
 
   n = 0;
   for (index_t k=0;k<nb_vert;k++)
-  for (index_t j=0;j<dim;j++)
-    data.coordinates[n++] = vertices(k,j);
+  {
+    data.colours[3*k] = k*1.0f/nb_vert;
+    for (index_t j=0;j<dim;j++)
+    {
+      //data.colours[n] = (float) (k+1)*(j+1) / (3*nb_vert);
+      data.colours[n] = vertices(k,0);
+      data.coordinates[n++] = vertices(k,j);
+    }
+  }
+  printInline(data.colours);
 }
 
 void
 OpenGLPrimitive::write()
 {
-  // bind the buffers to the opengl context
-  index_t nb_triangles = topology_.nb();
-  index_t nb_vertices = topology_.vertices().nb();
+  glViewport(0,0,1,1);
 
-  // Create the vertex array object (list of buffers)
-  glGenVertexArrays( 1, &vao_ );
-  glBindVertexArray(vao_);
+  // bind the buffers to the opengl context
+  index_t nb_elem = topology_.nb();
+  index_t nb_vertices = topology_.vertices().nb();
+  coord_t nv = topology_.number()+1;
+
+  printf("nb_elem = %lu\n",nb_elem);
 
   // allocate the buffers
-  vbo_.resize(2);
-  glGenBuffers(2, vbo_.data() );
-  GLuint position = vbo_[0];
-  GLuint indices  = vbo_[1];
+  vbo_.resize(3);
+  GL_CALL( glGenBuffers( vbo_.size() , vbo_.data() ) );
+  GLuint& indices  = vbo_[0];
+  GLuint& position = vbo_[1];
+  GLuint& colour   = vbo_[2];
 
   // convert the data for the gl
-  glData data;
-  glConvert( topology_ , data );
+  convert( data_ );
 
-  // bind the position buffer
-  glBindBuffer(GL_ARRAY_BUFFER, position);
-  glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(float), data.coordinates.data() , GL_STATIC_DRAW);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *)NULL );
+  ursa_assert( data_.indices.size()==nv*nb_elem );
 
   // bind the index buffer
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * nb_triangles * sizeof(unsigned int), data.indices.data() , GL_STATIC_DRAW);
+  GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices) );
+  GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, nv * nb_elem * sizeof(GLuint), data_.indices.data() , GL_STATIC_DRAW) );
+
+  // bind the position buffer
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, position) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(GLfloat), data_.coordinates.data() , GL_STATIC_DRAW) );
+
+  // bind the colour buffer
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, colour) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(GLfloat), data_.colours.data() , GL_STATIC_DRAW) );
+
+  // Create the vertex array object (list of buffers)
+  GL_CALL( glGenVertexArrays( 1, &vao_ ) );
+  GL_CALL( glBindVertexArray(vao_) );
+
+  GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, indices ) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, position ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, colour ) );
+  GL_CALL( glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(1) );
 
   // reset the vao bound to the gl
-  glBindVertexArray(0);
+  GL_CALL( glBindVertexArray(0) );
 
 }
 
@@ -86,14 +110,34 @@ OpenGLPrimitive::draw()
 {
   ursa_assert( shader_!=NULL );
 
+  index_t nb_elem = topology_.nb();
+  index_t nv = topology_.number()+1;
+  index_t nb_vert = topology_.vertices().nb();
+  coord_t dim = 3;
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   shader_->use();
+
+  shader_->setUniform("MVP" , window_->mvp() );
 
   //shader_->printActiveAttribs();
   //shader_->printActiveUniforms();
 
-  index_t nb_triangles = 2;
-  glBindVertexArray(vao_);
-  glDrawElements(GL_TRIANGLES, 3 * nb_triangles, GL_UNSIGNED_INT, ((GLubyte *)NULL + (0)));
+  //shader_->setUniform("MVP",window_->mvp());
+
+  //std::cout << window_->mvp() << std::endl;
+
+  //GL_CALL( glClear(GL_COLOR_BUFFER_BIT) );
+
+  GL_CALL( glBindVertexArray(vao_) );
+  if (topology_.number()==1)
+    GL_CALL( glDrawElements( GL_LINES , nb_elem*nv , GL_UNSIGNED_INT , 0 ) )
+  else if (topology_.number()==2)
+    GL_CALL( glDrawElements(GL_TRIANGLES,nb_elem*nv, GL_UNSIGNED_INT , 0 ) )
+  else
+    ursa_implement;
+  GL_CALL( glBindVertexArray(0) );
 
 }
 

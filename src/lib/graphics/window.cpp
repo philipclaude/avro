@@ -24,8 +24,11 @@ Window::Window( const std::string& title , Plotter* plotter) :
     ursa_assert_not_reached;
   }
 
-  for (int i=0;i<3;i++)
-    mvp_(i,i) = 1;
+  angles_[0] = 0;
+  angles_[1] = 0;
+
+  setMatrices();
+
 }
 
 Window::~Window()
@@ -34,9 +37,97 @@ Window::~Window()
 }
 
 void
+Window::setMatrices()
+{
+  // glfwGetTime is called only once, the first time this function is called
+	static double lastTime = glfwGetTime();
+
+
+  	// Compute time difference between current and last frame
+    #if 0
+  	double currentTime = glfwGetTime();
+  	float deltaTime = float(currentTime - lastTime);
+    deltaTime = 0.f;
+
+  	// Get mouse position
+  	double xpos, ypos;
+  	glfwGetCursorPos(window_, &xpos, &ypos);
+
+  	// Reset mouse position for next frame
+  	//glfwSetCursorPos(window_, 1024/2, 768/2);
+
+  	// Compute new orientation
+  	angles_[0] += mouseSpeed_ * float(width_/2  - xpos );
+  	angles_[1] += mouseSpeed_ * float(height_/2 - ypos );
+
+  	// Direction : Spherical coordinates to Cartesian coordinates conversion
+  	glm::vec3 direction(
+  		cos(angles_[1]) * sin(angles_[0]),
+  		sin(angles_[1]),
+  		cos(angles_[1]) * cos(angles_[0])
+  	);
+
+  	// Right vector
+  	glm::vec3 right = glm::vec3(
+  		sin(angles_[0] - 3.14f/2.0f),
+  		0,
+  		cos(angles_[0] - 3.14f/2.0f)
+  	);
+
+  	// Up vector
+  	glm::vec3 up = glm::cross( right, direction );
+
+  	// Move forward
+  	if (glfwGetKey( window_, GLFW_KEY_UP ) == GLFW_PRESS)
+    {
+  		position_ += direction * deltaTime * speed_;
+  	}
+  	// Move backward
+  	if (glfwGetKey( window_, GLFW_KEY_DOWN ) == GLFW_PRESS)
+    {
+  		position_ -= direction * deltaTime * speed_;
+  	}
+  	// Strafe right
+  	if (glfwGetKey( window_, GLFW_KEY_RIGHT ) == GLFW_PRESS)
+    {
+  		position_ += right * deltaTime * speed_;
+  	}
+  	// Strafe left
+  	if (glfwGetKey( window_, GLFW_KEY_LEFT ) == GLFW_PRESS)
+    {
+  		position_ -= right * deltaTime * speed_;
+  	}
+
+  	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+  	projMatrix_ = glm::perspective(glm::radians(fov_), 4.0f / 3.0f, 0.1f, 100.0f);
+
+  	// Camera matrix
+  	viewMatrix_ = glm::lookAt(
+  								position_,           // Camera is here
+  								position_+direction, // and looks here : at the same position, plus "direction"
+  								up                  // Head is up (set to 0,-1,0 to look upside-down)
+  						   );
+
+   #else
+   projMatrix_ = glm::perspective( glm::radians(fov_) , (float) width_  / height_ , 0.1f , 40.0f );
+   projMatrix_ = glm::translate( projMatrix_ , vec3(0,0,-1) );
+
+   #endif
+
+    modelMatrix_ = mat4(1.0);
+
+    mvp_ = projMatrix_*viewMatrix_*modelMatrix_;
+
+  	// For the next frame, the "last time" will be "now"
+  	//lastTime = currentTime;
+}
+
+void
 Window::draw()
 {
-  glClearColor (1.0, 0.0, 0.0, 0.0);
+  glClearColor (1.0, 1.0, 1.0, 0.0); // white
+
+  setMatrices();
 
   // this is where the drawing request occurs!
   for (index_t k=0;k<plot_.size();k++)
@@ -65,7 +156,17 @@ void
 Window::run()
 {
   glfwMakeContextCurrent(window_);
-  glfwSwapInterval(1);
+  //glfwSwapInterval(1);
+
+  glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+
+  // Enable depth test
+  glEnable(GL_DEPTH_TEST);
+  // Accept fragment if it closer to the camera than the former one
+  glDepthFunc(GL_LESS);
+
+  // Cull triangles which normal is not towards the camera
+  glEnable(GL_CULL_FACE);
 
   write();
 

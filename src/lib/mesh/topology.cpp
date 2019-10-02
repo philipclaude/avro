@@ -4,6 +4,10 @@
 namespace ursa
 {
 
+Fields::Fields( const TopologyHolder& topology ) :
+  topology_(topology)
+{}
+
 void
 TopologyHolder::copy( TopologyHolder& topology1 )
 {

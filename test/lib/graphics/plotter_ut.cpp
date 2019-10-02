@@ -4,6 +4,8 @@
 #include "graphics/plotter.h"
 #include "graphics/window.h"
 
+#include "library/samples.h"
+
 #include "mesh/topology.h"
 
 #include "numerics/field.h"
@@ -17,11 +19,14 @@ UT_TEST_CASE( test1 )
 {
   Plotter plotter;
 
-  DummyTopology topology;
-  Fields fields;
-  Window::Plot_ptr plot = std::make_shared<Plot>(topology,&fields);
+  Window& window = plotter.window("main");
 
-  plotter.window("main").attach(plot); // make generic later
+  library::TwoTriangles topology;
+  Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
+  plotter.window("main").attach(plot1);
+
+  Window::Plot_ptr plot2 = std::make_shared<Plot>(topology.edges(),&window);
+  //plotter.window("main").attach(plot2);
 
   plotter.run();
 }

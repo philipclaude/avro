@@ -3,11 +3,30 @@
 
 #include "numerics/matrix.h"
 
+#define USE_GLM 1
+
+#if USE_GLM
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#endif
+
 namespace ursa
 {
 
 namespace graphics
 {
+
+
+#if USE_GLM
+
+using vec2 = glm::vec2;
+using vec3 = glm::vec3;
+using vec4 = glm::vec4;
+
+using mat3 = glm::mat3;
+using mat4 = glm::mat4;
+
+#else
 
 typedef numerics::VectorS<2,float> vec2;
 typedef numerics::VectorS<3,float> vec3;
@@ -29,6 +48,8 @@ public:
 private:
   float mt_[16];
 };
+
+#endif
 
 
 } // graphics

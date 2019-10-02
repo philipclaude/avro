@@ -12,12 +12,12 @@ namespace ursa
 namespace graphics
 {
 
-Primitive::Primitive( const TopologyHolder& topology , const Fields* fields ) :
+Primitive::Primitive( const TopologyHolder& topology , Window* window ) :
   number_(topology.number()),
   topology_(topology),
-  fields_(fields),
   active_(-1),
-  shader_(NULL)
+  shader_(NULL),
+  window_(window)
 {}
 
 void
@@ -27,6 +27,11 @@ Primitive::selectShader( Plotter* plotter )
   {
     shader_ = &plotter->shader("basic");
     printf("selecting basic shader!\n");
+  }
+  else if (number_==1)
+  {
+    shader_ = &plotter->shader("edge");
+    printf("selecting edge shader!\n");
   }
   else
     ursa_implement;

@@ -24,7 +24,7 @@ class Plot
 public:
   typedef std::shared_ptr<Primitive> Primitive_ptr;
 
-  Plot( const TopologyHolder& topology , Fields* fields );
+  Plot( const TopologyHolder& topology , Window* window );
 
   void draw();
   void write();
@@ -34,7 +34,6 @@ public:
 
 private:
   const TopologyHolder& topology_;
-  Fields* fields_;
 
   std::vector< Primitive_ptr > primitive_;
   Plotter* plotter_;
@@ -42,14 +41,7 @@ private:
   Window* window_;
 };
 
-class DummyTopology : public Topology<Simplex<Lagrange>>
-{
-public:
-  DummyTopology();
 
-private:
-  Vertices vertices_;
-};
 
 } // graphics
 

@@ -18,6 +18,10 @@ ShaderProgram::ShaderProgram( const std::string& name ) :
   {
     ursa_assert_msg( compile(name_.c_str(),__basic_vs_src__,__basic_fs_src__) , "error compiling basic shaders" );
   }
+  else if (name_=="edge")
+  {
+    ursa_assert_msg( compile(name_.c_str(),__basic_vs_src__,__edge_fs_src__) , "error compiling basic shaders" );
+  }
   else
     ursa_implement;
 }
@@ -35,23 +39,23 @@ ShaderProgram::link()
   if (linked_) return true;
   if (handle_ <= 0) return false;
 
-  glLinkProgram(handle_);
+  GL_CALL( glLinkProgram(handle_) );
 
   int status = 0;
-  glGetProgramiv( handle_, GL_LINK_STATUS, &status);
+  GL_CALL( glGetProgramiv( handle_, GL_LINK_STATUS, &status) );
   if (status == GL_FALSE)
   {
     // Store log and return false
     int length = 0;
     log_ = "";
 
-    glGetProgramiv(handle_, GL_INFO_LOG_LENGTH, &length );
+    GL_CALL( glGetProgramiv(handle_, GL_INFO_LOG_LENGTH, &length ) );
 
     if (length > 0)
     {
-      char * c_log = new char[length];
+      char* c_log = new char[length];
       int written = 0;
-      glGetProgramInfoLog(handle_, length, &written, c_log);
+      GL_CALL( glGetProgramInfoLog(handle_, length, &written, c_log) );
       log_ = c_log;
       delete [] c_log;
     }
@@ -71,7 +75,7 @@ ShaderProgram::use()
 {
   if (!check()) return;
   if (handle_ <= 0 || !linked_) return;
-  glUseProgram( handle_ );
+  GL_CALL( glUseProgram( handle_ ) );
 }
 
 std::string
@@ -96,14 +100,14 @@ void
 ShaderProgram::bindAttribLocation( GLuint location, const char * name)
 {
   if (!check()) return;
-  glBindAttribLocation(handle_, location, name);
+  GL_CALL( glBindAttribLocation(handle_, location, name) );
 }
 
 void
 ShaderProgram::bindFragDataLocation( GLuint location, const char * name )
 {
   if (!check()) return;
-  glBindFragDataLocation(handle_, location, name);
+  GL_CALL( glBindFragDataLocation(handle_, location, name) );
 }
 
 void
@@ -112,7 +116,7 @@ ShaderProgram::setUniform( const char *name, float x, float y, float z)
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform3f(loc,x,y,z);
+    GL_CALL( glUniform3f(loc,x,y,z) )
 }
 
 void
@@ -121,7 +125,7 @@ ShaderProgram::setUniform( const char *name, float x, float y, float z, float w)
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform4f(loc,x,y,z,w);
+    GL_CALL( glUniform4f(loc,x,y,z,w) )
 }
 
 void
@@ -135,7 +139,7 @@ ShaderProgram::setUniform( const char *name, int n, float* v)
     if (n > 10) n = 10;
     for (int i=0; i<n;i++)
       vf[i] = v[i];
-    glUniform1fv(loc,n,vf);
+    GL_CALL( glUniform1fv(loc,n,vf) );
   }
 }
 
@@ -162,7 +166,7 @@ ShaderProgram::setUniform( const char *name, int n, std::vector<int> v)
     if (n > 10) n = 10;
     for (int i=0; i<n;i++)
       vi[i] = v[i];
-    glUniform1iv(loc,n,vi);
+    GL_CALL( glUniform1iv(loc,n,vi) );
   }
 }
 
@@ -172,7 +176,7 @@ ShaderProgram::setUniform( const char *name, const vec2& v)
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform2f(loc,v[0],v[1]);
+    GL_CALL( glUniform2f(loc,v[0],v[1]) )
 }
 
 void
@@ -181,7 +185,7 @@ ShaderProgram::setUniform( const char *name, const vec3& v)
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform3f(loc,v[0],v[1],v[2]);
+    GL_CALL( glUniform3f(loc,v[0],v[1],v[2]) )
 }
 
 void
@@ -190,7 +194,7 @@ ShaderProgram::setUniform( const char *name, const vec4& v)
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform4f(loc,v[0],v[1],v[2],v[3]);
+    GL_CALL( glUniform4f(loc,v[0],v[1],v[2],v[3]) )
 }
 
 void
@@ -199,7 +203,7 @@ ShaderProgram::setUniform( const char *name, mat3& m)
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniformMatrix3fv(loc, 1, GL_FALSE, m.value_ptr() );
+    GL_CALL( glUniformMatrix3fv(loc, 1, GL_FALSE, &m[0][0] ) )
 }
 
 void
@@ -208,7 +212,12 @@ ShaderProgram::setUniform( const char *name, mat4& m)
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniformMatrix4fv(loc, 1, GL_FALSE, m.value_ptr() );
+  {
+    GL_CALL( glUniformMatrix4fv(loc, 1, GL_FALSE, &m[0][0] ) );
+    printf("uniform set!\n");
+  }
+  else
+    printf("uniform not set for program handle %d!!\n",handle_);
 }
 
 void
@@ -217,7 +226,7 @@ ShaderProgram::setUniform( const char *name, float val )
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform1f(loc, val);
+    GL_CALL( glUniform1f(loc, val) )
 }
 
 void
@@ -226,7 +235,7 @@ ShaderProgram::setUniform( const char *name, int val )
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform1i(loc, val);
+    GL_CALL( glUniform1i(loc, val) )
 }
 
 void
@@ -235,7 +244,7 @@ ShaderProgram::setUniform( const char *name, bool val )
   if (!check()) return;
   int loc = getUniformLocation(name);
   if (loc >= 0)
-    glUniform1i(loc, val);
+    GL_CALL( glUniform1i(loc, val) )
 }
 
 void
@@ -254,16 +263,16 @@ ShaderProgram::printActiveUniforms()
 
   if (!check()) return;
 
-  glGetProgramiv( handle_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLen);
-  glGetProgramiv( handle_, GL_ACTIVE_UNIFORMS, &nUniforms);
+  GL_CALL( glGetProgramiv( handle_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLen) );
+  GL_CALL( glGetProgramiv( handle_, GL_ACTIVE_UNIFORMS, &nUniforms) );
 
   name = (GLchar *) malloc( maxLen );
 
-  printf(" Location | Name\n");
+  printf("\nLocation | Name\n");
   printf("------------------------------------------------\n");
   for (int i=0;i<nUniforms;i++)
   {
-    glGetActiveUniform( handle_, i, maxLen, &written, &size, &type, name );
+    GL_CALL( glGetActiveUniform( handle_, i, maxLen, &written, &size, &type, name ) );
     location = glGetUniformLocation(handle_, name);
     printf(" %-8d | %s\n",location, name);
   }
@@ -284,11 +293,11 @@ ShaderProgram::printActiveAttribs()
 
   name = (GLchar *) malloc( maxLength );
 
-  printf(" Index | Name\n");
+  printf("\nIndex | Name\n");
   printf("------------------------------------------------\n");
   for (int i=0;i<nAttribs;i++)
   {
-    glGetActiveAttrib( handle_, i, maxLength, &written, &size, &type, name );
+    GL_CALL( glGetActiveAttrib( handle_, i, maxLength, &written, &size, &type, name ) );
     location = glGetAttribLocation(handle_, name);
     printf(" %-5d | %s\n",location, name);
   }
@@ -303,8 +312,8 @@ ShaderProgram::validate()
   return true; // TODO
 
   GLint status;
-  glValidateProgram( handle_ );
-  glGetProgramiv( handle_, GL_VALIDATE_STATUS, &status );
+  GL_CALL( glValidateProgram( handle_ ) );
+  GL_CALL( glGetProgramiv( handle_, GL_VALIDATE_STATUS, &status ) );
 
   if (status == GL_FALSE)
   {
@@ -312,13 +321,13 @@ ShaderProgram::validate()
     int length = 0;
     log_ = "";
 
-    glGetProgramiv(handle_, GL_INFO_LOG_LENGTH, &length );
+    GL_CALL( glGetProgramiv(handle_, GL_INFO_LOG_LENGTH, &length ) );
 
     if (length > 0)
     {
-      char * c_log = new char[length];
+      char* c_log = new char[length];
       int written = 0;
-      glGetProgramInfoLog(handle_, length, &written, c_log);
+      GL_CALL( glGetProgramInfoLog(handle_, length, &written, c_log) );
       log_ = c_log;
       delete [] c_log;
     }
@@ -332,7 +341,7 @@ ShaderProgram::validate()
 }
 
 int
-ShaderProgram::getUniformLocation(const char * name )
+ShaderProgram::getUniformLocation(const char* name )
 {
   if (!check()) return 0;
   return glGetUniformLocation(handle_, name);
@@ -377,25 +386,25 @@ ShaderProgram::compileShaderFromString( const std::string& source, GLSLShaderTyp
   }
 
   const char* c_code = source.c_str();
-  glShaderSource( shaderHandle, 1, &c_code, NULL );
+  GL_CALL( glShaderSource( shaderHandle, 1, &c_code, NULL ) );
 
   // compile the shader
-  glCompileShader(shaderHandle );
+  GL_CALL( glCompileShader(shaderHandle ) );
 
   // check for errors
   int result;
-  glGetShaderiv( shaderHandle, GL_COMPILE_STATUS, &result );
+  GL_CALL( glGetShaderiv( shaderHandle, GL_COMPILE_STATUS, &result ) );
   if (result == GL_FALSE)
   {
     // Compile failed, store log and return false
     int length = 0;
     log_ = "";
-    glGetShaderiv(shaderHandle, GL_INFO_LOG_LENGTH, &length );
+    GL_CALL( glGetShaderiv(shaderHandle, GL_INFO_LOG_LENGTH, &length ) );
     if (length > 0)
     {
-      char * c_log = new char[length];
+      char* c_log = new char[length];
       int written = 0;
-      glGetShaderInfoLog(shaderHandle, length, &written, c_log);
+      GL_CALL( glGetShaderInfoLog(shaderHandle, length, &written, c_log) );
       log_ = c_log;
       delete [] c_log;
     }
@@ -405,7 +414,7 @@ ShaderProgram::compileShaderFromString( const std::string& source, GLSLShaderTyp
   else
   {
     // Compile succeeded, attach shader and return true
-    glAttachShader(handle_, shaderHandle);
+    GL_CALL( glAttachShader(handle_, shaderHandle) );
     return true;
   }
 }
@@ -429,19 +438,19 @@ ShaderProgram::compile(const char *name,
   bool error = false;
   if (!compileShaderFromString(vs,VERTEX))
   {
-     printf("GLSL programm error: %s: Vertex shader(%s) failed to compile !\n%s",name,vs.c_str(),log().c_str());
+     printf("GLSL programm error: %s: vertex shader(%s) failed to compile !\n%s",name,vs.c_str(),log().c_str());
      error = true;
   }
   if (!tcs.empty() && !tes.empty()  )
   {
     if (!compileShaderFromString(tcs,TESS_CONTROL))
     {
-       printf("GLSL programm error: %s: Tesselation control shader(%s) failed to compile !\n%s",name,tcs.c_str(),log().c_str());
+       printf("GLSL programm error: %s: tesselation control shader(%s) failed to compile !\n%s",name,tcs.c_str(),log().c_str());
        error = true;
     }
     if (!compileShaderFromString(tes,TESS_EVALUATION))
     {
-       printf("GLSL programm error: %s: Tesselation evaluation shader(%s) failed to compile !\n%s",name,tes.c_str(),log().c_str());
+       printf("GLSL programm error: %s: tesselation evaluation shader(%s) failed to compile !\n%s",name,tes.c_str(),log().c_str());
        error = true;
     }
   }
@@ -449,18 +458,18 @@ ShaderProgram::compile(const char *name,
   {
    if (!compileShaderFromString(gs,GEOMETRY))
    {
-       printf("GLSL programm error: %s: Geometry shader(%s) failed to compile !\n%s",name,gs.c_str(),log().c_str());
+       printf("GLSL programm error: %s: geometry shader(%s) failed to compile !\n%s",name,gs.c_str(),log().c_str());
        error = true;
    }
   }
   if (!compileShaderFromString(fs,FRAGMENT))
   {
-     printf("GLSL programm error: %s: Fragment shader(%s) failed to compile !\n%s",name,fs.c_str(),log().c_str());
+     printf("GLSL programm error: %s: fragment shader(%s) failed to compile !\n%s",name,fs.c_str(),log().c_str());
      error = true;
   }
   if (!link())
   {
-     printf("GLSL programm error: %s: Shader failed to link!\n%s",name,log().c_str());
+     printf("GLSL programm error: %s: shader failed to link!\n%s",name,log().c_str());
      error = true;
   }
   ursa_assert(!error);

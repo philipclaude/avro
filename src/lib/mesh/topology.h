@@ -9,6 +9,8 @@
 #include "master/polytope.h"
 #include "master/simplex.h"
 
+#include "numerics/field.h"
+
 #include <vector>
 
 namespace ursa
@@ -16,12 +18,28 @@ namespace ursa
 
 class Vertices;
 class ClippingPlane;
+class TopologyHolder;
+
+class Fields
+{
+
+public:
+    Fields( const TopologyHolder& topology );
+    Fields( const json& J );
+
+    void fromJSON( const json& J );
+private:
+  std::map<std::string,std::shared_ptr<FieldHolder>> fields_;
+
+  const TopologyHolder& topology_;
+};
 
 class TopologyHolder : public Data<index_t>
 {
 public:
   TopologyHolder( Vertices& vertices , const coord_t number ) :
-    Data<index_t>(true) , vertices_(vertices) , number_(number)
+    Data<index_t>(true) , vertices_(vertices) , number_(number),
+    fields_(*this)
   {}
 
   virtual ~TopologyHolder() {}
@@ -58,6 +76,7 @@ protected:
   coord_t order_;
   bool dummy_;
   std::string name_;
+  Fields fields_;
 };
 
 template<typename Master_t> class Topology;

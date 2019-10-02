@@ -40,6 +40,7 @@ Plotter::initialize()
 
   // create all the shaders
   shader_.insert( {"basic" , std::make_shared<ShaderProgram>( "basic" ) } );
+  shader_.insert( {"edge" , std::make_shared<ShaderProgram>( "edge" ) } );
   // TODO the rest of the shaders...
 }
 

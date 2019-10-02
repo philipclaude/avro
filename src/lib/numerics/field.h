@@ -75,19 +75,6 @@ private:
   const Master_t master_;
 };
 
-class Fields
-{
-
-public:
-    Fields() {}
-    Fields( const json& J );
-
-    void fromJSON( const json& J );
-private:
-  std::map<std::string,std::shared_ptr<FieldHolder>> fields_;
-
-};
-
 
 } // ursa
 

@@ -26,6 +26,8 @@ public:
   Window( const std::string& title , Plotter* plotter );
   virtual ~Window();
 
+  void setMatrices();
+
   virtual void draw();
   virtual void write();
 
@@ -39,6 +41,18 @@ public:
   void attach( Plot_ptr plot );
 
   GLFWwindow* window() { return window_; }
+
+  const mat4& mvp() const { return mvp_; }
+  mat4& mvp() { return mvp_; }
+
+  const mat4& viewMatrix() const { return viewMatrix_; }
+  mat4& viewMatrix() { return viewMatrix_; }
+
+  const mat4& projMatrix() const { return projMatrix_; }
+  mat4& projMatrix() { return projMatrix_; }
+
+  const mat4& modelMatrix() const { return modelMatrix_; }
+  mat4& modelMatrix() { return modelMatrix_; }
 
   Plotter* plotter() { return plotter_; }
   const Plotter* plotter() const { return plotter_; }
@@ -54,7 +68,18 @@ private:
 
   std::vector<Plot_ptr> plot_;
 
-  mat3 mvp_;
+  mat4 mvp_;
+  mat4 viewMatrix_;
+  mat4 projMatrix_;
+  mat4 modelMatrix_;
+
+  float fov_ = 45.0f;
+  float speed_ = 3.0f;
+  float mouseSpeed_ = 0.005f;
+
+  vec3 position_;
+
+  float angles_[2];
 };
 
 } // graphics

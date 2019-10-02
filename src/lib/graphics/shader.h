@@ -14,6 +14,10 @@ const std::string __basic_fs_src__ =
 #include "shaders/basic.fs"
 ;
 
+const std::string __edge_fs_src__ =
+#include "shaders/edge.fs"
+;
+
 /*
 const std::string patch_vs_src =
 #include "glsl/patch.vs"
@@ -33,14 +37,6 @@ const std::string pnt_fs_src =
 
 const std::string tri_vs_src =
 #include "glsl/tri.vs"
-;
-
-const std::string edg_vs_src =
-#include "glsl/edg.fs"
-;
-
-const std::string edg_fs_src =
-#include "glsl/edg.fs"
 ;
 
 const std::string edg_gs_src =
