@@ -4,6 +4,7 @@
 #include "graphics/plotter.h"
 #include "graphics/window.h"
 
+#include "library/obj.h"
 #include "library/samples.h"
 
 #include "mesh/topology.h"
@@ -22,11 +23,13 @@ UT_TEST_CASE( test1 )
   Window& window = plotter.window("main");
 
   library::TwoTriangles topology;
+  //library::objFile topology( "/Users/pcaplan/Desktop/suzanne.obj" );
+
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);
 
   Window::Plot_ptr plot2 = std::make_shared<Plot>(topology.edges(),&window);
-  //plotter.window("main").attach(plot2);
+  plotter.window("main").attach(plot2);
 
   plotter.run();
 }

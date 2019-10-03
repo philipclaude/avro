@@ -59,9 +59,9 @@ class OpenGLPrimitive : public Primitive
 private:
   typedef struct
   {
-    std::vector<float> coordinates;
-    std::vector<unsigned int> indices;
-    std::vector<float> colours;
+    std::vector<GLfloat> coordinates;
+    std::vector<GLuint> indices;
+    std::vector<GLfloat> colours;
   } glData;
 
 public:

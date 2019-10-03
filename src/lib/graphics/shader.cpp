@@ -214,7 +214,6 @@ ShaderProgram::setUniform( const char *name, mat4& m)
   if (loc >= 0)
   {
     GL_CALL( glUniformMatrix4fv(loc, 1, GL_FALSE, &m[0][0] ) );
-    printf("uniform set!\n");
   }
   else
     printf("uniform not set for program handle %d!!\n",handle_);

@@ -47,14 +47,12 @@ OpenGLPrimitive::convert( glData& data )
       data.coordinates[n++] = vertices(k,j);
     }
   }
-  printInline(data.colours);
+  //printInline(data.colours);
 }
 
 void
 OpenGLPrimitive::write()
 {
-  glViewport(0,0,1,1);
-
   // bind the buffers to the opengl context
   index_t nb_elem = topology_.nb();
   index_t nb_vertices = topology_.vertices().nb();
@@ -115,7 +113,7 @@ OpenGLPrimitive::draw()
   index_t nb_vert = topology_.vertices().nb();
   coord_t dim = 3;
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   shader_->use();
 
@@ -123,10 +121,6 @@ OpenGLPrimitive::draw()
 
   //shader_->printActiveAttribs();
   //shader_->printActiveUniforms();
-
-  //shader_->setUniform("MVP",window_->mvp());
-
-  //std::cout << window_->mvp() << std::endl;
 
   //GL_CALL( glClear(GL_COLOR_BUFFER_BIT) );
 

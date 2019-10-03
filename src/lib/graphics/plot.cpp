@@ -42,8 +42,6 @@ Plot::setWindow( Window* window )
 void
 Plot::draw()
 {
-  printf("drawing!\n");
-
   // loop through the primitives
   for (index_t k=0;k<primitive_.size();k++)
   {

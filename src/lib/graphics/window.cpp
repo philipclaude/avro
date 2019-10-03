@@ -23,6 +23,16 @@ Window::Window( const std::string& title , Plotter* plotter) :
     glfwTerminate();
     ursa_assert_not_reached;
   }
+  glfwMakeContextCurrent(window_);
+
+  // ensure we can capture the escape key being pressed below
+  glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
+
+  // hide the mouse and enable unlimited mouvement
+  glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+  glfwPollEvents();
+  glfwSetCursorPos(window_, width_/2, height_/2);
 
   angles_[0] = 0;
   angles_[1] = 0;
@@ -44,7 +54,7 @@ Window::setMatrices()
 
 
   	// Compute time difference between current and last frame
-    #if 0
+    #if 1
   	double currentTime = glfwGetTime();
   	float deltaTime = float(currentTime - lastTime);
     deltaTime = 0.f;
@@ -54,7 +64,7 @@ Window::setMatrices()
   	glfwGetCursorPos(window_, &xpos, &ypos);
 
   	// Reset mouse position for next frame
-  	//glfwSetCursorPos(window_, 1024/2, 768/2);
+  	glfwSetCursorPos(window_, width_/2, height_/2);
 
   	// Compute new orientation
   	angles_[0] += mouseSpeed_ * float(width_/2  - xpos );
@@ -126,6 +136,7 @@ void
 Window::draw()
 {
   glClearColor (1.0, 1.0, 1.0, 0.0); // white
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   setMatrices();
 

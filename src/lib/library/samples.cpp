@@ -14,7 +14,7 @@ TwoTriangles::TwoTriangles() :
   real_t x0[3] = {0,0,1};
   real_t x1[3] = {1,0,2};
   real_t x2[3] = {0,1,3};
-  real_t x3[3] = {0.5,0.5,6};
+  real_t x3[3] = {1,1,4};
   vertices_.create( x0 );
   vertices_.create( x1 );
   vertices_.create( x2 );
