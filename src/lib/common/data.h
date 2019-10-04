@@ -38,12 +38,6 @@ public:
   void add( std::vector<type> elem );
   void add( type* d0 , const index_t nd );
   void add( const type* d0 , const index_t nd ) { __add__(d0,nd); }
-  void addto( const index_t k , const index_t value );
-  void offsetBy( const type offset );
-  void incrementIfGreater( const type offset , const type d0 );
-  void decrementIfGreater( const type offset , const type d0 );
-  void decrement( const type offset );
-  void set( const index_t k , const index_t j , const index_t value );
   void setall( const type& value );
 
   void mapData( std::map<type,type>& dmap );
@@ -70,6 +64,7 @@ public:
 
   // retrieval
   type* operator() ( const index_t k );
+  const type* operator() ( const index_t k ) const;
   type operator() ( const index_t k , const index_t j ) const;
   type& operator() ( const index_t k , const index_t j );
   std::vector<type> get( const index_t k ) const;

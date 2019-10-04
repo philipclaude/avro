@@ -233,6 +233,16 @@ printValue( const float& x )
   printf("%g ",x);
 }
 
+template<>
+inline void
+printValue( const std::vector<real_t>& x )
+{
+  printf(" [ ");
+  for (index_t j=0;j<x.size();j++)
+    printf("%g ",x[j]);
+  printf("] ");
+}
+
 template<typename type>
 static void
 printInline( const std::vector<type>& s , const std::string& name=std::string() , const int id=-1 , const index_t nt=0 )

@@ -4,7 +4,7 @@
 #include "graphics/shader.h"
 #include "graphics/window.h"
 
-#include "numerics/field.h"
+#include "mesh/field.h"
 
 namespace ursa
 {

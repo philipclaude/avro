@@ -2,9 +2,8 @@
 #include "graphics/primitive.h"
 #include "graphics/shader.h"
 
+#include "mesh/field.h"
 #include "mesh/topology.h"
-
-#include "numerics/field.h"
 
 namespace ursa
 {

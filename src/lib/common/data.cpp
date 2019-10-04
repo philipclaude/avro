@@ -1,6 +1,8 @@
 #include "common/data.h"
 #include "common/tools.h"
 
+#include "numerics/matrix.h"
+
 #include <algorithm>
 
 namespace ursa
@@ -23,7 +25,7 @@ Data<type>::allocate( const index_t n , const index_t size )
   {
     first_.push_back( elements_.size() );
     for (index_t j=0;j<size;j++)
-      elements_.push_back(0);
+      elements_.push_back(type(0));
     last_.push_back( elements_.size() );
   }
 }
@@ -36,7 +38,7 @@ Data<type>::allocate( const index_t n , const std::vector<index_t> sizes )
   {
     first_.push_back( elements_.size() );
     for (index_t j=0;j<sizes[k];j++)
-      elements_.push_back(0.);
+      elements_.push_back(type(0));
     last_.push_back( elements_.size() );
   }
 }
@@ -56,6 +58,13 @@ Data<type>::countOccurrencesOf( const type n )
 template<typename type>
 type*
 Data<type>::operator() ( const index_t k )
+{
+  return &elements_[first_[k]];
+}
+
+template<typename type>
+const type*
+Data<type>::operator() ( const index_t k ) const
 {
   return &elements_[first_[k]];
 }
@@ -128,53 +137,6 @@ Data<type>::elementsWith( const type n , std::vector<index_t>& elems ) const
 
 template<typename type>
 void
-Data<type>::offsetBy( const type offset )
-{
-  for (index_t k=0;k<elements_.size();k++)
-    elements_[k] += offset;
-}
-
-template<typename type>
-void
-Data<type>::incrementIfGreater( const type offset , const type d0 )
-{
-  for (index_t k=0;k<elements_.size();k++)
-  {
-    if (elements_[k]>=d0)
-      elements_[k] += offset;
-  }
-}
-
-template<typename type>
-void
-Data<type>::decrementIfGreater( const type offset , const type d0 )
-{
-  for (index_t k=0;k<elements_.size();k++)
-  {
-    if (elements_[k]>=d0)
-      elements_[k] -= offset;
-  }
-}
-
-template<typename type>
-void
-Data<type>::decrement( const type offset )
-{
-  for (index_t k=0;k<elements_.size();k++)
-  {
-    elements_[k] -= offset;
-  }
-}
-
-template<typename type>
-void
-Data<type>::set( const index_t k , const index_t j , const index_t value )
-{
-  elements_[ first_[k]+j ] = value;
-}
-
-template<typename type>
-void
 Data<type>::add( std::vector<type> elem )
 {
   __add__(elem.data(),elem.size());
@@ -185,24 +147,6 @@ void
 Data<type>::add( type* d0 , const index_t nd )
 {
   __add__(d0,nd);
-}
-
-template<typename type>
-void
-Data<type>::addto( const index_t k0 , const index_t value )
-{
-  // add the value
-  elements_.insert( elements_.begin() +last_[k0] , value );
-
-  // last gets shifted for this cell
-  last_[k0]++;
-
-  // both first and last get shifted for following cells
-  for (index_t k=k0+1;k<nb();k++)
-  {
-    first_[k]++;
-    last_[k]++;
-  }
 }
 
 template<typename type>
@@ -493,7 +437,7 @@ template<typename type>
 type
 Data<type>::max() const
 {
-  if (elements_.size()==0) return 0.;
+  if (elements_.size()==0) return type(0);
   return *std::max_element( elements_.begin() , elements_.end() );
 }
 
@@ -526,5 +470,6 @@ Data<type>::setall( const type& value )
 template class Data<index_t>;
 template class Data<real_t>;
 template class Data<int>;
+template class Data<std::vector<real_t>>;
 
 } // avro

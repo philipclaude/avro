@@ -42,12 +42,32 @@ OpenGLPrimitive::convert( glData& data )
     data.colours[3*k] = k*1.0f/nb_vert;
     for (index_t j=0;j<dim;j++)
     {
-      //data.colours[n] = (float) (k+1)*(j+1) / (3*nb_vert);
-      data.colours[n] = vertices(k,0);
-      data.coordinates[n++] = vertices(k,j);
+      //data.colours[n] = 1.0f;//(float) (k+1)*(j+1) / (3*nb_vert);
+      data.coordinates[n] = vertices(k,j);
+
+      n++;
     }
   }
-  //printInline(data.colours);
+
+  // TODO add extra stuff stored in the topology
+  const Fields& fields = topology_.fields();
+  if (fields.has("vertex_normals"))
+  {
+    printf("add vertex normals!!!\n");
+  }
+  if (fields.has("vertex_uv"))
+  {
+    printf("add vertex uv values!!\n");
+  }
+
+  if (fields.has("triangle_normals"))
+  {
+    printf("add triangle normals!!!\n");
+  }
+  if (fields.has("triangle_uv"))
+  {
+    printf("add triangle uv values!!\n");
+  }
 }
 
 void
@@ -113,17 +133,13 @@ OpenGLPrimitive::draw()
   index_t nb_vert = topology_.vertices().nb();
   coord_t dim = 3;
 
-  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+  // indicate to the gl that we want to use the shader
   shader_->use();
 
+  // assign the uniforms for the shader programs
   shader_->setUniform("MVP" , window_->mvp() );
 
-  //shader_->printActiveAttribs();
-  //shader_->printActiveUniforms();
-
-  //GL_CALL( glClear(GL_COLOR_BUFFER_BIT) );
-
+  // bind the vao associated with this primitive
   GL_CALL( glBindVertexArray(vao_) );
   if (topology_.number()==1)
     GL_CALL( glDrawElements( GL_LINES , nb_elem*nv , GL_UNSIGNED_INT , 0 ) )
@@ -131,6 +147,8 @@ OpenGLPrimitive::draw()
     GL_CALL( glDrawElements(GL_TRIANGLES,nb_elem*nv, GL_UNSIGNED_INT , 0 ) )
   else
     ursa_implement;
+
+  // reset the vao bound to the gl
   GL_CALL( glBindVertexArray(0) );
 
 }

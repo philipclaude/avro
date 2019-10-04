@@ -9,8 +9,6 @@
 
 #include "mesh/topology.h"
 
-#include "numerics/field.h"
-
 using namespace ursa;
 using namespace ursa::graphics;
 
@@ -22,14 +20,14 @@ UT_TEST_CASE( test1 )
 
   Window& window = plotter.window("main");
 
-  library::TwoTriangles topology;
-  //library::objFile topology( "/Users/pcaplan/Desktop/suzanne.obj" );
+  //library::TwoTriangles topology;
+  library::objFile topology( "/Users/pcaplan/Desktop/suzanne.obj" );
 
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);
 
-  Window::Plot_ptr plot2 = std::make_shared<Plot>(topology.edges(),&window);
-  plotter.window("main").attach(plot2);
+  //Window::Plot_ptr plot2 = std::make_shared<Plot>(topology.edges(),&window);
+  //plotter.window("main").attach(plot2);
 
   plotter.run();
 }

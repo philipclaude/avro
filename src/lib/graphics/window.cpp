@@ -5,8 +5,6 @@
 #include "graphics/plotter.h"
 #include "graphics/window.h"
 
-#include "numerics/field.h"
-
 namespace ursa
 {
 

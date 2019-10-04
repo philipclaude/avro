@@ -9,8 +9,9 @@
 #include "master/polytope.h"
 #include "master/simplex.h"
 
-#include "numerics/field.h"
+#include "mesh/field.h"
 
+#include <string>
 #include <vector>
 
 namespace ursa
@@ -20,6 +21,23 @@ class Vertices;
 class ClippingPlane;
 class TopologyHolder;
 
+template<typename derived_t>
+class FieldClass : public FieldHolder
+{
+public:
+  FieldClass( const std::string& name , derived_t& base ) :
+    name_(name),
+    base_(base)
+  {}
+
+  derived_t& base() { return base_; }
+  const derived_t& base() const { return base_; }
+
+private:
+  std::string name_;
+  derived_t&  base_;
+};
+
 class Fields
 {
 
@@ -27,7 +45,40 @@ public:
     Fields( const TopologyHolder& topology );
     Fields( const json& J );
 
+    bool has( const std::string& name ) const
+    {
+      if (fields_.find(name)==fields_.end())
+        return false;
+      return true;
+    }
+
+    template<typename type>
+    void make( const std::string& name , std::shared_ptr<type>& f )
+    {
+      fields_.insert( { name , std::make_shared< FieldClass<type> >(name,*f.get()) } );
+    }
+
+    template<typename type>
+    type* get( const std::string& name )
+    {
+      FieldHolder* f = fields_[name].get();
+      return static_cast<FieldClass<type>*>(f)->base();
+    }
+
+    template<typename type>
+    const type* get( const std::string& name ) const
+    {
+      const FieldHolder* f = fields_.at(name).get();
+      return static_cast<const FieldClass<type>*>(f)->base();
+    }
+
+    void remove( const std::string& name )
+    {
+      fields_.erase(name);
+    }
+
     void fromJSON( const json& J );
+
 private:
   std::map<std::string,std::shared_ptr<FieldHolder>> fields_;
 
@@ -69,6 +120,15 @@ public:
 
   void setDummy( bool x ) { dummy_ = x; }
   bool dummy() const { return dummy_; }
+
+  template<typename derived_t>
+  void attach( const std::string& name , std::shared_ptr<derived_t>& fld )
+  {
+    fields_.make( name , fld );
+  }
+
+  Fields& fields() { return fields_; }
+  const Fields& fields() const { return fields_; }
 
 protected:
   Vertices& vertices_;

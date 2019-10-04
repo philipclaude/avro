@@ -63,8 +63,8 @@ private:
   Plotter* plotter_;
   GLFWwindow* window_;
 
-  int width_ = 650;
-  int height_ = 400;
+  int width_ = 1024;//650;
+  int height_ = 640;//400;
 
   std::vector<Plot_ptr> plot_;
 
