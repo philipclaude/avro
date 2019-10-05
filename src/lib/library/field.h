@@ -12,16 +12,6 @@ namespace ursa
 namespace library
 {
 
-class TriangleTextureField : public Field<Simplex<Lagrange>,std::vector<real_t>>
-{
-public:
-  TriangleTextureField( const Topology<Simplex<Lagrange>>& topology );
-
-private:
-};
-
-
-
 } // library
 
 } // ursa

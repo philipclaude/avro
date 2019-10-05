@@ -27,6 +27,8 @@ public:
 
   void loadQuadrature( Quadrature& quadrature ); // conical-product, grundmann-moeller, etc.
 
+  template<typename BasisFrom_t,typename dof_t> void convert( const BasisFrom_t& masterFrom , const std::vector<dof_t>& A , std::vector<dof_t>& B ) const;
+
   index_t nb_poly() const { return phi_.m(); }
   index_t nb_quad() const { return phi_.n(); }
 

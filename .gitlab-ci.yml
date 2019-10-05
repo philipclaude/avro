@@ -12,7 +12,7 @@ job-release:
     - mkdir build/release
     - cd build/release
     - cmake ../../
-    - make -j12
+    - make
   tags:
     - ursa-commit
 

@@ -24,8 +24,7 @@ class Coordinate;
 class FieldHolder
 {
 private:
-//  const TopologyHolder& topology_;
-std::string name_;
+  std::string name_;
 };
 
 enum FieldType
@@ -37,7 +36,7 @@ template<typename T>
 class FieldBase : public FieldHolder, public Data<index_t>
 {
 public:
-  FieldBase();
+  FieldBase( FieldType type );
 
   T& eval( index_t elem , const Parameter& u ) const;
   T& eval( index_t elem , const Coordinate& x ) const;
@@ -55,9 +54,9 @@ public:
   index_t nb_elem() const { return Data<index_t>::nb(); }
   index_t nb_data() const { return data_.size(); }
 
+  const std::vector<T>& data() const { return data_; }
+
 protected:
-  template<typename Shape_t,typename Master_t>
-  void build( const Topology<Shape_t>& topology , const Master_t& master  );
   std::vector<T> data_;
 
 private:
@@ -73,8 +72,10 @@ class Field<Simplex<Basis_t>,T> : public FieldBase<T>
   typedef Simplex<Lagrange> Shape_t;
 
 public:
-  Field( const Topology<Shape_t>& topology , coord_t order );
+  Field( const Topology<Shape_t>& topology , coord_t order , FieldType type );
   void build();
+
+  const Master_t& master() const { return master_; }
 
 private:
   const Topology<Shape_t>& topology_;
@@ -88,9 +89,10 @@ class Field<Polytope,T> : public FieldBase<T>
   typedef Polytope Master_t;
 
 public:
-  Field( Topology<Shape_t>& topology , coord_t order );
-
+  Field( Topology<Shape_t>& topology , coord_t order , FieldType type );
   void build();
+
+  const Master_t& master() const { return master_; }
 
 private:
   const Topology<Shape_t>& topology_;

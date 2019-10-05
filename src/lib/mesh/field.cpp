@@ -17,47 +17,13 @@ namespace ursa
 {
 
 template<typename T>
-FieldBase<T>::FieldBase() :
-  type_(CONTINUOUS)
+FieldBase<T>::FieldBase( FieldType type ) :
+  type_(type)
 {}
 
-template<typename T>
-template<typename Shape_t,typename Master_t>
-void
-FieldBase<T>::build( const Topology<Shape_t>& topology , const Master_t& master  )
-{
-  const index_t nb_poly = master.nb_poly();
-  if (type_==CONTINUOUS)
-  {
-    // get the number of unique entries in the field
-    // using the number of elements and nb_poly, for now assume p = 1
-    ursa_assert( master.order()==1 );
-    index_t nb = topology.vertices().nb();
-
-    for (index_t k=0;k<topology.nb();k++)
-    {
-      Data<index_t>::add( topology.template Data<index_t>::operator()(k) , topology.nv(k) );
-    }
-
-    for (index_t k=0;k<nb;k++)
-    {
-      data_.push_back( T(0) );
-    }
-  }
-  else if (type_==DISCONTINUOUS)
-  {
-    for (index_t k=0;k<topology.nb();k++)
-    {
-      for (index_t j=0;j<nb_poly;j++)
-        data_.push_back( T(0) );
-    }
-  }
-  else
-    ursa_assert_not_reached;
-}
-
 template<typename Basis,typename T>
-Field<Simplex<Basis>,T>::Field( const Topology<Shape_t>& topology , coord_t order ) :
+Field<Simplex<Basis>,T>::Field( const Topology<Shape_t>& topology , coord_t order , FieldType type ) :
+  FieldBase<T>(type),
   topology_(topology),
   master_(topology.number(),order)
 {
@@ -76,7 +42,9 @@ Field<Simplex<Basis>,T>::build()
 
     for (index_t k=0;k<topology_.nb();k++)
     {
-      Data<index_t>::add( topology_.template Data<index_t>::operator()(k) , topology_.nv(k) );
+      const index_t* v = topology_.template Data<index_t>::operator()(k);
+      const index_t nv = topology_.nv(k);
+      Data<index_t>::add( v , nv );
     }
 
     for (index_t k=0;k<topology_.vertices().nb();k++)
@@ -90,7 +58,9 @@ Field<Simplex<Basis>,T>::build()
     const index_t nb_poly = 1; // assume order zero
     for (index_t k=0;k<topology_.nb();k++)
     {
-      Data<index_t>::add( topology_.template Data<index_t>::operator()(k) , topology_.nv(k) );
+      const index_t* v = topology_.template Data<index_t>::operator()(k);
+      const index_t nv = topology_.nv(k);
+      Data<index_t>::add( v , nv );
       for (index_t j=0;j<nb_poly;j++)
         this->data_.push_back( T(0) );
     }
@@ -100,7 +70,8 @@ Field<Simplex<Basis>,T>::build()
 }
 
 template<typename T>
-Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order ) :
+Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
+  FieldBase<T>(type),
   topology_(topology),
   master_(topology.number(),topology.order(),topology.master().incidence())
 {
@@ -114,14 +85,15 @@ Field<Polytope,T>::build()
   if (this->type()==CONTINUOUS)
   {
     ursa_assert( master_.order()==1 );
-    index_t nb = topology_.vertices().nb();
 
     for (index_t k=0;k<topology_.nb();k++)
     {
-      Data<index_t>::add( topology_.template Data<index_t>::operator()(k) , topology_.nv(k) );
+      const index_t* v = topology_.template Data<index_t>::operator()(k);
+      const index_t nv = topology_.nv(k);
+      Data<index_t>::add( v , nv );
     }
 
-    for (index_t k=0;k<nb;k++)
+    for (index_t k=0;k<topology_.vertices().nb();k++)
     {
       this->data_.push_back( T(0) );
     }
@@ -145,7 +117,7 @@ template class Field< Polytope , real_t >;
 template class Field< Simplex<Lagrange> , std::vector<real_t> >;
 template class Field< Simplex<Lagrange> , std::vector<index_t> >;
 
-//template class Field< Simplex<Lagrange> , geometrics::Primitive* >;
-//template class Field< Simplex<Lagrange> , numerics::SymMatrixD<real_t> >;
+template class Field< Simplex<Lagrange> , geometrics::Primitive* >;
+template class Field< Simplex<Lagrange> , numerics::SymMatrixD<real_t> >;
 
 } // ursa

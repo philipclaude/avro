@@ -23,20 +23,6 @@ Window::Window( const std::string& title , Plotter* plotter) :
   }
   glfwMakeContextCurrent(window_);
 
-  // ensure we can capture the escape key being pressed below
-  glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
-
-  // hide the mouse and enable unlimited mouvement
-  glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-  glfwPollEvents();
-  glfwSetCursorPos(window_, width_/2, height_/2);
-
-  angles_[0] = 0;
-  angles_[1] = 0;
-
-  setMatrices();
-
 }
 
 Window::~Window()
@@ -55,7 +41,7 @@ Window::setMatrices()
     #if 1
   	double currentTime = glfwGetTime();
   	float deltaTime = float(currentTime - lastTime);
-    deltaTime = 0.f;
+    //deltaTime = 0.f;
 
   	// Get mouse position
   	double xpos, ypos;
@@ -106,6 +92,8 @@ Window::setMatrices()
   		position_ -= right * deltaTime * speed_;
   	}
 
+    //fov_ = fov_ - 5 * glfwGetMouseWheel();
+
   	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
   	projMatrix_ = glm::perspective(glm::radians(fov_), 4.0f / 3.0f, 0.1f, 100.0f);
 
@@ -127,7 +115,7 @@ Window::setMatrices()
     mvp_ = projMatrix_*viewMatrix_*modelMatrix_;
 
   	// For the next frame, the "last time" will be "now"
-  	//lastTime = currentTime;
+  	lastTime = currentTime;
 }
 
 void
@@ -164,8 +152,17 @@ Window::attach( Plot_ptr plot )
 void
 Window::run()
 {
-  glfwMakeContextCurrent(window_);
-  //glfwSwapInterval(1);
+  // ensure we can capture the escape key being pressed below
+  glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
+
+  // hide the mouse and enable unlimited mouvement
+  glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+  glfwPollEvents();
+  glfwSetCursorPos(window_, width_/2, height_/2);
+
+  angles_[0] = 0;
+  angles_[1] = 0;
 
   glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
@@ -175,25 +172,13 @@ Window::run()
   glDepthFunc(GL_LESS);
 
   // Cull triangles which normal is not towards the camera
-  glEnable(GL_CULL_FACE);
+  //glEnable(GL_CULL_FACE);
 
   write();
 
-  while (!glfwWindowShouldClose(window_))
+  while (!glfwWindowShouldClose(window_) && glfwGetKey(window_, GLFW_KEY_ESCAPE ) != GLFW_PRESS)
   {
-
-    draw(); // callback to window virtual function
-    /*mat4x4 m, p, mvp;
-    mat4x4_identity(m);
-    mat4x4_rotate_Z(m, m, (float) glfwGetTime());
-    mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-    mat4x4_mul(mvp, p, m);
-
-    glUseProgram(program);
-    glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) &mvp);
-    glBindVertexArray(vertex_array);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    */
+    draw();
     glfwSwapBuffers(window_);
     glfwPollEvents();
   }

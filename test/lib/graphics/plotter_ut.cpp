@@ -21,7 +21,7 @@ UT_TEST_CASE( test1 )
   Window& window = plotter.window("main");
 
   //library::TwoTriangles topology;
-  library::objFile topology( "/Users/pcaplan/Desktop/suzanne.obj" );
+  library::objFile topology( "/Users/pcaplan/Desktop/spot_triangulated.obj" );
 
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);

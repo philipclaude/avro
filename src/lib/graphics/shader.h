@@ -6,52 +6,6 @@
 
 #include <string>
 
-const std::string __basic_vs_src__ =
-#include "shaders/basic.vs"
-;
-
-const std::string __basic_fs_src__ =
-#include "shaders/basic.fs"
-;
-
-const std::string __edge_fs_src__ =
-#include "shaders/edge.fs"
-;
-
-/*
-const std::string patch_vs_src =
-#include "glsl/patch.vs"
-;
-
-const std::string patch_fs_src =
-#include "glsl/patch.fs"
-;
-
-const std::string pnt_vs_src =
-#include "glsl/pnt.vs"
-;
-
-const std::string pnt_fs_src =
-#include "glsl/pnt.fs"
-;
-
-const std::string tri_vs_src =
-#include "glsl/tri.vs"
-;
-
-const std::string edg_gs_src =
-#include "glsl/edg.gs"
-;
-
-const std::string tri_fs_src =
-#include "glsl/tri.fs"
-;
-
-const std::string tri_gs_src =
-#include "glsl/tri.gs"
-;
-*/
-
 namespace ursa
 {
 

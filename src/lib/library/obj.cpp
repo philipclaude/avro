@@ -4,6 +4,7 @@
 #include "library/obj.h"
 
 #include <fstream>
+#include <string>
 
 namespace ursa
 {
@@ -37,27 +38,19 @@ objFile::read()
   std::vector< std::vector<index_t> > nt_vals,ut_vals;
 
   typedef Field<Simplex<Lagrange>,std::vector<real_t>> FieldType;
-  std::shared_ptr<FieldType> normal_fld = std::make_shared<FieldType>(*this,1);
-  std::shared_ptr<FieldType> uv_fld = std::make_shared<FieldType>(*this,1);
-
-  normal_fld->type() = CONTINUOUS;
-  uv_fld->type() = CONTINUOUS;
+  std::shared_ptr<FieldType> normal_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
+  std::shared_ptr<FieldType> uv_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
 
   typedef Field<Simplex<Lagrange>,std::vector<index_t>> FieldType_idx;
-  std::shared_ptr<FieldType_idx> nt_fld = std::make_shared<FieldType_idx>(*this,0);
-  std::shared_ptr<FieldType_idx> ut_fld = std::make_shared<FieldType_idx>(*this,0);
-
-  nt_fld->type() = DISCONTINUOUS;
-  ut_fld->type() = DISCONTINUOUS;
-
+  std::shared_ptr<FieldType_idx> nt_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
+  std::shared_ptr<FieldType_idx> ut_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
+  
   while (true)
   {
     // read the first word of the line
     int res = fscanf(file, "%s", lineHeader);
     if (res == EOF)
-      break; // EOF = End Of File. Quit the loop.
-
-    // else : parse lineHeader
+      break; // we reached the end of the file
 
     if ( strcmp( lineHeader, "v" ) == 0 )
     {
@@ -77,7 +70,7 @@ objFile::read()
     }
     else if ( strcmp( lineHeader, "f" ) == 0 )
     {
-      int matches = fscanf(file, "%lu/%lu/%lu %lu/%lu/%lu %lu/%lu/%lu\n",
+      int matches; /*= fscanf(file, "%lu/%lu/%lu %lu/%lu/%lu %lu/%lu/%lu\n",
           &t[0], &ut[0], &nt[0], &t[1], &ut[1], &nt[1], &t[2], &ut[2], &nt[2] );
       if (matches == 9)
       {
@@ -90,9 +83,21 @@ objFile::read()
 
         nt_vals.push_back(NT);
         ut_vals.push_back(UT);
+        continue;
+      }*/
+      matches = fscanf(file, "%lu/%lu %lu/%lu %lu/%lu\n",
+          &t[0], &ut[0], &t[1], &ut[1], &t[2], &ut[2] );
+      if (matches==6)
+      {
+        for (coord_t d=0;d<3;d++)
+          t[d]--;
+        this->add( t , 3 );
+        std::vector<index_t> UT(ut,ut+3);
+        ut_vals.push_back(UT);
+        continue;
       }
       else
-        ursa_implement;
+        ursa_assert_msg( false , "matches = %d, line = %s " ,matches );
     }
     else
     {
@@ -127,10 +132,10 @@ objFile::read()
   nt_fld->build();
   ut_fld->build();
 
-  ursa_assert( nt_vals.size()==ut_vals.size() );
+  //ursa_assert( nt_vals.size()==ut_vals.size() );
   for (index_t k=0;k<nt_vals.size();k++)
   {
-    (*nt_fld)(k,0) = nt_vals[k];
+    //(*nt_fld)(k,0) = nt_vals[k];
     (*ut_fld)(k,0) = ut_vals[k];
   }
 
