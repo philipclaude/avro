@@ -21,8 +21,8 @@ FieldBase<T>::FieldBase( FieldType type ) :
   type_(type)
 {}
 
-template<typename Basis,typename T>
-Field<Simplex<Basis>,T>::Field( const Topology<Shape_t>& topology , coord_t order , FieldType type ) :
+template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
+Field<ShapeBasis_t,FieldBasis_t,T>::Field( const Topology<ShapeBasis_t>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type),
   topology_(topology),
   master_(topology.number(),order)
@@ -30,9 +30,18 @@ Field<Simplex<Basis>,T>::Field( const Topology<Shape_t>& topology , coord_t orde
   printf("constructing field with order %u\n",master_.order());
 }
 
-template<typename Basis,typename T>
+template<typename T>
+Field<Polytope,Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
+  FieldBase<T>(type),
+  topology_(topology),
+  master_(topology,order)
+{
+  printf("constructing field with order %u\n",master_.order());
+}
+
+template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
 void
-Field<Simplex<Basis>,T>::build()
+Field<ShapeBasis_t,FieldBasis_t,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
@@ -68,6 +77,8 @@ Field<Simplex<Basis>,T>::build()
   else
     ursa_assert_not_reached;
 }
+
+/*
 
 template<typename T>
 Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
@@ -109,15 +120,17 @@ Field<Polytope,T>::build()
   else
     ursa_assert_not_reached;
 }
+*/
 
-template class Field< Simplex<Lagrange> , real_t >;
-template class Field< Simplex<Bezier> , real_t >;
-template class Field< Polytope , real_t >;
+template class Field< Simplex<Lagrange> , Simplex<Lagrange> , real_t >;
+template class Field< Simplex<Lagrange> , Simplex<Bezier> , real_t >;
+template class Field< Polytope , Polytope , real_t >;
 
+/*
 template class Field< Simplex<Lagrange> , std::vector<real_t> >;
 template class Field< Simplex<Lagrange> , std::vector<index_t> >;
 
 template class Field< Simplex<Lagrange> , geometrics::Primitive* >;
-template class Field< Simplex<Lagrange> , numerics::SymMatrixD<real_t> >;
+template class Field< Simplex<Lagrange> , numerics::SymMatrixD<real_t> >;*/
 
 } // ursa

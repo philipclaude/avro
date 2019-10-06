@@ -9,23 +9,21 @@
 namespace ursa
 {
 
-template<typename MasterFrom_t,typename MasterTo_t,typename dof_t>
+template<typename Shape_t,typename Master_t>
 class Builder : public Data<index_t>
 {
 
 public:
-  Builder( const Topology<MasterFrom_t>& topology , const MasterTo_t& masterTo );
-  Builder( const Field<MasterFrom_t,dof_t>& field , const MasterTo_t& masterTo );
+  Builder( const Topology<Shape_t>& topology , const Master_t& master );
 
   void build();
 
-private:
-  std::vector<dof_t> dofFrom_;
-  std::vector<dof_t> dofTo_;
+  void transfer( Topology<Master_t>& F ) const;
+  //template<typename Basis_t,typename T> void transfer( const Field<Shape_t,Basis_t,T>& Fx , Field<Shape_t,Master_t,T>& Fy ) const;
 
-  const Data<index_t>& topology_;
-  const MasterFrom_t&  masterFrom_;
-  const MasterTo_t&    masterTo_;
+private:
+  const Topology<Shape_t>& topology_;
+  const Master_t&          master_;
 };
 
 }

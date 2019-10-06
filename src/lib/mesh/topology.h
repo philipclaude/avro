@@ -191,6 +191,7 @@ class Topology< Simplex<Bezier> > : public TopologyBase<Simplex<Bezier>>
 {
 public:
   Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange );
+  Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange , coord_t order );
 
   void convert();
 

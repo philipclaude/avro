@@ -32,6 +32,16 @@ Topology<Simplex<Bezier>>::Topology( Vertices& vertices , const Topology<Simplex
   convert();
 }
 
+/*\
+ * Bezier simplex topology
+\*/
+Topology<Simplex<Bezier>>::Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange , coord_t order ) :
+  TopologyBase(vertices,lagrange.number(),order),
+  lagrange_(lagrange)
+{
+  convert();
+}
+
 void
 Topology<Simplex<Bezier>>::convert()
 {

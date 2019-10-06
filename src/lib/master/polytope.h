@@ -9,11 +9,14 @@
 namespace ursa
 {
 
+template<typename type> class Topology;
+
 class Polytope : public Master
 {
 
 public:
   Polytope( coord_t number , coord_t order , Data<int>& incidence );
+  Polytope( Topology<Polytope>& topology , const coord_t order );
 
   Data<int>& incidence() { return incidence_; }
   const Data<int>& incidence() const { return incidence_; }

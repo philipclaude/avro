@@ -37,14 +37,16 @@ objFile::read()
   Data<real_t> normals,uv;
   std::vector< std::vector<index_t> > nt_vals,ut_vals;
 
-  typedef Field<Simplex<Lagrange>,std::vector<real_t>> FieldType;
+  typedef Simplex<Lagrange> type;
+
+  typedef Field<type,type,std::vector<real_t>> FieldType;
   std::shared_ptr<FieldType> normal_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
   std::shared_ptr<FieldType> uv_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
 
-  typedef Field<Simplex<Lagrange>,std::vector<index_t>> FieldType_idx;
+  typedef Field<type,type,std::vector<index_t>> FieldType_idx;
   std::shared_ptr<FieldType_idx> nt_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
   std::shared_ptr<FieldType_idx> ut_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
-  
+
   while (true)
   {
     // read the first word of the line
@@ -97,7 +99,7 @@ objFile::read()
         continue;
       }
       else
-        ursa_assert_msg( false , "matches = %d, line = %s " ,matches );
+        ursa_assert_msg( false , "matches = %d " ,matches );
     }
     else
     {

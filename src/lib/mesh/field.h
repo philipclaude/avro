@@ -63,13 +63,56 @@ private:
   FieldType type_;
 };
 
-template<typename Master_t,typename T> class Field;
+template<typename ShapeBasis_t,typename FieldBasis_t,typename T> class Field;
 
-template<typename Basis_t,typename T>
-class Field<Simplex<Basis_t>,T> : public FieldBase<T>
+template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
+class Field : public FieldBase<T>
+{
+public:
+  Field( const Topology<ShapeBasis_t>& topology , coord_t order , FieldType type );
+  void build();
+
+  const FieldBasis_t& master() const { return master_; }
+
+private:
+  const Topology<ShapeBasis_t>& topology_;
+  const FieldBasis_t master_;
+};
+
+template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
+class Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T> : public FieldBase<T>
+{
+public:
+  Field( const Topology<Simplex<ShapeBasis_t>>& topology , coord_t order , FieldType type );
+  void build();
+
+  const Simplex<FieldBasis_t>& master() const { return master_; }
+
+private:
+  const Topology<Simplex<ShapeBasis_t>>& topology_;
+  const Simplex<FieldBasis_t> master_;
+
+};
+
+template<typename T>
+class Field<Polytope,Polytope,T> : public FieldBase<T>
+{
+public:
+  Field( Topology<Polytope>& topology , coord_t order , FieldType type );
+
+private:
+  const Topology<Polytope>& topology_;
+  const Polytope master_;
+};
+
+/*
+template<typename Shape_t,typename Master_t,typename T> class Field;
+
+template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
+class Field<Simplex<ShapeBasis_t>,Simplex<Master_t>,T> : public FieldBase<T>
 {
   typedef Simplex<Basis_t>  Master_t;
-  typedef Simplex<Lagrange> Shape_t;
+  typedef Simplex<> Shape_t;
 
 public:
   Field( const Topology<Shape_t>& topology , coord_t order , FieldType type );
@@ -98,6 +141,7 @@ private:
   const Topology<Shape_t>& topology_;
   const Master_t master_;
 };
+*/
 
 
 } // ursa

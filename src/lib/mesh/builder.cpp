@@ -12,13 +12,12 @@ typedef struct
   coord_t dim;
 } Facet;
 
-template<typename Master_t>
+template<typename Shape_t>
 class FacetDecomposition
 {
 public:
-  FacetDecomposition( const Data<index_t>& topology , const Master_t& master ) :
-    topology_(topology),
-    master_(master)
+  FacetDecomposition( const Topology<Shape_t>& topology ) :
+    topology_(topology)
   {}
 
   coord_t nb_dim() const { return facets_.size(); }
@@ -34,29 +33,76 @@ public:
 private:
   std::vector< std::vector<Facet> > facets_;
   const Data<index_t>& topology_;
-  const Master_t& master_;
 };
 
-template<typename MasterFrom_t,typename MasterTo_t,typename dof_t>
-Builder<MasterFrom_t,MasterTo_t,dof_t>::Builder( const Topology<MasterFrom_t>& topology , const MasterTo_t& masterTo ) :
+template<typename Shape_t,typename Master_t>
+Builder<Shape_t,Master_t>::Builder( const Topology<Shape_t>& topology , const Master_t& master ) :
   topology_(topology),
-  masterFrom_(topology.master()),
-  masterTo_(masterTo)
+  master_(master)
 {
-  // make sure the type is std::vector<real_t>
-  ursa_assert( typeid(dof_t)==typeid(std::vector<real_t>) );
-
-  // save the dof we convert from
-  for (index_t k=0;k<topology.vertices().nb();k++)
-  {
-    std::vector<real_t> x( topology.vertices()[k] , topology.vertices()[k]+ topology.vertices().dim() );
-    dofFrom_.push_back(x);
-  }
-
   build();
 }
 
+template<typename Shape_t,typename Master_t>
+void
+Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
+{
+  ursa_assert( topology_.nb() == this->nb() );
+  ursa_assert( f.vertices().nb()==0 );
+  ursa_assert( f.vertices().dim()==topology_.vertices().dim() );
+  ursa_assert( f.nb()==0 );
 
+  // create all the vertices for the outgoing topology
+  const std::vector<index_t>& elems = this->elements();
+  index_t nb_vertices = *std::max_element( elems.begin() , elems.end() );
+  std::vector<real_t> x0( topology_.vertices().dim() , 0. );
+  for (index_t k=0;k<nb_vertices;k++)
+    f.vertices().create( x0.data() );
+
+  // map all the vertices from the topology to f's vertices
+  std::vector<bool> visited( nb_vertices , false );
+  std::vector<const real_t*> dof0,dof1;
+  std::vector<index_t> idx;
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    // get the vertices of the current element
+    dof0.resize( topology_.nv(k) , NULL );
+    for (index_t j=0;j<topology_.nv(k);j++)
+      dof0[j] = topology_.vertices()[ topology_(k,j) ];
+
+    // size the vertices to be added
+    dof1.resize( this->nv(k) , NULL );
+    //master_.transfer( topology_.master() , dof0 , dof1 );
+
+    idx.resize( this->nv(k) , 0 );
+    for (index_t j=0;j<dof1.size();j++)
+    {
+      idx[j] = (*this)(k,j);
+
+      // skip visited vertices
+      if (visited[ idx[j] ]) continue;
+      visited[ idx[j] ] = true;
+
+      for (index_t d=0;d<f.vertices().dim();d++)
+        f.vertices()[idx[j]][d] = dof1[j][d];
+    }
+    // create the element in the topology
+    f.add( idx.data() , idx.size() );
+  }
+}
+
+/*
+template<typename Shape_t,typename Master_t>
+template<typename MasterFrom_t,typename T>
+void
+Builder<Shape_t,Master_t>::transfer( const Field<Shape_t,MasterFrom_t,T>& fx , Field<Shape_t,Master_t>& fy ) const
+{
+  ursa_implement;
+}
+*/
+
+
+/*
 template<typename MasterFrom_t,typename MasterTo_t,typename dof_t>
 Builder<MasterFrom_t,MasterTo_t,dof_t>::Builder( const Field<MasterFrom_t,dof_t>& field , const MasterTo_t& masterTo ) :
   topology_(field),
@@ -73,13 +119,14 @@ Builder<MasterFrom_t,MasterTo_t,dof_t>::Builder( const Field<MasterFrom_t,dof_t>
 
   build();
 }
+*/
 
-template<typename MasterFrom_t,typename MasterTo_t,typename dof_t>
+template<typename Shape_t,typename Master_t>
 void
-Builder<MasterFrom_t,MasterTo_t,dof_t>::build()
+Builder<Shape_t,Master_t>::build()
 {
 
-  FacetDecomposition<MasterFrom_t> facets( topology_ , masterFrom_ );
+  FacetDecomposition<Shape_t> facets( topology_ );
   facets.build();
 
   // loop through the dimensional hierarchy
@@ -95,27 +142,16 @@ Builder<MasterFrom_t,MasterTo_t,dof_t>::build()
 
       const std::vector<index_t>& idx = f.indices;
 
-      // get the dof of this facet
-      std::vector<dof_t> f_dof( idx.size() );
-      for (index_t j=0;j<idx.size();j++)
-        f_dof[j] = dofFrom_[ idx[j] ];
+      // sprinkle the new dof into place
 
-      // compute the interior dof of the new facet
-      std::vector<dof_t> g_dof;
-      masterTo_.template convert<MasterFrom_t,dof_t>( masterFrom_ , f_dof , g_dof );
-
-      // add the dof to the new list
-      // TODO check which ones actually need to be added
-      for (index_t j=0;j<g_dof.size();j++)
-        dofTo_.push_back( g_dof[j] );
     }
 
   }
-
 }
 
 // builder for high-order meshes
-template class Builder< Simplex<Lagrange> , Simplex<Lagrange> , std::vector<real_t> >;
+template class Builder< Simplex<Lagrange> , Simplex<Lagrange> >;
+template class Builder< Simplex<Lagrange> , Simplex<Bezier> >;
 
 
 } // ursa

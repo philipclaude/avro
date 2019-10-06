@@ -12,6 +12,8 @@
 namespace ursa
 {
 
+template<typename Shape_t> class Topology;
+
 template<typename Basis> class Simplex;
 class Quadrature;
 
@@ -24,6 +26,8 @@ public:
   {
     precalculate();
   }
+
+  SimplexBase( const Topology<Simplex<Basis>>& topology , const coord_t order );
 
   void loadQuadrature( Quadrature& quadrature ); // conical-product, grundmann-moeller, etc.
 
