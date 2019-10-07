@@ -4,6 +4,7 @@
 #include "common/types.h"
 
 #include <string>
+#include <vector>
 
 namespace ursa
 {
@@ -33,6 +34,16 @@ protected:
   coord_t order_;
   std::string name_;
 };
+
+typedef struct
+{
+  std::vector<index_t> indices;
+  coord_t dim;
+  bool sorted = true;
+} Element;
+
+bool operator< ( const Element& f , const Element& g );
+bool operator== ( const Element& f , const Element& g );
 
 } // ursa
 

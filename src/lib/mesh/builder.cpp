@@ -1,16 +1,21 @@
+#include "common/tools.h"
+
+#include "master/transfer.hpp"
+
 #include "mesh/builder.h"
 
+#include <set>
 #include <type_traits>
+#include <vector>
 
 namespace ursa
 {
 
 typedef struct
 {
-  std::vector<index_t> indices;
   std::vector<index_t> parents;
-  coord_t dim;
-} Facet;
+  std::vector<index_t> local;
+} FacetParent;
 
 template<typename Shape_t>
 class FacetDecomposition
@@ -22,18 +27,65 @@ public:
 
   coord_t nb_dim() const { return facets_.size(); }
 
-  const std::vector<Facet>& operator[](index_t d)
+  const std::map<Element,FacetParent>& operator[](index_t d) const
     { return facets_[d]; }
 
-  void build()
-  {
-    ursa_implement;
-  }
+  std::map<Element,FacetParent>& operator[](index_t d)
+    { return facets_[d]; }
+
+  void build();
 
 private:
-  std::vector< std::vector<Facet> > facets_;
-  const Data<index_t>& topology_;
+  std::vector< std::map<Element,FacetParent> > facets_;
+  const Topology<Shape_t>& topology_;
 };
+
+template<typename Shape_t>
+void
+FacetDecomposition<Shape_t>::build()
+{
+  const coord_t nb_facet_dim = topology_.master().number()+1; // always!
+
+  // create the maps for each dimension
+  for (index_t j=0;j<nb_facet_dim;j++)
+    facets_.push_back( std::map<Element,FacetParent>() );
+
+  // loop through the elements in the topology
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    // loop through the facets of this element
+    for (index_t j=0;j<nb_facet_dim;j++)
+    {
+      std::map<Element,FacetParent>& facets_j = facets_[j];
+
+      for (index_t i=0;i<topology_.master().nb_facets(j);i++)
+      {
+        Element f;
+        f.dim = j;
+        topology_.master().get_facet_vertices( topology_(k) , topology_.nv(k) , i , f );
+
+        printInline( f.indices );
+
+        // check if this facet exists
+        std::map<Element,FacetParent>::iterator it = facets_j.find(f);
+        if ( it==facets_j.end() )
+        {
+          std::vector<index_t> parents = {k};
+          FacetParent p;
+          p.parents.push_back(k);
+          p.local.push_back(i);
+          facets_j.insert( {f,p} );
+        }
+        else
+        {
+          printf("    --> exists! adding parent (%lu,%lu)\n",k,i);
+          it->second.parents.push_back(k);
+          it->second.local.push_back(i);
+        }
+      }
+    }
+  }
+}
 
 template<typename Shape_t,typename Master_t>
 Builder<Shape_t,Master_t>::Builder( const Topology<Shape_t>& topology , const Master_t& master ) :
@@ -48,21 +100,28 @@ void
 Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
 {
   ursa_assert( topology_.nb() == this->nb() );
-  ursa_assert( f.vertices().nb()==0 );
+  ursa_assert_msg( f.vertices().nb()==0 , "nb_vertices = %lu" , f.vertices().nb() );
   ursa_assert( f.vertices().dim()==topology_.vertices().dim() );
   ursa_assert( f.nb()==0 );
 
+  printData();
+
   // create all the vertices for the outgoing topology
   const std::vector<index_t>& elems = this->elements();
-  index_t nb_vertices = *std::max_element( elems.begin() , elems.end() );
+  index_t nb_vertices = *std::max_element( elems.begin() , elems.end() ) +1;
   std::vector<real_t> x0( topology_.vertices().dim() , 0. );
   for (index_t k=0;k<nb_vertices;k++)
     f.vertices().create( x0.data() );
 
+  // copy the topology
+  for (index_t k=0;k<this->nb();k++)
+    f.add( this->operator()(k) , this->nv(k) );
+
+  printf("nb vertices = %lu\n",nb_vertices);
+
   // map all the vertices from the topology to f's vertices
-  std::vector<bool> visited( nb_vertices , false );
-  std::vector<const real_t*> dof0,dof1;
-  std::vector<index_t> idx;
+  std::vector<const real_t*> dof0;
+  std::vector<real_t*> dof1;
   for (index_t k=0;k<topology_.nb();k++)
   {
     // get the vertices of the current element
@@ -72,84 +131,76 @@ Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
 
     // size the vertices to be added
     dof1.resize( this->nv(k) , NULL );
-    //master_.transfer( topology_.master() , dof0 , dof1 );
-
-    idx.resize( this->nv(k) , 0 );
     for (index_t j=0;j<dof1.size();j++)
     {
-      idx[j] = (*this)(k,j);
-
-      // skip visited vertices
-      if (visited[ idx[j] ]) continue;
-      visited[ idx[j] ] = true;
-
-      for (index_t d=0;d<f.vertices().dim();d++)
-        f.vertices()[idx[j]][d] = dof1[j][d];
+      index_t idx = (*this)(k,j);
+      dof1[j] = f.vertices()[ idx ];
     }
-    // create the element in the topology
-    f.add( idx.data() , idx.size() );
+    master_.transfer( topology_.master() , dof0 , dof1 , topology_.vertices().dim() );
   }
 }
-
-/*
-template<typename Shape_t,typename Master_t>
-template<typename MasterFrom_t,typename T>
-void
-Builder<Shape_t,Master_t>::transfer( const Field<Shape_t,MasterFrom_t,T>& fx , Field<Shape_t,Master_t>& fy ) const
-{
-  ursa_implement;
-}
-*/
-
-
-/*
-template<typename MasterFrom_t,typename MasterTo_t,typename dof_t>
-Builder<MasterFrom_t,MasterTo_t,dof_t>::Builder( const Field<MasterFrom_t,dof_t>& field , const MasterTo_t& masterTo ) :
-  topology_(field),
-  masterFrom_(field.master()),
-  masterTo_(masterTo)
-{
-  const std::vector<dof_t>& data = field.data();
-
-  // save the dof we convert from
-  for (index_t k=0;k<data.size();k++)
-  {
-    dofFrom_.push_back( data[k] );
-  }
-
-  build();
-}
-*/
 
 template<typename Shape_t,typename Master_t>
 void
 Builder<Shape_t,Master_t>::build()
 {
-
   FacetDecomposition<Shape_t> facets( topology_ );
   facets.build();
 
+  // allocate enough space for all the elements
+  std::vector<index_t> elem;
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    elem.resize( master_.nb_basis() , 0 );
+    add( elem.data() , elem.size() );
+  }
+
+  printf("nb elements = %lu, nb_basis = %lu, order = %lu\n",this->nb(),master_.nb_basis(),master_.order());
+
   // loop through the dimensional hierarchy
+  index_t n = 0;
   for (coord_t dim=0;dim<facets.nb_dim();dim++)
   {
-    const std::vector<Facet> facets_d = facets[dim];
+    const std::map<Element,FacetParent>& facets_d = facets[dim];
+    std::map<Element,FacetParent>::const_iterator it;
 
     // loop through all the facets
-    for (index_t k=0;k<facets_d.size();k++)
+    for (it=facets_d.begin();it!=facets_d.end();++it)
     {
-      const Facet& f = facets_d[k];
+      const Element& f = it->first;
       ursa_assert( f.dim == dim );
 
       const std::vector<index_t>& idx = f.indices;
+      const std::vector<index_t>& parents = it->second.parents;
+      const std::vector<index_t>& local = it->second.local;
 
       // sprinkle the new dof into place
+      std::vector<index_t> dof( master_.nb_interior(dim) );
 
+      for (index_t j=0;j<dof.size();j++)
+        dof[j] = n++;
+
+      printInline( dof );
+      printInline( parents , "parents = " );
+
+      // assign the dof to all parents of this facet
+      for (index_t i=0;i<parents.size();i++)
+      {
+        index_t k = parents[i];
+
+        for (index_t j=0;j<dof.size();j++)
+        {
+          index_t idx = master_.get_index( f.dim , local[i] , j );
+          printf("assigning element (%lu) local index %lu = %lu\n",k,idx,dof[j]);
+          (*this)(k,idx) = dof[j];
+        }
+      }
     }
 
   }
 }
 
-// builder for high-order meshes
+// builder for high-order meshes and transfer from lagrange to bezier
 template class Builder< Simplex<Lagrange> , Simplex<Lagrange> >;
 template class Builder< Simplex<Lagrange> , Simplex<Bezier> >;
 

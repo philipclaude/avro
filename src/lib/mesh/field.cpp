@@ -7,6 +7,8 @@
 #include "master/polytope.h"
 #include "master/simplex.h"
 
+#include "mesh/builder.h"
+#include "mesh/builder.hpp"
 #include "mesh/field.h"
 #include "mesh/topology.h"
 #include "mesh/vertices.h"
@@ -22,7 +24,7 @@ FieldBase<T>::FieldBase( FieldType type ) :
 {}
 
 template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
-Field<ShapeBasis_t,FieldBasis_t,T>::Field( const Topology<ShapeBasis_t>& topology , coord_t order , FieldType type ) :
+Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::Field( const Topology<Simplex<ShapeBasis_t>>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type),
   topology_(topology),
   master_(topology.number(),order)
@@ -41,13 +43,17 @@ Field<Polytope,Polytope,T>::Field( Topology<Polytope>& topology , coord_t order 
 
 template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
 void
-Field<ShapeBasis_t,FieldBasis_t,T>::build()
+Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
     // get the number of unique entries in the field
     // using the number of elements and nb_poly, for now assume p = 1
     ursa_assert( master_.order()==1 );
+
+    Builder<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>> builder(topology_,master_);
+    builder.template transfer<T>(*this);
+    return;
 
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -78,20 +84,9 @@ Field<ShapeBasis_t,FieldBasis_t,T>::build()
     ursa_assert_not_reached;
 }
 
-/*
-
-template<typename T>
-Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
-  FieldBase<T>(type),
-  topology_(topology),
-  master_(topology.number(),topology.order(),topology.master().incidence())
-{
-  printf("constructing field with order %u\n",master_.order());
-}
-
 template<typename T>
 void
-Field<Polytope,T>::build()
+Field<Polytope,Polytope,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
@@ -120,17 +115,15 @@ Field<Polytope,T>::build()
   else
     ursa_assert_not_reached;
 }
-*/
 
 template class Field< Simplex<Lagrange> , Simplex<Lagrange> , real_t >;
 template class Field< Simplex<Lagrange> , Simplex<Bezier> , real_t >;
 template class Field< Polytope , Polytope , real_t >;
 
-/*
-template class Field< Simplex<Lagrange> , std::vector<real_t> >;
-template class Field< Simplex<Lagrange> , std::vector<index_t> >;
+template class Field< Simplex<Lagrange> , Simplex<Lagrange> , std::vector<real_t> >;
+template class Field< Simplex<Lagrange> , Simplex<Lagrange> , std::vector<index_t> >;
 
-template class Field< Simplex<Lagrange> , geometrics::Primitive* >;
-template class Field< Simplex<Lagrange> , numerics::SymMatrixD<real_t> >;*/
+template class Field< Simplex<Lagrange> , Simplex<Lagrange> , geometrics::Primitive* >;
+template class Field< Simplex<Lagrange> , Simplex<Lagrange> , numerics::SymMatrixD<real_t> >;
 
 } // ursa

@@ -111,6 +111,11 @@ public:
   index_t& operator() ( const index_t k , const index_t j )
     { return Data<index_t>::operator()(k,j); }
 
+  index_t* operator()(const index_t k)
+    { return Data<index_t>::operator()(k); }
+  const index_t* operator()(const index_t k) const
+    { return Data<index_t>::operator()(k); }
+
   virtual void getPoints( std::vector<index_t>& p ) const = 0;
   virtual void getEdges( std::vector<index_t>& e ) const = 0;
   virtual void getTriangles( std::vector<index_t>& t ) const = 0;

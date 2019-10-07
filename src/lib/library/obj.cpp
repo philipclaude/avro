@@ -37,13 +37,13 @@ objFile::read()
   Data<real_t> normals,uv;
   std::vector< std::vector<index_t> > nt_vals,ut_vals;
 
-  typedef Simplex<Lagrange> type;
+  typedef Simplex<Lagrange> Shape_t;
+  typedef Field<Shape_t,Shape_t,std::vector<real_t>> FieldType;
+  typedef Field<Shape_t,Shape_t,std::vector<index_t>> FieldType_idx;
 
-  typedef Field<type,type,std::vector<real_t>> FieldType;
   std::shared_ptr<FieldType> normal_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
   std::shared_ptr<FieldType> uv_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
 
-  typedef Field<type,type,std::vector<index_t>> FieldType_idx;
   std::shared_ptr<FieldType_idx> nt_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
   std::shared_ptr<FieldType_idx> ut_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
 
@@ -140,7 +140,6 @@ objFile::read()
     //(*nt_fld)(k,0) = nt_vals[k];
     (*ut_fld)(k,0) = ut_vals[k];
   }
-
 
   // add the field
   fields_.make( "vertex_normals" , normal_fld );

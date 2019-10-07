@@ -1,6 +1,7 @@
 #include "common/data.h"
 #include "common/tree.hpp"
 
+#include "mesh/builder.h"
 #include "mesh/topology.h"
 #include "mesh/topology.hpp"
 
@@ -20,6 +21,8 @@ void
 Topology<Simplex<Lagrange>>::convert( const Topology<Master_t>& linear )
 {
   printf("converting to order %u...\n",master_.order());
+  Builder<Master_t,Simplex<Lagrange>> builder(linear,master_);
+  builder.transfer(*this);
 }
 
 /*\
@@ -46,7 +49,8 @@ void
 Topology<Simplex<Bezier>>::convert()
 {
   printf("convert lagrange basis of %u-simplices...\n",lagrange_.number());
-  ursa_implement;
+  Builder<Simplex<Lagrange>,Simplex<Bezier>> builder(lagrange_,master_);
+  builder.transfer(*this);
 }
 
 template class TopologyBase< Simplex<Lagrange> >;

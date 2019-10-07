@@ -19,7 +19,8 @@ public:
   void build();
 
   void transfer( Topology<Master_t>& F ) const;
-  //template<typename Basis_t,typename T> void transfer( const Field<Shape_t,Basis_t,T>& Fx , Field<Shape_t,Master_t,T>& Fy ) const;
+  template<typename T> void transfer( Field<Shape_t,Master_t,T>& F ) const;
+  template<typename MasterFrom_t,typename T> void transfer( const Field<Shape_t,MasterFrom_t,T>& Fx , Field<Shape_t,Master_t,T>& Fy ) const;
 
 private:
   const Topology<Shape_t>& topology_;

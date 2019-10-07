@@ -65,6 +65,7 @@ private:
 
 template<typename ShapeBasis_t,typename FieldBasis_t,typename T> class Field;
 
+/*
 template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
 class Field : public FieldBase<T>
 {
@@ -77,7 +78,7 @@ public:
 private:
   const Topology<ShapeBasis_t>& topology_;
   const FieldBasis_t master_;
-};
+};*/
 
 template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
 class Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T> : public FieldBase<T>
@@ -99,6 +100,7 @@ class Field<Polytope,Polytope,T> : public FieldBase<T>
 {
 public:
   Field( Topology<Polytope>& topology , coord_t order , FieldType type );
+  void build();
 
 private:
   const Topology<Polytope>& topology_;
