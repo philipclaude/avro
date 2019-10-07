@@ -2,8 +2,6 @@ if (URSA_WITH_FPG)
 	add_subdirectory(PCK/fpg)
 endif()
 
-#set( THIRD_PARTY_INCLUDE PARENT_SCOPE )
-
 #add_source_directories( TET_SOURCES "tetgen source" tetgen1.5.0 )
 #set_source_files_properties( ${TET_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 #set_source_files_properties( ${TET_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" TETLIBRARY )

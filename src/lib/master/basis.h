@@ -6,7 +6,7 @@ namespace ursa
 
 class Lagrange;
 class Bezier;
-class Bernstein;
+class Legendre;
 
 } // ursa
 

@@ -1,5 +1,7 @@
 #include "unit_tester.hpp"
 
+#include "common/tools.h"
+
 #include "master/master.h"
 #include "master/quadrature.h"
 
@@ -23,6 +25,7 @@ UT_TEST_CASE( simplex_tests )
   topology.addChild(leaf);
 
   Topology<Simplex<Lagrange>>& c = topology.topology(0);
+  UNUSED(c);
 
 }
 UT_TEST_CASE_END( simplex_tests )

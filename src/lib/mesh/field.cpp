@@ -57,7 +57,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
 
     for (index_t k=0;k<topology_.nb();k++)
     {
-      const index_t* v = topology_.template Data<index_t>::operator()(k);
+      const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
       Data<index_t>::add( v , nv );
     }
@@ -73,7 +73,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
     const index_t nb_poly = 1; // assume order zero
     for (index_t k=0;k<topology_.nb();k++)
     {
-      const index_t* v = topology_.template Data<index_t>::operator()(k);
+      const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
       Data<index_t>::add( v , nv );
       for (index_t j=0;j<nb_poly;j++)
@@ -94,7 +94,7 @@ Field<Polytope,Polytope,T>::build()
 
     for (index_t k=0;k<topology_.nb();k++)
     {
-      const index_t* v = topology_.template Data<index_t>::operator()(k);
+      const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
       Data<index_t>::add( v , nv );
     }

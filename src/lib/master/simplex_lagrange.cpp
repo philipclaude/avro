@@ -149,7 +149,7 @@ Simplex<Lagrange>::precalculate()
 
     for (index_t j=0;j<xp.size();j++)
     {
-      iref_.push_back(xp[j]);
+      lref_.push_back(xp[j]);
       xref_.push_back( real_t(xp[j])/real_t(length));
     }
 
@@ -163,22 +163,77 @@ Simplex<Lagrange>::get_reference_coordinate( index_t k ) const
   return &xref_[k*(number_+1)];
 }
 
+const index_t*
+Simplex<Lagrange>::get_lattice_coordinate( index_t k ) const
+{
+  return &lref_[k*(number_+1)];
+}
+
+template<typename type>
+static type
+vector_sum( index_t n, const type* a )
+{
+  type value(0);
+
+  for (index_t i = 0; i < n; i++ )
+  {
+    value = value + a[i];
+  }
+  return value;
+}
+
+template<typename type>
+static type
+eval_lagrange_basis( index_t m, const index_t *alpha , const type* x )
+{
+  type c,l,w;
+
+  index_t d = vector_sum<index_t>( m+1 , alpha );
+
+  l = 1.0;
+  c = 1.0;
+
+  for (index_t q = 0; q < m; q++ )
+  {
+    for (index_t p = 0; p < alpha[q]; p++ )
+    {
+      l = l * ( type(d) * x[q] - type(p) );
+      c = c * ( alpha[q]       - type(p) );
+    }
+  }
+
+  w = 1.0 - vector_sum ( m, x );
+
+  for (index_t p = 0; p < alpha[m]; p++ )
+  {
+    l = l * ( type(d) * w    - type(p) );
+    c = c * ( type(alpha[m]) - type(p) );
+  }
+
+  l = l / c;
+
+  return l;
+}
+
 void
 Simplex<Lagrange>::evaluate( const real_t* x , std::vector<real_t>& phi ) const
 {
-  if (number_==1 && order_==1)
+  ursa_assert( phi.size()==nb_basis() );
+  for (index_t k=0;k<nb_basis();k++)
   {
-    phi[0] = x[0];
-    phi[1] = 1. -x[0];
+    // get the lattice coordinates for this basis function
+    const index_t* alpha = get_lattice_coordinate(k);
+
+    // evaluate the basis function
+    phi[k] = eval_lagrange_basis( number_ , alpha , x );
   }
-  if (number_==2 && order_==1)
-  {
-    phi[0] = x[0];
-    phi[1] = x[1];
-    phi[2] = 1. -x[0] -x[1];
-  }
-  else
-    ursa_implement;
+}
+
+void
+Simplex<Lagrange>::evaluate( index_t k , std::vector<real_t>& phi ) const
+{
+  // evaluate the set of basis functions at the k'th interpolation point
+  evaluate( get_reference_coordinate(k) , phi );
 }
 
 } // ursa

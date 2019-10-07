@@ -113,14 +113,13 @@ template< int M, class T >
 void
 EigenSystem(const MatrixSymS<M,T>& A, VectorS<M,T>& L, MatrixS<M,M,T>& E )
 {
+  // Calculate eigenvalues
+  // philip
+  #if 0
   T norm;          // Squared norm or inverse norm of current eigenvector
   T error;         // Estimated maximum roundoff error
   T t, u;          // Intermediate storage
-
-  // Calculate eigenvalues
-  // philip
-  //assert(false);
-  #if 0
+  
   dsyevc3(A, L);
 
   t = fabs(L[0]);

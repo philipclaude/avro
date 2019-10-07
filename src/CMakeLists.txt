@@ -1,4 +1,4 @@
-# reset the warnings that were save in third_party/CMakeLists.txt
+# reset the warnings that were saved in third_party/CMakeLists.txt
 set(CMAKE_C_FLAGS ${C_FLAGS0})
 set(CMAKE_CXX_FLAGS ${CXX_FLAGS0})
 

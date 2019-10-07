@@ -22,7 +22,6 @@ class Quadrature;
 inline index_t
 factorial( index_t n )
 {
-  ursa_assert(n>=0);
   if (n==0) return 1;
   return n*factorial(n-1);
 }
@@ -127,7 +126,9 @@ public:
   template<typename BasisFrom_t,typename T> void transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T>& X , std::vector<T>& Y ) const;
 
   const real_t* get_reference_coordinate( index_t k ) const;
+  const index_t* get_lattice_coordinate( index_t k ) const;
   void evaluate( const real_t* x , std::vector<real_t>& phi ) const;
+  void evaluate( index_t k , std::vector<real_t>& phi ) const;
 
   void precalculate();
 
@@ -135,11 +136,12 @@ public:
   void eval() {}
 
 private:
+
   std::vector<real_t> xunit_;
   std::vector<real_t> xorth_;
 
   std::vector<real_t>  xref_;
-  std::vector<index_t> iref_;
+  std::vector<index_t> lref_;
 };
 
 template<>
@@ -152,12 +154,33 @@ public:
   template<typename BasisFrom_t,typename T> void transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T>& X , std::vector<T>& Y ) const;
 
   void evaluate( const real_t* x , real_t* y ) const;
+  void evaluate( index_t k , std::vector<real_t>& phi ) const;
 
   void eval() const { printf("calling bezier simplex eval\n"); }
   void eval() {}
 
 private:
   // store the transformation matrix from a lagrange simplex
+  numerics::MatrixD<real_t> B2L_;
+};
+
+template<>
+class Simplex<Legendre> : public SimplexBase<Legendre>
+{
+public:
+  Simplex( coord_t number , coord_t order );
+
+  template<typename BasisFrom_t,typename T> void transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const;
+  template<typename BasisFrom_t,typename T> void transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T>& X , std::vector<T>& Y ) const;
+
+  void evaluate( const real_t* x , real_t* y ) const;
+  void evaluate( index_t k , std::vector<real_t>& phi ) const;
+
+  void eval() const { printf("calling bezier simplex eval\n"); }
+  void eval() {}
+
+private:
+
 };
 
 } // ursa

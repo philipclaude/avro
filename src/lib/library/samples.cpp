@@ -8,8 +8,8 @@ namespace library
 
 TwoTriangles::TwoTriangles() :
   Topology<Simplex<Lagrange>>(vertices_,2),
-  edges_(vertices_,1),
-  vertices_(3)
+  vertices_(3),
+  edges_(vertices_,1)
 {
   real_t x0[3] = {0,0,1};
   real_t x1[3] = {1,0,2};

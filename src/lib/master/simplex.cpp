@@ -142,7 +142,7 @@ void
 SimplexBase<Basis>::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet, std::vector<index_t>& f ) const
 {
   f.resize( number_+1 );
-  for (index_t j=0;j<number_+1;j++)
+  for (coord_t j=0;j<number_+1;j++)
     f[j] = v[j];
   f.erase( f.begin()+ifacet );
 }

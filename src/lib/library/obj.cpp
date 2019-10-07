@@ -4,7 +4,7 @@
 #include "library/obj.h"
 
 #include <fstream>
-#include <string>
+#include <cstring>
 
 namespace ursa
 {
@@ -31,7 +31,7 @@ objFile::read()
   }
 
   real_t x[3],u[2],n[3];
-  index_t t[3],nt[3],ut[3];
+  index_t t[3],ut[3];
   char lineHeader[128];
 
   Data<real_t> normals,uv;

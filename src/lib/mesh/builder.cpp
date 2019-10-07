@@ -155,7 +155,7 @@ Builder<Shape_t,Master_t>::build()
     add( elem.data() , elem.size() );
   }
 
-  printf("nb elements = %lu, nb_basis = %lu, order = %lu\n",this->nb(),master_.nb_basis(),master_.order());
+  printf("nb elements = %lu, nb_basis = %lu, order = %u\n",this->nb(),master_.nb_basis(),master_.order());
 
   // loop through the dimensional hierarchy
   index_t n = 0;
@@ -170,7 +170,6 @@ Builder<Shape_t,Master_t>::build()
       const Element& f = it->first;
       ursa_assert( f.dim == dim );
 
-      const std::vector<index_t>& idx = f.indices;
       const std::vector<index_t>& parents = it->second.parents;
       const std::vector<index_t>& local = it->second.local;
 

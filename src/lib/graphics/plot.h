@@ -36,9 +36,8 @@ private:
   const TopologyHolder& topology_;
 
   std::vector< Primitive_ptr > primitive_;
-  Plotter* plotter_;
-
   Window* window_;
+  Plotter* plotter_;
 };
 
 

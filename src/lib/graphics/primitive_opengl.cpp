@@ -130,8 +130,6 @@ OpenGLPrimitive::draw()
 
   index_t nb_elem = topology_.nb();
   index_t nv = topology_.number()+1;
-  index_t nb_vert = topology_.vertices().nb();
-  coord_t dim = 3;
 
   // indicate to the gl that we want to use the shader
   shader_->use();
