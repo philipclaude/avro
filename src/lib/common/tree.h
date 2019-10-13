@@ -18,7 +18,7 @@ public:
 
   index_t nb_children() const { return child_.size(); }
 
-  void addChild( Node_ptr c );
+  void add_child( Node_ptr c );
 
   void children( std::vector<Node_ptr>& c ) const;
   void children( std::vector<Node_t*>& c ) const;

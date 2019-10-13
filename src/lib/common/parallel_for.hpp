@@ -1,8 +1,3 @@
-// ursa: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
 // include this file within the enclosed namespaces
 // needed so that ::maximum_concurrent_threads, ::is_running_threads, ::run_threads
 // are defined in the appropriate namespaces

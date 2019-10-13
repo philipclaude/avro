@@ -22,7 +22,7 @@ UT_TEST_CASE( simplex_tests )
   topology.do_something();
 
   std::shared_ptr< Topology<Simplex<Lagrange>> > leaf = std::make_shared<Topology<Simplex<Lagrange>>>(vertices,number);
-  topology.addChild(leaf);
+  topology.add_child(leaf);
 
   Topology<Simplex<Lagrange>>& c = topology.topology(0);
   UNUSED(c);

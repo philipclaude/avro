@@ -5,7 +5,7 @@ namespace ursa
 
 template<typename Node_t>
 void
-Tree<Node_t>::addChild( Node_ptr node )
+Tree<Node_t>::add_child( Node_ptr node )
 {
   child_.push_back( node );
 }
