@@ -69,6 +69,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
   }
   else if (this->type()==DISCONTINUOUS)
   {
+    printf("heerrr\n");
     ursa_assert( master_.order()==0 );
     const index_t nb_poly = 1; // assume order zero
     for (index_t k=0;k<topology_.nb();k++)

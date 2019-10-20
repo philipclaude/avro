@@ -114,6 +114,10 @@ private:
 
   std::vector<real_t> xquad_;
   std::vector<real_t> wquad_;
+
+protected:
+  std::vector<index_t> edges_;
+  std::vector<index_t> triangles_;
 };
 
 template<>

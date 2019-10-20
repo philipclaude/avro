@@ -170,8 +170,10 @@ public:
 
   void do_something() {}
 
+  bool ghost( index_t k ) const { return false; }
+
   void getPoints( std::vector<index_t>& p ) const {}
-  void getEdges( std::vector<index_t>& e ) const {}
+  void getEdges( std::vector<index_t>& e ) const;
   void getTriangles( std::vector<index_t>& t ) const {}
 
   type master_;

@@ -19,7 +19,7 @@ struct Integrand
   const Function_t& cast() const { return static_cast<const Function_t>(*this); }
 };
 
-template<typename Basis_t,typename Function_t>
+template<typename Basis_t,typename Integrand_t>
 class Integral
 {
   Integral( const Basis_t& basis );

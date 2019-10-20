@@ -60,18 +60,18 @@ void main()
      vec3 lDirection = normalize(lightDir);
      vec3 norm       = vNormal*wNormal + conNormal*(1.0-wNormal);
      vec3 normal     = normalize(u_normalMatrix * vec4(norm,1)).xyz;
-     float dot       = abs(dot(normal, lDirection));
+     float dp        = abs(dot(normal, lDirection));
 
      // make the color to be rendered
      color           = color*wColor + vec4(conColor,1)*(1.0-wColor);
-     v_Color         = color*dot + color*wAmbient;
+     v_Color         = color*dp + color*wAmbient;
      v_bColor        = v_Color;
 
      // are we coloring the backface?
      if (bColor != 0.0)
      {
          color       = vec4(bacColor,1);
-         v_bColor    = color*dot + color*wAmbient;
+         v_bColor    = color*dp + color*wAmbient;
      }
    }
    v_Color.a  = xpar;

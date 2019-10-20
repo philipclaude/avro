@@ -29,7 +29,8 @@ Plot::Plot( const TopologyHolder& topology , Window* window ) :
   prim->shader().printActiveUniforms();
 
   prim->shader().setUniform( "MVP" , window->mvp() );
-  //ursa_implement;
+  //prim->shader().setUniform( "u_modelViewMatrix" , window->mv() );
+  prim->shader().setUniform( "u_normalMatrix" , window->normal() );
 }
 
 void
@@ -54,6 +55,7 @@ void
 Plot::write()
 {
   printf("writing!\n");
+
   // loop through the primitives
   for (index_t k=0;k<primitive_.size();k++)
     primitive_[k]->write();

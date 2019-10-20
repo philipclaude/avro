@@ -17,6 +17,7 @@ objFile::objFile( const std::string& filename ) :
   vertices_(3),
   filename_(filename)
 {
+  this->setSorted(false);
   read();
 }
 
@@ -44,9 +45,15 @@ objFile::read()
   std::shared_ptr<FieldType> normal_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
   std::shared_ptr<FieldType> uv_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
 
+  printf("making discontinuous fields..\n");
+
   std::shared_ptr<FieldType_idx> nt_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
   std::shared_ptr<FieldType_idx> ut_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
 
+  printf("reading file..\n");
+
+  index_t line = 0;
+  int matches = -1;
   while (true)
   {
     // read the first word of the line
@@ -56,22 +63,28 @@ objFile::read()
 
     if ( strcmp( lineHeader, "v" ) == 0 )
     {
-      fscanf(file, "%lg %lg %lg\n", &x[0] , &x[1] , &x[2] );
+      matches = fscanf(file, "%lg %lg %lg\n", &x[0] , &x[1] , &x[2] );
+      ursa_assert( matches==3 );
+      //printf("read vertex (%g,%g,%g)\n",x[0],x[1],x[2]);
       vertices_.create(x);
     }
     else if ( strcmp( lineHeader, "vt" ) == 0 )
     {
-      fscanf(file, "%lg %lg\n", &u[0] , &u[1] );
+      matches = fscanf(file, "%lg %lg\n", &u[0] , &u[1] );
+      ursa_assert( matches==2 );
       u[1] = -u[1]; // invert V coordinate since we will only use DDS texture, which are inverted. Remove if you want to use TGA or BMP loaders.
       uv.add( u , 2 );
+      //printf("read vt = (%g,%g)\n",u[0],u[1]);
     }
     else if ( strcmp( lineHeader, "vn" ) == 0 )
     {
-      fscanf(file, "%lg %lg %lg\n", &n[0] , &n[1] , &n[2] );
+      matches = fscanf(file, "%lg %lg %lg\n", &n[0] , &n[1] , &n[2] );
+      ursa_assert( matches==3 );
       normals.add( n , 3 );
     }
     else if ( strcmp( lineHeader, "f" ) == 0 )
     {
+      //printf("read facet %s\n",lineHeader);
       int matches; /*= fscanf(file, "%lu/%lu/%lu %lu/%lu/%lu %lu/%lu/%lu\n",
           &t[0], &ut[0], &nt[0], &t[1], &ut[1], &nt[1], &t[2], &ut[2], &nt[2] );
       if (matches == 9)
@@ -99,7 +112,11 @@ objFile::read()
         continue;
       }
       else
+      {
+        printf("error reading line %lu\n",line);
+        printf("t = (%lu,%lu,%lu)\n",t[0],t[1],t[2]);
         ursa_assert_msg( false , "matches = %d " ,matches );
+      }
     }
     else
     {
@@ -107,9 +124,14 @@ objFile::read()
       char comment[1024];
       fgets(comment, 1024, file);
     }
+    line++;
 
   }
   fclose(file);
+
+  printf("read file..skipping normals, uv and texture...\n");
+
+  return;
 
   // build the field with this connectivity and the same linear master element
   normal_fld->build();

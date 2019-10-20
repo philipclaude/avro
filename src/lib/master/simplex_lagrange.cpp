@@ -9,6 +9,13 @@ Simplex<Lagrange>::Simplex( coord_t number , coord_t order ) :
   SimplexBase(number,order)
 {
   precalculate();
+
+  for (index_t k=0;k<number_+1;k++)
+  for (index_t i=k+1;i<number_+1;i++)
+  {
+    this->edges_.push_back(k);
+    this->edges_.push_back(i);
+  }
 }
 
 static void
@@ -139,7 +146,20 @@ Simplex<Lagrange>::precalculate()
     xorth_[ (k+1)*number_ +k ] = 1.;
 
   real_t length = order_;
-  if (order_==0) length = 1;
+  if (order_==0)
+  {
+    // it doesn't really make sense to have a zero-order lagrange element
+    // but we can hack it by setting the coordinates to the centroid
+
+    for (index_t j=0;j<number_;j++)
+    {
+      lref_.push_back( 1 );
+      xref_.push_back( 1./(number_+1) );
+    }
+    return;
+  }
+
+  ursa_assert( length>0 );
 
   bool more = false;
   std::vector<index_t> xp(number_+1);

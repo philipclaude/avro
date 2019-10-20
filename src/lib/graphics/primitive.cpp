@@ -33,11 +33,11 @@ Primitive::selectShader( Plotter* plotter )
     shader_->setUniform( "wAmbient" , 0.25f );
     shader_->setUniform( "xpar" , 1.0f );
     shader_->setUniform( "conNormal" , 0. , 0. , 1. );
-    shader_->setUniform( "conColor" , 1. , 1. , 0. );
-    shader_->setUniform( "bacColor" , 0.5 , 0.5 , 0.5 );
-    shader_->setUniform( "wColor" , 0.0f );
+    shader_->setUniform( "conColor" , 0. , 1. , 1. );
+    shader_->setUniform( "bacColor" , 0.0 , 0.5 , 0.5 );
+    shader_->setUniform( "wColor" , 1.0f );
     shader_->setUniform( "bColor" , 1.0f );
-    shader_->setUniform( "wNormal" , 0.0f );
+    shader_->setUniform( "wNormal" , 1.0f );
     shader_->setUniform( "wLight" , 1.0f );
     shader_->setUniform( "pointSize" , 2.0f );
     shader_->setUniform( "picking" , 0 );
@@ -47,6 +47,22 @@ Primitive::selectShader( Plotter* plotter )
   {
     shader_ = &plotter->shader("edge");
     printf("selecting edge shader!\n");
+
+    // set some uniforms
+    shader_->use();
+    shader_->setUniform( "lightDir" , 0.0 , 0.3 , 1.0 );
+    shader_->setUniform( "wAmbient" , 0.25f );
+    shader_->setUniform( "xpar" , 1.0f );
+    shader_->setUniform( "conNormal" , 0. , 0. , 1. );
+    shader_->setUniform( "conColor" , 0. , 0. , 0. );
+    shader_->setUniform( "bacColor" , 0.0 , 0.5 , 0.5 );
+    shader_->setUniform( "wColor" , 1.0f );
+    shader_->setUniform( "bColor" , 1.0f );
+    shader_->setUniform( "wNormal" , 1.0f );
+    shader_->setUniform( "wLight" , 1.0f );
+    shader_->setUniform( "pointSize" , 2.0f );
+    shader_->setUniform( "picking" , 0 );
+    shader_->setUniform( "vbonum" , 0 );
   }
   else
     ursa_implement;

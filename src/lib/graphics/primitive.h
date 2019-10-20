@@ -62,6 +62,7 @@ private:
     std::vector<GLfloat> coordinates;
     std::vector<GLuint> indices;
     std::vector<GLfloat> colours;
+    std::vector<GLfloat> normals;
   } glData;
 
 public:

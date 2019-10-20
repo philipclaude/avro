@@ -1,3 +1,5 @@
+#include "common/tools.h"
+
 #include "master/quadrature.h"
 #include "master/simplex.h"
 
@@ -65,7 +67,6 @@ SimplexBase<Basis>::get_vertex( const index_t* v , index_t nv , index_t ivertex 
   return v[ivertex]; // vertices always stored at the beginning
 }
 
-
 template<typename Basis>
 void
 SimplexBase<Basis>::get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const
@@ -123,6 +124,15 @@ sort:
     e[0] = p1;
     e[1] = p0;
   }
+}
+
+template<typename Basis>
+void
+SimplexBase<Basis>::get_edges( const index_t* v , const index_t nv , std::vector<index_t>& ek ) const
+{
+  ek.resize( edges_.size() );
+  for (index_t j=0;j<edges_.size();j++)
+    ek[j] = v[edges_[j]];
 }
 
 template<typename Basis>

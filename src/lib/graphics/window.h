@@ -1,6 +1,7 @@
 #ifndef URSA_LIB_GRAPHICS_WINDOW_H_
 #define URSA_LIB_GRAPHICS_WINDOW_H_
 
+#include "graphics/controls.h"
 #include "graphics/gl.h"
 #include "graphics/math.h"
 #include "graphics/scene.h"
@@ -45,6 +46,12 @@ public:
   const mat4& mvp() const { return mvp_; }
   mat4& mvp() { return mvp_; }
 
+  const mat4& mv() const { return modelViewMatrix_; }
+  mat4& mv() { return modelViewMatrix_; }
+
+  const mat4& normal() const { return normalMatrix_; }
+  mat4& normal() { return normalMatrix_; }
+
   const mat4& viewMatrix() const { return viewMatrix_; }
   mat4& viewMatrix() { return viewMatrix_; }
 
@@ -72,6 +79,8 @@ private:
   mat4 viewMatrix_;
   mat4 projMatrix_;
   mat4 modelMatrix_;
+  mat4 normalMatrix_;
+  mat4 modelViewMatrix_;
 
   float fov_ = 45.0f;
   float speed_ = 3.0f;
@@ -80,6 +89,9 @@ private:
   vec3 position_;
 
   float angles_[2];
+
+  Camera camera_;
+  Trackball trackball_;
 };
 
 } // graphics

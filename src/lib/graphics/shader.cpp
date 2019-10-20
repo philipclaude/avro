@@ -40,7 +40,7 @@ ShaderProgram::ShaderProgram( const std::string& name ) :
   }
   else if (name_=="edge")
   {
-    ursa_assert_msg( compile(name_.c_str(),__basic_vs_src__,__edge_fs_src__) , "error compiling basic shaders" );
+    ursa_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
   }
   else if (name_=="wv")
   {
