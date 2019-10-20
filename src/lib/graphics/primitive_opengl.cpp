@@ -41,8 +41,8 @@ OpenGLPrimitive::convert( glData& data )
   for (index_t k=0;k<nb_vert;k++)
   {
     data.colours[3*k  ] = 255;
-    data.colours[3*k+1] = 0;//255;
-    data.colours[3*k+2] = 255;
+    data.colours[3*k+1] = 255;
+    data.colours[3*k+2] = 0;
 
     for (index_t j=0;j<dim;j++)
     {
@@ -218,24 +218,19 @@ OpenGLPrimitive::draw()
 
   // bind the vao associated with this primitive
   GL_CALL( glBindVertexArray(vao_) );
-  if (topology_.number()==1)
+  if (topology_.number()==1 && visible_)
   {
-    //printf("drawing lines!\n");
     shader_->setUniform("wLight" , 0.0f );
     shader_->setUniform("wColor" , 0.0f );
     GL_CALL( glDrawElements( GL_LINES , nb_elem*nv , GL_UNSIGNED_INT , 0 ) )
   }
-  else if (topology_.number()==2)
+  else if (topology_.number()==2 && visible_)
   {
-    //printf("drawing triangles!\n");
     GL_CALL( glDrawElements(GL_TRIANGLES,nb_elem*nv, GL_UNSIGNED_INT , 0 ) )
   }
-  else
-    ursa_implement;
 
   // reset the vao bound to the gl
   GL_CALL( glBindVertexArray(0) );
-
 }
 
 } // graphics

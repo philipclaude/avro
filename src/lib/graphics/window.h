@@ -64,14 +64,16 @@ public:
   Plotter* plotter() { return plotter_; }
   const Plotter* plotter() const { return plotter_; }
 
+  void reset();
+
 private:
   std::string title_;
   Scene scene_;
   Plotter* plotter_;
   GLFWwindow* window_;
 
-  int width_ = 1024;//650;
-  int height_ = 640;//400;
+  int width_ = 1024;
+  int height_ = 640;
 
   std::vector<Plot_ptr> plot_;
 

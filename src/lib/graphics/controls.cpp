@@ -13,8 +13,8 @@ namespace graphics
 #define   FloatInfinity std::numeric_limits<float>::infinity()
 #define   SQRT1_2  0.7071067811865476
 
-Camera::Camera(const glm::vec3& pos) :
-  eye(pos), up(0.0f,1.0f,0.0f), viewMatrix(1.0f)
+Camera::Camera(const glm::vec3& e) :
+  eye(e), up(0.0f,1.0f,0.0f), viewMatrix(1.0f)
 {}
 
 void
@@ -50,6 +50,35 @@ Trackball::Trackball(Camera* cam,glm::vec4 screenSize) :
   m_panStart(0.0f),
   m_panEnd(0.0f)
 {}
+
+void
+Trackball::reset(glm::vec4 screenSize)
+{
+  m_screen = screenSize;
+  m_enabled = true;
+  m_rotateSpeed = 1.0f;
+  m_zoomSpeed=1.2f;
+  m_panSpeed=0.3f;
+  m_noRotate=false;
+  m_noPan=false;
+  m_noZoom=false;
+  m_noRoll=false;
+  m_staticMoving=false;
+  m_dynamicDampingFactor=0.2f;
+  m_minDistance=0.0f;
+  m_maxDistance=FloatInfinity;
+  //m_target=0.0f;
+  //m_lastPos=0.0f;
+  state_=TCB_STATE::NONE;
+  m_prevState=TCB_STATE::NONE;
+  //m_eye=0.0f;
+  //m_rotStart=0.0f;
+  //m_rotEnd=0.0f;
+  //m_zoomStart=0.0f;
+  //m_zoomEnd=0.0f;
+  //m_panStart=0.0f;
+  //m_panEnd=0.0f;
+}
 
 void
 Trackball::update()
@@ -89,7 +118,7 @@ Trackball::RotateCamera()
 {
   float angle = (float)acos(glm::dot(m_rotStart, m_rotEnd) / glm::length(m_rotStart) / glm::length(m_rotEnd));
 
-  if (!isnan(angle) && angle != 0.0f)
+  if (!std::isnan(angle) && angle != 0.0f)
   {
     glm::vec3 axis = glm::normalize(glm::cross( m_rotStart, m_rotEnd )); //_rotateStart.cross(_rotateEnd).normalize();
 
@@ -298,6 +327,16 @@ Trackball::KeyDown(int key)
   else if ( (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT) && !m_noPan)
   {
     state_ = TCB_STATE::PAN;
+  }
+  else if ( (key == GLFW_KEY_M) )
+  {
+    controls_.edges_visible = !controls_.edges_visible;
+  }
+  else if ( (key == GLFW_KEY_R) )
+  {
+    camera_->eye = glm::vec3(0.0f,0.0f,7.0f);
+    camera_->up  = glm::vec3(0.0f,1.0f,0.0f);
+    reset(glm::vec4(0.0f,0.0f,(float)1024,(float)640));
   }
 }
 

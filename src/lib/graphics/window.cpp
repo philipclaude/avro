@@ -4,6 +4,7 @@
 #include "graphics/gl.h"
 #include "graphics/plot.h"
 #include "graphics/plotter.h"
+#include "graphics/primitive.h"
 #include "graphics/window.h"
 
 
@@ -59,7 +60,7 @@ keyboard_callback(GLFWwindow* win,int key,int scancode,int action,int mods)
 Window::Window( const std::string& title , Plotter* plotter) :
   title_(title),
   plotter_(plotter),
-  camera_(glm::vec3(0.0f,0.0f,100.0f)),
+  camera_(glm::vec3(0.0f,0.0f,7.0f)),
   trackball_(&camera_,glm::vec4(0.0f,0.0f,(float)width_,(float)height_))
 {
   window_ = glfwCreateWindow( width_ , height_ , title_.c_str() , NULL, NULL);
@@ -77,7 +78,14 @@ Window::Window( const std::string& title , Plotter* plotter) :
   glfwSetMouseButtonCallback(window_,&mouse_button_callback);
   glfwSetScrollCallback(window_,&mouse_scroll_callback);
   glfwSetKeyCallback(window_,&keyboard_callback);
+}
 
+void
+Window::reset()
+{
+  camera_.eye = glm::vec3(0.0f,0.0f,7.0f);
+  camera_.up  = glm::vec3(0.0f,1.0f,0.0f);
+  trackball_.reset(glm::vec4(0.0f,0.0f,(float)width_,(float)height_));
 }
 
 Window::~Window()
@@ -89,91 +97,23 @@ void
 Window::setMatrices()
 {
   modelMatrix_ = mat4(1.0);
-  // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-  projMatrix_ = glm::perspective(glm::radians(fov_), 4.0f / 3.0f, 0.1f, 100.0f);
-
-  #if 0
-
-  // glfwGetTime is called only once, the first time this function is called
-	static double lastTime = glfwGetTime();
-
-	// Compute time difference between current and last frame
-	double currentTime = glfwGetTime();
-	float deltaTime = float(currentTime - lastTime);
-
-	// Get mouse position
-	double xpos, ypos;
-	glfwGetCursorPos(window_, &xpos, &ypos);
-
-	// Reset mouse position for next frame
-	glfwSetCursorPos(window_, width_/2, height_/2);
-
-	// Compute new orientation
-	angles_[0] += mouseSpeed_ * float(width_/2  - xpos );
-	angles_[1] += mouseSpeed_ * float(height_/2 - ypos );
-
-	// Direction : Spherical coordinates to Cartesian coordinates conversion
-	glm::vec3 direction(
-		cos(angles_[1]) * sin(angles_[0]),
-		sin(angles_[1]),
-		cos(angles_[1]) * cos(angles_[0]) );
-
-	// Right vector
-	glm::vec3 right = glm::vec3(
-		sin(angles_[0] - 3.14f/2.0f),
-		0,
-		cos(angles_[0] - 3.14f/2.0f) );
-
-	// Up vector
-	glm::vec3 up = glm::cross( right, direction );
-
-	// Move forward
-	if (glfwGetKey( window_, GLFW_KEY_UP ) == GLFW_PRESS)
-  {
-		position_ += direction * deltaTime * speed_;
-	}
-
-	// Move backward
-	if (glfwGetKey( window_, GLFW_KEY_DOWN ) == GLFW_PRESS)
-  {
-		position_ -= direction * deltaTime * speed_;
-	}
-
-	// Strafe right
-	if (glfwGetKey( window_, GLFW_KEY_RIGHT ) == GLFW_PRESS)
-  {
-		position_ += right * deltaTime * speed_;
-	}
-
-	// Strafe left
-	if (glfwGetKey( window_, GLFW_KEY_LEFT ) == GLFW_PRESS)
-  {
-		position_ -= right * deltaTime * speed_;
-	}
-
-  //fov_ = fov_ - 5 * glfwGetMouseWheel();
-
-	// Camera matrix
-	viewMatrix_ = glm::lookAt(
-								position_,           // Camera is here
-								position_+direction, // and looks here : at the same position, plus "direction"
-								up                  // Head is up (set to 0,-1,0 to look upside-down)
-						   );
-
-  mvp_ = projMatrix_*viewMatrix_*modelMatrix_;
-
-  normalMatrix_ = glm::transpose(glm::inverse(glm::mat3( modelMatrix_*viewMatrix_)));
-
-	// For the next frame, the "last time" will be "now"
-	lastTime = currentTime;
-  #else
+  projMatrix_ = glm::perspective(glm::radians(fov_), float(width_)/float(height_) , 1.0f, 100.0f);
 
   trackball_.update();
 
+  // probably not the right place to put this for performance
+  for (index_t k=0;k<plot_.size();k++)
+  {
+    if (plot_[k]->topology().number()==1)
+    {
+      plot_[k]->primitive(0).visible() = trackball_.controls().edges_visible;
+    }
+  }
+
+  // compute the matrices that need to be passed to the shaders
   viewMatrix_ = camera_.viewMatrix;
   mvp_ = projMatrix_ * viewMatrix_ * modelMatrix_;
   normalMatrix_ = glm::transpose(glm::inverse(glm::mat3( modelMatrix_*viewMatrix_)));
-  #endif
 }
 
 void

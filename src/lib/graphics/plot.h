@@ -32,6 +32,10 @@ public:
   void add( Primitive_ptr prim );
   void setWindow( Window* window );
 
+  const TopologyHolder& topology() const { return topology_; }
+
+  Primitive& primitive( index_t k );
+
 private:
   const TopologyHolder& topology_;
 

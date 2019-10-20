@@ -10,10 +10,16 @@ namespace ursa
 namespace graphics
 {
 
+class Controls
+{
+public:
+  bool edges_visible;
+};
+
 class Camera
 {
 public:
-  Camera(const glm::vec3& pos);
+  Camera(const glm::vec3& e);
 
   void lookAt(const glm::vec3& target);
 
@@ -27,6 +33,8 @@ class Trackball
 {
 public:
   Trackball(Camera* cam,glm::vec4 screenSize);
+
+  void reset(glm::vec4 screensize);
 
   void update();
   void MouseDown(int button, int action, int mods,int xpos,int ypos);
@@ -59,6 +67,8 @@ public:
     state_ = m_prevState;
   }
 
+  const Controls& controls() const { return controls_; }
+
 private:
 
   glm::vec3 GetMouseProjectionOnBall(int clientX, int clientY);
@@ -87,6 +97,7 @@ private:
 
   Camera*   camera_;
   glm::vec4 m_screen;
+  Controls controls_;
 
   glm::vec3 m_target;
   glm::vec3 m_lastPos;

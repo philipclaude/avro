@@ -32,6 +32,8 @@ public:
   void selectShader( Plotter* plotter );
   ShaderProgram& shader();
 
+  bool& visible() { return visible_; }
+
 protected:
   coord_t number_;
   const TopologyHolder& topology_;
@@ -39,6 +41,7 @@ protected:
   int active_;
   ShaderProgram* shader_;
   Window* window_;
+  bool visible_;
 };
 
 class WebGLPrimitive : public Primitive
