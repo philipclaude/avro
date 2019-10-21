@@ -34,6 +34,10 @@ public:
 
   bool& visible() { return visible_; }
 
+  bool& points_on() { return points_on_; }
+  bool& edges_on() { return edges_on_; }
+  bool& triangles_on() { return triangles_on_; }
+
 protected:
   coord_t number_;
   const TopologyHolder& topology_;
@@ -42,6 +46,20 @@ protected:
   ShaderProgram* shader_;
   Window* window_;
   bool visible_;
+
+  std::vector<GLuint>  edges_;
+  std::vector<GLuint>  triangles_;
+  std::vector<GLfloat> points_;
+  std::vector<GLfloat> normals_;
+  std::vector<GLfloat> colors_;
+
+  GLuint vao_triangles_;
+  GLuint vao_edges_;
+  GLuint vao_points_;
+
+  bool triangles_on_;
+  bool edges_on_;
+  bool points_on_;
 };
 
 class WebGLPrimitive : public Primitive
@@ -60,26 +78,26 @@ private:
 class OpenGLPrimitive : public Primitive
 {
 private:
-  typedef struct
+  /*typedef struct
   {
     std::vector<GLfloat> coordinates;
     std::vector<GLuint> indices;
     std::vector<GLfloat> colours;
     std::vector<GLfloat> normals;
-  } glData;
+  } glData;*/
 
 public:
   using Primitive::Primitive;
 
   void write();
   void draw();
-  void convert( glData& data );
+  void convert();
 
 private:
-  std::vector<GLuint> vbo_;
-  GLuint vao_;
+  //std::vector<GLuint> vbo_;
+  //GLuint vao_;
 
-  glData data_;
+  //glData data_;
 
 };
 

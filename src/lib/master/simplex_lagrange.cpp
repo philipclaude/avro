@@ -177,6 +177,14 @@ Simplex<Lagrange>::precalculate()
   }
 }
 
+void
+Simplex<Lagrange>::get_edges( const index_t* v , const index_t nv , std::vector<index_t>& ek ) const
+{
+  ek.resize( edges_.size() );
+  for (index_t j=0;j<edges_.size();j++)
+    ek[j] = v[edges_[j]];
+}
+
 const real_t*
 Simplex<Lagrange>::get_reference_coordinate( index_t k ) const
 {

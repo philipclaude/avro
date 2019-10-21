@@ -14,6 +14,8 @@ class Controls
 {
 public:
   bool edges_visible;
+  bool faces_visible;
+  bool points_visible;
 };
 
 class Camera

@@ -15,6 +15,7 @@ class Fields;
 namespace graphics
 {
 
+class Controls;
 class Plotter;
 class Primitive;
 class Window;
@@ -35,6 +36,7 @@ public:
   const TopologyHolder& topology() const { return topology_; }
 
   Primitive& primitive( index_t k );
+  void set_visibility( const Controls& controls );
 
 private:
   const TopologyHolder& topology_;

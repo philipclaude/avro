@@ -104,10 +104,7 @@ Window::setMatrices()
   // probably not the right place to put this for performance
   for (index_t k=0;k<plot_.size();k++)
   {
-    if (plot_[k]->topology().number()==1)
-    {
-      plot_[k]->primitive(0).visible() = trackball_.controls().edges_visible;
-    }
+    plot_[k]->set_visibility( trackball_.controls() );
   }
 
   // compute the matrices that need to be passed to the shaders

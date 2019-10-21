@@ -1,3 +1,4 @@
+#include "graphics/controls.h"
 #include "graphics/plot.h"
 #include "graphics/plotter.h"
 #include "graphics/primitive.h"
@@ -29,6 +30,17 @@ Plot::setWindow( Window* window )
 {
   window_  = window;
   plotter_ = window->plotter();
+}
+
+void
+Plot::set_visibility( const Controls& controls )
+{
+  for (index_t k=0;k<primitive_.size();k++)
+  {
+    primitive_[k]->triangles_on() = controls.faces_visible;
+    primitive_[k]->edges_on()     = controls.edges_visible;
+    primitive_[k]->points_on()    = controls.points_visible;
+  }
 }
 
 void

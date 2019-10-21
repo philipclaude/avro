@@ -17,7 +17,10 @@ Primitive::Primitive( const TopologyHolder& topology , Window* window ) :
   active_(-1),
   shader_(NULL),
   window_(window),
-  visible_(true)
+  visible_(true),
+  triangles_on_(true),
+  edges_on_(true),
+  points_on_(false)
 {}
 
 void

@@ -120,13 +120,12 @@ Trackball::RotateCamera()
 
   if (!std::isnan(angle) && angle != 0.0f)
   {
-    glm::vec3 axis = glm::normalize(glm::cross( m_rotStart, m_rotEnd )); //_rotateStart.cross(_rotateEnd).normalize();
+    glm::vec3 axis = glm::normalize(glm::cross( m_rotStart, m_rotEnd ));
 
-    //axis.y*=-1.0f;///need to invert y as rotate seems to be in opposite to mouse move direction.
     if (glm::isnan(axis.x) || glm::isnan(axis.y) || glm::isnan(axis.z))
       return;
 
-    glm::quat quaternion;// Quaternion quaternion = Quaternion.Identity;
+    glm::quat quaternion;
 
     angle *= m_rotateSpeed;
 
@@ -328,9 +327,17 @@ Trackball::KeyDown(int key)
   {
     state_ = TCB_STATE::PAN;
   }
-  else if ( (key == GLFW_KEY_M) )
+  else if ( (key == GLFW_KEY_E) )
   {
     controls_.edges_visible = !controls_.edges_visible;
+  }
+  else if ( (key == GLFW_KEY_F) )
+  {
+    controls_.faces_visible = !controls_.faces_visible;
+  }
+  else if ( (key == GLFW_KEY_P) )
+  {
+    controls_.points_visible = !controls_.points_visible;
   }
   else if ( (key == GLFW_KEY_R) )
   {

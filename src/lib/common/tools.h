@@ -269,6 +269,17 @@ tabbedPrint( const index_t nt , const char *fmt , ... )
   va_end(args);
 }
 
+static void
+trim_string( std::string& str )
+{
+  const char* white_space = " \t\n\r";
+  size_t location;
+  location = str.find_first_not_of(white_space);
+  str.erase(0,location);
+  location = str.find_last_not_of(white_space);
+  str.erase(location + 1);
+}
+
 template void printInline( const std::vector<index_t>& s , const std::string& name , const int id , const index_t nt );
 template void printInline( const std::vector<double>& s , const std::string& name , const int id , const index_t nt );
 template void printInline( const std::vector<float>& s , const std::string& name , const int id , const index_t nt );

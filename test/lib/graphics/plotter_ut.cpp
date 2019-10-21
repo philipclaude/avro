@@ -23,7 +23,8 @@ UT_TEST_CASE( test1 )
   printf("reading obj...\n");
 
   //library::TwoTriangles topology;
-  library::objFile topology( "/Users/pcaplan/Desktop/spot_triangulated.obj" );
+  //library::objFile topology( "/Users/pcaplan/Desktop/spot_triangulated.obj" );
+  library::objFile topology( "/Users/pcaplan/Desktop/suzanne.obj" );
 
   std::vector<index_t> edges;
   topology.getEdges(edges);
@@ -34,9 +35,6 @@ UT_TEST_CASE( test1 )
 
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);
-
-  Window::Plot_ptr plot2 = std::make_shared<Plot>(topology_edges,&window);
-  plotter.window("main").attach(plot2);
 
   plotter.run();
 }

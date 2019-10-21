@@ -53,6 +53,14 @@ Topology<Simplex<Bezier>>::convert()
   builder.transfer(*this);
 }
 
+template<>
+void
+TopologyBase<Simplex<Bezier>>::getEdges( std::vector<index_t>& edges ) const
+{
+  // bezier edge extraction is not supported
+  ursa_assert_not_reached;
+}
+
 template class TopologyBase< Simplex<Lagrange> >;
 template class Tree< Topology< Simplex<Lagrange> > >;
 

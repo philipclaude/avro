@@ -22,11 +22,9 @@ TwoTriangles::TwoTriangles() :
 
   index_t t0[3] = {0,1,2};
   index_t t1[3] = {1,3,2};
-  index_t t2[3] = {0,3,2};
 
   add( t0 , 3 );
   add( t1 , 3 );
-  add( t2 , 3 );
 
   index_t e0[2] = {0,1};
   index_t e1[2] = {1,2};

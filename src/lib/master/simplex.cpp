@@ -128,15 +128,6 @@ sort:
 
 template<typename Basis>
 void
-SimplexBase<Basis>::get_edges( const index_t* v , const index_t nv , std::vector<index_t>& ek ) const
-{
-  ek.resize( edges_.size() );
-  for (index_t j=0;j<edges_.size();j++)
-    ek[j] = v[edges_[j]];
-}
-
-template<typename Basis>
-void
 SimplexBase<Basis>::get_triangle( const index_t* v , index_t nv , index_t itriangle, index_t* t ) const
 {
   index_t p0 = get_vertex( v , nv ,  itriangle   %3 );

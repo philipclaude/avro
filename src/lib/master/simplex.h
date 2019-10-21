@@ -98,8 +98,6 @@ public:
 
   index_t get_index( index_t dim , index_t ifacet , index_t ilocal ) const;
   void get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const;
-  void get_edges( const index_t* v , index_t nv , std::vector<index_t>& edges ) const;
-  void get_triangles( const index_t* v , index_t nv , std::vector<index_t>& triangles ) const;
 
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;
@@ -116,8 +114,7 @@ private:
   std::vector<real_t> wquad_;
 
 protected:
-  std::vector<index_t> edges_;
-  std::vector<index_t> triangles_;
+
 };
 
 template<>
@@ -139,6 +136,9 @@ public:
   void eval() const { printf("calling lagrange simplex eval\n"); }
   void eval() {}
 
+  void get_edges( const index_t* v , index_t nv , std::vector<index_t>& edges ) const;
+  void get_triangles( const index_t* v , index_t nv , std::vector<index_t>& triangles ) const;
+
 private:
 
   std::vector<real_t> xunit_;
@@ -146,6 +146,9 @@ private:
 
   std::vector<real_t>  xref_;
   std::vector<index_t> lref_;
+
+  std::vector<index_t> edges_;
+  std::vector<index_t> triangles_;
 };
 
 template<>

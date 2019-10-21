@@ -1,4 +1,5 @@
 #include "common/error.h"
+#include "common/tools.h"
 
 #include "library/field.h"
 #include "library/obj.h"
@@ -22,20 +23,29 @@ objFile::objFile( const std::string& filename ) :
 }
 
 void
+get_vertex( std::string& s , int& vertex , int& normal , int& texture )
+{
+  std::vector<std::string> pieces = split(s,"/");
+  ursa_assert(pieces.size()>0);
+
+  vertex = normal = texture = -1;
+  vertex = unstringify<int>(pieces[0]);
+
+  if (pieces.size()>1)
+    normal = unstringify<int>(pieces[1]);
+  if (pieces.size()>2)
+    texture = unstringify<int>(pieces[2]);
+}
+
+void
 objFile::read()
 {
-  FILE * file = fopen(filename_.c_str() , "r");
-  if ( file == NULL )
-  {
-    printf("cannot open the file! %s\n",filename_.c_str());
-    ursa_assert_not_reached;
-  }
-
   real_t x[3],u[2],n[3];
   index_t t[3],ut[3];
   char lineHeader[128];
 
   Data<real_t> normals,uv;
+  Data<real_t> texture;
   std::vector< std::vector<index_t> > nt_vals,ut_vals;
 
   typedef Simplex<Lagrange> Shape_t;
@@ -45,91 +55,93 @@ objFile::read()
   std::shared_ptr<FieldType> normal_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
   std::shared_ptr<FieldType> uv_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
 
-  printf("making discontinuous fields..\n");
-
   std::shared_ptr<FieldType_idx> nt_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
   std::shared_ptr<FieldType_idx> ut_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
 
-  printf("reading file..\n");
-
-  index_t line = 0;
-  int matches = -1;
-  while (true)
+  // read the file
+  std::ifstream file( filename_.c_str() , std::ios::in );
+  std::string line,token;
+  getline(file,line);
+  while (!file.eof())
   {
-    // read the first word of the line
-    int res = fscanf(file, "%s", lineHeader);
-    if (res == EOF)
-      break; // we reached the end of the file
+    size_t pos = line.find_first_of("#");
+    if (pos!=std::string::npos)
+      line = line.substr(0,pos);
+    trim_string(line);
 
-    if ( strcmp( lineHeader, "v" ) == 0 )
+    if (line.length()>0)
     {
-      matches = fscanf(file, "%lg %lg %lg\n", &x[0] , &x[1] , &x[2] );
-      ursa_assert( matches==3 );
-      //printf("read vertex (%g,%g,%g)\n",x[0],x[1],x[2]);
-      vertices_.create(x);
-    }
-    else if ( strcmp( lineHeader, "vt" ) == 0 )
-    {
-      matches = fscanf(file, "%lg %lg\n", &u[0] , &u[1] );
-      ursa_assert( matches==2 );
-      u[1] = -u[1]; // invert V coordinate since we will only use DDS texture, which are inverted. Remove if you want to use TGA or BMP loaders.
-      uv.add( u , 2 );
-      //printf("read vt = (%g,%g)\n",u[0],u[1]);
-    }
-    else if ( strcmp( lineHeader, "vn" ) == 0 )
-    {
-      matches = fscanf(file, "%lg %lg %lg\n", &n[0] , &n[1] , &n[2] );
-      ursa_assert( matches==3 );
-      normals.add( n , 3 );
-    }
-    else if ( strcmp( lineHeader, "f" ) == 0 )
-    {
-      //printf("read facet %s\n",lineHeader);
-      int matches; /*= fscanf(file, "%lu/%lu/%lu %lu/%lu/%lu %lu/%lu/%lu\n",
-          &t[0], &ut[0], &nt[0], &t[1], &ut[1], &nt[1], &t[2], &ut[2], &nt[2] );
-      if (matches == 9)
+      std::istringstream line_stream( line );
+
+      line_stream >> token;
+
+      if (token == "v")
       {
-        for (coord_t d=0;d<3;d++)
-          t[d]--;
-        this->add( t , 3 );
-
-        std::vector<index_t> NT(nt,nt+3);
-        std::vector<index_t> UT(ut,ut+3);
-
-        nt_vals.push_back(NT);
-        ut_vals.push_back(UT);
-        continue;
-      }*/
-      matches = fscanf(file, "%lu/%lu %lu/%lu %lu/%lu\n",
-          &t[0], &ut[0], &t[1], &ut[1], &t[2], &ut[2] );
-      if (matches==6)
+        float X,Y,Z;
+        line_stream >> X >> Y >> Z;
+        x[0] = X;
+        x[1] = Y;
+        x[2] = Z;
+        vertices_.create(x);
+      }
+      else if (token == "vt")
       {
-        for (coord_t d=0;d<3;d++)
-          t[d]--;
-        this->add( t , 3 );
-        std::vector<index_t> UT(ut,ut+3);
-        ut_vals.push_back(UT);
-        continue;
+        float S,T;
+        line_stream >> S >> T;
+        u[0] = S;
+        u[1] = T;
+        texture.add( u , 2 );
+      }
+      else if (token == "vn")
+      {
+        float NX,NY,NZ;
+        line_stream >> NX >> NY >> NZ;
+        n[0] = NX;
+        n[1] = NY;
+        n[2] = NZ;
+        normals.add( n , 3 );
+      }
+      else if (token == "f")
+      {
+        std::vector<std::string> parts;
+        while (line_stream.good())
+        {
+          std::string s;
+          line_stream >> s;
+          parts.push_back(s);
+        }
+        ursa_assert_msg( parts.size()==3 , "only triangles supported" );
+
+        int vertex0[3],vertex1[3],vertex2[3];
+        get_vertex( parts[0] , vertex0[0] , vertex0[1] , vertex0[2] );
+        get_vertex( parts[1] , vertex1[0] , vertex1[1] , vertex1[2] );
+        get_vertex( parts[2] , vertex2[0] , vertex2[1] , vertex2[2] );
+
+        t[0] = vertex0[0] -1;
+        t[1] = vertex1[0] -1;
+        t[2] = vertex2[0] -1;
+
+        add(t,3);
+      }
+      else if (token=="usemtl")
+      {
+        printf("[warning] usemtl not supported!\n");
+      }
+      else if (token=="s")
+      {
+        printf("[warning] s token not supported!\n");
       }
       else
       {
-        printf("error reading line %lu\n",line);
-        printf("t = (%lu,%lu,%lu)\n",t[0],t[1],t[2]);
-        ursa_assert_msg( false , "matches = %d " ,matches );
+        printf("bad token %s\n",token.c_str());
+        ursa_assert_not_reached;
       }
     }
-    else
-    {
-      // probably a comment, eat up the rest of the line
-      char comment[1024];
-      fgets(comment, 1024, file);
-    }
-    line++;
-
+    getline(file,line);
   }
-  fclose(file);
+  file.close();
 
-  printf("read file..skipping normals, uv and texture...\n");
+  printf("[warning] read facets...skipping normals, uv and texture...\n");
 
   return;
 

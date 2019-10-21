@@ -22,8 +22,6 @@ public:
 private:
   Vertices vertices_;
   std::string filename_;
-
-
 };
 
 } // library

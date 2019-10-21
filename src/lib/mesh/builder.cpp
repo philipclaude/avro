@@ -104,8 +104,6 @@ Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
   ursa_assert( f.vertices().dim()==topology_.vertices().dim() );
   ursa_assert( f.nb()==0 );
 
-  printData();
-
   // create all the vertices for the outgoing topology
   const std::vector<index_t>& elems = this->elements();
   index_t nb_vertices = *std::max_element( elems.begin() , elems.end() ) +1;
@@ -179,9 +177,6 @@ Builder<Shape_t,Master_t>::build()
       for (index_t j=0;j<dof.size();j++)
         dof[j] = n++;
 
-      printInline( dof );
-      printInline( parents , "parents = " );
-
       // assign the dof to all parents of this facet
       for (index_t i=0;i<parents.size();i++)
       {
@@ -190,12 +185,10 @@ Builder<Shape_t,Master_t>::build()
         for (index_t j=0;j<dof.size();j++)
         {
           index_t idx = master_.get_index( f.dim , local[i] , j );
-          printf("assigning element (%lu) local index %lu = %lu\n",k,idx,dof[j]);
           (*this)(k,idx) = dof[j];
         }
       }
     }
-
   }
 }
 
