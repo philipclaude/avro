@@ -1,5 +1,6 @@
 #include "unit_tester.hpp"
 
+#include "graphics/interface.h"
 #include "graphics/plot.h"
 #include "graphics/plotter.h"
 #include "graphics/window.h"
@@ -23,8 +24,7 @@ UT_TEST_CASE( test1 )
   printf("reading obj...\n");
 
   //library::TwoTriangles topology;
-  //library::objFile topology( "/Users/pcaplan/Desktop/spot_triangulated.obj" );
-  library::objFile topology( "/Users/pcaplan/Desktop/suzanne.obj" );
+  library::objFile topology( "/Users/pcaplan/Desktop/models/buddha.obj" );
 
   std::vector<index_t> edges;
   topology.getEdges(edges);
@@ -35,6 +35,10 @@ UT_TEST_CASE( test1 )
 
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);
+
+  BasicInterface basic( window );
+  PlotTree tree(window);
+  window.set_interface(&tree);
 
   plotter.run();
 }

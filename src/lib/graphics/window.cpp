@@ -7,6 +7,8 @@
 #include "graphics/primitive.h"
 #include "graphics/window.h"
 
+#include <imgui/GL/imgui_impl_glfw.h>
+#include <imgui/GL/imgui_impl_opengl3.h>
 
 namespace ursa
 {
@@ -61,7 +63,8 @@ Window::Window( const std::string& title , Plotter* plotter) :
   title_(title),
   plotter_(plotter),
   camera_(glm::vec3(0.0f,0.0f,7.0f)),
-  trackball_(&camera_,glm::vec4(0.0f,0.0f,(float)width_,(float)height_))
+  trackball_(&camera_,glm::vec4(0.0f,0.0f,(float)width_,(float)height_)),
+  interface_(NULL)
 {
   window_ = glfwCreateWindow( width_ , height_ , title_.c_str() , NULL, NULL);
   if (!window_)
@@ -145,6 +148,12 @@ Window::attach( Plot_ptr plot )
 }
 
 void
+Window::set_interface( Interface* interface )
+{
+  interface_ = interface;
+}
+
+void
 Window::run()
 {
   // ensure we can capture the escape key being pressed below
@@ -175,11 +184,21 @@ Window::run()
 
   write();
 
+  bool show_demo_window = true;
+
   while (!glfwWindowShouldClose(window_) && glfwGetKey(window_, GLFW_KEY_ESCAPE ) != GLFW_PRESS)
   {
-    draw();
-    glfwSwapBuffers(window_);
     glfwPollEvents();
+
+    if (interface_)
+      interface_->show();
+
+    draw();
+
+    if (interface_)
+      interface_->render();
+
+    glfwSwapBuffers(window_);
   }
 }
 

@@ -240,7 +240,6 @@ OpenGLPrimitive::write()
 
   // reset the vao bound to the gl
   GL_CALL( glBindVertexArray(0) );
-
 }
 
 void

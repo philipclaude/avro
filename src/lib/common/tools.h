@@ -269,7 +269,7 @@ tabbedPrint( const index_t nt , const char *fmt , ... )
   va_end(args);
 }
 
-static void
+inline void
 trim_string( std::string& str )
 {
   const char* white_space = " \t\n\r";

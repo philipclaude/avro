@@ -24,6 +24,10 @@ if (URSA_BUILTIN_GLFW)
 	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
 endif()
 
+add_source_directories( IMGUI_SOURCES "imgui source" imgui )
+add_source_directories( IMGUI_SOURCES "imgui source" imgui/GL )
+include_directories( imgui )
+
 set( GLAD_SOURCES )
 if (URSA_WITH_GL)
 	add_source_directories( GLAD_SOURCES "glad source" glad/src )
@@ -54,4 +58,4 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
 
-add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} )
+add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )

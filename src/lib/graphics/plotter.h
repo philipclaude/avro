@@ -2,6 +2,7 @@
 #define URSA_LIB_GRAPHICS_PLOTTER_H_
 
 #include "graphics/client.h"
+#include "graphics/interface.h"
 #include "graphics/server.h"
 
 #include <map>
@@ -39,10 +40,14 @@ public:
   ShaderProgram& shader( const std::string& name );
   const ShaderProgram& shader( const std::string& name ) const;
 
+  InterfaceManager& manager() { return interface_; }
+  const InterfaceManager& manager() const { return interface_; }
 
 private:
   std::map<std::string,Window_ptr> window_;
   std::map<std::string,Shader_ptr> shader_;
+
+  InterfaceManager interface_;
 };
 
 } // graphics

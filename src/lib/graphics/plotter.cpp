@@ -7,6 +7,9 @@
 #include "graphics/shader.h"
 #include "graphics/window.h"
 
+#include <imgui/GL/imgui_impl_glfw.h>
+#include <imgui/GL/imgui_impl_opengl3.h>
+
 namespace ursa
 {
 
@@ -43,6 +46,34 @@ Plotter::initialize()
   shader_.insert( {"edge" , std::make_shared<ShaderProgram>( "edge" ) } );
   shader_.insert( {"wv" , std::make_shared<ShaderProgram>( "wv" ) } );
   // TODO the rest of the shaders...
+
+
+  const char* glsl_version = "#version 410";
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO(); (void)io;
+  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+  // Setup Dear ImGui style
+  ImGui::StyleColorsDark();
+  //ImGui::StyleColorsClassic();
+
+  // Setup Platform/Renderer bindings
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init(glsl_version);
+
+  bool show_demo_window = true;
+  bool show_another_window = false;
+
+/*
+  ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+  ImGui::Text("Hello from another window!");
+  if (ImGui::Button("Close Me"))
+      show_another_window = false;
+  ImGui::End();
+*/
+
 }
 
 void
@@ -54,6 +85,10 @@ Plotter::run()
 
 Plotter::~Plotter()
 {
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+
   glfwTerminate();
 }
 

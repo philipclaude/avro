@@ -15,6 +15,7 @@ namespace ursa
 namespace graphics
 {
 
+class Interface;
 class Plot;
 class Plotter;
 class Scene;
@@ -31,6 +32,8 @@ public:
 
   virtual void draw();
   virtual void write();
+
+  void set_interface( Interface* interface );
 
   void run();
 
@@ -94,6 +97,8 @@ private:
 
   Camera camera_;
   Trackball trackball_;
+
+  Interface* interface_;
 };
 
 } // graphics
