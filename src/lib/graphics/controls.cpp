@@ -1,5 +1,6 @@
 #include "graphics/controls.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -24,31 +25,31 @@ Camera::lookAt(const glm::vec3& target)
 }
 
 Trackball::Trackball(Camera* cam,glm::vec4 screenSize) :
-  camera_(cam),
-  m_screen(screenSize),
-  m_enabled(true),
   m_rotateSpeed(1.0f),
   m_zoomSpeed(1.2f),
   m_panSpeed(0.3f),
-  m_noRotate(false),
-  m_noPan(false),
-  m_noZoom(false),
-  m_noRoll(false),
-  m_staticMoving(false),
   m_dynamicDampingFactor(0.2f),
   m_minDistance(0.0f),
   m_maxDistance(FloatInfinity),
+  m_enabled(true),
+  m_noRotate(false),
+  m_noZoom(false),
+  m_noPan(false),
+  m_noRoll(false),
+  m_staticMoving(false),
+  camera_(cam),
+  m_screen(screenSize),
   m_target(0.0f),
   m_lastPos(0.0f),
-  state_(TCB_STATE::NONE),
-  m_prevState(TCB_STATE::NONE),
   m_eye(0.0f),
   m_rotStart(0.0f),
   m_rotEnd(0.0f),
   m_zoomStart(0.0f),
   m_zoomEnd(0.0f),
   m_panStart(0.0f),
-  m_panEnd(0.0f)
+  m_panEnd(0.0f),
+  state_(TCB_STATE::NONE),
+  m_prevState(TCB_STATE::NONE)
 {}
 
 void
@@ -327,19 +328,19 @@ Trackball::KeyDown(int key)
   {
     state_ = TCB_STATE::PAN;
   }
-  else if ( (key == GLFW_KEY_E) )
+  else if ( key == GLFW_KEY_E )
   {
     controls_.edges_visible = !controls_.edges_visible;
   }
-  else if ( (key == GLFW_KEY_F) )
+  else if ( key == GLFW_KEY_F )
   {
     controls_.faces_visible = !controls_.faces_visible;
   }
-  else if ( (key == GLFW_KEY_P) )
+  else if ( key == GLFW_KEY_P )
   {
     controls_.points_visible = !controls_.points_visible;
   }
-  else if ( (key == GLFW_KEY_R) )
+  else if ( key == GLFW_KEY_R )
   {
     camera_->eye = glm::vec3(0.0f,0.0f,7.0f);
     camera_->up  = glm::vec3(0.0f,1.0f,0.0f);

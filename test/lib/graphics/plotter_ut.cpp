@@ -24,7 +24,7 @@ UT_TEST_CASE( test1 )
   printf("reading obj...\n");
 
   //library::TwoTriangles topology;
-  library::objFile topology( "/Users/pcaplan/Desktop/models/buddha.obj" );
+  library::objFile topology( "/Users/pcaplan/Desktop/models/spot.obj" );
 
   std::vector<index_t> edges;
   topology.getEdges(edges);

@@ -63,6 +63,33 @@ BasicInterface::show()
   ImGui::Render();
 }
 
+// Helper to display basic user controls.
+void showUserGuide()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::BulletText("Double-click on title bar to collapse window.");
+    ImGui::BulletText("Click and drag on lower corner to resize window\n(double-click to auto fit window to its contents).");
+    if (io.ConfigWindowsMoveFromTitleBarOnly)
+        ImGui::BulletText("Click and drag on title bar to move window.");
+    else
+        ImGui::BulletText("Click and drag on any empty space to move window.");
+    ImGui::BulletText("TAB/SHIFT+TAB to cycle through keyboard editable fields.");
+    ImGui::BulletText("CTRL+Click on a slider or drag box to input value as text.");
+    if (io.FontAllowUserScaling)
+        ImGui::BulletText("CTRL+Mouse Wheel to zoom window contents.");
+    ImGui::BulletText("Mouse Wheel to scroll.");
+    ImGui::BulletText("While editing text:\n");
+    ImGui::Indent();
+    ImGui::BulletText("Hold SHIFT or use mouse to select text.");
+    ImGui::BulletText("CTRL+Left/Right to word jump.");
+    ImGui::BulletText("CTRL+A or double-click to select all.");
+    ImGui::BulletText("CTRL+X,CTRL+C,CTRL+V to use clipboard.");
+    ImGui::BulletText("CTRL+Z,CTRL+Y to undo/redo.");
+    ImGui::BulletText("ESCAPE to revert.");
+    ImGui::BulletText("You can apply arithmetic operators +,*,/ on numerical values.\nUse +- to subtract.");
+    ImGui::Unindent();
+}
+
 PlotTree::PlotTree( Window& window ) :
   Interface(window)
 {}
@@ -77,49 +104,61 @@ PlotTree::show()
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_NoCollapse;
 
-  bool p_open = false;
-  if (!ImGui::Begin("primitive tree",&p_open,window_flags))
+  bool active = true;
+  ImGui::Begin("Plot controls",&active,ImGuiWindowFlags_MenuBar);
   {
-      // Early out if the window is collapsed, as an optimization.
-      ImGui::End();
-      return;
-  }
-
-  {
+    if (ImGui::BeginMenuBar())
+    {
       if (ImGui::BeginMenu("File"))
       {
-        bool show_file = true;
-        bool show_edit = true;
-        bool show_view = true;
-        bool show_help = true;
-        ImGui::MenuItem("File",NULL,&show_file);
-        ImGui::MenuItem("Edit",NULL,&show_edit);
-        ImGui::MenuItem("View",NULL,&show_view);
-        ImGui::MenuItem("Help",NULL,&show_help);
-
-        ImGui::EndMenu();
+          if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
+          if (ImGui::MenuItem("Save", "Ctrl+S"))   { /* Do stuff */ }
+          if (ImGui::MenuItem("Close", "Ctrl+W"))  { active = false; }
+          ImGui::EndMenu();
       }
-      ImGui::SameLine();
-      if (ImGui::BeginMenu("Edit"))
-      {
-        bool show_file = true;
-        bool show_edit = true;
-        bool show_view = true;
-        bool show_help = true;
-        ImGui::MenuItem("File",NULL,&show_file);
-        ImGui::MenuItem("Edit",NULL,&show_edit);
-        ImGui::MenuItem("View",NULL,&show_view);
-        ImGui::MenuItem("Help",NULL,&show_help);
+      ImGui::EndMenuBar();
+    }
 
-        ImGui::EndMenu();
-      }
-
-      if (ImGui::TreeNode("Style"))
+    if (ImGui::CollapsingHeader("Plots"))
+    {
+      if (ImGui::TreeNode("Plot 1"))
       {
-          ImGui::ShowStyleEditor();
+        ImGui::Text("hello!");
+
+        if (ImGui::TreeNode("Face 1"))
+        {
+          if (ImGui::TreeNode("Edge1"))
+          {
+            if (ImGui::TreeNode("Node 2"))
+            {
+
+              ImGui::TreePop();
+            }
+            ImGui::TreePop();
+          }
           ImGui::TreePop();
-          ImGui::Separator();
+        }
+        ImGui::TreePop();
       }
+      if (ImGui::TreeNode("Plot 2"))
+      {
+        ImGui::TreePop();
+      }
+    }
+
+    if (ImGui::CollapsingHeader("Help"))
+    {
+      ImGui::Text("PROGRAMMER GUIDE:");
+      ImGui::BulletText("Please see the ShowDemoWindow() code in imgui_demo.cpp. <- you are here!");
+      ImGui::BulletText("Please see the comments in imgui.cpp.");
+      ImGui::BulletText("Please see the examples/ application.");
+      ImGui::BulletText("Enable 'io.ConfigFlags |= NavEnableKeyboard' for keyboard controls.");
+      ImGui::BulletText("Enable 'io.ConfigFlags |= NavEnableGamepad' for gamepad controls.");
+      ImGui::Separator();
+
+      ImGui::Text("USER GUIDE:");
+      showUserGuide();
+    }
   }
 
   ImGui::End();
