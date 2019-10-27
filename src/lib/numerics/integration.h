@@ -32,7 +32,7 @@ class Integral
     for (index_t j=0;j<master_.nb_quad();j++)
     {
       integrand_( master_.x(k) , df );
-      f += master_.w(k)*df*master_.jacobian( topology.vertices() , topology(k) , topology.nv(k) );
+      f += master_.w(k)*df*master_.jacobian( topology.points() , topology(k) , topology.nv(k) );
     }
   }
 

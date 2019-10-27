@@ -14,8 +14,8 @@ namespace library
 {
 
 objFile::objFile( const std::string& filename ) :
-  Topology<Simplex<Lagrange>>(vertices_,2),
-  vertices_(3),
+  Topology<Simplex<Lagrange>>(points_,2),
+  points_(3),
   filename_(filename)
 {
   this->setSorted(false);
@@ -82,7 +82,7 @@ objFile::read()
         x[0] = X;
         x[1] = Y;
         x[2] = Z;
-        vertices_.create(x);
+        points_.create(x);
       }
       else if (token == "vt")
       {
@@ -162,8 +162,8 @@ objFile::read()
 
   }
 
-  ursa_assert_msg( normal_fld->nb_data()==vertices_.nb() ,
-    "|fld| = %lu , |vertices| = %lu", normal_fld->nb(),vertices_.nb() );
+  ursa_assert_msg( normal_fld->nb_data()==points_.nb() ,
+    "|fld| = %lu , |vertices| = %lu", normal_fld->nb(),points_.nb() );
 
   nt_fld->build();
   ut_fld->build();

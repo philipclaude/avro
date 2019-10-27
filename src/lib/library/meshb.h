@@ -19,7 +19,7 @@ public:
 
 private:
   std::string filename_;
-  Vertices vertices_;
+  Points points_;
 };
 
 } // library

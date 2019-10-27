@@ -7,18 +7,18 @@ namespace library
 {
 
 TwoTriangles::TwoTriangles() :
-  Topology<Simplex<Lagrange>>(vertices_,2),
-  vertices_(3),
-  edges_(vertices_,1)
+  Topology<Simplex<Lagrange>>(points_,2),
+  points_(3),
+  edges_(points_,1)
 {
   real_t x0[3] = {0,0,1};
   real_t x1[3] = {1,0,2};
   real_t x2[3] = {0,1,3};
   real_t x3[3] = {1,1,4};
-  vertices_.create( x0 );
-  vertices_.create( x1 );
-  vertices_.create( x2 );
-  vertices_.create( x3 );
+  points_.create( x0 );
+  points_.create( x1 );
+  points_.create( x2 );
+  points_.create( x3 );
 
   index_t t0[3] = {0,1,2};
   index_t t1[3] = {1,3,2};

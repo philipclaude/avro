@@ -100,16 +100,16 @@ void
 Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
 {
   ursa_assert( topology_.nb() == this->nb() );
-  ursa_assert_msg( f.vertices().nb()==0 , "nb_vertices = %lu" , f.vertices().nb() );
-  ursa_assert( f.vertices().dim()==topology_.vertices().dim() );
+  ursa_assert_msg( f.points().nb()==0 , "nb_vertices = %lu" , f.points().nb() );
+  ursa_assert( f.points().dim()==topology_.points().dim() );
   ursa_assert( f.nb()==0 );
 
   // create all the vertices for the outgoing topology
   const std::vector<index_t>& elems = this->elements();
   index_t nb_vertices = *std::max_element( elems.begin() , elems.end() ) +1;
-  std::vector<real_t> x0( topology_.vertices().dim() , 0. );
+  std::vector<real_t> x0( topology_.points().dim() , 0. );
   for (index_t k=0;k<nb_vertices;k++)
-    f.vertices().create( x0.data() );
+    f.points().create( x0.data() );
 
   // copy the topology
   for (index_t k=0;k<this->nb();k++)
@@ -125,16 +125,16 @@ Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
     // get the vertices of the current element
     dof0.resize( topology_.nv(k) , NULL );
     for (index_t j=0;j<topology_.nv(k);j++)
-      dof0[j] = topology_.vertices()[ topology_(k,j) ];
+      dof0[j] = topology_.points()[ topology_(k,j) ];
 
     // size the vertices to be added
     dof1.resize( this->nv(k) , NULL );
     for (index_t j=0;j<dof1.size();j++)
     {
       index_t idx = (*this)(k,j);
-      dof1[j] = f.vertices()[ idx ];
+      dof1[j] = f.points()[ idx ];
     }
-    master_.transfer( topology_.master() , dof0 , dof1 , topology_.vertices().dim() );
+    master_.transfer( topology_.master() , dof0 , dof1 , topology_.points().dim() );
   }
 }
 

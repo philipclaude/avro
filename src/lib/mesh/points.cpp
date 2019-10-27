@@ -5,7 +5,7 @@
 //#include "geometry/model.h"
 
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 #include "numerics/geometry.h"
 
@@ -18,7 +18,7 @@
 namespace ursa
 {
 
-Vertices::Vertices( const coord_t _dim ) :
+Points::Points( const coord_t _dim ) :
 	dim_(_dim),
 	udim_(dim_-1), // default to assuming parameter space is dim-1
 	ghost_(0)
@@ -30,7 +30,7 @@ Vertices::Vertices( const coord_t _dim ) :
 	fixed_.clear();
 }
 
-Vertices::Vertices( const coord_t _dim , const coord_t _udim ) :
+Points::Points( const coord_t _dim , const coord_t _udim ) :
 	dim_(_dim),
 	udim_(_udim),
 	ghost_(0)
@@ -42,20 +42,20 @@ Vertices::Vertices( const coord_t _dim , const coord_t _udim ) :
 	fixed_.clear();
 }
 
-Vertices::~Vertices()
+Points::~Points()
 {
 	clear();
 }
 
 void
-Vertices::create( const std::vector<real_t>& x )
+Points::create( const std::vector<real_t>& x )
 {
 	ursa_assert(x.size()==dim_);
 	create(x.data());
 }
 
 void
-Vertices::create( const real_t* x )
+Points::create( const real_t* x )
 {
   for (index_t i=0;i<dim_;i++)
     x_.push_back( x[i] );
@@ -68,7 +68,7 @@ Vertices::create( const real_t* x )
 }
 
 void
-Vertices::copy( Vertices& v , const bool erase , const bool ghosts) const
+Points::copy( Points& v , const bool erase , const bool ghosts) const
 {
   if (erase)
     v.clear();
@@ -99,7 +99,7 @@ Vertices::copy( Vertices& v , const bool erase , const bool ghosts) const
 }
 
 void
-Vertices::createGhost()
+Points::createGhost()
 {
 	// add some arbitrary ghost vertices
 	std::vector<real_t> x0( dim_ , INFTY );
@@ -117,7 +117,7 @@ Vertices::createGhost()
 }
 
 int&
-Vertices::body( const index_t k )
+Points::body( const index_t k )
 {
 	ursa_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
 	return body_[k];
@@ -126,21 +126,21 @@ Vertices::body( const index_t k )
 #if 1
 
 void
-Vertices::setPrimitive( const index_t k , geometrics::Primitive* e )
+Points::setPrimitive( const index_t k , geometrics::Primitive* e )
 {
 	ursa_assert( k<nb() );
 	primitive_[k] = e;
 }
 
 void
-Vertices::setParam( const index_t k , const std::vector<real_t>& u )
+Points::setParam( const index_t k , const std::vector<real_t>& u )
 {
 	ursa_assert(u.size()==udim_);
 	setParam( k , u.data() );
 }
 
 void
-Vertices::setParam( const index_t k , const real_t* u )
+Points::setParam( const index_t k , const real_t* u )
 {
   ursa_assert( k<nb() );
   for (index_t i=0;i<udim_;i++)
@@ -148,16 +148,16 @@ Vertices::setParam( const index_t k , const real_t* u )
 }
 
 bool
-Vertices::boundary( const index_t k ) const
+Points::boundary( const index_t k ) const
 {
 	ursa_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
 	return body_[k]>0;
 }
 
 void
-Vertices::print( std::string pre , bool info ) const
+Points::print( std::string pre , bool info ) const
 {
-	printf("Vertices (%p):\n",(void*)this);
+	printf("Points (%p):\n",(void*)this);
 	if (pre=="\0") pre = "v";
 	for (index_t k=0;k<nb();k++)
 	{
@@ -184,7 +184,7 @@ Vertices::print( std::string pre , bool info ) const
 }
 
 void
-Vertices::print( const index_t k , bool info ) const
+Points::print( const index_t k , bool info ) const
 {
 	printf("vertex[%4d]: (",int(k));
 	for (index_t d=0;d<dim_;d++)
@@ -208,7 +208,7 @@ Vertices::print( const index_t k , bool info ) const
 }
 
 void
-Vertices::remove( const index_t k )
+Points::remove( const index_t k )
 {
 	ursa_assert_msg( k < nb() ,
 		"k = %lu , nb = %lu , |x| = %lu" , k , nb() , x_.size() );
@@ -221,7 +221,7 @@ Vertices::remove( const index_t k )
 }
 
 void
-Vertices::duplicates( std::vector<index_t>& idx ,real_t tol ) const
+Points::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 {
 	// initialize the map
 	idx.resize(nb());
@@ -244,7 +244,7 @@ Vertices::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 }
 
 void
-Vertices::duplicates( std::vector<index_t>& idx , const Data<int>& F ) const
+Points::duplicates( std::vector<index_t>& idx , const Data<int>& F ) const
 {
 	ursa_assert( F.nb() == nb() );
 
@@ -280,7 +280,7 @@ Vertices::duplicates( std::vector<index_t>& idx , const Data<int>& F ) const
 }
 
 void
-Vertices::dump( const std::string& filename ) const
+Points::dump( const std::string& filename ) const
 {
   FILE* fid = fopen(filename.c_str(),"w");
   for (index_t k=0;k<nb();k++)
@@ -294,7 +294,7 @@ Vertices::dump( const std::string& filename ) const
 
 /*
 void
-Vertices::findGeometry( const Body& body , index_t ibody ,real_t tol )
+Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
 {
   // useful for when a mesh is read but it does not have a geometry
   // even though we know what it should be
@@ -409,14 +409,14 @@ Vertices::findGeometry( const Body& body , index_t ibody ,real_t tol )
 }
 
 void
-Vertices::findGeometry( const Model& model ,real_t tol )
+Points::findGeometry( const Model& model ,real_t tol )
 {
   for (index_t k=0;k<model.nb_bodies();k++)
     findGeometry( *model.body(k) , k+1 , tol );
 }
 
 void
-Vertices::projectToGeometry( Body& body )
+Points::projectToGeometry( Body& body )
 {
   // project the vertices to the egads geometry
   std::vector<real_t> x(4,0.);
@@ -505,7 +505,7 @@ Vertices::projectToGeometry( Body& body )
 }
 
 void
-Vertices::computePartition( Data<index_t>& data ,
+Points::computePartition( Data<index_t>& data ,
                       std::vector<index_t>& cell_partition , index_t nparts )
 {
   // data is technically a topology, construct the adjacency graph
@@ -580,7 +580,7 @@ Vertices::computePartition( Data<index_t>& data ,
 */
 
 void
-Vertices::toJSON( json& J ) const
+Points::toJSON( json& J ) const
 {
   J["dimension"] = dim_;
   J["nb_ghost"] = ghost_;
@@ -598,7 +598,7 @@ Vertices::toJSON( json& J ) const
 
 /*
 void
-Vertices::fromJSON( const json& J , const Model* model )
+Points::fromJSON( const json& J , const Model* model )
 {
   dim_ = J["dimension"];
   std::vector<real_t> X = J.at("coordinates");
@@ -635,7 +635,7 @@ Vertices::fromJSON( const json& J , const Model* model )
 #endif
 
 void
-Vertices::clear()
+Points::clear()
 {
   x_.clear();
   u_.clear();

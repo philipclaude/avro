@@ -2,7 +2,7 @@
 #define URSA_LIB_GRAPHICS_PLOT_H_
 
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 #include <memory>
 #include <vector>

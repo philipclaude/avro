@@ -11,7 +11,7 @@ namespace ursa
 /*\
  * Lagrange simplex topology
 \*/
-Topology<Simplex<Lagrange>>::Topology( Vertices& vertices , const Topology<Master_t>& linear , coord_t order ) :
+Topology<Simplex<Lagrange>>::Topology( Points& vertices , const Topology<Master_t>& linear , coord_t order ) :
  TopologyBase(vertices,linear.number(),order)
 {
   convert(linear);
@@ -28,7 +28,7 @@ Topology<Simplex<Lagrange>>::convert( const Topology<Master_t>& linear )
 /*\
  * Bezier simplex topology
 \*/
-Topology<Simplex<Bezier>>::Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange ) :
+Topology<Simplex<Bezier>>::Topology( Points& vertices , const Topology<Simplex<Lagrange>>& lagrange ) :
   TopologyBase(vertices,lagrange.number()),
   lagrange_(lagrange)
 {
@@ -38,7 +38,7 @@ Topology<Simplex<Bezier>>::Topology( Vertices& vertices , const Topology<Simplex
 /*\
  * Bezier simplex topology
 \*/
-Topology<Simplex<Bezier>>::Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange , coord_t order ) :
+Topology<Simplex<Bezier>>::Topology( Points& vertices , const Topology<Simplex<Lagrange>>& lagrange , coord_t order ) :
   TopologyBase(vertices,lagrange.number(),order),
   lagrange_(lagrange)
 {

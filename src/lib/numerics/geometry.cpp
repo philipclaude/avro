@@ -5,7 +5,7 @@
 
 #include "common/error.h"
 
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 //#include "numerics/densmat.h"
 //#include "numerics/determinant.h"
@@ -191,7 +191,7 @@ barycentric_signed( real_t* p , const std::vector<real_t*>& x , const coord_t di
 }
 
 void
-centroid( const index_t* v0 , const index_t nv , const Vertices& vertices , std::vector<real_t>& xc )
+centroid( const index_t* v0 , const index_t nv , const Points& vertices , std::vector<real_t>& xc )
 {
   avro_assert_msg( vertices.dim()==xc.size() ,
     "dim(v) = %u, dim(xc) = %lu" , vertices.dim() , xc.size() );

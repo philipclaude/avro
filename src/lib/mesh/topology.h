@@ -17,7 +17,7 @@
 namespace ursa
 {
 
-class Vertices;
+class Points;
 class ClippingPlane;
 class TopologyHolder;
 
@@ -88,14 +88,14 @@ private:
 class TopologyHolder : public Data<index_t>
 {
 public:
-  TopologyHolder( Vertices& vertices , const coord_t number ) :
-    Data<index_t>(true) , vertices_(vertices) , number_(number),
+  TopologyHolder( Points& vertices , const coord_t number ) :
+    Data<index_t>(true) , points_(vertices) , number_(number),
     fields_(*this)
   {}
 
   virtual ~TopologyHolder() {}
 
-  Vertices& vertices() const { return vertices_; }
+  Points& points() const { return points_; }
 
   coord_t number() const { return number_; }
   coord_t order() const { return order_; }
@@ -136,7 +136,7 @@ public:
   const Fields& fields() const { return fields_; }
 
 protected:
-  Vertices& vertices_;
+  Points& points_;
   coord_t number_;
   coord_t order_;
   bool dummy_;
@@ -157,9 +157,9 @@ public:
 
   using Tree<Topology_t>::nb_children;
 
-  TopologyBase( Vertices& _vertices , const coord_t _number );
-  TopologyBase( Vertices& _vertices , const coord_t _number , const coord_t _order );
-  TopologyBase( Vertices& _vertices , const json& J );
+  TopologyBase( Points& _vertices , const coord_t _number );
+  TopologyBase( Points& _vertices , const coord_t _number , const coord_t _order );
+  TopologyBase( Points& _vertices , const json& J );
 
   Topology_t& topology( index_t k ) { return Tree<Topology_t>::child(k); }
 
@@ -188,7 +188,7 @@ public:
   using TopologyBase<Master_t>::TopologyBase;
   using TopologyBase<Master_t>::master_;
 
-  Topology( Vertices& vertices , const Topology<Master_t>& linear , coord_t order );
+  Topology( Points& vertices , const Topology<Master_t>& linear , coord_t order );
 
   void convert( const Topology<Master_t>& linear );
 };
@@ -197,8 +197,8 @@ template<>
 class Topology< Simplex<Bezier> > : public TopologyBase<Simplex<Bezier>>
 {
 public:
-  Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange );
-  Topology( Vertices& vertices , const Topology<Simplex<Lagrange>>& lagrange , coord_t order );
+  Topology( Points& vertices , const Topology<Simplex<Lagrange>>& lagrange );
+  Topology( Points& vertices , const Topology<Simplex<Lagrange>>& lagrange , coord_t order );
 
   void convert();
 

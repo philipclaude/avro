@@ -11,7 +11,7 @@
 #include "mesh/builder.hpp"
 #include "mesh/field.h"
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 #include "numerics/matrix.h"
 
@@ -62,7 +62,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
       Data<index_t>::add( v , nv );
     }
 
-    for (index_t k=0;k<topology_.vertices().nb();k++)
+    for (index_t k=0;k<topology_.points().nb();k++)
     {
       this->data_.push_back( T(0) );
     }
@@ -100,7 +100,7 @@ Field<Polytope,Polytope,T>::build()
       Data<index_t>::add( v , nv );
     }
 
-    for (index_t k=0;k<topology_.vertices().nb();k++)
+    for (index_t k=0;k<topology_.points().nb();k++)
     {
       this->data_.push_back( T(0) );
     }

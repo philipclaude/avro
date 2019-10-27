@@ -59,7 +59,7 @@ public:
     return nb_facets(1);
   }
 
-  index_t nb_vertices() const
+  index_t nb_points() const
   {
     return number_+1;
   }

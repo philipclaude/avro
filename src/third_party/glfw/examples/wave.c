@@ -423,7 +423,7 @@ int main(int argc, char* argv[])
     init_opengl();
 
     // Initialize simulation
-    init_vertices();
+    init_points();
     init_grid();
     adjust_grid();
 

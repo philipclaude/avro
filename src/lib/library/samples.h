@@ -2,7 +2,7 @@
 #define URSA_LIB_LIBRARY_SAMPLES_H_
 
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 namespace ursa
 {
@@ -18,7 +18,7 @@ public:
   Topology<Simplex<Lagrange>>& edges() { return edges_; }
 
 private:
-  Vertices vertices_;
+  Points points_;
   Topology<Simplex<Lagrange>> edges_;
 };
 

@@ -11,7 +11,7 @@ UT_TEST_SUITE( TopologySuite )
 UT_TEST_CASE( simplex_tests )
 {
   library::TwoTriangles topology;
-  Vertices vertices( topology.vertices().dim() );
+  Points vertices( topology.points().dim() );
 
   Topology<Simplex<Lagrange>> topology_curved( vertices , topology , 3 );
 

@@ -2,7 +2,7 @@
 #define URSA_LIB_MESH_BUILDER_H_
 
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 #include <vector>
 

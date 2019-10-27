@@ -6,7 +6,7 @@
 #include "master/quadrature.h"
 
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 using namespace ursa;
 
@@ -14,7 +14,7 @@ UT_TEST_SUITE( TopologySuite )
 
 UT_TEST_CASE( simplex_tests )
 {
-  Vertices vertices(3);
+  Points vertices(3);
   coord_t number = 3;
 
   Topology< Simplex<Lagrange> > topology(vertices,number);

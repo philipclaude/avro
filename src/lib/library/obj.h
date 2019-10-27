@@ -2,7 +2,7 @@
 #define URSA_LIB_LIBRARY_OBJ_H_
 
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 #include <string>
 
@@ -20,7 +20,7 @@ public:
   void read();
 
 private:
-  Vertices vertices_;
+  Points points_;
   std::string filename_;
 };
 

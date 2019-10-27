@@ -1,7 +1,7 @@
 #include "common/tools.h"
 
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 #include <set>
 
@@ -9,7 +9,7 @@ namespace ursa
 {
 
 template<typename type>
-TopologyBase<type>::TopologyBase( Vertices& vertices , coord_t number , coord_t order ) :
+TopologyBase<type>::TopologyBase( Points& vertices , coord_t number , coord_t order ) :
   TopologyHolder(vertices,number),
   master_( number , order )
 {
@@ -17,7 +17,7 @@ TopologyBase<type>::TopologyBase( Vertices& vertices , coord_t number , coord_t 
 }
 
 template<typename type>
-TopologyBase<type>::TopologyBase( Vertices& vertices , coord_t number ) :
+TopologyBase<type>::TopologyBase( Points& vertices , coord_t number ) :
   TopologyBase(vertices,number,1)
 {
   printf("nb topologies = %lu\n",nb_children());
@@ -48,7 +48,7 @@ TopologyBase<type>::getEdges( std::vector<index_t>& edges ) const
       index_t p0 = ek[2*j];
       index_t p1 = ek[2*j+1];
 
-      if (p0<vertices_.nb_ghost() || p1<vertices_.nb_ghost())
+      if (p0<points_.nb_ghost() || p1<points_.nb_ghost())
         continue;
 
       if (p0>p1) std::swap(p0,p1);

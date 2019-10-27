@@ -1,5 +1,5 @@
-#ifndef URSA_MESH_VERTICES_H_
-#define URSA_MESH_VERTICES_H_
+#ifndef URSA_MESH_points_H_
+#define URSA_MESH_points_H_
 
 #include "common/error.h"
 #include "common/json.h"
@@ -22,15 +22,15 @@ namespace geometrics
 template<typename type> class Data;
 template<typename type> class Topology;
 
-class Vertices
+class Points
 {
 public:
-  Vertices() : dim_(0), udim_(0), ghost_(0) {}
-  Vertices( const coord_t dim , const coord_t udim );
-  Vertices( const coord_t dim );
-  ~Vertices();
+  Points() : dim_(0), udim_(0), ghost_(0) {}
+  Points( const coord_t dim , const coord_t udim );
+  Points( const coord_t dim );
+  ~Points();
 
-  void copy( Vertices& v , const bool erase=true , const bool ghosts=true ) const;
+  void copy( Points& v , const bool erase=true , const bool ghosts=true ) const;
 
   coord_t dim() const { return dim_; }
   coord_t udim() const { return udim_; }

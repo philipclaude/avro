@@ -6,7 +6,7 @@
 #include "graphics/window.h"
 
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 namespace ursa
 {
@@ -18,21 +18,21 @@ void
 OpenGLPrimitive::convert()
 {
   index_t n = 0;
-  index_t nb_vertices = topology_.vertices().nb();
+  index_t nb_points = topology_.points().nb();
   index_t nb_triangles = 0;
   index_t nb_edges = 0;
-  coord_t dim = topology_.vertices().dim();
+  coord_t dim = topology_.points().dim();
   coord_t nv = topology_.number()+1;
   coord_t number = topology_.number();
 
-  const Vertices& vertices = topology_.vertices();
+  const Points& points = topology_.points();
 
   ursa_assert( dim==3 );
 
   // allocate the vertex data
-  points_.resize( 3*nb_vertices);
-  colors_.resize( 3*nb_vertices, 0 );
-  normals_.resize( 3*nb_vertices, 0 );
+  points_.resize( 3*nb_points);
+  colors_.resize( 3*nb_points, 0 );
+  normals_.resize( 3*nb_points, 0 );
 
   if (number>=1)
   {
@@ -58,7 +58,7 @@ OpenGLPrimitive::convert()
 
   // save the vertex data that gets passed to the shaders
   n = 0;
-  for (index_t k=0;k<nb_vertices;k++)
+  for (index_t k=0;k<nb_points;k++)
   {
     colors_[3*k  ] = 255;
     colors_[3*k+1] = 255;
@@ -66,7 +66,7 @@ OpenGLPrimitive::convert()
 
     for (index_t j=0;j<dim;j++)
     {
-      points_[n] = vertices(k,j);
+      points_[n] = points(k,j);
       n++;
     }
   }
@@ -77,18 +77,18 @@ OpenGLPrimitive::convert()
     real_t x1,y1,z1,x2,y2,z2,x3,y3,z3;
     real_t dis;
     real_t xnor,ynor,znor;
-    std::vector<index_t> count( nb_vertices, 0 );
+    std::vector<index_t> count( nb_points, 0 );
     for (index_t k=0;k<nb_triangles;k++)
     {
-      x1 = vertices( triangles_[3*k  ] , 0 );
-      y1 = vertices( triangles_[3*k  ] , 1 );
-      z1 = vertices( triangles_[3*k  ] , 2 );
-      x2 = vertices( triangles_[3*k+1] , 0 );
-      y2 = vertices( triangles_[3*k+1] , 1 );
-      z2 = vertices( triangles_[3*k+1] , 2 );
-      x3 = vertices( triangles_[3*k+2] , 0 );
-      y3 = vertices( triangles_[3*k+2] , 1 );
-      z3 = vertices( triangles_[3*k+2] , 2 );
+      x1 = points( triangles_[3*k  ] , 0 );
+      y1 = points( triangles_[3*k  ] , 1 );
+      z1 = points( triangles_[3*k  ] , 2 );
+      x2 = points( triangles_[3*k+1] , 0 );
+      y2 = points( triangles_[3*k+1] , 1 );
+      z2 = points( triangles_[3*k+1] , 2 );
+      x3 = points( triangles_[3*k+2] , 0 );
+      y3 = points( triangles_[3*k+2] , 1 );
+      z3 = points( triangles_[3*k+2] , 2 );
 
       xnor = (y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
       ynor = (z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
@@ -115,7 +115,7 @@ OpenGLPrimitive::convert()
     }
 
     // normalize again
-    for (index_t k=0;k<nb_vertices;k++)
+    for (index_t k=0;k<nb_points;k++)
     {
       if (count[k] <= 1) continue;
       dis  = count[k];
@@ -131,7 +131,7 @@ OpenGLPrimitive::convert()
   else if (topology_.number()==1)
   {
     printf("setting color for lines!!\n");
-    colors_.resize( 3*nb_vertices, 255.0f );
+    colors_.resize( 3*nb_points, 255.0f );
   }
 
   // TODO add extra stuff stored in the topology
@@ -163,7 +163,7 @@ OpenGLPrimitive::write()
   transform_feedback_ = false;
 
   // bind the buffers to the opengl context
-  index_t nb_vertices = topology_.vertices().nb();
+  index_t nb_points = topology_.points().nb();
 
   // allocate the buffers
   std::vector<GLuint> vbo(7);
@@ -188,23 +188,23 @@ OpenGLPrimitive::write()
 
   // bind the position buffer
   GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, position) );
-  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(GLfloat), points_.data() , GL_STATIC_DRAW) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_points * sizeof(GLfloat), points_.data() , GL_STATIC_DRAW) );
 
   // NEW
   GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, feedback) );
-  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(GLfloat) , NULL , GL_STATIC_COPY) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_points * sizeof(GLfloat) , NULL , GL_STATIC_COPY) );
   glBindBuffer(GL_ARRAY_BUFFER,0);
   // END NEW
 
   // bind the colour buffer
   GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, colour) );
-  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(GLfloat), colors_.data() , GL_STATIC_DRAW) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_points * sizeof(GLfloat), colors_.data() , GL_STATIC_DRAW) );
 
   // bind the normal buffer
   if (topology_.number()>=2)
   {
     GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, normal) );
-    GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(GLfloat), normals_.data() , GL_STATIC_DRAW) );
+    GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_points * sizeof(GLfloat), normals_.data() , GL_STATIC_DRAW) );
   }
 
   // bind the triangle data

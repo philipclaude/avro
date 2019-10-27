@@ -1,5 +1,5 @@
 #include "mesh/topology.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
 namespace ursa
 {
@@ -17,7 +17,7 @@ TopologyHolder::copy( TopologyHolder& topology1 )
   elements_ = topology1.elements();
   first_    = topology1.first();
   last_     = topology1.last();
-  vertices_ = topology1.vertices();
+  points_ = topology1.points();
 }
 
 } // avro
