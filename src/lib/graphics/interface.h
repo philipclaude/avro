@@ -34,7 +34,7 @@ public:
   virtual void show() = 0;
   void render();
 
-private:
+protected:
   InterfaceManager& manager_;
   Window& window_;
 };

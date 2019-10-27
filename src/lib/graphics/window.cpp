@@ -140,6 +140,20 @@ Window::write()
 }
 
 void
+Window::save( const std::string& filename )
+{
+  // first set the transform feedback on for all plots
+  for (index_t k=0;k<plot_.size();k++)
+    plot_[k]->set_transform_feedback(true);
+
+  draw();
+
+  // reset transform feedback
+  for (index_t k=0;k<plot_.size();k++)
+    plot_[k]->set_transform_feedback(false);
+}
+
+void
 Window::attach( Plot_ptr plot )
 {
   // temporary until more generic plots are written
@@ -200,6 +214,7 @@ Window::run()
 
     glfwSwapBuffers(window_);
   }
+
 }
 
 } // graphics

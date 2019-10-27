@@ -33,6 +33,8 @@ public:
   void add( Primitive_ptr prim );
   void setWindow( Window* window );
 
+  void set_transform_feedback( bool x );
+
   const TopologyHolder& topology() const { return topology_; }
 
   Primitive& primitive( index_t k );

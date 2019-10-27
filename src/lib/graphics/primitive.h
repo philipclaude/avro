@@ -38,6 +38,8 @@ public:
   bool& edges_on() { return edges_on_; }
   bool& triangles_on() { return triangles_on_; }
 
+  void set_transform_feedback( bool x ) { transform_feedback_ = x; }
+
 protected:
   coord_t number_;
   const TopologyHolder& topology_;
@@ -56,10 +58,13 @@ protected:
   GLuint vao_triangles_;
   GLuint vao_edges_;
   GLuint vao_points_;
+  GLuint vao_feedback_;
 
   bool triangles_on_;
   bool edges_on_;
   bool points_on_;
+
+  bool transform_feedback_;
 };
 
 class WebGLPrimitive : public Primitive

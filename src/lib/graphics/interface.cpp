@@ -112,8 +112,27 @@ PlotTree::show()
       if (ImGui::BeginMenu("File"))
       {
           if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
-          if (ImGui::MenuItem("Save", "Ctrl+S"))   { /* Do stuff */ }
+          if (ImGui::MenuItem("Save", "Ctrl+S"))
+          {
+            printf("save file!\n");
+            window_.save("test.eps");
+          }
           if (ImGui::MenuItem("Close", "Ctrl+W"))  { active = false; }
+          ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("Edit"))
+      {
+          if (ImGui::MenuItem("Colors", NULL)) { /* Do stuff */ }
+          ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("View"))
+      {
+          if (ImGui::MenuItem("2D window", NULL)) { /* Do stuff */ }
+          ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("Help"))
+      {
+          if (ImGui::MenuItem("Usage", "Ctrl+H")) { /* Do stuff */ }
           ImGui::EndMenu();
       }
       ImGui::EndMenuBar();

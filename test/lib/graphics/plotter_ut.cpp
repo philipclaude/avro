@@ -26,13 +26,6 @@ UT_TEST_CASE( test1 )
   //library::TwoTriangles topology;
   library::objFile topology( "/Users/pcaplan/Desktop/models/spot.obj" );
 
-  std::vector<index_t> edges;
-  topology.getEdges(edges);
-
-  Topology<Simplex<Lagrange>> topology_edges( topology.vertices() , 1 );
-  for (index_t k=0;k<edges.size()/2;k++)
-    topology_edges.add( edges.data()+2*k , 2 );
-
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);
 

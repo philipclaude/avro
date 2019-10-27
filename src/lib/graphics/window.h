@@ -33,6 +33,8 @@ public:
   virtual void draw();
   virtual void write();
 
+  void save( const std::string& filename );
+
   void set_interface( Interface* interface );
 
   void run();

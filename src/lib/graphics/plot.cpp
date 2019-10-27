@@ -44,6 +44,13 @@ Plot::set_visibility( const Controls& controls )
 }
 
 void
+Plot::set_transform_feedback( bool x )
+{
+  for (index_t k=0;k<primitive_.size();k++)
+    primitive_[k]->set_transform_feedback(x);
+}
+
+void
 Plot::draw()
 {
   // loop through the primitives

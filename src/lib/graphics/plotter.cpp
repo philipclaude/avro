@@ -44,9 +44,9 @@ Plotter::initialize()
   // create all the shaders
   shader_.insert( {"basic" , std::make_shared<ShaderProgram>( "basic" ) } );
   shader_.insert( {"edge" , std::make_shared<ShaderProgram>( "edge" ) } );
+
   shader_.insert( {"wv" , std::make_shared<ShaderProgram>( "wv" ) } );
   // TODO the rest of the shaders...
-
 
   const char* glsl_version = "#version 410";
   IMGUI_CHECKVERSION();

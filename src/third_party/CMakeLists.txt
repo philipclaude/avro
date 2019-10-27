@@ -18,6 +18,10 @@ add_source_directories( JSON_SOURCES "json source" json )
 set_source_files_properties( ${JSON_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( json )
 
+add_source_directories( GL2PS_SOURCES "gl2ps source" gl2ps )
+set_source_files_properties( ${GL2PS_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
+include_directories( gl2ps )
+
 if (URSA_BUILTIN_GLFW)
 	add_subdirectory( glfw )
 	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
@@ -58,4 +62,4 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
 
-add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )
+add_library(ursa_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${GL2PS_SOURCES} )

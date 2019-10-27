@@ -436,7 +436,7 @@ ShaderProgram::compileShaderFromString( const std::string& source, GLSLShaderTyp
   }
   else
   {
-    // Compile succeeded, attach shader and return true
+    // compile succeeded, attach shader and return true
     GL_CALL( glAttachShader(handle_, shaderHandle) );
     return true;
   }
@@ -490,6 +490,11 @@ ShaderProgram::compile(const char *name,
      printf("GLSL programm error: %s: fragment shader(%s) failed to compile !\n%s",name,fs.c_str(),log().c_str());
      error = true;
   }
+
+  static const char* varyings[] = {"gl_Position","v_Color"};
+  if (name_=="wv")
+    GL_CALL( glTransformFeedbackVaryings(handle(),2,varyings,GL_INTERLEAVED_ATTRIBS) );
+
   if (!link())
   {
      printf("GLSL programm error: %s: shader failed to link!\n%s",name,log().c_str());

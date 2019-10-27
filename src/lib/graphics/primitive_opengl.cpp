@@ -160,11 +160,13 @@ OpenGLPrimitive::convert()
 void
 OpenGLPrimitive::write()
 {
+  transform_feedback_ = false;
+
   // bind the buffers to the opengl context
   index_t nb_vertices = topology_.vertices().nb();
 
   // allocate the buffers
-  std::vector<GLuint> vbo(6);
+  std::vector<GLuint> vbo(7);
   GL_CALL( glGenBuffers( vbo.size() , vbo.data() ) );
   GLuint& position  = vbo[0];
   GLuint& colour    = vbo[1];
@@ -172,6 +174,7 @@ OpenGLPrimitive::write()
   GLuint& triangles = vbo[3];
   GLuint& edges     = vbo[4];
   GLuint& points    = vbo[5];
+  GLuint& feedback  = vbo[6];
 
   // convert the data for the gl
   convert();
@@ -186,6 +189,12 @@ OpenGLPrimitive::write()
   // bind the position buffer
   GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, position) );
   GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(GLfloat), points_.data() , GL_STATIC_DRAW) );
+
+  // NEW
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, feedback) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, 3 * nb_vertices * sizeof(GLfloat) , NULL , GL_STATIC_COPY) );
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+  // END NEW
 
   // bind the colour buffer
   GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, colour) );
@@ -238,6 +247,15 @@ OpenGLPrimitive::write()
   GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
   GL_CALL( glEnableVertexAttribArray(0) );
 
+  // bind the feedback buffer
+  // NEW
+  GL_CALL( glGenVertexArrays( 1, &vao_feedback_ ) );
+  GL_CALL( glBindVertexArray( vao_feedback_ ) );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , feedback ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+  // END NEW
+
   // reset the vao bound to the gl
   GL_CALL( glBindVertexArray(0) );
 }
@@ -256,6 +274,27 @@ OpenGLPrimitive::draw()
   // assign the uniforms for the shader programs
   shader_->setUniform("MVP" , window_->mvp() );
   shader_->setUniform("u_normalMatrix" , window_->normal() );
+
+  GLuint QueryName;
+  if (transform_feedback_)
+  {
+    glGenQueries(1, &QueryName);
+
+		int QueryBits(0);
+		glGetQueryiv(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, GL_QUERY_COUNTER_BITS, &QueryBits);
+
+    GLuint buffer;
+    GL_CALL( glGenBuffers( 1 , &buffer ) );
+
+    GL_CALL( glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER , buffer ) );
+    GL_CALL( glBufferData( GL_TRANSFORM_FEEDBACK_BUFFER , 1024 , NULL , GL_DYNAMIC_COPY ) );
+
+    GL_CALL( glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER , 0 , buffer ) );
+    GL_CALL( glBindVertexArray( vao_feedback_ ) );
+
+    GL_CALL( glEnable(GL_RASTERIZER_DISCARD) );
+    GL_CALL( glBeginTransformFeedback(GL_TRIANGLES) );
+  }
 
   // bind the vao associated with this primitive
   if (topology_.number()>=2)
@@ -285,6 +324,17 @@ OpenGLPrimitive::draw()
       GL_CALL( glDrawArrays( GL_POINTS , 0 , points_.size()/3 ) );
     }
 
+  }
+
+  if (transform_feedback_)
+  {
+    printf("end transform feedback!\n");
+    GL_CALL( glEndTransformFeedback() );
+    GL_CALL( glDisable(GL_RASTERIZER_DISCARD) );
+
+    GLuint PrimitivesWritten = 0;
+    GL_CALL( glGetQueryObjectuiv(QueryName, GL_QUERY_RESULT, &PrimitivesWritten) );
+    printf("primitives written = %lu\n",PrimitivesWritten);
   }
 
   // reset the vao bound to the gl
