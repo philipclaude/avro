@@ -280,6 +280,17 @@ trim_string( std::string& str )
   str.erase(location + 1);
 }
 
+template<typename type>
+struct SortBy
+{
+  const std::vector<type>& target_;
+  explicit SortBy(const std::vector<type>& _target) : target_(_target) {}
+  bool operator()(index_t a, index_t b) const
+  {
+    return target_[a] < target_[b];
+  }
+};
+
 template void printInline( const std::vector<index_t>& s , const std::string& name , const int id , const index_t nt );
 template void printInline( const std::vector<double>& s , const std::string& name , const int id , const index_t nt );
 template void printInline( const std::vector<float>& s , const std::string& name , const int id , const index_t nt );

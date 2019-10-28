@@ -1,3 +1,5 @@
+#include "common/tools.h"
+
 #include "library/eps.h"
 
 #include <cstdlib>
@@ -251,9 +253,54 @@ void
 epsFile::print_triangles() const
 {
   int w = 640/2,h = 320;
-  #if 0
+  real_t xnor,ynor,znor;
+  std::vector<real_t> zbuffer;
+  std::vector<index_t> visible;
+  std::vector<real_t> distance( triangles_.size()/9 , -1 );
+  std::vector<index_t> idx;
+  index_t count = 0;
   for (index_t k=0;k<triangles_.size()/9;k++)
   {
+    // compute the triangle normal
+    real_t x1 = triangles_[9*k  ];
+    real_t y1 = triangles_[9*k+1];
+    real_t z1 = triangles_[9*k+2];
+    real_t x2 = triangles_[9*k+3];
+    real_t y2 = triangles_[9*k+4];
+    real_t z2 = triangles_[9*k+5];
+    real_t x3 = triangles_[9*k+6];
+    real_t y3 = triangles_[9*k+7];
+    real_t z3 = triangles_[9*k+8];
+
+    xnor = (y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
+    ynor = (z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
+    znor = (x3-x1)*(y2-y1)-(y3-y1)*(x2-x1);
+
+    if (znor > 0.0) continue;
+
+    idx.push_back(count++);
+    visible.push_back( k );
+
+    real_t z0 = (z1+z2+z3)/3.0;
+    zbuffer.push_back( z0 );
+    distance[k] = z0;
+  }
+
+  std::sort( idx.begin() , idx.end() , SortBy<real_t>(zbuffer) );
+  std::reverse( idx.begin() , idx.end() );
+  for (index_t i=0;i<idx.size();i++)
+  {
+    index_t k = visible[idx[i]];
+
+    #if 1
+    float c[3];
+    get_constant_color( &triangle_colors_[9*k] , c );
+    fprintf(fid_,"%g %g %g C\n",c[0],c[1],c[2]);
+    fprintf(fid_,"%g %g %g %g %g %g T\n",
+        triangles_[9*k]  +w,triangles_[9*k+1]+h,
+        triangles_[9*k+3]+w,triangles_[9*k+4]+h,
+        triangles_[9*k+6]+w,triangles_[9*k+7]+h);
+    #else
     fprintf(fid_,"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g ST\n",
         triangles_[9*k]+w,triangles_[9*k+1]+h,
         triangle_colors_[9*k],triangle_colors_[9*k+1],triangle_colors_[9*k+2],
@@ -263,29 +310,8 @@ epsFile::print_triangles() const
 
         triangles_[9*k+6]+w,triangles_[9*k+7]+h,
         triangle_colors_[9*k+6],triangle_colors_[9*k+7],triangle_colors_[9*k+8] );
+    #endif
   }
-  #elif 1
-  for (index_t k=0;k<triangles_.size()/9;k++)
-  {
-    float c[3];
-    get_constant_color( &triangle_colors_[9*k] , c );
-    fprintf(fid_,"%g %g %g C\n",c[0],c[1],c[2]);
-    fprintf(fid_,"%g %g %g %g %g %g T\n",
-        triangles_[9*k]  +w,triangles_[9*k+1]+h,
-        triangles_[9*k+3]+w,triangles_[9*k+4]+h,
-        triangles_[9*k+6]+w,triangles_[9*k+7]+h);
-  }
-
-  #else
-  fprintf(fid_,"%g %g %g C\n",triangle_colors_[0],triangle_colors_[1],triangle_colors_[2]);
-  for (index_t k=0;k<triangles_.size()/9;k++)
-  {
-    fprintf(fid_,"%g %g %g %g %g %g T\n",
-        triangles_[9*k],triangles_[9*k+1],
-        triangles_[9*k+3],triangles_[9*k+4],
-        triangles_[9*k+6],triangles_[9*k+7] );
-  }
-  #endif
 
 }
 

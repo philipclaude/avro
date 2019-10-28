@@ -270,7 +270,7 @@ printBuffer( GLfloat* buffer , index_t nb_prim , index_t nb_data_per_prim  )
   std::vector<real_t> colors;
   for (index_t k=0;k<nb_prim;k++)
   {
-    printf("primitve %lu\n",k);
+    //printf("primitve %lu\n",k);
     for (index_t j=0;j<3;j++)
     {
       for (coord_t d=0;d<3;d++)
@@ -278,9 +278,9 @@ printBuffer( GLfloat* buffer , index_t nb_prim , index_t nb_data_per_prim  )
       for (coord_t d=0;d<3;d++)
         colors.push_back( buffer[n+4+d] );
 
-      printf("v = (%g,%g,%g,%g), c = (%g,%g,%g,%g)\n",
+      /*printf("v = (%g,%g,%g,%g), c = (%g,%g,%g,%g)\n",
               buffer[n  ],buffer[n+1],buffer[n+2],buffer[n+3] ,
-              buffer[n+4],buffer[n+5],buffer[n+6],buffer[n+7]);
+              buffer[n+4],buffer[n+5],buffer[n+6],buffer[n+7]);*/
       n += 8;
     }
   }
