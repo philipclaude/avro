@@ -24,7 +24,7 @@ UT_TEST_CASE( test1 )
   printf("reading obj...\n");
 
   //library::TwoTriangles topology;
-  library::objFile topology( "/Users/pcaplan/Desktop/models/spot.obj" );
+  library::objFile topology( "/Users/pcaplan/Google Drive/library/models/obj/bunny.obj" );
 
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);

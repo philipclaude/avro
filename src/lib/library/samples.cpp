@@ -11,10 +11,12 @@ TwoTriangles::TwoTriangles() :
   points_(3),
   edges_(points_,1)
 {
-  real_t x0[3] = {0,0,1};
-  real_t x1[3] = {1,0,2};
-  real_t x2[3] = {0,1,3};
-  real_t x3[3] = {1,1,4};
+  this->setSorted(false);
+
+  real_t x0[3] = {0,0,0};
+  real_t x1[3] = {1,0,0};
+  real_t x2[3] = {0,1,0};
+  real_t x3[3] = {1,1,0};
   points_.create( x0 );
   points_.create( x1 );
   points_.create( x2 );

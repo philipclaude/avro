@@ -5,6 +5,8 @@
 #include "graphics/shader.h"
 #include "graphics/window.h"
 
+#include "library/eps.h"
+
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
@@ -261,6 +263,36 @@ OpenGLPrimitive::write()
 }
 
 void
+printBuffer( GLfloat* buffer , index_t nb_prim , index_t nb_data_per_prim  )
+{
+  index_t n = 0;
+  std::vector<real_t> triangles;
+  std::vector<real_t> colors;
+  for (index_t k=0;k<nb_prim;k++)
+  {
+    printf("primitve %lu\n",k);
+    for (index_t j=0;j<3;j++)
+    {
+      for (coord_t d=0;d<3;d++)
+        triangles.push_back( buffer[n+d] );
+      for (coord_t d=0;d<3;d++)
+        colors.push_back( buffer[n+4+d] );
+
+      printf("v = (%g,%g,%g,%g), c = (%g,%g,%g,%g)\n",
+              buffer[n  ],buffer[n+1],buffer[n+2],buffer[n+3] ,
+              buffer[n+4],buffer[n+5],buffer[n+6],buffer[n+7]);
+      n += 8;
+    }
+  }
+
+  library::epsFile eps;
+  int viewport[4] = {0,0,1024,640};
+  eps.set_viewport(viewport);
+  eps.add_triangles( triangles , colors );
+  eps.write( "test.eps" );
+}
+
+void
 OpenGLPrimitive::draw()
 {
   ursa_assert( shader_!=NULL );
@@ -275,20 +307,16 @@ OpenGLPrimitive::draw()
   shader_->setUniform("MVP" , window_->mvp() );
   shader_->setUniform("u_normalMatrix" , window_->normal() );
 
-  GLuint QueryName;
+  GLuint query;
+  GLuint buffer;
   if (transform_feedback_)
   {
-    glGenQueries(1, &QueryName);
+    glGenQueries(1, &query);
+    GL_CALL( glBeginQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN , query ) );
 
-		int QueryBits(0);
-		glGetQueryiv(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, GL_QUERY_COUNTER_BITS, &QueryBits);
-
-    GLuint buffer;
     GL_CALL( glGenBuffers( 1 , &buffer ) );
-
     GL_CALL( glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER , buffer ) );
-    GL_CALL( glBufferData( GL_TRANSFORM_FEEDBACK_BUFFER , 1024 , NULL , GL_DYNAMIC_COPY ) );
-
+    GL_CALL( glBufferData( GL_TRANSFORM_FEEDBACK_BUFFER , 24*triangles_.size()*sizeof(GLfloat) , NULL , GL_DYNAMIC_COPY ) );
     GL_CALL( glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER , 0 , buffer ) );
     GL_CALL( glBindVertexArray( vao_feedback_ ) );
 
@@ -306,6 +334,28 @@ OpenGLPrimitive::draw()
       GL_CALL( glDrawElements(GL_TRIANGLES,triangles_.size(), GL_UNSIGNED_INT , 0 ) )
     }
   }
+
+  if (transform_feedback_)
+  {
+    GL_CALL( glEndTransformFeedback() );
+    GL_CALL( glDisable(GL_RASTERIZER_DISCARD) );
+
+    GLuint nb_primitives = 0;
+    GL_CALL( glEndQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ) );
+    GL_CALL( glGetQueryObjectuiv( query , GL_QUERY_RESULT , &nb_primitives ) );
+    printf("primitives written = %u\n",nb_primitives);
+
+    // there are 4 coordinates for every output and 3 vertices per prim (color + coord)
+    index_t nb_data_per_prim = 4*3*2;
+    index_t size = nb_primitives*nb_data_per_prim;
+
+    GLfloat* feedbackBuffer = (GLfloat*) malloc( size*sizeof(GLfloat) );
+    GL_CALL( glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER , buffer ) );
+    GL_CALL( glGetBufferSubData( GL_TRANSFORM_FEEDBACK_BUFFER , 0 , size*sizeof(GLfloat) , feedbackBuffer ) );
+
+    printBuffer(feedbackBuffer, nb_primitives , nb_data_per_prim );
+  }
+
   if (topology_.number()>=1)
   {
     if (edges_on_)
@@ -323,18 +373,6 @@ OpenGLPrimitive::draw()
       GL_CALL( glPointSize(10.0f) );
       GL_CALL( glDrawArrays( GL_POINTS , 0 , points_.size()/3 ) );
     }
-
-  }
-
-  if (transform_feedback_)
-  {
-    printf("end transform feedback!\n");
-    GL_CALL( glEndTransformFeedback() );
-    GL_CALL( glDisable(GL_RASTERIZER_DISCARD) );
-
-    GLuint PrimitivesWritten = 0;
-    GL_CALL( glGetQueryObjectuiv(QueryName, GL_QUERY_RESULT, &PrimitivesWritten) );
-    printf("primitives written = %lu\n",PrimitivesWritten);
   }
 
   // reset the vao bound to the gl
