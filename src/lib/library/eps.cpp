@@ -4,7 +4,7 @@
 
 #include <cstdlib>
 
-namespace ursa
+namespace luna
 {
 
 namespace library
@@ -23,7 +23,7 @@ epsFile::write( const std::string& filename )
   fprintf(fid_,"%%!PS-Adobe-3.0 EPSF-3.0\n");
 
   fprintf(fid_,"%%%%Title: some plot\n"
-              "%%%%Creator: ursa 1.0.0b, (c) Philip Claude Caplan\n"
+              "%%%%Creator: luna 1.0.0b, (c) Philip Claude Caplan\n"
               "%%%%For: some reason\n"
               "%%%%CreationDate: October 27 2019\n"
               "%%%%LanguageLevel: 3\n"
@@ -123,7 +123,7 @@ epsFile::write( const std::string& filename )
                 "      4 index 15 index add 0.5 mul\n" /* b13 = (b1+b3)/2 */
                 "      5 copy 5 copy 25 15 roll\n");
 
-    /* at his point, stack = (V3) (V13) (V13) (V13) (V2) (V1) */
+    /* at this point, stack = (V3) (V13) (V13) (V13) (V2) (V1) */
 
     fprintf(fid_,"      9 index 30 index add 0.5 mul\n" /* x23 = (x2+x3)/2 */
                 "      9 index 30 index add 0.5 mul\n" /* y23 = (y2+y3)/2 */
@@ -317,4 +317,4 @@ epsFile::print_triangles() const
 
 } // library
 
-} // ursa
+} // luna

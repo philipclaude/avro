@@ -16,10 +16,10 @@
 
 //#include <triangle/predicates.h>
 
-//typedef ursa::real_t REAL;
+//typedef luna::real_t REAL;
 //#include <tetgen1.5.0/predicates.h>
 
-namespace ursa
+namespace luna
 {
 
 namespace numerics
@@ -317,4 +317,4 @@ vector( const real_t* x0 , const real_t* x1 , const coord_t dim , real_t* v )
 
 } // numerics
 
-} // ursa
+} // luna

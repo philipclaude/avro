@@ -1,5 +1,5 @@
-#ifndef URSA_MESH_TOPOLOGY_H_
-#define URSA_MESH_TOPOLOGY_H_
+#ifndef LUNA_MESH_TOPOLOGY_H_
+#define LUNA_MESH_TOPOLOGY_H_
 
 #include "common/data.h"
 #include "common/json.h"
@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 class Points;

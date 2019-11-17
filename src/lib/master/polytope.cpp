@@ -4,7 +4,7 @@
 
 #include "mesh/topology.h"
 
-namespace ursa
+namespace luna
 {
 
 Polytope::Polytope( coord_t number , coord_t order , Data<int>& incidence ) :
@@ -12,11 +12,11 @@ Polytope::Polytope( coord_t number , coord_t order , Data<int>& incidence ) :
   simplex_(number,order),
   incidence_(incidence)
 {
-  ursa_assert_msg( order==1 , "not supported..." );
+  luna_assert_msg( order==1 , "not supported..." );
 }
 
 Polytope::Polytope( Topology<Polytope>& topology , const coord_t order ) :
   Polytope(topology.number(),order,topology.master().incidence())
 {}
 
-} // ursa
+} // luna

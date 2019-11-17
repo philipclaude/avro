@@ -1,13 +1,13 @@
 
-find_library( URSA_LIBRARY ursa HINTS $ENV{URSA_DIR}/build/release/lib REQUIRED )
-if (NOT URSA_LIBRARY)
-  message( STATUS "could not find ursa" )
+find_library( LUNA_LIBRARY luna HINTS $ENV{LUNA_DIR}/build/release/lib REQUIRED )
+if (NOT LUNA_LIBRARY)
+  message( STATUS "could not find luna" )
 endif()
 
-find_path( URSA_INCLUDE_DIR ursa.h HINTS $ENV{URSA_DIR}/api REQUIRED )
-get_filename_component( URSA_LIBRARY_PATH ${URSA_LIBRARY} PATH )
+find_path( LUNA_INCLUDE_DIR luna.h HINTS $ENV{LUNA_DIR}/api REQUIRED )
+get_filename_component( LUNA_LIBRARY_PATH ${LUNA_LIBRARY} PATH )
 
-set( URSA_INCLUDE_DIRS ${URSA_INCLUDE_DIR} $ENV{URSA_DIR}/src )
+set( LUNA_INCLUDE_DIRS ${LUNA_INCLUDE_DIR} $ENV{LUNA_DIR}/src )
 
-message( STATUS "found ursa library at ${URSA_LIBRARY_PATH}" )
-message( STATUS "found ursa headers at ${URSA_INCLUDE_DIRS}" )
+message( STATUS "found luna library at ${LUNA_LIBRARY_PATH}" )
+message( STATUS "found luna headers at ${LUNA_INCLUDE_DIRS}" )

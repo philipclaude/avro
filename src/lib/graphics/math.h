@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_GRAPHICS_MATH_H_
-#define URSA_LIB_GRAPHICS_MATH_H_
+#ifndef LUNA_LIB_GRAPHICS_MATH_H_
+#define LUNA_LIB_GRAPHICS_MATH_H_
 
 #include "numerics/matrix.h"
 
@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #endif
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -54,6 +54,6 @@ private:
 
 } // graphics
 
-} // ursa
+} // luna
 
 #endif

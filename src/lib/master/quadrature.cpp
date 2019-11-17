@@ -4,7 +4,7 @@
 
 #include "master/quadrature_cp.h"
 
-namespace ursa
+namespace luna
 {
 
 Quadrature::Quadrature( coord_t dim , const int order) :
@@ -17,14 +17,14 @@ Quadrature::Quadrature( coord_t dim , const int order) :
 const real_t*
 Quadrature::x( index_t k ) const
 {
-  ursa_assert( k < nb_quad_ );
+  luna_assert( k < nb_quad_ );
   return x_.data()+k*dim_;
 }
 
 real_t
 Quadrature::w( index_t k ) const
 {
-  ursa_assert( k < nb_quad_ );
+  luna_assert( k < nb_quad_ );
   return w_[k];
 }
 
@@ -232,4 +232,4 @@ GrundmannMoellerQuadrature::define()
   return;
 }
 
-} // ursa
+} // luna

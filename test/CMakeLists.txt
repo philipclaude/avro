@@ -24,7 +24,7 @@ set( MASTER_UNIT ut_driver.cpp )
 set( COMMON_UNIT ut_common.cpp )
 
 add_library( ut_common_lib STATIC ${COMMON_UNIT} )
-target_link_libraries( ut_common_lib ursa_shared )
+target_link_libraries( ut_common_lib luna_shared )
 
 # needed for the directory class definitions
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -52,7 +52,7 @@ foreach( test_src ${TEST_FILES} )
   set( test_exe ${test_bin}_exe )
 
   # the actual executable: target for simply building
-  ursa_add_executable( ${test_exe} ${test_src} )
+  luna_add_executable( ${test_exe} ${test_src} )
   target_link_libraries( ${test_exe} ut_common_lib )
   target_compile_definitions( ${test_exe} PUBLIC -DSTANDALONE )
 
@@ -60,7 +60,7 @@ foreach( test_src ${TEST_FILES} )
   # target that actually runs the executable
   #list( GET TEST_NUMPROCS ${i} numprocs )
 
-  #if ( ${numprocs} GREATER 0 AND URSA_RUN_WITH_MPI)
+  #if ( ${numprocs} GREATER 0 AND LUNA_RUN_WITH_MPI)
 #    RUN_WITH_MPIEXEC( ${numprocs} )
 #  else()
     set( MPI_COMMAND )
@@ -81,8 +81,8 @@ foreach( test_src ${TEST_FILES} )
 endforeach()
 
 # create the full unit executable
-ursa_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
-target_link_libraries( unit_exe ursa_shared )
+luna_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
+target_link_libraries( unit_exe luna_shared )
 target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests.out" )
 
 # target for running all unit tests independently
@@ -108,7 +108,7 @@ foreach( test_src ${SBX_FILES} )
   set( test_exe ${test_bin}_exe )
 
   # the actual executable: target for simply building
-  ursa_add_executable( ${test_exe} ${test_src} )
+  luna_add_executable( ${test_exe} ${test_src} )
   target_link_libraries( ${test_exe} ut_common_lib )
   target_compile_definitions( ${test_exe} PUBLIC -DSTANDALONE )
 

@@ -2,8 +2,8 @@
 
 #include "graphics/window.h"
 
-using namespace ursa;
-using namespace ursa::graphics;
+using namespace luna;
+using namespace luna::graphics;
 
 UT_TEST_SUITE( WindowSuite )
 
@@ -12,7 +12,7 @@ UT_TEST_CASE( test1 )
   // must be run before the window starts
   glfwInit();
 
-  Window window( "ursa plotter" , NULL );
+  Window window( "luna plot" , NULL );
 
   //window.run();
 

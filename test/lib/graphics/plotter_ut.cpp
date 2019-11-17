@@ -10,8 +10,8 @@
 
 #include "mesh/topology.h"
 
-using namespace ursa;
-using namespace ursa::graphics;
+using namespace luna;
+using namespace luna::graphics;
 
 UT_TEST_SUITE( PlotterSuite )
 

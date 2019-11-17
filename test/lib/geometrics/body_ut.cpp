@@ -4,7 +4,7 @@
 #include "geometrics/egads.h"
 #include "geometrics/primitive.h"
 
-using namespace ursa;
+using namespace luna;
 
 UT_TEST_SUITE(BodySuite)
 

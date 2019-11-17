@@ -10,7 +10,7 @@
 #include <imgui/GL/imgui_impl_glfw.h>
 #include <imgui/GL/imgui_impl_opengl3.h>
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -70,7 +70,7 @@ Window::Window( const std::string& title , Plotter* plotter) :
   if (!window_)
   {
     glfwTerminate();
-    ursa_assert_not_reached;
+    luna_assert_not_reached;
   }
   glfwMakeContextCurrent(window_);
 
@@ -219,4 +219,4 @@ Window::run()
 
 } // graphics
 
-} // ursa
+} // luna

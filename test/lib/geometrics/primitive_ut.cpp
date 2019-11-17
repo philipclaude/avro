@@ -5,7 +5,7 @@
 
 #include "numerics/coordinate.h"
 
-using namespace ursa;
+using namespace luna;
 
 UT_TEST_SUITE(PrimitiveSuite)
 

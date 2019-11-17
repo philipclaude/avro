@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_LIBRARY_EGADS_H_
-#define URSA_LIB_LIBRARY_EGADS_H_
+#ifndef LUNA_LIB_LIBRARY_EGADS_H_
+#define LUNA_LIB_LIBRARY_EGADS_H_
 
 #include "geometrics/body.h"
 #include "geometrics/primitive.h"
@@ -7,7 +7,7 @@
 struct egObject;
 typedef egObject* ego;
 
-namespace ursa
+namespace luna
 {
 
 namespace numerics
@@ -58,7 +58,7 @@ private:
   egoData data_;
 };
 
-class Body : public ursa::geometrics::Body
+class Body : public luna::geometrics::Body
 {
 public:
   Body( const Context& context , ego* obj );
@@ -75,6 +75,6 @@ private:
 
 } // geometrics
 
-} // ursa
+} // luna
 
 #endif

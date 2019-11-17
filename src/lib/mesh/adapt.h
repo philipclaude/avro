@@ -1,7 +1,7 @@
-#ifndef URSA_LIB_MESH_ADAPT_H_
-#define URSA_LIB_MESH_ADAPT_H_
+#ifndef LUNA_LIB_MESH_ADAPT_H_
+#define LUNA_LIB_MESH_ADAPT_H_
 
-namespace ursa
+namespace luna
 {
 
 class
@@ -19,6 +19,6 @@ public:
   Topology<type>& topology_;
 };
 
-} // ursa
+} // luna
 
 #endif

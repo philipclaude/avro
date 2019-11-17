@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-namespace ursa
+namespace luna
 {
 
 template<typename type>
@@ -73,8 +73,8 @@ template<typename type>
 type
 Data<type>::operator() ( const index_t k , const index_t j ) const
 {
-  ursa_assert_msg( k < first_.size() && k < last_.size() , "k = %d, |first| = %d, |last| = %d\n",int(k),int(first_[k]),int(last_[k]));
-  ursa_assert_msg( first_[k] +j < elements_.size() , "first_[%d] = %d, j = %d, |elements| = %d\n",int(k),int(first_[k]),int(j),int(elements_.size()));
+  luna_assert_msg( k < first_.size() && k < last_.size() , "k = %d, |first| = %d, |last| = %d\n",int(k),int(first_[k]),int(last_[k]));
+  luna_assert_msg( first_[k] +j < elements_.size() , "first_[%d] = %d, j = %d, |elements| = %d\n",int(k),int(first_[k]),int(j),int(elements_.size()));
   return elements_[ first_[k] +j ];
 }
 
@@ -82,8 +82,8 @@ template<typename type>
 type&
 Data<type>::operator() ( const index_t k , const index_t j )
 {
-  ursa_assert_msg( k < first_.size() && k < last_.size() , "k = %d, |first| = %d, |last| = %d\n",int(k),int(first_[k]),int(last_[k]));
-  ursa_assert_msg( first_[k] +j < elements_.size() , "first_[%d] = %d, j = %d, |elements| = %d\n",int(k),int(first_[k]),int(j),int(elements_.size()));
+  luna_assert_msg( k < first_.size() && k < last_.size() , "k = %d, |first| = %d, |last| = %d\n",int(k),int(first_[k]),int(last_[k]));
+  luna_assert_msg( first_[k] +j < elements_.size() , "first_[%d] = %d, j = %d, |elements| = %d\n",int(k),int(first_[k]),int(j),int(elements_.size()));
   return elements_[ first_[k] +j ];
 }
 
@@ -298,12 +298,12 @@ Data<type>::replace( const index_t k0 , type* v1 , const index_t nv1 )
   if (nv0<nv1)
   {
     // we will need to insert data
-    ursa_implement;
+    luna_implement;
   }
   else if (nv0>nv1)
   {
     // we will insert the data and then chop some off
-    ursa_implement;
+    luna_implement;
   }
   else
   {
@@ -318,9 +318,9 @@ template<typename type>
 void
 Data<type>::remove( const index_t k0 )
 {
-  ursa_assert_msg( first_.size()==nb() ,
+  luna_assert_msg( first_.size()==nb() ,
               "nb = %d but first size = %d", int(nb()) , int(first_.size()) );
-  ursa_assert_msg( last_.size()==nb() ,
+  luna_assert_msg( last_.size()==nb() ,
               "nb = %d but last size = %d", int(nb()) , int(last_.size()) );
   index_t kshift = nv(k0);
   for (index_t k=k0+1;k<nb();k++)

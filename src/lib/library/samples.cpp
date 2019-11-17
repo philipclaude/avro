@@ -1,6 +1,6 @@
 #include "library/samples.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace library
@@ -44,4 +44,4 @@ TwoTriangles::TwoTriangles() :
 
 } // library
 
-} // ursa
+} // luna

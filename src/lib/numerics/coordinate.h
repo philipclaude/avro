@@ -1,11 +1,11 @@
-#ifndef URSA_LIB_NUMERICS_COORDINATE_H_
-#define URSA_LIB_NUMERICS_COORDINATE_H_
+#ifndef LUNA_LIB_NUMERICS_COORDINATE_H_
+#define LUNA_LIB_NUMERICS_COORDINATE_H_
 
 #include "common/types.h"
 
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 namespace numerics
@@ -34,6 +34,6 @@ private:
 
 } // numerics
 
-} // ursa
+} // luna
 
 #endif

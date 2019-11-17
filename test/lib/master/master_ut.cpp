@@ -3,7 +3,7 @@
 #include "master/simplex.h"
 #include "master/quadrature.h"
 
-using namespace ursa;
+using namespace luna;
 
 UT_TEST_SUITE( MasterSuite )
 

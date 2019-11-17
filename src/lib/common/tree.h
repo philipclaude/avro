@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_COMMON_TREE_H_
-#define URSA_LIB_COMMON_TREE_H_
+#ifndef LUNA_LIB_COMMON_TREE_H_
+#define LUNA_LIB_COMMON_TREE_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -7,14 +7,21 @@
 #include <memory>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
+class TreeBase
+{
+
+};
+
 template<typename Node_t>
-class Tree
+class Tree : public TreeBase
 {
 public:
   typedef std::shared_ptr<Node_t> Node_ptr;
+
+  void copy( const TreeBase& tree );
 
   index_t nb_children() const { return child_.size(); }
 
@@ -29,14 +36,14 @@ public:
   const Node_t* child_ptr( index_t k ) const { return child_[k].get(); }
 
   Node_ptr child_smptr( index_t k )
-    { ursa_assert(k<nb_children()); return child_[k]; }
+    { luna_assert(k<nb_children()); return child_[k]; }
   const Node_ptr child_smptr( index_t k ) const
-    { ursa_assert(k<nb_children()); return child_[k]; }
+    { luna_assert(k<nb_children()); return child_[k]; }
 
   Node_t& child( index_t k )
-    { ursa_assert(k<nb_children()); return *child_[k].get(); }
+    { luna_assert(k<nb_children()); return *child_[k].get(); }
   const Node_t& child( index_t k ) const
-    { ursa_assert(k<nb_children()); return *child_[k].get(); }
+    { luna_assert(k<nb_children()); return *child_[k].get(); }
 
 private:
 
@@ -44,6 +51,6 @@ private:
 };
 
 
-} // ursa
+} // luna
 
 #endif

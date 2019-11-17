@@ -2,7 +2,7 @@
 
 #include "numerics/coordinate.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace geometrics
@@ -27,4 +27,4 @@ Object::evaluate( const numerics::Coordinate& u , numerics::Coordinate& x ) cons
 
 } // geometrics
 
-} // ursa
+} // luna

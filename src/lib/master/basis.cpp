@@ -1,6 +1,6 @@
 #include "master/basis.h"
 
-namespace ursa
+namespace luna
 {
 
-} // ursa
+} // luna

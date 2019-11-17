@@ -1,7 +1,7 @@
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
-namespace ursa
+namespace luna
 {
 
 Fields::Fields( const TopologyHolder& topology ) :

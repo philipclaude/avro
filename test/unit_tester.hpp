@@ -1,5 +1,5 @@
-#ifndef URSA_TESTING_FRAMEWORK_H_
-#define URSA_TESTING_FRAMEWORK_H_
+#ifndef LUNA_TESTING_FRAMEWORK_H_
+#define LUNA_TESTING_FRAMEWORK_H_
 
 #include <exception>
 #include <iostream>

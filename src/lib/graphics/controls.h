@@ -1,10 +1,10 @@
-#ifndef URSA_LIB_GRAPHICS_CONTROLS_H_
-#define URSA_LIB_GRAPHICS_CONTROLS_H_
+#ifndef LUNA_LIB_GRAPHICS_CONTROLS_H_
+#define LUNA_LIB_GRAPHICS_CONTROLS_H_
 
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -116,6 +116,6 @@ private:
 
 } // graphics
 
-} // ursa
+} // luna
 
 #endif

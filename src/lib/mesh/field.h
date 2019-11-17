@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_MESH_FIELD_H_
-#define URSA_LIB_MESH_FIELD_H_
+#ifndef LUNA_LIB_MESH_FIELD_H_
+#define LUNA_LIB_MESH_FIELD_H_
 
 #include "common/json.h"
 #include "common/types.h"
@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 template<typename T> class Data;
@@ -91,6 +91,6 @@ private:
   const Polytope master_;
 };
 
-} // ursa
+} // luna
 
 #endif

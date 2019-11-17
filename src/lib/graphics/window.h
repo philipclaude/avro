@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_GRAPHICS_WINDOW_H_
-#define URSA_LIB_GRAPHICS_WINDOW_H_
+#ifndef LUNA_LIB_GRAPHICS_WINDOW_H_
+#define LUNA_LIB_GRAPHICS_WINDOW_H_
 
 #include "graphics/controls.h"
 #include "graphics/gl.h"
@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -105,6 +105,6 @@ private:
 
 } // graphics
 
-} // ursa
+} // luna
 
 #endif

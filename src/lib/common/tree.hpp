@@ -1,6 +1,6 @@
 #include "tree.h"
 
-namespace ursa
+namespace luna
 {
 
 template<typename Node_t>
@@ -23,4 +23,4 @@ Tree<Node_t>::above( const Node_t* node ) const
   return false;
 }
 
-} // ursa
+} // luna

@@ -5,7 +5,7 @@
 #include "mesh/topology.h"
 #include "mesh/topology.hpp"
 
-namespace ursa
+namespace luna
 {
 
 /*\
@@ -58,10 +58,10 @@ void
 TopologyBase<Simplex<Bezier>>::getEdges( std::vector<index_t>& edges ) const
 {
   // bezier edge extraction is not supported
-  ursa_assert_not_reached;
+  luna_assert_not_reached;
 }
 
 template class TopologyBase< Simplex<Lagrange> >;
 template class Tree< Topology< Simplex<Lagrange> > >;
 
-} // ursa
+} // luna

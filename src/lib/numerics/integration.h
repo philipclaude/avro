@@ -1,7 +1,7 @@
-#ifndef URSA_LIB_NUMERICS_INTEGRATION_H_
-#define URSA_LIB_NUMERICS_INTEGRATION_H_
+#ifndef LUNA_LIB_NUMERICS_INTEGRATION_H_
+#define LUNA_LIB_NUMERICS_INTEGRATION_H_
 
-namespace ursa
+namespace luna
 {
 
 template<typename> class Topology;
@@ -41,6 +41,6 @@ private:
 
 };
 
-} // ursa
+} // luna
 
 #endif

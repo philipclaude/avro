@@ -1,12 +1,12 @@
-#ifndef URSA_LIB_GRAPHICS_SHADER_H_
-#define URSA_LIB_GRAPHICS_SHADER_H_
+#ifndef LUNA_LIB_GRAPHICS_SHADER_H_
+#define LUNA_LIB_GRAPHICS_SHADER_H_
 
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
 #include <string>
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -77,6 +77,6 @@ private:
 
 } // graphics
 
-} // ursa
+} // luna
 
 #endif

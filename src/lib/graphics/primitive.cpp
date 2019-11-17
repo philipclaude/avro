@@ -5,7 +5,7 @@
 #include "mesh/field.h"
 #include "mesh/topology.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -69,7 +69,7 @@ Primitive::selectShader( Plotter* plotter )
     shader_->setUniform( "vbonum" , 0 );
   }
   else
-    ursa_implement;
+    luna_implement;
 
   // TODO: assign the shaders for the children too
 }
@@ -94,15 +94,15 @@ WebGLPrimitive::write()
   // send to wv
   handle_ = -1;
 
-  ursa_implement;
+  luna_implement;
 }
 
 void
 WebGLPrimitive::draw()
 {
-  ursa_implement;
+  luna_implement;
 }
 
 } // graphics
 
-} // ursa
+} // luna

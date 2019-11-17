@@ -1,5 +1,5 @@
-#ifndef URSA_COMMON_DATA_H_
-#define URSA_COMMON_DATA_H_
+#ifndef LUNA_COMMON_DATA_H_
+#define LUNA_COMMON_DATA_H_
 
 #include "common/types.h"
 
@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 template<typename type>
@@ -110,6 +110,6 @@ protected:
 
 };
 
-} // ursa
+} // luna
 
 #endif

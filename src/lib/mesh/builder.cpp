@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 typedef struct
@@ -99,10 +99,10 @@ template<typename Shape_t,typename Master_t>
 void
 Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
 {
-  ursa_assert( topology_.nb() == this->nb() );
-  ursa_assert_msg( f.points().nb()==0 , "nb_vertices = %lu" , f.points().nb() );
-  ursa_assert( f.points().dim()==topology_.points().dim() );
-  ursa_assert( f.nb()==0 );
+  luna_assert( topology_.nb() == this->nb() );
+  luna_assert_msg( f.points().nb()==0 , "nb_vertices = %lu" , f.points().nb() );
+  luna_assert( f.points().dim()==topology_.points().dim() );
+  luna_assert( f.nb()==0 );
 
   // create all the vertices for the outgoing topology
   const std::vector<index_t>& elems = this->elements();
@@ -166,7 +166,7 @@ Builder<Shape_t,Master_t>::build()
     for (it=facets_d.begin();it!=facets_d.end();++it)
     {
       const Element& f = it->first;
-      ursa_assert( f.dim == dim );
+      luna_assert( f.dim == dim );
 
       const std::vector<index_t>& parents = it->second.parents;
       const std::vector<index_t>& local = it->second.local;
@@ -197,4 +197,4 @@ template class Builder< Simplex<Lagrange> , Simplex<Lagrange> >;
 template class Builder< Simplex<Lagrange> , Simplex<Bezier> >;
 
 
-} // ursa
+} // luna

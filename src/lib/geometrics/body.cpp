@@ -1,7 +1,7 @@
 #include "geometrics/body.h"
 #include "geometrics/primitive.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace geometrics
@@ -19,4 +19,4 @@ Body::add( Primitive_ptr prim )
 
 } // geometrics
 
-} // ursa
+} // luna

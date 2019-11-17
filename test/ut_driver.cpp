@@ -7,14 +7,14 @@
 #include "common/tools.h"
 #include "common/process.h"
 
-typedef ursa::real_t REAL;
+typedef luna::real_t REAL;
 //#include <tetgen1.5.0/predicates.h>
 
 //#include <triangle/predicates.h>
 
 TestDriver* __driver__ = new TestDriver;
 
-using namespace ursa;
+using namespace luna;
 
 int
 main()
@@ -22,7 +22,7 @@ main()
   printInfo();
 
   // initialize the distributed/shared memory task/thread managers
-  #ifdef URSA_WITH_MPI
+  #ifdef LUNA_WITH_MPI
   ProcessMPI::initialize();
   #endif
   ProcessCPU::initialize();

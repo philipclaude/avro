@@ -7,7 +7,7 @@
 #include <imgui/GL/imgui_impl_glfw.h>
 #include <imgui/GL/imgui_impl_opengl3.h>
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -187,4 +187,4 @@ PlotTree::show()
 
 } // graphics
 
-} // ursa
+} // luna

@@ -5,7 +5,7 @@
 
 #include "mesh/topology.h"
 
-namespace ursa
+namespace luna
 {
 
 template<typename Basis>
@@ -26,7 +26,7 @@ SimplexBase<Basis>::get_facet_vertices( const index_t* v , index_t nv , index_t 
   }
   if (f.dim==number_)
   {
-    ursa_assert( ifacet==0 );
+    luna_assert( ifacet==0 );
     for (index_t j=0;j<nv;j++)
       f.indices[j] = v[j];
     if (f.sorted)
@@ -41,7 +41,7 @@ SimplexBase<Basis>::get_facet_vertices( const index_t* v , index_t nv , index_t 
   else if (f.dim==number_-1)
     get_facet_vertices( v,nv,ifacet,f.indices );
   else
-    ursa_implement;
+    luna_implement;
 
   if (f.sorted)
     std::sort( f.indices.begin() , f.indices.end() );
@@ -55,7 +55,7 @@ SimplexBase<Basis>::get_index( index_t dim , index_t ifacet , index_t ilocal ) c
   if (dim==1) return number_+1 + ifacet*nb_interior(dim) + ilocal;
   if (dim==2) return number_+1 + nb_edges()*nb_interior(1) + nb_interior(2)*ifacet + ilocal;
   if (dim==3) return number_+1 + nb_edges()*nb_interior(1) + nb_interior(2)*nb_facets(2) + nb_interior(3)*ifacet + ilocal;
-  ursa_assert_not_reached;
+  luna_assert_not_reached;
   return nb_basis()+1;
 }
 
@@ -74,7 +74,7 @@ SimplexBase<Basis>::get_edge( const index_t* v , index_t nv , index_t iedge , in
   index_t p0;
   index_t p1;
 
-  ursa_assert( number_>=1 );
+  luna_assert( number_>=1 );
   if (iedge==0)
   {
     p0 = get_vertex(v,nv,0);
@@ -111,7 +111,7 @@ SimplexBase<Basis>::get_edge( const index_t* v , index_t nv , index_t iedge , in
   }
   if (number_==3) goto sort;
 
-  if (number_==4) ursa_implement;
+  if (number_==4) luna_implement;
 
 sort:
   if (p0<p1)
@@ -159,4 +159,4 @@ template class SimplexBase<Lagrange>;
 template class SimplexBase<Bezier>;
 
 
-} // ursa
+} // luna

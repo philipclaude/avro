@@ -1,11 +1,11 @@
-#ifndef URSA_LIB_MASTER_QUADRATURE_H_
-#define URSA_LIB_MASTER_QUADRATURE_H_
+#ifndef LUNA_LIB_MASTER_QUADRATURE_H_
+#define LUNA_LIB_MASTER_QUADRATURE_H_
 
 #include "common/types.h"
 
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 class Quadrature
@@ -66,6 +66,6 @@ private:
   index_t rule_;
 };
 
-} // ursa
+} // luna
 
 #endif

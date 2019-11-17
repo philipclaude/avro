@@ -10,7 +10,7 @@
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -29,7 +29,7 @@ OpenGLPrimitive::convert()
 
   const Points& points = topology_.points();
 
-  ursa_assert( dim==3 );
+  luna_assert( dim==3 );
 
   // allocate the vertex data
   points_.resize( 3*nb_points);
@@ -47,7 +47,7 @@ OpenGLPrimitive::convert()
   if (number>=2)
   {
     // get the triangles from the topology (TODO)
-    ursa_assert( number==2 );
+    luna_assert( number==2 );
     nb_triangles = topology_.nb();
     triangles_.resize( 3*nb_triangles );
 
@@ -295,7 +295,7 @@ printBuffer( GLfloat* buffer , index_t nb_prim , index_t nb_data_per_prim  )
 void
 OpenGLPrimitive::draw()
 {
-  ursa_assert( shader_!=NULL );
+  luna_assert( shader_!=NULL );
 
   index_t nb_elem = topology_.nb();
   index_t nv = topology_.number()+1;
@@ -381,4 +381,4 @@ OpenGLPrimitive::draw()
 
 } // graphics
 
-} // ursa
+} // luna

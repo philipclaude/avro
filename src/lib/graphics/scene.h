@@ -1,12 +1,12 @@
-#ifndef URSA_LIB_GRAPHICS_SCENE_H_
-#define URSA_LIB_GRAPHICS_SCENE_H_
+#ifndef LUNA_LIB_GRAPHICS_SCENE_H_
+#define LUNA_LIB_GRAPHICS_SCENE_H_
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -33,6 +33,6 @@ private:
 
 } // graphics
 
-} // ursa
+} // luna
 
 #endif

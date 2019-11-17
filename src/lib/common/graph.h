@@ -1,7 +1,7 @@
-#ifndef URSA_LIB_COMMON_GRAPH_H_
-#define URSA_LIB_COMMON_GRAPH_H_
+#ifndef LUNA_LIB_COMMON_GRAPH_H_
+#define LUNA_LIB_COMMON_GRAPH_H_
 
-namespace ursa
+namespace luna
 {
 
 template<typename Derived_t>
@@ -19,6 +19,6 @@ private:
 
 };
 
-} // ursa
+} // luna
 
 #endif

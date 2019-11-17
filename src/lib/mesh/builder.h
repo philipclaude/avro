@@ -1,12 +1,12 @@
-#ifndef URSA_LIB_MESH_BUILDER_H_
-#define URSA_LIB_MESH_BUILDER_H_
+#ifndef LUNA_LIB_MESH_BUILDER_H_
+#define LUNA_LIB_MESH_BUILDER_H_
 
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 template<typename Shape_t,typename Master_t>

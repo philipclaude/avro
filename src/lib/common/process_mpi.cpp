@@ -1,16 +1,16 @@
-// ursa: Adaptive Voronoi Remesher
+// luna: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 
 #include "common/process.h"
 
-#ifdef URSA_WITH_MPI
+#ifdef LUNA_WITH_MPI
 #include <mpi.h>
 #include "common/mpi.hpp"
 #endif
 
-namespace ursa
+namespace luna
 {
 
 namespace ProcessMPI
@@ -49,7 +49,7 @@ public:
 
 };
 
-#ifdef URSA_WITH_MPI
+#ifdef LUNA_WITH_MPI
 class MPITaskManager : public TaskManager
 {
 public:
@@ -109,7 +109,7 @@ index_t rank()
 
 void initialize()
 {
-  #ifdef URSA_WITH_MPI
+  #ifdef LUNA_WITH_MPI
   task_manager_ = std::make_shared<MPITaskManager>();
   #else
   task_manager_ = std::make_shared<SerialTaskManager>();
@@ -147,4 +147,4 @@ barrier()
 
 } // ProcessMPI
 
-} // ursa
+} // luna

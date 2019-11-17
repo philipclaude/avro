@@ -14,7 +14,7 @@ job-release:
     - cmake ../../
     - make
   tags:
-    - ursa-commit
+    - luna-commit
 
 # the coverage test job
 job-coverage:
@@ -40,4 +40,4 @@ job-coverage:
     paths:
       - coverage_results
   tags:
-    - ursa-commit
+    - luna-commit

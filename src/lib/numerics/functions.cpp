@@ -1,6 +1,6 @@
 #include "numerics/functions.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace numerics

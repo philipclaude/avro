@@ -5,7 +5,7 @@
 
 #include <set>
 
-namespace ursa
+namespace luna
 {
 
 template<typename type>
@@ -63,4 +63,4 @@ TopologyBase<type>::getEdges( std::vector<index_t>& edges ) const
   }
 }
 
-} // ursa
+} // luna

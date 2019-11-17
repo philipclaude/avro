@@ -1,11 +1,11 @@
-#ifndef URSA_COMMON_ERROR_H_
-#define URSA_COMMON_ERROR_H_
+#ifndef LUNA_COMMON_ERROR_H_
+#define LUNA_COMMON_ERROR_H_
 
 #include <cstdio>
 #include <exception>
 #include <string>
 
-namespace ursa
+namespace luna
 {
 #ifndef unlikely
 #ifdef __GNUC__
@@ -15,19 +15,19 @@ namespace ursa
 #endif
 #endif
 
-#define ursa_throw(args...) throw(ursa::Exception(__FILE__,__LINE__,args));
+#define luna_throw(args...) throw(luna::Exception(__FILE__,__LINE__,args));
 
-#if (1 || defined(URSA_DEBUG))
-#define ursa_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__);ursa_throw("assertion error");}
-#define ursa_assert_msg(X,...) { try{ ursa_assert(X); } catch(...) { printf(__VA_ARGS__); ursa_throw("assertion error"); } }
+#if (1 || defined(LUNA_DEBUG))
+#define luna_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__);luna_throw("assertion error");}
+#define luna_assert_msg(X,...) { try{ luna_assert(X); } catch(...) { printf(__VA_ARGS__); luna_throw("assertion error"); } }
 #else
-#define ursa_assert(X) {}
-#define ursa_assert_msg(X,...) {}
+#define luna_assert(X) {}
+#define luna_assert_msg(X,...) {}
 #endif
 
-#define ursa_implement ursa_throw("not implemented");
+#define luna_implement luna_throw("not implemented");
 
-#define ursa_assert_not_reached {printf("\nthis should not have been reached!\n"); ursa_assert(false);}
+#define luna_assert_not_reached {printf("\nthis should not have been reached!\n"); luna_assert(false);}
 
 void call_backtrace(const int start=1,const int end=2);
 

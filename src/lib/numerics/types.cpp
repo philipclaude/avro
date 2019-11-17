@@ -1,8 +1,8 @@
 #include "numerics/types.h"
 
-namespace ursa
+namespace luna
 {
 
 
 
-} // ursa
+} // luna

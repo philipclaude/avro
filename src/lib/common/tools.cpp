@@ -6,7 +6,7 @@
 #include <math.h>
 #include <cstdlib>
 
-namespace ursa
+namespace luna
 {
 
 

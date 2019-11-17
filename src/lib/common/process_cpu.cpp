@@ -1,4 +1,4 @@
-// ursa: Adaptive Voronoi Remesher
+// luna: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
@@ -6,40 +6,40 @@
 #include "common/process.h"
 #include "common/thread.h"
 
-#ifdef URSA_CPU_THREAD_MANAGER_PTHREAD
+#ifdef LUNA_CPU_THREAD_MANAGER_PTHREAD
 #include <pthread.h>
 #endif
 
-#ifdef URSA_CPU_THREAD_MANAGER_CPP
+#ifdef LUNA_CPU_THREAD_MANAGER_CPP
 #include <thread>
 #endif
 
-#ifdef URSA_CPU_THREAD_MANAGER_OPENMP
+#ifdef LUNA_CPU_THREAD_MANAGER_OPENMP
 #include <omp.h>
 #endif
 
-#ifdef URSA_CPU_THREAD_MANAGER_EMP
+#ifdef LUNA_CPU_THREAD_MANAGER_EMP
 #include <emp.h>
 #endif
 
 #include <memory>
 #include <unistd.h>
 
-URSA_THREAD_LOCAL ursa::Thread* ursa_current_thread_ = 0;
+LUNA_THREAD_LOCAL luna::Thread* luna_current_thread_ = 0;
 
-namespace ursa
+namespace luna
 {
 
 void
 Thread::setCurrent(Thread* thread)
-  { ursa_current_thread_ = thread; }
+  { luna_current_thread_ = thread; }
 
 namespace ProcessCPU
 {
   std::shared_ptr<ThreadManager> thread_manager_;
   int running_threads_invocations_ = 0;
 
-  #ifdef URSA_CPU_THREAD_MANAGER_PTHREAD
+  #ifdef LUNA_CPU_THREAD_MANAGER_PTHREAD
   class PThreadManager : public ThreadManager
   {
   public:
@@ -99,7 +99,7 @@ namespace ProcessCPU
   };
   #endif
 
-  #ifdef URSA_CPU_THREAD_MANAGER_CPP
+  #ifdef LUNA_CPU_THREAD_MANAGER_CPP
   class CppThreadManager : public ThreadManager
   {
   public:
@@ -109,10 +109,10 @@ namespace ProcessCPU
       { return std::thread::hardware_concurrency(); }
 
     void enterCriticalSection()
-      { ursa_implement; }
+      { luna_implement; }
 
     void leaveCriticalSection()
-      { ursa_implement; }
+      { luna_implement; }
 
     static void* run_thread( void* thread_in )
     {
@@ -141,7 +141,7 @@ namespace ProcessCPU
   };
   #endif
 
-  #ifdef URSA_CPU_THREAD_MANAGER_OPENMP
+  #ifdef LUNA_CPU_THREAD_MANAGER_OPENMP
   class OpenMPThreadManager : public ThreadManager
   {
   public:
@@ -186,7 +186,7 @@ namespace ProcessCPU
   };
   #endif
 
-  #ifdef URSA_CPU_THREAD_MANAGER_EMP
+  #ifdef LUNA_CPU_THREAD_MANAGER_EMP
   class EMPThreadManager : public ThreadManager
   {
   public:
@@ -261,16 +261,16 @@ void initialize()
 {
 
   // set the appropriate thread manager
-  #if defined(URSA_CPU_THREAD_MANAGER_OPENMP)
+  #if defined(LUNA_CPU_THREAD_MANAGER_OPENMP)
     printf("enabling openmp threads\n");
     set_thread_manager( std::make_shared<OpenMPThreadManager>() );
-  #elif defined(URSA_CPU_THREAD_MANAGER_CPP)
+  #elif defined(LUNA_CPU_THREAD_MANAGER_CPP)
     printf("enabling cpp threads\n");
     set_thread_manager(  std::make_shared<CppThreadManager>() );
-  #elif defined(URSA_CPU_THREAD_MANAGER_PTHREAD)
+  #elif defined(LUNA_CPU_THREAD_MANAGER_PTHREAD)
     printf("enabling pthreads\n");
     set_thread_manager( std::make_shared<PThreadManager>() );
-  #elif defined(URSA_CPU_THREAD_MANAGER_EMP)
+  #elif defined(LUNA_CPU_THREAD_MANAGER_EMP)
     printf("enabling emp threads\n");
     set_thread_manager(  std::make_shared<EMPThreadManager>() );
   #else
@@ -308,4 +308,4 @@ terminate()
 
 } // ProcessCPU
 
-} // ursa
+} // luna

@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_GRAPHICS_PLOT_H_
-#define URSA_LIB_GRAPHICS_PLOT_H_
+#ifndef LUNA_LIB_GRAPHICS_PLOT_H_
+#define LUNA_LIB_GRAPHICS_PLOT_H_
 
 #include "mesh/topology.h"
 #include "mesh/points.h"
@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 class Fields;
@@ -52,6 +52,6 @@ private:
 
 } // graphics
 
-} // ursa
+} // luna
 
 #endif

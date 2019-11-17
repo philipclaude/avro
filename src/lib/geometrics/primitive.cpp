@@ -6,7 +6,7 @@
 
 #include "numerics/coordinate.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace geometrics
@@ -26,4 +26,4 @@ Primitive::Primitive( coord_t number , const std::string& name ) :
 
 template class Tree<geometrics::Primitive>;
 
-} // ursa
+} // luna

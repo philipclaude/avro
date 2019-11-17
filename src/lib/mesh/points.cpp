@@ -15,7 +15,7 @@
 #include <math.h>
 #include <unordered_map>
 
-namespace ursa
+namespace luna
 {
 
 Points::Points( const coord_t _dim ) :
@@ -50,7 +50,7 @@ Points::~Points()
 void
 Points::create( const std::vector<real_t>& x )
 {
-	ursa_assert(x.size()==dim_);
+	luna_assert(x.size()==dim_);
 	create(x.data());
 }
 
@@ -119,7 +119,7 @@ Points::createGhost()
 int&
 Points::body( const index_t k )
 {
-	ursa_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
+	luna_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
 	return body_[k];
 }
 
@@ -128,21 +128,21 @@ Points::body( const index_t k )
 void
 Points::setPrimitive( const index_t k , geometrics::Primitive* e )
 {
-	ursa_assert( k<nb() );
+	luna_assert( k<nb() );
 	primitive_[k] = e;
 }
 
 void
 Points::setParam( const index_t k , const std::vector<real_t>& u )
 {
-	ursa_assert(u.size()==udim_);
+	luna_assert(u.size()==udim_);
 	setParam( k , u.data() );
 }
 
 void
 Points::setParam( const index_t k , const real_t* u )
 {
-  ursa_assert( k<nb() );
+  luna_assert( k<nb() );
   for (index_t i=0;i<udim_;i++)
     u_[udim_*k+i] = u[i];
 }
@@ -150,7 +150,7 @@ Points::setParam( const index_t k , const real_t* u )
 bool
 Points::boundary( const index_t k ) const
 {
-	ursa_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
+	luna_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
 	return body_[k]>0;
 }
 
@@ -210,7 +210,7 @@ Points::print( const index_t k , bool info ) const
 void
 Points::remove( const index_t k )
 {
-	ursa_assert_msg( k < nb() ,
+	luna_assert_msg( k < nb() ,
 		"k = %lu , nb = %lu , |x| = %lu" , k , nb() , x_.size() );
 	x_.erase( x_.begin()+dim_*k , x_.begin()+dim_*(k+1) );
 	u_.erase( u_.begin()+udim_*k , u_.begin()+udim_*(k+1) );
@@ -246,7 +246,7 @@ Points::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 void
 Points::duplicates( std::vector<index_t>& idx , const Data<int>& F ) const
 {
-	ursa_assert( F.nb() == nb() );
+	luna_assert( F.nb() == nb() );
 
 	// get the symbolic information of every vertex
 	std::unordered_map<std::string,index_t> symbolic;
@@ -272,11 +272,11 @@ Points::duplicates( std::vector<index_t>& idx , const Data<int>& F ) const
 			printf("symbolic vertex exists! %lu -> %lu\n",k,it->second);
 
 			real_t d = numerics::distance( (*this)[k] , (*this)[it->second] , dim_ );
-			ursa_assert( d < 1e-6 ); // pretty loose tolerance
+			luna_assert( d < 1e-6 ); // pretty loose tolerance
 		}
 	}
 	printf("there are %lu unique vertices\n",symbolic.size());
-	ursa_implement;
+	luna_implement;
 }
 
 void
@@ -313,7 +313,7 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
   std::vector<real_t> distances( primitives.size() , 0. );
   std::vector<real_t> u( udim_*primitives.size() );
 
-  if (dim_ != 4) ursa_assert_msg(udim_ > 0, "udim = %u" , udim_ );
+  if (dim_ != 4) luna_assert_msg(udim_ > 0, "udim = %u" , udim_ );
   std::vector<real_t> uk(udim_, INFTY);
 
   for (index_t k=0;k<nb();k++)
@@ -364,7 +364,7 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
     // no candidates, stay null (interior)
     if (e_candidates.size()==0)
     {
-      ursa_assert(primitive_[k] == NULL);
+      luna_assert(primitive_[k] == NULL);
 			printf("no candidiates for vertex %lu\n",k);
       continue;
     }
@@ -382,7 +382,7 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
     }
     if (primitive_[k] != NULL)
     {
-      ursa_assert(ek == primitive_[k]);
+      luna_assert(ek == primitive_[k]);
     }
     else
       setPrimitive(k,ek);
@@ -404,7 +404,7 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
 
     // check the distance is lower than the tolerance
    real_t d = numerics::distance2(xk,x.data(),dim_);
-    if (recheck) ursa_assert_msg( d < tol , "d = %1.16e" , d );
+    if (recheck) luna_assert_msg( d < tol , "d = %1.16e" , d );
   }
 }
 
@@ -431,7 +431,7 @@ Points::projectToGeometry( Body& body )
   std::vector<real_t> distances( primitives.size() , 0. );
   std::vector<real_t> u( udim_*primitives.size() );
 
-  if (dim_ != 4) ursa_assert(udim_ > 0);
+  if (dim_ != 4) luna_assert(udim_ > 0);
   std::vector<real_t> uk(udim_);
 
   for (index_t k=0;k<nb();k++)
@@ -615,7 +615,7 @@ Points::fromJSON( const json& J , const Model* model )
     std::vector<geometrics::Primitive*> primitives;
     model->listEntities(primitives);
     std::vector<int> geometry = J.at("geometry");
-    ursa_assert(geometry.size()==nb());
+    luna_assert(geometry.size()==nb());
     for (index_t k=0;k<nb();k++)
     {
       if (geometry[k]<0) continue;
@@ -644,4 +644,4 @@ Points::clear()
   ghost_ = 0;
 }
 
-} // ursa
+} // luna

@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -82,4 +82,4 @@ dumpGLInfo(bool dumpExtensions)
 
 } // graphics
 
-} // ursa
+} // luna

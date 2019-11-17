@@ -2,7 +2,7 @@
 
 #include "master/simplex.h"
 
-namespace ursa
+namespace luna
 {
 
 Simplex<Lagrange>::Simplex( coord_t number , coord_t order ) :
@@ -23,12 +23,12 @@ next_index( const int n , const int q , bool& more , std::vector<index_t>& x )
 {
   int i,j;
 
-  ursa_assert( x.size()==index_t(n) );
+  luna_assert( x.size()==index_t(n) );
 
   if (!more)
   {
     if (n<1)
-      ursa_assert(false);
+      luna_assert(false);
 
 
     more = true;
@@ -159,7 +159,7 @@ Simplex<Lagrange>::precalculate()
     return;
   }
 
-  ursa_assert( length>0 );
+  luna_assert( length>0 );
 
   bool more = false;
   std::vector<index_t> xp(number_+1);
@@ -246,7 +246,7 @@ eval_lagrange_basis( index_t m, const index_t *alpha , const type* x )
 void
 Simplex<Lagrange>::evaluate( const real_t* x , std::vector<real_t>& phi ) const
 {
-  ursa_assert( phi.size()==nb_basis() );
+  luna_assert( phi.size()==nb_basis() );
   for (index_t k=0;k<nb_basis();k++)
   {
     // get the lattice coordinates for this basis function
@@ -264,4 +264,4 @@ Simplex<Lagrange>::evaluate( index_t k , std::vector<real_t>& phi ) const
   evaluate( get_reference_coordinate(k) , phi );
 }
 
-} // ursa
+} // luna

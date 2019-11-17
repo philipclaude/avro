@@ -1,4 +1,4 @@
-// ursa: unstrucutred adaptation library
+// luna: unstrucutred adaptation library
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
@@ -9,8 +9,8 @@
 
 #include "numerics/vector.h"
 
-using namespace ursa;
-using namespace ursa::numerics;
+using namespace luna;
+using namespace luna::numerics;
 
 UT_TEST_SUITE(VectorSuite)
 

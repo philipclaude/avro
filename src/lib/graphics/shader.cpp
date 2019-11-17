@@ -23,7 +23,7 @@ const std::string __wv_fs_src__ =
 #include "shaders/wv.fs"
 ;
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -36,18 +36,18 @@ ShaderProgram::ShaderProgram( const std::string& name ) :
 {
   if (name_=="basic")
   {
-    ursa_assert_msg( compile(name_.c_str(),__basic_vs_src__,__basic_fs_src__) , "error compiling basic shaders" );
+    luna_assert_msg( compile(name_.c_str(),__basic_vs_src__,__basic_fs_src__) , "error compiling basic shaders" );
   }
   else if (name_=="edge")
   {
-    ursa_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
+    luna_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
   }
   else if (name_=="wv")
   {
-    ursa_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
+    luna_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
   }
   else
-    ursa_implement;
+    luna_implement;
 }
 
 int
@@ -273,7 +273,7 @@ ShaderProgram::setUniform( const char *name, bool val )
 void
 ShaderProgram::setUniforms( const Window& window )
 {
-  //ursa_implement;
+  //luna_implement;
 }
 
 void
@@ -500,11 +500,11 @@ ShaderProgram::compile(const char *name,
      printf("GLSL programm error: %s: shader failed to link!\n%s",name,log().c_str());
      error = true;
   }
-  ursa_assert(!error);
+  luna_assert(!error);
   return true;
 }
 
 
 } // graphics
 
-} // ursa
+} // luna

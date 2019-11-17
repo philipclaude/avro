@@ -1,7 +1,7 @@
-#ifndef URSA_LIB_GRAPHICS_CLIENT_H_
-#define URSA_LIB_GRAPHICS_CLIENT_H_
+#ifndef LUNA_LIB_GRAPHICS_CLIENT_H_
+#define LUNA_LIB_GRAPHICS_CLIENT_H_
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -9,6 +9,6 @@ namespace graphics
 
 } // graphics
 
-} // ursa
+} // luna
 
 #endif

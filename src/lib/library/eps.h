@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_LIBRARY_EPS_H_
-#define URSA_LIB_LIBRARY_EPS_H_
+#ifndef LUNA_LIB_LIBRARY_EPS_H_
+#define LUNA_LIB_LIBRARY_EPS_H_
 
 #include "common/types.h"
 
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 namespace library
@@ -42,7 +42,7 @@ private:
 
 } // library
 
-} // ursa
+} // luna
 
 
 #endif

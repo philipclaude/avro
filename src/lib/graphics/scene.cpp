@@ -1,7 +1,7 @@
 #include "graphics/plot.h"
 #include "graphics/scene.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace graphics
@@ -12,4 +12,4 @@ Scene::Scene()
 
 } // graphics
 
-} // ursa
+} // luna

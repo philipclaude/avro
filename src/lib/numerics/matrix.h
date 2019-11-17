@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_NUMERICS_MATRIX_H_
-#define URSA_LIB_NUMERICS_MATRIX_H_
+#ifndef LUNA_LIB_NUMERICS_MATRIX_H_
+#define LUNA_LIB_NUMERICS_MATRIX_H_
 
 #include <vector>
 
@@ -9,7 +9,7 @@
 #include <numpack/dense/static/MatrixS.h>
 #include <numpack/dense/static/VectorS.h>
 
-namespace ursa
+namespace luna
 {
 
 namespace numerics
@@ -28,6 +28,6 @@ using Vec4f = numpack::DLA::VectorS<4,float>;
 
 } // numerics
 
-} // ursa
+} // luna
 
 #endif

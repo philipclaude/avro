@@ -2,7 +2,7 @@
 
 #include "master/master.h"
 
-namespace ursa
+namespace luna
 {
 
 // needed to create a set/map of elements
@@ -11,7 +11,7 @@ operator==( const Element& fx , const Element& fy )
 {
   // assumes fx and fy have the same topological dimension
   // and that the indices are sorted
-  ursa_assert( fx.dim==fy.dim );
+  luna_assert( fx.dim==fy.dim );
   for (index_t j=0;j<fx.dim;j++)
     if (fx.indices[j]!=fy.indices[j])
       return false;
@@ -31,4 +31,4 @@ operator<( const Element& f , const Element& g )
                                       g.indices.begin(), g.indices.end());
 }
 
-} // ursa
+} // luna

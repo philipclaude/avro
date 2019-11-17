@@ -4,7 +4,7 @@
 
 #include <egads.h>
 
-namespace ursa
+namespace luna
 {
 namespace geometrics
 {
@@ -66,7 +66,7 @@ Object::evaluate( const numerics::Coordinate& u , numerics::Coordinate& x ) cons
 }
 
 Body::Body( const Context& context , ego* obj ) :
-  ursa::geometrics::Body(0),
+  luna::geometrics::Body(0),
   context_(context),
   ego_(obj)
 {
@@ -84,4 +84,4 @@ Body::build()
 
 } // geometrics
 
-} // ursa
+} // luna

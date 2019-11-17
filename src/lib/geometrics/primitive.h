@@ -1,12 +1,12 @@
-#ifndef URSA_LIB_GEOMETRICS_PRIMITIVE_H_
-#define URSA_LIB_GEOMETRICS_PRIMITIVE_H_
+#ifndef LUNA_LIB_GEOMETRICS_PRIMITIVE_H_
+#define LUNA_LIB_GEOMETRICS_PRIMITIVE_H_
 
 #include "common/tree.h"
 #include "common/types.h"
 
 #include <string>
 
-namespace ursa
+namespace luna
 {
 
 namespace numerics
@@ -58,6 +58,6 @@ protected:
 
 } // geometrics
 
-} // ursa
+} // luna
 
 #endif

@@ -2,8 +2,8 @@
 
 #include "library/obj.h"
 
-using namespace ursa;
-using namespace ursa::library;
+using namespace luna;
+using namespace luna::library;
 
 UT_TEST_SUITE( objFile_suite )
 

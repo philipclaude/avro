@@ -15,7 +15,7 @@
 
 #include "numerics/matrix.h"
 
-namespace ursa
+namespace luna
 {
 
 template<typename T>
@@ -49,7 +49,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
   {
     // get the number of unique entries in the field
     // using the number of elements and nb_poly, for now assume p = 1
-    ursa_assert( master_.order()==1 );
+    luna_assert( master_.order()==1 );
 
     Builder<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>> builder(topology_,master_);
     builder.template transfer<T>(*this);
@@ -70,7 +70,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
   else if (this->type()==DISCONTINUOUS)
   {
     printf("heerrr\n");
-    ursa_assert( master_.order()==0 );
+    luna_assert( master_.order()==0 );
     const index_t nb_poly = 1; // assume order zero
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -82,7 +82,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
     }
   }
   else
-    ursa_assert_not_reached;
+    luna_assert_not_reached;
 }
 
 template<typename T>
@@ -91,7 +91,7 @@ Field<Polytope,Polytope,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
-    ursa_assert( master_.order()==1 );
+    luna_assert( master_.order()==1 );
 
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -107,14 +107,14 @@ Field<Polytope,Polytope,T>::build()
   }
   else if (this->type()==DISCONTINUOUS)
   {
-    ursa_assert( master_.order()==0 );
+    luna_assert( master_.order()==0 );
     for (index_t k=0;k<topology_.nb();k++)
     {
       this->data_.push_back( T(0) );
     }
   }
   else
-    ursa_assert_not_reached;
+    luna_assert_not_reached;
 }
 
 template class Field< Simplex<Lagrange> , Simplex<Lagrange> , real_t >;
@@ -127,4 +127,4 @@ template class Field< Simplex<Lagrange> , Simplex<Lagrange> , std::vector<index_
 template class Field< Simplex<Lagrange> , Simplex<Lagrange> , geometrics::Primitive* >;
 template class Field< Simplex<Lagrange> , Simplex<Lagrange> , numerics::SymMatrixD<real_t> >;
 
-} // ursa
+} // luna

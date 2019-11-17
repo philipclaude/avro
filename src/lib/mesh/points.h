@@ -1,5 +1,5 @@
-#ifndef URSA_MESH_points_H_
-#define URSA_MESH_points_H_
+#ifndef LUNA_MESH_points_H_
+#define LUNA_MESH_points_H_
 
 #include "common/error.h"
 #include "common/json.h"
@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 class Body;
@@ -99,7 +99,7 @@ public:
   // retrieve the partition of where the vertex lives
   index_t partition(  const index_t k ) const
   {
-    ursa_assert( k < partition_.size() );
+    luna_assert( k < partition_.size() );
     return partition_[k];
   }
 
@@ -131,6 +131,6 @@ protected:
   std::vector<index_t> partition_; // which partition this vertex is on
 };
 
-} // ursa
+} // luna
 
 #endif

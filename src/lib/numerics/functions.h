@@ -1,9 +1,9 @@
-#ifndef URSA_NUMERICS_FUNCTIONS_H_
-#define URSA_NUMERICS_FUNCTIONS_H_
+#ifndef LUNA_NUMERICS_FUNCTIONS_H_
+#define LUNA_NUMERICS_FUNCTIONS_H_
 
 #include "common/types.h"
 
-namespace ursa
+namespace luna
 {
 
 namespace numerics

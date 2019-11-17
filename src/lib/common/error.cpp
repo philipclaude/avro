@@ -1,4 +1,4 @@
-// ursa: Adaptive Voronoi Remesher
+// luna: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
@@ -15,7 +15,7 @@
 #include <cstdarg>
 #include <csignal>
 
-namespace ursa
+namespace luna
 {
 
 Exception::Exception(const char *file, int line,const char *fmt, ...) {
@@ -29,7 +29,7 @@ Exception::Exception(const char *file, int line,const char *fmt, ...) {
 
   sprintf(info," (file %s, line %d) ===\n",file,line);
 
-  message = "\n=== caught ursa::Exception";
+  message = "\n=== caught luna::Exception";
   message += std::string(info);
   message += std::string(buffer);
   printf("%s\n\n=== Backtrace ===\n",message.c_str());
@@ -68,6 +68,6 @@ call_backtrace(const int start,const int end) {
 	printf("\n");
 }
 
-} // ursa
+} // luna
 
 #endif // __CYGWIN__

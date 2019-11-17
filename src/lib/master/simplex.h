@@ -1,5 +1,5 @@
-#ifndef URSA_LIB_MASTER_SIMPLEX_H_
-#define URSA_LIB_MASTER_SIMPLEX_H_
+#ifndef LUNA_LIB_MASTER_SIMPLEX_H_
+#define LUNA_LIB_MASTER_SIMPLEX_H_
 
 #include "common/error.h"
 
@@ -11,7 +11,7 @@
 
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 template<typename Shape_t> class Topology;
@@ -190,6 +190,6 @@ private:
 
 };
 
-} // ursa
+} // luna
 
 #endif

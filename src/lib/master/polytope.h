@@ -1,12 +1,12 @@
-#ifndef URSA_LIB_MASTER_POLYTOPE_H_
-#define URSA_LIB_MASTER_POLYTOPE_H_
+#ifndef LUNA_LIB_MASTER_POLYTOPE_H_
+#define LUNA_LIB_MASTER_POLYTOPE_H_
 
 #include "common/data.h"
 
 #include "master/master.h"
 #include "master/simplex.h"
 
-namespace ursa
+namespace luna
 {
 
 template<typename type> class Topology;
@@ -26,6 +26,6 @@ private:
   Data<int>& incidence_;
 };
 
-} // ursa
+} // luna
 
 #endif

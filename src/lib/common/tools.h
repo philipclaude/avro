@@ -1,5 +1,5 @@
-#ifndef URSA_COMMON_TOOLS_H_
-#define URSA_COMMON_TOOLS_H_
+#ifndef LUNA_COMMON_TOOLS_H_
+#define LUNA_COMMON_TOOLS_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace ursa
+namespace luna
 {
 
 #define UNUSED(x) (void)(x);
@@ -112,7 +112,7 @@ indexof( const type* x , const std::vector<type*>& X )
 	{
 		if (X[k]==x) return k;
 	}
-	ursa_assert_not_reached;
+	luna_assert_not_reached;
 	return 0; // to avoid compiler warnings
 }
 
@@ -152,7 +152,7 @@ template<typename T>
 std::string
 unique_label( T& x0 , T& x1 )
 {
-  ursa_assert(x0!=x1);
+  luna_assert(x0!=x1);
   if (x0>x1) std::swap(x0,x1);
   std::string s = stringify(x0)+"|"+stringify(x1);
   return s;
@@ -162,7 +162,7 @@ template<typename T>
 std::string
 unique_label( std::vector<T>& x )
 {
-  ursa_assert( x.size()>0 );
+  luna_assert( x.size()>0 );
   std::sort( x.begin() , x.end() );
   std::string s = stringify(x[0]);
   for (index_t k=1;k<x.size();k++)
@@ -183,14 +183,14 @@ inline void
 printInfo()
 {
 
-  printf("\nursa compiled with ");
+  printf("\nluna compiled with ");
 
   if (__cplusplus == 201103L) printf("c++11");
   else if (__cplusplus == 199711L ) printf("c++98");
   else printf("pre-standard c++");
 
   printf("deleting memory upon termination using");
-  #ifdef URSA_SMART_PTR
+  #ifdef LUNA_SMART_PTR
     printf(" internal smart pointers.\n");
   #else
     printf(" std::shared_ptr (c++11).\n");
@@ -198,7 +198,7 @@ printInfo()
   printf("\n");
 }
 
-void ursaPrintf( const char* fmt , ... );
+void lunaPrintf( const char* fmt , ... );
 
 template<typename type>
 static void

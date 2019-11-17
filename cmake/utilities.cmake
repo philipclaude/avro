@@ -1,14 +1,14 @@
 
 # utility for adding an executable
-macro( ursa_add_executable )
+macro( luna_add_executable )
 
-    if( NOT URSA_BUILD_DYNAMIC)
+    if( NOT LUNA_BUILD_DYNAMIC)
         #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static" )
         #set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static" )
     endif()
     add_executable( ${ARGN} )
-    add_dependencies( ${ARGV0} ursa_lib )
-    target_link_libraries( ${ARGV0} ursa ${URSA_EXTERNAL_LIBRARIES} )
+    add_dependencies( ${ARGV0} luna_lib )
+    target_link_libraries( ${ARGV0} luna ${LUNA_EXTERNAL_LIBRARIES} )
 endmacro()
 
 #!

@@ -1,6 +1,6 @@
 #include "master/simplex.h"
 
-namespace ursa
+namespace luna
 {
 
 Simplex<Bezier>::Simplex( coord_t number , coord_t order ) :
@@ -14,7 +14,7 @@ Simplex<Bezier>::Simplex( coord_t number , coord_t order ) :
 void
 Simplex<Bezier>::evaluate( const real_t* x , real_t* y ) const
 {
-  ursa_implement;
+  luna_implement;
 }
 
 void
@@ -24,4 +24,4 @@ Simplex<Bezier>::evaluate( index_t k , std::vector<real_t>& phi ) const
 
 }
 
-} // ursa
+} // luna
