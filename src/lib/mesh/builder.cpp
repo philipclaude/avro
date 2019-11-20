@@ -87,17 +87,18 @@ FacetDecomposition<Shape_t>::build()
   }
 }
 
-template<typename Shape_t,typename Master_t>
-Builder<Shape_t,Master_t>::Builder( const Topology<Shape_t>& topology , const Master_t& master ) :
+template<typename type>
+Builder<type>::Builder( const Topology<type>& topology , coord_t order , BasisFunctionCategory category ) :
   topology_(topology),
-  master_(master)
+  master_(topology.number(),order)
 {
+  master_.set_basis( category );
   build();
 }
 
-template<typename Shape_t,typename Master_t>
+template<typename type>
 void
-Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
+Builder<type>::transfer( Topology<type>& f ) const
 {
   luna_assert( topology_.nb() == this->nb() );
   luna_assert_msg( f.points().nb()==0 , "nb_vertices = %lu" , f.points().nb() );
@@ -138,11 +139,11 @@ Builder<Shape_t,Master_t>::transfer( Topology<Master_t>& f ) const
   }
 }
 
-template<typename Shape_t,typename Master_t>
+template<typename type>
 void
-Builder<Shape_t,Master_t>::build()
+Builder<type>::build()
 {
-  FacetDecomposition<Shape_t> facets( topology_ );
+  FacetDecomposition<type> facets( topology_ );
   facets.build();
 
   // allocate enough space for all the elements
@@ -193,8 +194,6 @@ Builder<Shape_t,Master_t>::build()
 }
 
 // builder for high-order meshes and transfer from lagrange to bezier
-template class Builder< Simplex<Lagrange> , Simplex<Lagrange> >;
-template class Builder< Simplex<Lagrange> , Simplex<Bezier> >;
-
+template class Builder< Simplex >;
 
 } // luna

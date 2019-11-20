@@ -8,14 +8,33 @@
 namespace luna
 {
 
-template<typename Basis>
-SimplexBase<Basis>::SimplexBase( const Topology<Simplex<Basis>>& topology , const coord_t order ) :
-  SimplexBase(topology.number(),order)
+Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
+  Simplex(topology.number(),order)
 {}
 
-template<typename Basis>
 void
-SimplexBase<Basis>::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const
+Simplex::precalculate()
+{
+  // save the vertices
+  // TODO
+
+  // save the edges
+  for (index_t k=0;k<number_+1;k++)
+  for (index_t i=k+1;i<number_+1;i++)
+  {
+    this->edges_.push_back(k);
+    this->edges_.push_back(i);
+  }
+
+  // triangulate the reference element
+  // TODO
+
+  // precalculate the shape function values at the quadrature points
+
+}
+
+void
+Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const
 {
   f.indices.resize(f.dim+1);
 
@@ -47,9 +66,8 @@ SimplexBase<Basis>::get_facet_vertices( const index_t* v , index_t nv , index_t 
     std::sort( f.indices.begin() , f.indices.end() );
 }
 
-template<typename Basis>
 index_t
-SimplexBase<Basis>::get_index( index_t dim , index_t ifacet , index_t ilocal ) const
+Simplex::get_index( index_t dim , index_t ifacet , index_t ilocal ) const
 {
   if (dim==0) return ifacet;
   if (dim==1) return number_+1 + ifacet*nb_interior(dim) + ilocal;
@@ -59,17 +77,14 @@ SimplexBase<Basis>::get_index( index_t dim , index_t ifacet , index_t ilocal ) c
   return nb_basis()+1;
 }
 
-template<typename Basis>
 index_t
-SimplexBase<Basis>::get_vertex( const index_t* v , index_t nv , index_t ivertex ) const
+Simplex::get_vertex( const index_t* v , index_t nv , index_t ivertex ) const
 {
-  // maybe this only specializes for lagrange?
   return v[ivertex]; // vertices always stored at the beginning
 }
 
-template<typename Basis>
 void
-SimplexBase<Basis>::get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const
+Simplex::get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const
 {
   index_t p0;
   index_t p1;
@@ -126,10 +141,11 @@ sort:
   }
 }
 
-template<typename Basis>
 void
-SimplexBase<Basis>::get_triangle( const index_t* v , index_t nv , index_t itriangle, index_t* t ) const
+Simplex::get_triangle( const index_t* v , index_t nv , index_t itriangle, index_t* t ) const
 {
+  // this is incorrect
+  luna_implement;
   index_t p0 = get_vertex( v , nv ,  itriangle   %3 );
   index_t p1 = get_vertex( v , nv , (itriangle+1)%3 );
   index_t p2 = get_vertex( v , nv , (itriangle+2)%3 );
@@ -138,9 +154,8 @@ SimplexBase<Basis>::get_triangle( const index_t* v , index_t nv , index_t itrian
   t[2] = p2;
 }
 
-template<typename Basis>
 void
-SimplexBase<Basis>::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet, std::vector<index_t>& f ) const
+Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet, std::vector<index_t>& f ) const
 {
   f.resize( number_+1 );
   for (coord_t j=0;j<number_+1;j++)
@@ -148,15 +163,13 @@ SimplexBase<Basis>::get_facet_vertices( const index_t* v , index_t nv , index_t 
   f.erase( f.begin()+ifacet );
 }
 
-template<typename Basis>
 void
-SimplexBase<Basis>::loadQuadrature( Quadrature& quadrature )
+Simplex::get_edges( const index_t* v , const index_t nv , std::vector<index_t>& ek ) const
 {
-  quadrature.retrieve(xquad_,wquad_);
+  // retrieve all edges of the simplex
+  ek.resize( edges_.size() );
+  for (index_t j=0;j<edges_.size();j++)
+    ek[j] = v[edges_[j]];
 }
-
-template class SimplexBase<Lagrange>;
-template class SimplexBase<Bezier>;
-
 
 } // luna

@@ -17,14 +17,14 @@ UT_TEST_CASE( simplex_tests )
   Points vertices(3);
   coord_t number = 3;
 
-  Topology< Simplex<Lagrange> > topology(vertices,number);
+  Topology<Simplex> topology(vertices,number);
 
   topology.do_something();
 
-  std::shared_ptr< Topology<Simplex<Lagrange>> > leaf = std::make_shared<Topology<Simplex<Lagrange>>>(vertices,number);
+  std::shared_ptr< Topology<Simplex> > leaf = std::make_shared<Topology<Simplex>>(vertices,number);
   topology.add_child(leaf);
 
-  Topology<Simplex<Lagrange>>& c = topology.topology(0);
+  Topology<Simplex>& c = topology.topology(0);
   UNUSED(c);
 
 }

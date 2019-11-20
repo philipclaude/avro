@@ -144,11 +144,10 @@ protected:
   Fields fields_;
 };
 
-template<typename Master_t> class Topology;
-template<typename Basis> class Topology<Simplex<Basis>>;
+template<typename Shape> class Topology;
 
-template <typename type>
-class TopologyBase : public Tree<Topology<type> >, public TopologyHolder
+template<typename type>
+class TopologyBase : public Tree<Topology<type>>, public TopologyHolder
 {
 
 public:
@@ -181,29 +180,14 @@ public:
 
 
 template<>
-class Topology< Simplex<Lagrange> > : public TopologyBase<Simplex<Lagrange>>
+class Topology<Simplex> : public TopologyBase<Simplex>
 {
 public:
-  typedef Simplex<Lagrange> Master_t;
-  using TopologyBase<Master_t>::TopologyBase;
-  using TopologyBase<Master_t>::master_;
+  Topology( Points& vertices , coord_t order );
+  Topology( Points& vertices , const Topology<Simplex>& lagrange );
+  Topology( Points& vertices , const Topology<Simplex>& lagrange , coord_t order );
 
-  Topology( Points& vertices , const Topology<Master_t>& linear , coord_t order );
-
-  void convert( const Topology<Master_t>& linear );
-};
-
-template<>
-class Topology< Simplex<Bezier> > : public TopologyBase<Simplex<Bezier>>
-{
-public:
-  Topology( Points& vertices , const Topology<Simplex<Lagrange>>& lagrange );
-  Topology( Points& vertices , const Topology<Simplex<Lagrange>>& lagrange , coord_t order );
-
-  void convert();
-
-private:
-  const Topology<Simplex<Lagrange>>& lagrange_;
+  void convert( const Topology<Simplex>& linear );
 };
 
 template<>

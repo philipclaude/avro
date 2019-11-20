@@ -63,24 +63,24 @@ private:
   FieldType type_;
 };
 
-template<typename ShapeBasis_t,typename FieldBasis_t,typename T> class Field;
+template<typename Shape,typename T> class Field;
 
-template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
-class Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T> : public FieldBase<T>
+template<typename T>
+class Field<Simplex,T> : public FieldBase<T>
 {
 public:
-  Field( const Topology<Simplex<ShapeBasis_t>>& topology , coord_t order , FieldType type );
+  Field( const Topology<Simplex>& topology , coord_t order , FieldType type );
   void build();
 
-  const Simplex<FieldBasis_t>& master() const { return master_; }
+  const Simplex& master() const { return master_; }
 
 private:
-  const Topology<Simplex<ShapeBasis_t>>& topology_;
-  const Simplex<FieldBasis_t> master_;
+  const Topology<Simplex>& topology_;
+  const Simplex master_;
 };
 
 template<typename T>
-class Field<Polytope,Polytope,T> : public FieldBase<T>
+class Field<Polytope,T> : public FieldBase<T>
 {
 public:
   Field( Topology<Polytope>& topology , coord_t order , FieldType type );

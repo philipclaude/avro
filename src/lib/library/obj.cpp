@@ -14,7 +14,7 @@ namespace library
 {
 
 objFile::objFile( const std::string& filename ) :
-  Topology<Simplex<Lagrange>>(points_,2),
+  Topology<Simplex>(points_,2),
   points_(3),
   filename_(filename)
 {
@@ -48,9 +48,9 @@ objFile::read()
   Data<real_t> texture;
   std::vector< std::vector<index_t> > nt_vals,ut_vals;
 
-  typedef Simplex<Lagrange> Shape_t;
-  typedef Field<Shape_t,Shape_t,std::vector<real_t>> FieldType;
-  typedef Field<Shape_t,Shape_t,std::vector<index_t>> FieldType_idx;
+  typedef Simplex Shape_t;
+  typedef Field<Shape_t,std::vector<real_t>> FieldType;
+  typedef Field<Shape_t,std::vector<index_t>> FieldType_idx;
 
   std::shared_ptr<FieldType> normal_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
   std::shared_ptr<FieldType> uv_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);

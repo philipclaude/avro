@@ -9,22 +9,22 @@
 namespace luna
 {
 
-template<typename Shape_t,typename Master_t>
+template<typename type>
 class Builder : public Data<index_t>
 {
 
 public:
-  Builder( const Topology<Shape_t>& topology , const Master_t& master );
+  Builder( const Topology<type>& topology , coord_t order , BasisFunctionCategory category );
 
   void build();
 
-  void transfer( Topology<Master_t>& F ) const;
-  template<typename T> void transfer( Field<Shape_t,Master_t,T>& F ) const;
-  template<typename MasterFrom_t,typename T> void transfer( const Field<Shape_t,MasterFrom_t,T>& Fx , Field<Shape_t,Master_t,T>& Fy ) const;
+  void transfer( Topology<type>& F ) const;
+  template<typename T> void transfer( Field<type,T>& F ) const;
+  template<typename T> void transfer( const Field<type,T>& Fx , Field<type,T>& Fy ) const;
 
 private:
-  const Topology<Shape_t>& topology_;
-  const Master_t&          master_;
+  const Topology<type>& topology_;
+   type master_;
 };
 
 }

@@ -8,60 +8,25 @@
 namespace luna
 {
 
-/*\
- * Lagrange simplex topology
-\*/
-Topology<Simplex<Lagrange>>::Topology( Points& vertices , const Topology<Master_t>& linear , coord_t order ) :
- TopologyBase(vertices,linear.number(),order)
+Topology<Simplex>::Topology( Points& points , coord_t order ) :
+  TopologyBase<Simplex>(points,order)
+{}
+
+Topology<Simplex>::Topology( Points& points , const Topology<Simplex>& linear , coord_t order ) :
+ TopologyBase(points,linear.number(),order)
 {
   convert(linear);
 }
 
 void
-Topology<Simplex<Lagrange>>::convert( const Topology<Master_t>& linear )
+Topology<Simplex>::convert( const Topology<Simplex>& linear )
 {
   printf("converting to order %u...\n",master_.order());
-  Builder<Master_t,Simplex<Lagrange>> builder(linear,master_);
+  Builder<Simplex> builder(linear,order_,BasisFunctionCategory_Lagrange);
   builder.transfer(*this);
 }
 
-/*\
- * Bezier simplex topology
-\*/
-Topology<Simplex<Bezier>>::Topology( Points& vertices , const Topology<Simplex<Lagrange>>& lagrange ) :
-  TopologyBase(vertices,lagrange.number()),
-  lagrange_(lagrange)
-{
-  convert();
-}
-
-/*\
- * Bezier simplex topology
-\*/
-Topology<Simplex<Bezier>>::Topology( Points& vertices , const Topology<Simplex<Lagrange>>& lagrange , coord_t order ) :
-  TopologyBase(vertices,lagrange.number(),order),
-  lagrange_(lagrange)
-{
-  convert();
-}
-
-void
-Topology<Simplex<Bezier>>::convert()
-{
-  printf("convert lagrange basis of %u-simplices...\n",lagrange_.number());
-  Builder<Simplex<Lagrange>,Simplex<Bezier>> builder(lagrange_,master_);
-  builder.transfer(*this);
-}
-
-template<>
-void
-TopologyBase<Simplex<Bezier>>::getEdges( std::vector<index_t>& edges ) const
-{
-  // bezier edge extraction is not supported
-  luna_assert_not_reached;
-}
-
-template class TopologyBase< Simplex<Lagrange> >;
-template class Tree< Topology< Simplex<Lagrange> > >;
+template class TopologyBase<Simplex>;
+template class Tree<Topology<Simplex>>;
 
 } // luna

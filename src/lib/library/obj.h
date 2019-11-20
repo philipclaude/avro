@@ -12,7 +12,7 @@ namespace luna
 namespace library
 {
 
-class objFile : public Topology<Simplex<Lagrange>>
+class objFile : public Topology<Simplex>
 {
 public:
   objFile( const std::string& filename );

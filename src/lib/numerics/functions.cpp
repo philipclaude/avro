@@ -6,7 +6,6 @@ namespace luna
 namespace numerics
 {
 
-
 index_t
 factorial( const index_t i )
 {
@@ -26,6 +25,12 @@ binomial( const index_t n , const index_t k )
 	return num/den;;
 }
 
+index_t
+nchoosek( index_t n , index_t k )
+{
+  return factorial(n)/( factorial(k)*factorial(n-k) );
+}
+
 } // numerics
 
-} // avro
+} // luna

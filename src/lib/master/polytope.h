@@ -11,7 +11,7 @@ namespace luna
 
 template<typename type> class Topology;
 
-class Polytope : public Master
+class Polytope : public Master<Polytope>
 {
 
 public:
@@ -22,7 +22,7 @@ public:
   const Data<int>& incidence() const { return incidence_; }
 
 private:
-  Simplex<Lagrange> simplex_;
+  Simplex simplex_;
   Data<int>& incidence_;
 };
 

@@ -10,16 +10,16 @@ namespace luna
 namespace library
 {
 
-class TwoTriangles : public Topology<Simplex<Lagrange>>
+class TwoTriangles : public Topology<Simplex>
 {
 public:
   TwoTriangles();
 
-  Topology<Simplex<Lagrange>>& edges() { return edges_; }
+  Topology<Simplex>& edges() { return edges_; }
 
 private:
   Points points_;
-  Topology<Simplex<Lagrange>> edges_;
+  Topology<Simplex> edges_;
 };
 
 } // library

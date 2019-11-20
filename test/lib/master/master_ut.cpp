@@ -9,12 +9,16 @@ UT_TEST_SUITE( MasterSuite )
 
 UT_TEST_CASE( simplex_tests )
 {
-  Simplex<Lagrange> master( 2 , 1 );
+  Simplex master( 2 , 1 );
 
   ConicalProductQuadrature quadrature( -1 );
-  master.loadQuadrature( quadrature );
+  master.load_quadrature( quadrature );
 
-  master.eval();
+  master.set_basis( BasisFunctionCategory_Lagrange );
+
+  real_t x[2] = {0.5,0.5};
+  real_t phi[3];
+  master.eval(x,phi);
 
 }
 UT_TEST_CASE_END( simplex_tests )

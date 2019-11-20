@@ -3,9 +3,9 @@
 namespace luna
 {
 
-template<typename BasisFrom_t,typename T>
+template<typename T>
 void
-Simplex<Lagrange>::transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
+Simplex::transfer( const Simplex& master , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
   luna_assert( Y.size()==nb_basis() );
@@ -15,10 +15,10 @@ Simplex<Lagrange>::transfer( const Simplex<BasisFrom_t>& master , const std::vec
   for (index_t k=0;k<Y.size();k++)
   {
     // get the reference coordinate for Y
-    const real_t* y = get_reference_coordinate(k);
+    const real_t* y = reference_.get_reference_coordinate(k);
 
     // evaluate the basis function of the original master at this coordinate
-    master.evaluate( y , phi );
+    master.basis().evaluate( y , phi.data() );
 
     // evaluate the basis functions in the original master element
     for (coord_t d=0;d<dim;d++)
@@ -30,9 +30,9 @@ Simplex<Lagrange>::transfer( const Simplex<BasisFrom_t>& master , const std::vec
   }
 }
 
-template<typename BasisFrom_t,typename T>
+template<typename T>
 void
-Simplex<Lagrange>::transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T>& X , std::vector<T>& Y ) const
+Simplex::transfer( const Simplex& master , const std::vector<const T>& X , std::vector<T>& Y ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
   luna_assert( Y.size()==nb_basis() );
@@ -42,10 +42,10 @@ Simplex<Lagrange>::transfer( const Simplex<BasisFrom_t>& master , const std::vec
   for (index_t k=0;k<Y.size();k++)
   {
     // get the reference coordinate for Y
-    const real_t* y = get_reference_coordinate(k);
+    const real_t* y = reference_.get_reference_coordinate(k);
 
     // evaluate the basis function of the original master at this coordinate
-    master.evaluate( y , phi );
+    master.basis().evaluate( y , phi.data() );
 
     // evaluate the basis functions in the original master element
     for (index_t j=0;j<master.nb_basis();j++)
@@ -53,6 +53,7 @@ Simplex<Lagrange>::transfer( const Simplex<BasisFrom_t>& master , const std::vec
   }
 }
 
+#if 0
 template<typename BasisFrom_t,typename T>
 void
 Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
@@ -96,5 +97,7 @@ Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& master , const std::vecto
       Y[k] += phi[j]*X[j];
   }
 }
+
+#endif
 
 } // luna

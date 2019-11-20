@@ -23,8 +23,8 @@ FieldBase<T>::FieldBase( FieldType type ) :
   type_(type)
 {}
 
-template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
-Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::Field( const Topology<Simplex<ShapeBasis_t>>& topology , coord_t order , FieldType type ) :
+template<typename T>
+Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type),
   topology_(topology),
   master_(topology.number(),order)
@@ -33,7 +33,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::Field( const Topology<Simp
 }
 
 template<typename T>
-Field<Polytope,Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
+Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type),
   topology_(topology),
   master_(topology,order)
@@ -41,9 +41,9 @@ Field<Polytope,Polytope,T>::Field( Topology<Polytope>& topology , coord_t order 
   printf("constructing field with order %u\n",master_.order());
 }
 
-template<typename ShapeBasis_t,typename FieldBasis_t,typename T>
+template<typename T>
 void
-Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
+Field<Simplex,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
@@ -51,7 +51,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
     // using the number of elements and nb_poly, for now assume p = 1
     luna_assert( master_.order()==1 );
 
-    Builder<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>> builder(topology_,master_);
+    Builder<Simplex> builder(topology_,master_.order(),BasisFunctionCategory_None);
     builder.template transfer<T>(*this);
     return;
 
@@ -87,7 +87,7 @@ Field<Simplex<ShapeBasis_t>,Simplex<FieldBasis_t>,T>::build()
 
 template<typename T>
 void
-Field<Polytope,Polytope,T>::build()
+Field<Polytope,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
@@ -117,14 +117,13 @@ Field<Polytope,Polytope,T>::build()
     luna_assert_not_reached;
 }
 
-template class Field< Simplex<Lagrange> , Simplex<Lagrange> , real_t >;
-template class Field< Simplex<Lagrange> , Simplex<Bezier> , real_t >;
-template class Field< Polytope , Polytope , real_t >;
+template class Field< Simplex , real_t >;
+template class Field< Polytope , real_t >;
 
-template class Field< Simplex<Lagrange> , Simplex<Lagrange> , std::vector<real_t> >;
-template class Field< Simplex<Lagrange> , Simplex<Lagrange> , std::vector<index_t> >;
+template class Field< Simplex , std::vector<real_t> >;
+template class Field< Simplex , std::vector<index_t> >;
 
-template class Field< Simplex<Lagrange> , Simplex<Lagrange> , geometrics::Primitive* >;
-template class Field< Simplex<Lagrange> , Simplex<Lagrange> , numerics::SymMatrixD<real_t> >;
+template class Field< Simplex , geometrics::Primitive* >;
+template class Field< Simplex , numerics::SymMatrixD<real_t> >;
 
 } // luna

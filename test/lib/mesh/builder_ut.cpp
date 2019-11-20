@@ -13,7 +13,7 @@ UT_TEST_CASE( simplex_tests )
   library::TwoTriangles topology;
   Points vertices( topology.points().dim() );
 
-  Topology<Simplex<Lagrange>> topology_curved( vertices , topology , 3 );
+  Topology<Simplex> topology_curved( vertices , topology , 3 );
 
   vertices.print();
   //builder.transfer( topology_curved );

@@ -7,7 +7,7 @@ namespace library
 {
 
 TwoTriangles::TwoTriangles() :
-  Topology<Simplex<Lagrange>>(points_,2),
+  Topology<Simplex>(points_,2),
   points_(3),
   edges_(points_,1)
 {

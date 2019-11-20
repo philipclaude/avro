@@ -1,6 +1,7 @@
 #include "common/error.h"
 
 #include "master/master.h"
+#include "master/quadrature.h"
 
 namespace luna
 {
@@ -30,5 +31,21 @@ operator<( const Element& f , const Element& g )
   return std::lexicographical_compare(f.indices.begin(), f.indices.end(),
                                       g.indices.begin(), g.indices.end());
 }
+
+template<typename Shape>
+void
+Master<Shape>::load_quadrature( Quadrature& quadrature )
+{
+  quadrature.retrieve(xquad_,wquad_);
+}
+
+template<typename Shape>
+void
+Master<Shape>::set_basis( BasisFunctionCategory category )
+{
+  basis_ = std::make_shared<Basis<Shape>>(reference_,category);
+}
+
+template class Master<Simplex>;
 
 } // luna

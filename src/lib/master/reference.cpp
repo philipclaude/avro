@@ -1,21 +1,24 @@
-#include "common/tools.h"
+#include "common/error.h"
 
-#include "master/simplex.h"
+#include "master/reference.h"
+
+#include "numerics/matrix.h"
+
+#include <cmath>
 
 namespace luna
 {
 
-Simplex<Lagrange>::Simplex( coord_t number , coord_t order ) :
-  SimplexBase(number,order)
+const real_t*
+ReferenceElement<Simplex>::get_reference_coordinate( index_t k ) const
 {
-  precalculate();
+  return &xref_[k*(number_+1)];
+}
 
-  for (index_t k=0;k<number_+1;k++)
-  for (index_t i=k+1;i<number_+1;i++)
-  {
-    this->edges_.push_back(k);
-    this->edges_.push_back(i);
-  }
+const index_t*
+ReferenceElement<Simplex>::get_lattice_coordinate( index_t k ) const
+{
+  return &lref_[k*(number_+1)];
 }
 
 static void
@@ -68,7 +71,7 @@ next_index( const int n , const int q , bool& more , std::vector<index_t>& x )
 }
 
 void
-Simplex<Lagrange>::precalculate()
+ReferenceElement<Simplex>::precalculate()
 {
   // set the unit (equilateral) coordinates
   if (number_==0)
@@ -150,7 +153,6 @@ Simplex<Lagrange>::precalculate()
   {
     // it doesn't really make sense to have a zero-order lagrange element
     // but we can hack it by setting the coordinates to the centroid
-
     for (index_t j=0;j<number_;j++)
     {
       lref_.push_back( 1 );
@@ -158,7 +160,6 @@ Simplex<Lagrange>::precalculate()
     }
     return;
   }
-
   luna_assert( length>0 );
 
   bool more = false;
@@ -175,93 +176,6 @@ Simplex<Lagrange>::precalculate()
 
     if (!more) break;
   }
-}
-
-void
-Simplex<Lagrange>::get_edges( const index_t* v , const index_t nv , std::vector<index_t>& ek ) const
-{
-  ek.resize( edges_.size() );
-  for (index_t j=0;j<edges_.size();j++)
-    ek[j] = v[edges_[j]];
-}
-
-const real_t*
-Simplex<Lagrange>::get_reference_coordinate( index_t k ) const
-{
-  return &xref_[k*(number_+1)];
-}
-
-const index_t*
-Simplex<Lagrange>::get_lattice_coordinate( index_t k ) const
-{
-  return &lref_[k*(number_+1)];
-}
-
-template<typename type>
-static type
-vector_sum( index_t n, const type* a )
-{
-  type value(0);
-
-  for (index_t i = 0; i < n; i++ )
-  {
-    value = value + a[i];
-  }
-  return value;
-}
-
-template<typename type>
-static type
-eval_lagrange_basis( index_t m, const index_t *alpha , const type* x )
-{
-  type c,l,w;
-
-  index_t d = vector_sum<index_t>( m+1 , alpha );
-
-  l = 1.0;
-  c = 1.0;
-
-  for (index_t q = 0; q < m; q++ )
-  {
-    for (index_t p = 0; p < alpha[q]; p++ )
-    {
-      l = l * ( type(d) * x[q] - type(p) );
-      c = c * ( alpha[q]       - type(p) );
-    }
-  }
-
-  w = 1.0 - vector_sum ( m, x );
-
-  for (index_t p = 0; p < alpha[m]; p++ )
-  {
-    l = l * ( type(d) * w    - type(p) );
-    c = c * ( type(alpha[m]) - type(p) );
-  }
-
-  l = l / c;
-
-  return l;
-}
-
-void
-Simplex<Lagrange>::evaluate( const real_t* x , std::vector<real_t>& phi ) const
-{
-  luna_assert( phi.size()==nb_basis() );
-  for (index_t k=0;k<nb_basis();k++)
-  {
-    // get the lattice coordinates for this basis function
-    const index_t* alpha = get_lattice_coordinate(k);
-
-    // evaluate the basis function
-    phi[k] = eval_lagrange_basis( number_ , alpha , x );
-  }
-}
-
-void
-Simplex<Lagrange>::evaluate( index_t k , std::vector<real_t>& phi ) const
-{
-  // evaluate the set of basis functions at the k'th interpolation point
-  evaluate( get_reference_coordinate(k) , phi );
 }
 
 } // luna
