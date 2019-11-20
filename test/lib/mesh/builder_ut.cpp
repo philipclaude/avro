@@ -13,11 +13,11 @@ UT_TEST_CASE( simplex_tests )
   library::TwoTriangles topology;
   Points vertices( topology.points().dim() );
 
+  topology.master().set_basis( BasisFunctionCategory_Lagrange );
+
   Topology<Simplex> topology_curved( vertices , topology , 3 );
 
   vertices.print();
-  //builder.transfer( topology_curved );
-
 }
 UT_TEST_CASE_END( simplex_tests )
 

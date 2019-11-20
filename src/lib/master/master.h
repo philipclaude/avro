@@ -53,8 +53,8 @@ public:
   }
 
 protected:
-  const Basis<Shape>& basis() const { return *basis_.get(); }
-  Basis<Shape>& basis() { return *basis_.get(); }
+  const Basis<Shape>& basis() const { luna_assert(basis_!=nullptr); return *basis_.get(); }
+  Basis<Shape>& basis() { luna_assert(basis_!=nullptr); return *basis_.get(); }
 
 protected:
   coord_t number_;

@@ -40,8 +40,6 @@ TopologyBase<type>::getEdges( std::vector<index_t>& edges ) const
     // get the edges of this cell
     master_.get_edges( v0 , nv(k) , ek );
 
-    //printInline(ek,"ek");
-
     // add the edges
     for (index_t j=0;j<ek.size()/2;j++)
     {

@@ -54,8 +54,7 @@ public:
 
   index_t nb_facets() const
   {
-    // specialized for dim-1 facets
-    return number_+1;
+    return number_+1; // specialized for dim-1 facets
   }
 
   index_t nb_basis() const
