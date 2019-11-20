@@ -1,4 +1,4 @@
-**luna**: unstructured adaptation library
+**luna**: library for unstructured adaptation
 (c) Philip Claude Caplan, 2019
 
 <img width="60px" src="doc/fig/luna.png"/>
