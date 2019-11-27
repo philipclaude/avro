@@ -1,7 +1,7 @@
 #ifndef LUNA_LIB_MASTER_POLYTOPE_H_
 #define LUNA_LIB_MASTER_POLYTOPE_H_
 
-#include "common/data.h"
+#include "common/array.h"
 
 #include "master/master.h"
 #include "master/simplex.h"
@@ -15,17 +15,16 @@ class Polytope : public Master<Polytope>
 {
 
 public:
-  Polytope( coord_t number , coord_t order );
-  Polytope( Topology<Polytope>& topology , const coord_t order );
+  Polytope( coord_t number , coord_t order , const Array<int>& incidence );
+  Polytope( Topology<Polytope>& topology , const coord_t order , const Array<int>& incidence );
 
-  Data<int>& incidence() { return *incidence_.get(); }
-  const Data<int>& incidence() const { return *incidence_.get(); }
+  const Array<int>& incidence() const { return incidence_; }
 
   void get_edges( const index_t* v0 , index_t nv , std::vector<index_t>& ek ) const;
 
 private:
   Simplex simplex_;
-  std::shared_ptr<Data<int>> incidence_;
+  const Array<int>& incidence_;
 };
 
 } // luna

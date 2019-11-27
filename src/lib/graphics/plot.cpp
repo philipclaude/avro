@@ -13,7 +13,7 @@ namespace luna
 namespace graphics
 {
 
-Plot::Plot( const TopologyHolder& topology , Window* window ) :
+Plot::Plot( const TopologyBase& topology , Window* window ) :
   topology_(topology),
   window_(window),
   plotter_(window->plotter())

@@ -20,17 +20,17 @@ namespace luna
 class Points;
 class ClippingPlane;
 
-class TopologyHolder : public Array<index_t>
+class TopologyBase : public Array<index_t>
 {
 public:
-  TopologyHolder( Points& vertices , const coord_t number , ArrayLayoutCategory category ) :
+  TopologyBase( Points& vertices , const coord_t number , ArrayLayoutCategory category ) :
     Array<index_t>(category,number+1),
     points_(vertices),
     number_(number),
     fields_(*this)
   {}
 
-  virtual ~TopologyHolder() {}
+  virtual ~TopologyBase() {}
 
   Points& points() const { return points_; }
 
@@ -38,7 +38,7 @@ public:
   coord_t order() const { return order_; }
 
   // virtual functions for leaf
-  void copy( TopologyHolder& topology );
+  void copy( TopologyBase& topology );
 
   virtual void getPoints( std::vector<index_t>& p ) const = 0;
   virtual void getEdges( std::vector<index_t>& e ) const = 0;
@@ -68,10 +68,8 @@ protected:
   Fields fields_;
 };
 
-#if 1
-
 template<typename type>
-class Topology : public Tree<Topology<type>>, public TopologyHolder
+class Topology : public Tree<Topology<type>>, public TopologyBase
 {
 public:
   typedef Topology<type> Topology_t;
@@ -100,65 +98,6 @@ public:
 private:
   type master_;
 };
-
-#else
-
-template<typename Shape> class Topology;
-
-template<typename type>
-class TopologyBase : public Tree<Topology<type>>, public TopologyHolder
-{
-
-public:
-  typedef Topology<type> Topology_t;
-  typedef std::shared_ptr<Topology_t> Topology_ptr;
-
-  using Tree<Topology_t>::nb_children;
-
-  TopologyBase( Points& _vertices , const coord_t _number );
-  TopologyBase( Points& _vertices , const coord_t _number , const coord_t _order );
-  TopologyBase( Points& _vertices , const json& J );
-
-  Topology_t& topology( index_t k ) { return Tree<Topology_t>::child(k); }
-
-  type& master() { return master_; }
-  const type& master() const { return master_; }
-
-  coord_t order() const { return master_.order(); }
-
-  void do_something() {}
-
-  bool ghost( index_t k ) const { return false; }
-
-  void getPoints( std::vector<index_t>& p ) const {}
-  void getEdges( std::vector<index_t>& e ) const;
-  void getTriangles( std::vector<index_t>& t ) const;
-
-  type master_;
-};
-
-
-template<>
-class Topology<Simplex> : public TopologyBase<Simplex>
-{
-public:
-  Topology( Points& vertices , coord_t order );
-  Topology( Points& vertices , const Topology<Simplex>& lagrange );
-  Topology( Points& vertices , const Topology<Simplex>& lagrange , coord_t order );
-
-  void convert( const Topology<Simplex>& linear );
-};
-
-template<>
-class Topology<Polytope> : public TopologyBase<Polytope>
-{
-public:
-
-private:
-  Data<int> incidence_;
-};
-
-#endif
 
 } // luna
 

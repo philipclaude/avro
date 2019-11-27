@@ -4,7 +4,7 @@
 namespace luna
 {
 
-Fields::Fields( const TopologyHolder& topology ) :
+Fields::Fields( const TopologyBase& topology ) :
   topology_(topology)
 {}
 

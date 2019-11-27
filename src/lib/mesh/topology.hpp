@@ -8,18 +8,6 @@
 namespace luna
 {
 
-template<>
-Topology<Simplex>::Topology( Points& vertices , coord_t number , coord_t order ) :
-  TopologyHolder(vertices,number,ArrayLayout_Rectangular),
-  master_( number , order )
-{}
-
-template<>
-Topology<Polytope>::Topology( Points& vertices , coord_t number , coord_t order ) :
-  TopologyHolder(vertices,number,ArrayLayout_Jagged),
-  master_( number , order )
-{}
-
 template<typename type>
 Topology<type>::Topology( Points& vertices , coord_t number ) :
   Topology(vertices,number,1)

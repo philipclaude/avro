@@ -22,7 +22,7 @@ template<typename type>
 class Array
 {
 public:
-  Array( ArrayLayoutCategory category ) :
+  Array( ArrayLayoutCategory category = ArrayLayout_None ) :
     category_(category),
     sorted_(false),
     rank_(0)
@@ -33,6 +33,11 @@ public:
     sorted_(false),
     rank_(rank)
   {}
+
+  bool undefined() const { return category_==ArrayLayout_None; }
+
+  void set_category( ArrayLayoutCategory category )
+    { category_ = category; }
 
   void set_sorted( bool sorted ) { sorted_ = sorted; }
 
@@ -115,6 +120,8 @@ public:
 
   void add( const type* x , index_t n )
   {
+    if (category_==ArrayLayout_Rectangular)
+      luna_assert( n == rank_ );
     if (category_==ArrayLayout_Jagged)
       first_.push_back( data_.size() );
     for (index_t j=0;j<n;j++)
@@ -199,7 +206,7 @@ private:
     else luna_assert_not_reached;
   }
 
-  const ArrayLayoutCategory category_;
+  ArrayLayoutCategory category_;
   bool sorted_;
   index_t rank_;
 

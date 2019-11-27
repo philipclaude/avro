@@ -9,6 +9,12 @@ namespace luna
 {
 
 template<>
+Topology<Simplex>::Topology( Points& vertices , coord_t number , coord_t order ) :
+  TopologyBase(vertices,number,ArrayLayout_Rectangular),
+  master_( number , order )
+{}
+
+template<>
 Topology<Simplex>::Topology( Points& points , const Topology<Simplex>& linear , coord_t order ) :
  Topology(points,linear.number(),order)
 {

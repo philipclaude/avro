@@ -25,7 +25,7 @@ class Plot
 public:
   typedef std::shared_ptr<Primitive> Primitive_ptr;
 
-  Plot( const TopologyHolder& topology , Window* window );
+  Plot( const TopologyBase& topology , Window* window );
 
   void draw();
   void write();
@@ -35,13 +35,13 @@ public:
 
   void set_transform_feedback( bool x );
 
-  const TopologyHolder& topology() const { return topology_; }
+  const TopologyBase& topology() const { return topology_; }
 
   Primitive& primitive( index_t k );
   void set_visibility( const Controls& controls );
 
 private:
-  const TopologyHolder& topology_;
+  const TopologyBase& topology_;
 
   std::vector< Primitive_ptr > primitive_;
   Window* window_;

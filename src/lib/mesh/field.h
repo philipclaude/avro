@@ -1,6 +1,7 @@
 #ifndef LUNA_LIB_MESH_FIELD_H_
 #define LUNA_LIB_MESH_FIELD_H_
 
+#include "common/data.h"
 #include "common/json.h"
 #include "common/types.h"
 
@@ -91,7 +92,7 @@ private:
   const Polytope master_;
 };
 
-class TopologyHolder;
+class TopologyBase;
 
 template<typename derived_t>
 class FieldClass : public FieldHolder
@@ -114,7 +115,7 @@ class Fields
 {
 
 public:
-    Fields( const TopologyHolder& topology );
+    Fields( const TopologyBase& topology );
     Fields( const json& J );
 
     bool has( const std::string& name ) const
@@ -154,7 +155,7 @@ public:
 private:
   std::map<std::string,std::shared_ptr<FieldHolder>> fields_;
 
-  const TopologyHolder& topology_;
+  const TopologyBase& topology_;
 };
 
 } // luna

@@ -36,7 +36,7 @@ template<typename T>
 Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type),
   topology_(topology),
-  master_(topology,order)
+  master_(topology,order,topology.points().incidence())
 {
   printf("constructing field with order %u\n",master_.order());
 }

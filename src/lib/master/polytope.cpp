@@ -7,16 +7,18 @@
 namespace luna
 {
 
-Polytope::Polytope( coord_t number , coord_t order ) :
+Polytope::Polytope( coord_t number , coord_t order , const Array<int>& incidence ) :
   Master(number,order),
-  simplex_(number,order)
+  simplex_(number,order),
+  incidence_(incidence)
 {
   luna_assert_msg( order==1 , "not supported..." );
 }
 
-Polytope::Polytope( Topology<Polytope>& topology , const coord_t order ) :
+Polytope::Polytope( Topology<Polytope>& topology , const coord_t order , const Array<int>& incidence ) :
   Master(topology.number(),order),
-  simplex_(topology.number(),order)
+  simplex_(topology.number(),order),
+  incidence_(incidence)
 {}
 
 

@@ -74,6 +74,9 @@ public:
 
   void remove( const index_t k );
 
+  Array<int>& incidence() { return incidence_; }
+  const Array<int>& incidence() const { return incidence_; }
+
   // duplicates detection (useful when the mesh may have come from an OBJ file)
   // or given a vertex-facet incidence matrix F so that merging is done symbolically
   void duplicates( std::vector<index_t>& idx ,real_t tol=1e-16 ) const;
@@ -95,10 +98,11 @@ protected:
   coord_t dim_;  // dimension of ambient space the vertices live in
   coord_t udim_; // dimension of the parameter space of the geometry
 
-  DOF<real_t> u_;                                  // geometry parameter coordinates
+  DOF<real_t> u_;                           // geometry parameter coordinates
   Array<geometrics::Primitive*> primitive_; // which geometric primitive this vertex is on
-  Array<int>                    body_;
-  Array<bool>                   fixed_;
+  Array<int>                    body_;      // which geometry body this vertex is on
+  Array<bool>                   fixed_;     // whether this vertex is tagged as fixed
+  Array<int>                    incidence_; // vertex-facet/bisector incidence matrix
 
   index_t nb_ghost_; // how many ghost vertices
 };

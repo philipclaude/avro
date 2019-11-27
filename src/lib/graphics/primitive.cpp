@@ -11,7 +11,7 @@ namespace luna
 namespace graphics
 {
 
-Primitive::Primitive( const TopologyHolder& topology , Window* window ) :
+Primitive::Primitive( const TopologyBase& topology , Window* window ) :
   number_(topology.number()),
   topology_(topology),
   active_(-1),

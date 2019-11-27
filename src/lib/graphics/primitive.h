@@ -11,7 +11,7 @@ namespace luna
 {
 
 template<typename Master_t> class Topology;
-class TopologyHolder;
+class TopologyBase;
 
 namespace graphics
 {
@@ -23,7 +23,7 @@ class Window;
 class Primitive : public Tree<Primitive>
 {
 public:
-  Primitive( const TopologyHolder& topology , Window* window );
+  Primitive( const TopologyBase& topology , Window* window );
   virtual ~Primitive() {}
 
   virtual void write() = 0;
@@ -42,7 +42,7 @@ public:
 
 protected:
   coord_t number_;
-  const TopologyHolder& topology_;
+  const TopologyBase& topology_;
 
   int active_;
   ShaderProgram* shader_;
