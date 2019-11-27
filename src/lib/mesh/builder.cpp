@@ -64,7 +64,7 @@ FacetDecomposition<Shape_t>::build()
         f.dim = j;
         topology_.master().get_facet_vertices( topology_(k) , topology_.nv(k) , i , f );
 
-        printInline( f.indices );
+        print_inline( f.indices );
 
         // check if this facet exists
         std::map<Element,FacetParent>::iterator it = facets_j.find(f);

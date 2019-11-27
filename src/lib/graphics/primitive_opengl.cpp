@@ -48,14 +48,11 @@ OpenGLPrimitive::convert()
   {
     // get the triangles from the topology (TODO)
     luna_assert( number==2 );
-    nb_triangles = topology_.nb();
-    triangles_.resize( 3*nb_triangles );
-
-    // save the triangles
-    n = 0;
-    for (index_t k=0;k<nb_triangles;k++)
-    for (index_t j=0;j<3;j++)
-      triangles_[n++] = topology_(k,j);
+    std::vector<index_t> triangles;
+    triangles_.clear();
+    topology_.getTriangles(triangles);
+    nb_triangles = triangles.size()/3;
+    triangles_.assign( triangles.begin() , triangles.end() );
   }
 
   // save the vertex data that gets passed to the shaders
@@ -296,9 +293,6 @@ void
 OpenGLPrimitive::draw()
 {
   luna_assert( shader_!=NULL );
-
-  index_t nb_elem = topology_.nb();
-  index_t nv = topology_.number()+1;
 
   // indicate to the gl that we want to use the shader
   shader_->use();

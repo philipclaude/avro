@@ -1,7 +1,7 @@
 #ifndef LUNA_MESH_TOPOLOGY_H_
 #define LUNA_MESH_TOPOLOGY_H_
 
-#include "common/data.h"
+#include "common/array.h"
 #include "common/json.h"
 #include "common/tree.h"
 #include "common/types.h"
@@ -19,77 +19,14 @@ namespace luna
 
 class Points;
 class ClippingPlane;
-class TopologyHolder;
 
-template<typename derived_t>
-class FieldClass : public FieldHolder
+class TopologyHolder : public Array<index_t>
 {
 public:
-  FieldClass( const std::string& name , derived_t& base ) :
-    name_(name),
-    base_(base)
-  {}
-
-  derived_t& base() { return base_; }
-  const derived_t& base() const { return base_; }
-
-private:
-  std::string name_;
-  derived_t&  base_;
-};
-
-class Fields
-{
-
-public:
-    Fields( const TopologyHolder& topology );
-    Fields( const json& J );
-
-    bool has( const std::string& name ) const
-    {
-      if (fields_.find(name)==fields_.end())
-        return false;
-      return true;
-    }
-
-    template<typename type>
-    void make( const std::string& name , std::shared_ptr<type>& f )
-    {
-      fields_.insert( { name , std::make_shared< FieldClass<type> >(name,*f.get()) } );
-    }
-
-    template<typename type>
-    type* get( const std::string& name )
-    {
-      FieldHolder* f = fields_[name].get();
-      return static_cast<FieldClass<type>*>(f)->base();
-    }
-
-    template<typename type>
-    const type* get( const std::string& name ) const
-    {
-      const FieldHolder* f = fields_.at(name).get();
-      return static_cast<const FieldClass<type>*>(f)->base();
-    }
-
-    void remove( const std::string& name )
-    {
-      fields_.erase(name);
-    }
-
-    void fromJSON( const json& J );
-
-private:
-  std::map<std::string,std::shared_ptr<FieldHolder>> fields_;
-
-  const TopologyHolder& topology_;
-};
-
-class TopologyHolder : public Data<index_t>
-{
-public:
-  TopologyHolder( Points& vertices , const coord_t number ) :
-    Data<index_t>(true) , points_(vertices) , number_(number),
+  TopologyHolder( Points& vertices , const coord_t number , ArrayLayoutCategory category ) :
+    Array<index_t>(category,number+1),
+    points_(vertices),
+    number_(number),
     fields_(*this)
   {}
 
@@ -102,19 +39,6 @@ public:
 
   // virtual functions for leaf
   void copy( TopologyHolder& topology );
-
-  // index/cell retrieval
-  std::vector<index_t> get( const index_t k ) const
-    { return Data::get(k); }
-  index_t operator() ( const index_t k , const index_t j ) const
-    { return Data<index_t>::operator()(k,j); }
-  index_t& operator() ( const index_t k , const index_t j )
-    { return Data<index_t>::operator()(k,j); }
-
-  index_t* operator()(const index_t k)
-    { return Data<index_t>::operator()(k); }
-  const index_t* operator()(const index_t k) const
-    { return Data<index_t>::operator()(k); }
 
   virtual void getPoints( std::vector<index_t>& p ) const = 0;
   virtual void getEdges( std::vector<index_t>& e ) const = 0;
@@ -143,6 +67,41 @@ protected:
   std::string name_;
   Fields fields_;
 };
+
+#if 1
+
+template<typename type>
+class Topology : public Tree<Topology<type>>, public TopologyHolder
+{
+public:
+  typedef Topology<type> Topology_t;
+  typedef std::shared_ptr<Topology_t> Topology_ptr;
+  using Tree<Topology_t>::nb_children;
+
+  Topology( Points& vertices , coord_t number );
+  Topology( Points& vertices , coord_t number , coord_t order );
+  Topology( Points& vertices , const Topology<type>& topology , coord_t order );
+  Topology( Points& vertices , const json& J );
+
+  Topology_t& topology( index_t k ) { return Tree<Topology_t>::child(k); }
+
+  type& master() { return master_; }
+  const type& master() const { return master_; }
+
+  coord_t number() const { return master_.number(); }
+  coord_t order() const { return master_.order(); }
+
+  bool ghost( index_t k ) const { return false; }
+
+  void getPoints( std::vector<index_t>& p ) const {}
+  void getEdges( std::vector<index_t>& e ) const;
+  void getTriangles( std::vector<index_t>& t ) const;
+
+private:
+  type master_;
+};
+
+#else
 
 template<typename Shape> class Topology;
 
@@ -173,7 +132,7 @@ public:
 
   void getPoints( std::vector<index_t>& p ) const {}
   void getEdges( std::vector<index_t>& e ) const;
-  void getTriangles( std::vector<index_t>& t ) const {}
+  void getTriangles( std::vector<index_t>& t ) const;
 
   type master_;
 };
@@ -193,10 +152,14 @@ public:
 template<>
 class Topology<Polytope> : public TopologyBase<Polytope>
 {
+public:
+
 private:
   Data<int> incidence_;
 };
 
-}
+#endif
+
+} // luna
 
 #endif

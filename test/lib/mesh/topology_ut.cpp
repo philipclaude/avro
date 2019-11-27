@@ -19,8 +19,6 @@ UT_TEST_CASE( simplex_tests )
 
   Topology<Simplex> topology(vertices,number);
 
-  topology.do_something();
-
   std::shared_ptr< Topology<Simplex> > leaf = std::make_shared<Topology<Simplex>>(vertices,number);
   topology.add_child(leaf);
 

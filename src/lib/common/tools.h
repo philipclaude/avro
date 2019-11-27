@@ -245,7 +245,7 @@ printValue( const std::vector<real_t>& x )
 
 template<typename type>
 static void
-printInline( const std::vector<type>& s , const std::string& name=std::string() , const int id=-1 , const index_t nt=0 )
+print_inline( const std::vector<type>& s , const std::string& name=std::string() , const int id=-1 , const index_t nt=0 )
 {
   for (index_t k=0;k<nt;k++) printf("  ");
   if (name.size()>0)
@@ -291,9 +291,9 @@ struct SortBy
   }
 };
 
-template void printInline( const std::vector<index_t>& s , const std::string& name , const int id , const index_t nt );
-template void printInline( const std::vector<double>& s , const std::string& name , const int id , const index_t nt );
-template void printInline( const std::vector<float>& s , const std::string& name , const int id , const index_t nt );
+template void print_inline( const std::vector<index_t>& s , const std::string& name , const int id , const index_t nt );
+template void print_inline( const std::vector<double>& s , const std::string& name , const int id , const index_t nt );
+template void print_inline( const std::vector<float>& s , const std::string& name , const int id , const index_t nt );
 
 }
 

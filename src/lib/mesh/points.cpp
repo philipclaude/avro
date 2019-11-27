@@ -18,29 +18,38 @@
 namespace luna
 {
 
+Points::Points() :
+	DOF<real_t>(0),
+	dim_(0),
+	udim_(0),
+	u_(0),
+	primitive_(ArrayLayout_Simple),
+	body_(ArrayLayout_Simple),
+	fixed_(ArrayLayout_Simple),
+	nb_ghost_(0)
+{}
+
 Points::Points( const coord_t _dim ) :
+	DOF<real_t>(_dim),
 	dim_(_dim),
 	udim_(dim_-1), // default to assuming parameter space is dim-1
-	ghost_(0)
-{
-	x_.clear();
-	u_.clear();
-	body_.clear();
-	primitive_.clear();
-	fixed_.clear();
-}
+	u_(udim_),
+	primitive_(ArrayLayout_Simple),
+	body_(ArrayLayout_Simple),
+	fixed_(ArrayLayout_Simple),
+	nb_ghost_(0)
+{}
 
 Points::Points( const coord_t _dim , const coord_t _udim ) :
+	DOF<real_t>(_dim),
 	dim_(_dim),
 	udim_(_udim),
-	ghost_(0)
-{
-	x_.clear();
-	u_.clear();
-	body_.clear();
-	primitive_.clear();
-	fixed_.clear();
-}
+	u_(udim_),
+	primitive_(ArrayLayout_Simple),
+	body_(ArrayLayout_Simple),
+	fixed_(ArrayLayout_Simple),
+	nb_ghost_(0)
+{}
 
 Points::~Points()
 {
@@ -57,24 +66,21 @@ Points::create( const std::vector<real_t>& x )
 void
 Points::create( const real_t* x )
 {
-  for (index_t i=0;i<dim_;i++)
-    x_.push_back( x[i] );
-  for (index_t i=0;i<udim_;i++)
-    u_.push_back(INFTY);
-  body_.push_back(0);
-  primitive_.push_back(NULL);
-  const bool f = false;
-  fixed_.push_back(f);
+	DOF<real_t>::add(x,dim_);
+
+	std::vector<real_t> infty(udim_,INFTY);
+	u_.add( infty.data() , udim_ );
+
+	body_.add(0);
+	primitive_.add(NULL);
+	fixed_.add(false);
 }
 
 void
-Points::copy( Points& v , const bool erase , const bool ghosts) const
+Points::copy( Points& v , const bool ghosts) const
 {
-  if (erase)
-    v.clear();
-
-  v.setDimension( dim_ );
-	v.setParameterDimension( udim_ );
+  v.set_dim( dim_ );
+	v.set_parameter_dim( udim_ );
 
   // copy the coordinates
   for (index_t k=nb_ghost();k<nb();k++)
@@ -84,84 +90,76 @@ Points::copy( Points& v , const bool erase , const bool ghosts) const
   if (ghosts)
   {
     for (index_t k=0;k<nb_ghost();k++)
-      v.createGhost();
+      v.create_ghost();
   }
 
   // copy the meta data
 	// TODO account for ghost offset...
   for (index_t k=0;k<nb();k++)
   {
-    v.body(k)   = body_[k];
+    v.body(k)   = body_(k,0);
     //v.setPrimitive( k , primitive_[k] );
-    v.setFixed( k , fixed_[k] );
+    v.set_fixed( k , fixed_(k,0) );
     //v.setParam( k , u(k) );
   }
 }
 
 void
-Points::createGhost()
+Points::create_ghost()
 {
 	// add some arbitrary ghost vertices
 	std::vector<real_t> x0( dim_ , INFTY );
-	x_.insert( x_.begin()+ghost_ , x0.begin() , x0.end() );
+
+	DOF<real_t>::insert( nb_ghost_ , x0.data() , x0.size() );
 
 	std::vector<real_t> u0( udim_ , INFTY );
-	u_.insert( u_.begin()+ghost_ , u0.begin() , u0.end() );
 
-	body_.insert( body_.begin() +ghost_ , ghost_ );
-	primitive_.insert( primitive_.begin() +ghost_ , NULL );
-	fixed_.insert( fixed_.begin() + ghost_ , false );
+	u_.insert( nb_ghost_ , u0.data() , u0.size() );
+	body_.insert( nb_ghost_ , nb_ghost_ );
+	primitive_.insert( nb_ghost_ , NULL );
+	fixed_.insert( nb_ghost_ , false );
 
 	// increment the ghost counter
-	ghost_++;
+	nb_ghost_++;
 }
 
 int&
 Points::body( const index_t k )
 {
 	luna_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
-	return body_[k];
+	return body_(k,0);
 }
 
 #if 1
 
 void
-Points::setPrimitive( const index_t k , geometrics::Primitive* e )
+Points::set_primitive( const index_t k , geometrics::Primitive* e )
 {
 	luna_assert( k<nb() );
-	primitive_[k] = e;
+	primitive_(k,0) = e;
 }
 
 void
-Points::setParam( const index_t k , const std::vector<real_t>& u )
+Points::set_param( const index_t k , const std::vector<real_t>& u )
 {
 	luna_assert(u.size()==udim_);
-	setParam( k , u.data() );
+	set_param( k , u.data() );
 }
 
 void
-Points::setParam( const index_t k , const real_t* u )
+Points::set_param( const index_t k , const real_t* u )
 {
   luna_assert( k<nb() );
-  for (index_t i=0;i<udim_;i++)
-    u_[udim_*k+i] = u[i];
-}
-
-bool
-Points::boundary( const index_t k ) const
-{
-	luna_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
-	return body_[k]>0;
+	u_.set( k , u );
 }
 
 void
-Points::print( std::string pre , bool info ) const
+Points::print( bool info ) const
 {
 	printf("Points (%p):\n",(void*)this);
-	if (pre=="\0") pre = "v";
 	for (index_t k=0;k<nb();k++)
 	{
-		printf("%s[%4d]: (",pre.c_str(),int(k));
+		printf("p[%4d]: (",int(k));
 		for (index_t d=0;d<dim_;d++)
 			printf(" %12.4e ", operator[](k)[d] );
 		printf(")");
@@ -170,11 +168,11 @@ Points::print( std::string pre , bool info ) const
       std::string geo;
   		if (primitive_[k]!=NULL)
   		{
-  			geo = "-"+primitive_[k]->name();
+  			geo = "-"+primitive_(k,0)->name();
   		}
   		else geo = "";
-  		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<ghost_)? "GHST":"REAL",
-  						body_[k],(void*)primitive_[k],geo.c_str());
+  		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
+  						body_(k,0),(void*)primitive_(k,0),geo.c_str());
 			for (index_t d=0;d<udim_;d++)
 				printf(" %12.4e ",u(k)[d]);
 			printf(")");
@@ -184,7 +182,7 @@ Points::print( std::string pre , bool info ) const
 }
 
 void
-Points::print( const index_t k , bool info ) const
+Points::print( index_t k , bool info ) const
 {
 	printf("vertex[%4d]: (",int(k));
 	for (index_t d=0;d<dim_;d++)
@@ -193,13 +191,13 @@ Points::print( const index_t k , bool info ) const
 	if (info)
 	{
 		std::string geo;
-		if (primitive_[k]!=NULL)
+		if (primitive_(k,0)!=NULL)
 		{
-			geo = "-"+primitive_[k]->name();
+			geo = "-"+primitive_(k,0)->name();
 		}
 		else geo = "";
-		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<ghost_)? "GHST":"REAL",
-						body_[k],(void*)primitive_[k],geo.c_str());
+		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
+						body_(k,0),(void*)primitive_(k,0),geo.c_str());
 		for (index_t d=0;d<udim_;d++)
 			printf("%12.4e ",u(k)[d]);
 		printf(")");
@@ -211,13 +209,16 @@ void
 Points::remove( const index_t k )
 {
 	luna_assert_msg( k < nb() ,
-		"k = %lu , nb = %lu , |x| = %lu" , k , nb() , x_.size() );
-	x_.erase( x_.begin()+dim_*k , x_.begin()+dim_*(k+1) );
-	u_.erase( u_.begin()+udim_*k , u_.begin()+udim_*(k+1) );
-  if (k<ghost_) ghost_--;
-	body_.erase( body_.begin() +k );
-	primitive_.erase( primitive_.begin() + k );
-	fixed_.erase( fixed_.begin() + k );
+		"k = %lu , nb = %lu" , k , nb() );
+
+	DOF<real_t>::remove(k);
+
+	u_.remove(k);
+	body_.remove(k);
+	primitive_.remove(k);
+	fixed_.remove(k);
+
+	if (k<nb_ghost_) nb_ghost_--;
 }
 
 void
@@ -244,7 +245,7 @@ Points::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 }
 
 void
-Points::duplicates( std::vector<index_t>& idx , const Data<int>& F ) const
+Points::duplicates( std::vector<index_t>& idx , const Array<int>& F ) const
 {
 	luna_assert( F.nb() == nb() );
 
@@ -505,7 +506,7 @@ Points::projectToGeometry( Body& body )
 }
 
 void
-Points::computePartition( Data<index_t>& data ,
+Points::computePartition( ArrayBase<index_t>& data ,
                       std::vector<index_t>& cell_partition , index_t nparts )
 {
   // data is technically a topology, construct the adjacency graph
@@ -580,32 +581,32 @@ Points::computePartition( Data<index_t>& data ,
 */
 
 void
-Points::toJSON( json& J ) const
+Points::to_json( json& J ) const
 {
   J["dimension"] = dim_;
-  J["nb_ghost"] = ghost_;
-  J["coordinates"] = x_;
-  J["parameters"] = u_;
+  J["nb_ghost"] = nb_ghost_;
+  J["coordinates"] = DOF<real_t>::data();
+  J["parameters"] = u_.data();
 
   std::vector<int> geometry(nb(),-1);
   for (index_t k=0;k<nb();k++)
   {
-    if (primitive_[k]==NULL) continue;
-    geometry[k] = primitive_[k]->identifier();
+    if (primitive_(k,0)==NULL) continue;
+    geometry[k] = primitive_(k,0)->identifier();
   }
   J["geometry"] = geometry;
 }
 
 /*
 void
-Points::fromJSON( const json& J , const Model* model )
+Points::from_json( const json& J , const Model* model )
 {
   dim_ = J["dimension"];
   std::vector<real_t> X = J.at("coordinates");
   x_ = X;
   std::vector<real_t> U = J.at("parameters");
   u_ = U;
-  ghost_ = J["nb_ghost"];
+  nb_ghost_ = J["nb_ghost"];
 
   primitive_.resize( nb() , NULL );
   body_.resize( nb() );
@@ -637,11 +638,10 @@ Points::fromJSON( const json& J , const Model* model )
 void
 Points::clear()
 {
-  x_.clear();
   u_.clear();
   body_.clear();
   primitive_.clear();
-  ghost_ = 0;
+  nb_ghost_ = 0;
 }
 
 } // luna

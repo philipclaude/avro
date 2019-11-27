@@ -44,18 +44,6 @@ Data<type>::allocate( const index_t n , const std::vector<index_t> sizes )
 }
 
 template<typename type>
-index_t
-Data<type>::countOccurrencesOf( const type n )
-{
-  index_t count = 0;
-  for (index_t k=0;k<elements_.size();k++)
-  {
-    if (elements_[k]==n) count++;
-  }
-  return count;
-}
-
-template<typename type>
 type*
 Data<type>::operator() ( const index_t k )
 {
@@ -73,8 +61,12 @@ template<typename type>
 type
 Data<type>::operator() ( const index_t k , const index_t j ) const
 {
-  luna_assert_msg( k < first_.size() && k < last_.size() , "k = %d, |first| = %d, |last| = %d\n",int(k),int(first_[k]),int(last_[k]));
-  luna_assert_msg( first_[k] +j < elements_.size() , "first_[%d] = %d, j = %d, |elements| = %d\n",int(k),int(first_[k]),int(j),int(elements_.size()));
+  luna_assert_msg( k < first_.size() && k < last_.size() ,
+                  "k = %d, |first| = %d, |last| = %d\n",
+                  int(k),int(first_[k]),int(last_[k]) );
+  luna_assert_msg( first_[k] +j < elements_.size() ,
+                   "first_[%d] = %d, j = %d, |elements| = %d\n",
+                  int(k),int(first_[k]),int(j),int(elements_.size()) );
   return elements_[ first_[k] +j ];
 }
 
@@ -82,8 +74,12 @@ template<typename type>
 type&
 Data<type>::operator() ( const index_t k , const index_t j )
 {
-  luna_assert_msg( k < first_.size() && k < last_.size() , "k = %d, |first| = %d, |last| = %d\n",int(k),int(first_[k]),int(last_[k]));
-  luna_assert_msg( first_[k] +j < elements_.size() , "first_[%d] = %d, j = %d, |elements| = %d\n",int(k),int(first_[k]),int(j),int(elements_.size()));
+  luna_assert_msg( k < first_.size() && k < last_.size() ,
+                  "k = %d, |first| = %d, |last| = %d\n",
+                  int(k),int(first_[k]),int(last_[k]) );
+  luna_assert_msg( first_[k] +j < elements_.size() ,
+                  "first_[%d] = %d, j = %d, |elements| = %d\n",
+                  int(k),int(first_[k]),int(j),int(elements_.size()) );
   return elements_[ first_[k] +j ];
 }
 
@@ -103,7 +99,8 @@ Data<type>::has( const index_t k , const type value ) const
 {
   for (index_t j=first_[k];j<last_[k];j++)
   {
-    if (elements_[j]==value) return true;
+    if (elements_[j]==value)
+      return true;
   }
   return false;
 }
@@ -115,24 +112,6 @@ Data<type>::has( const type value ) const
   for (index_t k=0;k<elements_.size();k++)
     if (elements_[k]==value) return true;
   return false;
-}
-
-template<typename type>
-index_t
-Data<type>::elementsWith( const type n , std::vector<index_t>& elems ) const
-{
-  elems.clear();
-  for (index_t k=0;k<nb();k++)
-  {
-    for (index_t j=0;j<nv(k);j++)
-      if (operator()(k,j)==n)
-      {
-        //printInline( get(k) , "elem(nv = "+stringify(nv(k))+")" , k );
-        elems.push_back(k);
-        break;
-      }
-  }
-  return elems.size();
 }
 
 template<typename type>
@@ -159,26 +138,9 @@ Data<type>::clear()
   offset_ = false;
 }
 
-template<typename type>
-void
-Data<type>::printData( const index_t nt , const std::string& name , const std::string& prefix ) const
-{
-  for (index_t k=0;k<nt;k++) printf("  ");
-  if (!name.empty()) printf("%s: (type=%s)\n",name.c_str(),typeid(type).name());
-  printf("sorted = %s, offset = %s\n",(sorted_)?"true":"false",(offset_)?"true":"false");
-  for (index_t k=0;k<nb();k++)
-  {
-    std::vector<type> d(nv(k));
-    for (index_t j=0;j<nv(k);j++) d[j] = operator()(k,j);
-    if (prefix.empty()) printInline( d , "data" , k );
-    else printInline( d, prefix , k );
-  }
-}
-
-#if 1
 template<>
 void
-Data<index_t>::allWithSubset( const std::vector<index_t>& sub , std::vector<index_t>& elems ) const
+Data<index_t>::allwith( const std::vector<index_t>& sub , std::vector<index_t>& elems ) const
 {
   elems.clear();
   for (index_t k=0;k<nb();k++)
@@ -205,113 +167,6 @@ Data<index_t>::allWithSubset( const std::vector<index_t>& sub , std::vector<inde
     // if we made it here with ok being true, then the element has the facet
     if (ok) elems.push_back(k);
   }
-
-}
-
-#else
-template<>
-void
-Data<index_t>::allWithSubset( const std::vector<index_t>& sub , std::vector<index_t>& elems ) const
-{
-  for (index_t k=0;k<nb();k++)
-  {
-    std::vector<index_t> T;
-    std::set_intersection( sub.begin() , sub.end() , &first_[k] ,
-                           &last_[k] ,
-                           std::back_inserter(T) );
-
-    if (T.size()==sub.size())
-      elems.push_back(k);
-  }
-}
-
-#endif
-
-template<>
-void
-Data<index_t>::dataOfElems( const std::vector<index_t>& elems , std::vector<index_t>& data )
-{
-  data.clear();
-  for (index_t k=0;k<elems.size();k++)
-  {
-    for (index_t j=0;j<nv(elems[k]);j++)
-    {
-      data.push_back( operator()(elems[k])[j] );
-    }
-  }
-  uniquify(data);
-}
-
-template<>
-void
-Data<index_t>::closure( const std::vector<index_t>& a0 , std::vector<index_t>& a ,
-                          std::vector<index_t>& N , Data<index_t>& da )
-{
-  // loop through the elements in a0, accumulating a list of nodes
-  N.clear();
-  da.clear();
-  a.clear();
-
-  // construct the common list of indices
-  for (index_t k=0;k<a0.size();k++)
-  {
-    for (index_t j=0;j<nv(a0[k]);j++)
-      N.push_back( operator()( a0[k] , j ) );
-  }
-  uniquify(N);
-
-  if (!std::is_sorted(N.begin(),N.end()))
-    std::sort(N.begin(),N.end());
-
-  //printInline( N , "N" );
-
-  // now find any element/facet which is completely contained in N
-  for (index_t k=0;k<nb();k++)
-  {
-    // perform the set intersection: T \cap N
-    std::vector<index_t> common;
-    std::set_intersection( N.begin() , N.end() , operator()(k) , operator()(k)+nv(k) , std::back_inserter(common) );
-
-    //printInline( common , "common ");
-
-    // check if this is on the boundary
-    if (common.size()==nv(k)-1)
-      da.add( common.data() , common.size() );
-
-    // check if this is an element
-    if (common.size()==nv(k))
-      a.push_back(k);
-
-  }
-
-  //printInline( a , "a" );
-  //da.printData();
-}
-
-template<typename type>
-void
-Data<type>::replace( const index_t k0 , type* v1 , const index_t nv1 )
-{
-  // get the number of vertices currently at k0
-  index_t nv0 = nv(k0);
-
-  if (nv0<nv1)
-  {
-    // we will need to insert data
-    luna_implement;
-  }
-  else if (nv0>nv1)
-  {
-    // we will insert the data and then chop some off
-    luna_implement;
-  }
-  else
-  {
-    // just replace the data!
-    for (index_t j=0;j<nv1;j++)
-      elements_[ first_[k0]+j ] = v1[j];
-  }
-
 }
 
 template<typename type>
@@ -331,55 +186,6 @@ Data<type>::remove( const index_t k0 )
   elements_.erase( elements_.begin() +first_[k0] , elements_.begin()+last_[k0] );
   first_.erase( first_.begin() +k0 );
   last_.erase( last_.begin() +k0 );
-}
-
-template<typename type>
-void
-Data<type>::remove( const index_t k0 , const index_t j )
-{
-  // decrement the pointers for following cells
-  for (index_t k=k0+1;k<nb();k++)
-  {
-    first_[k]--;
-    last_[k]--;
-  }
-
-  // last gets decremented for this cell
-  last_[k0]--;
-  elements_.erase( elements_.begin() +first_[k0] +j );
-
-  // check if this cell disappears entirely
-  if (last_[k0]==first_[k0])
-  {
-    first_.erase( first_.begin() +k0 );
-    last_.erase( last_.begin() +k0 );
-  }
-}
-
-template<typename type>
-void
-Data<type>::operate( const std::vector<index_t>& subtractions , Data<type>& additions )
-{
-  if (subtractions.size()>=additions.nb())
-  {
-    // first replace the subtractions with additions
-    for (index_t k=0;k<additions.nb();k++)
-      replace( subtractions[k] , additions(k) , additions.nv(k) );
-
-    // remove the rest
-    for (index_t k=additions.nb();k<subtractions.size();k++)
-      remove( subtractions[k] );
-  }
-  else
-  {
-    // first replace the subtractions with additions
-    for (index_t k=0;k<subtractions.size();k++)
-      replace( subtractions[k] , additions(k) , additions.nv(k) );
-
-    // add the remaining additions to the end
-    for (index_t k=subtractions.size();k<additions.nb();k++)
-      add( additions(k) , additions.nv(k) );
-  }
 }
 
 template<typename type>
@@ -443,7 +249,7 @@ Data<type>::max() const
 
 template<>
 void
-Data<index_t>::mapData( std::map<index_t,index_t>& dmap )
+Data<index_t>::map( std::map<index_t,index_t>& dmap )
 {
   for (index_t k=0;k<elements_.size();k++)
   {
@@ -465,6 +271,22 @@ void
 Data<type>::setall( const type& value )
 {
   std::fill( elements_.begin() , elements_.end() , value );
+}
+
+template<typename type>
+void
+Data<type>::print( const index_t nt , const std::string& name , const std::string& prefix ) const
+{
+  for (index_t k=0;k<nt;k++) printf("  ");
+  if (!name.empty()) printf("%s: (type=%s)\n",name.c_str(),typeid(type).name());
+  printf("sorted = %s, offset = %s\n",(sorted_)?"true":"false",(offset_)?"true":"false");
+  for (index_t k=0;k<nb();k++)
+  {
+    std::vector<type> d(nv(k));
+    for (index_t j=0;j<nv(k);j++) d[j] = operator()(k,j);
+    if (prefix.empty()) print_inline( d , "data" , k );
+    else print_inline( d, prefix , k );
+  }
 }
 
 template class Data<index_t>;

@@ -18,7 +18,7 @@ objFile::objFile( const std::string& filename ) :
   points_(3),
   filename_(filename)
 {
-  this->setSorted(false);
+  this->set_sorted(false);
   read();
 }
 

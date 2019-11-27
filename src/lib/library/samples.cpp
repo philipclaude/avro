@@ -11,7 +11,7 @@ TwoTriangles::TwoTriangles() :
   points_(3),
   edges_(points_,1)
 {
-  this->setSorted(false);
+  this->set_sorted(false);
 
   real_t x0[3] = {0,0,0};
   real_t x1[3] = {1,0,0};

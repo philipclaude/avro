@@ -15,15 +15,17 @@ class Polytope : public Master<Polytope>
 {
 
 public:
-  Polytope( coord_t number , coord_t order , Data<int>& incidence );
+  Polytope( coord_t number , coord_t order );
   Polytope( Topology<Polytope>& topology , const coord_t order );
 
-  Data<int>& incidence() { return incidence_; }
-  const Data<int>& incidence() const { return incidence_; }
+  Data<int>& incidence() { return *incidence_.get(); }
+  const Data<int>& incidence() const { return *incidence_.get(); }
+
+  void get_edges( const index_t* v0 , index_t nv , std::vector<index_t>& ek ) const;
 
 private:
   Simplex simplex_;
-  Data<int>& incidence_;
+  std::shared_ptr<Data<int>> incidence_;
 };
 
 } // luna

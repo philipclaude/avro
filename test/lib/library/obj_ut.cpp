@@ -12,8 +12,6 @@ UT_TEST_CASE( test1 )
 
   objFile topology( "/Users/pcaplan/Desktop/suzanne.obj" );
 
-  topology.printData();
-
 }
 UT_TEST_CASE_END( test1 )
 

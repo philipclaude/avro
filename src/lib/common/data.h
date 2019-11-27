@@ -1,5 +1,5 @@
-#ifndef LUNA_COMMON_DATA_H_
-#define LUNA_COMMON_DATA_H_
+#ifndef LUNA_COMMON_ARRAYS_H_
+#define LUNA_COMMON_ARRAYS_H_
 
 #include "common/types.h"
 
@@ -16,7 +16,7 @@ class Data
 {
 
 public:
-  Data() : sorted_(false), preallocated_(false) {}
+  Data() : sorted_(false) {}
   Data( const bool _sorted ) : sorted_(_sorted) {}
 
   // data & information functions
@@ -25,8 +25,8 @@ public:
   std::vector<index_t> last() const { return last_; }
   bool sorted() const { return sorted_; }
   bool offset() const { return offset_; }
-  void setOffset( const bool x ) { offset_ = x; }
-  void setSorted( const bool x ) { sorted_ = x; }
+  void set_offset( const bool x ) { offset_ = x; }
+  void set_sorted( const bool x ) { sorted_ = x; }
 
   void sort();
 
@@ -40,20 +40,13 @@ public:
   void add( const type* d0 , const index_t nd ) { __add__(d0,nd); }
   void setall( const type& value );
 
-  void mapData( std::map<type,type>& dmap );
+  void map( std::map<type,type>& dmap );
 
   // set functions
   bool has( const index_t k , const type value ) const;
   bool has( const type value ) const;
-  index_t countOccurrencesOf( const type n );
-  index_t elementsWith( const type n , std::vector<index_t>& elems ) const;
-  void allWithSubset( const std::vector<type>& sub , std::vector<index_t>& elems ) const;
-  void dataOfElems( const std::vector<index_t>& elems , std::vector<index_t>& data );
-  void closure( const std::vector<index_t>& a0 , std::vector<index_t>& a , std::vector<index_t>& N , Data<index_t>& da );
+  void allwith( const std::vector<type>& sub , std::vector<index_t>& elems ) const;
   void remove( const index_t k0 );
-  void remove( const index_t k0 , const index_t j );
-  void replace( const index_t k0 , type* v1 , const index_t nv1 );
-  void operate( const std::vector<index_t>& subtractions , Data<type>& additions );
   bool contains( type* d , index_t nd ) const;
   index_t cardinality( type*d , index_t nd ) const;
 
@@ -71,13 +64,9 @@ public:
 
   // utilities
   void clear();
-  void printData( const index_t nt=0 , const std::string& name=std::string() , const std::string& prefix=std::string() ) const;
+  void print( const index_t nt=0 , const std::string& name=std::string() , const std::string& prefix=std::string() ) const;
 
   void reserve( index_t nelem , index_t ndof_per_elem );
-
-  bool vacant( const index_t k ) const { return vacant_[k]; }
-  void preallocate( index_t nelem , index_t nv_per_elem );
-  int findvacant();
 
 private:
 
@@ -103,11 +92,8 @@ protected:
   std::vector<type> elements_;
   std::vector<index_t> first_;
   std::vector<index_t> last_;
-  std::vector<bool> vacant_;
   bool offset_;
   bool sorted_;
-  bool preallocated_;
-
 };
 
 } // luna

@@ -8,24 +8,26 @@
 namespace luna
 {
 
-template<typename type>
-TopologyBase<type>::TopologyBase( Points& vertices , coord_t number , coord_t order ) :
-  TopologyHolder(vertices,number),
+template<>
+Topology<Simplex>::Topology( Points& vertices , coord_t number , coord_t order ) :
+  TopologyHolder(vertices,number,ArrayLayout_Rectangular),
   master_( number , order )
-{
-  printf("nb topologies = %lu\n",nb_children());
-}
+{}
+
+template<>
+Topology<Polytope>::Topology( Points& vertices , coord_t number , coord_t order ) :
+  TopologyHolder(vertices,number,ArrayLayout_Jagged),
+  master_( number , order )
+{}
 
 template<typename type>
-TopologyBase<type>::TopologyBase( Points& vertices , coord_t number ) :
-  TopologyBase(vertices,number,1)
-{
-  printf("nb topologies = %lu\n",nb_children());
-}
+Topology<type>::Topology( Points& vertices , coord_t number ) :
+  Topology(vertices,number,1)
+{}
 
 template<typename type>
 void
-TopologyBase<type>::getEdges( std::vector<index_t>& edges ) const
+Topology<type>::getEdges( std::vector<index_t>& edges ) const
 {
   std::vector<index_t> ek;
 
@@ -58,6 +60,21 @@ TopologyBase<type>::getEdges( std::vector<index_t>& edges ) const
         edges.push_back(p1);
       }
     }
+  }
+}
+
+template<typename type>
+void
+Topology<type>::getTriangles( std::vector<index_t>& triangles ) const
+{
+  luna_assert( number_==2 );
+  triangles.clear();
+  for (index_t k=0;k<nb();k++)
+  {
+    if (ghost(k)) continue;
+
+    for (index_t j=0;j<this->nv(k);j++)
+      triangles.push_back( this->operator()(k,j) );
   }
 }
 
