@@ -1,7 +1,7 @@
 #ifndef LUNA_LIB_MESH_FIELD_H_
 #define LUNA_LIB_MESH_FIELD_H_
 
-#include "common/data.h"
+#include "common/array.h"
 #include "common/json.h"
 #include "common/types.h"
 
@@ -16,7 +16,7 @@
 namespace luna
 {
 
-template<typename T> class Data;
+template<typename T> class Array;
 template<typename type> class Topology;
 
 class Parameter;
@@ -34,7 +34,7 @@ enum FieldType
 };
 
 template<typename T>
-class FieldBase : public FieldHolder, public Data<index_t>
+class FieldBase : public FieldHolder, public Array<index_t>
 {
 public:
   FieldBase( FieldType type );
@@ -44,15 +44,15 @@ public:
   T& eval( const Coordinate& x ) const;
 
   T& operator()( index_t i , index_t j )
-    { return data_[Data<index_t>::operator()(i,j)]; }
+    { return data_[Array<index_t>::operator()(i,j)]; }
 
   const T& operator()( index_t i , index_t j ) const
-    { return data_[Data<index_t>::operator()(i,j)]; }
+    { return data_[Array<index_t>::operator()(i,j)]; }
 
   FieldType& type() { return type_; }
   const FieldType& type() const { return type_; }
 
-  index_t nb_elem() const { return Data<index_t>::nb(); }
+  index_t nb_elem() const { return Array<index_t>::nb(); }
   index_t nb_data() const { return data_.size(); }
 
   const std::vector<T>& data() const { return data_; }

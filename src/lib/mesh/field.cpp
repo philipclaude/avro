@@ -1,5 +1,3 @@
-#include "common/data.h"
-
 #include "geometrics/egads.h"
 #include "geometrics/primitive.h"
 #include "geometrics/plc.h"
@@ -59,7 +57,7 @@ Field<Simplex,T>::build()
     {
       const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
-      Data<index_t>::add( v , nv );
+      Array<index_t>::add( v , nv );
     }
 
     for (index_t k=0;k<topology_.points().nb();k++)
@@ -76,7 +74,7 @@ Field<Simplex,T>::build()
     {
       const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
-      Data<index_t>::add( v , nv );
+      Array<index_t>::add( v , nv );
       for (index_t j=0;j<nb_poly;j++)
         this->data_.push_back( T(0) );
     }
@@ -97,7 +95,7 @@ Field<Polytope,T>::build()
     {
       const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
-      Data<index_t>::add( v , nv );
+      Array<index_t>::add( v , nv );
     }
 
     for (index_t k=0;k<topology_.points().nb();k++)

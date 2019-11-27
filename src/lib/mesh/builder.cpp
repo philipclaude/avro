@@ -87,8 +87,9 @@ FacetDecomposition<Shape_t>::build()
   }
 }
 
-template<typename type>
-Builder<type>::Builder( const Topology<type>& topology , coord_t order , BasisFunctionCategory category ) :
+template<>
+Builder<Simplex>::Builder( const Topology<Simplex>& topology , coord_t order , BasisFunctionCategory category ) :
+  Array<index_t>(ArrayLayout_Rectangular,topology.number()+1),
   topology_(topology),
   master_(topology.number(),order)
 {
@@ -106,7 +107,7 @@ Builder<type>::transfer( Topology<type>& f ) const
   luna_assert( f.nb()==0 );
 
   // create all the vertices for the outgoing topology
-  const std::vector<index_t>& elems = this->elements();
+  const std::vector<index_t>& elems = this->data();
   index_t nb_vertices = *std::max_element( elems.begin() , elems.end() ) +1;
   std::vector<real_t> x0( topology_.points().dim() , 0. );
   for (index_t k=0;k<nb_vertices;k++)

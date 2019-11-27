@@ -10,7 +10,7 @@ namespace luna
 {
 
 template<typename type>
-class Builder : public Data<index_t>
+class Builder : public Array<index_t>
 {
 
 public:

@@ -4,6 +4,8 @@
 #include "library/field.h"
 #include "library/obj.h"
 
+#include "mesh/dof.h"
+
 #include <fstream>
 #include <cstring>
 
@@ -44,8 +46,8 @@ objFile::read()
   index_t t[3],ut[3];
   char lineHeader[128];
 
-  Data<real_t> normals,uv;
-  Data<real_t> texture;
+  DOF<real_t> normals(3),uv(2);
+  DOF<real_t> texture(2);
   std::vector< std::vector<index_t> > nt_vals,ut_vals;
 
   typedef Simplex Shape_t;
