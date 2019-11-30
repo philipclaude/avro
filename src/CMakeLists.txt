@@ -4,8 +4,9 @@ set(CMAKE_CXX_FLAGS ${CXX_FLAGS0})
 
 # add all the source files
 add_source_directories(SOURCES "Source Files" .)
+add_source_directories(SOURCES "Source Files\\adaptation" lib/adaptation)
 add_source_directories(SOURCES "Source Files\\common" lib/common)
-add_source_directories(SOURCES "Source Files\\geometrics" lib/geometrics)
+add_source_directories(SOURCES "Source Files\\geometrics" lib/geometry)
 add_source_directories(SOURCES "Source Files\\graphics" lib/graphics)
 add_source_directories(SOURCES "Source Files\\library" lib/library)
 add_source_directories(SOURCES "Source Files\\mesh" lib/master)

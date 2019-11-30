@@ -2,6 +2,7 @@
 #define LUNA_MESH_points_H_
 
 #include "common/array.h"
+#include "common/table.h"
 #include "common/error.h"
 #include "common/json.h"
 #include "common/types.h"
@@ -14,13 +15,9 @@
 namespace luna
 {
 
+class Entity;
 class Body;
 class Model;
-
-namespace geometrics
-{
-  class Primitive;
-}
 
 class Points : public DOF<real_t>
 {
@@ -58,13 +55,13 @@ public:
 	void clear();
 
   int& body( const index_t k );
-  void set_primitive( const index_t k , geometrics::Primitive* e );
+  void set_entity( const index_t k , Entity* e );
   void set_param( const index_t k , const std::vector<real_t>& u );
   void set_param( const index_t k , const real_t* u );
   void set_fixed( const index_t k , bool f ) { fixed_.set(k,f); }
 
-  geometrics::Primitive* primitive( const index_t k ) const { return primitive_(k,0); }
-  bool fixed( const index_t k ) const { return fixed_(k,0); }
+  Entity* entity( const index_t k ) const { return primitive_[k]; }
+  bool fixed( const index_t k ) const { return fixed_[k]; }
 
   // boundary vertex query function
   bool boundary( const index_t k ) const;
@@ -74,13 +71,13 @@ public:
 
   void remove( const index_t k );
 
-  Array<int>& incidence() { return incidence_; }
-  const Array<int>& incidence() const { return incidence_; }
+  Table<int>& incidence() { return incidence_; }
+  const Table<int>& incidence() const { return incidence_; }
 
   // duplicates detection (useful when the mesh may have come from an OBJ file)
   // or given a vertex-facet incidence matrix F so that merging is done symbolically
   void duplicates( std::vector<index_t>& idx ,real_t tol=1e-16 ) const;
-  void duplicates( std::vector<index_t>& idx , const Array<int>& F ) const;
+  void duplicates( std::vector<index_t>& idx , const Table<int>& F ) const;
 
   void dump( const std::string& filename ) const;
 
@@ -98,11 +95,11 @@ protected:
   coord_t dim_;  // dimension of ambient space the vertices live in
   coord_t udim_; // dimension of the parameter space of the geometry
 
-  DOF<real_t> u_;                           // geometry parameter coordinates
-  Array<geometrics::Primitive*> primitive_; // which geometric primitive this vertex is on
-  Array<int>                    body_;      // which geometry body this vertex is on
-  Array<bool>                   fixed_;     // whether this vertex is tagged as fixed
-  Array<int>                    incidence_; // vertex-facet/bisector incidence matrix
+  DOF<real_t>    u_;                           // geometry parameter coordinates
+  Array<Entity*> primitive_; // which geometric primitive this vertex is on
+  Array<int>     body_;      // which geometry body this vertex is on
+  Array<bool>    fixed_;     // whether this vertex is tagged as fixed
+  Table<int>     incidence_; // vertex-facet/bisector incidence matrix
 
   index_t nb_ghost_; // how many ghost vertices
 };

@@ -9,8 +9,10 @@ namespace luna
 
 template<>
 Topology<Polytope>::Topology( Points& points , coord_t number , coord_t order ) :
-  TopologyBase(points,number,ArrayLayout_Jagged),
-  master_( number , order , points.incidence() )
+  TopologyBase(points,number,TableLayout_Jagged),
+  master_( number , order , points.incidence() ),
+  neighbours_(*this),
+  inverse_(*this)
 {}
 
 template class Topology<Polytope>;

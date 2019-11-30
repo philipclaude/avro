@@ -1,7 +1,7 @@
 #include "unit_tester.hpp"
 
-#include "geometrics/egads.h"
-#include "geometrics/primitive.h"
+#include "geometry/egads.h"
+#include "geometry/entity.h"
 
 #include "numerics/coordinate.h"
 
@@ -11,9 +11,9 @@ UT_TEST_SUITE(PrimitiveSuite)
 
 UT_TEST_CASE(test1)
 {
-  geometrics::EGADS::Context context;
+  EGADS::Context context;
   ego obj;
-  geometrics::EGADS::Object prim(context,&obj);
+  EGADS::Object prim(context,&obj);
 
   numerics::Coordinate x(3),u(2);
   prim.inverse(x,u);

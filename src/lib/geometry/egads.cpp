@@ -1,4 +1,4 @@
-#include "geometrics/egads.h"
+#include "geometry/egads.h"
 
 #include "numerics/coordinate.h"
 
@@ -6,8 +6,7 @@
 
 namespace luna
 {
-namespace geometrics
-{
+
 namespace EGADS
 {
 
@@ -34,7 +33,7 @@ Context::get()
 }
 
 Object::Object( const Context& context , ego* obj ) :
-  Primitive(0),
+  Entity(0),
   context_(context),
   ego_(obj)
 {
@@ -66,7 +65,7 @@ Object::evaluate( const numerics::Coordinate& u , numerics::Coordinate& x ) cons
 }
 
 Body::Body( const Context& context , ego* obj ) :
-  luna::geometrics::Body(0),
+  luna::Body(0),
   context_(context),
   ego_(obj)
 {
@@ -81,7 +80,5 @@ Body::build()
 }
 
 } // EGADS
-
-} // geometrics
 
 } // luna

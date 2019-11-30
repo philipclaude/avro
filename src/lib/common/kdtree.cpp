@@ -1,0 +1,71 @@
+#include "common/kdtree.h"
+
+#include "mesh/points.h"
+
+#include <nanoflann/nanoflann.hpp>
+
+#include <vector>
+
+namespace luna
+{
+
+PointCloud::PointCloud( Points& points ) :
+  points_(points)
+{}
+
+real_t
+PointCloud::kdtree_get_pt(const size_t idx, int d) const
+ { return points_[idx][d]; }
+
+size_t
+PointCloud::kdtree_get_point_count() const
+ { return points_.nb(); }
+
+coord_t
+PointCloud::dim() const
+  { return points_.dim(); }
+
+template<coord_t dim>
+KdTree<dim>::KdTree( PointCloud& _cloud ) :
+  KdTreeNd(_cloud)
+{}
+
+template<coord_t dim>
+void
+KdTree<dim>::build()
+{
+  tree_ = std::make_shared<nanoflann::KDTreeSingleIndexAdaptor<
+                nanoflann::L2_Simple_Adaptor<real_t,PointCloud>,
+                PointCloud,dim> >
+                (dim,cloud_,nanoflann::KDTreeSingleIndexAdaptorParams(10));
+  tree_->buildIndex();
+}
+
+template<coord_t dim>
+void
+KdTree<dim>::getNearestNeighbours( real_t* q, std::vector<index_t>& idx ,
+                                   std::vector<real_t>& dist2 , index_t& nu )
+{
+  luna_assert( idx.size()==dist2.size() );
+  nu = tree_->knnSearch(q,idx.size(),idx.data(),dist2.data());
+  //idx.resize(nu);
+  //dist2.resize(nu);
+}
+
+
+template class KdTree<1>;
+template class KdTree<2>;
+template class KdTree<3>;
+template class KdTree<4>;
+template class KdTree<5>;
+template class KdTree<6>;
+template class KdTree<7>;
+template class KdTree<8>;
+template class KdTree<9>;
+template class KdTree<10>;
+template class KdTree<11>;
+template class KdTree<12>;
+template class KdTree<13>;
+template class KdTree<14>;
+
+} // luna

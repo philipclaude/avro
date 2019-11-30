@@ -24,7 +24,6 @@ OpenGLPrimitive::convert()
   index_t nb_triangles = 0;
   index_t nb_edges = 0;
   coord_t dim = topology_.points().dim();
-  coord_t nv = topology_.number()+1;
   coord_t number = topology_.number();
 
   const Points& points = topology_.points();
@@ -172,7 +171,7 @@ OpenGLPrimitive::write()
   GLuint& normal    = vbo[2];
   GLuint& triangles = vbo[3];
   GLuint& edges     = vbo[4];
-  GLuint& points    = vbo[5];
+  GLuint& points    = vbo[5]; UNUSED(points);
   GLuint& feedback  = vbo[6];
 
   // convert the data for the gl

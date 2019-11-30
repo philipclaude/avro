@@ -1,7 +1,7 @@
 #ifndef LUNA_MESH_TOPOLOGY_H_
 #define LUNA_MESH_TOPOLOGY_H_
 
-#include "common/array.h"
+#include "common/table.h"
 #include "common/json.h"
 #include "common/tree.h"
 #include "common/types.h"
@@ -10,6 +10,8 @@
 #include "master/simplex.h"
 
 #include "mesh/field.h"
+#include "mesh/inverse.h"
+#include "mesh/neighbours.h"
 
 #include <string>
 #include <vector>
@@ -20,11 +22,11 @@ namespace luna
 class Points;
 class ClippingPlane;
 
-class TopologyBase : public Array<index_t>
+class TopologyBase : public Table<index_t>
 {
 public:
-  TopologyBase( Points& vertices , const coord_t number , ArrayLayoutCategory category ) :
-    Array<index_t>(category,number+1),
+  TopologyBase( Points& vertices , const coord_t number , TableLayoutCategory category ) :
+    Table<index_t>(category,number+1),
     points_(vertices),
     number_(number),
     fields_(*this)
@@ -95,8 +97,34 @@ public:
   void getEdges( std::vector<index_t>& e ) const;
   void getTriangles( std::vector<index_t>& t ) const;
 
+  void get_elem( index_t k , std::vector<real_t*>& X ) const;
+  void get_elem( index_t k , std::vector<const real_t*>& X ) const;
+
+  bool has( index_t k , index_t idx ) const;
+
+  bool closed() const { luna_implement; return closed_; }
+
+  void all_with( const std::vector<index_t>& facet , std::vector<index_t>& elems ) const;
+
+  void get_boundary( Topology<type>& boundary ) const;
+
+  void get_elements( Topology<type>& topology ) const;
+
+  void facet( const index_t k , const index_t j , std::vector<index_t>& f ) const;
+
+  Neighbours<type>& neighbours() { return neighbours_; }
+  const Neighbours<type>& neighbours() const { return neighbours_; }
+
+  InverseTopology<type>& inverse() { return inverse_; }
+  const InverseTopology<type>& inverse() const { return inverse_; }
+
 private:
   type master_;
+
+  bool closed_;
+
+  Neighbours<type>      neighbours_;
+  InverseTopology<type> inverse_;
 };
 
 } // luna

@@ -89,7 +89,7 @@ FacetDecomposition<Shape_t>::build()
 
 template<>
 Builder<Simplex>::Builder( const Topology<Simplex>& topology , coord_t order , BasisFunctionCategory category ) :
-  Array<index_t>(ArrayLayout_Rectangular,topology.number()+1),
+  Table<index_t>(TableLayout_Rectangular,topology.number()+1),
   topology_(topology),
   master_(topology.number(),order)
 {

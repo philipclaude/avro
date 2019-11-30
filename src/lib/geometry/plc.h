@@ -1,7 +1,9 @@
-#ifndef LUNA_LIB_GEOMETRICS_PLC_H_
-#define LUNA_LIB_GEOMETRICS_PLC_H_
+#ifndef LUNA_LIB_GEOMETRY_PLC_H_
+#define LUNA_LIB_GEOMETRY_PLC_H_
 
 #include "common/types.h"
+
+#include "geometry/entity.h"
 
 #include "numerics/matrix.h"
 
@@ -13,13 +15,10 @@ namespace numerics
   class Coordinate;
 }
 
-namespace geometrics
-{
-
 namespace PLC
 {
 
-class Object
+class Object : public Entity
 {
 public:
   Object( coord_t num , coord_t dim );
@@ -35,8 +34,6 @@ private:
 };
 
 } // PLC
-
-} // geometrics
 
 } // luna
 

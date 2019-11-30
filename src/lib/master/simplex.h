@@ -16,6 +16,7 @@ namespace luna
 {
 
 template<typename Shape> class Topology;
+class Points;
 
 class Simplex : public Master<Simplex>
 {
@@ -86,6 +87,11 @@ public:
   index_t get_index( index_t dim , index_t ifacet , index_t ilocal ) const;
   void get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const;
   void get_edges( const index_t* v , index_t nv , std::vector<index_t>& ek ) const;
+
+  real_t closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y ) const;
+
+  void facet( const index_t* v , index_t j , std::vector<index_t>& f ) const
+    { luna_implement; }
 
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;

@@ -1,6 +1,6 @@
-#include "geometrics/egads.h"
-#include "geometrics/primitive.h"
-#include "geometrics/plc.h"
+#include "geometry/egads.h"
+#include "geometry/entity.h"
+#include "geometry/plc.h"
 
 #include "master/polytope.h"
 #include "master/simplex.h"
@@ -57,7 +57,7 @@ Field<Simplex,T>::build()
     {
       const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
-      Array<index_t>::add( v , nv );
+      Table<index_t>::add( v , nv );
     }
 
     for (index_t k=0;k<topology_.points().nb();k++)
@@ -74,7 +74,7 @@ Field<Simplex,T>::build()
     {
       const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
-      Array<index_t>::add( v , nv );
+      Table<index_t>::add( v , nv );
       for (index_t j=0;j<nb_poly;j++)
         this->data_.push_back( T(0) );
     }
@@ -95,7 +95,7 @@ Field<Polytope,T>::build()
     {
       const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
-      Array<index_t>::add( v , nv );
+      Table<index_t>::add( v , nv );
     }
 
     for (index_t k=0;k<topology_.points().nb();k++)
@@ -121,7 +121,7 @@ template class Field< Polytope , real_t >;
 template class Field< Simplex , std::vector<real_t> >;
 template class Field< Simplex , std::vector<index_t> >;
 
-template class Field< Simplex , geometrics::Primitive* >;
+template class Field< Simplex , Entity* >;
 template class Field< Simplex , numerics::SymMatrixD<real_t> >;
 
 } // luna

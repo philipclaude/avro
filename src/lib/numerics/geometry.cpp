@@ -1,23 +1,18 @@
-// luna: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
 #include "common/error.h"
 
 #include "mesh/points.h"
 
-//#include "numerics/densmat.h"
-//#include "numerics/determinant.h"
-//#include "numerics/expansion.h"
-//#include "numerics/functions.h"
+#include "numerics/matrix.h"
+#include "numerics/expansion.h"
+#include "numerics/functions.h"
 #include "numerics/geometry.h"
-//#include "numerics/orient4d_filter.h"
+#include "numerics/linear_algebra.h"
+#include "numerics/orient4d_filter.h"
 
-//#include <triangle/predicates.h>
+#include <triangle/predicates.h>
 
-//typedef luna::real_t REAL;
-//#include <tetgen1.5.0/predicates.h>
+typedef luna::real_t REAL;
+#include <tetgen1.5.0/predicates.h>
 
 namespace luna
 {
@@ -25,7 +20,6 @@ namespace luna
 namespace numerics
 {
 
-/*
 real_t
 orient4d( const real_t* p0 , const real_t* p1 , const real_t* p2 , const real_t* p3 , const real_t* p4 )
 {
@@ -61,7 +55,6 @@ orient4d( const real_t* p0 , const real_t* p1 , const real_t* p2 , const real_t*
   if (Delta.sign()==GEO::ZERO) return 0.0;
   return Delta.value();
 }
-*/
 
 real_t
 distance2( const real_t* x , const real_t* y , const coord_t dim )
@@ -77,7 +70,6 @@ distance( const real_t* x , const real_t* y , const coord_t dim )
 {
   return sqrt(distance2(x,y,dim));
 }
-/*
 
 real_t
 volume2( const std::vector<real_t*>& x )
@@ -107,7 +99,7 @@ volume( const std::vector<real_t*>& x , const coord_t dim )
   if (n==4 && dim==4) return fabs(volume4(x));
   std::vector<const real_t*> y(x.begin(),x.end()); // use the function below
   return volume( y , dim );
-  avro_assert_not_reached;
+  luna_assert_not_reached;
   return 0.;
 }
 
@@ -118,7 +110,7 @@ signedVolume( const std::vector<real_t*>& x , const coord_t dim )
   if (n==2 && dim==2) return volume2(x);
   if (n==3 && dim==3) return volume3(x);
   if (n==4 && dim==4) return volume4(x);
-  avro_assert_not_reached;
+  luna_assert_not_reached;
   return 0.;
 }
 
@@ -128,7 +120,8 @@ volume( const std::vector<const real_t*>& x , const coord_t dim )
   // assume this is a simplex because there's no other way to compute it
   coord_t n = x.size() -1;
 
-  numerics::densMat<real_t> B(n+2,n+2);
+  //numerics::densMat<real_t> B(n+2,n+2);
+  numerics::MatrixD<real_t> B(n+2,n+2);
 
   B(0,0) = 0;
   for (index_t i=1;i<index_t(n+2);i++)
@@ -176,7 +169,7 @@ barycentric_signed( real_t* p , const std::vector<real_t*>& x , const coord_t di
 
   real_t V = signedVolume(x,dim);
   if (V<=0.0) printf("warning: V = %1.12e\n",V);
-  //avro_assert( V>0.0 );
+  //luna_assert( V>0.0 );
 
   for (index_t k=0;k<n+1;k++)
   {
@@ -193,7 +186,7 @@ barycentric_signed( real_t* p , const std::vector<real_t*>& x , const coord_t di
 void
 centroid( const index_t* v0 , const index_t nv , const Points& vertices , std::vector<real_t>& xc )
 {
-  avro_assert_msg( vertices.dim()==xc.size() ,
+  luna_assert_msg( vertices.dim()==xc.size() ,
     "dim(v) = %u, dim(xc) = %lu" , vertices.dim() , xc.size() );
 
   std::fill( xc.begin() , xc.end() , 0. );
@@ -207,19 +200,22 @@ normal( const std::vector<real_t*>& x , real_t* n , const coord_t dim )
 {
   // we want a single vector orthogonal to the simplex in x
   // in a higher dimensional space, we would have multiple vectors
-  avro_assert_msg( x.size()==dim , "|x| = %lu, dim = %u" , x.size() , dim );
+  luna_assert_msg( x.size()==dim , "|x| = %lu, dim = %u" , x.size() , dim );
 
-  numerics::densMat<double> A(dim-1,dim);
-  A.zeros();
+  //numerics::densMat<double> A(dim-1,dim);
+  numerics::MatrixD<real_t> A(dim-1,dim);
+  //A.zeros();
+  A = 0;
 
   for (index_t k=0;k<index_t(dim-1);k++)
   for (index_t j=0;j<dim;j++)
     A(k,j) = x[k+1][j] -x[0][j];
 
-  numerics::densMat<double> K(dim-1,1);
-  int info = A.kernel(K);
-  if (info!=0) A.display();
-  avro_assert_msg( info>=0 , " info = %d " , info );
+  //numerics::densMat<double> K(dim-1,1);
+  numerics::MatrixD<real_t> K(dim-1,1);
+  int info = numerics::kernel(A,K);
+  if (info!=0) A.dump();
+  luna_assert_msg( info>=0 , " info = %d " , info );
 
   for (index_t j=0;j<dim;j++)
     n[j] = K(j,0);
@@ -233,20 +229,22 @@ orthogonal( const std::vector<real_t*>& x , real_t* n , const coord_t dim )
 {
   // we want a single vector orthogonal to the vector in x
   // in a higher dimensional space, we would have multiple vectors
-  avro_assert_msg( x.size()==index_t(dim-1) ,
+  luna_assert_msg( x.size()==index_t(dim-1) ,
                     "|x| = %lu, dim = %u" , x.size() , dim );
 
-  numerics::densMat<double> A(dim-1,dim);
-  A.zeros();
+  //numerics::densMat<double> A(dim-1,dim);
+  numerics::MatrixD<real_t> A(dim-1,dim);
+  //A.zeros();
+  A = 0;
 
   for (index_t k=0;k<index_t(dim-1);k++)
   for (index_t j=0;j<dim;j++)
     A(k,j) = x[k][j];
 
-  numerics::densMat<double> K(dim-1,1);
-  int info = A.kernel(K);
-  if (info!=0) A.display();
-  avro_assert_msg( info>=0 , " info = %d " , info );
+  numerics::MatrixD<real_t> K(dim-1,1);
+  int info = numerics::kernel(A,K);
+  if (info!=0) A.dump();
+  luna_assert_msg( info>=0 , " info = %d " , info );
 
   for (index_t j=0;j<dim;j++)
     n[j] = K(j,0);
@@ -277,7 +275,7 @@ orientNormal( const std::vector<real_t*>& x , real_t *n , const coord_t dim )
   else
   {
     printf("dimension = %d not implemented\n",int(dim));
-    avro_assert_not_reached;
+    luna_assert_not_reached;
   }
 
   // flip the normal if necessary
@@ -313,7 +311,6 @@ vector( const real_t* x0 , const real_t* x1 , const coord_t dim , real_t* v )
   for (coord_t d=0;d<dim;d++)
     v[d] = x1[d] -x0[d];
 }
-*/
 
 } // numerics
 

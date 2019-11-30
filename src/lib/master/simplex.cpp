@@ -5,6 +5,8 @@
 
 #include "mesh/topology.h"
 
+#include "numerics/matrix.h"
+
 namespace luna
 {
 
@@ -170,6 +172,99 @@ Simplex::get_edges( const index_t* v , const index_t nv , std::vector<index_t>& 
   ek.resize( edges_.size() );
   for (index_t j=0;j<edges_.size();j++)
     ek[j] = v[edges_[j]];
+}
+
+real_t
+Simplex::closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y ) const
+{
+  // for the point p, compute the closest barycentric point via least-squares
+  // i.e. minimize || x(alpha)-p ||^2 s.t. sum(alpha) = 1 and all(alpha) > 0
+  // the minimizer satisfiers
+  // [V'*V, 1 ; 1' , 0] * [alpha;lambda] = [V'*p;1]
+  // where V is the matrix of vertex coordinates and lambda is the
+  // lagrange multiplier
+  //
+  //avro_assert_msg( nv==index_t(number+1) ,  );
+  //avro_assert( alpha.size()==index_t(number+1) );
+
+  // set the matrix of vertex coordinates
+  #if 1
+  luna_implement
+  #else
+  numerics::densMat<real> V(x.dim(),nv);
+  for (index_t k=0;k<nv;k++)
+  for (index_t j=0;j<x.dim();j++)
+    V(j,k) = x[ v[k] ][j];
+  const numerics::densMat<real> Vt = V.transpose();
+
+  // set the least-squares portion of the system
+  numerics::densMat<real> A = Vt*V;
+  numerics::densMat<real> B(nv+1,nv+1);
+  for (index_t i=0;i<nv;i++)
+  for (index_t j=0;j<nv;j++)
+    B(i,j) = A(i,j);
+
+  // include the constraint in the full system
+  for (index_t i=0;i<nv;i++)
+  {
+    B(i,nv) = 1;
+    B(nv,i) = 1;
+  }
+
+  // set the right-hand side
+  std::vector<real> b(nv+1,0.);
+  Vt.multiply( p , b.data() );
+  b[nv] = 1.0;
+
+  // solve the system
+  B.solve(b.data());
+
+  // set the barycentric coordinates ignoring the last entry
+  // because it holds the lagrange multiplier
+  std::vector<real> alpha(nv);
+  for (index_t i=0;i<nv;i++)
+    alpha[i] = b[i];
+
+  // check if the barycentric coordinates are in the simplex
+  bool outside = false;
+  for (index_t k=0;k<nv;k++)
+  {
+    if (alpha[k]<0)
+    {
+      outside = true;
+      break;
+    }
+  }
+  if (!outside)
+  {
+    // compute the actual coordinates and return the squared-distance
+    V.multiply(alpha.data(),y.data());
+    return geometrics::distance2(y.data(),p,x.dim());
+  }
+
+  // the projected point is outside the simplex
+  // iterate through the facets
+  std::vector<index_t> s(v,v+nv);
+  std::vector<index_t> f;
+  for (index_t j=0;j<nv;j++)
+  {
+    f = s;
+    f.erase(f.begin()+j);
+
+    std::vector<real> yf(x.dim());
+    real df = closestBarycentric(x,f.data(),f.size(),p,yf,distance2);
+    if (df<distance2 || distance2<0)
+    {
+      // the point minimizes the distance so set the point and save
+      // the new squared-distance
+      y = yf;
+      distance2 = df;
+    }
+  }
+
+  // no point was found that is both inside the simplex and minimizes the input squared-distance
+  return distance2;
+  #endif
 }
 
 } // luna

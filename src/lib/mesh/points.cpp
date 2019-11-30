@@ -1,7 +1,7 @@
 #include "common/tools.h"
 
-//#include "geometry/body.h"
-#include "geometrics/primitive.h"
+#include "geometry/body.h"
+#include "geometry/entity.h"
 //#include "geometry/model.h"
 
 #include "mesh/topology.h"
@@ -23,9 +23,6 @@ Points::Points() :
 	dim_(0),
 	udim_(0),
 	u_(0),
-	primitive_(ArrayLayout_Simple),
-	body_(ArrayLayout_Simple),
-	fixed_(ArrayLayout_Simple),
 	nb_ghost_(0)
 {}
 
@@ -34,9 +31,6 @@ Points::Points( const coord_t _dim ) :
 	dim_(_dim),
 	udim_(dim_-1), // default to assuming parameter space is dim-1
 	u_(udim_),
-	primitive_(ArrayLayout_Simple),
-	body_(ArrayLayout_Simple),
-	fixed_(ArrayLayout_Simple),
 	nb_ghost_(0)
 {}
 
@@ -45,9 +39,6 @@ Points::Points( const coord_t _dim , const coord_t _udim ) :
 	dim_(_dim),
 	udim_(_udim),
 	u_(udim_),
-	primitive_(ArrayLayout_Simple),
-	body_(ArrayLayout_Simple),
-	fixed_(ArrayLayout_Simple),
 	nb_ghost_(0)
 {}
 
@@ -97,9 +88,9 @@ Points::copy( Points& v , const bool ghosts) const
 	// TODO account for ghost offset...
   for (index_t k=0;k<nb();k++)
   {
-    v.body(k)   = body_(k,0);
-    //v.setPrimitive( k , primitive_[k] );
-    v.set_fixed( k , fixed_(k,0) );
+    v.body(k)   = body_[k];
+    //v.setEntity( k , primitive_[k] );
+    v.set_fixed( k , fixed_[k] );
     //v.setParam( k , u(k) );
   }
 }
@@ -127,16 +118,16 @@ int&
 Points::body( const index_t k )
 {
 	luna_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
-	return body_(k,0);
+	return body_[k];
 }
 
 #if 1
 
 void
-Points::set_primitive( const index_t k , geometrics::Primitive* e )
+Points::set_entity( const index_t k , Entity* e )
 {
 	luna_assert( k<nb() );
-	primitive_(k,0) = e;
+	primitive_[k] = e;
 }
 
 void
@@ -168,11 +159,11 @@ Points::print( bool info ) const
       std::string geo;
   		if (primitive_[k]!=NULL)
   		{
-  			geo = "-"+primitive_(k,0)->name();
+  			geo = "-"+primitive_[k]->name();
   		}
   		else geo = "";
   		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
-  						body_(k,0),(void*)primitive_(k,0),geo.c_str());
+  						body_[k],(void*)primitive_[k],geo.c_str());
 			for (index_t d=0;d<udim_;d++)
 				printf(" %12.4e ",u(k)[d]);
 			printf(")");
@@ -191,13 +182,13 @@ Points::print( index_t k , bool info ) const
 	if (info)
 	{
 		std::string geo;
-		if (primitive_(k,0)!=NULL)
+		if (primitive_[k]!=NULL)
 		{
-			geo = "-"+primitive_(k,0)->name();
+			geo = "-"+primitive_[k]->name();
 		}
 		else geo = "";
 		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
-						body_(k,0),(void*)primitive_(k,0),geo.c_str());
+						body_[k],(void*)primitive_[k],geo.c_str());
 		for (index_t d=0;d<udim_;d++)
 			printf("%12.4e ",u(k)[d]);
 		printf(")");
@@ -245,7 +236,7 @@ Points::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 }
 
 void
-Points::duplicates( std::vector<index_t>& idx , const Array<int>& F ) const
+Points::duplicates( std::vector<index_t>& idx , const Table<int>& F ) const
 {
 	luna_assert( F.nb() == nb() );
 
@@ -302,14 +293,14 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
   std::vector<real_t> x(4,0.);
   coord_t dlim = (dim_<=3) ? dim_ : 4;
 
-  Primitive *e;
-  std::vector<Primitive*> e_candidates;
+  Entity *e;
+  std::vector<Entity*> e_candidates;
   std::vector<std::vector<real_t>> u_candidates;
 
   bool recheck;
 
   // get the full list of primitives
-  std::vector<Primitive*> primitives;
+  std::vector<Entity*> primitives;
   body.listTessellatableEntities(primitives);
   std::vector<real_t> distances( primitives.size() , 0. );
   std::vector<real_t> u( udim_*primitives.size() );
@@ -371,7 +362,7 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
     }
 
     // find the candidate with the lowest topological number
-    Primitive* ek = e_candidates[0];
+    Entity* ek = e_candidates[0];
     uk = u_candidates[0];
     for (index_t j=1;j<e_candidates.size();j++)
     {
@@ -386,7 +377,7 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
       luna_assert(ek == primitive_[k]);
     }
     else
-      setPrimitive(k,ek);
+      setEntity(k,ek);
 
     setParam(k,uk);
     body_[k] = ibody;
@@ -423,11 +414,11 @@ Points::projectToGeometry( Body& body )
   std::vector<real_t> x(4,0.);
   coord_t dlim = (dim_<=3) ? dim_ : 4;
 
-  std::vector<Primitive*> e_candidates;
+  std::vector<Entity*> e_candidates;
   std::vector<std::vector<real_t>> u_candidates;
 
   // get the full list of primitives
-  std::vector<Primitive*> primitives;
+  std::vector<Entity*> primitives;
   body.listTessellatableEntities(primitives);
   std::vector<real_t> distances( primitives.size() , 0. );
   std::vector<real_t> u( udim_*primitives.size() );
@@ -473,7 +464,7 @@ Points::projectToGeometry( Body& body )
 		}
 
     // find the candidate with the lowest topological number
-    Primitive* ek = e_candidates[0];
+    Entity* ek = e_candidates[0];
     uk = u_candidates[0];
     for (index_t j=1;j<e_candidates.size();j++)
     {
@@ -485,7 +476,7 @@ Points::projectToGeometry( Body& body )
     }
 
     //print(k,true);
-    setPrimitive(k,ek);
+    setEntity(k,ek);
     setParam(k,uk);
 
     // recall the projection (this is only so we don't have to save all the coordinates)
@@ -591,8 +582,8 @@ Points::to_json( json& J ) const
   std::vector<int> geometry(nb(),-1);
   for (index_t k=0;k<nb();k++)
   {
-    if (primitive_(k,0)==NULL) continue;
-    geometry[k] = primitive_(k,0)->identifier();
+    if (primitive_[k]==NULL) continue;
+    geometry[k] = primitive_[k]->identifier();
   }
   J["geometry"] = geometry;
 }
@@ -613,7 +604,7 @@ Points::from_json( const json& J , const Model* model )
 
   if (model!=NULL)
   {
-    std::vector<geometrics::Primitive*> primitives;
+    std::vector<Entity*> primitives;
     model->listEntities(primitives);
     std::vector<int> geometry = J.at("geometry");
     luna_assert(geometry.size()==nb());
@@ -624,7 +615,7 @@ Points::from_json( const json& J , const Model* model )
       {
         if ((int)primitives[j]->bodyIndex()==geometry[j])
         {
-          setPrimitive(k,primitives[j]);
+          setEntity(k,primitives[j]);
           break;
         }
       }

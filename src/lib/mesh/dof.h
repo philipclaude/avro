@@ -1,20 +1,20 @@
 #ifndef LUNA_LIB_MESH_DOF_H_
 #define LUNA_LIB_MESH_DOF_H_
 
-#include "common/array.h"
+#include "common/table.h"
 
 namespace luna
 {
 
 template<typename type>
-class DOF : public Array<type>
+class DOF : public Table<type>
 {
 public:
   DOF( coord_t rank ) :
-    Array<type>(ArrayLayout_Rectangular,rank)
+    Table<type>(TableLayout_Rectangular,rank)
   {}
 
-  index_t rank() const { return Array<type>::rank_; }
+  index_t rank() const { return Table<type>::rank_; }
 
   template<typename Shape>
   void

@@ -1,11 +1,8 @@
-#include "geometrics/plc.h"
+#include "geometry/plc.h"
 
 #include "numerics/coordinate.h"
 
 namespace luna
-{
-
-namespace geometrics
 {
 
 namespace PLC
@@ -24,7 +21,5 @@ Object::evaluate( const numerics::Coordinate& u , numerics::Coordinate& x ) cons
 }
 
 } // PLC
-
-} // geometrics
 
 } // luna

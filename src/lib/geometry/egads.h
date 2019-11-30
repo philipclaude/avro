@@ -1,8 +1,8 @@
-#ifndef LUNA_LIB_LIBRARY_EGADS_H_
-#define LUNA_LIB_LIBRARY_EGADS_H_
+#ifndef LUNA_LIB_GEOMETRY_EGADS_H_
+#define LUNA_LIB_GEOMETRY_EGADS_H_
 
-#include "geometrics/body.h"
-#include "geometrics/primitive.h"
+#include "geometry/body.h"
+#include "geometry/entity.h"
 
 struct egObject;
 typedef egObject* ego;
@@ -14,9 +14,6 @@ namespace numerics
 {
   class Coordinate;
 }
-
-namespace geometrics
-{
 
 namespace EGADS
 {
@@ -40,7 +37,7 @@ private:
   bool mine_;
 };
 
-class Object : public Primitive
+class Object : public Entity
 {
 public:
   Object( const Context& context , ego* object );
@@ -51,6 +48,8 @@ public:
   ego* object();
   const ego* object() const;
 
+  void print() const { luna_implement; }
+
 private:
   const Context& context_;
   ego* ego_;
@@ -58,7 +57,7 @@ private:
   egoData data_;
 };
 
-class Body : public luna::geometrics::Body
+class Body : public luna::Body
 {
 public:
   Body( const Context& context , ego* obj );
@@ -72,8 +71,6 @@ private:
 };
 
 } // EGADS
-
-} // geometrics
 
 } // luna
 

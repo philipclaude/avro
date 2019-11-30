@@ -7,9 +7,6 @@
 #include "graphics/primitive.h"
 #include "graphics/window.h"
 
-#include <imgui/GL/imgui_impl_glfw.h>
-#include <imgui/GL/imgui_impl_opengl3.h>
-
 namespace luna
 {
 

@@ -9,7 +9,16 @@
 
 * dimension-independent mesh adaptation given a (1) mesh, (2) geometry description and (3) a metric field
 * dimension-independent calculation of restricted Voronoi diagrams given (1) a set of sites and (2) a background mesh
-* visualization of 2d, 3d and 4d meshes in the browser via (1) OpenGL and (2) websockets and WebGL
+* visualization of 2d, 3d and 4d meshes via (1) OpenGL and (2) websockets and WebGL
+
+current/future developments include:
+* parallel mesh adaptation using MPI
+* optimal mesh to minimize the interpolation error in representing a function
+* optimal mesh for representing a geometry (both static and time-dependent)
+* dimension-independent calculation of quadrature rules using the centroidal Voronoi tessellation
+* calculation of geometry-conforming Voronoi diagrams
+* Python wrapper with an interface to blender
+* curvilinear mesh adaptation
 
 ```
 cd luna
