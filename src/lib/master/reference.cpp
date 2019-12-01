@@ -2,6 +2,7 @@
 
 #include "master/reference.h"
 
+#include "numerics/functions.h"
 #include "numerics/matrix.h"
 
 #include <cmath>
@@ -176,6 +177,8 @@ ReferenceElement<Simplex>::precalculate()
 
     if (!more) break;
   }
-}
+
+  vunit_ = sqrt(number_+1)/(numerics::factorial(number_)*sqrt(pow(2.,number_)));
+  vorth_ = 1./numerics::factorial(number_);}
 
 } // luna

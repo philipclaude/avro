@@ -211,6 +211,9 @@ TestSuite::TestSuite( const char* name , TestDriver* driver ) :
       __result__.passed(); \
   }while(0)
 
+#define UT_ASSERT_CLOSE( X , Y , Z , Z0 ) UT_ASSERT_NEAR(X,Y,Z)
+#define UT_ASSERT_SMALL( X , Z ) UT_ASSERT_NEAR(X,0,Z)
+
 #define UT_CATCH_EXCEPTION(X) \
   do {__result__.asserted(); \
     try { (X); __result__.failed(); \

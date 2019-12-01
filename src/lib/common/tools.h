@@ -16,8 +16,8 @@ namespace luna
 
 #define UNUSED(x) (void)(x);
 
-real_t randomWithin( const real_t lo , const real_t hi );
-int randomWithin( const int lo , const int hi );
+real_t random_within( const real_t lo , const real_t hi );
+int random_within( const int lo , const int hi );
 
 template <typename T>
 inline std::string

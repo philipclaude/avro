@@ -75,6 +75,8 @@ private:
     data_.erase( data_.begin() + start , data_.begin() + end );
   }
 
+protected:
+
   std::vector<type> data_;
 };
 

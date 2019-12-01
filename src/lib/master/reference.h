@@ -29,6 +29,9 @@ public:
   coord_t order() const { return order_; }
   coord_t number() const { return number_; }
 
+  real_t vunit() const { return vunit_; }
+  real_t vorth() const { return vorth_; }
+  
 protected:
   coord_t number_;
   coord_t order_;
@@ -40,6 +43,9 @@ protected:
   // all coordinates
   std::vector<real_t>  xref_;
   std::vector<index_t> lref_;
+
+  real_t vunit_;
+  real_t vorth_;
 };
 
 template<typename Shape> class ReferenceElement;

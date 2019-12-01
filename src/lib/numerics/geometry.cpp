@@ -11,7 +11,7 @@
 
 #include <triangle/predicates.h>
 
-typedef luna::real_t REAL;
+typedef const luna::real_t REAL;
 #include <tetgen1.5.0/predicates.h>
 
 namespace luna
@@ -72,26 +72,26 @@ distance( const real_t* x , const real_t* y , const coord_t dim )
 }
 
 real_t
-volume2( const std::vector<real_t*>& x )
+volume2( const std::vector<const real_t*>& x )
 {
   return .5*orient2d(x[0],x[1],x[2]);
 }
 
 real_t
-volume3( const std::vector<real_t*>& x )
+volume3( const std::vector<const real_t*>& x )
 {
   return -orient3d(x[0],x[1],x[2],x[3])/6.;
 }
 
 real_t
-volume4( const std::vector<real_t*>& x )
+volume4( const std::vector<const real_t*>& x )
 {
   real_t dv = orient4d(x[0],x[1],x[2],x[3],x[4])/24.;
   return dv;
 }
 
 real_t
-volume( const std::vector<real_t*>& x , const coord_t dim )
+volume( const std::vector<const real_t*>& x , const coord_t dim )
 {
   coord_t n = x.size() -1;
   if (n==2 && dim==2) return fabs(volume2(x));
@@ -99,12 +99,10 @@ volume( const std::vector<real_t*>& x , const coord_t dim )
   if (n==4 && dim==4) return fabs(volume4(x));
   std::vector<const real_t*> y(x.begin(),x.end()); // use the function below
   return volume( y , dim );
-  luna_assert_not_reached;
-  return 0.;
 }
 
 real_t
-signedVolume( const std::vector<real_t*>& x , const coord_t dim )
+signedVolume( const std::vector<const real_t*>& x , const coord_t dim )
 {
   coord_t n = x.size() -1;
   if (n==2 && dim==2) return volume2(x);
@@ -115,7 +113,7 @@ signedVolume( const std::vector<real_t*>& x , const coord_t dim )
 }
 
 real_t
-volume( const std::vector<const real_t*>& x , const coord_t dim )
+volume_nd( const std::vector<const real_t*>& x , const coord_t dim )
 {
   // assume this is a simplex because there's no other way to compute it
   coord_t n = x.size() -1;
@@ -162,7 +160,7 @@ barycentric( const real_t* p , const std::vector<const real_t*>& x , const coord
 }
 
 void
-barycentric_signed( real_t* p , const std::vector<real_t*>& x , const coord_t dim , std::vector<real_t>& alpha )
+barycentric_signed( real_t* p , const std::vector<const real_t*>& x , const coord_t dim , std::vector<real_t>& alpha )
 {
   index_t n = x.size() -1;
   alpha.resize(n+1);
@@ -173,7 +171,7 @@ barycentric_signed( real_t* p , const std::vector<real_t*>& x , const coord_t di
 
   for (index_t k=0;k<n+1;k++)
   {
-    std::vector<real_t*> f = x;
+    std::vector<const real_t*> f = x;
     f[k] = p;
 
     real_t vk = signedVolume(f,dim);

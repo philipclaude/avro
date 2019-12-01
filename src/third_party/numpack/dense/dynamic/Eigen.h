@@ -43,7 +43,7 @@ namespace DLA
   struct EigenSystemPair
   {
     // cppcheck-suppress noExplicitConstructor
-    EigenSystemPair(const MatrixSymD<T>& A) { EigenSystem(A, L, E); }
+    EigenSystemPair(const MatrixSymD<T>& A) : L(A.m()) , E(A.m(),A.n()) { EigenSystem(A, L, E); }
     EigenSystemPair(const EigenSystemPair<T>& LE ) : L(LE.L), E(LE.E) {}
     EigenSystemPair& operator=(const EigenSystemPair<T>& LE ) { L = LE.L; E = LE.E; return *this; }
     VectorD<T> L;

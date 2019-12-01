@@ -1,3 +1,5 @@
+#include "adaptation/metric.h"
+
 #include "geometry/egads.h"
 #include "geometry/entity.h"
 #include "geometry/plc.h"
@@ -123,5 +125,7 @@ template class Field< Simplex , std::vector<index_t> >;
 
 template class Field< Simplex , Entity* >;
 template class Field< Simplex , numerics::SymMatrixD<real_t> >;
+
+template class Field< Simplex , Metric >;
 
 } // luna

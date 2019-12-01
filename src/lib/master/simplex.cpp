@@ -3,8 +3,10 @@
 #include "master/quadrature.h"
 #include "master/simplex.h"
 
+#include "mesh/points.h"
 #include "mesh/topology.h"
 
+#include "numerics/geometry.h"
 #include "numerics/matrix.h"
 
 namespace luna
@@ -265,6 +267,32 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   // no point was found that is both inside the simplex and minimizes the input squared-distance
   return distance2;
   #endif
+}
+
+static real_t
+simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
+{
+  if (x.size()==3 && dim==2) return numerics::volume2(x);
+  if (x.size()==4 && dim==3) return numerics::volume3(x);
+  if (x.size()==5 && dim==4) return numerics::volume4(x);
+  return numerics::volume_nd(x,dim);
+}
+
+real_t
+Simplex::volume( const Points& points , const index_t* v , index_t nv ) const
+{
+  luna_assert( index_t(number_+1)==nv );
+  std::vector<const real_t*> x(nv);
+  for (index_t k=0;k<nv;k++)
+    x[k] = points[v[k]];
+  return simplex_volume(x,points.dim());
+}
+
+index_t
+Simplex::edge( index_t k , index_t i ) const
+{
+  luna_assert( i <= 2 );
+  return edges_[2*k+i];
 }
 
 } // luna

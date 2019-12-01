@@ -15,7 +15,7 @@
 
 #include "MatrixD.h"
 
-namespace numpack 
+namespace numpack
 {
 namespace DLA
 {
@@ -357,6 +357,6 @@ inline VectorD<DenseVectorSize>::VectorD( const std::initializer_list< int >& s 
 }
 
 } //namespace DLA
-} //namespace numpack 
+} //namespace numpack
 
 #endif // VECTORD_CLASS_H

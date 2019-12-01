@@ -2,9 +2,6 @@
 // Copyright 2013-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
-
-#include "MatrixSymD_Eigen_impl.h"
-
 #include "../MatrixD_Trace.h"
 #include "../MatrixD_Det.h"
 
@@ -24,24 +21,6 @@ namespace numpack
 namespace DLA
 {
 
-template<class T >
-void
-EigenValues(const MatrixSymD<T>& A, VectorD<T>& L )
-{
-  MatrixD<T> E(A.m(),A.m());
-  EigenSystem( A, L, E );
-}
-
-template<class T >
-void
-EigenVectors(const MatrixSymD<T>& A, MatrixD<T>& E )
-{
-  VectorD<T> L(A.m());
-  EigenSystem( A, L, E );
-}
-
-
-
 // Constants
 #define M_SQRT3    1.73205080756887729352744634151   // sqrt(3)
 
@@ -51,7 +30,7 @@ EigenVectors(const MatrixSymD<T>& A, MatrixD<T>& E )
 
 // ----------------------------------------------------------------------------
 template<class T>
-void dsyevc3(const MatrixSymD<T>& A, VectorD<T>& L)
+static void dsyevc3(const MatrixSymD<T>& A, VectorD<T>& L)
 // ----------------------------------------------------------------------------
 // Calculates the eigenvalues of a symmetric 3x3 matrix A using Cardano's
 // analytical algorithm.
@@ -109,7 +88,7 @@ void dsyevc3(const MatrixSymD<T>& A, VectorD<T>& L)
 
 template<class T >
 void
-EigenSystem(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E )
+EigenSystem_3x3(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E )
 {
   assert(A.m()==3);
   const int M = A.m();
@@ -119,9 +98,7 @@ EigenSystem(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E )
   T t, u;          // Intermediate storage
 
   // Calculate eigenvalues
-  // philip
-  assert(false);
-  //dsyevc3(A, L);
+  dsyevc3(A, L);
 
   t = fabs(L[0]);
   if ((u=fabs(L[1])) > t)
@@ -197,19 +174,6 @@ EigenSystem(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E )
   E(1,2) = E(2,0)*E(0,1) - E(0,0)*E(2,1);
   E(2,2) = E(0,0)*E(1,1) - E(1,0)*E(0,1);
 }
-
-#define INSTANTIATE_EIGEN(T) \
-template void EigenValues<T>(const MatrixSymD<T>& A, VectorD<T>& L ); \
-template void EigenVectors<T>(const MatrixSymD<T>& A, MatrixD<T>& E ); \
-template void EigenSystem<T>(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E );
-
-INSTANTIATE_EIGEN(Real)
-INSTANTIATE_EIGEN(SurrealD)
-
-//INSTANTIATE_EIGEN(SurrealS<1>)
-//INSTANTIATE_EIGEN(SurrealS<6>)
-//INSTANTIATE_EIGEN(SurrealS<12>)
-//INSTANTIATE_EIGEN(SurrealS<24>)
 
 }
 }

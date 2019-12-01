@@ -55,6 +55,8 @@ public:
 
   const std::vector<T>& data() const { return data_; }
 
+  T& value( index_t k ) { return data_[k]; }
+
 protected:
   FieldBase( FieldType type );
   std::vector<T> data_;

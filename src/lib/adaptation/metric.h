@@ -1,40 +1,81 @@
 #ifndef LUNA_LIB_ADAPTATION_METRIC_H_
 #define LUNA_LIB_ADAPTATION_METRIC_H_
 
+#include "common/array.h"
 #include "common/table.h"
 #include "common/types.h"
 
 #include "mesh/field.h"
+#include "mesh/points.h"
+#include "mesh/search.h"
+
+#include "numerics/linear_algebra.h"
+#include "numerics/matrix.h"
 
 namespace luna
 {
 
-#if 0
+template<typename type>
+void
+interp( const std::vector<type>& alpha ,
+             const std::vector<numerics::SymMatrixD<type>>& tensors ,
+						 numerics::SymMatrixD<type>& T )
+{
+	luna_assert( alpha.size()==tensors.size() );
 
-class Metric : public MatrixSymD<real_t>
+  //T.zero();
+	T = 0;
+  for (index_t k=0;k<tensors.size();k++)
+	{
+		T = T + numerics::log(tensors[k])*alpha[k];
+    //T = T +tensors[k].log()*alpha[k];
+	}
+  //T = T.exp();
+	T = numerics::exp(T);
+}
+
+class Metric : public numerics::SymMatrixD<real_t>
 {
 public:
-  MatrixSymD<real_t>& log(){ return log_; }
-  const MatrixSymD<real_t>& log() const { return log_; }
+  Metric( coord_t number ) :
+    numerics::SymMatrixD<real_t>(number),
+    number_(number),
+    log_(number),
+    elem_(0),
+    sqdet_(-1)
+  {}
+  numerics::SymMatrixD<real_t>& log(){ return log_; }
+  const numerics::SymMatrixD<real_t>& log() const { return log_; }
+
+  void set( const numerics::SymMatrixD<real_t>& m0 )
+  {
+    luna_assert( number_ == m0.m() && number_ == m0.n() );
+    for (coord_t i=0;i<number_;i++)
+    for (coord_t j=i;j<number_;j++)
+      (*this)(i,j) = m0(i,j);
+  }
 
   real_t sqdet() const { return sqdet_; }
   index_t elem() const { return elem_; }
+  index_t& elem() { return elem_; }
   void set_elem( index_t elem ) { elem_  = elem; }
 
   void calculate()
   {
     log_   = this->log();
-    sqdet_ = std::sqrt( numerics::det(*this) );
+    sqdet_ = std::sqrt( numerics::determinant(*this) );
   }
 
 private:
+  coord_t number_;
+  numerics::SymMatrixD<real_t> log_; // logarithm of this metric
   index_t elem_;           // element in some mesh containing this metric
-  MatrixSymD<real_t> log_; //
   real_t sqdet_;           // sqrt of determinant
 };
 
 //
-// DiscreteField used by DiscreteMetric for holding metrics
+// Metric attachment referenced by MetricField for holding metrics at
+// dynamic mesh points
 //
 class MetricAttachment : public Array<Metric>
 {
@@ -48,7 +89,7 @@ public:
       Metric mk(number_);
       if (points.ghost(k))
       {
-        for (index_t i=0;i<n_;i++)
+        for (index_t i=0;i<number_;i++)
           mk(i,i) = 1.;
         mk.calculate();
         Array<Metric>::add( mk );
@@ -62,31 +103,28 @@ public:
     }
 	}
 
-  //MetricAttachment( VertexField<SPDT<real_t>>& fld , Points& v );
-  MetricAttachment( Points& points );
+  MetricAttachment( const std::vector<numerics::SymMatrixD<real_t>>& metrics , Points& points );
 
-	const MatrixSymD<real_t>& log( const index_t k ) const
-    { return metric_[k].log(); }
+	const numerics::SymMatrixD<real_t>& log( const index_t k ) const
+    { return Array<Metric>::data_[k].log(); }
 	real_t sqdet( index_t k ) const
-    { return metric_[k].sqdet(); }
+    { return Array<Metric>::data_[k].sqdet(); }
 
   template<typename type> void set_cells( Topology<type>& topology );
 
-  //void reset( DiscreteField& fld );
+  void reset( MetricAttachment& fld );
   //void set( VertexField<SPDT<real_t>>& fld );
 
-  void add( Metric& m , index_t elem );
+  void add( numerics::SymMatrixD<real_t>& tensor, index_t elem );
 
-	void assign( index_t p , const Metric& M , index_t elem );
+	void assign( index_t p , const numerics::SymMatrixD<real_t>& M , index_t elem );
   void remove( index_t k , bool recheck=true );
   bool check() const;
 
   Points& points() { return points_; }
 
-  std::vector<index_t>& elems() { return elems_; }
-  index_t& elem( const index_t k ) { return elem_[k]; }
-
-  index_t nb_elem() const { return elem_.size(); }
+  index_t& elem( const index_t k )
+    { return Array<Metric>::data_[k].elem(); }
 
   void to_json( json& J ) const;
 	void from_json( json& J ) const;
@@ -95,70 +133,65 @@ public:
 	void from_solb( const std::string& filename );
 
 private:
-  coord_t n_;
-  Vertices& vertices_;
+  const coord_t number_;
+  Points& points_;
 };
 
 //
 // discrete metric field
 //
 template<typename type>
-class MetricField : public Field<type,Metric>>
+class MetricField : public Field<type,Metric>
 {
 public:
-  MetricField( coord_t n , Topology<type>& topology , MetricAttachment& fld );
-	MetricField( Topology<type>& topology , MetricAttachment& fld );
+  MetricField( Topology<type>& topology , MetricAttachment& fld );
 
-	Metric<real_t>& operator() ( const Vertices& x , index_t v );
-	real length( index_t n0 , index_t n1 );
+	numerics::SymMatrixD<real_t>& operator() ( const Points& x , index_t v );
+	real_t length( index_t n0 , index_t n1 );
 
-	real length( const Vertices& v , index_t n0 , index_t n1 )
+	real_t length( const Points& v , index_t n0 , index_t n1 )
 		{ return length(n0,n1); }
 
-	real volume( const Topology<type>& t , const index_t k );
-  real volume( const Topology<type>& t );
-  real volume0();
+	real_t volume( const Topology<type>& t , const index_t k );
+  real_t volume( const Topology<type>& t );
 
-	real quality( const Topology<type>& topology , index_t k );
+	real_t quality( const Topology<type>& topology , index_t k );
   void initializeCells();
-  int  find( index_t n0 , index_t n1 , real* x );
-  void interpolate( real* x , index_t elem , SPDT<real_t>& tensor , bool STFU=false );
-  void add( index_t n0 , index_t n1 , real* x );
-  void recompute( index_t p , real* x , const std::vector<index_t>& N );
-  bool recompute( index_t p , real* x );
-	void assign( index_t p , const SPDT<real_t>& M0 , index_t elem0 )
-		{ field_.assign(p,M0,elem0); }
+  int  find( index_t n0 , index_t n1 , real_t*  x );
+  void interpolate( real_t*  x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU=false );
+  void add( index_t n0 , index_t n1 , real_t*  x );
+  void recompute( index_t p , real_t*  x , const std::vector<index_t>& N );
+  bool recompute( index_t p , real_t*  x );
+	//void assign( index_t p , const SPDT<real_t>& M0 , index_t elem0 )
+	//	{ field_.assign(p,M0,elem0); }
 	index_t elementContaining( index_t p )
-		{ return field_.cell(p); }
+		{ return attachment_[p].elem(); }
   void remove( index_t k );
-
-  template<typename Function>
-  void reevaluate( Topology<type>& topology , AnalyticMetric<Function>& analytic );
 
   void reset( MetricAttachment& fld );
 
-  MetricAttachment& field() { return field_; }
-  Topology<type>& topology() { return background_.topology(); }
+  MetricAttachment& attachment() { return attachment_; }
+  const Topology<type>& topology() const { return topology_; }
   ElementSearch<type>& searcher() { return searcher_; }
 
-  bool checkCells();
+  bool check_cells();
 
   // ensures shape = type
-  template<typename shape>
-  bool check( Topology<shape>& topology );
+  bool check( Topology<type>& topology );
 
 private:
 
   // static data
   const Topology<type>& topology_;
+  const coord_t number_;
 
   // the dynamic field that changes when vertices are changed
-	MetricAttachment& field_;
+	MetricAttachment& attachment_;
 
   ElementSearch<type> searcher_;
-};
 
-#endif
+  real_t normalization_;
+};
 
 } // luna
 

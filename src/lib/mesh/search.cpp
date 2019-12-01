@@ -91,7 +91,7 @@ ElementSearch<type>::step( real_t* x , const index_t start )
   for (index_t j=0;j<nf;j++)
   {
     // set the coordinate with this vertex
-    std::vector<real_t*> xj(nf);
+    std::vector<const real_t*> xj(nf);
     for (index_t i=0;i<nf;i++)
     {
       if (i==j) xj[i] = x;
@@ -169,7 +169,7 @@ ElementSearch<type>::brute( real_t* x )
   nb_brute_force_++;
 
   const index_t nf = topology_.number()+1;
-  std::vector<real_t*> xk(nf,0);
+  std::vector<const real_t*> xk(nf,0);
   real_t vol;
   const coord_t dim = topology_.points().dim();
 
@@ -248,7 +248,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
     real_t distance2 = topology_.master().closest( topology_.points() , topology_(B[k]) , topology_.nv(B[k]) , x , y );
 
     // compute the barycentric coordinates of y in this simplex
-    std::vector<real_t*> X(topology_.nv(B[k]));
+    std::vector<const real_t*> X(topology_.nv(B[k]));
     std::vector<real_t> alphak(topology_.nv(B[k]));
     topology_.get_elem( B[k] , X );
     numerics::barycentric_signed( y.data() , X , topology_.points().dim() , alphak );
@@ -279,7 +279,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   {
     index_t k = 0;
     ielem = k;
-    std::vector<real_t*> X(topology_.nv(B[k]));
+    std::vector<const real_t*> X(topology_.nv(B[k]));
     topology_.get_elem( B[k] , X );
     numerics::barycentric_signed( topology_.points()[q] , X , topology_.points().dim() , alpha );
   }

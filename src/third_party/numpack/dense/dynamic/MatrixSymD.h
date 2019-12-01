@@ -409,7 +409,11 @@ template <class T>
 inline MatrixSymD<T>&
 MatrixSymD<T>::operator=( const std::initializer_list< std::initializer_list<T> >& s )
 {
-  SANS_ASSERT(s.size() == (std::size_t)M);
+  //SANS_ASSERT(s.size() == (std::size_t)M);
+  M  = s.size();
+  m_ = M;
+  allocate();
+
   int n = 0;
   auto row = s.begin();
   for (std::size_t i = 0; i < M; ++i, row++)

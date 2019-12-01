@@ -23,7 +23,7 @@ namespace DLA
 
 template<class T >
 void
-EigenValues(const MatrixSymD<T>& A, VectorD<T>& L )
+EigenValues_2x2(const MatrixSymD<T>& A, VectorD<T>& L )
 {
   const T& a = A(0,0);
   const T& b = A(1,0); const T& c = A(1,1);
@@ -78,15 +78,7 @@ EigenValues(const MatrixSymD<T>& A, VectorD<T>& L )
 
 template<class T >
 void
-EigenVectors(const MatrixSymD<T>& A, MatrixD<T>& E )
-{
-  VectorD<T> L(A.m());
-  EigenSystem( A, L, E );
-}
-
-template<class T >
-void
-EigenSystem(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E )
+EigenSystem_2x2(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E )
 {
   const T& a = A(0,0);
   const T& b = A(1,0); const T& c = A(1,1);
@@ -216,20 +208,6 @@ EigenSystem(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E )
 #endif
   }
 }
-
-#define INSTANTIATE_EIGEN(T) \
-template void EigenValues<T>(const MatrixSymD<T>& A, VectorD<T>& L ); \
-template void EigenVectors<T>(const MatrixSymD<T>& A, MatrixD<T>& E ); \
-template void EigenSystem<T>(const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E );
-
-INSTANTIATE_EIGEN(Real)
-INSTANTIATE_EIGEN(SurrealD)
-
-//INSTANTIATE_EIGEN(SurrealS<1>)
-//INSTANTIATE_EIGEN(SurrealS<2>)
-//INSTANTIATE_EIGEN(SurrealS<3>)
-//INSTANTIATE_EIGEN(SurrealS<6>)
-//INSTANTIATE_EIGEN(SurrealS<9>)
 
 }
 }

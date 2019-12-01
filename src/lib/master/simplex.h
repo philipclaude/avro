@@ -35,6 +35,8 @@ public:
   template<typename dof_t>
   void convert( const Simplex& master_from , const std::vector<dof_t>& A , std::vector<dof_t>& B ) const;
 
+  real_t volume( const Points& points , const index_t* v , index_t nv ) const;
+
   index_t nb_poly() const { return this->phi_.m(); }
   index_t nb_quad() const { return this->phi_.n(); }
 
@@ -93,6 +95,8 @@ public:
   void facet( const index_t* v , index_t j , std::vector<index_t>& f ) const
     { luna_implement; }
 
+  index_t edge( index_t k , index_t i ) const;
+
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;
   void get_triangle( const index_t* v , index_t nv , index_t itriangle , index_t* t ) const;
@@ -111,6 +115,9 @@ private:
 
   // store the transformation matrix from a lagrange simplex
   numerics::MatrixD<real_t> transformation_;
+
+  real_t vunit_;
+  real_t vorth_;
 
 };
 

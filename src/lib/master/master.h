@@ -52,6 +52,8 @@ public:
     basis_->evaluate(x,phi);
   }
 
+  const ReferenceElement<Shape>& reference() const { return reference_; }
+
 protected:
   const Basis<Shape>& basis() const { luna_assert(basis_!=nullptr); return *basis_.get(); }
   Basis<Shape>& basis() { luna_assert(basis_!=nullptr); return *basis_.get(); }
@@ -71,6 +73,7 @@ protected:
 
 private:
   std::shared_ptr< Basis<Shape> > basis_;
+
 };
 
 typedef struct
