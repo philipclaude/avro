@@ -23,15 +23,61 @@ interp( const std::vector<type>& alpha ,
 {
 	luna_assert( alpha.size()==tensors.size() );
 
-  //T.zero();
 	T = 0;
   for (index_t k=0;k<tensors.size();k++)
 	{
 		T = T + numerics::log(tensors[k])*alpha[k];
-    //T = T +tensors[k].log()*alpha[k];
 	}
-  //T = T.exp();
 	T = numerics::exp(T);
+}
+
+inline numerics::SymMatrixD<real_t>
+intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<real_t>& y )
+{
+  coord_t n = x.n();
+
+  numerics::MatrixD<real_t> Z( n , n );
+  numerics::MatrixD<real_t> Xinv( n , n );
+  numerics::VectorD<real_t> lambda( n );
+
+  // compute inverse of current tensor
+  numerics::MatrixD<real_t> X(x);
+  numerics::MatrixD<real_t> Y(y);
+  Xinv = numerics::inverse(X);
+
+  // compute N = T^{-1} * tensors[k]
+  Z = Xinv*Y;
+
+  // compute eigenvectors of N
+  numerics::SymMatrixD<real_t> T(Z);
+
+  numerics::MatrixD<real_t> E(n,n);
+  numerics::VectorD<real_t> P0(n);
+
+  numpack::DLA::EigenSystem(T,P0,E);
+
+  numerics::MatrixD<real_t> P(n,n);
+  P = numpack::DLA::diag(P0);
+
+  numerics::MatrixD<real_t> Pinv(n,n);
+  Pinv = numerics::inverse(P);
+
+  // measure the length in direction of each eigenvector
+  for (coord_t d=0;d<n;d++)
+  {
+    numerics::VectorD<real_t> e(n);
+    e = P.col(d);
+    real_t h1 = 1./std::sqrt( e*X*numpack::Transpose(e) );
+    real_t h2 = 1./std::sqrt( e*Y*numpack::Transpose(e) );
+    real_t h = std::min(h1,h2);
+
+    lambda(d) = 1./(h*h);
+  }
+
+  luna_implement; // this is not unit tested
+
+  // construct the matrix from the eigendecomposition
+  return Pinv*numpack::DLA::diag(lambda)*numpack::Transpose(Pinv);
 }
 
 class Metric : public numerics::SymMatrixD<real_t>

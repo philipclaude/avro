@@ -77,6 +77,7 @@ public:
   MatrixSymD( const std::initializer_list< std::initializer_list<T> >& s ) { *this = s; }
   MatrixSymD( const typename numpack::POD<T>::type& s , int m );
   MatrixSymD( const EigenSystemPair<T>& LE ) { *this = LE; }
+  MatrixSymD( const MatrixD<T>& M );
   ~MatrixSymD() {}
 
 #define INDEX(i,j) ( i > j  ?  i*(i+1)/2 + j  :  j*(j+1)/2 + i )
@@ -316,7 +317,6 @@ protected:
 
 
 // constructors
-
 template <class T>
 inline
 MatrixSymD<T>::MatrixSymD( const MatrixSymD<T>& m0 ) :
@@ -359,8 +359,18 @@ MatrixSymD<T>::MatrixSymD( const typename numpack::POD<T>::type& s , int m ) :
     data[n] = s;
 }
 
-// assignment
+template <class T>
+inline
+MatrixSymD<T>::MatrixSymD( const MatrixD<T>& m0 ) :
+  m_(m0.m())
+{
+  allocate();
+  for (int i = 0; i < m_; i++)
+  for (int j = i; j < m_; j++)
+    (*this)(i,j) = m0(i,j);
+}
 
+// assignment
 template <class T>
 inline MatrixSymD<T>&
 MatrixSymD<T>::operator=( const MatrixSymD& m0 )
@@ -409,7 +419,6 @@ template <class T>
 inline MatrixSymD<T>&
 MatrixSymD<T>::operator=( const std::initializer_list< std::initializer_list<T> >& s )
 {
-  //SANS_ASSERT(s.size() == (std::size_t)M);
   M  = s.size();
   m_ = M;
   allocate();

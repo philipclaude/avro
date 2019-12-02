@@ -128,4 +128,56 @@ UT_TEST_CASE(Metric_tests_3d)
 }
 UT_TEST_CASE_END(Metric_tests_3d)
 
+UT_TEST_CASE(tests_4d)
+{
+  real_t tol = 1e-12;
+  coord_t n = 4;
+
+  Metric m(n);
+
+  // test1: this has a pretty small eigenvalue
+  m(0,0) = 2.27;
+  m(0,1) = 1.05;
+  m(0,2) = 2.45;
+  m(0,3) = 1.34;
+  m(1,1) = 0.71;
+  m(1,2) = 1.15;
+  m(1,3) = 0.88;
+  m(2,2) = 2.66;
+  m(2,3) = 1.56;
+  m(3,3) = 1.71;
+
+  numpack::DLA::MatrixD<real_t> q(n,n);
+  numerics::VectorD<real_t> lambda(n);
+  numpack::DLA::EigenSystem(m,lambda,q);
+
+  numerics::SymMatrixD<real_t> m0 = q*numpack::DLA::diag(lambda)*numpack::Transpose(q);
+  m0.dump();
+
+  for (index_t i=0;i<n;i++)
+  for (index_t j=0;j<n;j++)
+    UT_ASSERT_NEAR( m(i,j) , m0(i,j) , tol );
+
+}
+UT_TEST_CASE_END(tests_4d)
+
+UT_TEST_CASE(intersect)
+{
+  for (coord_t d=2;d<=4;d++)
+  {
+    Metric T(d);
+
+    // test the smr technique for intersection
+    Metric T1(d),T2(d);
+
+    T1.set( random_tensor(d) );
+    T2.set( random_tensor(d) );
+
+    // intersect with itself
+    //T1.intersect(T1,T);
+  }
+}
+UT_TEST_CASE_END(intersect)
+
+
 UT_TEST_SUITE_END( Metric_suite )
