@@ -20,6 +20,7 @@ namespace luna
 #if (1 || defined(LUNA_DEBUG))
 #define luna_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__);luna_throw("assertion error");}
 #define luna_assert_msg(X,...) { try{ luna_assert(X); } catch(...) { printf(__VA_ARGS__); luna_throw("assertion error"); } }
+#define luna_assert_else(X,Y) { try{ luna_assert(X); } catch(...) { Y ; luna_throw("assertion error"); } }
 #else
 #define luna_assert(X) {}
 #define luna_assert_msg(X,...) {}

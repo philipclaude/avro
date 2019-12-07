@@ -82,10 +82,10 @@ inverse( MatrixD<T>& M )
 	}
 	else if (M.n()==2)
 	{
-		Minv(0,0) = M(1,1)*idetM;
+		Minv(0,0) =  M(1,1)*idetM;
 		Minv(0,1) = -M(0,1)*idetM;
 		Minv(1,0) = -M(1,0)*idetM;
-		Minv(1,1) = M(0,0)*idetM;
+		Minv(1,1) =  M(0,0)*idetM;
 	}
 	else if (M.n()==3)
 	{
@@ -128,7 +128,7 @@ inverse( MatrixD<T>& M )
 	}
 	else
 		luna_implement;
-  return MatrixD<T>(0,0);
+  return Minv;
 }
 
 } // numerics

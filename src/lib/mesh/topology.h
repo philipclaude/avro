@@ -112,6 +112,9 @@ public:
 
   void facet( const index_t k , const index_t j , std::vector<index_t>& f ) const;
 
+  void orient( real_t* p=NULL );
+  void orient( index_t* v , const index_t nv , real_t* p=NULL );
+
   Neighbours<type>& neighbours() { return neighbours_; }
   const Neighbours<type>& neighbours() const { return neighbours_; }
 

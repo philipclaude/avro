@@ -2,6 +2,7 @@
 #define LUNA_LIB_TABLE_H_
 
 #include "common/error.h"
+#include "common/tools.h"
 #include "common/types.h"
 
 #include <algorithm>

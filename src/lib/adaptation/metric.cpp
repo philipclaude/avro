@@ -323,7 +323,7 @@ MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<
   std::vector<const real_t*> xk(nv,0);
   for (index_t j=0;j<nv;j++)
     xk[j] = topology_.points()[ topology_(elem,j) ];
-  real_t V = 1./numerics::signedVolume(xk,topology_.points().dim());
+  real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
 
   // compute the barycentric coordinates
   std::vector<real_t> alpha( nv , 0. );
@@ -335,7 +335,7 @@ MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<
       if (i==j) xk0[i] = x;
       else xk0[i] = xk[i];
     }
-    alpha[j] = V*numerics::signedVolume(xk0,topology_.points().dim());
+    alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
 
     if (alpha[j]<0. || alpha[j]>1.)
     {
@@ -396,7 +396,7 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
   std::vector<const real_t*> xk(nv,0);
   for (index_t j=0;j<nv;j++)
     xk[j] = topology_.points()[ topology_(elem,j) ];
-  real_t V = 1./numerics::signedVolume(xk,topology_.points().dim());
+  real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
 
   // compute the barycentric coordinates
   std::vector<real_t> alpha( nv , 0. );
@@ -409,7 +409,7 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
       if (i==j) xk0[i] = x;
       else xk0[i] = xk[i];
     }
-    alpha[j] = V*numerics::signedVolume(xk0,topology_.points().dim());
+    alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
 
     if (alpha[j]<0. || alpha[j]>1.)
     {
@@ -467,7 +467,7 @@ MetricField<type>::recompute( index_t p , real_t* x ,
     std::vector<const real_t*> xk(nv,0);
     for (index_t j=0;j<nv;j++)
       xk[j] = topology_.points()[ topology_(elem,j) ];
-    real_t V = 1./numerics::signedVolume(xk,topology_.points().dim());
+    real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
 
     // compute the barycentric coordinates
     std::vector<real_t> alpha( nv , 0. );
@@ -480,7 +480,7 @@ MetricField<type>::recompute( index_t p , real_t* x ,
         if (i==j) xk0[i] = x;
         else xk0[i] = xk[i];
       }
-      alpha[j] = V*numerics::signedVolume(xk0,topology_.points().dim());
+      alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
 
       if (alpha[j]==0.0 || alpha[j]==1.0)
       {}
@@ -559,7 +559,7 @@ MetricField<type>::recompute( index_t p , real_t* x )
   std::vector<const real_t*> xk(nv,0);
   for (index_t j=0;j<nv;j++)
     xk[j] = topology_.points()[ topology_(elem,j) ];
-  real_t V = 1./numerics::signedVolume(xk,topology_.points().dim());
+  real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
 
   // compute the barycentric coordinates
   std::vector<real_t> alpha( nv , 0. );
@@ -573,7 +573,7 @@ MetricField<type>::recompute( index_t p , real_t* x )
       if (i==j) xk0[i] = x;
       else xk0[i] = xk[i];
     }
-    alpha[j] = V*numerics::signedVolume(xk0,topology_.points().dim());
+    alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
 
 		//if (fabs(alpha[j]-1.0)>0.0 && fabs(alpha[j]-1.0)<1e-12)
 		// 	alpha[j] = 1.0; // round-off due to above multiplication can exceed machine precision
@@ -670,7 +670,7 @@ MetricField<type>::check_cells()
     std::vector<const real_t*> xk(nv,0);
     for (index_t j=0;j<nv;j++)
       xk[j] = topology_.points()[ topology_(elem,j) ];
-    real_t V = 1./numerics::signedVolume(xk,topology_.points().dim());
+    real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
 
     // compute the barycentric coordinates
     std::vector<real_t> alpha( nv , 0. );
@@ -682,7 +682,7 @@ MetricField<type>::check_cells()
         if (i==j) xk0[i] = x;
         else xk0[i] = xk[i];
       }
-      alpha[j] = V*numerics::signedVolume(xk0,topology_.points().dim());
+      alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
 
       if (alpha[j]<0.0 || alpha[j]>1.0)
       {

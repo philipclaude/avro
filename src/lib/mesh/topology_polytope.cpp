@@ -15,6 +15,13 @@ Topology<Polytope>::Topology( Points& points , coord_t number , coord_t order ) 
   inverse_(*this)
 {}
 
+template<>
+void
+Topology<Polytope>::orient( index_t* v , const index_t nv , real_t* p )
+{
+  luna_implement;
+}
+
 template class Topology<Polytope>;
 template class Tree<Topology<Polytope>>;
 

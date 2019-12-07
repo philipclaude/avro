@@ -102,7 +102,7 @@ volume( const std::vector<const real_t*>& x , const coord_t dim )
 }
 
 real_t
-signedVolume( const std::vector<const real_t*>& x , const coord_t dim )
+simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
 {
   coord_t n = x.size() -1;
   if (n==2 && dim==2) return volume2(x);
@@ -165,7 +165,7 @@ barycentric_signed( real_t* p , const std::vector<const real_t*>& x , const coor
   index_t n = x.size() -1;
   alpha.resize(n+1);
 
-  real_t V = signedVolume(x,dim);
+  real_t V = simplex_volume(x,dim);
   if (V<=0.0) printf("warning: V = %1.12e\n",V);
   //luna_assert( V>0.0 );
 
@@ -174,7 +174,7 @@ barycentric_signed( real_t* p , const std::vector<const real_t*>& x , const coor
     std::vector<const real_t*> f = x;
     f[k] = p;
 
-    real_t vk = signedVolume(f,dim);
+    real_t vk = simplex_volume(f,dim);
 
     alpha[k] = vk/V;
   }

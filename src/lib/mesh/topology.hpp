@@ -161,4 +161,15 @@ Topology<type>::get_elem( index_t k , std::vector<real_t*>& X ) const
     X[j] = points_[(*this)(k,j)];
 }
 
+template<typename type>
+void
+Topology<type>::orient( real_t* q )
+{
+  if (q!=NULL)
+    luna_assert( number_+1 == points_.dim() );
+
+  for (index_t k=0;k<nb();k++)
+    orient( operator()(k) , nv(k) , q );
+}
+
 } // luna

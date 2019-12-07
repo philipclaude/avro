@@ -115,8 +115,8 @@ public:
 private:
   coord_t number_;
   numerics::SymMatrixD<real_t> log_; // logarithm of this metric
-  index_t elem_;           // element in some mesh containing this metric
-  real_t sqdet_;           // sqrt of determinant
+  index_t elem_; // element in some mesh containing this metric
+  real_t sqdet_; // sqrt of determinant
 };
 
 //
@@ -159,8 +159,6 @@ public:
   template<typename type> void set_cells( Topology<type>& topology );
 
   void reset( MetricAttachment& fld );
-  //void set( VertexField<SPDT<real_t>>& fld );
-
   void add( numerics::SymMatrixD<real_t>& tensor, index_t elem );
 
 	void assign( index_t p , const numerics::SymMatrixD<real_t>& M , index_t elem );
@@ -208,8 +206,6 @@ public:
   void add( index_t n0 , index_t n1 , real_t*  x );
   void recompute( index_t p , real_t*  x , const std::vector<index_t>& N );
   bool recompute( index_t p , real_t*  x );
-	//void assign( index_t p , const SPDT<real_t>& M0 , index_t elem0 )
-	//	{ field_.assign(p,M0,elem0); }
 	index_t elementContaining( index_t p )
 		{ return attachment_[p].elem(); }
   void remove( index_t k );

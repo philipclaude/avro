@@ -99,7 +99,7 @@ ElementSearch<type>::step( real_t* x , const index_t start )
     }
 
     // check the barycentric volume
-    real_t vol = numerics::signedVolume( xj , topology_.points().dim() );
+    real_t vol = numerics::simplex_volume( xj , topology_.points().dim() );
 
     if (vol<TOLER)
     {
@@ -188,7 +188,7 @@ ElementSearch<type>::brute( real_t* x )
         else xk[i] = topology_.points()[ topology_(k,i) ];
       }
       // check the volume
-      vol = numerics::signedVolume(xk,dim);
+      vol = numerics::simplex_volume(xk,dim);
       if (vol<TOLER)
       {
         found = false;

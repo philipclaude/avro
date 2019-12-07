@@ -19,7 +19,7 @@ real_t distanceLinf2( const real_t* x , const real_t* y , const coord_t dim );
 real_t distance2( const real_t* x , const real_t* y , const coord_t dim );
 real_t distance( const real_t* x , const real_t* y , const coord_t dim );
 real_t volume( const std::vector<const real_t*>& x , const coord_t dim );
-real_t signedVolume( const std::vector<const real_t*>& x , const coord_t dim );
+real_t simplex_volume( const std::vector<const real_t*>& x , const coord_t dim );
 real_t volume_nd( const std::vector<const real_t*>& x , const coord_t dim );
 real_t volume2( const std::vector<const real_t*>& x );
 real_t volume3( const std::vector<const real_t*>& x );

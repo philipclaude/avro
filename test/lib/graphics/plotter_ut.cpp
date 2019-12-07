@@ -5,6 +5,7 @@
 #include "graphics/plotter.h"
 #include "graphics/window.h"
 
+#include "library/ckf.h"
 #include "library/obj.h"
 #include "library/samples.h"
 
@@ -24,7 +25,21 @@ UT_TEST_CASE( test1 )
   printf("reading obj...\n");
 
   //library::TwoTriangles topology;
-  library::objFile topology( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
+  //library::objFile topology( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
+
+  CKF_Triangulation topology0( {10,10} );
+  Points points(3);
+  for (index_t k=0;k<topology0.points().nb();k++)
+  {
+    std::vector<real_t> x(3,0);
+    x.assign(topology0.points()[k],topology0.points()[k]+2);
+    points.create(x.data());
+  }
+  Topology<Simplex> topology(points,2);
+  for (index_t k=0;k<topology0.nb();k++)
+    topology.add( topology0(k) , topology0.nv(k) );
+
+  topology.print();
 
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);
