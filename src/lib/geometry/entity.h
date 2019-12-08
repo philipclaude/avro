@@ -42,7 +42,11 @@ public:
   bool interior() const { return interior_; }
   void set_interior( bool x ) { interior_ = x; }
 
+  bool sense_required() const { return sense_required_; }
+  void set_sense_required( bool x ) { sense_required_ = x; }
+
   virtual void print() const = 0;
+  virtual void build_hierarchy() = 0;
 
 protected:
   Entity( coord_t number );
@@ -53,16 +57,13 @@ protected:
   virtual void inverse( numerics::Coordinate& x , numerics::Coordinate& u ) const = 0;
   virtual void evaluate( const numerics::Coordinate& u , numerics::Coordinate& p ) const = 0;
 
-  bool sense() const { return sense_; }
-  void sense( bool x ) { sense_ = x; }
-
   coord_t number_;
   std::string name_;
   index_t identifier_;
   Body* body_;
 
   bool interior_;
-  bool sense_;
+  bool sense_required_;
 
   std::vector<Entity*> parents_;
   bool tessellatable_;

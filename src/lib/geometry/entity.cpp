@@ -1,9 +1,7 @@
 #include "common/tools.h"
 #include "common/tree.hpp"
 
-#include "geometry/egads.h"
 #include "geometry/entity.h"
-#include "geometry/plc.h"
 
 #include "numerics/coordinate.h"
 

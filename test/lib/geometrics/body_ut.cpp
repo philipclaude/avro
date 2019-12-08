@@ -1,7 +1,8 @@
 #include "unit_tester.hpp"
 
-#include "geometry/body.h"
-#include "geometry/egads.h"
+#include "geometry/egads/body.h"
+#include "geometry/egads/context.h"
+#include "geometry/egads/object.h"
 #include "geometry/entity.h"
 
 using namespace luna;

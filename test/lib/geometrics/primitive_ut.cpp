@@ -1,6 +1,7 @@
 #include "unit_tester.hpp"
 
-#include "geometry/egads.h"
+#include "geometry/egads/context.h"
+#include "geometry/egads/object.h"
 #include "geometry/entity.h"
 
 #include "numerics/coordinate.h"

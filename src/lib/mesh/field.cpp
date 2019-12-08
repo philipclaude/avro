@@ -1,8 +1,6 @@
 #include "adaptation/metric.h"
 
-#include "geometry/egads.h"
 #include "geometry/entity.h"
-#include "geometry/plc.h"
 
 #include "master/polytope.h"
 #include "master/simplex.h"

@@ -2,6 +2,7 @@
 #define LUNA_LIB_GEOMETRY_EGADS_H_
 
 #include "geometry/body.h"
+#include "geometry/egads/data.h"
 #include "geometry/entity.h"
 
 struct egObject;
@@ -18,32 +19,20 @@ namespace numerics
 namespace EGADS
 {
 
-typedef struct
-{
-
-} egoData;
-
-class Context
-{
-public:
-  Context();
-  Context( ego* context );
-  ~Context();
-
-  ego* get();
-
-private:
-  ego* context_;
-  bool mine_;
-};
+class Context;
 
 class Object : public Entity
 {
 public:
   Object( const Context& context , ego* object );
+  Object( ego object , Body* body );
 
   void inverse( numerics::Coordinate& x , numerics::Coordinate& u ) const;
   void evaluate( const numerics::Coordinate& u , numerics::Coordinate& p ) const;
+
+  void set_object( ego* object );
+
+  void build_hierarchy() {}
 
   ego* object();
   const ego* object() const;
@@ -55,19 +44,8 @@ private:
   ego* ego_;
 
   egoData data_;
-};
 
-class Body : public luna::Body
-{
-public:
-  Body( const Context& context , ego* obj );
-
-  void build();
-
-private:
-  const Context& context_;
-  ego* ego_;
-
+  int body_index_;
 };
 
 } // EGADS
