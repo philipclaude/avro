@@ -3,11 +3,12 @@
 namespace luna
 {
 
-class Cube
+class Cube : public Table<index_t>
 {
 
 public:
   Cube( coord_t number ) :
+    Table<index_t>(TableLayout_Rectangular,number+1),
     number_(number)
   {
     allocate();
@@ -19,7 +20,7 @@ public:
     delete [] x_;
   }
 
-  void triangulate(std::vector<std::vector<index_t>>& S);
+  void triangulate();
 
   index_t nb_points() const
   {
@@ -122,8 +123,8 @@ Cube::calculate()
   }
 }
 
-inline void
-Cube::triangulate(std::vector<std::vector<index_t>>& S)
+void
+Cube::triangulate()
 {
   // perform the Kuhn-Friedenthal triangulation such that we can
   // tile the generated simplices to create a mesh
@@ -150,14 +151,13 @@ Cube::triangulate(std::vector<std::vector<index_t>>& S)
         vj[d] = v[d];
 
       vj[p[j]] = vj[p[j]] +1;
-
       s[j+1]   = find_point(vj.data());
 
       for (index_t d=0;d<number_;d++)
         v[d] = vj[d];
     }
 
-    S.push_back(s);
+    add( s.data() , s.size() );
   } while (std::next_permutation(p.begin(),p.end()));
 }
 
@@ -221,7 +221,9 @@ CKF_Triangulation::generate()
   // create the base cube triangulation
   // i.e. triangulation of a single n-cube with 2^n points
   Cube base(number_);
-  base.triangulate(S0);
+  base.triangulate();
+
+  //base.print();
 
   Table<index_t> table(TableLayout_Rectangular,number_);
   for (index_t k=0;k<base.nb_points();k++)
@@ -230,11 +232,15 @@ CKF_Triangulation::generate()
     std::vector<index_t> idx(x,x+number_);
     table.add( idx.data() , idx.size() );
   }
+  //table.print();
 
-  std::vector< std::vector<index_t> > S;
   std::vector<index_t> simplex(number_+1);
-
   std::vector<index_t> idx( base.nb_points() );
+
+  std::vector<index_t> offset(number_,1);
+  for (coord_t d=0;d<number_;d++)
+    for (coord_t i=d+1;i<number_;i++)
+      offset[d] *= dims_[i];
 
   for (index_t i=0;i<points_.nb();i++)
   {
@@ -251,14 +257,16 @@ CKF_Triangulation::generate()
     {
       idx[j] = 0;
       for (coord_t d=0;d<number_;d++)
-        idx[j] += (u0[d]+table(j,d))*pow(dims_[d],number_-d-1);
+        idx[j] += (u0[d]+table(j,d))*offset[d];
+        //idx[j] += (u0[d]+table(j,d))*pow(dims_[d],number_-d-1);
     }
+    //print_inline(idx);
 
-    for (index_t k=0;k<S0.size();k++)
+    for (index_t k=0;k<base.nb();k++)
     {
       // map the simplex indices
       for (index_t j=0;j<index_t(number_+1);j++)
-        simplex[j] = idx[ S0[k][j] ];
+        simplex[j] = idx[ base(k,j) ];
 
       // add the element to the topology
       this->add( simplex.data() , simplex.size() );

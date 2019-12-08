@@ -22,6 +22,8 @@ public:
 
   void get_edges( const index_t* v0 , index_t nv , std::vector<index_t>& ek ) const;
 
+  real_t volume( const Points& points , const index_t* v , index_t nv ) const;
+
   void facet( const index_t* v , index_t j , std::vector<index_t>& f ) const
     { luna_implement; }
 

@@ -172,4 +172,16 @@ Topology<type>::orient( real_t* q )
     orient( operator()(k) , nv(k) , q );
 }
 
+template<typename type>
+real_t
+Topology<type>::volume() const
+{
+  real_t v = 0.;
+  for (index_t k=0;k<nb();k++)
+  {
+    v += master_.volume( points_ , operator()(k) , nv(k) );
+  }
+  return v;
+}
+
 } // luna

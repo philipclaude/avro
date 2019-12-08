@@ -28,4 +28,12 @@ Polytope::get_edges( const index_t* v0 , index_t nv , std::vector<index_t>& ek )
   luna_implement;
 }
 
+real_t
+Polytope::volume( const Points& points , const index_t* v , index_t nv ) const
+{
+  luna_implement;
+  return -1.0;
+}
+
+
 } // luna

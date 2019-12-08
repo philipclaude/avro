@@ -4,9 +4,9 @@
 //#include "graphics/plotter.h"
 
 typedef luna::real_t REAL;
-//#include <tetgen1.5.0/predicates.h>
+#include <tetgen1.5.0/predicates.h>
 
-//#include <triangle/predicates.h>
+#include <triangle/predicates.h>
 
 using namespace luna;
 
@@ -29,8 +29,8 @@ ut_pre(int argc, char** argv)
   ProcessGPU::initialize();
 
   // initialize the predicates
-  //exactinit(1,0,0,10,10,10);
-  //exactinit();
+  exactinit(1,0,0,10,10,10);
+  exactinit();
 
   // create a graphics plotter instance and save globally
   //Server server;

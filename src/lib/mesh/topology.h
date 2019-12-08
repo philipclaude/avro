@@ -114,6 +114,7 @@ public:
 
   void orient( real_t* p=NULL );
   void orient( index_t* v , const index_t nv , real_t* p=NULL );
+  real_t volume() const;
 
   Neighbours<type>& neighbours() { return neighbours_; }
   const Neighbours<type>& neighbours() const { return neighbours_; }

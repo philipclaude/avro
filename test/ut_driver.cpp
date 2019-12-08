@@ -8,9 +8,9 @@
 #include "common/process.h"
 
 typedef luna::real_t REAL;
-//#include <tetgen1.5.0/predicates.h>
+#include <tetgen1.5.0/predicates.h>
 
-//#include <triangle/predicates.h>
+#include <triangle/predicates.h>
 
 TestDriver* __driver__ = new TestDriver;
 
@@ -29,8 +29,8 @@ main()
   ProcessGPU::initialize();
 
   // initialize the predicates
-  //exactinit(1,0,0,10,10,10);
-  //exactinit();
+  exactinit(1,0,0,10,10,10);
+  exactinit();
 
   // create a graphics plotter instance
   //Server server;
