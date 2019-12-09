@@ -36,10 +36,9 @@ if (LUNA_WITH_GL)
 	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
 endif()
 
-#add_source_directories( GMF_SOURCES "gmf source" libMeshb/libMeshb7 )
-#set_source_files_properties( ${GMF_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" TRANSMESH )
-#set_source_files_properties( ${GMF_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
-#include_directories( libMeshb/libMeshb7 )
+add_source_directories( MESHB_SOURCES "gmf source" libmeshb )
+set_source_files_properties( ${MESHB_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
+include_directories( libmeshb )
 
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack )
 
@@ -59,4 +58,4 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
 
-add_library(luna_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${GMF_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )
+add_library(luna_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )

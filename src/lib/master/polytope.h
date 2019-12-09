@@ -18,6 +18,8 @@ public:
   Polytope( coord_t number , coord_t order , const Table<int>& incidence );
   Polytope( Topology<Polytope>& topology , const coord_t order , const Table<int>& incidence );
 
+  static std::string type_name() { return "polytope"; }
+
   const Table<int>& incidence() const { return incidence_; }
 
   void get_edges( const index_t* v0 , index_t nv , std::vector<index_t>& ek ) const;

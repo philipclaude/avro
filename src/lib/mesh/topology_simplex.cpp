@@ -11,7 +11,7 @@ namespace luna
 
 template<>
 Topology<Simplex>::Topology( Points& vertices , coord_t number , coord_t order ) :
-  TopologyBase(vertices,number,TableLayout_Rectangular),
+  TopologyBase(vertices,number,TableLayout_Rectangular,"simplex"),
   master_( number , order ),
   neighbours_(*this),
   inverse_(*this)

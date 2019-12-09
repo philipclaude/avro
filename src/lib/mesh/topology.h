@@ -20,18 +20,19 @@ namespace luna
 {
 
 class Points;
-class ClippingPlane;
 
 class TopologyBase : public Table<index_t>
 {
-public:
-  TopologyBase( Points& vertices , const coord_t number , TableLayoutCategory category ) :
+protected:
+  TopologyBase( Points& vertices , const coord_t number , TableLayoutCategory category , const std::string& type ) :
     Table<index_t>(category,number+1),
     points_(vertices),
     number_(number),
-    fields_(*this)
+    fields_(*this),
+    type_(type)
   {}
 
+public:
   virtual ~TopologyBase() {}
 
   Points& points() const { return points_; }
@@ -41,7 +42,6 @@ public:
 
   void set_number( coord_t number ) { number_ = number; set_rank(number_+1); }
 
-  // virtual functions for leaf
   void copy( TopologyBase& topology );
 
   virtual void getPoints( std::vector<index_t>& p ) const = 0;
@@ -50,6 +50,8 @@ public:
 
   const std::string& name() const { return name_; }
   void setName( const std::string& _name ) { name_ = _name; }
+
+  const std::string& type_name() const { return type_; }
 
   void set_dummy( bool x ) { dummy_ = x; }
   bool dummy() const { return dummy_; }
@@ -70,6 +72,7 @@ protected:
   bool dummy_;
   std::string name_;
   Fields fields_;
+  std::string type_;
 };
 
 template<typename type>

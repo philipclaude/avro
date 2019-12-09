@@ -627,6 +627,26 @@ Points::from_json( const json& J , const Model* model )
 #endif
 
 void
+Points::compute_param( index_t k )
+{
+	if (primitive_[k]==NULL) return;
+
+	std::vector<real_t> x( (*this)[k] , (*this)[k] + dim_ );
+	std::vector<real_t> U( u(k) , u(k) + udim_ );
+	primitive_[k]->project(x,U);
+
+	for (coord_t d=0;d<udim_;d++)
+		u(k,d) = U[d];
+}
+
+void
+Points::compute_params()
+{
+	for (index_t k=0;k<nb();k++)
+		compute_param(k);
+}
+
+void
 Points::clear()
 {
   u_.clear();

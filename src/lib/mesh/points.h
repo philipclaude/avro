@@ -88,6 +88,9 @@ public:
   void to_json( json& J ) const;
   void from_json( const json& J , const Model* model=NULL );
 
+  void compute_param( index_t k );
+  void compute_params();
+
  real_t INFTY = 1.0e20;
 
 protected:

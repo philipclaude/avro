@@ -101,6 +101,25 @@ Object::evaluate( const numerics::Coordinate& u , numerics::Coordinate& x ) cons
 }
 
 void
+Object::project( std::vector<real_t>& x , std::vector<real_t>& u ) const
+{
+  if (number_==0)
+  {
+    std::fill( u.begin() , u.end() , 0.0 );
+    return;
+  }
+
+  if (x.size()==2) x.push_back(0);
+  luna_assert( x.size()==3 );
+
+  print();
+  real_t result[3];
+  EGADS_ENSURE_SUCCESS( EG_invEvaluate(*object_,x.data(),u.data(),result) );
+  for (coord_t d=0;d<3;d++)
+    x[d] = result[d];
+}
+
+void
 Object::print() const
 {
   for (index_t i=0;i<body_->number()-number_;i++)

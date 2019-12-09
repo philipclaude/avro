@@ -44,6 +44,36 @@ Model::Model( const Context& context , const std::string& filename , bool split 
   determine_number();
 }
 
+Entity*
+Model::find_entity( index_t id , int object_class ) const
+{
+  if (nb_bodies()!=1)
+    printf("don't know how to find with %lu bodies\n",nb_bodies());
+
+  const Body& b = body(0);
+	ego object;
+	EGADS_ENSURE_SUCCESS( EG_objectBodyTopo( *b.object() , object_class , id , &object ) );
+	return b.lookup(object).get();
+}
+
+void
+Model::determine_number()
+{
+  number_ = 0;
+  for (index_t k=0;k<nb_bodies();k++)
+  {
+    if (body_[k]->number()>number_)
+      number_ = body_[k]->number();
+  }
+}
+
+void
+Model::print() const
+{
+  for (index_t k=0;k<nb_bodies();k++)
+    body_[k]->print();
+}
+
 } // EGADS
 
 } // luna

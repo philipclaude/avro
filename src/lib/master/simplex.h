@@ -25,6 +25,8 @@ public:
     Master(number,order,"simplex")
   {}
 
+  static std::string type_name() { return "simplex"; }
+
   Simplex( const Topology<Simplex>& topology , const coord_t order );
 
   void precalculate();

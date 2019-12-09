@@ -30,12 +30,16 @@ public:
   void inverse( numerics::Coordinate& x , numerics::Coordinate& u ) const;
   void evaluate( const numerics::Coordinate& u , numerics::Coordinate& p ) const;
 
+
+  void project( std::vector<real_t>& x , std::vector<real_t>& u ) const;
+
   void set_object( ego* object );
 
   void build_hierarchy();
 
   ego* object();
   const ego* object() const;
+
 
   void print() const;
 

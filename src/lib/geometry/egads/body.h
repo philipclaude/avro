@@ -45,6 +45,9 @@ public:
 
   void print() const;
 
+  ego* object() { return object_; }
+  const ego* object() const { return object_; }
+
 private:
   const Context& context_;
   EGADS::Model* model_;

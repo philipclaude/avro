@@ -50,6 +50,8 @@ public:
   virtual void print() const = 0;
   virtual void build_hierarchy() = 0;
 
+  virtual void project( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
+
 protected:
   Entity( coord_t number );
   Entity( coord_t number , const std::string& name );
