@@ -45,9 +45,14 @@ public:
   const Node_t& child( index_t k ) const
     { luna_assert(k<nb_children()); return *child_[k].get(); }
 
-private:
+  void build_parents();
+  void add_parent( Node_t* parent ) { parents_.push_back(parent); }
 
+protected:
   std::vector<Node_ptr> child_;
+  std::vector<Node_t*> parents_; // list of all parents owning this
+
+  Node_t* derived() { return static_cast<Node_t*>(this); }
 };
 
 

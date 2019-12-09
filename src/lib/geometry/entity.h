@@ -32,6 +32,8 @@ public:
   index_t nb_parents() const { return parents_.size(); }
   Entity* parents( index_t k ) { return parents_[k]; }
   const Entity* parent( index_t k ) const { return parents_[k]; }
+  void set_parent( Entity* parent ) { parent_ = parent; }
+  void build_parents();
 
   const std::vector<Entity*>& parents() const { return parents_; }
 
@@ -65,7 +67,7 @@ protected:
   bool interior_;
   bool sense_required_;
 
-  std::vector<Entity*> parents_;
+  Entity* parent_;
   bool tessellatable_;
 };
 

@@ -39,12 +39,14 @@ intersection( const std::vector<T>& s0 , const std::vector<T>& s1 , std::vector<
 
 Entity::Entity( coord_t number ) :
   number_(number),
-  name_("unnamed")
+  name_("unnamed"),
+	parent_(nullptr)
 {}
 
 Entity::Entity( coord_t number , const std::string& name ) :
   number_(number),
-  name_(name)
+  name_(name),
+	parent_(nullptr)
 {}
 
 Entity*
@@ -231,6 +233,12 @@ Entity::above( const Entity* e ) const
 			return true;
 	}
 	return false;
+}
+
+void
+Entity::build_parents()
+{
+	
 }
 
 template class Tree<Entity>;

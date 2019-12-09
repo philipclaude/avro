@@ -8,21 +8,16 @@
 namespace luna
 {
 
-namespace library
+namespace meshb
 {
 
-class meshbFile : public Topology<Simplex<Lagrange>>
-{
+template<typename type>
+void read_meshb( const std::string& meshfile , Topology<type>& topology );
 
-public:
-  meshbFile( const std::string& filename );
+template<typename type>
+void read_solb( const std::string& solfile );
 
-private:
-  std::string filename_;
-  Points points_;
-};
-
-} // library
+} // meshb
 
 } // luna
 

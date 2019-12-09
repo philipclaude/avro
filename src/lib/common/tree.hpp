@@ -23,4 +23,17 @@ Tree<Node_t>::above( const Node_t* node ) const
   return false;
 }
 
+template<typename Node_t>
+void
+Tree<Node_t>::build_parents()
+{
+  // go through the children
+  for (index_t k=0;k<nb_children();k++)
+  {
+    child(k).add_parent(derived());
+    child(k).build_parents();
+  }
+  uniquify(parents_);
+}
+
 } // luna

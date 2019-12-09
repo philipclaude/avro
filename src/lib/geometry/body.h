@@ -13,10 +13,19 @@ class Entity;
 
 class Body
 {
+protected:
   typedef std::shared_ptr<Entity> Entity_ptr;
 public:
+  virtual ~Body() {}
+  
   coord_t number() const { return number_; }
   void add( Entity_ptr prim );
+
+  index_t nb_entities() const { return entity_.size(); }
+
+  void build_parents();
+
+  virtual void print() const = 0;
 
 protected:
 

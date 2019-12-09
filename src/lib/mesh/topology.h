@@ -39,6 +39,8 @@ public:
   coord_t number() const { return number_; }
   coord_t order() const { return order_; }
 
+  void set_number( coord_t number ) { number_ = number; set_rank(number_+1); }
+
   // virtual functions for leaf
   void copy( TopologyBase& topology );
 
@@ -49,7 +51,7 @@ public:
   const std::string& name() const { return name_; }
   void setName( const std::string& _name ) { name_ = _name; }
 
-  void setDummy( bool x ) { dummy_ = x; }
+  void set_dummy( bool x ) { dummy_ = x; }
   bool dummy() const { return dummy_; }
 
   template<typename derived_t>

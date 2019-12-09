@@ -1,7 +1,7 @@
 #ifndef LUNA_LIB_GEOMETRY_EGADS_H_
 #define LUNA_LIB_GEOMETRY_EGADS_H_
 
-#include "geometry/body.h"
+#include "geometry/egads/body.h"
 #include "geometry/egads/data.h"
 #include "geometry/entity.h"
 
@@ -25,23 +25,24 @@ class Object : public Entity
 {
 public:
   Object( const Context& context , ego* object );
-  Object( ego object , Body* body );
+  Object( ego* object , EGADS::Body* body );
 
   void inverse( numerics::Coordinate& x , numerics::Coordinate& u ) const;
   void evaluate( const numerics::Coordinate& u , numerics::Coordinate& p ) const;
 
   void set_object( ego* object );
 
-  void build_hierarchy() {}
+  void build_hierarchy();
 
   ego* object();
   const ego* object() const;
 
-  void print() const { luna_implement; }
+  void print() const;
 
 private:
+  EGADS::Body* body_;
   const Context& context_;
-  ego* ego_;
+  ego* object_;
 
   egoData data_;
 
