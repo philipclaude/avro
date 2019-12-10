@@ -4,6 +4,9 @@
 
 #include "common/tools.h"
 
+#include "library/ckf.h"
+#include "library/metric.h"
+
 #include "numerics/linear_algebra.h"
 
 using namespace luna;
@@ -179,5 +182,33 @@ UT_TEST_CASE(intersect)
 }
 UT_TEST_CASE_END(intersect)
 
+UT_TEST_CASE( metric_field_tests )
+{
+  for (coord_t dim=2;dim<=2;dim++)
+  {
+
+    library::MetricField_Uniform function(dim,0.1);
+
+    for (index_t n=4;n<=5;n++)
+    {
+      std::vector<index_t> sizes(dim,n);
+      CKF_Triangulation topology(sizes);
+
+      MetricAttachment field(function,topology.points());
+      MetricField<Simplex> metric_field(topology,field);
+
+      UT_ASSERT_EQUALS( metric_field.nb_data() , topology.points().nb() );
+
+      metric_field.attachment().set_cells( topology );
+
+      topology.points().remove( 0 );
+      metric_field.remove( 0 );
+
+      UT_ASSERT_EQUALS( metric_field.attachment().nb() , topology.points().nb() );
+
+    }
+  }
+}
+UT_TEST_CASE_END( metric_field_tests )
 
 UT_TEST_SUITE_END( Metric_suite )

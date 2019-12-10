@@ -9,17 +9,13 @@
 #include "numerics/geometry.h"
 
 #include <json/json.hpp>
-
-#if 0
-#include <libMeshb/libMeshb7/libmeshb.h>
-#endif
+#include <libmeshb/libmeshb7.h>
 
 #include <cmath>
 
 namespace luna
 {
 
-#if 1
 template<typename type>
 MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld ) :
 	Field<type,Metric>(topology,1,CONTINUOUS),
@@ -50,7 +46,10 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
   // save the tensors stored in the field
   // these are static and need to be kept for interpolation
   for (index_t k=0;k<attachment_.nb();k++)
+	{
+		Field<type,Metric>::value(k).allocate(number_);
     Field<type,Metric>::value(k).set( attachment_[k] );
+	}
 }
 
 template<typename type>
@@ -746,9 +745,10 @@ MetricAttachment::MetricAttachment( const std::vector<numerics::SymMatrixD<real_
   }
 }
 
+#if 1
 template<typename type>
 void
-MetricAttachment::set_cells( Topology<type>& topology )
+MetricAttachment::set_cells( const Topology<type>& topology )
 {
   std::vector<index_t> vertex(1);
   int offset = topology.points().nb_ghost() -points_.nb_ghost();
@@ -774,6 +774,8 @@ MetricAttachment::set_cells( Topology<type>& topology )
 	luna_assert_msg(counted==points_.nb(),
 									"counted = %lu, nb_points = %lu",counted,points_.nb());
 }
+template void MetricAttachment::set_cells( const Topology<Simplex>& );
+#endif
 
 #if 0
 template<typename type>
@@ -841,6 +843,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 	printf("limited %lu metrics out of %lu\n",nb_limited,this->nb());
 }
 #endif
+
 
 void
 MetricAttachment::reset( MetricAttachment& fld )
@@ -995,7 +998,5 @@ MetricAttachment::from_solb( const std::string& filename )
 #endif
 
 template class MetricField<Simplex>;
-
-#endif
 
 } // luna

@@ -41,6 +41,8 @@ public:
   T& eval( index_t elem , const Coordinate& x ) const;
   T& eval( const Coordinate& x ) const;
 
+  void allocate( index_t n );
+
   T& operator()( index_t i , index_t j )
     { return data_[Table<index_t>::operator()(i,j)]; }
 
@@ -58,7 +60,7 @@ public:
   T& value( index_t k ) { return data_[k]; }
 
 protected:
-  FieldBase( FieldType type );
+  FieldBase( FieldType type , TableLayoutCategory category=TableLayout_Jagged );
   std::vector<T> data_;
 
 private:

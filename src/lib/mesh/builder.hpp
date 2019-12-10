@@ -8,7 +8,14 @@ template<typename T>
 void
 Builder<type>::transfer( Field<type,T>& F ) const
 {
-  luna_implement;
+  // transfer the associativity
+  for (index_t k=0;k<nb();k++)
+    F.add( (*this)(k) , nv(k) );
+
+  // transfer the dof
+  const std::vector<index_t>& idx = Table<index_t>::data();
+  index_t nb_dof = * std::max_element( idx.begin() , idx.end() ) +1;
+  F.allocate( nb_dof );
 }
 
 template<typename type>

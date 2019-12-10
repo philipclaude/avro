@@ -83,6 +83,14 @@ intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<re
 class Metric : public numerics::SymMatrixD<real_t>
 {
 public:
+  Metric() :
+    numerics::SymMatrixD<real_t>(0),
+    number_(0),
+    log_(0),
+    elem_(0),
+    sqdet_(-1)
+  {}
+
   Metric( coord_t number ) :
     numerics::SymMatrixD<real_t>(number),
     number_(number),
@@ -90,6 +98,14 @@ public:
     elem_(0),
     sqdet_(-1)
   {}
+
+  void allocate( coord_t n )
+  {
+    numerics::SymMatrixD<real_t>::allocate(n);
+    log_.allocate(n);
+    number_ = n;
+  }
+
   numerics::SymMatrixD<real_t>& log(){ return log_; }
   const numerics::SymMatrixD<real_t>& log() const { return log_; }
 
@@ -128,7 +144,7 @@ class MetricAttachment : public Array<Metric>
 public:
 	template<typename Function>
 	MetricAttachment( Function& fn , Points& points ) :
-    number_(fn.number()), points_(points)
+    number_(fn.dim()), points_(points)
 	{
 		for (index_t k=0;k<points_.nb();k++)
     {
@@ -142,8 +158,8 @@ public:
       }
       else
 			{
-        mk = fn(points_[k]);
-        fn.calculate();
+        mk.set( fn(points_[k]) );
+        mk.calculate();
 			  Array<Metric>::add( mk );
 			}
     }
@@ -156,7 +172,7 @@ public:
 	real_t sqdet( index_t k ) const
     { return Array<Metric>::data_[k].sqdet(); }
 
-  template<typename type> void set_cells( Topology<type>& topology );
+  template<typename type> void set_cells( const Topology<type>& topology );
 
   void reset( MetricAttachment& fld );
   void add( numerics::SymMatrixD<real_t>& tensor, index_t elem );
@@ -206,7 +222,7 @@ public:
   void add( index_t n0 , index_t n1 , real_t*  x );
   void recompute( index_t p , real_t*  x , const std::vector<index_t>& N );
   bool recompute( index_t p , real_t*  x );
-	index_t elementContaining( index_t p )
+	index_t element_containing( index_t p )
 		{ return attachment_[p].elem(); }
   void remove( index_t k );
 

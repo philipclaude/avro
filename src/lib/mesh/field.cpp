@@ -17,17 +17,20 @@ namespace luna
 {
 
 template<typename T>
-FieldBase<T>::FieldBase( FieldType type ) :
+FieldBase<T>::FieldBase( FieldType type , TableLayoutCategory category ) :
+  Table<index_t>(category),
   type_(type)
 {}
 
 template<typename T>
 Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , FieldType type ) :
-  FieldBase<T>(type),
+  FieldBase<T>(type,TableLayout_Rectangular),
   topology_(topology),
   master_(topology.number(),order)
 {
+  Table<index_t>::set_rank( master_.nb_basis() );
   printf("constructing field with order %u\n",master_.order());
+  build();
 }
 
 template<typename T>
@@ -37,6 +40,13 @@ Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldTy
   master_(topology,order,topology.points().incidence())
 {
   printf("constructing field with order %u\n",master_.order());
+}
+
+template<typename T>
+void
+FieldBase<T>::allocate( index_t n )
+{
+  data_.resize(n);
 }
 
 template<typename T>

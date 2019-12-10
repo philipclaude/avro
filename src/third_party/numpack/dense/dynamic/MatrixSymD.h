@@ -94,6 +94,12 @@ public:
     data.resize(SIZE,T(0));
   }
 
+  void allocate( int n )
+  {
+    m_ = n;
+    allocate();
+  }
+
   // assignment
   MatrixSymD& operator=( const MatrixSymD& m );
   MatrixSymD& operator=( const T& s );

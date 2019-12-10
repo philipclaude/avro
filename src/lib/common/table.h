@@ -120,7 +120,7 @@ public:
   void add( const type* x , index_t n )
   {
     if (category_==TableLayout_Rectangular)
-      luna_assert( n == rank_ );
+      luna_assert_msg( n == rank_ , "n = %lu, rank = %lu" , n , rank_ );
     if (category_==TableLayout_Jagged)
       first_.push_back( data_.size() );
     for (index_t j=0;j<n;j++)
