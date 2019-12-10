@@ -48,6 +48,8 @@ public:
   void build_parents();
   void add_parent( Node_t* parent ) { parents_.push_back(parent); }
 
+  void get_children( std::vector<Node_t*>& children );
+
 protected:
   std::vector<Node_ptr> child_;
   std::vector<Node_t*> parents_; // list of all parents owning this

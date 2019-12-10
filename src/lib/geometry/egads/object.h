@@ -27,9 +27,8 @@ public:
   Object( const Context& context , ego* object );
   Object( ego* object , EGADS::Body* body );
 
-  void inverse( numerics::Coordinate& x , numerics::Coordinate& u ) const;
-  void evaluate( const numerics::Coordinate& u , numerics::Coordinate& p ) const;
-
+  void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
+  void evaluate( const std::vector<real_t>& u , std::vector<real_t>& p ) const;
 
   void project( std::vector<real_t>& x , std::vector<real_t>& u ) const;
 

@@ -36,4 +36,15 @@ Tree<Node_t>::build_parents()
   uniquify(parents_);
 }
 
+template<typename Node_t>
+void
+Tree<Node_t>::get_children( std::vector<Node_t*>& children )
+{
+  for (index_t k=0;k<nb_children();k++)
+  {
+    children.push_back(child_ptr(k));
+    child(k).get_children(children);
+  }
+}
+
 } // luna

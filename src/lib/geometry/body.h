@@ -17,7 +17,7 @@ protected:
   typedef std::shared_ptr<Entity> Entity_ptr;
 public:
   virtual ~Body() {}
-  
+
   coord_t number() const { return number_; }
   void add( Entity_ptr prim );
 
@@ -26,6 +26,10 @@ public:
   void build_parents();
 
   virtual void print() const = 0;
+
+
+  void get_entities( std::vector<Entity*>& entities ) const;
+  void get_tessellatable( std::vector<Entity*>& entities ) const;
 
 protected:
 

@@ -194,6 +194,7 @@ private:
     else luna_assert_not_reached;
   }
 
+protected:
   TableLayoutCategory category_;
   bool sorted_;
   index_t rank_;

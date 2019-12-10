@@ -89,13 +89,13 @@ Object::build_hierarchy()
 }
 
 void
-Object::inverse( numerics::Coordinate& x , numerics::Coordinate& u ) const
+Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
 {
   x[0] = 0;
 }
 
 void
-Object::evaluate( const numerics::Coordinate& u , numerics::Coordinate& x ) const
+Object::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
 {
   x[0] = 0;
 }

@@ -63,6 +63,11 @@ public:
     data_.clear();
   }
 
+  void resize( index_t n , type x )
+  {
+    data_.resize( n , x );
+  }
+
   void print() const
   {
     luna_implement;

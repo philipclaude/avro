@@ -50,10 +50,10 @@ Model::find_entity( index_t id , int object_class ) const
   if (nb_bodies()!=1)
     printf("don't know how to find with %lu bodies\n",nb_bodies());
 
-  const Body& b = body(0);
+  const Body* b = dynamic_cast<const EGADS::Body*>(&body(0));
 	ego object;
-	EGADS_ENSURE_SUCCESS( EG_objectBodyTopo( *b.object() , object_class , id , &object ) );
-	return b.lookup(object).get();
+	EGADS_ENSURE_SUCCESS( EG_objectBodyTopo( *b->object() , object_class , id , &object ) );
+	return b->lookup(object).get();
 }
 
 void

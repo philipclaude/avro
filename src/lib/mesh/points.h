@@ -81,9 +81,8 @@ public:
 
   void dump( const std::string& filename ) const;
 
-  void findGeometry( const Body& body , index_t ibody=1 ,real_t tol=1e-12 );
-  void findGeometry( const Model& model ,real_t tol=1e-12 );
-  void projectToGeometry( Body& body );
+  void attach( const Body& body , index_t ibody=1 ,real_t tol=1e-12 );
+  void attach( const Model& model ,real_t tol=1e-12 );
 
   void to_json( json& J ) const;
   void from_json( const json& J , const Model* model=NULL );

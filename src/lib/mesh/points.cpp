@@ -2,7 +2,7 @@
 
 #include "geometry/body.h"
 #include "geometry/entity.h"
-//#include "geometry/model.h"
+#include "geometry/model.h"
 
 #include "mesh/topology.h"
 #include "mesh/points.h"
@@ -284,16 +284,13 @@ Points::dump( const std::string& filename ) const
   fclose(fid);
 }
 
-/*
 void
-Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
+Points::attach( const Body& body , index_t ibody ,real_t tol )
 {
   // useful for when a mesh is read but it does not have a geometry
   // even though we know what it should be
   std::vector<real_t> x(4,0.);
-  coord_t dlim = (dim_<=3) ? dim_ : 4;
 
-  Entity *e;
   std::vector<Entity*> e_candidates;
   std::vector<std::vector<real_t>> u_candidates;
 
@@ -301,7 +298,8 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
 
   // get the full list of primitives
   std::vector<Entity*> primitives;
-  body.listTessellatableEntities(primitives);
+  body.get_tessellatable(primitives);
+
   std::vector<real_t> distances( primitives.size() , 0. );
   std::vector<real_t> u( udim_*primitives.size() );
 
@@ -313,7 +311,7 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
 
     recheck = true;
 
-    const real_t* xk = this->operator[](k);
+    const real_t* xk = (*this)[k];
 
     e_candidates.clear();
     u_candidates.clear();
@@ -322,28 +320,14 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
     for (index_t j=0;j<primitives.size();j++)
     {
       // re-assign the original coordinates
-      for (coord_t d=0;d<dlim;d++)
-        x[d] = xk[d];
+			x.assign( xk , xk+dim_ );
 
-      e = primitives[j];
+      Entity* e = primitives[j];
 
       // project to the primitive and compute the distance
-      primitives[j]->projectToGeometry( x.data() , uk.data() );
+      primitives[j]->project( x , uk );
 
       distances[j] = numerics::distance2( xk , x.data() , dim_ );
-
-      #if 0
-      if (primitives[j]->number()==2 && !primitives[j]->tesseractGeometry())
-      {
-        // better to use inTopology for surface fit
-        int icode = EG_inTopology( primitives[j]->object() , xk );
-        if (icode==EGADS_SUCCESS)
-        {
-          recheck = false;
-          distances[j] = 0.;
-        }
-      }
-      #endif
 
       // add as candidate if the tolerance is satisfied
       if (distances[j]<tol)
@@ -377,125 +361,31 @@ Points::findGeometry( const Body& body , index_t ibody ,real_t tol )
       luna_assert(ek == primitive_[k]);
     }
     else
-      setEntity(k,ek);
+      set_entity(k,ek);
 
-    setParam(k,uk);
+    set_param(k,uk);
     body_[k] = ibody;
 
     // get the primitive coordinates
-    if (ek->tesseractGeometry())
-    {
-      // re-assign the original coordinates
-      for (coord_t d=0;d<dlim;d++)
-        x[d] = xk[d];
+		if (recheck)
+		{
+    	ek->evaluate( uk , x );
 
-      ek->projectToGeometry(x.data());
-    }
-    else
-      ek->evaluate( uk.data() , x.data() );
-
-    // check the distance is lower than the tolerance
-   real_t d = numerics::distance2(xk,x.data(),dim_);
-    if (recheck) luna_assert_msg( d < tol , "d = %1.16e" , d );
+    	// check the distance is lower than the tolerance
+    	real_t d = numerics::distance2(xk,x.data(),dim_);
+    	luna_assert_msg( d < tol , "d = %1.16e" , d );
+		}
   }
 }
 
 void
-Points::findGeometry( const Model& model ,real_t tol )
+Points::attach( const Model& model , real_t tol )
 {
   for (index_t k=0;k<model.nb_bodies();k++)
-    findGeometry( *model.body(k) , k+1 , tol );
+    attach( model.body(k) , k+1 , tol );
 }
 
-void
-Points::projectToGeometry( Body& body )
-{
-  // project the vertices to the egads geometry
-  std::vector<real_t> x(4,0.);
-  coord_t dlim = (dim_<=3) ? dim_ : 4;
-
-  std::vector<Entity*> e_candidates;
-  std::vector<std::vector<real_t>> u_candidates;
-
-  // get the full list of primitives
-  std::vector<Entity*> primitives;
-  body.listTessellatableEntities(primitives);
-  std::vector<real_t> distances( primitives.size() , 0. );
-  std::vector<real_t> u( udim_*primitives.size() );
-
-  if (dim_ != 4) luna_assert(udim_ > 0);
-  std::vector<real_t> uk(udim_);
-
-  for (index_t k=0;k<nb();k++)
-  {
-    // find the closest primitive with lowest topological dimension
-    const real_t* xk = this->operator[](k);
-
-    // compute the distance to each primitive
-    for (index_t j=0;j<primitives.size();j++)
-    {
-      // re-assign the original coordinates
-      for (coord_t d=0;d<dlim;d++)
-        x[d] = xk[d];
-
-      // project to the primitive and compute the distance
-      primitives[j]->projectToGeometry(x.data(), u.data() + udim_*j);
-      distances[j] = numerics::distance2( xk , x.data() , dim_ );
-
-    }
-
-   real_t dmin = *std::min_element( distances.begin() , distances.end() );
-
-    e_candidates.clear();
-    u_candidates.clear();
-    for (index_t j=0;j<distances.size();j++)
-    {
-      if (distances[j]<dmin+1e-12)
-      {
-        e_candidates.push_back( primitives[j] );
-        u_candidates.push_back( std::vector<real_t>(u.begin() + udim_*j, u.begin() + udim_*(j+1)) );
-      }
-    }
-
-    if (e_candidates.size()==0)
-		{
-			//printf("no candidates for vertex %lu\n",k);
-			continue;
-		}
-
-    // find the candidate with the lowest topological number
-    Entity* ek = e_candidates[0];
-    uk = u_candidates[0];
-    for (index_t j=1;j<e_candidates.size();j++)
-    {
-      if (e_candidates[j]->number()<ek->number())
-      {
-        ek = e_candidates[j];
-        uk = u_candidates[j];
-      }
-    }
-
-    //print(k,true);
-    setEntity(k,ek);
-    setParam(k,uk);
-
-    // recall the projection (this is only so we don't have to save all the coordinates)
-   real_t xp[3];
-    if (ek->tesseractGeometry())
-    {
-      for (coord_t d=0;d<dlim;d++)
-        xp[d] = xk[d];
-      ek->projectToGeometry( xp );
-    }
-    else
-      ek->evaluate( uk.data() , xp );
-
-    for (coord_t d=0;d<dlim;d++)
-      this->operator[](k)[d] = xp[d];
-  }
-
-}
-
+/*
 void
 Points::computePartition( ArrayBase<index_t>& data ,
                       std::vector<index_t>& cell_partition , index_t nparts )
@@ -588,24 +478,23 @@ Points::to_json( json& J ) const
   J["geometry"] = geometry;
 }
 
-/*
 void
 Points::from_json( const json& J , const Model* model )
 {
   dim_ = J["dimension"];
   std::vector<real_t> X = J.at("coordinates");
-  x_ = X;
-  std::vector<real_t> U = J.at("parameters");
-  u_ = U;
+  DOF<real_t>::data_ = X;
+  //std::vector<real_t> U = J.at("parameters");
+  //u_ = U;
   nb_ghost_ = J["nb_ghost"];
 
   primitive_.resize( nb() , NULL );
-  body_.resize( nb() );
+  body_.resize( nb() , 0 );
 
   if (model!=NULL)
   {
     std::vector<Entity*> primitives;
-    model->listEntities(primitives);
+    model->get_entities(primitives);
     std::vector<int> geometry = J.at("geometry");
     luna_assert(geometry.size()==nb());
     for (index_t k=0;k<nb();k++)
@@ -613,16 +502,15 @@ Points::from_json( const json& J , const Model* model )
       if (geometry[k]<0) continue;
       for (index_t j=0;j<primitives.size();j++)
       {
-        if ((int)primitives[j]->bodyIndex()==geometry[j])
+        if ((int)primitives[j]->identifier()==geometry[j])
         {
-          setEntity(k,primitives[j]);
+          set_entity(k,primitives[j]);
           break;
         }
       }
     }
   }
 }
-*/
 
 #endif
 
