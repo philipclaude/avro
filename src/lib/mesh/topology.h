@@ -44,9 +44,9 @@ public:
 
   void copy( TopologyBase& topology );
 
-  virtual void getPoints( std::vector<index_t>& p ) const = 0;
-  virtual void getEdges( std::vector<index_t>& e ) const = 0;
-  virtual void getTriangles( std::vector<index_t>& t ) const = 0;
+  virtual void get_points( std::vector<index_t>& p ) const = 0;
+  virtual void get_edges( std::vector<index_t>& e ) const = 0;
+  virtual void get_triangles( std::vector<index_t>& t ) const = 0;
 
   const std::string& name() const { return name_; }
   void setName( const std::string& _name ) { name_ = _name; }
@@ -98,9 +98,9 @@ public:
 
   bool ghost( index_t k ) const { return false; }
 
-  void getPoints( std::vector<index_t>& p ) const {}
-  void getEdges( std::vector<index_t>& e ) const;
-  void getTriangles( std::vector<index_t>& t ) const;
+  void get_points( std::vector<index_t>& p ) const {}
+  void get_edges( std::vector<index_t>& e ) const;
+  void get_triangles( std::vector<index_t>& t ) const;
 
   void get_elem( index_t k , std::vector<real_t*>& X ) const;
   void get_elem( index_t k , std::vector<const real_t*>& X ) const;

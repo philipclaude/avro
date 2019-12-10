@@ -28,6 +28,7 @@ public:
   Object( ego* object , EGADS::Body* body );
 
   void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
+  void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const;
   void evaluate( const std::vector<real_t>& u , std::vector<real_t>& p ) const;
 
   void project( std::vector<real_t>& x , std::vector<real_t>& u ) const;

@@ -39,17 +39,16 @@ OpenGLPrimitive::convert()
   {
     // get the edges from the topology
     std::vector<index_t> edges;
-    topology_.getEdges( edges );
+    topology_.get_edges( edges );
     nb_edges = edges_.size()/2;
     edges_.assign( edges.begin() , edges.end() );
   }
   if (number>=2)
   {
     // get the triangles from the topology (TODO)
-    luna_assert( number==2 );
     std::vector<index_t> triangles;
     triangles_.clear();
-    topology_.getTriangles(triangles);
+    topology_.get_triangles(triangles);
     nb_triangles = triangles.size()/3;
     triangles_.assign( triangles.begin() , triangles.end() );
   }
@@ -70,7 +69,7 @@ OpenGLPrimitive::convert()
   }
 
   // compute the normals
-  if (topology_.number()==2)
+  if (topology_.number()>=2)
   {
     real_t x1,y1,z1,x2,y2,z2,x3,y3,z3;
     real_t dis;

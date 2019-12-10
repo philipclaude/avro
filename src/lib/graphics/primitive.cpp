@@ -26,7 +26,7 @@ Primitive::Primitive( const TopologyBase& topology , Window* window ) :
 void
 Primitive::selectShader( Plotter* plotter )
 {
-  if (number_==2)
+  if (number_>=2)
   {
     shader_ = &plotter->shader("wv");
     printf("selecting wv shader!\n");

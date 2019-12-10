@@ -50,9 +50,8 @@ public:
   virtual void print() const = 0;
   virtual void build_hierarchy() = 0;
 
-  virtual void project( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
-
   virtual void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
+  virtual void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
   virtual void evaluate( const std::vector<real_t>& u , std::vector<real_t>& p ) const = 0;
 
 protected:

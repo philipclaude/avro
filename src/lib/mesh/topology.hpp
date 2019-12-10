@@ -15,7 +15,7 @@ Topology<type>::Topology( Points& points , coord_t number ) :
 
 template<typename type>
 void
-Topology<type>::getEdges( std::vector<index_t>& edges ) const
+Topology<type>::get_edges( std::vector<index_t>& edges ) const
 {
   std::vector<index_t> ek;
 
@@ -53,7 +53,7 @@ Topology<type>::getEdges( std::vector<index_t>& edges ) const
 
 template<typename type>
 void
-Topology<type>::getTriangles( std::vector<index_t>& triangles ) const
+Topology<type>::get_triangles( std::vector<index_t>& triangles ) const
 {
   luna_assert( number_==2 );
   triangles.clear();

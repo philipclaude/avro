@@ -16,6 +16,12 @@ Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
   Simplex(topology.number(),order)
 {}
 
+Simplex::Simplex( const coord_t number , const coord_t order ) :
+  Master(number,order,"simplex")
+{
+  precalculate();
+}
+
 void
 Simplex::precalculate()
 {
@@ -26,8 +32,22 @@ Simplex::precalculate()
   for (index_t k=0;k<number_+1;k++)
   for (index_t i=k+1;i<number_+1;i++)
   {
-    this->edges_.push_back(k);
-    this->edges_.push_back(i);
+    edges_.push_back(k);
+    edges_.push_back(i);
+  }
+
+  // save the triangles
+  for (coord_t i=0;i<number_+1;i++)
+  {
+    for (coord_t j=i+1;j<number_+1;j++)
+    {
+      for (coord_t k=j+1;k<number_+1;k++)
+      {
+        triangles_.push_back( i );
+        triangles_.push_back( j );
+        triangles_.push_back( k );
+      }
+    }
   }
 
   // triangulate the reference element
@@ -176,6 +196,15 @@ Simplex::get_edges( const index_t* v , const index_t nv , std::vector<index_t>& 
     ek[j] = v[edges_[j]];
 }
 
+void
+Simplex::get_triangles( const index_t* v , const index_t nv , std::vector<index_t>& tk ) const
+{
+  // retrieve all edges of the simplex
+  tk.resize( triangles_.size() );
+  for (index_t j=0;j<triangles_.size();j++)
+    tk[j] = v[triangles_[j]];
+}
+
 real_t
 Simplex::closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y ) const
 {
@@ -293,6 +322,29 @@ Simplex::edge( index_t k , index_t i ) const
 {
   luna_assert( i <= 2 );
   return edges_[2*k+i];
+}
+
+void
+Simplex::triangulate( coord_t number , Topology<Simplex>& topology , Points& points , const index_t* v , index_t nv ) const
+{
+  luna_assert(nv==index_t(number+1));
+  std::vector<index_t> tk(number+1);
+  if (number==2)
+  {
+    // we were requested triangles
+    for (index_t k=0;k<triangles_.size()/3;k++)
+    {
+      for (index_t j=0;j<3;j++)
+        tk[j] = v[ triangles_[3*k+j] ];
+      topology.add(tk.data(),tk.size());
+    }
+    return;
+  }
+
+  luna_assert(number==number_);
+  for (index_t j=0;j<index_t(number+1);j++)
+    tk[j] = v[j];
+  topology.add(tk.data(),tk.size());
 }
 
 } // luna

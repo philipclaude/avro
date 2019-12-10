@@ -90,7 +90,7 @@ public:
   void compute_param( index_t k );
   void compute_params();
 
- real_t INFTY = 1.0e20;
+  real_t INFTY = 1.0e20;
 
 protected:
 

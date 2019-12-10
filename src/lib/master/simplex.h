@@ -21,9 +21,7 @@ class Points;
 class Simplex : public Master<Simplex>
 {
 public:
-  Simplex( const coord_t number , const coord_t order ) :
-    Master(number,order,"simplex")
-  {}
+  Simplex( const coord_t number , const coord_t order );
 
   static std::string type_name() { return "simplex"; }
 
@@ -91,6 +89,7 @@ public:
   index_t get_index( index_t dim , index_t ifacet , index_t ilocal ) const;
   void get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const;
   void get_edges( const index_t* v , index_t nv , std::vector<index_t>& ek ) const;
+  void get_triangles( const index_t* v , index_t nv , std::vector<index_t>& tk ) const;
 
   real_t closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y ) const;
 
@@ -98,6 +97,8 @@ public:
     { luna_implement; }
 
   index_t edge( index_t k , index_t i ) const;
+
+  void triangulate( coord_t number , Topology<Simplex>& topology , Points& points , const index_t* v , index_t nv ) const;
 
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;

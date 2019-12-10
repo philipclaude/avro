@@ -22,12 +22,11 @@ UT_TEST_CASE( test1 )
 
   Window& window = plotter.window("main");
 
-  printf("reading obj...\n");
-
   //library::TwoTriangles topology;
   //library::objFile topology( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
 
-  CKF_Triangulation topology0( {10,10} );
+  #if 0
+  CKF_Triangulation topology0( {10,10,10} );
   Points points(3);
   for (index_t k=0;k<topology0.points().nb();k++)
   {
@@ -38,8 +37,9 @@ UT_TEST_CASE( test1 )
   Topology<Simplex> topology(points,2);
   for (index_t k=0;k<topology0.nb();k++)
     topology.add( topology0(k) , topology0.nv(k) );
-
-  topology.print();
+  #else
+  CKF_Triangulation topology( {10,10,10} );
+  #endif
 
   Window::Plot_ptr plot1 = std::make_shared<Plot>(topology,&window);
   plotter.window("main").attach(plot1);

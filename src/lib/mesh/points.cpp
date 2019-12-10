@@ -325,7 +325,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
       Entity* e = primitives[j];
 
       // project to the primitive and compute the distance
-      primitives[j]->project( x , uk );
+      primitives[j]->inverse( x , uk );
 
       distances[j] = numerics::distance2( xk , x.data() , dim_ );
 
@@ -521,7 +521,7 @@ Points::compute_param( index_t k )
 
 	std::vector<real_t> x( (*this)[k] , (*this)[k] + dim_ );
 	std::vector<real_t> U( u(k) , u(k) + udim_ );
-	primitive_[k]->project(x,U);
+	primitive_[k]->inverse(x,U);
 
 	for (coord_t d=0;d<udim_;d++)
 		u(k,d) = U[d];

@@ -91,18 +91,6 @@ Object::build_hierarchy()
 void
 Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
 {
-  x[0] = 0;
-}
-
-void
-Object::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
-{
-  x[0] = 0;
-}
-
-void
-Object::project( std::vector<real_t>& x , std::vector<real_t>& u ) const
-{
   if (number_==0)
   {
     std::fill( u.begin() , u.end() , 0.0 );
@@ -117,6 +105,43 @@ Object::project( std::vector<real_t>& x , std::vector<real_t>& u ) const
   EGADS_ENSURE_SUCCESS( EG_invEvaluate(*object_,x.data(),u.data(),result) );
   for (coord_t d=0;d<3;d++)
     x[d] = result[d];
+}
+
+void
+Object::inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
+{
+  if (number_==0)
+  {
+    std::fill( u.begin() , u.end() , 0.0 );
+    return;
+  }
+
+  if (x.size()==2) x.push_back(0);
+  luna_assert( x.size()==3 );
+
+  print();
+  real_t result[3];
+  EGADS_ENSURE_SUCCESS( EG_invEvaluateGuess(*object_,x.data(),u.data(),result) );
+  for (coord_t d=0;d<3;d++)
+    x[d] = result[d];
+}
+
+void
+Object::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
+{
+  if (number_==0)
+  {
+    x[0] = data_.data[0];
+    x[1] = data_.data[1];
+    x[2] = data_.data[2];
+    return;
+  }
+
+  real_t data[18];
+  EGADS_ENSURE_SUCCESS( EG_evaluate( *object_ , u.data() , data ) );
+
+  for (coord_t d=0;d<3;d++)
+    x[d] = data[d];
 }
 
 void
