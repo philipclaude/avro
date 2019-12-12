@@ -745,7 +745,6 @@ MetricAttachment::MetricAttachment( const std::vector<numerics::SymMatrixD<real_
   }
 }
 
-#if 1
 template<typename type>
 void
 MetricAttachment::set_cells( const Topology<type>& topology )
@@ -775,7 +774,6 @@ MetricAttachment::set_cells( const Topology<type>& topology )
 									"counted = %lu, nb_points = %lu",counted,points_.nb());
 }
 template void MetricAttachment::set_cells( const Topology<Simplex>& );
-#endif
 
 #if 0
 template<typename type>

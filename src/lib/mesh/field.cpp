@@ -19,6 +19,7 @@ namespace luna
 template<typename T>
 FieldBase<T>::FieldBase( FieldType type , TableLayoutCategory category ) :
   Table<index_t>(category),
+  data_(1),
   type_(type)
 {}
 
@@ -46,7 +47,7 @@ template<typename T>
 void
 FieldBase<T>::allocate( index_t n )
 {
-  data_.resize(n);
+  data_.allocate(n);
 }
 
 template<typename T>
@@ -70,23 +71,24 @@ Field<Simplex,T>::build()
       Table<index_t>::add( v , nv );
     }
 
+    T x0(0);
     for (index_t k=0;k<topology_.points().nb();k++)
     {
-      this->data_.push_back( T(0) );
+      this->data_.add( &x0 , 1 );
     }
   }
   else if (this->type()==DISCONTINUOUS)
   {
-    printf("heerrr\n");
     luna_assert( master_.order()==0 );
     const index_t nb_poly = 1; // assume order zero
+    T x0(0);
     for (index_t k=0;k<topology_.nb();k++)
     {
       const index_t* v = topology_(k);
       const index_t nv = topology_.nv(k);
       Table<index_t>::add( v , nv );
       for (index_t j=0;j<nb_poly;j++)
-        this->data_.push_back( T(0) );
+        this->data_.add( &x0 , 1 );
     }
   }
   else
@@ -108,17 +110,19 @@ Field<Polytope,T>::build()
       Table<index_t>::add( v , nv );
     }
 
+    T x0(0);
     for (index_t k=0;k<topology_.points().nb();k++)
     {
-      this->data_.push_back( T(0) );
+      this->data_.add( &x0 , 1 );
     }
   }
   else if (this->type()==DISCONTINUOUS)
   {
     luna_assert( master_.order()==0 );
+    T x0(0);
     for (index_t k=0;k<topology_.nb();k++)
     {
-      this->data_.push_back( T(0) );
+      this->data_.add( &x0 , 1 );
     }
   }
   else

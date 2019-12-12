@@ -9,6 +9,8 @@
 #include "master/polytope.h"
 #include "master/simplex.h"
 
+#include "mesh/dof.h"
+
 #include <map>
 #include <string>
 #include <vector>
@@ -44,7 +46,7 @@ public:
   void allocate( index_t n );
 
   T& operator()( index_t i , index_t j )
-    { return data_[Table<index_t>::operator()(i,j)]; }
+    { return *data_[Table<index_t>::operator()(i,j)]; }
 
   const T& operator()( index_t i , index_t j ) const
     { return data_[Table<index_t>::operator()(i,j)]; }
@@ -53,15 +55,13 @@ public:
   const FieldType& type() const { return type_; }
 
   index_t nb_elem() const { return Table<index_t>::nb(); }
-  index_t nb_data() const { return data_.size(); }
+  index_t nb_data() const { return data_.nb(); }
 
-  const std::vector<T>& data() const { return data_; }
-
-  T& value( index_t k ) { return data_[k]; }
+  T& value( index_t k ) { return *data_[k]; }
 
 protected:
   FieldBase( FieldType type , TableLayoutCategory category=TableLayout_Jagged );
-  std::vector<T> data_;
+  DOF<T> data_;
 
 private:
   FieldType type_;
