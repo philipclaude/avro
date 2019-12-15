@@ -4,6 +4,8 @@
 
 #include "master/quadrature.h"
 
+#include "mesh/field.hpp"
+
 #include "numerics/integration.h"
 
 using namespace luna;
@@ -38,14 +40,22 @@ public:
                 const std::vector<T>& ux ,
                 const std::vector<T>& uxx ) const
   {
-    return u[0]*u[0];
+    return u[0];
   }
+};
 
+class SomeFunction
+{
+public:
+  real_t operator() ( const real_t* x ) const
+  {
+    return x[0]*x[1];
+  }
 };
 
 UT_TEST_CASE( test1 )
 {
-  CKF_Triangulation topology( {3,3} );
+  CKF_Triangulation topology( {100,100} );
   ConicalProductQuadrature quadrature(topology.points().dim(),2);
   quadrature.define();
   topology.master().load_quadrature(quadrature);
@@ -61,14 +71,12 @@ UT_TEST_CASE( test1 )
   real_t value = functional.value();
   printf("value = %g\n",value);
 
-  Field<Simplex,real_t> u(topology,1,CONTINUOUS);
+  Field<Simplex,real_t> u(topology,3,CONTINUOUS);
   u.master().set_basis( BasisFunctionCategory_Lagrange );
   u.master().load_quadrature(quadrature);
 
-  for (index_t k=0;k<u.nb_data();k++)
-    u.value(k) = 2;
-
-  u.dof().print();
+  SomeFunction fcn;
+  u.evaluate(fcn);
 
   typedef Integrand_Field<Simplex,real_t,Functor_Solution<real_t>> Integrand_t;
   Integrand_Field<Simplex,real_t,Functor_Solution<real_t>> integrand2(u);
@@ -76,7 +84,7 @@ UT_TEST_CASE( test1 )
   Functional<Integrand_t> f2(integrand2);
   f2.integrate( u );
 
-  printf("f2 = %g\n",f2.value());
+  printf("value = %g\n",f2.value());
 }
 UT_TEST_CASE_END( test1 )
 

@@ -81,6 +81,9 @@ public:
   const Simplex& master() const { return master_; }
   Simplex& master() { return master_; }
 
+  template<typename Function>
+  void evaluate( const Function& function );
+
   const Topology<Simplex>& topology() const { return topology_; }
 
 private:

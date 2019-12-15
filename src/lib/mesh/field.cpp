@@ -58,37 +58,21 @@ Field<Simplex,T>::build()
   {
     // get the number of unique entries in the field
     // using the number of elements and nb_poly, for now assume p = 1
-    luna_assert( master_.order()==1 );
-
     Builder<Simplex> builder(topology_,master_.order(),BasisFunctionCategory_None);
     builder.template transfer<T>(*this);
-    return;
-
-    for (index_t k=0;k<topology_.nb();k++)
-    {
-      const index_t* v = topology_(k);
-      const index_t nv = topology_.nv(k);
-      Table<index_t>::add( v , nv );
-    }
-
-    T x0(0);
-    for (index_t k=0;k<topology_.points().nb();k++)
-    {
-      this->data_.add( &x0 , 1 );
-    }
   }
   else if (this->type()==DISCONTINUOUS)
   {
-    luna_assert( master_.order()==0 );
-    const index_t nb_poly = 1; // assume order zero
-    T x0(0);
+    index_t n = 0;
+    std::vector<index_t> dof( master_.nb_basis() );
     for (index_t k=0;k<topology_.nb();k++)
     {
-      const index_t* v = topology_(k);
-      const index_t nv = topology_.nv(k);
-      Table<index_t>::add( v , nv );
-      for (index_t j=0;j<nb_poly;j++)
-        this->data_.add( &x0 , 1 );
+      for (index_t j=0;j<master_.nb_basis();j++)
+        dof[j] = n++;
+      Table<index_t>::add( dof.data() , dof.size() );
+      const std::vector<index_t>& idx = Table<index_t>::data();
+      index_t nb_dof = * std::max_element( idx.begin() , idx.end() ) +1;
+      this->allocate( nb_dof );
     }
   }
   else

@@ -64,8 +64,6 @@ FacetDecomposition<Shape_t>::build()
         f.dim = j;
         topology_.master().get_facet_vertices( topology_(k) , topology_.nv(k) , i , f );
 
-        print_inline( f.indices );
-
         // check if this facet exists
         std::map<Element,FacetParent>::iterator it = facets_j.find(f);
         if ( it==facets_j.end() )
@@ -78,7 +76,6 @@ FacetDecomposition<Shape_t>::build()
         }
         else
         {
-          printf("    --> exists! adding parent (%lu,%lu)\n",k,i);
           it->second.parents.push_back(k);
           it->second.local.push_back(i);
         }
@@ -89,10 +86,11 @@ FacetDecomposition<Shape_t>::build()
 
 template<>
 Builder<Simplex>::Builder( const Topology<Simplex>& topology , coord_t order , BasisFunctionCategory category ) :
-  Table<index_t>(TableLayout_Rectangular,topology.number()+1),
+  Table<index_t>(TableLayout_Rectangular,0),
   topology_(topology),
   master_(topology.number(),order)
 {
+  Table<index_t>::set_rank( master_.nb_basis() );
   master_.set_basis( category );
   build();
 }
@@ -116,8 +114,6 @@ Builder<type>::transfer( Topology<type>& f ) const
   // copy the topology
   for (index_t k=0;k<this->nb();k++)
     f.add( this->operator()(k) , this->nv(k) );
-
-  printf("nb vertices = %lu\n",nb_vertices);
 
   // map all the vertices from the topology to f's vertices
   std::vector<const real_t*> dof0;
@@ -154,8 +150,6 @@ Builder<type>::build()
     elem.resize( master_.nb_basis() , 0 );
     add( elem.data() , elem.size() );
   }
-
-  printf("nb elements = %lu, nb_basis = %lu, order = %u\n",this->nb(),master_.nb_basis(),master_.order());
 
   // loop through the dimensional hierarchy
   index_t n = 0;
