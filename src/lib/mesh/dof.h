@@ -16,15 +16,32 @@ public:
 
   index_t rank() const { return Table<type>::rank_; }
 
-  template<typename Shape>
   void
-  interpolate( Shape& master , const index_t* idx , index_t nv , type* u )
+  interpolate( const std::vector<const type*>& uk , const std::vector<real_t>& phi , type* u ) const
   {
-    u = type(0);
-    for (index_t j=0;j<nv;j++)
-    for (index_t d=0;d<rank();d++)
-      u[d] += this->operator()(idx[j],d);
+    luna_assert( uk.size() == phi.size() );
+    for (index_t j=0;j<rank();j++)
+      u[j] = type(0);
+    for (index_t j=0;j<rank();j++)
+    {
+      for (index_t i=0;i<uk.size();i++)
+        u[j] += uk[i][j]*phi[i];
+    }
   }
+
+  void
+  interpolate( const index_t* idx , index_t nv , const std::vector<real_t>& phi , type* u ) const
+  {
+    luna_assert( nv == phi.size() );
+    for (index_t j=0;j<rank();j++)
+      u[j] = type(0);
+    for (index_t j=0;j<rank();j++)
+    {
+      for (index_t i=0;i<phi.size();i++)
+        u[j] += (*this)( idx[i] , 0 )*phi[i];
+    }
+  }
+
 };
 
 } // luna

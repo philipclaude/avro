@@ -44,6 +44,8 @@ public:
   coord_t order() const {return order_; }
   const std::string name() const { return name_; }
 
+  index_t nb_quad() const { return wquad_.size(); }
+
   void load_quadrature( Quadrature& quadrature ); // conical-product, grundmann-moeller, etc.
 
   void eval( const double* x , double* phi )
@@ -54,7 +56,9 @@ public:
 
   const ReferenceElement<Shape>& reference() const { return reference_; }
 
-protected:
+  real_t quad_weight(index_t k) const { return wquad_[k]; }
+  const real_t* quad_point(index_t k) const { return &xquad_[number_*k]; }
+
   const Basis<Shape>& basis() const { luna_assert(basis_!=nullptr); return *basis_.get(); }
   Basis<Shape>& basis() { luna_assert(basis_!=nullptr); return *basis_.get(); }
 

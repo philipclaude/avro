@@ -23,40 +23,42 @@ template<typename type>
 class Table
 {
 public:
-  Table( TableLayoutCategory category = TableLayout_None ) :
-    category_(category),
+  Table( TableLayoutCategory layout = TableLayout_None ) :
+    layout_(layout),
     sorted_(false),
     rank_(0)
   {}
 
-  Table( const TableLayoutCategory& category , index_t rank ) :
-    category_(category),
+  Table( const TableLayoutCategory& layout , index_t rank ) :
+    layout_(layout),
     sorted_(false),
     rank_(rank)
   {}
 
-  bool undefined() const { return category_==TableLayout_None; }
+  TableLayoutCategory layout() const { return layout_; }
+
+  bool undefined() const { return layout_==TableLayout_None; }
 
   void allocate( index_t n )
   {
-    luna_assert( category_ == TableLayout_Rectangular );
+    luna_assert( layout_ == TableLayout_Rectangular );
     data_.resize( n*rank_ , type(0) );
   }
 
-  void set_category( TableLayoutCategory category )
-    { category_ = category; }
+  void set_layout( TableLayoutCategory layout )
+    { layout_ = layout; }
 
   void set_sorted( bool sorted ) { sorted_ = sorted; }
 
   void set_rank( index_t rank )
   {
-    luna_assert( category_ == TableLayout_Rectangular );
+    luna_assert( layout_ == TableLayout_Rectangular );
     rank_ = rank;
   }
 
   index_t rank() const
   {
-    luna_assert( category_==TableLayout_Rectangular );
+    luna_assert( layout_==TableLayout_Rectangular );
     return rank_;
   }
 
@@ -77,15 +79,15 @@ public:
 
   index_t nv( index_t k ) const
   {
-    if (category_==TableLayout_Rectangular) return rank_;
-    else if (category_==TableLayout_Jagged) return last_[k]-first_[k];
+    if (layout_==TableLayout_Rectangular) return rank_;
+    else if (layout_==TableLayout_Jagged) return last_[k]-first_[k];
     else luna_assert_not_reached;
   }
 
   index_t nb() const
   {
-    if (category_==TableLayout_Rectangular) return data_.size()/rank_;
-    else if (category_==TableLayout_Jagged) return first_.size();
+    if (layout_==TableLayout_Rectangular) return data_.size()/rank_;
+    else if (layout_==TableLayout_Jagged) return first_.size();
     else luna_assert_not_reached;
     return 0;
   }
@@ -107,25 +109,25 @@ public:
 
   void add( type* x , index_t n )
   {
-    if (category_==TableLayout_Rectangular)
+    if (layout_==TableLayout_Rectangular)
       luna_assert( n == rank_ );
-    if (category_==TableLayout_Jagged)
+    if (layout_==TableLayout_Jagged)
       first_.push_back( data_.size() );
     for (index_t j=0;j<n;j++)
       data_.push_back(x[j]);
-    if (category_==TableLayout_Jagged)
+    if (layout_==TableLayout_Jagged)
       last_.push_back( data_.size() );
   }
 
   void add( const type* x , index_t n )
   {
-    if (category_==TableLayout_Rectangular)
+    if (layout_==TableLayout_Rectangular)
       luna_assert_msg( n == rank_ , "n = %lu, rank = %lu" , n , rank_ );
-    if (category_==TableLayout_Jagged)
+    if (layout_==TableLayout_Jagged)
       first_.push_back( data_.size() );
     for (index_t j=0;j<n;j++)
       data_.push_back(x[j]);
-    if (category_==TableLayout_Jagged)
+    if (layout_==TableLayout_Jagged)
       last_.push_back( data_.size() );
   }
 
@@ -141,11 +143,11 @@ public:
 
   void remove( index_t k0 )
   {
-    if (category_==TableLayout_Rectangular)
+    if (layout_==TableLayout_Rectangular)
     {
       remove( k0*rank_ , (k0+1)*rank_ );
     }
-    if (category_==TableLayout_Jagged)
+    if (layout_==TableLayout_Jagged)
     {
       index_t kshift = nv(k0);
       for (index_t k=k0+1;k<nb();k++)
@@ -189,13 +191,13 @@ private:
 
   index_t location( index_t k ) const
   {
-    if (category_==TableLayout_Rectangular) return k*rank_;
-    else if (category_==TableLayout_Jagged) return first_[k];
+    if (layout_==TableLayout_Rectangular) return k*rank_;
+    else if (layout_==TableLayout_Jagged) return first_[k];
     else luna_assert_not_reached;
   }
 
 protected:
-  TableLayoutCategory category_;
+  TableLayoutCategory layout_;
   bool sorted_;
   index_t rank_;
 

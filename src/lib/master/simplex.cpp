@@ -347,4 +347,10 @@ Simplex::triangulate( coord_t number , Topology<Simplex>& topology , Points& poi
   topology.add(tk.data(),tk.size());
 }
 
+real_t
+Simplex::jacobian( const std::vector<const real_t*>& x , coord_t dim ) const
+{
+  return simplex_volume(x,dim);
+}
+
 } // luna

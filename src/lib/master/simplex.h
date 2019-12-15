@@ -37,9 +37,6 @@ public:
 
   real_t volume( const Points& points , const index_t* v , index_t nv ) const;
 
-  index_t nb_poly() const { return this->phi_.m(); }
-  index_t nb_quad() const { return this->phi_.n(); }
-
   index_t nb_facets( coord_t dim ) const
   {
     return numerics::nchoosek(number_+1,dim+1);
@@ -99,6 +96,8 @@ public:
   index_t edge( index_t k , index_t i ) const;
 
   void triangulate( coord_t number , Topology<Simplex>& topology , Points& points , const index_t* v , index_t nv ) const;
+
+  real_t jacobian( const std::vector<const real_t*>& x , coord_t dim ) const;
 
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;

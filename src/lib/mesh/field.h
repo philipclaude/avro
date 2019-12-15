@@ -59,6 +59,8 @@ public:
 
   T& value( index_t k ) { return *data_[k]; }
 
+  const DOF<T>& dof() const { return data_; }
+
 protected:
   FieldBase( FieldType type , TableLayoutCategory category=TableLayout_Jagged );
   DOF<T> data_;
@@ -77,10 +79,13 @@ public:
   void build();
 
   const Simplex& master() const { return master_; }
+  Simplex& master() { return master_; }
+
+  const Topology<Simplex>& topology() const { return topology_; }
 
 private:
   const Topology<Simplex>& topology_;
-  const Simplex master_;
+  Simplex master_;
 };
 
 template<typename T>

@@ -27,10 +27,9 @@ extern "C" void DGEMM(const char *TRANSA,const char* TRANSB, const int *M, const
 extern "C" void dgetrf_( int* M , int* N , double *A , int* LDA , int* IPIV , int* INFO );
 extern "C" void DGETRF( int* M , int* N , double *A , int* LDA , int* IPIV , int* INFO );
 
-//extern "C" void dgetrs_( const char* TRANSA, int* N , double* A , int *LDA, int *IPIV , double *work , int* lwork , int *info );
-//extern "C" void DGETRS( const char* TRANS, int* N , double* A , int *LDA, int *IPIV , double *work , int* lwork , int *info );
-
+// SVD
 extern "C" void dgesvd_( char *jobu , char* jobvt , int *m , int *n , double *A , int* lda , double *s , double *u , int* ldu , double *vt , int* ldvt, double* work , int* lwork , int* info );
+extern "C" void DGESVD( char *jobu , char* jobvt , int *m , int *n , double *A , int* lda , double *s , double *u , int* ldu , double *vt , int* ldvt, double* work , int* lwork , int* info );
 
 } // numerics
 
