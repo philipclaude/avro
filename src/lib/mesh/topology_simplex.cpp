@@ -15,13 +15,14 @@ Topology<Simplex>::Topology( Points& vertices , coord_t number , coord_t order )
   master_( number , order ),
   neighbours_(*this),
   inverse_(*this)
-{}
+{
+  set_rank( master_.nb_basis() );
+}
 
 template<>
 Topology<Simplex>::Topology( Points& points , const Topology<Simplex>& linear , coord_t order ) :
  Topology(points,linear.number(),order)
 {
-  printf("converting to order %u...\n",master_.order());
   Builder<Simplex> builder(linear,master_.order(),BasisFunctionCategory_Lagrange);
   builder.transfer(*this);
 }
@@ -98,10 +99,7 @@ Topology<Simplex>::get_triangles( std::vector<index_t>& t ) const
         t.push_back(p0);
         t.push_back(p1);
         t.push_back(p2);
-        //printf("adding triangle %s\n",s.c_str());
       }
-      //else
-      //printf("triangle %s exists!\n",s.c_str());
     }
   }
 }

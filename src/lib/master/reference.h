@@ -31,7 +31,8 @@ public:
 
   real_t vunit() const { return vunit_; }
   real_t vorth() const { return vorth_; }
-  
+
+
 protected:
   coord_t number_;
   coord_t order_;
@@ -71,7 +72,16 @@ public:
     return np/numerics::factorial(number_);
   }
 
+  int find_index( const index_t* x ) const;
+  int find_index( const real_t* x ) const;
+
+  index_t nb_interior() const { return interior_.size(); }
+  index_t interior( index_t k ) const { return interior_[k]; }
+
   void precalculate();
+
+private:
+  std::vector<index_t> interior_;
 
 };
 

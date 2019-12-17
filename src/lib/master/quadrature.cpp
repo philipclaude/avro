@@ -31,8 +31,6 @@ Quadrature::w( index_t k ) const
 void
 ConicalProductQuadrature::define()
 {
-  printf("requesting order %d, dim = %u\n",order_,dim_);
-
   if (order_<0) order_ = order_max_;
 
   nb_quad_ = nPointsStroudQuadrature(dim_,order_);

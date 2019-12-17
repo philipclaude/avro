@@ -30,7 +30,6 @@ Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , Fie
   master_(topology.number(),order)
 {
   Table<index_t>::set_rank( master_.nb_basis() );
-  printf("constructing field with order %u\n",master_.order());
   build();
 }
 
@@ -39,9 +38,7 @@ Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldTy
   FieldBase<T>(type),
   topology_(topology),
   master_(topology,order,topology.points().incidence())
-{
-  printf("constructing field with order %u\n",master_.order());
-}
+{}
 
 template<typename T>
 void

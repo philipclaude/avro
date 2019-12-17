@@ -22,6 +22,42 @@ Simplex::Simplex( const coord_t number , const coord_t order ) :
   precalculate();
 }
 
+index_t
+Simplex::triangle( const index_t itriangle , const index_t inode ) const
+{
+  return triangles_[3*itriangle+inode];
+}
+
+std::vector<index_t>
+Simplex::facet( const index_t j , const index_t i ) const
+{
+  std::vector<index_t> f(j+1);
+  if (j==0) f[0] = i;
+  else if (j==1)
+  {
+    f[0] = edge(i,0);
+    f[1] = edge(i,1);
+  }
+  else if (j==2)
+  {
+    f[0] = triangle(i,0);
+    f[1] = triangle(i,1);
+    f[2] = triangle(i,2);
+  }
+  else if (j==index_t(number_-1))
+  {
+    index_t count = 0;
+    for (index_t k=0;k<index_t(number_+1);k++)
+    {
+      if (k==i) continue;
+      f[count++] = k;
+    }
+  }
+  else
+    luna_assert_not_reached;
+  return f;
+}
+
 void
 Simplex::precalculate()
 {
@@ -58,6 +94,26 @@ Simplex::precalculate()
 }
 
 void
+Simplex::get_canonical_indices( const index_t* v , index_t nv , const Element& f , std::vector<index_t>& canonical ) const
+{
+  luna_assert_msg( order_==1 , "should this only be called for linear simplices?" );
+  for (index_t k=0;k<f.indices.size();k++)
+  {
+    bool found = false;
+    for (index_t j=0;j<nv;j++)
+    {
+      if (f.indices[k]==v[j])
+      {
+        canonical[k] = j;
+        found = true;
+        break;
+      }
+    }
+    luna_assert( found );
+  }
+}
+
+void
 Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const
 {
   f.indices.resize(f.dim+1);
@@ -91,19 +147,9 @@ Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , El
 }
 
 index_t
-Simplex::get_index( index_t dim , index_t ifacet , index_t ilocal ) const
-{
-  if (dim==0) return ifacet;
-  if (dim==1) return number_+1 + ifacet*nb_interior(dim) + ilocal;
-  if (dim==2) return number_+1 + nb_edges()*nb_interior(1) + nb_interior(2)*ifacet + ilocal;
-  if (dim==3) return number_+1 + nb_edges()*nb_interior(1) + nb_interior(2)*nb_facets(2) + nb_interior(3)*ifacet + ilocal;
-  luna_assert_not_reached;
-  return nb_basis()+1;
-}
-
-index_t
 Simplex::get_vertex( const index_t* v , index_t nv , index_t ivertex ) const
 {
+  // not true for high-order simplices!!!
   return v[ivertex]; // vertices always stored at the beginning
 }
 

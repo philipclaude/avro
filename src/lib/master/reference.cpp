@@ -1,4 +1,5 @@
 #include "common/error.h"
+#include "common/tools.h"
 
 #include "master/reference.h"
 
@@ -20,6 +21,38 @@ const index_t*
 ReferenceElement<Simplex>::get_lattice_coordinate( index_t k ) const
 {
   return &lref_[k*(number_+1)];
+}
+
+int
+ReferenceElement<Simplex>::find_index( const index_t* x ) const
+{
+  for (index_t i=0;i<nb_basis();i++)
+  {
+    const index_t* coord0 = get_lattice_coordinate(i);
+    index_t distance = 0;
+    for (coord_t d=0;d<number_;d++)
+    {
+      if (coord0[d]-x[d]!=0)
+      {
+        distance = 1;
+        break;
+      }
+    }
+    if (distance==0)
+    {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int
+ReferenceElement<Simplex>::find_index( const real_t* x ) const
+{
+  std::vector<index_t> y(number_);
+  for (coord_t d=0;d<number_;d++)
+    y[d] = x[d]*order_;
+  luna_implement;
 }
 
 static void
@@ -179,6 +212,26 @@ ReferenceElement<Simplex>::precalculate()
   }
 
   vunit_ = sqrt(number_+1)/(numerics::factorial(number_)*sqrt(pow(2.,number_)));
-  vorth_ = 1./numerics::factorial(number_);}
+  vorth_ = 1./numerics::factorial(number_);
+
+  for (index_t k=0;k<nb_basis();k++)
+  {
+    bool anyzero = false;
+    for (index_t j=0;j<number_+1;j++)
+    {
+      if (lref_[k*(number_+1)+j]==0)
+      {
+        anyzero = true;
+        break;
+      }
+    }
+    if (!anyzero)
+    {
+      //printf("lref = (%lu,%lu,%lu)\n",lref_[k*(number_+1)],lref_[k*(number_+1)+1],lref_[k*(number_+1)+2]);
+      interior_.push_back(k);
+    }
+  }
+  //print_inline(interior_,"interior = " );
+}
 
 } // luna

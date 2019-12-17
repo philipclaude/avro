@@ -10,6 +10,7 @@
 #include "numerics/matrix.h"
 #include "numerics/types.h"
 
+#include <map>
 #include <vector>
 
 namespace luna
@@ -83,12 +84,13 @@ public:
     return nb_interior(number_);
   }
 
-  index_t get_index( index_t dim , index_t ifacet , index_t ilocal ) const;
   void get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const;
   void get_edges( const index_t* v , index_t nv , std::vector<index_t>& ek ) const;
   void get_triangles( const index_t* v , index_t nv , std::vector<index_t>& tk ) const;
 
   real_t closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y ) const;
+
+  void get_canonical_indices( const index_t* v , index_t nv , const Element& f , std::vector<index_t>& canonical ) const;
 
   void facet( const index_t* v , index_t j , std::vector<index_t>& f ) const
     { luna_implement; }
@@ -107,6 +109,10 @@ protected:
 
 private:
 
+  //index_t edge( const index_t iedge , const index_t inode ) const;
+  index_t triangle( const index_t itriangle , const index_t inode ) const;
+  std::vector<index_t> facet( const index_t j , const index_t i ) const;
+
   // these are all straight-sided
   std::vector<index_t> vertices_; // also high-order
   std::vector<index_t> edges_;
@@ -120,7 +126,6 @@ private:
 
   real_t vunit_;
   real_t vorth_;
-
 };
 
 } // luna

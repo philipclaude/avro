@@ -15,7 +15,9 @@ UT_TEST_CASE( simplex_tests )
 
   topology.master().set_basis( BasisFunctionCategory_Lagrange );
 
-  Topology<Simplex> topology_curved( vertices , topology , 3 );
+  Topology<Simplex> topology_curved( vertices , topology , 2 );
+
+  topology_curved.print();
 
   vertices.print();
 }
