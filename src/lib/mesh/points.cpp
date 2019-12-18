@@ -157,13 +157,15 @@ Points::print( bool info ) const
 		if (info)
 		{
       std::string geo;
+			int num = -1;
   		if (primitive_[k]!=NULL)
   		{
   			geo = "-"+primitive_[k]->name();
+				num = primitive_[k]->number();
   		}
   		else geo = "";
-  		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
-  						body_[k],(void*)primitive_[k],geo.c_str());
+  		printf(" : %s , b[ %3d ] , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
+  						body_[k],num,(void*)primitive_[k],geo.c_str());
 			for (index_t d=0;d<udim_;d++)
 				printf(" %12.4e ",u(k)[d]);
 			printf(")");
@@ -289,7 +291,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
 {
   // useful for when a mesh is read but it does not have a geometry
   // even though we know what it should be
-  std::vector<real_t> x(4,0.);
+  std::vector<real_t> x(dim_,0.);
 
   std::vector<Entity*> e_candidates;
   std::vector<std::vector<real_t>> u_candidates;
@@ -308,7 +310,6 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
 
   for (index_t k=0;k<nb();k++)
   {
-
     recheck = true;
 
     const real_t* xk = (*this)[k];
@@ -327,6 +328,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
       // project to the primitive and compute the distance
       primitives[j]->inverse( x , uk );
 
+			// compute the distance between the inverse evaluated point and the original one
       distances[j] = numerics::distance2( xk , x.data() , dim_ );
 
       // add as candidate if the tolerance is satisfied
@@ -341,7 +343,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
     if (e_candidates.size()==0)
     {
       luna_assert(primitive_[k] == NULL);
-			printf("no candidiates for vertex %lu\n",k);
+			//printf("no candidates for vertex %lu\n",k);
       continue;
     }
 
@@ -366,14 +368,14 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
     set_param(k,uk);
     body_[k] = ibody;
 
+		ek->evaluate( uk , x );
+
     // get the primitive coordinates
 		if (recheck)
 		{
-    	ek->evaluate( uk , x );
-
     	// check the distance is lower than the tolerance
     	real_t d = numerics::distance2(xk,x.data(),dim_);
-    	luna_assert_msg( d < tol , "d = %1.16e" , d );
+    	luna_assert_msg( d < tol , "point %lu , d = %1.16e" , k , d );
 		}
   }
 }

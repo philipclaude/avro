@@ -146,6 +146,17 @@ Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , El
     std::sort( f.indices.begin() , f.indices.end() );
 }
 
+void
+Simplex::facet( const index_t* v , const index_t j , std::vector<index_t>& f ) const
+{
+  index_t count = 0;
+  for (index_t i=0;i<index_t(number_+1);i++)
+  {
+    if (i==j) continue;
+    f[count++] = v[i];
+  }
+}
+
 index_t
 Simplex::get_vertex( const index_t* v , index_t nv , index_t ivertex ) const
 {

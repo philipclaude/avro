@@ -92,8 +92,7 @@ public:
 
   void get_canonical_indices( const index_t* v , index_t nv , const Element& f , std::vector<index_t>& canonical ) const;
 
-  void facet( const index_t* v , index_t j , std::vector<index_t>& f ) const
-    { luna_implement; }
+  void facet( const index_t* v , index_t j , std::vector<index_t>& f ) const;
 
   index_t edge( index_t k , index_t i ) const;
 

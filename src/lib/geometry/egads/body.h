@@ -48,7 +48,7 @@ public:
   ego* object() { return object_; }
   const ego* object() const { return object_; }
 
-private:
+protected:
   const Context& context_;
   EGADS::Model* model_;
   ego* object_;

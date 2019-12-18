@@ -47,7 +47,7 @@ public:
   bool sense_required() const { return sense_required_; }
   void set_sense_required( bool x ) { sense_required_ = x; }
 
-  virtual void print() const = 0;
+  virtual void print(bool with_children=false) const = 0;
   virtual void build_hierarchy() = 0;
 
   virtual void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;

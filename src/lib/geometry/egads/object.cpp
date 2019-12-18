@@ -1,3 +1,5 @@
+#include "common/tools.h"
+
 #include "geometry/egads/object.h"
 
 #include "numerics/coordinate.h"
@@ -19,6 +21,7 @@ Object::Object( const Context& context , ego* object ) :
   EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
+  tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
 }
 
 Object::Object( ego* object , EGADS::Body* body ) :
@@ -30,6 +33,7 @@ Object::Object( ego* object , EGADS::Body* body ) :
   EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
+  tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
 }
 
 ego*
@@ -100,17 +104,24 @@ Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   if (number_==0)
   {
     std::fill( u.begin() , u.end() , 0.0 );
+    x[0] = data_.data[0];
+    x[1] = data_.data[1];
+    x[2] = data_.data[2];
     return;
   }
 
   if (x.size()==2) x.push_back(0);
   luna_assert( x.size()==3 );
 
-  print();
+  //print_inline( u , "u before = " );
+  //print(false);
+
   real_t result[3];
   EGADS_ENSURE_SUCCESS( EG_invEvaluate(*object_,x.data(),u.data(),result) );
   for (coord_t d=0;d<3;d++)
     x[d] = result[d];
+
+  //print_inline( u , "u after = " );
 }
 
 void
@@ -119,13 +130,15 @@ Object::inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
   if (number_==0)
   {
     std::fill( u.begin() , u.end() , 0.0 );
+    x[0] = data_.data[0];
+    x[1] = data_.data[1];
+    x[2] = data_.data[2];
     return;
   }
 
   if (x.size()==2) x.push_back(0);
   luna_assert( x.size()==3 );
 
-  print();
   real_t result[3];
   EGADS_ENSURE_SUCCESS( EG_invEvaluateGuess(*object_,x.data(),u.data(),result) );
   for (coord_t d=0;d<3;d++)
@@ -151,16 +164,19 @@ Object::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
 }
 
 void
-Object::print() const
+Object::print(bool with_children) const
 {
-  for (index_t i=0;i<body_->number()-number_;i++)
-    printf("\t");
+  if (with_children)
+    for (index_t i=0;i<body_->number()-number_;i++)
+      printf("\t");
   printf("EGADS: number = %u , class = %s, type = %s at %p\n",number_,
   EGADS::utilities::object_class_name(data_.object_class).c_str(),
   EGADS::utilities::member_type_name(data_.object_class,data_.member_type).c_str(),
   (void*)(this) );
+  printf("--> data = (%g,%g,%g,%g)\n",data_.data[0],data_.data[1],data_.data[2],data_.data[3]);
+  if (!with_children) return;
   for (index_t k=0;k<nb_children();k++)
-    child(k).print();
+    child(k).print(with_children);
 }
 
 } // EGADS

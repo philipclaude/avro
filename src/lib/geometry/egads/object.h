@@ -45,7 +45,7 @@ public:
   int object_class() const { return data_.object_class; }
 
 
-  void print() const;
+  void print(bool with_children=true) const;
 
 private:
   EGADS::Body* body_;

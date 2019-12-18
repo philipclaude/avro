@@ -37,8 +37,13 @@ Body::get_entities( std::vector<Entity*>& entities ) const
 void
 Body::get_tessellatable( std::vector<Entity*>& entities ) const
 {
-  get_entities(entities);
-
+  std::vector<Entity*> entities0;
+  get_entities(entities0);
+  for (index_t k=0;k<entities0.size();k++)
+  {
+    if (entities0[k]->tessellatable())
+      entities.push_back(entities0[k]);
+  }
 }
 
 } // luna
