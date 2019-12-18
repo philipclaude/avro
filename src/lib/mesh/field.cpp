@@ -42,13 +42,6 @@ Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldTy
 
 template<typename T>
 void
-FieldBase<T>::allocate( index_t n )
-{
-  data_.allocate(n);
-}
-
-template<typename T>
-void
 Field<Simplex,T>::build()
 {
   if (this->type()==CONTINUOUS)

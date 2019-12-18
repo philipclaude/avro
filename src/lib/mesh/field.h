@@ -43,7 +43,8 @@ public:
   T& eval( index_t elem , const Coordinate& x ) const;
   T& eval( const Coordinate& x ) const;
 
-  void allocate( index_t n );
+  void allocate( index_t n )
+    { data_.allocate(n); }
 
   T& operator()( index_t i , index_t j )
     { return *data_[Table<index_t>::operator()(i,j)]; }
