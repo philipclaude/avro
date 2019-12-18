@@ -2,6 +2,8 @@
 
 #include "common/tools.h"
 
+#include "library/ckf.h"
+
 #include "master/master.h"
 #include "master/quadrature.h"
 
@@ -27,5 +29,25 @@ UT_TEST_CASE( simplex_tests )
 
 }
 UT_TEST_CASE_END( simplex_tests )
+
+UT_TEST_CASE( simplex_close )
+{
+  for (coord_t dim=2;dim<=4;dim++)
+  {
+    for (index_t N=4;N<=8;N+=2)
+    {
+      std::vector<index_t> dims(dim,N);
+      CKF_Triangulation topology(dims);
+
+      topology.close();
+
+      Topology<Simplex> boundary( topology.points() , topology.number()-1 );
+      topology.get_boundary(boundary);
+      UT_ASSERT_EQUALS( boundary.nb() , 0 );
+    }
+  }
+
+}
+UT_TEST_CASE_END( simplex_close )
 
 UT_TEST_SUITE_END( TopologySuite )

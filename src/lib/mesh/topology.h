@@ -30,7 +30,8 @@ protected:
     points_(vertices),
     number_(number),
     fields_(*this),
-    type_(type)
+    type_(type),
+    closed_(false)
   {}
 
 public:
@@ -66,6 +67,9 @@ public:
   Fields& fields() { return fields_; }
   const Fields& fields() const { return fields_; }
 
+  bool closed() const { return closed_; }
+  void set_closed( bool x ) { closed_ = x; }
+
 protected:
   Points& points_;
   coord_t number_;
@@ -74,6 +78,7 @@ protected:
   std::string name_;
   Fields fields_;
   std::string type_;
+  bool closed_;
 };
 
 template<typename type>
@@ -114,8 +119,7 @@ public:
 
   void offset_by( index_t offset );
 
-  bool closed() const { return closed_; }
-  void set_closed( bool x ) { closed_ = x; }
+
   void close();
 
   index_t cardinality( const index_t* v , index_t nv ) const;
@@ -148,8 +152,6 @@ public:
 
 private:
   type master_;
-
-  bool closed_;
 
   Neighbours<type>      neighbours_;
   InverseTopology<type> inverse_;

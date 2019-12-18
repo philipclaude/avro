@@ -3,6 +3,7 @@
 #include "common/tree.hpp"
 
 #include "mesh/builder.h"
+#include "mesh/facets.h"
 #include "mesh/topology.h"
 #include "mesh/topology.hpp"
 
@@ -204,6 +205,28 @@ Topology<Simplex>::apply( Cavity<Simplex>& cavity )
     //  if (this->neighbours_(k,j)<0)
     //    throw "oops";
     //}
+  }
+}
+
+template<>
+void
+Topology<Simplex>::get_boundary( Topology<Simplex>& bnd ) const
+{
+  luna_assert( bnd.number()==number_-1 );
+
+  // compute the facets
+  Facets facets(*this);
+  facets.compute();
+
+  // retrieve boundary facets
+  std::vector<index_t> f(number_);
+  for (index_t k=0;k<facets.nb();k++)
+  {
+    if (facets.boundary(k))
+    {
+      facets.retrieve(k,f);
+      bnd.add( f.data() , f.size() );
+    }
   }
 }
 

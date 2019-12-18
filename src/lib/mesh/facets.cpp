@@ -81,6 +81,7 @@ Facets::compute( index_t* elements0 , index_t nelem )
 
   coord_t nf = topology_.number()+1;
   std::vector<index_t> f( topology_.number() );
+  elem2facet_.set_rank( nf );
 
   // even in case a subset of the elements are used, the elem2facet info
   // is sized for all the elements because the indices need to correspond
