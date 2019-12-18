@@ -116,13 +116,24 @@ geometric_interpolation( const Points& points,
 
 template<typename type>
 real_t
-MetricField<type>::length( index_t n0 , index_t n1 )
+MetricField<type>::length( index_t n0 , index_t n1 ) const
 {
   luna_assert_msg( n0 < attachment_.nb() ,
                   "n0 = %lu, attachment_.nb() = %lu" , n0, attachment_.nb() );
   luna_assert_msg( n1 < attachment_.nb() ,
                   "n1 = %lu, attachment_.nb() = %lu" , n1, attachment_.nb() );
   return geometric_interpolation( attachment_.points() , n0 , n1 );
+}
+
+template<typename type>
+void
+MetricField<type>::lengths( const Topology<type>& topology , std::vector<real_t>& lens ) const
+{
+	std::vector<index_t> edges;
+	topology.get_edges(edges);
+	lens.resize( edges.size()/2 );
+	for (index_t k=0;k<edges.size()/2;k++)
+		lens[k] = length( edges[2*k] , edges[2*k+1] );
 }
 
 template<typename type>

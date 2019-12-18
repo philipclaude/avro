@@ -97,7 +97,8 @@ public:
   coord_t number() const { return master_.number(); }
   coord_t order() const { return master_.order(); }
 
-  bool ghost( index_t k ) const { luna_implement; return false; }
+  bool ghost( index_t k ) const;
+  bool ghost( const index_t* v , index_t nv ) const;
   index_t nb_real() const;
   index_t nb_ghost() const;
 
@@ -110,6 +111,8 @@ public:
 
   bool has( index_t k , index_t idx ) const;
   bool has( index_t p ) const;
+
+  void offset_by( index_t offset );
 
   bool closed() const { return closed_; }
   void set_closed( bool x ) { closed_ = x; }
