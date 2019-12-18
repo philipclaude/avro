@@ -68,7 +68,7 @@ distance2( const real_t* x , const real_t* y , const coord_t dim )
 real_t
 distance( const real_t* x , const real_t* y , const coord_t dim )
 {
-  return sqrt(distance2(x,y,dim));
+  return std::sqrt(distance2(x,y,dim));
 }
 
 real_t
@@ -134,7 +134,7 @@ volume_nd( const std::vector<const real_t*>& x , const coord_t dim )
 
   real_t f = pow(-1.,n+1)/pow(2.,n);
   f /= pow( real_t(numerics::factorial(n)),2. );
-  real_t v = sqrt(fabs(f*numerics::determinant(B)));
+  real_t v = std::sqrt(fabs(f*numerics::determinant(B)));
   return v;
 }
 

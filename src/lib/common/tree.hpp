@@ -37,6 +37,28 @@ Tree<Node_t>::build_parents()
 }
 
 template<typename Node_t>
+bool
+Tree<Node_t>::has_parent( const Node_t* P ) const
+{
+  // the children should also have this parent!
+  // check them first
+  for (index_t k=0;k<nb_children();k++)
+  {
+    if (!child(k).has_parent(P))
+      return false;
+  }
+
+  // all the children are deemed to have this parent
+  // now check this entity
+  for (index_t k=0;k<parents_.size();k++)
+  {
+    if (parents_[k]==P)
+      return true;
+  }
+  return false;
+}
+
+template<typename Node_t>
 void
 Tree<Node_t>::get_children( std::vector<Node_t*>& children )
 {

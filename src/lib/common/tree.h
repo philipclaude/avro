@@ -47,6 +47,7 @@ public:
 
   void build_parents();
   void add_parent( Node_t* parent ) { parents_.push_back(parent); }
+  bool has_parent( const Node_t* P ) const;
 
   void get_children( std::vector<Node_t*>& children );
 

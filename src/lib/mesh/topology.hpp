@@ -184,4 +184,18 @@ Topology<type>::volume() const
   return v;
 }
 
+template<typename type>
+void
+Topology<type>::remove_point( const index_t k )
+{
+  points_.remove(k);
+
+  // decrement any indices higher than the original index
+  for (index_t i=0;i<data_.size();i++)
+  {
+    if (data_[i]>k)
+      data_[i]--;
+  }
+}
+
 } // luna

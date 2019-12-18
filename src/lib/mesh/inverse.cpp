@@ -1,3 +1,5 @@
+#include "adaptation/cavity.h"
+
 #include "common/tools.h"
 
 #include "mesh/inverse.h"
@@ -273,10 +275,10 @@ InverseTopology<type>::decrement( index_t bar )
   }
 }
 
-#if 0
+#if 1
 template<typename  type>
 void
-InverseTopology<type>::update( local::Cavity<type>& cavity , bool delay )
+InverseTopology<type>::update( Cavity<type>& cavity , bool delay )
 {
 
   // adjust the element indices

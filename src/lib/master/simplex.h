@@ -100,7 +100,8 @@ public:
   void triangulate( coord_t number , Topology<Simplex>& topology , Points& points , const index_t* v , index_t nv ) const;
 
   real_t jacobian( const std::vector<const real_t*>& x , coord_t dim ) const;
-
+  void   jacobian( const std::vector<const real_t*>& xk , numerics::MatrixD<real_t>& J ) const;
+  void   jacobian( const index_t* v , index_t nv , const Points& points , numerics::MatrixD<real_t>& J ) const;
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;
   void get_triangle( const index_t* v , index_t nv , index_t itriangle , index_t* t ) const;

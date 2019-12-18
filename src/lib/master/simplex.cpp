@@ -196,7 +196,29 @@ Simplex::get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) 
   }
   if (number_==3) goto sort;
 
-  if (number_==4) luna_implement;
+  if (iedge==6)
+  {
+    p0 = get_vertex(v,nv,0);
+    p1 = get_vertex(v,nv,4);
+  }
+  if (iedge==7)
+  {
+    p0 = get_vertex(v,nv,1);
+    p1 = get_vertex(v,nv,4);
+  }
+  if (iedge==8)
+  {
+    p0 = get_vertex(v,nv,2);
+    p1 = get_vertex(v,nv,4);
+  }
+  if (iedge==9)
+  {
+    p0 = get_vertex(v,nv,3);
+    p1 = get_vertex(v,nv,4);
+  }
+  if (number_==4) goto sort;
+
+  luna_implement;
 
 sort:
   if (p0<p1)
@@ -215,6 +237,10 @@ void
 Simplex::get_triangle( const index_t* v , index_t nv , index_t itriangle, index_t* t ) const
 {
   // this is incorrect
+  t[0] = v[triangles_[itriangle*3  ]];
+  t[1] = v[triangles_[itriangle*3+1]];
+  t[2] = v[triangles_[itriangle*3+2]];
+  return;
   luna_implement;
   index_t p0 = get_vertex( v , nv ,  itriangle   %3 );
   index_t p1 = get_vertex( v , nv , (itriangle+1)%3 );
@@ -397,6 +423,28 @@ real_t
 Simplex::jacobian( const std::vector<const real_t*>& x , coord_t dim ) const
 {
   return simplex_volume(x,dim);
+}
+
+void
+Simplex::jacobian( const std::vector<const real_t*>& xk , numerics::MatrixD<real_t>& J ) const
+{
+  luna_assert( J.m()==number_ );
+  luna_assert( J.n()==number_ );
+  luna_assert( order_==1 );
+  for (index_t j=0;j<number_;j++)
+  for (index_t d=0;d<number_;d++)
+    J(d,j) = xk[j+1][d] -xk[0][d];
+}
+
+void
+Simplex::jacobian( const index_t* v , index_t nv , const Points& points , numerics::MatrixD<real_t>& J ) const
+{
+  luna_assert( J.m()==number_ );
+  luna_assert( J.n()==number_ );
+  luna_assert( order_==1 );
+  for (index_t j=0;j<number_;j++)
+  for (index_t d=0;d<points.dim();d++)
+    J(d,j) = points[v[j+1]][d] -points[v[0]][d];
 }
 
 } // luna

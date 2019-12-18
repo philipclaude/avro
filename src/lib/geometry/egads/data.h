@@ -19,7 +19,7 @@ namespace EGADS
 std::string get_error_message( const int ierror );
 
 #define EGADS_CHECK_SUCCESS(X) { int ierror = (X); if (ierror!=0) printf("egads error: returned %d (%s) at %s (line %d)\n",ierror,get_error_message(ierror).c_str(),__FILE__,__LINE__); }
-#define EGADS_ENSURE_SUCCESS(X) { int ierror = (X); if (ierror!=0) luna_throw(get_error_message(ierror).c_str()); }
+#define EGADS_ENSURE_SUCCESS(X) { int ierror = (X); if (ierror!=0) luna_throw(EGADS::get_error_message(ierror).c_str()); }
 
 typedef struct
 {

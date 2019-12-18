@@ -44,6 +44,12 @@ Object::object() const
   return object_;
 }
 
+const ego*
+Object::egchild( index_t k ) const
+{
+  return &data_.children[k];
+}
+
 void
 Object::build_hierarchy()
 {

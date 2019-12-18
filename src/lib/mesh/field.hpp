@@ -29,12 +29,7 @@ Field<Simplex,T>::evaluate( const Function& function )
       // evaluate the physical coordinates
       topology_.points().interpolate( xk , phi , x.data() );
 
-      index_t idx = j;//master_.get_index(j);
-      //printf("j = %lu, idx = %lu, xref = (%g,%g)\n",j,idx,xref[0],xref[1]);
-
-      (*this)(k,idx) = function(x.data());
-
-      //printf("(%lu,%lu) at (%.2f,%.2f) -> %g\n",k,j,x[0],x[1],(*this)(k,j));
+      (*this)(k,j) = function(x.data());
     }
   }
 }

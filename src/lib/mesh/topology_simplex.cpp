@@ -1,3 +1,5 @@
+#include "adaptation/cavity.h"
+
 #include "common/tree.hpp"
 
 #include "mesh/builder.h"
@@ -101,6 +103,107 @@ Topology<Simplex>::get_triangles( std::vector<index_t>& t ) const
         t.push_back(p2);
       }
     }
+  }
+}
+
+template<>
+void
+Topology<Simplex>::apply( Cavity<Simplex>& cavity )
+{
+  // this simply applies the cavity operator in terms of element
+  // removals and insertions, including the neighbour relationships
+  // it is the responsibility of the caller to do the vertex removals
+
+  // the cache needs to be empty if the topology is closed (null boundary)
+  if (this->closed())
+    luna_assert( this->neighbours_.cache().nb()==0 );
+
+  index_t elem;
+
+  if (cavity.nb_insert()<=cavity.nb_cavity())
+  {
+    // fewer inserted elements than we are deleting
+    for (index_t k=0;k<cavity.nb_insert();k++)
+    {
+      elem = cavity.cavity(k);
+
+      this->neighbours_.remove( elem , false  ); // no erase
+      for (index_t j=0;j<cavity.nv(k);j++)
+        this->operator()( elem , j ) = cavity(k,j);
+    }
+
+    // delete the remaining cells
+    index_t count = 0;
+    for (index_t k=cavity.nb_insert();k<cavity.nb_cavity();k++)
+    {
+      elem = cavity.cavity(k);
+      this->neighbours_.remove( elem-count ); // erase
+      Topology<Simplex>::remove( elem-count );
+      count++;
+    }
+
+    // compute the neighbours of the replaced elements
+    for (index_t k=0;k<cavity.nb_insert();k++)
+    {
+      this->neighbours_.addElement( cavity.cavity(k) );
+      cavity.inserted()[k] = cavity.cavity(k);
+    }
+  }
+  else
+  {
+
+    // more inserted elements than cavity elements
+    for (index_t k=0;k<cavity.nb_cavity();k++)
+    {
+      elem = cavity.cavity(k);
+
+      this->neighbours_.remove( elem , false  );
+      for (index_t j=0;j<cavity.nv(elem);j++)
+        this->operator()( elem , j ) = cavity(k,j);
+    }
+
+    // add the remaining cells
+    this->neighbours_.enlarge( cavity.nb_insert() -cavity.nb_cavity() );
+    elem = this->nb();
+    for (index_t k=cavity.nb_cavity();k<cavity.nb_insert();k++)
+    {
+      Topology<Simplex>::add( cavity(k) , cavity.nv(k) );
+    }
+
+    for (index_t k=0;k<cavity.nb_cavity();k++)
+    {
+      this->neighbours_.addElement( cavity.cavity(k) );
+      cavity.inserted()[k] = cavity.cavity(k);
+    }
+    index_t count = 0;
+    for (index_t k=cavity.nb_cavity();k<cavity.nb_insert();k++)
+    {
+      this->neighbours_.addElement( elem+count );
+      cavity.inserted()[k] = elem+count;
+      count++;
+    }
+  }
+
+  // update the inverse topology
+  this->inverse_.update( cavity , true ); // delay the removal of vertices
+
+  // ensure the neighbours cache is empty (i.e. null boundary)
+  if (this->closed())
+  {
+    if (this->neighbours_.cache().nb()!=0)
+    {
+      //this->neighbours_.cache().print();
+      cavity.print();
+    }
+    luna_assert( this->neighbours_.cache().nb()==0 );
+
+    // debug check (slow) REMOVE ME!
+    //for (index_t k=0;k<this->neighbours_.nb();k++)
+    //for (index_t j=0;j<this->number_+1;j++)
+    //{
+    //  if (this->neighbours_(k,j)<0)
+    //    throw "oops";
+    //}
   }
 }
 

@@ -212,6 +212,8 @@ public:
 	real_t length( const Points& v , index_t n0 , index_t n1 )
 		{ return length(n0,n1); }
 
+  void lengths( const Topology<type>& topology , std::vector<real_t>& lengths ) const;
+
 	real_t volume( const Topology<type>& t , const index_t k );
   real_t volume( const Topology<type>& t );
 
@@ -250,6 +252,14 @@ private:
 
   real_t normalization_;
 };
+
+template<typename type>
+real_t
+worst_quality( const Topology<type>& topology , MetricField<type>& metric )
+{
+  luna_implement;
+  return -1;
+}
 
 } // luna
 

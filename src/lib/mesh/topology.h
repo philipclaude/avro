@@ -20,6 +20,7 @@ namespace luna
 {
 
 class Points;
+template<typename type> class Cavity;
 
 class TopologyBase : public Table<index_t>
 {
@@ -96,7 +97,9 @@ public:
   coord_t number() const { return master_.number(); }
   coord_t order() const { return master_.order(); }
 
-  bool ghost( index_t k ) const { return false; }
+  bool ghost( index_t k ) const { luna_implement; return false; }
+  index_t nb_real() const;
+  index_t nb_ghost() const;
 
   void get_points( std::vector<index_t>& p ) const {}
   void get_edges( std::vector<index_t>& e ) const;
@@ -106,8 +109,15 @@ public:
   void get_elem( index_t k , std::vector<const real_t*>& X ) const;
 
   bool has( index_t k , index_t idx ) const;
+  bool has( index_t p ) const;
 
-  bool closed() const { luna_implement; return closed_; }
+  bool closed() const { return closed_; }
+  void set_closed( bool x ) { closed_ = x; }
+  void close();
+
+  index_t cardinality( const index_t* v , index_t nv ) const;
+
+  void intersect( const std::vector<index_t>& facet , std::vector<index_t>& elems ) const;
 
   void all_with( const std::vector<index_t>& facet , std::vector<index_t>& elems ) const;
 
@@ -121,11 +131,17 @@ public:
   void orient( index_t* v , const index_t nv , real_t* p=NULL );
   real_t volume() const;
 
+  void get_volumes( std::vector<real_t>& volumes ) const;
+
   Neighbours<type>& neighbours() { return neighbours_; }
   const Neighbours<type>& neighbours() const { return neighbours_; }
 
   InverseTopology<type>& inverse() { return inverse_; }
   const InverseTopology<type>& inverse() const { return inverse_; }
+
+  // local operator functions
+  void remove_point( index_t k );
+  void apply( Cavity<type>& cavity );
 
 private:
   type master_;

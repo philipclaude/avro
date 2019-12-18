@@ -11,10 +11,7 @@ namespace luna
 
 template<typename type> class Topology;
 
-namespace local
-{
 template<typename type> class Cavity;
-}
 
 template<typename type>
 class InverseTopology
@@ -34,7 +31,7 @@ public:
   index_t nb() const;
   bool created() const;
 
-  void update( local::Cavity<type>& cavity , bool delay=false );
+  void update( Cavity<type>& cavity , bool delay=false );
   void create( index_t nb_new );
   void remove( index_t k );
   void decrement( index_t bar );
