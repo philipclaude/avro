@@ -7,6 +7,7 @@
 #include "mesh/topology.h"
 
 #include "numerics/geometry.h"
+#include "numerics/linear_algebra.h"
 #include "numerics/matrix.h"
 
 namespace luna
@@ -289,7 +290,7 @@ Simplex::get_triangles( const index_t* v , const index_t nv , std::vector<index_
 }
 
 real_t
-Simplex::closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y ) const
+Simplex::closest( const Points& x , const index_t* v , const index_t nv , const real_t* p0 , std::vector<real_t>& y , real_t distance2 ) const
 {
   // for the point p, compute the closest barycentric point via least-squares
   // i.e. minimize || x(alpha)-p ||^2 s.t. sum(alpha) = 1 and all(alpha) > 0
@@ -302,18 +303,21 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   //avro_assert( alpha.size()==index_t(number+1) );
 
   // set the matrix of vertex coordinates
-  #if 1
+  #if 0
   luna_implement
   #else
-  numerics::densMat<real> V(x.dim(),nv);
+  numerics::VectorD<real_t> p(x.dim(),p0);
+  numerics::MatrixD<real_t> V(x.dim(),nv);
   for (index_t k=0;k<nv;k++)
   for (index_t j=0;j<x.dim();j++)
     V(j,k) = x[ v[k] ][j];
-  const numerics::densMat<real> Vt = V.transpose();
+  //const numerics::densMat<real> Vt = V.transpose();
 
   // set the least-squares portion of the system
-  numerics::densMat<real> A = Vt*V;
-  numerics::densMat<real> B(nv+1,nv+1);
+  //numerics::densMat<real> A = Vt*V;
+  //numerics::densMat<real> B(nv+1,nv+1);
+  numerics::SymMatrixD<real_t> A = numpack::Transpose(V)*V;
+  numerics::MatrixD<real_t> B(nv+1,nv+1);
   for (index_t i=0;i<nv;i++)
   for (index_t j=0;j<nv;j++)
     B(i,j) = A(i,j);
@@ -326,24 +330,29 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   }
 
   // set the right-hand side
-  std::vector<real> b(nv+1,0.);
-  Vt.multiply( p , b.data() );
-  b[nv] = 1.0;
+  //std::vector<real> b(nv+1,0.);
+  //Vt.multiply( p , b.data() );
+  numerics::VectorD<real_t> b0(nv+1);
+  b0 = numpack::Transpose(V)*p;
+  b0[nv] = 1.0;
 
   // solve the system
-  B.solve(b.data());
+  numerics::VectorD<real_t> b(nv+1);
+  b = numpack::DLA::InverseLU::Solve(B,b0);
+  //B.solve(b.data());
 
   // set the barycentric coordinates ignoring the last entry
   // because it holds the lagrange multiplier
-  std::vector<real> alpha(nv);
+  //std::vector<real> alpha(nv);
+  numerics::VectorD<real_t> alpha(nv);
   for (index_t i=0;i<nv;i++)
-    alpha[i] = b[i];
+    alpha(i) = b[i];
 
   // check if the barycentric coordinates are in the simplex
   bool outside = false;
   for (index_t k=0;k<nv;k++)
   {
-    if (alpha[k]<0)
+    if (alpha(k)<0)
     {
       outside = true;
       break;
@@ -352,8 +361,12 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   if (!outside)
   {
     // compute the actual coordinates and return the squared-distance
-    V.multiply(alpha.data(),y.data());
-    return geometrics::distance2(y.data(),p,x.dim());
+    numerics::VectorD<real_t> y0(x.dim());
+    y0 = V*alpha;
+    //V.multiply(alpha.data(),y.data());
+    for (coord_t i=0;i<x.dim();i++)
+      y[i] = y0(i);
+    return numerics::distance2(y.data(),p0,x.dim());
   }
 
   // the projected point is outside the simplex
@@ -365,8 +378,8 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
     f = s;
     f.erase(f.begin()+j);
 
-    std::vector<real> yf(x.dim());
-    real df = closestBarycentric(x,f.data(),f.size(),p,yf,distance2);
+    std::vector<real_t> yf(x.dim());
+    real_t df = closest(x,f.data(),f.size(),p0,yf,distance2);
     if (df<distance2 || distance2<0)
     {
       // the point minimizes the distance so set the point and save

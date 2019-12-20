@@ -88,7 +88,7 @@ public:
   void get_edges( const index_t* v , index_t nv , std::vector<index_t>& ek ) const;
   void get_triangles( const index_t* v , index_t nv , std::vector<index_t>& tk ) const;
 
-  real_t closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y ) const;
+  real_t closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y , real_t distance2=-1 ) const;
 
   void get_canonical_indices( const index_t* v , index_t nv , const Element& f , std::vector<index_t>& canonical ) const;
 

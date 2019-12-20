@@ -514,7 +514,7 @@ adapt( AdaptationProblem& problem )
       }
     }
     #else
-    luna_implement;
+    //luna_implement;
     #endif
 
     if (topology.number()==3 && params.has_interior_boundaries())
@@ -536,7 +536,7 @@ adapt( AdaptationProblem& problem )
       gamma.writeMesh( problem.mesh_out , mesh_file , false );
       printf("wrote mesh %s\n",mesh_file.c_str());
       #else
-      luna_implement;
+      //luna_implement;
       #endif
     }
 
@@ -546,7 +546,7 @@ adapt( AdaptationProblem& problem )
       const std::string json_file = params.directory()+"mesh_"+stringify(params.adapt_iter())+".json";
       io::writeMesh<Simplex>( json_file , topology , &metric.field() );
       #else
-      luna_implement;
+      //luna_implement;
       #endif
     }
 

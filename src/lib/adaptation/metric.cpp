@@ -121,7 +121,7 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
   luna_assert_msg( n1 < attachment_.nb() ,
                   "n1 = %lu, attachment_.nb() = %lu" , n1, attachment_.nb() );
 	std::vector<real_t> edge0( topology_.points().dim() );
-	numerics::vector( topology_.points()[n0] , topology_.points()[n1] , topology_.points().dim() , edge0.data() );
+	numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
 	numerics::VectorD<real_t> edge(topology_.points().dim(),edge0.data());
   return geometric_interpolation( attachment_.points() , attachment_[n0] , attachment_[n1] , edge );
 }
@@ -283,7 +283,18 @@ bool
 MetricField<type>::check( Topology<type>& topology )
 {
   if (topology.points().nb()!=attachment_.nb()) return false;
-  return true;
+
+	bool success = true;
+	for (index_t k=0;k<attachment_.nb();k++)
+	{
+		if (topology_.ghost(attachment_[k].elem()))
+		{
+			printf("element %lu is a ghost containing point %lu\n",attachment_[k].elem(),k);
+			success = false;
+			break;
+		}
+	}
+  return success;
 }
 
 template<typename type>
@@ -411,7 +422,7 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 
   // compute the barycentric coordinates
   std::vector<real_t> alpha( nv , 0. );
-	std::vector<numerics::SymMatrixD<real_t>> metrics;
+	std::vector<numerics::SymMatrixD<real_t>> metrics(nv);
   for (index_t j=0;j<nv;j++)
   {
     std::vector<const real_t*> xk0(nv);
@@ -529,6 +540,8 @@ template<typename type>
 bool
 MetricField<type>::recompute( index_t p , real_t* x )
 {
+	luna_assert( p >= attachment_.points().nb_ghost() );
+
 	// look for the element in the background topology with the searcher
   index_t guess = attachment_[p].elem();
   int ielem = searcher_.find( x , guess );
@@ -882,7 +895,7 @@ void
 MetricAttachment::assign( index_t p , const numerics::SymMatrixD<real_t>& m0 , index_t elem )
 {
 	for (index_t j=0;j<number_;j++)
-	for (index_t i=j;j<number_;i++)
+	for (index_t i=j;i<number_;i++)
 		Array<Metric>::data_[p](i,j) = m0(i,j);
 	Array<Metric>::data_[p].set_elem(elem);
 	Array<Metric>::data_[p].calculate();
@@ -912,6 +925,7 @@ MetricAttachment::check() const
   //if (points_.nb()!=Field<SPDT<real_t>>::nb()) return false;
 	//if (points_.nb()!=logM_.size()) return false;
 	//if (points_.nb()!=sqrtDetM_.size()) return false;
+
   return true;
 }
 

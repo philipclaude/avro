@@ -900,7 +900,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   for (index_t i=0;i<dim;i++)
   for (index_t j=i;j<dim;j++)
     M0_(i,j) = metric(this->topology_.points(),p)(i,j);
-  index_t elem0 = metric.value(p).elem();
+  index_t elem0 = metric.attachment()[p].elem();
 
   // recompute the metric at the new point
   bool success = metric.recompute( p , x.data() );

@@ -265,6 +265,7 @@ Topology<type>::volume() const
   real_t v = 0.;
   for (index_t k=0;k<nb();k++)
   {
+    if (ghost(k)) continue;
     v += master_.volume( points_ , operator()(k) , nv(k) );
   }
   return v;
@@ -313,7 +314,7 @@ void
 Topology<type>::close()
 {
   if (closed_) return;
-  
+
   // compute the boundary
   Topology<type> bnd(this->points_,this->number_-1);
   get_boundary(bnd);
