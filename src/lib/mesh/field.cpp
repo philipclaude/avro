@@ -30,7 +30,7 @@ Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , Fie
   master_(topology.number(),order)
 {
   Table<index_t>::set_rank( master_.nb_basis() );
-  build();
+  //build();
 }
 
 template<typename T>

@@ -43,6 +43,9 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	else
 		luna_assert_not_reached;
 
+	// build the field
+	Field<type,Metric>::build();
+
   // save the tensors stored in the field
   // these are static and need to be kept for interpolation
   for (index_t k=0;k<attachment_.nb();k++)

@@ -13,7 +13,7 @@ class Cube : public Body
 {
 public:
   Cube( const Context* context , coord_t dim );
-  Cube( const Context* context , const std::vector<real_t>& lens , const real_t* x0 );
+  Cube( const Context* context , const std::vector<real_t>& lens , const real_t* x0=nullptr );
 
 private:
   ego object_;

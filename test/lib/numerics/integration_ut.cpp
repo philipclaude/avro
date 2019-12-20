@@ -92,6 +92,7 @@ UT_TEST_CASE( test1 )
   printf("value = %g\n",value);
 
   Field<Simplex,real_t> u(topology,2,CONTINUOUS);
+  u.build();
   u.master().set_basis( BasisFunctionCategory_Lagrange );
   u.master().load_quadrature(quadrature);
 
@@ -123,6 +124,7 @@ UT_TEST_CASE( test2 )
     topology.master().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,DISCONTINUOUS);
+    u.build();
     u.master().set_basis( BasisFunctionCategory_Lagrange );
     u.master().load_quadrature(quadrature);
 
@@ -171,6 +173,7 @@ UT_TEST_CASE( test2_3d )
     topology.master().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,DISCONTINUOUS);
+    u.build();
     u.master().set_basis( BasisFunctionCategory_Lagrange );
     u.master().load_quadrature(quadrature);
 

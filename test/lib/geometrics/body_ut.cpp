@@ -5,6 +5,8 @@
 #include "geometry/egads/object.h"
 #include "geometry/entity.h"
 
+#include "library/egads.h"
+
 using namespace luna;
 
 UT_TEST_SUITE(BodySuite)
@@ -14,13 +16,25 @@ UT_TEST_CASE(test1)
   typedef EGADS::Object Object_t;
 
   EGADS::Context context;
-  ego obj;
+  ego obj = nullptr;
   std::shared_ptr<Object_t> prim = std::make_shared<Object_t>(context,&obj);
 
-  EGADS::Body body( context , prim->object() );
+  std::shared_ptr<EGADS::Body> body_ptr;
+  UT_CATCH_EXCEPTION( body_ptr = std::make_shared<EGADS::Body>( context , prim->object() ) );
 
-  body.add( prim );
+  //body.add( prim );
 }
 UT_TEST_CASE_END(test1)
+
+UT_TEST_CASE(test2)
+{
+  typedef EGADS::Object Object_t;
+
+  EGADS::Context context;
+  EGADS::Cube box(&context,{1,1,1});
+
+  //box.add( prim );
+}
+UT_TEST_CASE_END(test2)
 
 UT_TEST_SUITE_END(BodySuite)

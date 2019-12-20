@@ -13,7 +13,7 @@ UT_TEST_SUITE(PrimitiveSuite)
 UT_TEST_CASE(test1)
 {
   EGADS::Context context;
-  ego obj;
+  ego obj = nullptr;
   EGADS::Object prim(context,&obj);
 
   numerics::Coordinate x(3),u(2);

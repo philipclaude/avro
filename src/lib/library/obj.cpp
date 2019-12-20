@@ -62,6 +62,7 @@ objFile::read()
 
   // read the file
   std::ifstream file( filename_.c_str() , std::ios::in );
+  luna_assert( file.good() );
   std::string line,token;
   getline(file,line);
   while (!file.eof())
