@@ -10,6 +10,8 @@
 #include "tools/SANSException.h"
 #include "MatrixD_Type.h"
 
+#include <assert.h>
+
 namespace numpack
 {
 namespace DLA
