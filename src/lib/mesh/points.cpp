@@ -70,6 +70,8 @@ Points::create( const real_t* x )
 void
 Points::copy( Points& v , const bool ghosts) const
 {
+	v.clear();
+	
   v.set_dim( dim_ );
 	v.set_parameter_dim( udim_ );
 

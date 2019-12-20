@@ -19,8 +19,11 @@ protected:
 
 public:
   Mesh( coord_t dim );
+  Mesh( coord_t number , coord_t dim );
 
   index_t nb_topologies() const { return topology_.size(); }
+
+  coord_t number() const { return number_; }
 
   void add( Topology_ptr topology ) { topology_.push_back(topology); }
 
@@ -50,6 +53,7 @@ public:
 
 protected:
   Points points_;
+  coord_t number_;
   std::vector<Topology_ptr> topology_;
 };
 

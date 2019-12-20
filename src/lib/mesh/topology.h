@@ -44,7 +44,7 @@ public:
 
   void set_number( coord_t number ) { number_ = number; set_rank(number_+1); }
 
-  void copy( TopologyBase& topology );
+  void copy( const TopologyBase& topology );
 
   virtual void get_points( std::vector<index_t>& p ) const = 0;
   virtual void get_edges( std::vector<index_t>& e ) const = 0;

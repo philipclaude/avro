@@ -245,7 +245,7 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
 
   // get the current list of edges
   std::vector<index_t> edges;
-  topology_.getEdges(edges);
+  topology_.get_edges(edges);
   std::vector<real_t> lengths;
 
   collapser_.nb_parameter_rejections() = 0;
@@ -457,7 +457,7 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
 
     // analyze the resulting edges (and recompute for the next iteration)
     edges.clear();
-    topology_.getEdges(edges);
+    topology_.get_edges(edges);
 
     // compute all the lengths
     ne = edges.size()/2;
@@ -480,5 +480,6 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
 }
 
 template class Collapse<Simplex>;
+template class AdaptThread<Simplex>;
 
 } // luna

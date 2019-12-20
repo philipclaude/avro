@@ -165,7 +165,7 @@ public:
     }
 	}
 
-  MetricAttachment( const std::vector<numerics::SymMatrixD<real_t>>& metrics , Points& points );
+  MetricAttachment( Points& points , const std::vector<numerics::SymMatrixD<real_t>>& metrics );
 
 	const numerics::SymMatrixD<real_t>& log( const index_t k ) const
     { return Array<Metric>::data_[k].log(); }
@@ -256,8 +256,15 @@ template<typename type>
 real_t
 worst_quality( const Topology<type>& topology , MetricField<type>& metric )
 {
-  luna_implement;
-  return -1;
+  std::vector<real_t> quality(topology.nb());
+  for (index_t k=0;k<topology.nb();k++)
+  {
+    if (topology.ghost(k))
+      quality[k] = 1e20;
+    else
+      quality[k] = metric.quality( topology , k );
+  }
+  return *std::min_element(quality.begin(),quality.end());
 }
 
 } // luna

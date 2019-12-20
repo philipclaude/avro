@@ -729,7 +729,7 @@ edge_vector( const index_t i , const index_t j , const Points& v ,
     X[d] = v[j][d] -v[i][d];
 }
 
-MetricAttachment::MetricAttachment( const std::vector<numerics::SymMatrixD<real_t>>& metrics , Points& points ) :
+MetricAttachment::MetricAttachment( Points& points , const std::vector<numerics::SymMatrixD<real_t>>& metrics ) :
   number_(metrics[0].n()),
 	points_(points)
 {

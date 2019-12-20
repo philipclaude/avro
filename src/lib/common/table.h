@@ -35,8 +35,6 @@ public:
     rank_(rank)
   {}
 
-  TableLayoutCategory layout() const { return layout_; }
-
   bool undefined() const { return layout_==TableLayout_None; }
 
   void allocate( index_t n )
@@ -45,17 +43,29 @@ public:
     data_.resize( n*rank_ , type(0) );
   }
 
+  void copy( const Table<type>& table )
+  {
+    layout_ = table.layout();
+    sorted_ = table.sorted();
+    rank_   = table.rank();
+
+    data_  = table.data();
+    first_ = table.first();
+    last_  = table.last();
+  }
+
   void set_layout( TableLayoutCategory layout )
     { layout_ = layout; }
+  TableLayoutCategory layout() const { return layout_; }
 
   void set_sorted( bool sorted ) { sorted_ = sorted; }
+  bool sorted() const { return sorted_; }
 
   void set_rank( index_t rank )
   {
     luna_assert( layout_ == TableLayout_Rectangular );
     rank_ = rank;
   }
-
   index_t rank() const
   {
     luna_assert( layout_==TableLayout_Rectangular );
@@ -181,6 +191,9 @@ public:
   }
 
 private:
+
+  std::vector<index_t> first() const { return first_; }
+  std::vector<index_t> last() const { return last_; }
 
   void remove( index_t start , index_t end )
   {
