@@ -75,14 +75,14 @@ MetricField<type>::operator() ( const Points& points , index_t p )
 real_t
 geometric_interpolation( const Points& points,
 												 const numerics::SymMatrixD<real_t>& m0,
-	                       const numerics::SymMatrixD<real_t>& m1 )
+	                       const numerics::SymMatrixD<real_t>& m1,
+											   const numerics::VectorD<real_t>& edge )
 {
-	#if 0
-	real l0_sqr = m0.quadraticForm(edge_.data());
-	real l1_sqr = m1.quadraticForm(edge_.data());
-	real l0 = std::sqrt( l0_sqr );
-	real l1 = std::sqrt( l1_sqr );
-	real lm,r;
+	real_t l0_sqr = numpack::Transpose(edge)*m0*edge;//m0.quadraticForm(edge_.data());
+	real_t l1_sqr = numpack::Transpose(edge)*m1*edge;//m1.quadraticForm(edge_.data());
+	real_t l0 = std::sqrt( l0_sqr );
+	real_t l1 = std::sqrt( l1_sqr );
+	real_t lm,r;
 	if (l0<1e-16) return 0.;
 	if (l1<1e-16) return 0.;
 	if (l0>l1)
@@ -99,22 +99,17 @@ geometric_interpolation( const Points& points,
 		return l0;
 	if (r!=r)
 	{
-		m0.display();
-		m1.display();
+		m0.dump();
+		m1.dump();
 	}
 	if (r!=r)
 	{
 		printf("l0_sqr = %g, l1_sqr = %g\n",l0_sqr,l1_sqr);
 		printf("l0 = %g, l1 = %g\n",l0,l1);
-		for (coord_t d=0;d<edge_.size();d++)
-			printf("edge[%u] = %g\n",d,edge_[d]);
+		edge.dump();
 	}
-	avro_assert_msg(r>0., "r = %.20e",r);
+	luna_assert_msg(r>0., "r = %.20e",r);
 	return lm*(r -1.)/( r*std::log(r) );
-	#else
-	luna_implement;
-	return 0;
-	#endif
 }
 
 template<typename type>
@@ -125,7 +120,10 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
                   "n0 = %lu, attachment_.nb() = %lu" , n0, attachment_.nb() );
   luna_assert_msg( n1 < attachment_.nb() ,
                   "n1 = %lu, attachment_.nb() = %lu" , n1, attachment_.nb() );
-  return geometric_interpolation( attachment_.points() , n0 , n1 );
+	std::vector<real_t> edge0( topology_.points().dim() );
+	numerics::vector( topology_.points()[n0] , topology_.points()[n1] , topology_.points().dim() , edge0.data() );
+	numerics::VectorD<real_t> edge(topology_.points().dim(),edge0.data());
+  return geometric_interpolation( attachment_.points() , attachment_[n0] , attachment_[n1] , edge );
 }
 
 template<typename type>

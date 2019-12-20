@@ -34,6 +34,80 @@ edgesInLengthBounds( MetricField<type>& metric_ ,
 }
 
 template<typename type>
+bool
+AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 , real_t lmax0 )
+{
+  // try edge swapping around the edge (p,q) such that the
+  // global worst quality does not get worse
+  std::vector<index_t> shell;
+  topology_.intersect( {p,q} , shell );
+  if (shell.size()==0) return false;
+
+  // list all the vertices in the shell
+  std::vector<index_t> candidates;
+  for (index_t j=0;j<shell.size();j++)
+  for (index_t i=0;i<topology_.nv(shell[j]);i++)
+    candidates.push_back(topology_(shell[j],i));
+  uniquify(candidates);
+
+  // assign the cavity used by the swapper since this is the same
+  // for all candidates
+  edge_swapper_.setCavity( shell );
+
+  // loop through all candidates
+  int m = -1;
+  real_t qw = Q0;
+  for (index_t j=0;j<candidates.size();j++)
+  {
+
+    if (candidates[j]==p || candidates[j]==q) continue;
+
+    // check if the swap is valid in terms of geometry topology
+    bool accept = edge_swapper_.valid( candidates[j] , p , q );
+    if (!accept)
+    {
+      continue;
+    }
+
+    // check if the swap is valid in terms of visibility
+    accept = edge_swapper_.apply( candidates[j] , p , q );
+    if (!accept)
+    {
+      continue;
+    }
+
+    // option to check the produced lengths
+    std::vector<real_t> lens;
+    metric_.lengths( edge_swapper_ , lens );
+    if (lens.size()==0) return false;
+    real_t lmin = * std::min_element( lens.begin() , lens.end() );
+    real_t lmax = * std::max_element( lens.begin() , lens.end() );
+    if (lmin0>0 && lmin<lmin0) continue;
+    if (lmax0>0 && lmax>lmax0) continue;
+
+    //edge_swapper_.evaluate(metric);
+    real_t qws = worst_quality(edge_swapper_,metric_);
+    if (qws>qw)
+    {
+      if (!edge_swapper_.philipcondition()) continue;
+      m  = candidates[j];
+      qw = qws;
+    }
+
+  }
+
+  if (m<0) return false;
+
+  edge_swapper_.apply( index_t(m) , p , q );
+  //edge_swapper_.evaluate(metric);
+  topology_.apply(edge_swapper_);
+  //topology_.update(edge_swapper_,metric);
+
+  return true;
+
+}
+
+template<typename type>
 void
 AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 {

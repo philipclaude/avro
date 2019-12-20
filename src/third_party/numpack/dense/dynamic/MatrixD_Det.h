@@ -131,6 +131,8 @@ namespace MatrixDdet
   inline T
   Det(const MatrixDView<T>& Matrix)
   {
+    if ( Matrix.m() == 1 && Matrix.n() == 1 )
+      return Matrix(0,0);
     if ( Matrix.m() == 2 && Matrix.n() == 2 )
       return MatrixDdet::det2x2< T >( Matrix );
     if ( Matrix.m() == 3 && Matrix.n() == 3 )

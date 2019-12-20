@@ -44,7 +44,7 @@ public:
   }
 
   void generateCandidates( Topology<Simplex>& topology ,
-                           MetricField<Simplex> , real_t lmax , Insert<Simplex>& inserter );
+                           MetricField<Simplex>& , real_t lmax , Insert<Simplex>& inserter );
 
   bool tooclose( Points& v , const index_t k , MetricField<Simplex>& metric ,
                  const real_t lmin , index_t nn );

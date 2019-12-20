@@ -22,12 +22,14 @@ public:
 
   void adapt();
 
-  void collapse_edges();
-  void split_edges();
+  void collapse_edges( bool limit_length , bool swapout );
+  void split_edges( real_t lt , bool limit_length , bool swapout );
   void swap_edges( real_t qt , index_t npass , bool lcheck );
-  void smooth_points();
+  void smooth_points( index_t nb_iter );
 
 private:
+  bool swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 , real_t lmax0 );
+
   Topology<type>& topology_;
   MetricField<type>& metric_;
 

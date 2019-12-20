@@ -232,6 +232,253 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
   return true;
 }
 
+template<typename type>
+void
+AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
+{
+  index_t pass = 0;
+  index_t nb_candidates,nb_collapsed,nb_collapsed_total = 0;
+  index_t nb_swaps;
+  real_t lmin0,lmax0,lmin1,lmax1;
+
+  printf("-> performing collapses:\n");
+
+  // get the current list of edges
+  std::vector<index_t> edges;
+  topology_.getEdges(edges);
+  std::vector<real_t> lengths;
+
+  collapser_.nb_parameter_rejections() = 0;
+  collapser_.nb_parameter_tests() = 0;
+  collapser_.nb_invalid_geometry() = 0;
+
+  // evaluate the current worst quality
+  // this is used as the improvement criterion when swapping out of
+  // uncollapsable configuration
+  //topology_.evaluate(metric);
+  real_t Q0 = worst_quality(topology_,metric_);
+
+  while (true)
+  {
+
+    pass++;
+    bool collapsed = false;
+    nb_collapsed = 0;
+    nb_swaps = 0;
+
+    // compute all the lengths
+    index_t ne = edges.size()/2;
+    lengths.resize( ne );
+    for (index_t k=0;k<ne;k++)
+      lengths[k] = metric_.length( topology_.points() ,
+                                  edges[2*k] , edges[2*k+1] );
+
+    // sort the edges by length
+    std::vector<index_t> idx = linspace( ne );
+    std::sort( idx.begin() , idx.end() , SortBy<real_t>(lengths) );
+
+    // compute the original length bounds
+    lmin0 = * std::min_element( lengths.begin() , lengths.end() );
+    lmax0 = * std::max_element( lengths.begin() , lengths.end() );
+
+    // list the collapse candidates
+    std::vector<index_t> node0;
+    std::vector<index_t> node1;
+    std::vector<bool> swapok;
+    for (index_t k=0;k<ne;k++)
+    {
+      index_t i = idx[k];
+      if (lengths[i]<sqrt(.5))
+      {
+        // add the nodes of the edge
+        node0.push_back( edges[2*i] );
+        node1.push_back( edges[2*i+1] );
+        swapok.push_back( false );
+
+        node0.push_back( edges[2*i+1] );
+        node1.push_back( edges[2*i] );
+        swapok.push_back( true );
+      }
+      else
+        break; // the next edge is long enough that it doesn't need collapsing
+    }
+
+    nb_candidates = node0.size()/2;
+
+    for (coord_t d=0;d<topology_.number()+1;d++)
+    {
+      collapser_.nb_rejected(d) = 0;
+      collapser_.nb_accepted(d) = 0;
+    }
+    collapser_.nb_rej_vis_Edge() = 0;
+    collapser_.nb_rej_sgn_Edge() = 0;
+    collapser_.nb_rej_geo_Edge() = 0;
+
+    printf("\tpass %lu: ne = %lu, short = %lu, l = [%3.4f,%3.4f]\n",
+                      pass,ne,nb_candidates,lmin0,lmax0);
+
+    // remove the nodes
+    std::vector<bool> removed( topology_.points().nb() , false );
+    index_t edge = 0;
+    while (true)
+    {
+      if (node0.size()==0) break;
+      if (edge==node0.size()-1) break;
+
+      // get the next edge to collapse
+      index_t n = node0[edge];
+      index_t p = node1[edge];
+
+      if (removed[n] || removed[p])
+      {
+        edge++;
+        continue;
+      }
+
+      bool result = false;
+      if (!collapser_.valid(n,p))
+      {
+        // try swapping out of this configuration
+        if (swapout && swapok[edge])
+        {
+          result = swap_edge( n , p , Q0 , lmin0 , lmax0 );
+          if (result) nb_swaps++;
+        }
+
+        // go to the next edge, we already added the reverse nodes so
+        // those will be checked
+        edge++;
+        continue;
+      }
+
+      if (removed[n] || removed[p])
+      {
+        // nodes were removed, skip this collapse
+        edge++;
+        continue;
+      }
+
+      // attempt the collapse, delay application
+      result = collapser_.apply( n , p , true );
+      if (!result)
+      {
+
+        // try swapping out of this configuration
+        if (swapout && swapok[edge])
+        {
+          result = swap_edge( n , p , Q0 , lmin0 , lmax0 );
+          if (result) nb_swaps++;
+        }
+
+        // the operator didn't like this due to visibility
+        edge++;
+        continue;
+      }
+
+      // check if we want to bound the maximum length
+      if (limitLength)
+      {
+        std::vector<real_t> lens;
+        metric_.lengths( collapser_ , lens );
+        if (lens.size()==0)
+        {
+          collapser_.print();
+          luna_assert_not_reached;
+        }
+        real_t lmax = * std::max_element( lens.begin() , lens.end() );
+        if (lmax>lmax0)
+        {
+          // try swapping out of this configuration
+          if (swapout && swapok[edge])
+          {
+            result = swap_edge( n , p , Q0 , lmin0 , lmax0 );
+            if (result) nb_swaps++;
+          }
+
+          edge++;
+          continue;
+        }
+      }
+
+      // make sure the quality does not globally degrade
+      //collapser_.evaluate(metric);
+      real_t qwc = worst_quality( collapser_ , metric_ );
+      if (qwc<Q0)
+      {
+        edge++;
+        continue;
+      }
+
+      // the collapse was finally accepted! apply the topology change
+      topology_.apply(collapser_);
+
+      // the quality needs to be updated if we are allowing swaps
+      if (swapout)
+      {
+        //collapser_.evaluate(metric);
+        //topology_.update(collapser_,metric);
+      }
+
+      collapsed = true;
+      nb_collapsed++;
+
+      // mark the removed nodes
+      removed[n] = true;
+
+      // go to the next edge
+      edge++;
+
+    } // loop over current edges to collapse
+
+    nb_collapsed_total += nb_collapsed;
+
+    // if no collapses were performed, we're done
+    if (!collapsed)
+    {
+      printf("-> done collapses. total collapses = %lu. nb_param_rej = (%lu/%lu), nb_geom_rej = %lu.\n",
+                nb_collapsed_total,collapser_.nb_parameter_rejections(),
+                collapser_.nb_parameter_tests(),collapser_.nb_invalid_geometry());
+      break;
+    }
+
+    // now actually delete the points
+    index_t count = 0;
+    for (index_t k=0;k<removed.size();k++)
+    {
+      if (removed[k])
+      {
+        topology_.remove_point( k-count );
+        metric_.remove(k-count);
+        topology_.inverse().remove( k-count );
+
+        count++;
+      }
+    }
+
+    // analyze the resulting edges (and recompute for the next iteration)
+    edges.clear();
+    topology_.getEdges(edges);
+
+    // compute all the lengths
+    ne = edges.size()/2;
+    lengths.resize( ne );
+    for (index_t k=0;k<ne;k++)
+      lengths[k] = metric_.length( topology_.points() ,
+                                  edges[2*k] , edges[2*k+1] );
+
+    lmin1 = * std::min_element( lengths.begin() , lengths.end() );
+    lmax1 = * std::max_element( lengths.begin() , lengths.end() );
+    printf("\t\tcol = %lu, swap = %lu l = [%3.4f,%3.4f]\n",
+                nb_collapsed,nb_swaps,lmin1,lmax1);
+    if (topology_.number()>=1) printf("\t\t--> Edges:   accepted %lu, rejected %lu\n",collapser_.nb_accepted(1),collapser_.nb_rejected(1));
+    if (topology_.number()>=2) printf("\t\t--> Faces:   accepted %lu, rejected %lu\n",collapser_.nb_accepted(2),collapser_.nb_rejected(2));
+    if (topology_.number()>=3) printf("\t\t--> Volumes: accepted %lu, rejected %lu\n",collapser_.nb_accepted(3),collapser_.nb_rejected(3));
+    if (topology_.number()>=4) printf("\t\t--> HypVols: accepted %lu, rejected %lu\n",collapser_.nb_accepted(4),collapser_.nb_rejected(4));
+    printf("\t\tEdge rejections: vis = %lu, sgn = %lu, geo = %lu\n",collapser_.nb_rej_vis_Edge(),collapser_.nb_rej_sgn_Edge(),collapser_.nb_rej_geo_Edge());
+
+  } // loop over recomputation of edges
+}
+
 template class Collapse<Simplex>;
 
 } // luna
