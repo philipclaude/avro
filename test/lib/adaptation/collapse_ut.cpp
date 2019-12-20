@@ -11,6 +11,8 @@
 
 using namespace luna;
 
+#define FULL_TEST 0
+
 UT_TEST_SUITE( collapse_test_suite )
 
 UT_TEST_CASE(ckf_3d)
@@ -22,26 +24,22 @@ UT_TEST_CASE(ckf_3d)
   real_t xc[3] = {0.,0.,0.};
   EGADS::Cube box(&context,{1,1,1},xc);
 
-  std::vector<index_t> dims(number,3);
+  std::vector<index_t> dims(number,10);
   CKF_Triangulation topology( dims );
-  topology.points().print();
   topology.points().attach(box);
-
-  bool testBoundaryVolume = false;
 
   topology.close();
   topology.orient();
   topology.neighbours().compute();
   topology.inverse().build();
-
   UT_ASSERT_EQUALS( topology.neighbours().cache().nb() , 0 );
 
   Collapse<Simplex> collapser(topology);
 
   // compute the initial volumes of the entities
+  #if FULL_TEST
   std::vector<Entity*> entities;
-  //if (testBoundaryVolume)
-  //  box.listTessellatableEntities(entities);
+  box.get_tessellatable(entities);
   std::vector<real_t> volume0( entities.size() );
   Boundary<Simplex> boundary0( topology );
   boundary0.extract();
@@ -50,7 +48,9 @@ UT_TEST_CASE(ckf_3d)
     volume0[k] = boundary0.volume( boundary0.indexof( entities[k] ) );
     UT_ASSERT_NEAR( volume0[k] , 1. , 1e-12 );
   }
+  #endif
 
+  index_t nb_collapse_total = 0;
   index_t pass = 0;
   while (true)
   {
@@ -97,13 +97,14 @@ UT_TEST_CASE(ckf_3d)
       }
       else
         nb_invalid_geometry++;
+
       if (!accept)
         continue;
 
       nb_collapse++;
+      nb_collapse_total++;
 
-      if (!testBoundaryVolume)
-        continue;
+      #if FULL_TEST
 
       // compute the boundary of the new topology
       Boundary<Simplex> boundary( topology );
@@ -116,6 +117,8 @@ UT_TEST_CASE(ckf_3d)
         UT_ASSERT_NEAR( vol , volume0[j] , 1e-12 );
       }
 
+      #endif
+
     }
     printf("collapsed %lu edges\n",nb_collapse);
 
@@ -124,7 +127,7 @@ UT_TEST_CASE(ckf_3d)
 
     if (nb_collapse==0) break;
   }
-
+  printf("summary: nb_collapse_total = %lu\n",nb_collapse_total);
 }
 UT_TEST_CASE_END(ckf_3d)
 

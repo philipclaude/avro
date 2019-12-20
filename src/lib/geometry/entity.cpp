@@ -237,12 +237,6 @@ Entity::above( const Entity* e ) const
 	return false;
 }
 
-void
-Entity::build_parents()
-{
-
-}
-
 template class Tree<Entity>;
 
 } // luna

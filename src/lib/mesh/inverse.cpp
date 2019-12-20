@@ -282,7 +282,6 @@ InverseTopology<type>::update( Cavity<type>& cavity , bool delay )
 {
 
   // adjust the element indices
-  #if SMART_APPLY
   if (cavity.nb_insert()>=cavity.nb_cavity())
   {
     // if there are more elements inserted than removed,
@@ -308,9 +307,6 @@ InverseTopology<type>::update( Cavity<type>& cavity , bool delay )
     }
 
   }
-  #else
-  luna_implement;
-  #endif
 
   // first check if any points are deleted
 /*  if (!delay)

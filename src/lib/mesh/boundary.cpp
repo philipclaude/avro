@@ -1,6 +1,7 @@
 #include "common/tools.h"
 
 #include "geometry/entity.h"
+#include "geometry/egads/object.h"
 
 #include "mesh/boundary.h"
 #include "mesh/facets.h"
@@ -300,7 +301,7 @@ Boundary<type>::extract( bool interior )
     Entity* e = entity_[k];
     Topology_ptr t =
         std::make_shared<Topology<type>>(topology_.points(),e->number());
-    entity2child_.insert( std::pair<Entity*,index_t>(e,k ) );
+    entity2child_.insert( std::pair<Entity*,index_t>(e,k) );
     this->add_child(t);
   }
 
@@ -482,12 +483,17 @@ Boundary<type>::check() const
 
 template<typename type>
 index_t
-Boundary<type>::indexof( Entity* e )
+Boundary<type>::indexof( Entity* e0 )
 {
+  EGADS::Object* e = (EGADS::Object*)e0;
   std::map<Entity*,index_t>::const_iterator it;
+  e->print(false);
   for (it=entity2child_.begin();it!=entity2child_.end();++it)
   {
-    luna_implement; // TODO lookup object?
+    //luna_implement; // TODO lookup object?
+    EGADS::Object* obj = (EGADS::Object*)it->first;
+    obj->print(false);
+    if (obj->object() == e->object()) return it->second;
     //if (it->first->object()==e->object()) return it->second;
   }
   printf("could not find entity:\n");

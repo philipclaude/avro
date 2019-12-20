@@ -168,8 +168,6 @@ public:
     first_.clear();
     last_.clear();
     data_.clear();
-    sorted_   = false;
-    rank_     = 0;
   }
 
   void print() const

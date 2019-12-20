@@ -87,8 +87,6 @@ UT_TEST_CASE(test2)
   box.get_tessellatable(entities);
   UT_ASSERT_EQUALS( entities.size() , 26 );
 
-  boundary.print();
-
   for (index_t k=0;k<entities.size();k++)
   {
     if (entities[k]->number()!=2) continue;

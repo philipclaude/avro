@@ -313,6 +313,7 @@ void
 Topology<type>::close()
 {
   if (closed_) return;
+  
   // compute the boundary
   Topology<type> bnd(this->points_,this->number_-1);
   get_boundary(bnd);

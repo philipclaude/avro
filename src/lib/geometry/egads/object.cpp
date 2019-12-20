@@ -22,6 +22,8 @@ Object::Object( const Context& context , ego* object ) :
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
   tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
+  interior_ = false;
+  sense_required_ = false;
 }
 
 Object::Object( ego* object , EGADS::Body* body ) :
@@ -34,6 +36,8 @@ Object::Object( ego* object , EGADS::Body* body ) :
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
   tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
+  interior_ = false;
+  sense_required_ = false;
 }
 
 ego*
@@ -48,10 +52,10 @@ Object::object() const
   return object_;
 }
 
-const ego*
+const ego
 Object::egchild( index_t k ) const
 {
-  return &data_.children[k];
+  return data_.children[k];
 }
 
 void
@@ -104,6 +108,7 @@ Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   if (number_==0)
   {
     std::fill( u.begin() , u.end() , 0.0 );
+    u[0] = 1;
     x[0] = data_.data[0];
     x[1] = data_.data[1];
     x[2] = data_.data[2];
@@ -130,6 +135,7 @@ Object::inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
   if (number_==0)
   {
     std::fill( u.begin() , u.end() , 0.0 );
+    u[0] = 1;
     x[0] = data_.data[0];
     x[1] = data_.data[1];
     x[2] = data_.data[2];

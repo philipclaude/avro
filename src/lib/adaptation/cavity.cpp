@@ -266,17 +266,17 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
               t = trange[0]; // TODO: Is this right?!?!?
 
               // @marshall: changed to the same logic as non-periodic
-              if (edge->egchild(0) == node->object()) t = trange[0];
-              if (edge->egchild(1) == node->object()) t = trange[1];
+              if (edge->egchild(0) == *node->object()) t = trange[0];
+              if (edge->egchild(1) == *node->object()) t = trange[1];
             }
             else
             {
-              if (edge->egchild(0) == node->object()) t = trange[0];
-              if (edge->egchild(1) == node->object()) t = trange[1];
+              if (edge->egchild(0) == *node->object()) t = trange[0];
+              if (edge->egchild(1) == *node->object()) t = trange[1];
             }
             #else
-            if (edge->egchild(0) == node->object()) t = trange[0];
-            if (edge->egchild(1) == node->object()) t = trange[1];
+            if (edge->egchild(0) == *node->object()) t = trange[0];
+            if (edge->egchild(1) == *node->object()) t = trange[1];
             #endif
 
             break;
@@ -312,6 +312,7 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
             if (!ufound[i]) continue;
             uv[0] = params[i*udim  ];
             uv[1] = params[i*udim+1];
+            luna_implement;
             foundGuess = true;
             break;
           }
@@ -429,17 +430,17 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
           t = trange[0]; // TODO: Is this right?!?!?
 
           // @marshall: changed to the same logic as non-periodic
-          if (edge->egchild(0) == node->object()) t = trange[0];
-          if (edge->egchild(1) == node->object()) t = trange[1];
+          if (edge->egchild(0) == *node->object()) t = trange[0];
+          if (edge->egchild(1) == *node->object()) t = trange[1];
         }
         else
         {
-          if (edge->egchild(0) == node->object()) t = trange[0];
-          if (edge->egchild(1) == node->object()) t = trange[1];
+          if (edge->egchild(0) == *node->object()) t = trange[0];
+          if (edge->egchild(1) == *node->object()) t = trange[1];
         }
         #else
-        if (edge->egchild(0) == node->object()) t = trange[0];
-        if (edge->egchild(1) == node->object()) t = trange[1];
+        if (edge->egchild(0) == *node->object()) t = trange[0];
+        if (edge->egchild(1) == *node->object()) t = trange[1];
         #endif
 
         // set the parametric value
@@ -481,9 +482,9 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
       printf("x_true = (%g,%g,%g), x_eval = (%g,%g,%g) with param coordinates (%g,%g)\n",
                 x[0],x[1],x[2],x_eval[0],x_eval[1],x_eval[2],params[k*udim],params[k*udim+1]);
       printf("Getting parameters for entity:\n");
-      e->print();
+      e->print(false);
       printf("Entity storing vertex with param = (%g,%g):\n", points.u( v[k] )[0], points.u( v[k] )[1]);
-      entities[k]->print();
+      entities[k]->print(false);
     }
 
     luna_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
@@ -533,6 +534,7 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
     // because there might be situations in which it touches multiple faces
     if (count!=geometry.number()+1)
       continue;
+
 
     // get the opposite neighbour
     int k1 = -1;
@@ -587,6 +589,9 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
   std::vector<index_t> N = geometry.data();
   uniquify( N );
 
+  luna_assert( v2u.size()==0 );
+  luna_assert( u2v.size()==0 );
+
   // get the parameter coordinates of each vertex
   real_t params[2] = {0,0};;
   for (index_t k=0;k<N.size();k++)
@@ -619,7 +624,9 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
       geometryParams( entity , this->points_ , geometry(k) , geometry.nv(k) , params.data() );
       for (index_t j=0;j<geometry.nv(k);j++)
       {
-        index_t m = v2u[ geometry(k,j) ];
+        //index_t m = v2u[ geometry(k,j) ];
+        if (v2u.find(geometry(k,j))==v2u.end()) luna_assert(false);
+        index_t m = v2u.at( geometry(k,j) );
         for (index_t i=0;i<udim;i++)
           geometry.points()[m][i] = params[ udim*j+i ];
       }
@@ -629,7 +636,10 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
   // map the geometry topology indices
   for (index_t k=0;k<geometry.nb();k++)
   for (index_t j=0;j<geometry.nv(k);j++)
+  {
+    luna_assert( v2u.find(geometry(k,j))!=v2u.end() );
     geometry(k,j) = v2u[ geometry(k,j) ];
+  }
 
   // close the geometry
   geometry.close();
@@ -648,7 +658,8 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
   for (index_t k=0;k<geometry.points().nb();k++)
   {
     if (k<geometry.points().nb_ghost()) continue;
-    index_t v = u2v.at(k);
+    index_t v = u2v[k];
+    if (v2u.find(v)==v2u.end()) luna_assert_not_reached;
     luna_assert( v2u[v]==k );
     luna_assert( v2u[v]>=geometry.points().nb_ghost() );
   }

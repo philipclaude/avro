@@ -25,6 +25,17 @@ Tree<Node_t>::above( const Node_t* node ) const
 
 template<typename Node_t>
 void
+Tree<Node_t>::add_parent( Node_t* parent )
+{
+  parents_.push_back(parent);
+
+  // also add to the children!
+  for (index_t k=0;k<nb_children();k++)
+    child(k).add_parent(parent);
+}
+
+template<typename Node_t>
+void
 Tree<Node_t>::build_parents()
 {
   // go through the children

@@ -539,6 +539,7 @@ Points::compute_params()
 void
 Points::clear()
 {
+	DOF<real_t>::clear();
   u_.clear();
   body_.clear();
   primitive_.clear();
