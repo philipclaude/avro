@@ -8,6 +8,10 @@
 
 #include "geometry/egads/context.h"
 
+#include "graphics/plot.h"
+#include "graphics/plotter.h"
+#include "graphics/window.h"
+
 #include "library/ckf.h"
 #include "library/egads.h"
 #include "library/metric.h"
@@ -34,22 +38,22 @@ UT_TEST_CASE(adapt_test)
   EGADS::Cube box(&context,{1,1,1});
 
   // structured grid
-  std::vector<index_t> dims(number,6);
+  std::vector<index_t> dims(number,4);
   std::shared_ptr<Topology<Simplex>> ptopology = std::make_shared<CKF_Triangulation>(dims);
-  std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,number);
-  pmesh->add(ptopology);
-  ptopology->points().copy(pmesh->points());
-
-  pmesh->points().print();
 
   // tag the points onto the body
   ptopology->points().attach( box );
+
+  // create a mesh and add the topology
+  std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,number);
+  pmesh->add(ptopology);
+  ptopology->points().copy(pmesh->points());
 
   // define the problem and adapt
   AdaptationParameters params;
   params.directory() = "tmp/";
 
-  for (index_t iter=0;iter<5;iter++)
+  for (index_t iter=0;iter<1;iter++)
   {
 
     params.adapt_iter() = iter;
@@ -62,8 +66,6 @@ UT_TEST_CASE(adapt_test)
     // create the mesh we will write to
     std::shared_ptr<Mesh> pmesh_out = std::make_shared<Mesh>(number,number);
 
-    pmesh->retrieve<Simplex>(0).print();
-
     // define the problem and adapt
     AdaptationProblem problem = {*pmesh,fld,params,*pmesh_out};
     adapt<Simplex>( problem );
@@ -75,11 +77,24 @@ UT_TEST_CASE(adapt_test)
 
     std::shared_ptr<Topology<Simplex>> ptopology = std::make_shared<Topology<Simplex>>(pmesh->points(),number);
     const Topology<Simplex>& topology_out = pmesh_out->retrieve<Simplex>(0);
-    for (index_t k=0;k<pmesh_out->topology(0).nb();k++)
+    for (index_t k=0;k<topology_out.nb();k++)
       ptopology->add(topology_out(k),topology_out.nv(k));
     pmesh->add(ptopology);
-  }
 
+    #if 1
+    graphics::Plotter plotter;
+    graphics::Window& window = plotter.window("main");
+
+    graphics::Window::Plot_ptr plot1 = std::make_shared<graphics::Plot>(topology_out,&window);
+    plotter.window("main").attach(plot1);
+
+    graphics::BasicInterface basic( window );
+    graphics::PlotTree tree(window);
+    window.set_interface(&tree);
+
+    plotter.run();
+    #endif
+  }
 }
 UT_TEST_CASE_END(adapt_test)
 

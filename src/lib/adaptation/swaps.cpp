@@ -280,6 +280,225 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
 }
 
+template<typename type>
+EdgeSwap<type>::EdgeSwap( Topology<type>& _topology ) :
+  Primitive<type>(_topology)
+{
+  this->setName("edge swapper");
+  nb_geometry_rejections_.resize( _topology.number() );
+}
+
+template<typename type>
+bool
+EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Entity* face0 )
+{
+  EGADS::Object* face = (EGADS::Object*) face0;
+
+  // check if the edge swap is valid in the parameter space
+  // 2d swaps area already checks, 4d is limited to linear geometries for now
+  if (this->topology_.number()!=3) return true;
+  if (!this->curved_) return true;
+  if (face->interior()) return true;
+
+  // based on the type of face, we may need to flip the sign for the volume calculation
+  int oclass,mtype;
+  ego ref,prev,next;
+  EGADS_ENSURE_SUCCESS( EG_getInfo(*face->object(), &oclass, &mtype,&ref, &prev, &next) );
+  if (mtype==SREVERSE)
+    this->gcavity_.sign() = -1;
+  else
+    this->gcavity_.sign() = 1;
+
+  // extract the geometry cavity
+  this->extractGeometry( face, {e0,e1} );
+  luna_assert( this->G_.nb()>0 );
+
+  if (!this->G_.closed())
+    luna_assert_msg( this->G_.nb()==2 ,
+                    "|G| = %lu, |swap ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
+
+  if (this->G_.closed())
+    luna_assert( this->G_.nb_real()==2 );
+
+  // ensure the e0 is visible to the cavity boundary
+  bool accept = this->gcavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
+  luna_assert( accept );
+
+  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , face );
+  int s = checker.signof( this->gcavity_ );
+  luna_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
+  luna_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+
+  // ensure e1 is visible to the cavity boundary
+  accept = this->gcavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
+  luna_assert( accept );
+  s = checker.signof( this->gcavity_ );
+  luna_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
+  luna_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+
+  // check for visibility of p
+  nb_parameter_tests_++;
+  accept = this->gcavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
+  luna_assert( this->gcavity_.nb_real()==2 );
+  if (!accept)
+  {
+    //printf("swap not visible in parameter space!\n");
+    nb_parameter_rejections_++;
+    return false;
+  }
+
+  s = checker.signof( this->gcavity_ );
+  if (s<0)
+  {
+    //printf("swap creates negative normals!\n");
+    return false;
+  }
+
+  if (checker.createsBadGeometry(this->gcavity_))
+  {
+    //printf("swap creates bad geometry!\n");
+    nb_invalid_geometry_++;
+    return false;
+  }
+
+  // the geometry cavity should have positive volumes
+  luna_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+
+  return true;
+}
+
+template<typename type>
+bool
+EdgeSwap<type>::valid( const index_t p , const index_t e0 , const index_t e1 )
+{
+  // topology checks
+  if (this->topology_.points().fixed(e0) ||
+      this->topology_.points().fixed(e1))
+    return false;
+  if (p<this->topology_.points().nb_ghost()) return false;
+  if (e0<this->topology_.points().nb_ghost()) return false;
+  if (e1<this->topology_.points().nb_ghost()) return false;
+
+  std::vector<index_t> edge = {e0,e1};
+  if (this->C_.empty())
+    this->topology_.intersect(edge,this->C_);
+
+  std::vector<index_t>& elems = this->C_;
+
+  for (index_t k=0;k<elems.size();k++)
+  for (index_t j=0;j<this->topology_.nv(elems[k]);j++)
+  {
+    if (this->topology_.points().fixed(this->topology_(elems[k],j)))
+      return false;
+  }
+
+  // check if the two points lie on an Edge entity
+  Entity* ge = this->geometry(e0,e1);
+
+  // check if this edge is in the volume
+  if (ge==NULL)
+  {
+    // edge is in the volume, always valid
+    return true;
+  }
+
+  // check if this edge is on a geometry Edge (can't swap these)
+  if (ge!=NULL && ge->number()<2)
+  {
+    nb_geometry_rejections_[ge->number()]++;
+    return false;
+  }
+
+  // check the entity on the re-inserted vertex
+  if (ge!=NULL)
+  {
+    Entity* ep = this->topology_.points().entity(p);
+    if (ep==NULL) return false;
+    if (ep!=ge)
+    {
+      if (ge->above(ep))
+      {} // the swap is okay
+      else
+      {
+        nb_geometry_rejections_[ge->number()]++;
+        return false;
+      }
+    }
+  }
+
+  if (ge->interior())
+  {
+    nb_wake_++;
+  }
+
+  return true;
+}
+
+template<typename type>
+bool
+EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
+{
+  // check if the swap is valid in terms of geometry
+  if (!valid(p,e0,e1)) return false; // computes cavity C_
+
+  this->info_ = "trying to swap edge (" + stringify<index_t>(e0) + "/"
+                + stringify<index_t>(e1) +")"+
+                " with reinsertion " + stringify<index_t>(p);
+
+  // compute the original number of ghost elements
+  index_t nb_ghost0 = 0;
+  for (index_t j=0;j<this->C_.size();j++)
+    if (this->topology_.ghost(this->C_[j]))
+      nb_ghost0++;
+
+  // apply the operator, checking visibility
+  this->enlarge_ = false;
+  bool accept = this->compute( p , this->topology_.points()[p] , this->C_ );
+  if (!accept) return false;
+
+  // check if all produce elements have a positive determinant of implied metric
+  if (!this->positiveImpliedMetrics())
+    return false;
+
+  // check visibility in the parametric space
+  Entity* ge = this->geometry(e0,e1);
+  if (ge!=NULL && ge->number()==2)
+  {
+    if (!visibleParameterSpace(p,e0,e1,ge))
+    {
+      //printf("swap not visible in parameter space!\n");
+      return false;
+    }
+  }
+
+  // count the resulting number of ghost elements
+  index_t nb_ghost = 0;
+  for (index_t j=0;j<this->nb();j++)
+    if (this->ghost(j))
+      nb_ghost++;
+
+  // check if only ghosts are created
+  index_t only_ghost = true;
+  for (index_t k=0;k<this->nb();k++)
+  {
+    if (!this->ghost(k))
+    {
+      only_ghost = false;
+      break;
+    }
+  }
+  if (only_ghost) return false;
+
+  // do not allow swaps which change the number of ghosts for 3-simplices
+  if (this->topology_.number()==3 && nb_ghost0!=nb_ghost)
+    return false;
+
+  if (!accept) return false;
+
+  return accept;
+}
+
+template class EdgeSwap<Simplex>;
 template class AdaptThread<Simplex>;
 
 } // luna

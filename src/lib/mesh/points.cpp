@@ -71,7 +71,7 @@ void
 Points::copy( Points& v , const bool ghosts) const
 {
 	v.clear();
-	
+
   v.set_dim( dim_ );
 	v.set_parameter_dim( udim_ );
 
@@ -91,9 +91,9 @@ Points::copy( Points& v , const bool ghosts) const
   for (index_t k=0;k<nb();k++)
   {
     v.body(k)   = body_[k];
-    //v.setEntity( k , primitive_[k] );
+    v.set_entity( k , primitive_[k] );
     v.set_fixed( k , fixed_[k] );
-    //v.setParam( k , u(k) );
+    v.set_param( k , u(k) );
   }
 }
 
@@ -122,8 +122,6 @@ Points::body( const index_t k )
 	luna_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
 	return body_[k];
 }
-
-#if 1
 
 void
 Points::set_entity( const index_t k , Entity* e )
@@ -515,8 +513,6 @@ Points::from_json( const json& J , const Model* model )
     }
   }
 }
-
-#endif
 
 void
 Points::compute_param( index_t k )

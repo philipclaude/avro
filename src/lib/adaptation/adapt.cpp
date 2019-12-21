@@ -1,5 +1,3 @@
-//#include "luna.h"
-
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
 #include "adaptation/parameters.h"
@@ -49,7 +47,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
 
   // retrieve the parameters
   const bool limit_insertion_length = params.limit_insertion_length();
-  const bool swapout = params.swapout();
+  const bool swapout = false;//params.swapout();
   const real_t lt_min = params.lt_min();
   real_t lt_max = params.lt_max();
   const bool smooth_on = params.use_smoothing();
@@ -385,8 +383,6 @@ adapt( AdaptationProblem& problem )
     // close the mesh topology, compute the neighours and mesh inverse
     mesh_topology.close();
     mesh_topology.orient();
-
-    mesh_topology.points().print();
 
     mesh_topology.neighbours().fromscratch() = true; // speed up
     mesh_topology.neighbours().compute();
