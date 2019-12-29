@@ -1,3 +1,4 @@
+#include "adaptation/implied_metric.h"
 #include "adaptation/metric.h"
 
 #include "mesh/search.h"
@@ -800,7 +801,7 @@ MetricAttachment::set_cells( const Topology<type>& topology )
 }
 template void MetricAttachment::set_cells( const Topology<Simplex>& );
 
-#if 0
+#if 1
 template<typename type>
 void
 MetricAttachment::limit( const Topology<type>& topology , real_t href )
@@ -810,7 +811,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 
 	// the points should be associated with each other
 	luma_assert_msg( topology.points().nb() == points_.nb() , "topology nb_points = %lu, points_.nb() = %lu" ,
-										topology.points().nb() , points_.nb() );
+									 topology.points().nb() , points_.nb() );
 
 	// compute the implied metric of the input topology
 	MeshImpliedMetric<type> implied( topology );
@@ -824,26 +825,26 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		if (k < topology.points().nb_ghost()) continue;
 
 		// compute the step from the implied metric to the current metric
-		SPDT<real_t> mi = implied[k];
-		SPDT<real_t> mt = this->operator[](k);
+		numerics::SymMatrixD<real_t> mi = implied[k];
+		numerics::SymMatrixD<real_t> mt = this->operator[](k);
 
-		SPDT<real_t> invsqrt_M0 = mi.pow(-0.5);
-		SPDT<real_t> expS = mt.sandwich(invsqrt_M0);
-		SPDT<real_t> s = expS.log();
+		numerics::SymMatrixD<real_t> invsqrt_M0 = numerics::powm(mi,-0.5);
+		numerics::SymMatrixD<real_t> expS = invsqrt_M0*mt*invsqrt_M0;
+		numerics::SymMatrixD<real_t> s = numerics::logm(expS);
 
 		// limit the step
 		bool limited = false;
 		for (index_t i=0;i<dim;i++)
 		for (index_t j=0;j<=i;j++)
 		{
-			if (s(i,j) > 2*log(href))
+			if (s(i,j) > 2*std::log(href))
 			{
-				s(i,j) = 2*log(href);
+				s(i,j) = 2*std::log(href);
 				limited = true;
 			}
-			else if (s(i,j) < -2*log(href))
+			else if (s(i,j) < -2*std::log(href))
 			{
-				s(i,j) = -2*log(href);
+				s(i,j) = -2*std::log(href);
 				limited = true;
 			}
 		}
@@ -851,17 +852,19 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		else continue;
 
 		// compute the new metric from the step
-		SPDT<real_t> sqrt_M0 = mi.sqrt();
-		SPDT<real_t> mk = (s.exp()).sandwich(sqrt_M0);
-		this->operator[](k) = mk;
+		numerics::SymMatrixD<real_t> sqrt_M0 = numerics::sqrtm(mi);
+		numerics::SymMatrixD<real_t> mk = sqrt_M0*numerics::expm(s)*sqrt_M0;
 
-		logM_[k]     = mk.log();
-		sqrtDetM_[k] = sqrt( mk.determinant() );
+		this->operator[](k).set(mk);
+		this->operator[](k).calculate();
+
+		//logM_[k]     = numerics::logm(mk);
+		//sqrtDetM_[k] = sqrt( numerics::determinant(mk) );
 
 		// check positive-definiteness
-		std::pair< std::vector<real_t> , densMat<real_t> > eig = mk.eig();
-		for (index_t j=0;j<eig.first.size();j++)
-			luma_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
+		//std::pair< std::vector<real_t> , densMat<real_t> > eig = mk.eig();
+		//for (index_t j=0;j<eig.first.size();j++)
+		//	luma_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
 	}
 	printf("limited %lu metrics out of %lu\n",nb_limited,this->nb());
 }
@@ -1022,5 +1025,6 @@ MetricAttachment::from_solb( const std::string& filename )
 #endif
 
 template class MetricField<Simplex>;
+template void MetricAttachment::limit(const Topology<Simplex>&,real_t);
 
 } // luma

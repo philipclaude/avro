@@ -128,12 +128,13 @@ ElementImpliedMetric<type>::determinant( const Points& points , const index_t* v
 
 template<typename type>
 MeshImpliedMetric<type>::MeshImpliedMetric( const Topology<type>& topology ) :
-  Field<type,numerics::SymMatrixD<real_t>>(topology,1,CONTINUOUS),
+  //Field<type,numerics::SymMatrixD<real_t>>(topology,1,CONTINUOUS),
   topology_(topology)
 {
   numerics::SymMatrixD<real_t> zero( topology_.master().number() );
+  this->resize( topology.points().nb() , zero );
   //this->data_.resize( topology_.points().nb() , zero );
-  this->allocate( topology_.points().nb() );
+  //this->allocate( topology_.points().nb() );
   nodalMetricSqrt_.resize( topology_.points().nb() , zero );
   nodalMetricSqrtDet_.resize( topology_.points().nb() , 0. );
   edges_.clear();
@@ -217,7 +218,7 @@ MeshImpliedMetric<type>::initialize()
     // compute the weighted average
     try
     {
-      interp( alpha , mb , *this->data_[k] );
+      interp( alpha , mb , this->data_[k] );
       //this->data_[k].template interpolate<LogEuclidean<real_t>>( alpha , mb );
     }
     catch(...)
@@ -226,7 +227,7 @@ MeshImpliedMetric<type>::initialize()
       printf("v0 = %g\n",v0);
     }
 
-    nodalMetricSqrt_[k]    = numerics::sqrtm(*this->data_[k]);
+    nodalMetricSqrt_[k]    = numerics::sqrtm(this->data_[k]);
     nodalMetricSqrtDet_[k] = numerics::determinant(nodalMetricSqrt_[k]);
   }
 }
@@ -581,12 +582,12 @@ MeshImpliedMetric<type>::optimize()
     // assign the implied metric
 		//this->data_[k] = nodalMetricSqrt_[k]*S.exp()*nodalMetricSqrt_[k];
     //this->data_[k] = (S.exp()).sandwich(nodalMetricSqrt_[k]);
-    this->value(k) = nodalMetricSqrt_[k]*numerics::expm(S)*nodalMetricSqrt_[k];
+    this->data_[k] = nodalMetricSqrt_[k]*numerics::expm(S)*nodalMetricSqrt_[k];
 
     if (k<topology_.points().nb_ghost())
     {
       //this->data_[k].zero();
-      this->value(k) = 0;
+      this->data_[k] = 0;
       continue;
     }
 

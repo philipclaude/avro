@@ -181,6 +181,9 @@ public:
   void remove( index_t k , bool recheck=true );
   bool check() const;
 
+  template<typename type>
+  void limit( const Topology<type>& topology , real_t href );
+
   Points& points() { return points_; }
 
   index_t& elem( const index_t k )

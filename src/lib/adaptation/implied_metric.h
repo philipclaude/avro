@@ -1,6 +1,7 @@
 #ifndef luma_LIB_ADAPTATION_IMPLIED_METRIC_H_
 #define luma_LIB_ADAPTATION_IMPLIED_METRIC_H_
 
+#include "common/array.h"
 #include "common/types.h"
 
 #include "mesh/field.h"
@@ -34,7 +35,7 @@ private:
 };
 
 template<typename type>
-class MeshImpliedMetric : public Field<type,numerics::SymMatrixD<real_t>>
+class MeshImpliedMetric : public Array<numerics::SymMatrixD<real_t>>//Field<type,numerics::SymMatrixD<real_t>>
 {
 public:
   MeshImpliedMetric( const Topology<type>& topology );

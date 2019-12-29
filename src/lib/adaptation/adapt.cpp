@@ -472,6 +472,8 @@ adapt( AdaptationProblem& problem )
   field.set_cells( topology );
   luma_assert( field.check () );
 
+  field.limit( topology , std::sqrt(2) );
+
   // create a discrete metric with the input topology
   MetricField<type> metric( topology , field );
 

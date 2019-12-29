@@ -42,6 +42,21 @@ determinant( const SymMatrixD<type>& A )
 
 template< class T >
 inline numpack::DLA::MatrixSymD<T>
+powm(const numpack::DLA::MatrixSymD<T>& A , real_t p )
+{
+  // compute the eigensystem with normalized eigenvectors
+  numpack::DLA::EigenSystemPair<T> LE(A);
+
+  // compute the power of the eigenvalues
+  for (int i = 0; i < A.m(); i++ )
+    LE.L[i] = ::pow(LE.L[i],p);
+
+  // return the symmetric matrix
+  return LE;
+}
+
+template< class T >
+inline numpack::DLA::MatrixSymD<T>
 logm(const numpack::DLA::MatrixSymD<T>& A)
 {
   // compute the eigensystem with normalized eigenvectors

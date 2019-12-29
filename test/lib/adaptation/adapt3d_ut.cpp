@@ -53,9 +53,10 @@ UT_TEST_CASE(adapt_test)
   // define the problem and adapt
   AdaptationParameters params;
   params.directory() = "tmp/";
+  params.insertion_volume_factor() = -1;
 
-  index_t niter = 2;
-  for (index_t iter=0;iter<=2;iter++)
+  index_t niter = 10;
+  for (index_t iter=0;iter<=niter;iter++)
   {
 
     params.adapt_iter() = iter;
