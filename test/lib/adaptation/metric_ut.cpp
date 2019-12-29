@@ -52,12 +52,12 @@ UT_TEST_CASE(Metric_tests_2d)
   Metric m(n);
   m.set(identity(n));
 
-  numerics::SymMatrixD<real_t> expm = numerics::exp(m);
+  numerics::SymMatrixD<real_t> expm = numerics::expm(m);
   UT_ASSERT_NEAR( expm(0,0) , std::exp(1.) , tol );
   UT_ASSERT_NEAR( expm(0,1) , 0. , tol );
   UT_ASSERT_NEAR( expm(1,1) , std::exp(1.) , tol );
 
-  numerics::SymMatrixD<real_t> logm = numerics::log(m);
+  numerics::SymMatrixD<real_t> logm = numerics::logm(m);
   UT_ASSERT_EQUALS( logm(0,0) , 0. );
   UT_ASSERT_EQUALS( logm(0,1) , 0. );
   UT_ASSERT_EQUALS( logm(1,1) , 0. );

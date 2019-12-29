@@ -9,9 +9,14 @@
 #include "mesh/topology.h"
 
 #include "numerics/linear_algebra.h"
+#include "numerics/nlopt_result.h"
 
-#include <numpack/types/SurrealD.h>
 #include <numpack/types/SurrealS.h>
+#include <numpack/types/PromoteSurreal.h>
+
+#include <nlopt.hpp>
+
+#include <cmath>
 
 namespace luma
 {
@@ -221,7 +226,7 @@ MeshImpliedMetric<type>::initialize()
       printf("v0 = %g\n",v0);
     }
 
-    nodalMetricSqrt_[k]    = numerics::sqrt(*this->data_[k]);
+    nodalMetricSqrt_[k]    = numerics::sqrtm(*this->data_[k]);
     nodalMetricSqrtDet_[k] = numerics::determinant(nodalMetricSqrt_[k]);
   }
 }
@@ -241,7 +246,7 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
   real_t  one_over_nv = 1./real_t(DIM+1);
 
   // reference complexity
-  complexity0 = topology_.nb_real()*topology_.master().unit_volume();
+  complexity0 = topology_.nb_real()*topology_.master().reference().vunit();
 
   luma_assert( sv.size()==topology_.points().nb() );
   if (dc_dS.size()!=0)
@@ -299,6 +304,16 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
   return complexity;
 }
 
+template<typename T>
+static T
+power( const T& x , index_t p )
+{
+  T result = 1;
+  for (index_t k=0;k<=p;k++)
+    result *= x;
+  return result;
+}
+
 // Smooth max with C2 continuity that matches at x = +- eps/2
 template<typename T>
 static T
@@ -309,7 +324,7 @@ smoothmaxC2(const T x, const T y, const real_t eps = 1e-2 )
   const T d = M-m; // max(x,y) = y + max(0,x-y);
 
   // from solving linear system with 6 boundary conditions
-  return ( d > eps / 2 ) ? M : m + (pow(eps+2*d,3)*(3*eps - 2*d))/(32*pow(eps,3));
+  return ( d > eps / 2 ) ? M : m + (power(eps+2*d,3)*(3*eps - 2*d))/(32*power(eps,3));
 }
 
 template<typename type>
@@ -336,10 +351,12 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
   {
     MatrixSymSurrealVertex S = Svec[k];
     for (index_t i=0;i<nrank;i++)
-      S.data(i).deriv(i) = 1.0; // derivative with respect to its own value is 1
+      S.data[i].deriv(i) = 1.0; // derivative with respect to its own value is 1
 
     MatrixSymSurrealVertex sqrtM0 = nodalMetricSqrt_[k];
-    nodalMetric[k] = (S.exp()).sandwich(sqrtM0);
+    //nodalMetric[k] = (S.exp()).sandwich(sqrtM0);
+    nodalMetric[k] = sqrtM0*numerics::expm(S)*sqrtM0;
+
   }
 
   // compute the deviation for every edge
@@ -359,8 +376,11 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
                       topology_.points().dim() , dx.data() );
 
     // get the edge length squared
-    SurrealClassVertex lni = nodalMetric[p].quadraticFormReal( dx.data() );
-    SurrealClassVertex lnj = nodalMetric[q].quadraticFormReal( dx.data() );
+    numerics::VectorD<real_t> e( DIM , dx.data() );
+    //SurrealClassVertex lni = nodalMetric[p].quadraticFormReal( dx.data() );
+    //SurrealClassVertex lnj = nodalMetric[q].quadraticFormReal( dx.data() );
+    SurrealClassVertex lni = numpack::Transpose(e)*nodalMetric[p]*e;
+    SurrealClassVertex lnj = numpack::Transpose(e)*nodalMetric[q]*e;
     lni = sqrt(lni);
     lnj = sqrt(lnj);
 
@@ -390,7 +410,7 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
       del = 1./sqrt(2.) -edgeLen;
     if (del.value()>0) nb_violate++;
     del = smoothmaxC2( SurrealClassEdge(0.0) , del , 1e-2 );
-    SurrealClassEdge delUnity = pow( del , topology_.number() );
+    SurrealClassEdge delUnity = power( del , topology_.number() );
 
     // add the contribution to the objective function
     delta += delUnity.value()/nb_edges;
@@ -408,7 +428,7 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
   return delta;
 }
 
-#if 0
+#if 1
 template<typename type>
 struct nlopt_data
 {
@@ -439,7 +459,7 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 	for (index_t k=0;k<topology.points().nb();k++)
 	{
 		for (index_t i=0;i<nrank;i++)
-			S[k].data(i) = x[k*nrank+i];
+			S[k].data[i] = x[k*nrank+i];
 	}
 
   // size the gradients if necessary
@@ -470,9 +490,9 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 		{
 			for (index_t i=0;i<nrank;i++)
 			{
-				grad[k*nrank+i] = dl_dS[k].data(i);
+				grad[k*nrank+i] = dl_dS[k].data[i];
         if (data->include_complexity)
-          grad[k*nrank+i] += 2*factor*(complexity/complexity0-1.0)*dc_dS[k].data(i)*(1./complexity0);
+          grad[k*nrank+i] += 2*factor*(complexity/complexity0-1.0)*dc_dS[k].data[i]*(1./complexity0);
 				gradnorm += pow(grad[k*nrank+i],2.);
 			}
 		}
@@ -556,22 +576,24 @@ MeshImpliedMetric<type>::optimize()
 
 		numerics::SymMatrixD<real_t> S( topology_.number() );
 		for (index_t i=0;i<nrank;i++)
-			S.data(i) = x[k*nrank+i];
+			S.data[i] = x[k*nrank+i];
 
     // assign the implied metric
 		//this->data_[k] = nodalMetricSqrt_[k]*S.exp()*nodalMetricSqrt_[k];
-    this->data_[k] = (S.exp()).sandwich(nodalMetricSqrt_[k]);
+    //this->data_[k] = (S.exp()).sandwich(nodalMetricSqrt_[k]);
+    this->value(k) = nodalMetricSqrt_[k]*numerics::expm(S)*nodalMetricSqrt_[k];
 
     if (k<topology_.points().nb_ghost())
     {
-      this->data_[k].zero();
+      //this->data_[k].zero();
+      this->value(k) = 0;
       continue;
     }
 
     // check the implied metric is positive-definite
-    std::pair< std::vector<real_t> , densMat<real_t> > eig = this->data_[k].eig();
-    for (index_t j=0;j<eig.first.size();j++)
-      luma_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
+    //std::pair< std::vector<real_t> , numerics::SymMatrixD<real_t> > eig = this->data_[k].eig();
+    //for (index_t j=0;j<eig.first.size();j++)
+    //  luma_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
 	}
 }
 #endif

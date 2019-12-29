@@ -11,7 +11,10 @@
 #include <numpack/dense/InverseLU.h>
 #include <numpack/Transpose.h>
 
-#include <math.h>
+#include <numpack/types/SurrealD.h>
+#include <numpack/types/SurrealS.h>
+
+#include <cmath>
 
 namespace luma
 {
@@ -39,14 +42,14 @@ determinant( const SymMatrixD<type>& A )
 
 template< class T >
 inline numpack::DLA::MatrixSymD<T>
-log(const numpack::DLA::MatrixSymD<T>& A)
+logm(const numpack::DLA::MatrixSymD<T>& A)
 {
   // compute the eigensystem with normalized eigenvectors
   numpack::DLA::EigenSystemPair<T> LE(A);
 
   // compute the log of the eigenvalues
   for (int i = 0; i < A.m(); i++ )
-    LE.L[i] = std::log(LE.L[i]);
+    LE.L[i] = ::log(LE.L[i]);
 
   // return the symmetric matrix
   return LE;
@@ -54,14 +57,14 @@ log(const numpack::DLA::MatrixSymD<T>& A)
 
 template< class T >
 inline numpack::DLA::MatrixSymD<T>
-exp(const numpack::DLA::MatrixSymD<T>& A)
+expm(const numpack::DLA::MatrixSymD<T>& A)
 {
   // compute the eigensystem with normalized eigenvectors
   numpack::DLA::EigenSystemPair<T> LE(A);
 
   // compute the log of the eigenvalues
   for (int i = 0; i < A.m(); i++ )
-    LE.L[i] = std::exp(LE.L[i]);
+    LE.L[i] = ::exp(LE.L[i]);
 
   // return the symmetric matrix
   return LE;
@@ -69,14 +72,14 @@ exp(const numpack::DLA::MatrixSymD<T>& A)
 
 template< class T >
 inline numpack::DLA::MatrixSymD<T>
-sqrt(const numpack::DLA::MatrixSymD<T>& A)
+sqrtm(const numpack::DLA::MatrixSymD<T>& A)
 {
   // compute the eigensystem with normalized eigenvectors
   numpack::DLA::EigenSystemPair<T> LE(A);
 
   // compute the log of the eigenvalues
   for (int i = 0; i < A.m(); i++ )
-    LE.L[i] = std::sqrt(LE.L[i]);
+    LE.L[i] = ::sqrt(LE.L[i]);
 
   // return the symmetric matrix
   return LE;

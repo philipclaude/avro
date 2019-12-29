@@ -9,7 +9,7 @@
 #define MATRIXD_MATMUL_NATIVE_INSTANTIATE
 #include "MatMul_Native_impl.h"
 
-namespace numpack 
+namespace numpack
 {
 namespace DLA
 {
@@ -53,6 +53,23 @@ template class MatMul_Native< Real, MatrixSymS<4,Real>, MatrixSymS<4,Real> >;
 
 template class MatMul_Native< Real, SurrealS<1>, SurrealS<1> >;
 template class MatMul_Native< Real, SurrealS<2>, SurrealS<2> >;
+
+// philip
+template class MatMul_Native< SurrealS<1>, SurrealS<1>, SurrealS<1> >;
+template class MatMul_Native< SurrealS<1>, Real, SurrealS<1> >;
+
+template class MatMul_Native< SurrealS<3>, SurrealS<3>, SurrealS<3> >;
+template class MatMul_Native< SurrealS<3>, Real, SurrealS<3> >;
+template class MatMul_Native< Real, SurrealS<3>, SurrealS<3> >;
+
+template class MatMul_Native< SurrealS<6>, SurrealS<6>, SurrealS<6> >;
+template class MatMul_Native< SurrealS<6>, Real, SurrealS<6> >;
+template class MatMul_Native< Real, SurrealS<6>, SurrealS<6> >;
+
+template class MatMul_Native< SurrealS<10>, SurrealS<10>, SurrealS<10> >;
+template class MatMul_Native< SurrealS<10>, Real, SurrealS<10> >;
+template class MatMul_Native< Real, SurrealS<10>, SurrealS<10> >;
+// end philip
 
 template class MatMul_Native< Real, MatrixS<3,3, SurrealS<1> >, MatrixS<3,3, SurrealS<1> > >;
 
@@ -100,4 +117,4 @@ template class MatMul_Native< Real, VectorS<3,MatrixS22>, VectorS<3,MatrixS22> >
 template class MatMul_Native< Real, VectorS<3,MatrixS44>, VectorS<3,MatrixS44> >;
 
 } //namespace DLA
-} //namespace numpack 
+} //namespace numpack

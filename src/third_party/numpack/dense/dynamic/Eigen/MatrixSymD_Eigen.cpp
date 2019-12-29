@@ -14,6 +14,7 @@
 #include "MatrixSymD_Eigen_Jacobi.h"
 
 #include "numpack/types/SurrealD.h"
+#include "numpack/types/SurrealS.h"
 
 #include "tools/SANSnumerics.h"
 
@@ -39,7 +40,7 @@ EigenValues( const MatrixSymD<T>& A, VectorD<T>& L )
   }
   else if (A.m()==3)
   {
-    EigenSystem_3x3(A,L,E);
+    EigenSystem_Jacobi(A,L,E);
   }
   else
     EigenSystem_Jacobi(A,L,E);
@@ -60,7 +61,7 @@ EigenVectors( const MatrixSymD<T>& A, MatrixD<T>& E )
   }
   else if (A.m()==3)
   {
-    EigenSystem_3x3(A,L,E);
+    EigenSystem_Jacobi(A,L,E);
   }
   else
     EigenSystem_Jacobi(A,L,E);
@@ -80,7 +81,7 @@ EigenSystem( const MatrixSymD<T>& A, VectorD<T>& L, MatrixD<T>& E )
   }
   else if (A.m()==3)
   {
-    EigenSystem_3x3(A,L,E);
+    EigenSystem_Jacobi(A,L,E);
   }
   else
     EigenSystem_Jacobi(A,L,E);
@@ -92,7 +93,11 @@ template void EigenValues<T>(const MatrixSymD<T>& A, VectorD<T>& L ); \
 template void EigenVectors<T>(const MatrixSymD<T>& A, MatrixD<T>& L );
 
 INSTANTIATE_EIGEN(Real)
-//INSTANTIATE_EIGEN(SurrealD)
+INSTANTIATE_EIGEN(SurrealS<1>)
+INSTANTIATE_EIGEN(SurrealS<3>)
+INSTANTIATE_EIGEN(SurrealS<6>)
+INSTANTIATE_EIGEN(SurrealS<10>)
+
 
 }
 }

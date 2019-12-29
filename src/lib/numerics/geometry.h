@@ -4,7 +4,7 @@
 #include "common/types.h"
 
 #include <vector>
-#include <math.h>
+#include <cmath>
 
 namespace luma
 {

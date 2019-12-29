@@ -26,9 +26,9 @@ interp( const std::vector<type>& alpha ,
 	T = 0;
   for (index_t k=0;k<tensors.size();k++)
 	{
-		T = T + numerics::log(tensors[k])*alpha[k];
+		T = T + numerics::logm(tensors[k])*alpha[k];
 	}
-	T = numerics::exp(T);
+	T = numerics::expm(T);
 }
 
 inline numerics::SymMatrixD<real_t>
