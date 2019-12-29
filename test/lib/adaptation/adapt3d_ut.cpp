@@ -32,7 +32,8 @@ UT_TEST_CASE(adapt_test)
   std::vector<real_t> x0(number,0.0);
 
   // parameters
-  library::MetricField_Uniform analytic(number,0.1);
+  //library::MetricField_Uniform analytic(number,0.1);
+  library::MetricField_UGAWG_Linear analytic;
 
   // geometry
   EGADS::Cube box(&context,{1,1,1});
@@ -53,7 +54,8 @@ UT_TEST_CASE(adapt_test)
   AdaptationParameters params;
   params.directory() = "tmp/";
 
-  for (index_t iter=0;iter<1;iter++)
+  index_t niter = 2;
+  for (index_t iter=0;iter<=2;iter++)
   {
 
     params.adapt_iter() = iter;
@@ -81,19 +83,20 @@ UT_TEST_CASE(adapt_test)
       ptopology->add(topology_out(k),topology_out.nv(k));
     pmesh->add(ptopology);
 
-    #if 1
-    graphics::Plotter plotter;
-    graphics::Window& window = plotter.window("main");
+    if (iter==niter)
+    {
+      graphics::Plotter plotter;
+      graphics::Window& window = plotter.window("main");
 
-    graphics::Window::Plot_ptr plot1 = std::make_shared<graphics::Plot>(topology_out,&window);
-    plotter.window("main").attach(plot1);
+      graphics::Window::Plot_ptr plot1 = std::make_shared<graphics::Plot>(topology_out,&window);
+      plotter.window("main").attach(plot1);
 
-    graphics::BasicInterface basic( window );
-    graphics::PlotTree tree(window);
-    window.set_interface(&tree);
+      graphics::BasicInterface basic( window );
+      graphics::PlotTree tree(window);
+      window.set_interface(&tree);
 
-    plotter.run();
-    #endif
+      plotter.run();
+    }
   }
 }
 UT_TEST_CASE_END(adapt_test)

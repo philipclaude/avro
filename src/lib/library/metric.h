@@ -53,6 +53,33 @@ private:
   std::vector<real_t> h_;
 };
 
+class MetricField_UGAWG_Linear : public MetricField_Analytic
+{
+public:
+  MetricField_UGAWG_Linear() :
+    MetricField_Analytic(3)
+  {}
+
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  {
+    numerics::SymMatrixD<real_t> m(dim_);
+
+    real_t hx = 0.1;
+    real_t hy = 0.1;
+    real_t h0 = 1e-3;
+    real_t hz = h0 +2.*(0.1 -h0)*fabs( x[2] -0.5 );
+
+    m(0,0) = 1./(hx*hx);
+    m(0,1) = 0.;
+    m(0,2) = 0.;
+    m(1,1) = 1./(hy*hy);
+    m(1,2) = 0.;
+    m(2,2) = 1./(hz*hz);
+    return m;
+  }
+
+};
+
 } // library
 
 } // luma
