@@ -1,4 +1,4 @@
-**luma**: library for unstructured adaptation
+**luma**: library for unstructured mesh adaptation
 (c) Philip Claude Caplan, 2019
 
 <img width="60px" src="doc/fig/luma.svg"/>
