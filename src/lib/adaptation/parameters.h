@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_ADAPTATION_PARAMETERS_H_
-#define LUNA_LIB_ADAPTATION_PARAMETERS_H_
+#ifndef luma_LIB_ADAPTATION_PARAMETERS_H_
+#define luma_LIB_ADAPTATION_PARAMETERS_H_
 
 #include "common/types.h"
 
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -100,6 +100,6 @@ public:
   }
 };
 
-} // luna
+} // luma
 
 #endif

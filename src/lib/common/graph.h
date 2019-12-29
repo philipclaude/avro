@@ -1,7 +1,7 @@
-#ifndef LUNA_LIB_COMMON_GRAPH_H_
-#define LUNA_LIB_COMMON_GRAPH_H_
+#ifndef luma_LIB_COMMON_GRAPH_H_
+#define luma_LIB_COMMON_GRAPH_H_
 
-namespace luna
+namespace luma
 {
 
 template<typename Derived_t>
@@ -19,6 +19,6 @@ private:
 
 };
 
-} // luna
+} // luma
 
 #endif

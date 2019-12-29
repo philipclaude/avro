@@ -1,6 +1,6 @@
 #include "library/ckf.h"
 
-namespace luna
+namespace luma
 {
 
 class Cube : public Table<index_t>
@@ -29,7 +29,7 @@ public:
 
   real_t* get_coordinate( const index_t i )
   {
-    luna_assert( i<nb_points() );
+    luma_assert( i<nb_points() );
     return x_+i*number_;
   }
 
@@ -80,7 +80,7 @@ private:
       if (d<1e-6) return i;
     }
     printf("could not find vertex (%g,%g,%g,%g)\n",v[0],v[1],v[2],v[3]);
-    luna_assert(false);
+    luma_assert(false);
     return nb_points();
   }
 
@@ -92,7 +92,7 @@ private:
 void
 Cube::calculate()
 {
-  luna_assert(number_>0);
+  luma_assert(number_>0);
 
   // base case
   if (number_==1)
@@ -208,7 +208,7 @@ check_skip( const real_t* x , coord_t dim )
 void
 CKF_Triangulation::generate()
 {
-  luna_assert( dims_.size() == index_t(number_) );
+  luma_assert( dims_.size() == index_t(number_) );
 
   std::vector<real_t> dx(number_);
   for (coord_t d=0;d<number_;d++)
@@ -277,4 +277,4 @@ CKF_Triangulation::generate()
   this->orient();
 }
 
-} // luna
+} // luma

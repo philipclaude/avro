@@ -1,6 +1,6 @@
 #include "tree.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename Node_t>
@@ -80,4 +80,4 @@ Tree<Node_t>::get_children( std::vector<Node_t*>& children )
   }
 }
 
-} // luna
+} // luma

@@ -1,5 +1,5 @@
-#ifndef LUNA_MESH_BOUNDARY_H_
-#define LUNA_MESH_BOUNDARY_H_
+#ifndef luma_MESH_BOUNDARY_H_
+#define luma_MESH_BOUNDARY_H_
 
 #include "common/types.h"
 
@@ -10,7 +10,7 @@
 
 #include <map>
 
-namespace luna
+namespace luma
 {
 
 namespace BoundaryUtils
@@ -79,6 +79,6 @@ private:
 };
 
 
-} // luna
+} // luma
 
 #endif

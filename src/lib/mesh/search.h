@@ -1,5 +1,5 @@
-#ifndef LUNA_MESH_SEARCH_H_
-#define LUNA_MESH_SEARCH_H_
+#ifndef luma_MESH_SEARCH_H_
+#define luma_MESH_SEARCH_H_
 
 #include "common/types.h"
 
@@ -9,7 +9,7 @@
 #include <time.h>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 template<typename type> class Neighbours;
@@ -90,6 +90,6 @@ private:
 
 };
 
-} // luna
+} // luma
 
 #endif

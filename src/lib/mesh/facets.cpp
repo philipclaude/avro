@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-namespace luna
+namespace luma
 {
 
 Facets::Facets( const Topology<Simplex>& topology ) :
@@ -19,14 +19,14 @@ Facets::opposite( const index_t f , short side ) const
 {
   if (side==0) return topology_( side0_[f] , indx0_[f] );
   if (side==1) return topology_( side1_[f] , indx1_[f] );
-  luna_assert_not_reached;
+  luma_assert_not_reached;
   return 0;
 }
 
 index_t
 Facets::opposite( const index_t f ) const
 {
-  luna_assert( boundary(f) );
+  luma_assert( boundary(f) );
   if (side0_[f]<0) return topology_( side1_[f] , indx1_[f] );
   else return topology_(side0_[f] , indx0_[f] );
 }
@@ -57,7 +57,7 @@ Facets::opposite( std::vector<index_t>& F ) const
 
     return opposite( k );
   }
-  luna_assert_not_reached;
+  luma_assert_not_reached;
   return 0;
 }
 
@@ -165,7 +165,7 @@ Facets::neighbour( const index_t k , const index_t j ) const
 {
   const index_t f = elem2facet_(k,j);
   if ( side0_[f] == int(k) ) return side1_[f];
-  luna_assert( side1_[f]==int(k) );
+  luma_assert( side1_[f]==int(k) );
   return side0_[f];
 }
 
@@ -200,7 +200,7 @@ Facets::check() const
     }
   }
 
-  luna_assert( elem2facet_.nb()==topology_.nb() );
+  luma_assert( elem2facet_.nb()==topology_.nb() );
   for (index_t k=0;k<topology_.nb();k++)
   {
     for (index_t j=0;j<nf;j++)
@@ -235,7 +235,7 @@ Facets::retrieve( const index_t fid , std::vector<index_t>& f ) const
     facet( side0_[fid] , indx0_[fid] ,  f );
     return;
   }
-  luna_assert_msg( side1_[fid]>=0 , "this facet (%lu) has no neighbours!" , fid );
+  luma_assert_msg( side1_[fid]>=0 , "this facet (%lu) has no neighbours!" , fid );
 
   facet( side1_[fid] , indx1_[fid] , f );
 }
@@ -255,7 +255,7 @@ Facets::retrieve( const index_t fid , std::vector<int>& T ) const
     T[ indx0_[fid] ] = -1;
     return;
   }
-  luna_assert_msg( side1_[fid]>=0 , "this facet (%lu) has no neighbours!" , fid );
+  luma_assert_msg( side1_[fid]>=0 , "this facet (%lu) has no neighbours!" , fid );
 
   // fill T with the side0 element but replace indx0 with -1
   for (index_t j=0;j<T.size();j++)
@@ -287,4 +287,4 @@ Facets::print() const
   elem2facet_.print();
 }
 
-} // luna
+} // luma

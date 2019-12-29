@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_GEOMETRY_EGADS_BODY_H_
-#define LUNA_LIB_GEOMETRY_EGADS_BODY_H_
+#ifndef luma_LIB_GEOMETRY_EGADS_BODY_H_
+#define luma_LIB_GEOMETRY_EGADS_BODY_H_
 
 #include "geometry/body.h"
 #include "geometry/egads/data.h"
@@ -8,7 +8,7 @@
 
 #include <map>
 
-namespace luna
+namespace luma
 {
 
 namespace EGADS
@@ -16,18 +16,18 @@ namespace EGADS
 
 class Context;
 
-class Body : public luna::Body
+class Body : public luma::Body
 {
 public:
   Body( const Context& context , ego* object ) :
-    luna::Body(0),
+    luma::Body(0),
     context_(context),
     model_(NULL),
     object_(object)
   {}
 
   Body( ego* object , Model* model ) :
-    luna::Body(0),
+    luma::Body(0),
     context_(model->context()),
     model_(model),
     object_(object)
@@ -59,6 +59,6 @@ protected:
 
 } // EGADS
 
-} // luna
+} // luma
 
 #endif

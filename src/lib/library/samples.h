@@ -1,10 +1,10 @@
-#ifndef LUNA_LIB_LIBRARY_SAMPLES_H_
-#define LUNA_LIB_LIBRARY_SAMPLES_H_
+#ifndef luma_LIB_LIBRARY_SAMPLES_H_
+#define luma_LIB_LIBRARY_SAMPLES_H_
 
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
-namespace luna
+namespace luma
 {
 
 namespace library
@@ -24,6 +24,6 @@ private:
 
 } // library
 
-} // luna
+} // luma
 
 #endif

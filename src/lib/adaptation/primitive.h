@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_ADAPTATION_PRIMITIVE_H_
-#define LUNA_LIB_ADAPTATION_PRIMITIVE_H_
+#ifndef luma_LIB_ADAPTATION_PRIMITIVE_H_
+#define luma_LIB_ADAPTATION_PRIMITIVE_H_
 
 #include "adaptation/cavity.h"
 
@@ -16,7 +16,7 @@
 
 #define PRIMITIVE_CHECK(X) if(!(X)) { this->logError( (#X) ); }
 
-namespace luna
+namespace luma
 {
 
 class Entity;
@@ -45,7 +45,7 @@ public:
 
   bool invalidatesTopology() const
   {
-    //luna_implement; // is validBodies even needed???
+    //luma_implement; // is validBodies even needed???
     //if (!this->topology_.validBodies(*this)) return true;
     return false;
   }
@@ -189,21 +189,6 @@ private:
 };
 
 template<typename type>
-class RidgeSwap : public Primitive<type>
-{
-public:
-  RidgeSwap( Topology<type>& _topology );
-
-  bool apply( const index_t p , const index_t t0 , const index_t t1 , const index_t t2 );
-  bool valid( const index_t p , const index_t t0 , const index_t t1 , const index_t t2 );
-
-  index_t& nb_geometry_rejections( index_t d ) { return nb_geometry_rejections_[d]; }
-
-private:
-  std::vector<index_t> nb_geometry_rejections_;
-};
-
-template<typename type>
 class FacetSwap : public Primitive<type>
 {
 public:
@@ -211,7 +196,6 @@ public:
 
   bool apply( const index_t p , const index_t k0 , const index_t k1 );
   bool valid( const index_t p , const index_t k0 , const index_t k1 );
-
 };
 
 template<typename type>
@@ -286,9 +270,9 @@ public:
     entity_((EGADS::Object*)entity),
     normal_(TableLayout_Rectangular,3)
   {
-    luna_assert( u_.dim()==v_.dim()-1 );
-    luna_assert( v_.dim()==3 );
-    luna_assert( u2v_.size()==u_.nb() );
+    luma_assert( u_.dim()==v_.dim()-1 );
+    luma_assert( v_.dim()==3 );
+    luma_assert( u2v_.size()==u_.nb() );
 
     // compute the normal to every vertex
     std::vector<real_t> N(v_.dim());
@@ -307,7 +291,7 @@ public:
 
   template<typename type> int signof( Topology<type>& topology , bool verbose=false )
   {
-    luna_assert( topology.number()==u_.dim() );
+    luma_assert( topology.number()==u_.dim() );
 
     std::vector<int> sign( topology.nb() );
 
@@ -339,7 +323,7 @@ public:
       sign[k] = 1;
       for (index_t j=0;j<3;j++)
       {
-        luna_assert( topology(k,j)>=topology.points().nb_ghost() );
+        luma_assert( topology(k,j)>=topology.points().nb_ghost() );
         const real_t* n = normal_(topology(k,j));
         real_t dp = DOT(N,n);
         if (verbose)
@@ -356,7 +340,7 @@ public:
         }
       }
     }
-    luna_assert_msg( counted>0 , "topology.nb = %lu" , topology.nb() );
+    luma_assert_msg( counted>0 , "topology.nb = %lu" , topology.nb() );
     return s;
   }
 
@@ -397,7 +381,7 @@ public:
 
   void normal( index_t k , std::vector<real_t>& N )
   {
-    luna_assert( N.size()==3 );
+    luma_assert( N.size()==3 );
 
     // evaluate the normal at the vertex using the stored parameter coordinates
     real_t result[18];
@@ -425,7 +409,7 @@ public:
                std::vector<real_t>& N )
   {
     // evaluate the normal of the oriented triangle
-    luna_assert( N.size()==3 );
+    luma_assert( N.size()==3 );
     real_t X01[3],X02[3];
     for (coord_t d=0;d<3;d++)
     {
@@ -434,7 +418,7 @@ public:
     }
     CROSS(N,X01,X02);
     real_t ln = std::sqrt(N[0]*N[0]+N[1]*N[1]+N[2]*N[2]);
-    luna_assert(ln!=0.0);
+    luma_assert(ln!=0.0);
     numerics::normalize( N.data() , N.size() );
   }
 
@@ -447,6 +431,6 @@ private:
   Table<real_t> normal_; // vertex normals (using the geometry)
 };
 
-} // luna
+} // luma
 
 #endif

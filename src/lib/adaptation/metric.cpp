@@ -13,7 +13,7 @@
 
 #include <cmath>
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -24,8 +24,8 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	attachment_(fld),
 	searcher_(topology_)
 {
-	luna_assert( attachment_.nb()==topology_.points().nb() );
-	luna_assert( attachment_.nb()>0 );
+	luma_assert( attachment_.nb()==topology_.points().nb() );
+	luma_assert( attachment_.nb()>0 );
 
 	if (number_==2)
 	{
@@ -41,7 +41,7 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 																	 2./topology_.number() );
 	}
 	else
-		luna_assert_not_reached;
+		luma_assert_not_reached;
 
 	// build the field
 	Field<type,Metric>::build();
@@ -67,7 +67,7 @@ template<typename type>
 numerics::SymMatrixD<real_t>&
 MetricField<type>::operator() ( const Points& points , index_t p )
 {
-  luna_assert_msg( p<attachment_.nb() ,
+  luma_assert_msg( p<attachment_.nb() ,
                    "p = %lu but field has %lu tensors",p,attachment_.nb() );
   return attachment_[p];
 }
@@ -108,7 +108,7 @@ geometric_interpolation( const Points& points,
 		printf("l0 = %g, l1 = %g\n",l0,l1);
 		edge.dump();
 	}
-	luna_assert_msg(r>0., "r = %.20e",r);
+	luma_assert_msg(r>0., "r = %.20e",r);
 	return lm*(r -1.)/( r*std::log(r) );
 }
 
@@ -116,9 +116,9 @@ template<typename type>
 real_t
 MetricField<type>::length( index_t n0 , index_t n1 ) const
 {
-  luna_assert_msg( n0 < attachment_.nb() ,
+  luma_assert_msg( n0 < attachment_.nb() ,
                   "n0 = %lu, attachment_.nb() = %lu" , n0, attachment_.nb() );
-  luna_assert_msg( n1 < attachment_.nb() ,
+  luma_assert_msg( n1 < attachment_.nb() ,
                   "n1 = %lu, attachment_.nb() = %lu" , n1, attachment_.nb() );
 	std::vector<real_t> edge0( topology_.points().dim() );
 	numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
@@ -236,7 +236,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 
 	// compute the volume under m
 	real_t v = sqrtdetM*master.volume(topology.points(),V,NV);
-	luna_assert_msg( v>=0. , "v = %g, sqrtDetM = %g, v_e = %g" , v , sqrtdetM , master.volume(topology.points(),V,NV) );
+	luma_assert_msg( v>=0. , "v = %g, sqrtDetM = %g, v_e = %g" , v , sqrtdetM , master.volume(topology.points(),V,NV) );
 	v = std::pow( v , 2./num );
 
 	// normalize to be within [0,1]
@@ -258,7 +258,7 @@ MetricField<type>::initializeCells()
     vertex[0] = k;
     std::vector<index_t> elems;
     topology_.all_with(vertex,elems);
-    luna_assert( elems.size()>0 );
+    luma_assert( elems.size()>0 );
 
     if (k<topology_.points().nb_ghost())
     {
@@ -274,7 +274,7 @@ MetricField<type>::initializeCells()
       found = true;
       break;
     }
-    luna_assert(found);
+    luma_assert(found);
   }
 }
 
@@ -301,30 +301,30 @@ template<typename type>
 int
 MetricField<type>::find( index_t n0 , index_t n1 , real_t* x )
 {
-  luna_assert_msg( n0>=topology_.points().nb_ghost() ,
+  luma_assert_msg( n0>=topology_.points().nb_ghost() ,
 									"n0 = %lu, nb_ghost = %lu" ,
 									 n0 , topology_.points().nb_ghost() );
-  luna_assert_msg( n1>=topology_.points().nb_ghost() ,
+  luma_assert_msg( n1>=topology_.points().nb_ghost() ,
 									"n1 = %lu, nb_ghost = %lu" ,
 									 n1 , topology_.points().nb_ghost() );
 
-  luna_assert( n0 < attachment_.points().nb() );
-  luna_assert( n1 < attachment_.points().nb() );
+  luma_assert( n0 < attachment_.points().nb() );
+  luma_assert( n1 < attachment_.points().nb() );
 
-  luna_assert_msg( n0 < attachment_.nb() ,
+  luma_assert_msg( n0 < attachment_.nb() ,
 									 "n0 = %lu , attachment_.nb = %lu\n" ,
 									  n0 , attachment_.nb() );
 
 	// search by starting with the element containing n0
   index_t guess = attachment_[n0].elem();
-  luna_assert_msg( guess < topology_.nb() ,
+  luma_assert_msg( guess < topology_.nb() ,
 									"guess = %lu but nb = %lu\n", guess,topology_.nb());
   int elem = searcher_.find( x , guess );
   if (elem>=0) return elem;
 
 	// search by starting with the element containing n1, if not found yet
   guess = attachment_[n1].elem();
-  luna_assert_msg( guess < topology_.nb() ,
+  luma_assert_msg( guess < topology_.nb() ,
 									"guess = %lu but nb = %lu\n", guess,topology_.nb());
   elem = searcher_.find( x , guess );
   if (elem>=0) return elem;
@@ -364,7 +364,7 @@ MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<
       if (!STFU)
       {
         printf("element search failed!, alpha[%lu] = %g\n",j,alpha[j]);
-        luna_assert_not_reached;
+        luma_assert_not_reached;
       }
     }
 
@@ -436,7 +436,7 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
     if (alpha[j]<0. || alpha[j]>1.)
     {
       printf("element search failed\n");
-      luna_assert_not_reached;
+      luma_assert_not_reached;
     }
 
     // save the metric at this vertex
@@ -455,7 +455,7 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 
   // note: this check will fail if the vertex is intended to be added after
   // its corresponding tensor is computed
-  luna_assert( attachment_.check() );
+  luma_assert( attachment_.check() );
 }
 
 template<typename type>
@@ -533,14 +533,14 @@ MetricField<type>::recompute( index_t p , real_t* x ,
 
     break; // we found the element so we're done
   }
-  luna_assert(inside); // we should have found something
+  luma_assert(inside); // we should have found something
 }
 
 template<typename type>
 bool
 MetricField<type>::recompute( index_t p , real_t* x )
 {
-	luna_assert( p >= attachment_.points().nb_ghost() );
+	luma_assert( p >= attachment_.points().nb_ghost() );
 
 	// look for the element in the background topology with the searcher
   index_t guess = attachment_[p].elem();
@@ -606,7 +606,7 @@ MetricField<type>::recompute( index_t p , real_t* x )
     {
 			printf("alpha[%lu] = %1.16e\n",j,alpha[j]);
       printf("element search failed\n");
-      luna_assert_not_reached;
+      luma_assert_not_reached;
     }
 
 		// signal a problem
@@ -684,7 +684,7 @@ MetricField<type>::check_cells()
     // get the element in the topology this vertex is inside
     index_t elem = attachment_[k].elem();
     real_t* x = attachment_.points()[k];
-    luna_assert( !topology_.ghost(elem) );
+    luma_assert( !topology_.ghost(elem) );
 
     // ensure the barcyentric coordinates are ok
     bool inside = true;
@@ -737,7 +737,7 @@ void
 edge_vector( const index_t i , const index_t j , const Points& v ,
               std::vector<real_t>& X )
 {
-  luna_assert( X.size()==v.dim() );
+  luma_assert( X.size()==v.dim() );
   for (coord_t d=0;d<v.dim();d++)
     X[d] = v[j][d] -v[i][d];
 }
@@ -746,7 +746,7 @@ MetricAttachment::MetricAttachment( Points& points , const std::vector<numerics:
   number_(metrics[0].n()),
 	points_(points)
 {
-  luna_assert_msg( metrics.size()==points.nb() ,
+  luma_assert_msg( metrics.size()==points.nb() ,
 									"number of metrics = %lu , number of points = %lu" ,
 									metrics.size() , points.nb() );
 
@@ -776,7 +776,7 @@ MetricAttachment::set_cells( const Topology<type>& topology )
 {
   std::vector<index_t> vertex(1);
   int offset = topology.points().nb_ghost() -points_.nb_ghost();
-  luna_assert( points_.nb()+offset==topology.points().nb() );
+  luma_assert( points_.nb()+offset==topology.points().nb() );
 
 	std::vector<bool> visited( points_.nb() , false );
 	index_t counted = points_.nb_ghost();
@@ -795,7 +795,7 @@ MetricAttachment::set_cells( const Topology<type>& topology )
 			visited[topology(k,j)] = true;
 		}
 	}
-	luna_assert_msg(counted==points_.nb(),
+	luma_assert_msg(counted==points_.nb(),
 									"counted = %lu, nb_points = %lu",counted,points_.nb());
 }
 template void MetricAttachment::set_cells( const Topology<Simplex>& );
@@ -806,10 +806,10 @@ void
 MetricAttachment::limit( const Topology<type>& topology , real_t href )
 {
 	const coord_t dim = topology.number();
-	luna_assert_msg( topology.points().dim() == dim , "dim = %u , num = %u" , topology.points().dim() , dim );
+	luma_assert_msg( topology.points().dim() == dim , "dim = %u , num = %u" , topology.points().dim() , dim );
 
 	// the points should be associated with each other
-	luna_assert_msg( topology.points().nb() == points_.nb() , "topology nb_points = %lu, points_.nb() = %lu" ,
+	luma_assert_msg( topology.points().nb() == points_.nb() , "topology nb_points = %lu, points_.nb() = %lu" ,
 										topology.points().nb() , points_.nb() );
 
 	// compute the implied metric of the input topology
@@ -861,7 +861,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		// check positive-definiteness
 		std::pair< std::vector<real_t> , densMat<real_t> > eig = mk.eig();
 		for (index_t j=0;j<eig.first.size();j++)
-			luna_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
+			luma_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
 	}
 	printf("limited %lu metrics out of %lu\n",nb_limited,this->nb());
 }
@@ -911,7 +911,7 @@ MetricAttachment::remove( index_t k , bool recheck )
 	sqrtDetM_.erase( sqrtDetM_.begin() +k );*/
 	if (recheck)
 	{
-	  luna_assert_msg( check() ,
+	  luma_assert_msg( check() ,
 	  "nb_points = %lu, nb_metrics = %lu" ,
 	  points_.nb(),Array<Metric>::nb() );
 	}
@@ -958,7 +958,7 @@ MetricAttachment::to_solb( const std::string& filename ) const
 	double buf[GmfMaxTyp];
 	int dim = points_.dim();
 	fid = GmfOpenMesh(filename.c_str(),GmfWrite,GmfDouble,dim);
-	luna_assert( fid );
+	luma_assert( fid );
 
 	int TypTab[GmfMaxTyp];
 	TypTab[0] = GmfSymMat;
@@ -986,7 +986,7 @@ MetricAttachment::from_solb( const std::string& filename )
 	int64_t fid;
 
 	fid = GmfOpenMesh(filename.c_str(),GmfRead,&version,&dim);
-	luna_assert_msg( fid , "could not open sol file %s ",filename.c_str() );
+	luma_assert_msg( fid , "could not open sol file %s ",filename.c_str() );
 
 	printf("version = %d, dimension = %d\n",version,dim);
 
@@ -995,10 +995,10 @@ MetricAttachment::from_solb( const std::string& filename )
 	nb_sol = GmfStatKwd( fid , GmfSolAtVertices , &numberType , &solSize , TypTab );
 	printf("nb_sol = %d, numberType = %d, solSize = %d\n",nb_sol,numberType,solSize);
 
-	luna_assert( nb_sol == int(this->points_.nb()) );
-	luna_assert( solSize == int(dim*(dim+1)/2) );
+	luma_assert( nb_sol == int(this->points_.nb()) );
+	luma_assert( solSize == int(dim*(dim+1)/2) );
 
-	luna_assert( GmfGotoKwd( fid , GmfSolAtVertices ) > 0 );
+	luma_assert( GmfGotoKwd( fid , GmfSolAtVertices ) > 0 );
 	for (int k=0;k<nb_sol;k++)
 	{
 
@@ -1012,7 +1012,7 @@ MetricAttachment::from_solb( const std::string& filename )
 		else
 			status = GmfGetLin( fid , GmfSolAtVertices , dvalues );
 
-		luna_assert( status==1 );
+		luma_assert( status==1 );
 
 		std::vector<real_t> data(dvalues,dvalues+solSize);
 		numerics::SPDT<real_t> m(data);
@@ -1023,4 +1023,4 @@ MetricAttachment::from_solb( const std::string& filename )
 
 template class MetricField<Simplex>;
 
-} // luna
+} // luma

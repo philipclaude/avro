@@ -7,7 +7,7 @@
 #include "graphics/primitive.h"
 #include "graphics/window.h"
 
-namespace luna
+namespace luma
 {
 
 namespace graphics
@@ -67,7 +67,7 @@ Window::Window( const std::string& title , Plotter* plotter) :
   if (!window_)
   {
     glfwTerminate();
-    luna_assert_not_reached;
+    luma_assert_not_reached;
   }
   glfwMakeContextCurrent(window_);
 
@@ -187,8 +187,8 @@ Window::run()
   glDepthFunc(GL_LESS);
 
   // Cull triangles which normal is not towards the camera
-  glEnable(GL_CULL_FACE);
-  //glDisable(GL_CULL_FACE);
+  //glEnable(GL_CULL_FACE);
+  glDisable(GL_CULL_FACE);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -216,4 +216,4 @@ Window::run()
 
 } // graphics
 
-} // luna
+} // luma

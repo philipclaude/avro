@@ -2,7 +2,7 @@
 
 #include "common/parallel_for.h"
 
-using namespace luna;
+using namespace luma;
 
 class Threadable
 {

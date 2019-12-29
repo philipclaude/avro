@@ -7,7 +7,7 @@
 
 #include "mesh/field.h"
 
-namespace luna
+namespace luma
 {
 
 namespace graphics
@@ -82,4 +82,4 @@ Plot::add( Primitive_ptr prim )
 
 } // graphics
 
-} // luna
+} // luma

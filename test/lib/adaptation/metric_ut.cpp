@@ -9,7 +9,7 @@
 
 #include "numerics/linear_algebra.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( Metric_suite )
 

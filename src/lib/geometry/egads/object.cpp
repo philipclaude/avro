@@ -6,7 +6,7 @@
 
 #include <egads.h>
 
-namespace luna
+namespace luma
 {
 
 namespace EGADS
@@ -116,7 +116,7 @@ Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   }
 
   if (x.size()==2) x.push_back(0);
-  luna_assert( x.size()==3 );
+  luma_assert( x.size()==3 );
 
   //print_inline( u , "u before = " );
   //print(false);
@@ -143,7 +143,7 @@ Object::inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
   }
 
   if (x.size()==2) x.push_back(0);
-  luna_assert( x.size()==3 );
+  luma_assert( x.size()==3 );
 
   real_t result[3];
   EGADS_ENSURE_SUCCESS( EG_invEvaluateGuess(*object_,x.data(),u.data(),result) );
@@ -187,4 +187,4 @@ Object::print(bool with_children) const
 
 } // EGADS
 
-} // luna
+} // luma

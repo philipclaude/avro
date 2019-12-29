@@ -1,5 +1,5 @@
-#ifndef LUNA_MESH_TOPOLOGY_H_
-#define LUNA_MESH_TOPOLOGY_H_
+#ifndef luma_MESH_TOPOLOGY_H_
+#define luma_MESH_TOPOLOGY_H_
 
 #include "common/table.h"
 #include "common/json.h"
@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 class Points;
@@ -157,6 +157,6 @@ private:
   InverseTopology<type> inverse_;
 };
 
-} // luna
+} // luma
 
 #endif

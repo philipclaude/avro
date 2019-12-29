@@ -1,12 +1,12 @@
-#ifndef LUNA_LIB_ARRAY_H_
-#define LUNA_LIB_ARRAY_H_
+#ifndef luma_LIB_ARRAY_H_
+#define luma_LIB_ARRAY_H_
 
 #include "common/error.h"
 #include "common/types.h"
 
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -23,7 +23,7 @@ public:
 
   void set( index_t k , const type& x )
   {
-    luna_assert( k < nb() );
+    luma_assert( k < nb() );
     data_[k] = x;
   }
 
@@ -70,7 +70,7 @@ public:
 
   void print() const
   {
-    luna_implement;
+    luma_implement;
   }
 
 private:
@@ -85,6 +85,6 @@ protected:
   std::vector<type> data_;
 };
 
-} // luna
+} // luma
 
 #endif

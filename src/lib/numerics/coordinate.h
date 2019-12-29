@@ -1,11 +1,11 @@
-#ifndef LUNA_LIB_NUMERICS_COORDINATE_H_
-#define LUNA_LIB_NUMERICS_COORDINATE_H_
+#ifndef luma_LIB_NUMERICS_COORDINATE_H_
+#define luma_LIB_NUMERICS_COORDINATE_H_
 
 #include "common/types.h"
 
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -34,6 +34,6 @@ private:
 
 } // numerics
 
-} // luna
+} // luma
 
 #endif

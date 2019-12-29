@@ -1,7 +1,7 @@
 #include "mesh/neighbours.h"
 #include "mesh/topology.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -9,7 +9,7 @@ index_t
 Cache<type>::element( const index_t position ) const
 {
   if (position>=element_.size()) print();
-  luna_assert_msg( position<element_.size() , "pos = %lu, |cache| = %lu",
+  luma_assert_msg( position<element_.size() , "pos = %lu, |cache| = %lu",
                     position,element_.size() );
   return element_[position];
 }
@@ -18,7 +18,7 @@ template<typename type>
 index_t
 Cache<type>::index( const index_t position ) const
 {
-  luna_assert_msg( position<index_.size() , "pos = %lu, |cache| = %lu",
+  luma_assert_msg( position<index_.size() , "pos = %lu, |cache| = %lu",
                     position,index_.size() );
   return index_[position];
 }
@@ -76,7 +76,7 @@ Cache<type>::generate( const std::vector<index_t>& f ) const
   if (f.size()==2) return std::to_string(f[0])+"|"+std::to_string(f[1]);
   if (f.size()==3) return std::to_string(f[0])+"|"+std::to_string(f[1])+"|"+std::to_string(f[2]);
   if (f.size()==4) return std::to_string(f[0])+"|"+std::to_string(f[1])+"|"+std::to_string(f[2])+"|"+std::to_string(f[3]);
-  luna_implement;
+  luma_implement;
   return "";
   /*for (index_t i=0;i<f.size();i++)
   {
@@ -195,7 +195,7 @@ void
 Neighbours<Polytope>::compute( index_t* elements0 , index_t nelements )
 {
   printf("convex polytope neighbours not currently supported.\n");
-  luna_implement;
+  luma_implement;
 }
 
 template<typename type>
@@ -256,7 +256,7 @@ Neighbours<type>::remove( const index_t elem0 , bool erase )
     // set the opposite neighbour to -1
     if (elem1>=0)
     {
-      luna_assert( j1>=0 );
+      luma_assert( j1>=0 );
       neighbours_[elem1*nfacets_ +j1] = -1;
     }
 
@@ -384,4 +384,4 @@ template class Neighbours<Polytope>;
 
 template void Neighbours<Simplex>::copy( Neighbours<Simplex>& );
 
-} // luna
+} // luma

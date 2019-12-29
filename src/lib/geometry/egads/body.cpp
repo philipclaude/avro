@@ -3,7 +3,7 @@
 
 #include <egads.h>
 
-namespace luna
+namespace luma
 {
 
 namespace EGADS
@@ -12,7 +12,7 @@ namespace EGADS
 void
 Body::build_hierarchy()
 {
-  luna_assert( nb_entities()==0 );
+  luma_assert( nb_entities()==0 );
 
   // get the topology of the associated ego with the children
   EGADS_ENSURE_SUCCESS( EG_getTopology( *object_ , &data_.reference , &data_.object_class ,
@@ -43,7 +43,7 @@ Body::build_hierarchy()
 Body::Entity_ptr
 Body::child(index_t k)
 {
-  luna_assert( k < nb_entities() );
+  luma_assert( k < nb_entities() );
   return entity_[k];
 }
 
@@ -78,4 +78,4 @@ Body::print() const
 
 } // EGADS
 
-} // luna
+} // luma

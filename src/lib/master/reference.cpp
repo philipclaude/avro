@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-namespace luna
+namespace luma
 {
 
 const real_t*
@@ -52,7 +52,7 @@ ReferenceElement<Simplex>::find_index( const real_t* x ) const
   std::vector<index_t> y(number_);
   for (coord_t d=0;d<number_;d++)
     y[d] = x[d]*order_;
-  luna_implement;
+  luma_implement;
 }
 
 static void
@@ -60,12 +60,12 @@ next_index( const int n , const int q , bool& more , std::vector<index_t>& x )
 {
   int i,j;
 
-  luna_assert( x.size()==index_t(n) );
+  luma_assert( x.size()==index_t(n) );
 
   if (!more)
   {
     if (n<1)
-      luna_assert(false);
+      luma_assert(false);
 
 
     more = true;
@@ -194,7 +194,7 @@ ReferenceElement<Simplex>::precalculate()
     }
     return;
   }
-  luna_assert( length>0 );
+  luma_assert( length>0 );
 
   bool more = false;
   std::vector<index_t> xp(number_+1);
@@ -234,4 +234,4 @@ ReferenceElement<Simplex>::precalculate()
   //print_inline(interior_,"interior = " );
 }
 
-} // luna
+} // luma

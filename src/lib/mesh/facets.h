@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_MESH_FACETS_H_
-#define LUNA_LIB_MESH_FACETS_H_
+#ifndef luma_LIB_MESH_FACETS_H_
+#define luma_LIB_MESH_FACETS_H_
 
 #include "common/table.h"
 #include "common/types.h"
@@ -10,7 +10,7 @@
 #include <vector>
 #include <unordered_map>
 
-namespace luna
+namespace luma
 {
 
 class Simplex;
@@ -43,14 +43,14 @@ private:
   std::vector<index_t> elem_;
 };
 
-} // luna
+} // luma
 
 namespace std
 {
 
-template<> struct hash<luna::HashableElement>
+template<> struct hash<luma::HashableElement>
 {
-  std::size_t operator() (luna::HashableElement const& elem) const noexcept
+  std::size_t operator() (luma::HashableElement const& elem) const noexcept
   {
     std::size_t seed = 0;
     for(auto& i : elem.elem())
@@ -66,7 +66,7 @@ template<> struct hash<luna::HashableElement>
 
 } // namespace std
 
-namespace luna
+namespace luma
 {
 
   inline std::size_t hash_value(const HashableElement& elem)
@@ -145,6 +145,6 @@ private:
   int __contains__( HashableElement& fs ) const;
 };
 
-} // luna
+} // luma
 
 #endif

@@ -8,7 +8,7 @@
 
 #include "numerics/integration.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( integration_test_suite )
 

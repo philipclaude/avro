@@ -3,7 +3,7 @@
 
 #include <array>
 
-namespace luna
+namespace luma
 {
 
 namespace EGADS
@@ -34,4 +34,4 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
 
 } // EGADS
 
-} // luna
+} // luma

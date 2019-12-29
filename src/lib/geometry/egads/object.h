@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_GEOMETRY_EGADS_H_
-#define LUNA_LIB_GEOMETRY_EGADS_H_
+#ifndef luma_LIB_GEOMETRY_EGADS_H_
+#define luma_LIB_GEOMETRY_EGADS_H_
 
 #include "geometry/egads/body.h"
 #include "geometry/egads/data.h"
@@ -8,7 +8,7 @@
 struct egObject;
 typedef egObject* ego;
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -59,6 +59,6 @@ private:
 
 } // EGADS
 
-} // luna
+} // luma
 
 #endif

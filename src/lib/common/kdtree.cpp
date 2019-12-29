@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 PointCloud::PointCloud( Points& points ) :
@@ -46,7 +46,7 @@ void
 KdTree<dim>::getNearestNeighbours( real_t* q, std::vector<index_t>& idx ,
                                    std::vector<real_t>& dist2 , index_t& nu )
 {
-  luna_assert( idx.size()==dist2.size() );
+  luma_assert( idx.size()==dist2.size() );
   nu = tree_->knnSearch(q,idx.size(),idx.data(),dist2.data());
   //idx.resize(nu);
   //dist2.resize(nu);
@@ -68,4 +68,4 @@ template class KdTree<12>;
 template class KdTree<13>;
 template class KdTree<14>;
 
-} // luna
+} // luma

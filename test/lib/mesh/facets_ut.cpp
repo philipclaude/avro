@@ -5,7 +5,7 @@
 #include "mesh/facets.h"
 #include "mesh/topology.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE(facet_test_suite)
 

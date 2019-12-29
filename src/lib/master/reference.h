@@ -1,5 +1,5 @@
-#ifndef LUNA_SRC_LIB_MASTER_REFERENCE_H_
-#define LUNA_SRC_LIB_MASTER_REFERENCE_H_
+#ifndef luma_SRC_LIB_MASTER_REFERENCE_H_
+#define luma_SRC_LIB_MASTER_REFERENCE_H_
 
 #include "common/types.h"
 
@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 class Simplex;
@@ -106,6 +106,6 @@ class ReferenceElement<Hypercube> : public ReferenceElementBase
 
 #endif
 
-} // luna
+} // luma
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_LINEAR_ALGEBRA_H_
-#define LUNA_LIB_LINEAR_ALGEBRA_H_
+#ifndef luma_LIB_LINEAR_ALGEBRA_H_
+#define luma_LIB_LINEAR_ALGEBRA_H_
 
 #include "common/error.h"
 
@@ -13,7 +13,7 @@
 
 #include <math.h>
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -86,7 +86,7 @@ template<typename T>
 inline MatrixD<T>
 inverse( MatrixD<T>& M )
 {
-	luna_assert( M.m() == M.n() );
+	luma_assert( M.m() == M.n() );
 	T idetM = 1./determinant(M);
 
   MatrixD<T> Minv(M.m(),M.n());
@@ -142,7 +142,7 @@ inverse( MatrixD<T>& M )
 		Minv(3,3) = (a1_1*a2_2*a3_3-a1_1*a2_3*a3_2-a1_2*a2_1*a3_3+a1_2*a2_3*a3_1+a1_3*a2_1*a3_2-a1_3*a2_2*a3_1)*idetM;
 	}
 	else
-		luna_implement;
+		luma_implement;
   return Minv;
 }
 
@@ -205,12 +205,12 @@ inverse( SymMatrixD<T>& M )
 		Minv(3,3) = (a1_1*a2_2*a3_3-a1_1*a2_3*a3_2-a1_2*a2_1*a3_3+a1_2*a2_3*a3_1+a1_3*a2_1*a3_2-a1_3*a2_2*a3_1)*idetM;
 	}
 	else
-		luna_implement;
+		luma_implement;
   return Minv;
 }
 
 } // numerics
 
-} // luna
+} // luma
 
 #endif

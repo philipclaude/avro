@@ -2,7 +2,7 @@
 
 #include "numerics/functions.h"
 
-using namespace luna;
+using namespace luma;
 using namespace numerics;
 
 UT_TEST_SUITE(FunctionsSuite)

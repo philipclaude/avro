@@ -1,7 +1,7 @@
-#ifndef LUNA_LIB_NUMERICS_LAPACK_H_
-#define LUNA_LIB_NUMERICS_LAPACK_H_
+#ifndef luma_LIB_NUMERICS_LAPACK_H_
+#define luma_LIB_NUMERICS_LAPACK_H_
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -33,6 +33,6 @@ extern "C" void DGESVD( char *jobu , char* jobvt , int *m , int *n , double *A ,
 
 } // numerics
 
-} // luna
+} // luma
 
 #endif

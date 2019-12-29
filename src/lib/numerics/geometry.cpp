@@ -11,10 +11,10 @@
 
 #include <triangle/predicates.h>
 
-typedef const luna::real_t REAL;
+typedef const luma::real_t REAL;
 #include <tetgen1.5.0/predicates.h>
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -97,7 +97,7 @@ volume( const std::vector<const real_t*>& x , const coord_t dim )
   if (n==2 && dim==2) return fabs(volume2(x));
   if (n==3 && dim==3) return fabs(volume3(x));
   if (n==4 && dim==4) return fabs(volume4(x));
-  luna_assert_not_reached;
+  luma_assert_not_reached;
   //std::vector<const real_t*> y(x.begin(),x.end()); // use the function below
   return volume_nd( x , dim );
 }
@@ -109,7 +109,7 @@ simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
   if (n==2 && dim==2) return volume2(x);
   if (n==3 && dim==3) return volume3(x);
   if (n==4 && dim==4) return volume4(x);
-  luna_assert_not_reached;
+  luma_assert_not_reached;
   return 0.;
 }
 
@@ -168,7 +168,7 @@ barycentric_signed( real_t* p , const std::vector<const real_t*>& x , const coor
 
   real_t V = simplex_volume(x,dim);
   if (V<=0.0) printf("warning: V = %1.12e\n",V);
-  //luna_assert( V>0.0 );
+  //luma_assert( V>0.0 );
 
   for (index_t k=0;k<n+1;k++)
   {
@@ -185,7 +185,7 @@ barycentric_signed( real_t* p , const std::vector<const real_t*>& x , const coor
 void
 centroid( const index_t* v0 , const index_t nv , const Points& vertices , std::vector<real_t>& xc )
 {
-  luna_assert_msg( vertices.dim()==xc.size() ,
+  luma_assert_msg( vertices.dim()==xc.size() ,
     "dim(v) = %u, dim(xc) = %lu" , vertices.dim() , xc.size() );
 
   std::fill( xc.begin() , xc.end() , 0. );
@@ -199,7 +199,7 @@ normal( const std::vector<real_t*>& x , real_t* n , const coord_t dim )
 {
   // we want a single vector orthogonal to the simplex in x
   // in a higher dimensional space, we would have multiple vectors
-  luna_assert_msg( x.size()==dim , "|x| = %lu, dim = %u" , x.size() , dim );
+  luma_assert_msg( x.size()==dim , "|x| = %lu, dim = %u" , x.size() , dim );
 
   //numerics::densMat<double> A(dim-1,dim);
   numerics::MatrixD<real_t> A(dim-1,dim);
@@ -214,7 +214,7 @@ normal( const std::vector<real_t*>& x , real_t* n , const coord_t dim )
   numerics::MatrixD<real_t> K(dim-1,1);
   int info = numerics::kernel(A,K);
   if (info!=0) A.dump();
-  luna_assert_msg( info>=0 , " info = %d " , info );
+  luma_assert_msg( info>=0 , " info = %d " , info );
 
   for (index_t j=0;j<dim;j++)
     n[j] = K(j,0);
@@ -228,7 +228,7 @@ orthogonal( const std::vector<real_t*>& x , real_t* n , const coord_t dim )
 {
   // we want a single vector orthogonal to the vector in x
   // in a higher dimensional space, we would have multiple vectors
-  luna_assert_msg( x.size()==index_t(dim-1) ,
+  luma_assert_msg( x.size()==index_t(dim-1) ,
                     "|x| = %lu, dim = %u" , x.size() , dim );
 
   //numerics::densMat<double> A(dim-1,dim);
@@ -243,7 +243,7 @@ orthogonal( const std::vector<real_t*>& x , real_t* n , const coord_t dim )
   numerics::MatrixD<real_t> K(dim-1,1);
   int info = numerics::kernel(A,K);
   if (info!=0) A.dump();
-  luna_assert_msg( info>=0 , " info = %d " , info );
+  luma_assert_msg( info>=0 , " info = %d " , info );
 
   for (index_t j=0;j<dim;j++)
     n[j] = K(j,0);
@@ -274,7 +274,7 @@ orientNormal( const std::vector<real_t*>& x , real_t *n , const coord_t dim )
   else
   {
     printf("dimension = %d not implemented\n",int(dim));
-    luna_assert_not_reached;
+    luma_assert_not_reached;
   }
 
   // flip the normal if necessary
@@ -313,4 +313,4 @@ vector( const real_t* x0 , const real_t* x1 , const coord_t dim , real_t* v )
 
 } // numerics
 
-} // luna
+} // luma

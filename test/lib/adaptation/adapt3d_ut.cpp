@@ -18,7 +18,7 @@
 
 #include "mesh/mesh.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( adaptation_adapt3d_suite)
 

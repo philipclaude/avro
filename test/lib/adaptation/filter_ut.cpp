@@ -7,7 +7,7 @@
 #include "adaptation/metric.h"
 #include "adaptation/primitive.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( insertion_filter_suite )
 

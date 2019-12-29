@@ -1,4 +1,4 @@
-// luna: Adaptive Voronoi Remesher
+// luma: Adaptive Voronoi Remesher
 // Copyright 2017-2018, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php

@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-namespace luna
+namespace luma
 {
 
 static inline void
@@ -108,7 +108,7 @@ Filter::createCandidate( const index_t n0 , const index_t n1 ,
                          const real_t s , const real_t* x,
                          Entity * e, const real_t* params )
 {
-  luna_assert( n0 < n1 );
+  luma_assert( n0 < n1 );
   node0_.push_back(n0);
   node1_.push_back(n1);
   s_.push_back(s);
@@ -235,7 +235,7 @@ Filter::buildTree()
 void
 Filter::accept( const index_t k , const index_t idx )
 {
-  luna_assert_msg( node0_[k]>=0 && node1_[k]>=0 ,
+  luma_assert_msg( node0_[k]>=0 && node1_[k]>=0 ,
       "node %lu is already active",k);
 
   // save the original values
@@ -298,4 +298,4 @@ Filter::print() const
   }
 }
 
-} // luna
+} // luma

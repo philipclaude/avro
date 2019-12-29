@@ -1,9 +1,9 @@
-#ifndef LUNA_NUMERICS_FUNCTIONS_H_
-#define LUNA_NUMERICS_FUNCTIONS_H_
+#ifndef luma_NUMERICS_FUNCTIONS_H_
+#define luma_NUMERICS_FUNCTIONS_H_
 
 #include "common/types.h"
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -15,6 +15,6 @@ index_t nchoosek( index_t n , index_t k );
 
 } // numerics
 
-} // luna
+} // luma
 
 #endif

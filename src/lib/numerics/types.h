@@ -1,12 +1,12 @@
-#ifndef LUNA_LIB_NUMERICS_TYPES_H_
-#define LUNA_LIB_NUMERICS_TYPES_H_
+#ifndef luma_LIB_NUMERICS_TYPES_H_
+#define luma_LIB_NUMERICS_TYPES_H_
 
 #include "common/types.h"
 
 #include "numpack/dense/dynamic/MatrixD.h"
 #include "numpack/dense/dynamic/VectorD.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename T>
@@ -69,6 +69,6 @@ public:
   {}
 };
 
-} // luna
+} // luma
 
 #endif

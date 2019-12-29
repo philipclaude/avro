@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_GRAPHICS_GL_H_
-#define LUNA_LIB_GRAPHICS_GL_H_
+#ifndef luma_LIB_GRAPHICS_GL_H_
+#define luma_LIB_GRAPHICS_GL_H_
 
 #include "common/error.h"
 
@@ -18,7 +18,7 @@
 #include <GL/gl.h>
 #endif
 
-namespace luna
+namespace luma
 {
 
 namespace graphics
@@ -59,12 +59,12 @@ void dumpGLInfo(bool dumpExtensions = false);
     glerr = glGetError(); \
     error = true; \
   } \
-  luna_assert(!error); \
+  luma_assert(!error); \
 }
 
 
 } // graphics
 
-} // luna
+} // luma
 
 #endif

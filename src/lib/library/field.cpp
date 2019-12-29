@@ -1,6 +1,6 @@
 #include "library/field.h"
 
-namespace luna
+namespace luma
 {
 
 namespace library
@@ -8,4 +8,4 @@ namespace library
 
 } // library
 
-} // luna
+} // luma

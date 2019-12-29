@@ -11,7 +11,7 @@
 
 #include "numerics/predicates.h"
 
-typedef luna::real_t REAL;
+typedef luma::real_t REAL;
 #include <tetgen1.5.0/predicates.h>
 
 #include <triangle/predicates.h>
@@ -19,7 +19,7 @@ typedef luna::real_t REAL;
 #include <unistd.h>
 #include <fstream>
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -134,7 +134,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
         e->print(false);
       }
 
-      luna_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
+      luma_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
     }
   }
 
@@ -308,7 +308,7 @@ done:
  topology.set_closed(false);
  topology_out.set_closed(false);
 
- luna_assert( topology_out.points().nb_ghost()==0 );
+ luma_assert( topology_out.points().nb_ghost()==0 );
 
  return 0;
 }
@@ -348,7 +348,7 @@ adapt( AdaptationProblem& problem )
   std::vector<numerics::SymMatrixD<real_t>>& fld = problem.fld;
 
   // extract the background topology
-  luna_assert_msg( mesh.nb_topologies()==1 ,
+  luma_assert_msg( mesh.nb_topologies()==1 ,
                   "nb_topologies = %lu",mesh.nb_topologies() );
   Topology<type>& topology = mesh.retrieve<type>(0);
   if (topology.nb()==0)
@@ -359,10 +359,10 @@ adapt( AdaptationProblem& problem )
 
   // retrieve some info about the mesh
   const coord_t number = mesh.number();
-  luna_assert( number == topology.number() );
+  luma_assert( number == topology.number() );
 
   const coord_t dim = mesh.points().dim();
-  luna_assert( number == dim );
+  luma_assert( number == dim );
 
   // create a mesh topology by copying the input one
   Points points( dim );
@@ -373,10 +373,10 @@ adapt( AdaptationProblem& problem )
   if (!params.prepared())
   {
     // check there are no ghosts
-    luna_assert_msg( mesh.points().nb_ghost()==0 , "there are %lu ghosts!" , mesh.points().nb_ghost() );
+    luma_assert_msg( mesh.points().nb_ghost()==0 , "there are %lu ghosts!" , mesh.points().nb_ghost() );
 
     // check the number of tensors equals the number of points
-    luna_assert_msg( mesh.points().nb() == fld.size() ,
+    luma_assert_msg( mesh.points().nb() == fld.size() ,
                       "nb_points = %lu, nb_fld = %lu",
                       mesh.points().nb() , fld.size() );
 
@@ -399,11 +399,11 @@ adapt( AdaptationProblem& problem )
   }
   else
   {
-    luna_assert_not_reached;
+    luma_assert_not_reached;
 
     // use the stored mesh
     // check the number of tensors equals the number of points
-    luna_assert_msg( mesh.points().nb()-mesh.points().nb_ghost() == fld.size() ,
+    luma_assert_msg( mesh.points().nb()-mesh.points().nb_ghost() == fld.size() ,
       "nb_points = %lu, nb_ghost = %lu, fld.nb = %lu" ,
       mesh.points().nb(), mesh.points().nb_ghost(),fld.size() );
 
@@ -447,14 +447,14 @@ adapt( AdaptationProblem& problem )
       nerr++;
     }
   }
-  luna_assert_msg(nerr==0,
+  luma_assert_msg(nerr==0,
     "there are interior points tagged on the geometry! if you have interior boundary groups, set this flag to true!");
   #endif
 
   // check how many ghost points are present and adjust the field
   if (fld.size() < mesh_topology.points().nb() )
   {
-    luna_assert( fld.size() == mesh_topology.points().nb() - mesh_topology.points().nb_ghost() );
+    luma_assert( fld.size() == mesh_topology.points().nb() - mesh_topology.points().nb_ghost() );
     index_t nb_ghost = mesh_topology.points().nb_ghost();
     for (index_t k=0;k<nb_ghost;k++)
     {
@@ -470,7 +470,7 @@ adapt( AdaptationProblem& problem )
   // to the background topology
   MetricAttachment field( mesh_topology.points() , fld );
   field.set_cells( topology );
-  luna_assert( field.check () );
+  luma_assert( field.check () );
 
   // create a discrete metric with the input topology
   MetricField<type> metric( topology , field );
@@ -510,7 +510,7 @@ adapt( AdaptationProblem& problem )
       }
     }
     #else
-    //luna_implement;
+    //luma_implement;
     #endif
 
     if (topology.number()==3 && params.has_interior_boundaries())
@@ -532,7 +532,7 @@ adapt( AdaptationProblem& problem )
       gamma.writeMesh( problem.mesh_out , mesh_file , false );
       printf("wrote mesh %s\n",mesh_file.c_str());
       #else
-      //luna_implement;
+      //luma_implement;
       #endif
     }
 
@@ -542,14 +542,14 @@ adapt( AdaptationProblem& problem )
       const std::string json_file = params.directory()+"mesh_"+stringify(params.adapt_iter())+".json";
       io::writeMesh<Simplex>( json_file , topology , &metric.field() );
       #else
-      //luna_implement;
+      //luma_implement;
       #endif
     }
 
   } // option to write the mesh
 
   // save the metric in case the caller wants information about it
-  luna_assert_msg( field.nb() == topology.points().nb() , "|field| = %lu, nv = %lu", field.nb() , topology.points().nb() );
+  luma_assert_msg( field.nb() == topology.points().nb() , "|field| = %lu, nv = %lu", field.nb() , topology.points().nb() );
   fld.clear();
   for (index_t k=0;k<field.nb();k++)
     fld.push_back( field[k] );
@@ -572,4 +572,4 @@ adapt( AdaptationProblem& problem )
 template class AdaptThread<Simplex>;
 template int adapt<Simplex>( AdaptationProblem& );
 
-} // luna
+} // luma

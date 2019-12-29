@@ -4,7 +4,7 @@
 
 #include "mesh/topology.h"
 
-namespace luna
+namespace luma
 {
 
 Polytope::Polytope( coord_t number , coord_t order , const Table<int>& incidence ) :
@@ -12,7 +12,7 @@ Polytope::Polytope( coord_t number , coord_t order , const Table<int>& incidence
   simplex_(number,order),
   incidence_(incidence)
 {
-  luna_assert_msg( order==1 , "not supported..." );
+  luma_assert_msg( order==1 , "not supported..." );
 }
 
 Polytope::Polytope( Topology<Polytope>& topology , const coord_t order , const Table<int>& incidence ) :
@@ -25,15 +25,15 @@ Polytope::Polytope( Topology<Polytope>& topology , const coord_t order , const T
 void
 Polytope::get_edges( const index_t* v0 , index_t nv , std::vector<index_t>& ek ) const
 {
-  luna_implement;
+  luma_implement;
 }
 
 real_t
 Polytope::volume( const Points& points , const index_t* v , index_t nv ) const
 {
-  luna_implement;
+  luma_implement;
   return -1.0;
 }
 
 
-} // luna
+} // luma

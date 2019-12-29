@@ -5,7 +5,7 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/matrix.h"
 
-using namespace luna;
+using namespace luma;
 
 numerics::MatrixD<real_t>
 random_matrix( index_t n )

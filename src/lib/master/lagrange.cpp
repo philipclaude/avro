@@ -3,7 +3,7 @@
 #include "master/basis.h"
 #include "master/simplex.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -87,4 +87,4 @@ Simplex::evaluate( index_t k , std::vector<real_t>& phi ) const
 }
 #endif
 
-} // luna
+} // luma

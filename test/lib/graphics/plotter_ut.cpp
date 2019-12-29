@@ -11,8 +11,8 @@
 
 #include "mesh/topology.h"
 
-using namespace luna;
-using namespace luna::graphics;
+using namespace luma;
+using namespace luma::graphics;
 
 UT_TEST_SUITE( PlotterSuite )
 

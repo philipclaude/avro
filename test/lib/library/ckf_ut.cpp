@@ -2,7 +2,7 @@
 
 #include "library/ckf.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( ckf_suite )
 

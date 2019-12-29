@@ -4,7 +4,7 @@
 
 #include "mesh/builder.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( TopologySuite )
 

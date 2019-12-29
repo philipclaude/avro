@@ -34,10 +34,10 @@ include_directories(${CMAKE_SOURCE_DIR}/src/include)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 
 # static versus dynamic builds
-if(LUNA_BUILD_DYNAMIC)
+if(luma_BUILD_DYNAMIC)
     set(BUILD_SHARED_LIBS TRUE)
     set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
-    add_definitions(-DLUNA_DYNAMIC_LIBS)
+    add_definitions(-Dluma_DYNAMIC_LIBS)
 else()
     set(BUILD_SHARED_LIBS FALSE)
 endif()

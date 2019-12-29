@@ -1,4 +1,4 @@
-if (LUNA_WITH_GL)
+if (luma_WITH_GL)
 
   include(FindOpenGL CONFIG)
 
@@ -7,10 +7,10 @@ if (LUNA_WITH_GL)
 
   if (glf3_FOUND)
     message( STATUS "found glfw3 on the system: ${GLFW3_LIB}")
-    set( LUNA_BUILTIN_GLFW false )
+    set( luma_BUILTIN_GLFW false )
   else()
     message(STATUS "compiling built-in glfw3")
-    set( LUNA_BUILTIN_GLFW true )
+    set( luma_BUILTIN_GLFW true )
   endif()
 
   if (APPLE)

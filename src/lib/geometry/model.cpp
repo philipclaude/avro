@@ -1,6 +1,6 @@
 #include "geometry/model.h"
 
-namespace luna
+namespace luma
 {
 
 void
@@ -10,4 +10,4 @@ Model::get_entities( std::vector<Entity*>& entities ) const
     body_[k]->get_entities(entities);
 }
 
-} // luna
+} // luma

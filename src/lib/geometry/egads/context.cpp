@@ -2,7 +2,7 @@
 
 #include <egads.h>
 
-namespace luna
+namespace luma
 {
 
 namespace EGADS
@@ -52,4 +52,4 @@ Context::~Context()
 
 } // EGADS
 
-} // luna
+} // luma

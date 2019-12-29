@@ -1,5 +1,5 @@
-#ifndef LUNA_NUMERICS_EXPANSION_H_
-#define LUNA_NUMERICS_EXPANSION_H_
+#ifndef luma_NUMERICS_EXPANSION_H_
+#define luma_NUMERICS_EXPANSION_H_
 
 #include "numerics/predicates.h"
 
@@ -450,6 +450,6 @@ private:
     friend class expansion_nt;
 };
 
-} // luna
+} // luma
 
 #endif

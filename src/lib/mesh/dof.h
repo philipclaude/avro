@@ -1,9 +1,9 @@
-#ifndef LUNA_LIB_MESH_DOF_H_
-#define LUNA_LIB_MESH_DOF_H_
+#ifndef luma_LIB_MESH_DOF_H_
+#define luma_LIB_MESH_DOF_H_
 
 #include "common/table.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -19,7 +19,7 @@ public:
   void
   interpolate( const std::vector<const type*>& uk , const std::vector<real_t>& phi , type* u ) const
   {
-    luna_assert( uk.size() == phi.size() );
+    luma_assert( uk.size() == phi.size() );
     for (index_t j=0;j<rank();j++)
       u[j] = type(0);
     for (index_t j=0;j<rank();j++)
@@ -32,7 +32,7 @@ public:
   void
   interpolate( const index_t* idx , index_t nv , const std::vector<real_t>& phi , type* u ) const
   {
-    luna_assert( nv == phi.size() );
+    luma_assert( nv == phi.size() );
     for (index_t j=0;j<rank();j++)
       u[j] = type(0);
     for (index_t j=0;j<rank();j++)
@@ -44,6 +44,6 @@ public:
 
 };
 
-} // luna
+} // luma
 
 #endif

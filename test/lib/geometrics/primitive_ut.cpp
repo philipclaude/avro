@@ -6,7 +6,7 @@
 
 #include "numerics/coordinate.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE(PrimitiveSuite)
 

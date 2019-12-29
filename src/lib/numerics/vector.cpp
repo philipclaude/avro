@@ -4,7 +4,7 @@
 
 #include "numerics/vector.h"
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -14,7 +14,7 @@ template<typename T>
 Vector<T>
 Vector<T>::operator+( const Vector<T>& Y ) const
 {
-  luna_assert( nb() == Y.nb() );
+  luma_assert( nb() == Y.nb() );
   Vector<T> Z( nb() );
   for (index_t k=0;k<nb();k++)
     Z[k] = data_[k] +Y[k];
@@ -35,4 +35,4 @@ template class Vector<real_t>;
 
 } // numerics
 
-} // luna
+} // luma

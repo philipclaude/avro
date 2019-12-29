@@ -3,12 +3,12 @@
 
 //#include "graphics/plotter.h"
 
-typedef luna::real_t REAL;
+typedef luma::real_t REAL;
 #include <tetgen1.5.0/predicates.h>
 
 #include <triangle/predicates.h>
 
-using namespace luna;
+using namespace luma;
 
 void
 ut_pre(int argc, char** argv)
@@ -22,7 +22,7 @@ ut_pre(int argc, char** argv)
   printInfo();
 
   // initialize the distributed/shared memory task/thread managers
-  #ifdef LUNA_WITH_MPI
+  #ifdef luma_WITH_MPI
   ProcessMPI::initialize();
   #endif
   ProcessCPU::initialize();

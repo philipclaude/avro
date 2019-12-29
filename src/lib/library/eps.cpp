@@ -4,7 +4,7 @@
 
 #include <cstdlib>
 
-namespace luna
+namespace luma
 {
 
 namespace library
@@ -23,7 +23,7 @@ epsFile::write( const std::string& filename )
   fprintf(fid_,"%%!PS-Adobe-3.0 EPSF-3.0\n");
 
   fprintf(fid_,"%%%%Title: some plot\n"
-              "%%%%Creator: luna 1.0.0b, (c) Philip Claude Caplan\n"
+              "%%%%Creator: luma 1.0.0b, (c) Philip Claude Caplan\n"
               "%%%%For: some reason\n"
               "%%%%CreationDate: October 27 2019\n"
               "%%%%LanguageLevel: 3\n"
@@ -317,4 +317,4 @@ epsFile::print_triangles() const
 
 } // library
 
-} // luna
+} // luma

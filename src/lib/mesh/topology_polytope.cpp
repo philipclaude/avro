@@ -4,7 +4,7 @@
 #include "mesh/topology.h"
 #include "mesh/topology.hpp"
 
-namespace luna
+namespace luma
 {
 
 template<>
@@ -19,10 +19,10 @@ template<>
 void
 Topology<Polytope>::orient( index_t* v , const index_t nv , real_t* p )
 {
-  luna_implement;
+  luma_implement;
 }
 
 template class Topology<Polytope>;
 template class Tree<Topology<Polytope>>;
 
-} // luna
+} // luma

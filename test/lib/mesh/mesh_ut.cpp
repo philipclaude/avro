@@ -4,7 +4,7 @@
 
 #include "mesh/mesh.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( mesh_test_suite )
 

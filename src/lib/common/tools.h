@@ -1,5 +1,5 @@
-#ifndef LUNA_COMMON_TOOLS_H_
-#define LUNA_COMMON_TOOLS_H_
+#ifndef luma_COMMON_TOOLS_H_
+#define luma_COMMON_TOOLS_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 #define UNUSED(x) (void)(x);
@@ -112,7 +112,7 @@ indexof( const type* x , const std::vector<type*>& X )
 	{
 		if (X[k]==x) return k;
 	}
-	luna_assert_not_reached;
+	luma_assert_not_reached;
 	return 0; // to avoid compiler warnings
 }
 
@@ -152,7 +152,7 @@ template<typename T>
 std::string
 unique_label( T& x0 , T& x1 )
 {
-  luna_assert(x0!=x1);
+  luma_assert(x0!=x1);
   if (x0>x1) std::swap(x0,x1);
   std::string s = stringify(x0)+"|"+stringify(x1);
   return s;
@@ -162,7 +162,7 @@ template<typename T>
 std::string
 unique_label( std::vector<T>& x )
 {
-  luna_assert( x.size()>0 );
+  luma_assert( x.size()>0 );
   std::sort( x.begin() , x.end() );
   std::string s = stringify(x[0]);
   for (index_t k=1;k<x.size();k++)
@@ -183,14 +183,14 @@ inline void
 printInfo()
 {
 
-  printf("\nluna compiled with ");
+  printf("\nluma compiled with ");
 
   if (__cplusplus == 201103L) printf("c++11");
   else if (__cplusplus == 199711L ) printf("c++98");
   else printf("pre-standard c++");
 
   printf("deleting memory upon termination using");
-  #ifdef LUNA_SMART_PTR
+  #ifdef luma_SMART_PTR
     printf(" internal smart pointers.\n");
   #else
     printf(" std::shared_ptr (c++11).\n");
@@ -198,7 +198,7 @@ printInfo()
   printf("\n");
 }
 
-void lunaPrintf( const char* fmt , ... );
+void lumaPrintf( const char* fmt , ... );
 
 template<typename type>
 static void

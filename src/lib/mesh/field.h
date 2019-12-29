@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_MESH_FIELD_H_
-#define LUNA_LIB_MESH_FIELD_H_
+#ifndef luma_LIB_MESH_FIELD_H_
+#define luma_LIB_MESH_FIELD_H_
 
 #include "common/table.h"
 #include "common/json.h"
@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 template<typename T> class Table;
@@ -170,6 +170,6 @@ private:
   const TopologyBase& topology_;
 };
 
-} // luna
+} // luma
 
 #endif

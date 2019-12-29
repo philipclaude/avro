@@ -3,7 +3,7 @@
 #include <math.h>
 #include <cstdlib>
 
-namespace luna
+namespace luma
 {
 
   real_t

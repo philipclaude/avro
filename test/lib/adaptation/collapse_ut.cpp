@@ -9,7 +9,7 @@
 
 #include "mesh/boundary.h"
 
-using namespace luna;
+using namespace luma;
 
 #define FULL_TEST 0
 

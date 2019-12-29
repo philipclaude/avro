@@ -13,7 +13,7 @@
 
 #include "numerics/matrix.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename T>
@@ -66,7 +66,7 @@ Field<Simplex,T>::build()
     }
   }
   else
-    luna_assert_not_reached;
+    luma_assert_not_reached;
 }
 
 template<typename T>
@@ -75,7 +75,7 @@ Field<Polytope,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
-    luna_assert( master_.order()==1 );
+    luma_assert( master_.order()==1 );
 
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -92,7 +92,7 @@ Field<Polytope,T>::build()
   }
   else if (this->type()==DISCONTINUOUS)
   {
-    luna_assert( master_.order()==0 );
+    luma_assert( master_.order()==0 );
     T x0(0);
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -100,7 +100,7 @@ Field<Polytope,T>::build()
     }
   }
   else
-    luna_assert_not_reached;
+    luma_assert_not_reached;
 }
 
 template class Field< Simplex , real_t >;
@@ -114,4 +114,4 @@ template class Field< Simplex , numerics::SymMatrixD<real_t> >;
 
 template class Field< Simplex , Metric >;
 
-} // luna
+} // luma

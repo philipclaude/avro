@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_ADAPTATION_METRIC_H_
-#define LUNA_LIB_ADAPTATION_METRIC_H_
+#ifndef luma_LIB_ADAPTATION_METRIC_H_
+#define luma_LIB_ADAPTATION_METRIC_H_
 
 #include "common/array.h"
 #include "common/table.h"
@@ -12,7 +12,7 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/matrix.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -21,7 +21,7 @@ interp( const std::vector<type>& alpha ,
              const std::vector<numerics::SymMatrixD<type>>& tensors ,
 						 numerics::SymMatrixD<type>& T )
 {
-	luna_assert( alpha.size()==tensors.size() );
+	luma_assert( alpha.size()==tensors.size() );
 
 	T = 0;
   for (index_t k=0;k<tensors.size();k++)
@@ -74,7 +74,7 @@ intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<re
     lambda(d) = 1./(h*h);
   }
 
-  luna_implement; // this is not unit tested
+  luma_implement; // this is not unit tested
 
   // construct the matrix from the eigendecomposition
   return Pinv*numpack::DLA::diag(lambda)*numpack::Transpose(Pinv);
@@ -111,7 +111,7 @@ public:
 
   void set( const numerics::SymMatrixD<real_t>& m0 )
   {
-    luna_assert( number_ == m0.m() && number_ == m0.n() );
+    luma_assert( number_ == m0.m() && number_ == m0.n() );
     for (coord_t i=0;i<number_;i++)
     for (coord_t j=i;j<number_;j++)
       (*this)(i,j) = m0(i,j);
@@ -267,6 +267,6 @@ worst_quality( const Topology<type>& topology , MetricField<type>& metric )
   return *std::min_element(quality.begin(),quality.end());
 }
 
-} // luna
+} // luma
 
 #endif

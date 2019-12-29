@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_MESH_H_
-#define LUNA_LIB_MESH_H_
+#ifndef luma_LIB_MESH_H_
+#define luma_LIB_MESH_H_
 
 #include "common/types.h"
 
@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 class Mesh
@@ -34,7 +34,7 @@ public:
   Topology<type>&
   retrieve( index_t k )
   {
-    luna_assert_msg( topology_[k]->type_name() == type::type_name()  ,
+    luma_assert_msg( topology_[k]->type_name() == type::type_name()  ,
       "requested topology of type %s but have %s" , topology_[k]->type_name().c_str() , type::type_name().c_str() );
     return static_cast<Topology<type>&>(*topology_[k].get());
   }
@@ -43,7 +43,7 @@ public:
   const Topology<type>&
   retrieve( index_t k ) const
   {
-    luna_assert_msg( topology_[k]->type_name() == type::type_name()  ,
+    luma_assert_msg( topology_[k]->type_name() == type::type_name()  ,
       "requested topology of type %s but have %s" , topology_[k]->type_name().c_str() , type::type_name().c_str() );
     return static_cast<Topology<type>&>(*topology_[k].get());
   }
@@ -57,6 +57,6 @@ protected:
   std::vector<Topology_ptr> topology_;
 };
 
-} // luna
+} // luma
 
 #endif

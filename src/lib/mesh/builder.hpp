@@ -1,6 +1,6 @@
 #include "mesh/builder.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -23,7 +23,7 @@ template<typename T>
 void
 Builder<type>::transfer( const Field<type,T>& fx , Field<type,T>& fy ) const
 {
-  luna_implement;
+  luma_implement;
 }
 
-} // luna
+} // luma

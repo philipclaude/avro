@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_GRAPHICS_PLOTTER_H_
-#define LUNA_LIB_GRAPHICS_PLOTTER_H_
+#ifndef luma_LIB_GRAPHICS_PLOTTER_H_
+#define luma_LIB_GRAPHICS_PLOTTER_H_
 
 #include "graphics/client.h"
 #include "graphics/interface.h"
@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 namespace graphics
@@ -52,6 +52,6 @@ private:
 
 } // graphics
 
-} // luna
+} // luma
 
 #endif

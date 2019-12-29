@@ -92,7 +92,7 @@ calculateJacobiQuadrature(int order, double alpha, double beta, double *t, doubl
  *   - 8, Rational,             (a,inf)     (x-a)^alpha*(x+b)^beta
  *
  * Converted for SANS by Cory Frontin in 2019
- * imported into luna by Philip Caplan in 2019
+ * imported into luma by Philip Caplan in 2019
  *
  * @param nt      the number of knots
  * @param kind    the type of quadrature used
@@ -212,34 +212,34 @@ scqf(int nt, double t[], int mlt[], double wts[], int nwts, int ndx[], double sw
 
   if (kind == 1)
   {
-    luna_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
+    luma_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
 
     al = 0.0;
     be = 0.0;
     if (fabs(b - a) <= temp)
-      luna_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
+      luma_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
     shft = (a + b)/2.0;
     slp = (b - a)/2.0;
   }
   else if (kind == 2)
   {
-    luna_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
+    luma_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
 
     al = -0.5;
     be = -0.5;
     if (fabs(b - a) <= temp)
-      luna_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
+      luma_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
     shft = (a + b)/2.0;
     slp = (b - a)/2.0;
   }
   else if (kind == 3)
   {
-    luna_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
+    luma_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
 
     al = alpha;
     be = alpha;
     if (fabs(b - a) <= temp)
-      luna_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
+      luma_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
     shft = (a + b)/2.0;
     slp = (b - a)/2.0;
   }
@@ -249,16 +249,16 @@ scqf(int nt, double t[], int mlt[], double wts[], int nwts, int ndx[], double sw
     be = beta;
 
     if (fabs(b - a) <= temp)
-      luna_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
+      luma_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
     shft = (a + b)/2.0;
     slp = (b - a)/2.0;
   }
   else if ( kind == 5 )
   {
-    luna_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
+    luma_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
 
     if (b <= 0.0)
-      luna_assert_msg(false,"SCQF - Fatal error!\nB <= 0.");
+      luma_assert_msg(false,"SCQF - Fatal error!\nB <= 0.");
     shft = a;
     slp = 1.0/b;
     al = alpha;
@@ -266,10 +266,10 @@ scqf(int nt, double t[], int mlt[], double wts[], int nwts, int ndx[], double sw
   }
   else if (kind == 6)
   {
-    luna_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
+    luma_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
 
     if (b <= 0.0)
-      luna_assert_msg(false,"SCQF - Fatal error!\nB <= 0.");
+      luma_assert_msg(false,"SCQF - Fatal error!\nB <= 0.");
     shft = a;
     slp = 1.0/sqrt(b);
     al = alpha;
@@ -277,21 +277,21 @@ scqf(int nt, double t[], int mlt[], double wts[], int nwts, int ndx[], double sw
   }
   else if (kind == 7)
   {
-    luna_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
+    luma_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
 
     al = alpha;
     be = 0.0;
     if (fabs(b - a) <= temp)
-      luna_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
+      luma_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
     shft = (a + b)/2.0;
     slp = (b - a)/2.0;
   }
   else if (kind == 8)
   {
-    luna_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
+    luma_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
 
     if (a + b <= 0.0)
-      luna_assert_msg(false,"SCQF - Fatal error!\nA + B <= 0.");
+      luma_assert_msg(false,"SCQF - Fatal error!\nA + B <= 0.");
     shft = a;
     slp = a + b;
     al = alpha;
@@ -299,17 +299,17 @@ scqf(int nt, double t[], int mlt[], double wts[], int nwts, int ndx[], double sw
   }
   else if (kind == 9)
   {
-    luna_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
+    luma_assert_msg(false,"KIND != 4 NOT UNIT TESTED.");
 
     al = 0.5;
     be = 0.5;
     if (fabs(b - a) <= temp)
-      luna_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
+      luma_assert_msg(false,"SCQF - Fatal error!\n|B - A| too small.");
     shft = (a + b)/2.0;
     slp = (b - a)/2.0;
   }
   else
-    luna_assert_msg(false,"KIND specified is not implemented for shifts.");
+    luma_assert_msg(false,"KIND specified is not implemented for shifts.");
 
   p = pow(slp, al + be + 1.0);
 
@@ -373,7 +373,7 @@ scqf(int nt, double t[], int mlt[], double wts[], int nwts, int ndx[], double sw
  *   - 8, Rational,             (a,inf)     (x-a)^alpha*(x+b)^beta
  *
  * Converted for SANS by Cory Frontin in 2019
- * imported into luna by Philip Caplan in 2019
+ * imported into luma by Philip Caplan in 2019
  *
  * @param nt      the number of knots
  * @param kind    the type of quadrature used
@@ -454,7 +454,7 @@ sgqf(int nt, double aj[], double bj[], double zemu, double t[], double wts[])
   // exit if the zero-th moment is not positive.
 
   if (zemu <= 0.0)
-    luna_assert_msg(false,"SGQF error: zemu is not positive.");
+    luma_assert_msg(false,"SGQF error: zemu is not positive.");
 
   // set up vectors for IMTQLX.
 
@@ -519,7 +519,7 @@ sgqf(int nt, double aj[], double bj[], double zemu, double t[], double wts[])
  *   - 8, Rational,             (a,inf)     (x-a)^alpha*(x+b)^beta
  *
  * Converted for SANS by Cory Frontin in 2019
- * imported into luna by Philip Caplan in 2019
+ * imported into luma by Philip Caplan in 2019
  *
  * @param kind[in]    the type of quadrature used
  * @param m[in]       the order of the Jacobi matrix
@@ -553,11 +553,11 @@ class_matrix(int kind, int m, double alpha, double beta, double aj[], double bj[
   temp2 = 0.5;
 
   if (500.0*temp < fabs(pow(tgamma(temp2), 2) - pi))
-    luna_assert_msg(false,"CLASS_MATRIX: Gamma function does not match machine parameters.");
+    luma_assert_msg(false,"CLASS_MATRIX: Gamma function does not match machine parameters.");
 
   if (kind == 1)
   {
-    luna_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
+    luma_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
 
     ab = 0.0;
 
@@ -575,7 +575,7 @@ class_matrix(int kind, int m, double alpha, double beta, double aj[], double bj[
   }
   else if (kind == 2)
   {
-    luna_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
+    luma_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
 
     zemu = pi;
 
@@ -588,7 +588,7 @@ class_matrix(int kind, int m, double alpha, double beta, double aj[], double bj[
   }
   else if (kind == 3)
   {
-    luna_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
+    luma_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
 
     ab = alpha*2.0;
     zemu = pow(2.0, ab + 1.0)*pow(tgamma(alpha + 1.0), 2)/tgamma(ab + 2.0);
@@ -619,7 +619,7 @@ class_matrix(int kind, int m, double alpha, double beta, double aj[], double bj[
   }
   else if (kind == 5)
   {
-    luna_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
+    luma_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
 
     zemu = tgamma(alpha + 1.0);
 
@@ -631,7 +631,7 @@ class_matrix(int kind, int m, double alpha, double beta, double aj[], double bj[
   }
   else if (kind == 6)
   {
-    luna_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
+    luma_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
 
     zemu = tgamma((alpha + 1.0)/2.0);
 
@@ -643,7 +643,7 @@ class_matrix(int kind, int m, double alpha, double beta, double aj[], double bj[
   }
   else if (kind == 7)
   {
-    luna_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
+    luma_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
 
     ab = alpha;
     zemu = 2.0/(ab + 1.0);
@@ -660,7 +660,7 @@ class_matrix(int kind, int m, double alpha, double beta, double aj[], double bj[
   }
   else if (kind == 8)
   {
-    luna_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
+    luma_assert_msg(false,"KIND != 4 HAS NOT BEEN UNIT TESTED.\n");
 
     ab = alpha + beta;
     zemu = tgamma(alpha + 1.0)*tgamma(-(ab + 1.0))/tgamma(-beta);
@@ -685,7 +685,7 @@ class_matrix(int kind, int m, double alpha, double beta, double aj[], double bj[
       bj[i] = sqrt(bj[i]);
   }
   else
-    luna_assert_msg(false,"KIND NOT DETECTED.\n");
+    luma_assert_msg(false,"KIND NOT DETECTED.\n");
 
 
   return zemu;
@@ -797,7 +797,7 @@ imtqlx(int n, double d[], double e[], double z[])
       }
       if (itn <= j)
       {
-        luna_assert_msg(false,"Iteration limit exceeded in IMTQLX.");
+        luma_assert_msg(false,"Iteration limit exceeded in IMTQLX.");
       }
       j = j + 1;
       g = (d[lz] - p)/(2.0*e[lz - 1]);
@@ -909,7 +909,7 @@ imtqlx(int n, double d[], double e[], double z[])
  *   - 8, Rational,             (a,inf)     (x-a)^alpha*(x+b)^beta
  *
  * Converted for SANS by Cory Frontin in 2019
- * imported into luna by Philip Caplan in 2019
+ * imported into luma by Philip Caplan in 2019
  *
  * @param kind    the type of quadrature rule used
  * @param m       the order of the highest moment to be calculated; only for kind = 8
@@ -923,22 +923,22 @@ parchk(int kind, int m, double alpha, double beta)
   double tmp;
 
   if (kind <= 0)
-    luna_assert_msg(false,"PARCHK - Fatal error!\nKIND <= 0.\n");
+    luma_assert_msg(false,"PARCHK - Fatal error!\nKIND <= 0.\n");
 
   // check ALPHA for Gegenbauer, Jacobi, Laguerre, Hermite, Exponential.
   if (3 <= kind && alpha <= -1.0)
-    luna_assert_msg(false,"PARCHK - Fatal error!\n3 <= KIND and ALPHA <= -1.\n");
+    luma_assert_msg(false,"PARCHK - Fatal error!\n3 <= KIND and ALPHA <= -1.\n");
 
   // check BETA for Jacobi.
   if (kind == 4 && beta <= -1.0)
-    luna_assert_msg(false,"PARCHK - Fatal error!\nKIND == 4 and BETA <= -1.0.\n");
+    luma_assert_msg(false,"PARCHK - Fatal error!\nKIND == 4 and BETA <= -1.0.\n");
 
   // check ALPHA and BETA for rational.
   if (kind == 8)
   {
     tmp = alpha + beta + m + 1.0;
     if (0.0 <= tmp || tmp <= beta)
-      luna_assert_msg(false,"PARCHK - Fatal error!\nKIND == 8 but condition on ALPHA and BETA fails.\n");
+      luma_assert_msg(false,"PARCHK - Fatal error!\nKIND == 8 but condition on ALPHA and BETA fails.\n");
   }
 
   return;
@@ -981,7 +981,7 @@ calculateStroudQuadrature(int nDim, int order, double x[], double w[])
   if (order==0)
   {
     w[0] = 1.0;
-    luna_assert( nDim==4 );
+    luma_assert( nDim==4 );
     for (int i=0;i<nDim;i++)
       x[i] = 1./5.;
     return;
@@ -991,8 +991,8 @@ calculateStroudQuadrature(int nDim, int order, double x[], double w[])
   int nPoints = (int) pow((double) order, (double) nDim);
   double *y = new double[nPoints*nDim];
 
-  //luna_assert_msg(order>0,"order = %d",order);
-  luna_assert(order>0);
+  //luma_assert_msg(order>0,"order = %d",order);
+  luma_assert(order>0);
 
 //  printf("nDim= %d\n", nDim);
 //  printf("order= %d\n", order);
@@ -1138,7 +1138,7 @@ calculateStroudQuadrature(int nDim, int order, double x[], double w[])
 
   }
   else
-    luna_assert_msg(false,"nDim > 4 STILL NEEDS IMPLEMENTATION.");
+    luma_assert_msg(false,"nDim > 4 STILL NEEDS IMPLEMENTATION.");
 
   // free memory
   delete [] y;

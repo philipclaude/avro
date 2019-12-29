@@ -1,6 +1,6 @@
 #include "mesh/field.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename T>
@@ -34,4 +34,4 @@ Field<Simplex,T>::evaluate( const Function& function )
   }
 }
 
-} // luna
+} // luma

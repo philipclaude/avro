@@ -5,7 +5,7 @@
 
 #include <libmeshb/libmeshb7.h>
 
-namespace luna
+namespace luma
 {
 
 namespace library
@@ -16,7 +16,7 @@ void
 get_line( int fid , int keyword , Args... args )
 {
   int ret = GmfGetLin(fid,keyword,args...);
-  luna_assert_msg( ret > 0 , "ret = %d", ret );
+  luma_assert_msg( ret > 0 , "ret = %d", ret );
 }
 
 meshb::meshb( const std::string& filename , const EGADS::Model* model ) :
@@ -91,7 +91,7 @@ meshb::read_elements( int GmfType )
       continue; // skip the topology stuff below
     }
 
-    luna_assert( status==1 );
+    luma_assert( status==1 );
 
     for (index_t j=0;j<nv(GmfType);j++)
       simplex[j] = index_t(indices[j]-1); // 1-indexed
@@ -124,7 +124,7 @@ meshb::nv( const int GmfType ) const
   if (GmfType==GmfTriangles) return 3;
   if (GmfType==GmfEdges) return 2;
   if (GmfType==GmfCorners) return 1;
-  luna_assert_not_reached;
+  luma_assert_not_reached;
   return 0;
 }
 
@@ -134,7 +134,7 @@ meshb::read()
   // open the file
   int dim;
   fid_ = GmfOpenMesh(filename_.c_str(),GmfRead,&version_,&dim);
-  luna_assert_msg( fid_ , "could not open mesh file %s ",filename_.c_str() );
+  luma_assert_msg( fid_ , "could not open mesh file %s ",filename_.c_str() );
 
   printf("--> vertices dimension = %d\n",dim);
 
@@ -156,7 +156,7 @@ meshb::read()
   }
 
   // first read the vertices
-  luna_assert( GmfGotoKwd( fid_ , GmfVertices ) > 0 );
+  luma_assert( GmfGotoKwd( fid_ , GmfVertices ) > 0 );
   read_elements<Simplex>( GmfVertices );
 
   if (number>=3)
@@ -209,9 +209,9 @@ meshb::read()
       for (index_t k=0;k<nb;k++)
       {
         status = GmfGetLin( fid_ , GmfVerticesOnGeometricTriangles , &v , &f , u , u+1 , u+2 );
-        luna_assert(status==1);
+        luma_assert(status==1);
         entity = model_->find_entity( index_t(f) , FACE );
-        luna_assert(entity->number()==2);
+        luma_assert(entity->number()==2);
         if (entity==NULL) printf("ERROR entity not found :(\n");
         points_.set_entity(v-1,entity);
         points_.set_param(v-1,u);
@@ -228,10 +228,10 @@ meshb::read()
       for (index_t k=0;k<nb;k++)
       {
         status = GmfGetLin( fid_ , GmfVerticesOnGeometricEdges , &v , &e , &u[0] , &u[1] );
-        luna_assert(status==1);
+        luma_assert(status==1);
         entity = model_->find_entity( index_t(e) , EDGE );
         if (entity==NULL) printf("ERROR entity not found :(\n");
-        luna_assert(entity->number()==1);
+        luma_assert(entity->number()==1);
         points_.set_entity(v-1,entity);
         points_.set_param(v-1,u);
       }
@@ -247,11 +247,11 @@ meshb::read()
         // read the vertex and which EGADS node this corresponds to
         int v,n;
         status = GmfGetLin( fid_ , GmfVerticesOnGeometricVertices , &v , &n );
-        luna_assert( status==1 );
+        luma_assert( status==1 );
         entity = model_->find_entity( index_t(n) , NODE );
         if (entity==NULL) printf("ERROR entity not found :(\n");
         //entity->print();
-        luna_assert(entity->number()==0);
+        luma_assert(entity->number()==0);
         points_.set_entity(v-1,entity);
       }
     }
@@ -263,4 +263,4 @@ meshb::read()
 
 } // library
 
-} // luna
+} // luma

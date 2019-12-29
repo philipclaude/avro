@@ -3,15 +3,15 @@
 
 #include "mesh/topology.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
 void
-edgesInLengthBounds( MetricField<type>& metric_ ,
-                     Topology<type>& topology ,
-                     std::vector<index_t>& edges ,
-                     real_t alpha=-1 )
+lengths_in_bounds( MetricField<type>& metric_ ,
+                   Topology<type>& topology ,
+                   std::vector<index_t>& edges ,
+                   real_t alpha=-1 )
 {
   edges.clear();
   std::vector<index_t> edges0;
@@ -85,7 +85,6 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
     if (lmin0>0 && lmin<lmin0) continue;
     if (lmax0>0 && lmax>lmax0) continue;
 
-    //edge_swapper_.evaluate(metric);
     real_t qws = worst_quality(edge_swapper_,metric_);
     if (qws>qw)
     {
@@ -99,9 +98,7 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
   if (m<0) return false;
 
   edge_swapper_.apply( index_t(m) , p , q );
-  //edge_swapper_.evaluate(metric);
   topology_.apply(edge_swapper_);
-  //topology_.update(edge_swapper_,metric);
 
   return true;
 
@@ -130,14 +127,11 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
     if (pass>npass) break;
 
     // evaluate the quality on the current topology
-    //topology_.evaluate( metric_ );
-    //real_t qmin = topology_.worst();
     real_t qmin = worst_quality(topology_,metric_);
     index_t count = 0;
     for (index_t k=0;k<topology_.nb();k++)
     {
       if (topology_.ghost(k)) continue;
-      //if (topology_.quality(k)<qt) count++;
       if (metric_.quality(topology_,k)<qt) count++;
     }
     printf("\tpass %lu: qmin = %g, nb_simplices < %g = %lu / %lu\n",
@@ -151,7 +145,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
     nb_swaps = 0;
     nb_length_rejected = 0;
     std::vector<index_t> edges;
-    edgesInLengthBounds( metric_ , topology_ , edges , 0.8 );
+    lengths_in_bounds( metric_ , topology_ , edges , 0.8 );
 
     printf("\tnb_elem = %lu, nb_edges = %lu, nb_vert = %lu\n",
             topology_.nb(),edges.size()/2,topology_.points().nb());
@@ -181,7 +175,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
       topology_.intersect(edge,elems);
       if (elems.size()==0) continue;
-      luna_assert( elems.size()>0 );
+      luma_assert( elems.size()>0 );
 
       // initial worst quality
       real_t q0 = -1;
@@ -189,8 +183,6 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       {
         if (topology_.ghost( elems[j] ) )
           continue;
-        //if (q0<0 || topology_.quality(elems[j])<q0)
-        //  q0 = topology_.quality(elems[j]);
         if (q0<0 || metric_.quality(topology_,elems[j])<q0)
           q0 = metric_.quality(topology_,elems[j]);
       }
@@ -243,7 +235,6 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
           }
         }
 
-        //edge_swapper_.evaluate(metric_);
         real_t qw_swap = worst_quality(edge_swapper_,metric_);
         if (qw_swap>qw)
         {
@@ -259,9 +250,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
       nb_swaps++;
       edge_swapper_.apply( index_t(m) , e0 , e1 );
-      //edge_swapper_.evaluate(metric_);
       topology_.apply(edge_swapper_);
-      //topology_.update(edge_swapper_,metric_);
 
     } // loop over edges
 
@@ -311,35 +300,35 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
 
   // extract the geometry cavity
   this->extractGeometry( face, {e0,e1} );
-  luna_assert( this->G_.nb()>0 );
+  luma_assert( this->G_.nb()>0 );
 
   if (!this->G_.closed())
-    luna_assert_msg( this->G_.nb()==2 ,
+    luma_assert_msg( this->G_.nb()==2 ,
                     "|G| = %lu, |swap ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
 
   if (this->G_.closed())
-    luna_assert( this->G_.nb_real()==2 );
+    luma_assert( this->G_.nb_real()==2 );
 
   // ensure the e0 is visible to the cavity boundary
   bool accept = this->gcavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
-  luna_assert( accept );
+  luma_assert( accept );
 
   GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , face );
   int s = checker.signof( this->gcavity_ );
-  luna_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
-  luna_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  luma_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
+  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   // ensure e1 is visible to the cavity boundary
   accept = this->gcavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
-  luna_assert( accept );
+  luma_assert( accept );
   s = checker.signof( this->gcavity_ );
-  luna_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
-  luna_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  luma_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
+  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   // check for visibility of p
   nb_parameter_tests_++;
   accept = this->gcavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
-  luna_assert( this->gcavity_.nb_real()==2 );
+  luma_assert( this->gcavity_.nb_real()==2 );
   if (!accept)
   {
     //printf("swap not visible in parameter space!\n");
@@ -362,7 +351,7 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   }
 
   // the geometry cavity should have positive volumes
-  luna_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   return true;
 }
@@ -498,7 +487,43 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
   return accept;
 }
 
+template<typename type>
+FacetSwap<type>::FacetSwap( Topology<type>& _topology ) :
+  Primitive<type>(_topology)
+{
+  this->setName("facet swapper");
+}
+
+template<typename type>
+bool
+FacetSwap<type>::valid( const index_t p , const index_t k0 , const index_t k1 )
+{
+  if (p<=this->topology_.points().nb_ghost()) return false;
+  if (this->topology_.ghost(k0) || this->topology_.ghost(k1))
+    return false;
+  return true;
+}
+
+template<typename type>
+bool
+FacetSwap<type>::apply( const index_t p , const index_t k1 , const index_t k2 )
+{
+  // check if the facet swap is valid
+  if (!valid(p,k1,k2)) return false;
+  this->enlarge_ = false;
+
+  // check if the swap is visible
+  std::vector<index_t> elems = {k1,k2};
+  bool accept = this->compute( p , this->topology_.points()[p] , elems );
+
+  // check if all produced elements have a positive determinant of implied metric
+  if (!this->positiveImpliedMetrics())
+    return false;
+  return accept;
+}
+
+template class FacetSwap<Simplex>;
 template class EdgeSwap<Simplex>;
 template class AdaptThread<Simplex>;
 
-} // luna
+} // luma

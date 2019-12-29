@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_COMMON_TREE_H_
-#define LUNA_LIB_COMMON_TREE_H_
+#ifndef luma_LIB_COMMON_TREE_H_
+#define luma_LIB_COMMON_TREE_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 class TreeBase
@@ -36,14 +36,14 @@ public:
   const Node_t* child_ptr( index_t k ) const { return child_[k].get(); }
 
   Node_ptr child_smptr( index_t k )
-    { luna_assert(k<nb_children()); return child_[k]; }
+    { luma_assert(k<nb_children()); return child_[k]; }
   const Node_ptr child_smptr( index_t k ) const
-    { luna_assert(k<nb_children()); return child_[k]; }
+    { luma_assert(k<nb_children()); return child_[k]; }
 
   Node_t& child( index_t k )
-    { luna_assert(k<nb_children()); return *child_[k].get(); }
+    { luma_assert(k<nb_children()); return *child_[k].get(); }
   const Node_t& child( index_t k ) const
-    { luna_assert(k<nb_children()); return *child_[k].get(); }
+    { luma_assert(k<nb_children()); return *child_[k].get(); }
 
   void build_parents();
   void add_parent( Node_t* parent );
@@ -59,6 +59,6 @@ protected:
 };
 
 
-} // luna
+} // luma
 
 #endif

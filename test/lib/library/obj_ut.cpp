@@ -2,8 +2,8 @@
 
 #include "library/obj.h"
 
-using namespace luna;
-using namespace luna::library;
+using namespace luma;
+using namespace luma::library;
 
 UT_TEST_SUITE( objFile_suite )
 

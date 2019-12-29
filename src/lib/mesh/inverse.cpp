@@ -7,7 +7,7 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename type>
@@ -53,7 +53,7 @@ InverseTopology<type>::build()
   for (index_t k=0;k<nb();k++)
   {
     if (elem_[k]>= topology_.nb()+1) topology_.points().print(true);
-    luna_assert_msg(elem_[k] < topology_.nb()+1 , "inverse not found for vertex %lu" , k );
+    luma_assert_msg(elem_[k] < topology_.nb()+1 , "inverse not found for vertex %lu" , k );
   }
 }
 
@@ -71,7 +71,7 @@ InverseTopology<type>::find( index_t p ) const
         return k;
     }
   }
-  luna_assert_not_reached;
+  luma_assert_not_reached;
   return topology_.nb();
 }
 
@@ -161,7 +161,7 @@ InverseTopology<type>::shell( index_t p , index_t q , std::vector<index_t>& S ) 
     print_inline( Bp , "recomputed ball of vertex " +stringify(p) +":" );
     print_inline( Bq , "recomputed ball of vertex " +stringify(q) +":" );
   }
-  luna_assert_msg( start>=0 ,
+  luma_assert_msg( start>=0 ,
       "could not find element touching edge (%lu,%lu)",p,q);
 
   std::unordered_set<index_t> s;
@@ -189,7 +189,7 @@ InverseTopology<type>::shell( index_t t0 , index_t t1 , index_t t2 , std::vector
       break;
     }
   }
-  luna_assert_msg( start>=0 ,
+  luma_assert_msg( start>=0 ,
       "could not find element touching triangle (%lu,%lu,%lu)",t0,t1,t2);
 
   std::unordered_set<index_t> s;
@@ -311,7 +311,7 @@ InverseTopology<type>::update( Cavity<type>& cavity , bool delay )
   // first check if any points are deleted
 /*  if (!delay)
   {
-    luna_assert_not_reached;
+    luma_assert_not_reached;
     for (index_t k=0;k<cavity.nb_removedNodes();k++)
       this->remove( cavity.removedNode(k) );
   }*/
@@ -353,9 +353,9 @@ InverseTopology<type>::update( Cavity<type>& cavity , bool delay )
   for (it=N2elem.begin();it!=N2elem.end();it++)
     printf("N2elem = (%lu,%lu)\n",it->first,it->second);*/
 
-  luna_assert( N.size()==N2elem.size() );
+  luma_assert( N.size()==N2elem.size() );
   for (index_t k=0;k<N.size();k++)
-    luna_assert_msg( N2elem.find(N[k])!=N2elem.end() ,
+    luma_assert_msg( N2elem.find(N[k])!=N2elem.end() ,
                     "vertex %lu should have a non-ghost element" , N[k] );
 
   // update existing points
@@ -388,7 +388,7 @@ void
 InverseTopology<type>::copy( const InverseTopology<type>& inverse )
 {
   // check the points have the same size
-  luna_assert( nb()==inverse.nb() );
+  luma_assert( nb()==inverse.nb() );
   elem_.resize( nb() );
   for (index_t k=0;k<inverse.nb();k++)
     elem_[k] = inverse.elem(k);
@@ -469,4 +469,4 @@ InverseTopology<type>::print( bool balls) const
 template class InverseTopology<Simplex>;
 template class InverseTopology<Polytope>;
 
-} // luna
+} // luma

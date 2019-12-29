@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_MESH_NEIGHBOURS_H_
-#define LUNA_LIB_MESH_NEIGHBOURS_H_
+#ifndef luma_LIB_MESH_NEIGHBOURS_H_
+#define luma_LIB_MESH_NEIGHBOURS_H_
 
 #include "common/types.h"
 #include "common/tools.h"
@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 template<typename type> class Topology;
@@ -111,7 +111,7 @@ public:
     for (index_t i=0;i<nfacets_;i++)
       if (operator()(index_t(n),i)==int(k))
         return i;
-    luna_assert_not_reached;
+    luma_assert_not_reached;
     return 0;
   }
 
@@ -135,7 +135,7 @@ public:
       if (operator()(k0,j)==int(k1))
         return j;
     }
-    luna_assert_not_reached;
+    luma_assert_not_reached;
     return -1;
   }
 
@@ -172,6 +172,6 @@ private:
   bool fromscratch_;
 };
 
-} // luna
+} // luma
 
 #endif

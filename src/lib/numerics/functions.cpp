@@ -1,6 +1,6 @@
 #include "numerics/functions.h"
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -33,4 +33,4 @@ nchoosek( index_t n , index_t k )
 
 } // numerics
 
-} // luna
+} // luma

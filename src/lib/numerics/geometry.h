@@ -1,12 +1,12 @@
-#ifndef LUNA_LIB_NUMERICS_GEOMETRY_H_
-#define LUNA_LIB_NUMERICS_GEOMETRY_H_
+#ifndef luma_LIB_NUMERICS_GEOMETRY_H_
+#define luma_LIB_NUMERICS_GEOMETRY_H_
 
 #include "common/types.h"
 
 #include <vector>
 #include <math.h>
 
-namespace luna
+namespace luma
 {
 
 class Points;
@@ -40,6 +40,6 @@ void barycentric_signed( real_t* p , const std::vector<const real_t*>& x , const
 
 } // numerics
 
-} // luna
+} // luma
 
 #endif

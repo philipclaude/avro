@@ -7,7 +7,7 @@
 
 #include "library/egads.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE(BodySuite)
 

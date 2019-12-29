@@ -1,6 +1,6 @@
 #include "master/basis.h"
 
-namespace luna
+namespace luma
 {
 
-} // luna
+} // luma

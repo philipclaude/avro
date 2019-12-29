@@ -1,10 +1,10 @@
-// luna: Adaptive Voronoi Remesher
+// luma: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 
-#ifndef LUNA_COMMON_PARALLEL_FOR_H_
-#define LUNA_COMMON_PARALLEL_FOR_H_
+#ifndef luma_COMMON_PARALLEL_FOR_H_
+#define luma_COMMON_PARALLEL_FOR_H_
 
 #include "common/process.h"
 #include "common/thread.h"
@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-namespace luna
+namespace luma
 {
 
 template<class T>
@@ -152,6 +152,6 @@ receive( int source , int tag , T* values , int n )
 
 }
 
-} // luna
+} // luma
 
 #endif

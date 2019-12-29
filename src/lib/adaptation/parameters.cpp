@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-namespace luna
+namespace luma
 {
 
 void
@@ -34,4 +34,4 @@ AdaptationParameters::standard()
   if (!boolParams_.has("debug")) boolParams_["debug"] = true;
 }
 
-} // luna
+} // luma

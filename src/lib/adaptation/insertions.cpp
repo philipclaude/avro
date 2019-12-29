@@ -10,14 +10,212 @@
 
 #include <unordered_set>
 
-namespace luna
+namespace luma
 {
+
+template<typename type>
+Insert<type>::Insert( Topology<type>& _topology ) :
+  Primitive<type>(_topology)
+{
+  this->setName("inserter");
+}
+
+template<typename type>
+bool
+Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
+{
+  EGADS::Object* ep = (EGADS::Object*) ep0;
+
+  luma_assert( ep->number()==2 );
+  if (!this->curved_) return true;
+  if (ep->interior()) return true;
+
+  // based on the type of face, we may need to flip the sign for the volume calculation
+  int oclass,mtype;
+  ego ref,prev,next;
+  EGADS_ENSURE_SUCCESS( EG_getInfo(*ep->object(), &oclass, &mtype,&ref, &prev, &next) );
+  if (mtype==SREVERSE)
+    this->gcavity_.sign() = -1;
+  else
+    this->gcavity_.sign() = 1;
+
+  // extract the geometry cavity
+  this->extractGeometry( ep ); // no facet information, will assign the cavity to non-ghosts
+  luma_assert(this->G_.nb()>0);
+
+  // add the parameter coordinates for the inserted point along with the mapped index
+  this->u_.create( params );
+  this->u2v_.push_back( this->points_.nb()-1 );
+
+  // the insertion should be visible in parameter space
+  bool accept = this->gcavity_.compute( this->u_.nb()-1 , params , this->S_ );
+  luma_assert(accept);
+
+  // check the orientation of the facets
+  GeometryOrientationChecker checker(this->points_,this->u_,this->u2v_,ep);
+  int s = checker.signof( this->gcavity_ );
+  if (s<0) return false;
+
+  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype) );
+
+  return true;
+}
+
+
+template<typename type>
+bool
+Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell )
+{
+  //std::vector<index_t> elems;
+  elems_.clear();
+
+  // insertions should not enlarge the initial set of cavity elements
+  this->enlarge_ = false;
+  this->checkVisibility_ = true;
+  enlarged_ = false; // no enlargement (for geometry) yet
+
+  // determine the cavity elements if none were provided
+  if (shell.size()==0)
+  {
+    // likely an interior edge, cavity is the shell around the edge
+    this->topology_.intersect( {e0,e1} , elems_ );
+  }
+  else
+  {
+    // likely a geometry insertion, use the provided shell
+    elems_ = shell;
+  }
+
+  // index of the vertex to be inserted
+  index_t ns = this->topology_.points().nb();
+
+  // we need to add the vertex
+  this->topology_.points().create(x);
+
+  // this might be a boundary insertion,
+  // compute intersection of geometry entities of each vertex
+  Entity* entity0 = this->topology_.points().entity(e0);
+  Entity* entity1 = this->topology_.points().entity(e1);
+  Entity* entitys;
+  int bodys;
+  if (entity0==NULL || entity1==NULL)
+  {
+    // interior split
+    entitys = NULL;
+    bodys   = 0;
+  }
+  else
+  {
+    // set the geometry of the inserted vertex as the intersection
+    // of the endpoint geometries
+    entitys = this->geometry(e0,e1);
+
+    // determine the body
+    if (entitys==NULL)
+    {
+      // interior split
+      bodys = 0;
+    }
+    else
+    {
+      int body0 = this->topology_.points().body(e0);
+      int body1 = this->topology_.points().body(e1);
+
+      if (body0==body1) bodys = body0;
+      else bodys = 0; // not sure how this can even happen but just being safe
+    }
+  }
+
+  if (entitys!=NULL)
+  {
+    // enlarge the cavity for boundary insertions
+    // if the shell was given, then this should have been precomputed
+    std::vector<index_t> elems0 = elems_;
+    if (!this->findGeometry( x , elems_ ))
+    {
+      // we could not enlarge to find the inserted point
+      this->topology_.remove_point(ns);
+      return false;
+    }
+    if (elems_.size()!=elems0.size())
+    {
+      enlarged_ = true;
+    }
+  }
+
+  // attempt the operator
+  bool accept = this->compute( ns , x , elems_ );
+  if (!accept)
+  {
+    // the cavity requested enlargment which is possible because of a
+    // minimum volume constraint in the cavity operator
+    // remove the vertex and inform the caller the insertion is not allowed
+    this->topology_.remove_point(ns);
+    return false;
+  }
+
+  // check if all produce elements have a positive determinant of implied metric
+  #if 0
+  // pcaplan REMOVE THIS in master branch (this ruins timing and should only be used for curved=true)
+  if (!this->positiveImpliedMetrics())
+  {
+    this->topology_.remove_point(ns);
+    return false;
+  }
+  #endif
+
+
+  if (entitys!=NULL && entitys->number()==2)
+  {
+    // check if the insertion is visible to the boundary of the geometry
+    // cavity in the parameter space of the geometry entity
+    accept = visibleParameterSpace( x , u , entitys );
+    if (!accept)
+    {
+      this->topology_.remove_point(ns);
+      return false;
+    }
+  }
+
+  if (entitys!=NULL && this->topology_.number()==3 && !entitys->interior())
+  {
+    index_t nb_ghost = 0;
+    for (index_t k=0;k<this->nb();k++)
+    {
+      if (this->ghost(k))
+        nb_ghost++;
+    }
+    PRIMITIVE_CHECK( nb_ghost==4 );
+    if (nb_ghost!=4)
+    {
+      this->topology_.remove_point(ns);
+      return false;
+    }
+  }
+
+  if (this->nb_removedNodes()>0)
+  {
+    // when we are enlarging, do not allow points to be removed
+    this->topology_.remove_point(ns);
+    return false;
+  }
+
+  // set the geometry entity and body
+  this->topology_.points().set_entity( ns , entitys );
+  this->topology_.points().set_param( ns , u );
+  this->topology_.points().body(ns) = bodys;
+
+  // apply the operator to the topology if the caller did not request a delay
+  if (!this->delay_)
+    this->topology_.apply(*this);
+  return true;
+}
 
 template<typename type>
 void
 AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 {
-  luna_assert( metric_.check(topology_) );
+  luma_assert( metric_.check(topology_) );
 
   real_t dof_factor = params_.insertion_volume_factor();
 
@@ -175,7 +373,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         }
         continue;
       }
-      luna_assert( metric_.check(topology_) );
+      luma_assert( metric_.check(topology_) );
 
       // the vertex needs to be removed because the inserter will add it again
       // TODO clean up this inefficiency
@@ -229,7 +427,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // apply the insertion into the topology
       topology_.apply(inserter_);
-      luna_assert( metric_.check(topology_) );
+      luma_assert( metric_.check(topology_) );
 
       if (swapout)
       {
@@ -302,6 +500,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
 }
 
+template class Insert<Simplex>;
 template class AdaptThread<Simplex>;
 
-} // luna
+} // luma

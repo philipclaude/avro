@@ -1,12 +1,12 @@
-#ifndef LUNA_LIB_LIBRARY_CKF_H_
-#define LUNA_LIB_LIBRARY_CKF_H_
+#ifndef luma_LIB_LIBRARY_CKF_H_
+#define luma_LIB_LIBRARY_CKF_H_
 
 #include "common/types.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
-namespace luna
+namespace luma
 {
 
 class CKF_Triangulation : public Topology<Simplex>
@@ -29,6 +29,6 @@ private:
 
 };
 
-} // luna
+} // luma
 
 #endif

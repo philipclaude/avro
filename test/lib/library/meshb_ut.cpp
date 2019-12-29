@@ -5,7 +5,7 @@
 
 #include "library/meshb.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( meshb_test_suite )
 

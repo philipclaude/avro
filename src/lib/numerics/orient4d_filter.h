@@ -1,5 +1,5 @@
-#ifndef LUNA_NUMERICS_ORIENT4D_FILTER_H_
-#define LUNA_NUMERICS_ORIENT4D_FILTER_H_
+#ifndef luma_NUMERICS_ORIENT4D_FILTER_H_
+#define luma_NUMERICS_ORIENT4D_FILTER_H_
 
 inline double
 orient4dfast( const double *p0 , const double *p1 , const double* p2 , const double* p3 , const double* p4 )

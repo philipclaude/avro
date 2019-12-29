@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_MASTER_MASTER_H_
-#define LUNA_LIB_MASTER_MASTER_H_
+#ifndef luma_LIB_MASTER_MASTER_H_
+#define luma_LIB_MASTER_MASTER_H_
 
 #include "common/types.h"
 
@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace luna
+namespace luma
 {
 
 class Quadrature;
@@ -50,7 +50,7 @@ public:
 
   void eval( const double* x , double* phi )
   {
-    luna_assert( basis_!=nullptr );
+    luma_assert( basis_!=nullptr );
     basis_->evaluate(x,phi);
   }
 
@@ -59,8 +59,8 @@ public:
   real_t quad_weight(index_t k) const { return wquad_[k]; }
   const real_t* quad_point(index_t k) const { return &xquad_[number_*k]; }
 
-  const Basis<Shape>& basis() const { luna_assert(basis_!=nullptr); return *basis_.get(); }
-  Basis<Shape>& basis() { luna_assert(basis_!=nullptr); return *basis_.get(); }
+  const Basis<Shape>& basis() const { luma_assert(basis_!=nullptr); return *basis_.get(); }
+  Basis<Shape>& basis() { luma_assert(basis_!=nullptr); return *basis_.get(); }
 
 protected:
   coord_t number_;
@@ -90,6 +90,6 @@ typedef struct
 bool operator< ( const Element& f , const Element& g );
 bool operator== ( const Element& f , const Element& g );
 
-} // luna
+} // luma
 
 #endif

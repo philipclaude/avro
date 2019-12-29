@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_NUMERICS_INTEGRATION_H_
-#define LUNA_LIB_NUMERICS_INTEGRATION_H_
+#ifndef luma_LIB_NUMERICS_INTEGRATION_H_
+#define luma_LIB_NUMERICS_INTEGRATION_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -7,7 +7,7 @@
 #include "mesh/dof.h"
 #include "mesh/field.h"
 
-namespace luna
+namespace luma
 {
 
 template<typename> class Topology;
@@ -98,13 +98,13 @@ public:
   {
     if (topology_.layout()==TableLayout_Rectangular )
     {
-      luna_assert( field.layout()==TableLayout_Rectangular );
-      luna_assert( master_.nb_basis()==field_.rank() );
+      luma_assert( field.layout()==TableLayout_Rectangular );
+      luma_assert( master_.nb_basis()==field_.rank() );
       x_.resize( topology_.rank() );
       f_.resize( field_.rank() );
     }
     else
-      luna_implement
+      luma_implement
   }
 
   void get( index_t k )
@@ -119,7 +119,7 @@ public:
     else
     {
       // need to query how many dof/points we need to store
-      luna_implement;
+      luma_implement;
     }
   }
 
@@ -193,7 +193,7 @@ public:
   integrate( const Field<type,T>& field )
   {
     const Topology<type>& topology = field.topology();
-    luna_assert( topology.nb() == field.nb() );
+    luma_assert( topology.nb() == field.nb() );
 
     ElementIntegral<type,T> elem( topology , field.dof() , field , field.master() );
     for (index_t k=0;k<field.nb();k++)
@@ -212,6 +212,6 @@ private:
 
 };
 
-} // luna
+} // luma
 
 #endif

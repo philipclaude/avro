@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_COMMON_KDTREE_H_
-#define LUNA_LIB_COMMON_KDTREE_H_
+#ifndef luma_LIB_COMMON_KDTREE_H_
+#define luma_LIB_COMMON_KDTREE_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -10,7 +10,7 @@
 
 #include <nanoflann/nanoflann.hpp>
 
-namespace luna
+namespace luma
 {
 
 class Points;
@@ -80,7 +80,7 @@ initializeKdTree( PointCloud& cloud )
   switch (dim)
   {
     case 0:
-      luna_assert_not_reached;
+      luma_assert_not_reached;
     case 1:
       return std::make_shared<KdTree<1>>(cloud);
     case 2:
@@ -106,9 +106,9 @@ initializeKdTree( PointCloud& cloud )
     case 12:
       return std::make_shared<KdTree<12>>(cloud);
     default:
-      luna_implement;
+      luma_implement;
   }
-  luna_assert_not_reached;
+  luma_assert_not_reached;
   return std::make_shared<KdTree<3>>(cloud);
 }
 

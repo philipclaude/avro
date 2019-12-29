@@ -1,13 +1,13 @@
-#ifndef LUNA_COMMON_JSON_H_
-#define LUNA_COMMON_JSON_H_
+#ifndef luma_COMMON_JSON_H_
+#define luma_COMMON_JSON_H_
 
 #include <json/json_fwd.hpp>
 
-namespace luna
+namespace luma
 {
 
 using json = nlohmann::json;
 
-} // luna
+} // luma
 
 #endif

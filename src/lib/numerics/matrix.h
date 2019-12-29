@@ -1,5 +1,5 @@
-#ifndef LUNA_LIB_NUMERICS_MATRIX_H_
-#define LUNA_LIB_NUMERICS_MATRIX_H_
+#ifndef luma_LIB_NUMERICS_MATRIX_H_
+#define luma_LIB_NUMERICS_MATRIX_H_
 
 #include <vector>
 
@@ -12,7 +12,7 @@
 
 #include <numpack/dense/tools/Identity.h>
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -32,6 +32,6 @@ using Vec4f = numpack::DLA::VectorS<4,float>;
 
 } // numerics
 
-} // luna
+} // luma
 
 #endif

@@ -1,8 +1,8 @@
 #include "numerics/types.h"
 
-namespace luna
+namespace luma
 {
 
 
 
-} // luna
+} // luma

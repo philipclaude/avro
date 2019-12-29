@@ -1,9 +1,9 @@
-#ifndef LUNA_LIB_NUMERICS_DETERMINANT_H_
-#define LUNA_LIB_NUMERICS_DETERMINANT_H_
+#ifndef luma_LIB_NUMERICS_DETERMINANT_H_
+#define luma_LIB_NUMERICS_DETERMINANT_H_
 
 #include "common/types.h"
 
-namespace luna
+namespace luma
 {
 
 namespace numerics
@@ -15,6 +15,6 @@ template<typename type> type determinant(const densMat<type>& X);
 
 } // numerics
 
-} // luna
+} // luma
 
 #endif

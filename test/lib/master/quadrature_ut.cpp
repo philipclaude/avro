@@ -5,7 +5,7 @@
 #include "numerics/functions.h"
 #include "numerics/integration.h"
 
-using namespace luna;
+using namespace luma;
 
 UT_TEST_SUITE( QuadratureTestSuite )
 
