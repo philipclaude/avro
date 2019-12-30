@@ -344,7 +344,6 @@ adapt( AdaptationProblem& problem )
   // retrieve the background mesh and metric field
   Mesh& mesh = problem.mesh_in;
   //VertexField<numerics::SPDT<real_t>>& fld = problem.fld;
-  //MetricAttachment& fld = problem.fld;
   std::vector<numerics::SymMatrixD<real_t>>& fld = problem.fld;
 
   // extract the background topology
@@ -400,17 +399,6 @@ adapt( AdaptationProblem& problem )
   else
   {
     luma_assert_not_reached;
-
-    // use the stored mesh
-    // check the number of tensors equals the number of points
-    luma_assert_msg( mesh.points().nb()-mesh.points().nb_ghost() == fld.size() ,
-      "nb_points = %lu, nb_ghost = %lu, fld.nb = %lu" ,
-      mesh.points().nb(), mesh.points().nb_ghost(),fld.size() );
-
-    // both the topology and mesh_topology should be properly oriented
-    // we just need to copy in the neighbours into the mesh_topology
-    topology.neighbours().copy( mesh_topology.neighbours() );
-    mesh_topology.inverse().copy( topology.inverse() );
   }
 
   // extract the boundaries to check the vertex/geometry association
@@ -461,7 +449,7 @@ adapt( AdaptationProblem& problem )
       Metric tensor(number);
       for (coord_t d=0;d<number;d++)
         tensor(d,d) = 1.;
-      fld.push_back( tensor );
+      fld.insert( fld.begin() , tensor );
     }
   }
 
@@ -472,7 +460,7 @@ adapt( AdaptationProblem& problem )
   field.set_cells( topology );
   luma_assert( field.check () );
 
-  field.limit( topology , std::sqrt(2) );
+  field.limit( topology , 2. );
 
   // create a discrete metric with the input topology
   MetricField<type> metric( topology , field );

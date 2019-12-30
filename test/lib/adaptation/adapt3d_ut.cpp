@@ -36,10 +36,11 @@ UT_TEST_CASE(adapt_test)
   library::MetricField_UGAWG_Linear analytic;
 
   // geometry
-  EGADS::Cube box(&context,{1,1,1});
+  std::vector<real_t> lengths(number,1);
+  EGADS::Cube box(&context,lengths);
 
   // structured grid
-  std::vector<index_t> dims(number,4);
+  std::vector<index_t> dims(number,6);
   std::shared_ptr<Topology<Simplex>> ptopology = std::make_shared<CKF_Triangulation>(dims);
 
   // tag the points onto the body
@@ -54,8 +55,10 @@ UT_TEST_CASE(adapt_test)
   AdaptationParameters params;
   params.directory() = "tmp/";
   params.insertion_volume_factor() = -1;
+  params.curved() = false;
+  //params.use_smoothing() = false;
 
-  index_t niter = 10;
+  index_t niter = 5;
   for (index_t iter=0;iter<=niter;iter++)
   {
 

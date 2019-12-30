@@ -53,7 +53,7 @@ public:
 
   void remove( index_t k0 )
   {
-    remove( k0 , k0+1 );
+    data_.erase( data_.begin() + k0 );
   }
 
   std::vector<type> data() const { return data_; }

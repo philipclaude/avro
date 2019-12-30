@@ -1,6 +1,8 @@
 #include "adaptation/implied_metric.h"
 #include "adaptation/metric.h"
 
+#include "library/metric.h"
+
 #include "mesh/search.h"
 #include "mesh/topology.h"
 #include "mesh/points.h"
@@ -53,6 +55,7 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	{
 		Field<type,Metric>::value(k).allocate(number_);
     Field<type,Metric>::value(k).set( attachment_[k] );
+		Field<type,Metric>::value(k).calculate();
 	}
 }
 
@@ -74,13 +77,12 @@ MetricField<type>::operator() ( const Points& points , index_t p )
 }
 
 real_t
-geometric_interpolation( const Points& points,
-												 const numerics::SymMatrixD<real_t>& m0,
+geometric_interpolation( const numerics::SymMatrixD<real_t>& m0,
 	                       const numerics::SymMatrixD<real_t>& m1,
 											   const numerics::VectorD<real_t>& edge )
 {
-	real_t l0_sqr = numpack::Transpose(edge)*m0*edge;//m0.quadraticForm(edge_.data());
-	real_t l1_sqr = numpack::Transpose(edge)*m1*edge;//m1.quadraticForm(edge_.data());
+	real_t l0_sqr = numpack::Transpose(edge)*m0*edge;
+	real_t l1_sqr = numpack::Transpose(edge)*m1*edge;
 	real_t l0 = std::sqrt( l0_sqr );
 	real_t l1 = std::sqrt( l1_sqr );
 	real_t lm,r;
@@ -124,7 +126,9 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
 	std::vector<real_t> edge0( topology_.points().dim() );
 	numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
 	numerics::VectorD<real_t> edge(topology_.points().dim(),edge0.data());
-  return geometric_interpolation( attachment_.points() , attachment_[n0] , attachment_[n1] , edge );
+	//library::MetricField_UGAWG_Linear field;
+	//return geometric_interpolation( field(attachment_.points()[n0]) , field(attachment_.points()[n1]) , edge );
+  return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
 }
 
 template<typename type>
@@ -230,9 +234,8 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
     index_t p1 = master.edge(j,1);
 
 		numerics::vector( points[V[p0]] , points[V[p1]] , dim , e.data() );
-		//lj = M.quadraticForm( e.data() );
 		lj = numpack::Transpose(e)*M*e;
-    l += lj;
+    l  += lj;
   }
 
 	// compute the volume under m
@@ -243,40 +246,6 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	// normalize to be within [0,1]
 	real_t q = normalization_*v/l;
 	return q;
-}
-
-template<typename type>
-void
-MetricField<type>::initializeCells()
-{
-  // assume the points in the topology are associated with the metric
-  // with the VertexField
-  // this means we only need to find a cell containing each vertex
-  std::vector<index_t> vertex(1);
-
-  for (index_t k=0;k<topology_.points().nb();k++)
-  {
-    vertex[0] = k;
-    std::vector<index_t> elems;
-    topology_.all_with(vertex,elems);
-    luma_assert( elems.size()>0 );
-
-    if (k<topology_.points().nb_ghost())
-    {
-      attachment_[k].set_elem(elems[0]);
-      continue;
-    }
-
-    bool found = false;
-    for (index_t j=0;j<elems.size();j++)
-    {
-      if (topology_.ghost(elems[j])) continue;
-      attachment_[k].set_elem(elems[j]);
-      found = true;
-      break;
-    }
-    luma_assert(found);
-  }
 }
 
 template<typename type>
@@ -374,7 +343,6 @@ MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<
   }
 
   // perform the interpolation
-  //tensor.interpolate<LogEuclidean<real_t>>(alpha,metrics);
 	interp(alpha,metrics,tensor);
 }
 
@@ -389,7 +357,6 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
   // this can only happen with curved geometries
   if (ielem<0)
   {
-		//SPDT<real_t> tensor( number_ );
 		numerics::SymMatrixD<real_t> tensor(number_);
 		#if 0
 		std::vector<real_t> alpha(2,0.5);
@@ -408,6 +375,7 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 		//tensor.interpolate<LogEuclidean<real_t>>(alpha,this->Melem_);
 		interp(alpha,metrics,tensor);
 		attachment_.add( tensor , elem );
+		luma_assert_not_reached; // philip testing
 		#endif
 		return;
   }
@@ -442,14 +410,16 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 
     // save the metric at this vertex
     //this->Melem_[j] = tensors_[ topology_(elem,j) ];
-		metrics[j] = Field<type,Metric>::value(topology_(elem,j));
+		//metrics[j] = Field<type,Metric>::value(topology_(elem,j));
+		metrics[j] = Field<type,Metric>::operator()(elem,j);
   }
 
   // perform the interpolation
-  //SPDT<real_t> tensor( number_ );
 	numerics::SymMatrixD<real_t> tensor(number_);
-  //tensor.interpolate<LogEuclidean<real_t>>(alpha,this->Melem_);
 	interp(alpha,metrics,tensor);
+
+	//library::MetricField_UGAWG_Linear field;
+	//tensor = field(x);
 
   // add the tensor along with its corresponding element to the field
   attachment_.add(tensor,elem);
@@ -457,84 +427,6 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
   // note: this check will fail if the vertex is intended to be added after
   // its corresponding tensor is computed
   luma_assert( attachment_.check() );
-}
-
-template<typename type>
-void
-MetricField<type>::recompute( index_t p , real_t* x ,
-                                 const std::vector<index_t>& N )
-{
-  // the vertex at p has new coordinates so the element containing it
-  // (within the background topology) may have changed
-  // check the elements attached to the ball (the vertex needs to be in one of
-  // these cells)
-  index_t elem;
-  std::vector<index_t> elems;
-
-  printf("recomputing metric for vertex %lu\n",p);
-  print_inline( std::vector<real_t>(x,x+topology_.points().dim()), "coords: ");
-
-  // list all the elements to try
-  for (index_t k=0;k<N.size();k++)
-    elems.push_back( attachment_[N[k]].elem() );
-
-  bool inside = true;
-  for (index_t k=0;k<elems.size();k++)
-  {
-    inside = true;
-    elem = elems[k];
-    if (topology_.ghost(elem)) continue;
-    const coord_t nv = topology_.nv(elem);
-
-    // get the points of the element
-    std::vector<const real_t*> xk(nv,0);
-    for (index_t j=0;j<nv;j++)
-      xk[j] = topology_.points()[ topology_(elem,j) ];
-    real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
-
-    // compute the barycentric coordinates
-    std::vector<real_t> alpha( nv , 0. );
-		std::vector<numerics::SymMatrixD<real_t>> metrics(nv);
-    for (index_t j=0;j<nv;j++)
-    {
-      std::vector<const real_t*> xk0(nv);
-      for (index_t i=0;i<nv;i++)
-      {
-        if (i==j) xk0[i] = x;
-        else xk0[i] = xk[i];
-      }
-      alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
-
-      if (alpha[j]==0.0 || alpha[j]==1.0)
-      {}
-      else if (alpha[j]<1e-8 || alpha[j]>1.-1e-8)
-      {
-        printf("alpha[%lu] = %3.16e\n",j,alpha[j]);
-        // the point is not inside this element;
-        inside = false;
-        break;
-      }
-
-      // save the metric at this vertex
-      //this->Melem_[j] = tensors_[ topology_(elem,j) ];
-			metrics[j] = Field<type,Metric>::operator()(elem,j);
-    }
-    print_inline( alpha , "\talpha: ");
-
-    if (!inside) continue;
-
-    // perform the interpolation
-    //attachment_[p].template interpolate<LogEuclidean<real_t>>(alpha,this->Melem_);
-		//attachment_.cell(p) = elem;
-		//attachment_.sqrtDetM(p) = sqrt( attachment_[p].determinant() );
-
-		interp( alpha , metrics , attachment_[p] );
-		attachment_[p].set_elem(elem);
-		attachment_[p].calculate();
-
-    break; // we found the element so we're done
-  }
-  luma_assert(inside); // we should have found something
 }
 
 template<typename type>
@@ -662,10 +554,6 @@ MetricField<type>::recompute( index_t p , real_t* x )
 	} // problem
 
   // perform the interpolation
-  //attachment_[p].template interpolate<LogEuclidean<real_t>>(alpha,this->Melem_);
-  //attachment_.cell(p) = elem;
-	//attachment_.sqrtDetM(p) = sqrt( attachment_[p].determinant() );
-
 	interp( alpha , metrics , attachment_[p] );
 	attachment_[p].set_elem(elem);
 	attachment_[p].calculate();
@@ -799,9 +687,7 @@ MetricAttachment::set_cells( const Topology<type>& topology )
 	luma_assert_msg(counted==points_.nb(),
 									"counted = %lu, nb_points = %lu",counted,points_.nb());
 }
-template void MetricAttachment::set_cells( const Topology<Simplex>& );
 
-#if 1
 template<typename type>
 void
 MetricAttachment::limit( const Topology<type>& topology , real_t href )
@@ -858,6 +744,9 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		this->operator[](k).set(mk);
 		this->operator[](k).calculate();
 
+		points_.print(k);
+		mk.dump();
+
 		//logM_[k]     = numerics::logm(mk);
 		//sqrtDetM_[k] = sqrt( numerics::determinant(mk) );
 
@@ -867,9 +756,8 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		//	luma_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
 	}
 	printf("limited %lu metrics out of %lu\n",nb_limited,this->nb());
+	//assert(false);
 }
-#endif
-
 
 void
 MetricAttachment::reset( MetricAttachment& fld )
@@ -1025,6 +913,7 @@ MetricAttachment::from_solb( const std::string& filename )
 #endif
 
 template class MetricField<Simplex>;
+template void MetricAttachment::set_cells( const Topology<Simplex>& );
 template void MetricAttachment::limit(const Topology<Simplex>&,real_t);
 
 } // luma

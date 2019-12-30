@@ -59,7 +59,6 @@ UT_TEST_CASE(filter3d)
   std::vector<index_t> insertions;
   for (index_t k=0;k<filter.nb_candidates();k++)
   {
-
     // remember to insert this vertex for later
     insertions.push_back( filter.candidate(k) );
 

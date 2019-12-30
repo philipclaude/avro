@@ -155,14 +155,11 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   }
 
   // check if all produce elements have a positive determinant of implied metric
-  #if 0
-  // pcaplan REMOVE THIS in master branch (this ruins timing and should only be used for curved=true)
   if (!this->positiveImpliedMetrics())
   {
     this->topology_.remove_point(ns);
     return false;
   }
-  #endif
 
 
   if (entitys!=NULL && entitys->number()==2)

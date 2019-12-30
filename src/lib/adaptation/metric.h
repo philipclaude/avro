@@ -119,12 +119,11 @@ public:
 
   real_t sqdet() const { return sqdet_; }
   index_t elem() const { return elem_; }
-  index_t& elem() { return elem_; }
   void set_elem( index_t elem ) { elem_  = elem; }
 
   void calculate()
   {
-    log_   = this->log();
+    log_   = numerics::logm(*this);
     sqdet_ = std::sqrt( numerics::determinant(*this) );
   }
 
@@ -161,8 +160,10 @@ public:
         mk.set( fn(points_[k]) );
         mk.calculate();
 			  Array<Metric>::add( mk );
+        mk.dump();
 			}
     }
+    assert(false);
 	}
 
   MetricAttachment( Points& points , const std::vector<numerics::SymMatrixD<real_t>>& metrics );
@@ -185,9 +186,6 @@ public:
   void limit( const Topology<type>& topology , real_t href );
 
   Points& points() { return points_; }
-
-  index_t& elem( const index_t k )
-    { return Array<Metric>::data_[k].elem(); }
 
   void to_json( json& J ) const;
 	void from_json( json& J ) const;
@@ -220,11 +218,9 @@ public:
   real_t volume( const Topology<type>& t );
 
 	real_t quality( const Topology<type>& topology , index_t k );
-  void initializeCells();
   int  find( index_t n0 , index_t n1 , real_t*  x );
   void interpolate( real_t*  x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU=false );
   void add( index_t n0 , index_t n1 , real_t*  x );
-  void recompute( index_t p , real_t*  x , const std::vector<index_t>& N );
   bool recompute( index_t p , real_t*  x );
 	index_t element_containing( index_t p )
 		{ return attachment_[p].elem(); }
@@ -237,8 +233,6 @@ public:
   ElementSearch<type>& searcher() { return searcher_; }
 
   bool check_cells();
-
-  // ensures shape = type
   bool check( Topology<type>& topology );
 
 private:

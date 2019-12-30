@@ -35,7 +35,7 @@ private:
 };
 
 template<typename type>
-class MeshImpliedMetric : public Array<numerics::SymMatrixD<real_t>>//Field<type,numerics::SymMatrixD<real_t>>
+class MeshImpliedMetric : public Array<numerics::SymMatrixD<real_t>>
 {
 public:
   MeshImpliedMetric( const Topology<type>& topology );

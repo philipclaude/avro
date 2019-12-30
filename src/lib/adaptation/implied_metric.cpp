@@ -128,7 +128,6 @@ ElementImpliedMetric<type>::determinant( const Points& points , const index_t* v
 
 template<typename type>
 MeshImpliedMetric<type>::MeshImpliedMetric( const Topology<type>& topology ) :
-  //Field<type,numerics::SymMatrixD<real_t>>(topology,1,CONTINUOUS),
   topology_(topology)
 {
   numerics::SymMatrixD<real_t> zero( topology_.master().number() );
@@ -256,7 +255,7 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
   // compute elemental step matrices and elemental costs
   std::vector< numerics::SymMatrixD<real_t> > sk( topology_.nb() , numerics::SymMatrixD<real_t>(DIM) );
   std::vector<real_t> ck( topology_.nb() , 0. );
-  real_t  complexity = 0.0;
+  real_t complexity = 0.0;
   for (index_t k=0;k<topology_.nb();k++)
   {
     if (topology_.ghost(k)) continue;
@@ -310,7 +309,7 @@ static T
 power( const T& x , index_t p )
 {
   T result = 1;
-  for (index_t k=0;k<=p;k++)
+  for (index_t k=1;k<=p;k++)
     result *= x;
   return result;
 }
@@ -378,8 +377,6 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
 
     // get the edge length squared
     numerics::VectorD<real_t> e( DIM , dx.data() );
-    //SurrealClassVertex lni = nodalMetric[p].quadraticFormReal( dx.data() );
-    //SurrealClassVertex lnj = nodalMetric[q].quadraticFormReal( dx.data() );
     SurrealClassVertex lni = numpack::Transpose(e)*nodalMetric[p]*e;
     SurrealClassVertex lnj = numpack::Transpose(e)*nodalMetric[q]*e;
     lni = sqrt(lni);
@@ -429,7 +426,6 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
   return delta;
 }
 
-#if 1
 template<typename type>
 struct nlopt_data
 {
@@ -586,10 +582,11 @@ MeshImpliedMetric<type>::optimize()
 
     if (k<topology_.points().nb_ghost())
     {
-      //this->data_[k].zero();
       this->data_[k] = 0;
       continue;
     }
+
+    this->data_[k].dump();
 
     // check the implied metric is positive-definite
     //std::pair< std::vector<real_t> , numerics::SymMatrixD<real_t> > eig = this->data_[k].eig();
@@ -597,7 +594,6 @@ MeshImpliedMetric<type>::optimize()
     //  luma_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
 	}
 }
-#endif
 
 template class ElementImpliedMetric<Simplex>;
 template class MeshImpliedMetric<Simplex>;

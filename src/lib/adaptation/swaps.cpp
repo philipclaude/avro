@@ -108,6 +108,7 @@ template<typename type>
 void
 AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 {
+  //return;
   index_t pass = 0;
 
   real_t lmin0 = -1;
