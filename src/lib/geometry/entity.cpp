@@ -41,14 +41,16 @@ Entity::Entity( coord_t number ) :
   number_(number),
   name_("unnamed"),
 	parent_(nullptr),
-	tessellatable_(false)
+	tessellatable_(false),
+	egads_(false)
 {}
 
 Entity::Entity( coord_t number , const std::string& name ) :
   number_(number),
   name_(name),
 	parent_(nullptr),
-	tessellatable_(false)
+	tessellatable_(false),
+	egads_(false)
 {}
 
 Entity*

@@ -86,6 +86,78 @@ kernel( const MatrixD<real_t>& A , MatrixD<real_t>& K )
 	return info;
 }
 
+template<>
+int
+range( const MatrixD<real_t>& A , MatrixD<real_t>& U0 )
+{
+  int info;
+
+  char jobu = 'A';
+  char jobvt = 'A';
+
+  int M = A.m();
+  int N = A.n();
+
+  int m = M;
+  int n = N;
+
+  int lda = M;
+  int ldu = M;
+  int ldvt = N;
+  std::vector<double> S( m*n , 0. );
+  std::vector<double> U( m*m , 0. );
+  std::vector<double> VT( n*n , 0. );
+
+  int lwork = std::max( 3*std::min(M,N)+std::max(M,N),5*std::min(M,N)-4 ) +10;
+  std::vector<double> work( lwork );
+
+  std::vector<double> tdata( m*n );
+  for (int i=0;i<m;i++)
+  for (int j=0;j<n;j++)
+    tdata[j*m+i] = A(i,j);
+
+  // perform the svd
+  dgesvd_( &jobu , &jobvt , &M , &N , tdata.data() , &lda , S.data() , U.data() , &ldu , VT.data() , &ldvt , work.data() , &lwork , &info );
+
+  // analyze the singular values to determine the rank
+  std::vector<double> s;
+  if (m==0) s.push_back( S[0] );
+  else if (m>0)
+  {
+    for (int i=0;i<m;i++)
+      s.push_back( S[i] );
+  }
+  else s.push_back(0.);
+
+  // compute the tolerance
+  double maxS = *std::max_element( s.begin() , s.end() );
+  double tol = std::max(m,n)*eps(maxS);
+  int r = 0;
+  for (int i=0;i<int(s.size());i++)
+  {
+    if (s[i]>tol) r++;
+  }
+
+  //U0.m = M;
+  //U0.n = r;
+  //U0.allocate();
+  U0.resize(M,r);
+
+  // save the left singular vectors which have non-zero singular values
+  index_t k = 0;
+  for (index_t j=0;j<index_t(M);j++)
+  {
+    if (s[j]<=tol) continue;
+    //printf("left singular vector for svalue %g\n",s[j]);
+    for (index_t i=0;i<index_t(M);i++)
+    {
+      U0(i,k) = U[j*m+i];
+    }
+    k++;
+  }
+  return info;
+}
+
 } // numerics
 
 } // avro

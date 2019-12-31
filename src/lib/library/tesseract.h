@@ -22,7 +22,15 @@ public:
 
   void build();
 
-  void print() const { avro_implement; }
+  void print() const
+  {
+    printf("tesseract!\n");
+    for (index_t k=0;k<nb_entities();k++)
+    {
+      printf("\t");
+      entity_[k]->print(true);
+    }
+  }
 
 private:
   std::vector<real_t> x0_;

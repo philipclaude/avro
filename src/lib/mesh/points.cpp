@@ -311,6 +311,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
   for (index_t k=0;k<nb();k++)
   {
     recheck = true;
+		if (dim_==4) recheck = false;
 
     const real_t* xk = (*this)[k];
 
@@ -343,7 +344,6 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
     if (e_candidates.size()==0)
     {
       avro_assert(primitive_[k] == NULL);
-			//printf("no candidates for vertex %lu\n",k);
       continue;
     }
 

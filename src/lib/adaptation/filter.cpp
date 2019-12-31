@@ -196,6 +196,7 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
       Entity* eg = inserter.geometry(n0,n1);
       if (eg!=NULL && inserter.curved())
       {
+        if (eg->egads())
         //if (eg->tesseractGeometry())
         //  eg->project( xs );
         //else

@@ -24,6 +24,7 @@ Object::Object( const Context& context , ego* object ) :
   tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
   interior_ = false;
   sense_required_ = false;
+  egads_ = true;
 }
 
 Object::Object( ego* object , EGADS::Body* body ) :
@@ -38,6 +39,8 @@ Object::Object( ego* object , EGADS::Body* body ) :
   tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
   interior_ = false;
   sense_required_ = false;
+  egads_ = true;
+
 }
 
 ego*

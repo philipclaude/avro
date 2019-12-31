@@ -25,6 +25,7 @@ public:
   void set_identifier( index_t id ) { identifier_ = id; }
   index_t identifier() const { return identifier_; }
   Body* body() const { return body_; }
+  void set_body( Body* body ) { body_ = body; }
 
   Entity* intersect( Entity* e1 );
   Entity* intersect( Entity* e1 , Entity* e2 , bool only_check=false );
@@ -54,6 +55,7 @@ public:
   virtual void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
   virtual void evaluate( const std::vector<real_t>& u , std::vector<real_t>& p ) const = 0;
 
+  bool egads() const { return egads_; }
 protected:
   Entity( coord_t number );
   Entity( coord_t number , const std::string& name );
@@ -70,6 +72,8 @@ protected:
 
   Entity* parent_;
   bool tessellatable_;
+
+  bool egads_;
 };
 
 } // avro

@@ -19,18 +19,16 @@ class Object : public Entity
 public:
   Object( coord_t num , coord_t dim );
 
-  void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
-  void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const;
-  void evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const;
-
-  numerics::MatrixD<real_t> basis_;
+  virtual void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
+  virtual void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
+  virtual void evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const = 0;
 
   void print(bool with_children) const;
   void build_hierarchy();
 
-
 protected:
   coord_t dim_;
+  numerics::MatrixD<real_t> basis_;
 };
 
 class Body : public avro::Body
@@ -50,13 +48,18 @@ private:
 class Facet : public Object
 {
 public:
-  Facet( Body* body , std::vector<std::shared_ptr<Entity>>& facets ) :
-    Object(facets.size()/2,body->dim())
-  {
-    avro_assert( number_>0 );
-    for (index_t k=0;k<facets.size();k++)
-      add_child(facets[k]);
-  }
+  Facet( Body* body , std::vector<std::shared_ptr<Entity>>& facets );
+  void build_basis();
+
+  void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
+  void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
+    { inverse(x,u); }
+  void evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const;
+
+private:
+  numerics::MatrixD<real_t> V_;
+  numerics::MatrixD<real_t> B_;
+
 };
 
 class Node : public Object
@@ -72,6 +75,12 @@ public:
     avro_assert( d<dim_ );
     return x_[d];
   }
+
+  void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
+  void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
+  { inverse(x,u); }
+  void evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const;
+
 
 private:
   std::vector<real_t> x_;

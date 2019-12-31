@@ -31,7 +31,12 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
   inserter_(topology),
   smoother_(topology),
   edge_swapper_(topology)
-{}
+{
+  collapser_.curved() = params.curved();
+  inserter_.curved() = params.curved();
+  smoother_.curved() = params.curved();
+  edge_swapper_.curved() = params.curved();
+}
 
 const real_t nb_smooth = 10;
 const real_t qt_max = 0.8;

@@ -27,6 +27,10 @@ int
 kernel( const MatrixD<type>& A , MatrixD<type>& K );
 
 template<typename type>
+int
+range( const MatrixD<type>& A , MatrixD<type>& U );
+
+template<typename type>
 type
 determinant( const MatrixD<type>& A )
 {

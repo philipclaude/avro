@@ -31,6 +31,7 @@ Body::build_hierarchy()
     // build the entity hierarchy
     entity->build_hierarchy();
     entity->set_parent(NULL);
+    entity->set_body(this);
   }
 
   // determine the topological number from the children
