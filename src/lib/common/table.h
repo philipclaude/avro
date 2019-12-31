@@ -141,6 +141,14 @@ public:
       last_.push_back( data_.size() );
   }
 
+  bool has( index_t k , type x ) const
+  {
+    for (index_t j=location(k);j<location(k)+nv(k);j++)
+      if (data_[j]==x)
+        return true;
+    return false;
+  }
+
   void insert( index_t loc , const type* x , index_t n )
   {
     data_.insert( data_.begin()+loc , x , x+n );

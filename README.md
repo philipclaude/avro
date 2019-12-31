@@ -3,7 +3,9 @@
 
 <img width="60px" src="doc/fig/arrow.svg"/>
 
-[![build status](https://gitlab.com/philipclaude/arrow/badges/master/build.svg)](https://gitlab.com/philipclaude/arrow/badges/master/build.svg)
+[![build status](https://gitlab.com/philipclaude/arrow/badges/master/pipeline.svg)](https://gitlab.com/philipclaude/arrow/badges/master/pipeline.svg)
+
+[![coverage](https://gitlab.com/philipclaude/arrow/badges/master/coverage.svg)](https://gitlab.com/philipclaude/arrow/badges/master/coverage.svg)
 
 **arrow** is an unstructured mesh adaptation library with the following capabilities:
 

@@ -10,12 +10,7 @@
 namespace avro
 {
 
-namespace numerics
-{
-  class Coordinate;
-}
-
-namespace PLC
+namespace PSC
 {
 
 class Object : public Entity
@@ -26,11 +21,22 @@ public:
   void inverse( numerics::Coordinate& x , numerics::Coordinate& u ) const;
   void evaluate( const numerics::Coordinate& u , numerics::Coordinate& p ) const;
 
+  void fit();
+
 private:
   coord_t num_;
   coord_t dim_;
 
+};
+
+class CubeFacet : public Object
+{
+public:
+  CubeFacet( const std::vector<const real_t*>& x );
+
+private:
   numerics::MatrixD<real_t> basis_;
+
 };
 
 } // PLC
