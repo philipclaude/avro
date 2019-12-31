@@ -101,7 +101,6 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
   topology_.apply(edge_swapper_);
 
   return true;
-
 }
 
 template<typename type>

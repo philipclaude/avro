@@ -696,8 +696,8 @@ MatrixSymD<T>::addAssign3( const Expr& Tree )
     for (int j = 0; j < i+1; j++)
     {
       (*this)(i,j) += tmp(i,j);
-      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
-        throw "not symmetric";
+      /*if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";*/
     }
   }
 
@@ -723,8 +723,8 @@ MatrixSymD<T>::subAssign3( const Expr& Tree )
     for (int j = 0; j < i+1; j++)
     {
       (*this)(i,j) -= tmp(i,j);
-      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
-        throw "not symmetric";
+      /*if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";*/
     }
   }
 
@@ -755,8 +755,8 @@ MatrixSymD<T>::operator=( const MatrixDType<Expr, true>& r )
     for (int j = 0; j < i+1; j++)
     {
       (*this)(i,j) = tmp(i,j);
-      if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
-        throw "not symmetric";
+      /*if ( abs( tmp(i,j) - tmp(j,i) ) > 1e-12 )
+        throw "not symmetric";*/
     }
   }
   #endif

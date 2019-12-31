@@ -85,7 +85,6 @@ ElementImpliedMetric<type>::compute( const std::vector<const real_t*>& xk )
 {
   master_.jacobian( xk , J0_ );
   J_ = J0_*Jeq_;
-  //M_ = ( J_*J_.transpose() ).inverse();
   numerics::SymMatrixD<real_t> JJt = J_*numpack::Transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<master_.number();i++)
@@ -99,7 +98,6 @@ ElementImpliedMetric<type>::inverse( const Points& points , const index_t *v , i
 {
   master_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  //M_ = ( J_*J_.transpose() ); // no inverse
   M_ = J_*numpack::Transpose(J_); // no inverse
   for (index_t i=0;i<master_.number();i++)
   for (index_t j=i;j<master_.number();j++)
@@ -132,8 +130,6 @@ MeshImpliedMetric<type>::MeshImpliedMetric( const Topology<type>& topology ) :
 {
   numerics::SymMatrixD<real_t> zero( topology_.master().number() );
   this->resize( topology.points().nb() , zero );
-  //this->data_.resize( topology_.points().nb() , zero );
-  //this->allocate( topology_.points().nb() );
   nodalMetricSqrt_.resize( topology_.points().nb() , zero );
   nodalMetricSqrtDet_.resize( topology_.points().nb() , 0. );
   edges_.clear();
@@ -218,7 +214,6 @@ MeshImpliedMetric<type>::initialize()
     try
     {
       interp( alpha , mb , this->data_[k] );
-      //this->data_[k].template interpolate<LogEuclidean<real_t>>( alpha , mb );
     }
     catch(...)
     {
@@ -354,7 +349,6 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
       S.data[i].deriv(i) = 1.0; // derivative with respect to its own value is 1
 
     MatrixSymSurrealVertex sqrtM0 = nodalMetricSqrt_[k];
-    //nodalMetric[k] = (S.exp()).sandwich(sqrtM0);
     nodalMetric[k] = sqrtM0*numerics::expm(S)*sqrtM0;
 
   }
@@ -576,8 +570,6 @@ MeshImpliedMetric<type>::optimize()
 			S.data[i] = x[k*nrank+i];
 
     // assign the implied metric
-		//this->data_[k] = nodalMetricSqrt_[k]*S.exp()*nodalMetricSqrt_[k];
-    //this->data_[k] = (S.exp()).sandwich(nodalMetricSqrt_[k]);
     this->data_[k] = nodalMetricSqrt_[k]*numerics::expm(S)*nodalMetricSqrt_[k];
 
     if (k<topology_.points().nb_ghost())
@@ -585,13 +577,6 @@ MeshImpliedMetric<type>::optimize()
       this->data_[k] = 0;
       continue;
     }
-
-    this->data_[k].dump();
-
-    // check the implied metric is positive-definite
-    //std::pair< std::vector<real_t> , numerics::SymMatrixD<real_t> > eig = this->data_[k].eig();
-    //for (index_t j=0;j<eig.first.size();j++)
-    //  avro_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
 	}
 }
 

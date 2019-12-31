@@ -14,6 +14,7 @@
 
 #include "library/ckf.h"
 #include "library/egads.h"
+#include "library/meshb.h"
 #include "library/metric.h"
 
 #include "mesh/mesh.h"
@@ -32,16 +33,22 @@ UT_TEST_CASE(adapt_test)
   std::vector<real_t> x0(number,0.0);
 
   // parameters
-  //library::MetricField_Uniform analytic(number,0.1);
-  library::MetricField_UGAWG_Linear analytic;
+  library::MetricField_UGAWG_Polar1 analytic;
 
   // geometry
   std::vector<real_t> lengths(number,1);
-  EGADS::Cube box(&context,lengths);
+  //EGADS::Cube box(&context,lengths);
+
+  EGADS::Model model(context,"/Users/pcaplan/Desktop/cube-cylinder.egads");
+  Body& box = model.body(0);
 
   // structured grid
   std::vector<index_t> dims(number,6);
-  std::shared_ptr<Topology<Simplex>> ptopology = std::make_shared<CKF_Triangulation>(dims);
+  std::shared_ptr<Topology<Simplex>> ptopology;
+  //ptopology = std::make_shared<CKF_Triangulation>(dims);
+
+  library::meshb mesh("/Users/pcaplan/Desktop/cube-cylinder.mesh");
+  ptopology = mesh.retrieve_ptr<Simplex>(0);
 
   // tag the points onto the body
   ptopology->points().attach( box );
@@ -55,8 +62,7 @@ UT_TEST_CASE(adapt_test)
   AdaptationParameters params;
   params.directory() = "tmp/";
   params.insertion_volume_factor() = -1;
-  params.curved() = false;
-  //params.use_smoothing() = false;
+  params.curved() = true;
 
   index_t niter = 5;
   for (index_t iter=0;iter<=niter;iter++)
@@ -101,6 +107,8 @@ UT_TEST_CASE(adapt_test)
 
       plotter.run();
     }
+
+    params.has_uv() = true;
   }
 }
 UT_TEST_CASE_END(adapt_test)

@@ -15,7 +15,6 @@ Collapse<type>::Collapse( Topology<type>& _topology ) :
   this->setName("collapser");
   nb_accepted_.resize(_topology.number()+1);
   nb_rejected_.resize(_topology.number()+1);
-  //this->curved_ = false;
 }
 
 template<typename type>
@@ -255,7 +254,6 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
   // evaluate the current worst quality
   // this is used as the improvement criterion when swapping out of
   // uncollapsable configuration
-  //topology_.evaluate(metric);
   real_t Q0 = worst_quality(topology_,metric_);
 
   while (true)
@@ -411,13 +409,6 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
 
       // the collapse was finally accepted! apply the topology change
       topology_.apply(collapser_);
-
-      // the quality needs to be updated if we are allowing swaps
-      if (swapout)
-      {
-        //collapser_.evaluate(metric);
-        //topology_.update(collapser_,metric);
-      }
 
       collapsed = true;
       nb_collapsed++;

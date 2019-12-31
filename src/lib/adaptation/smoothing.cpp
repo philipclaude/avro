@@ -19,7 +19,6 @@ AdaptThread<type>::smooth_points( index_t nb_iter )
   smoother_.nb_parameter_rejections() = 0;
   smoother_.nb_geometry() = 0;
 
-  //topology_.evaluate(metric);
   real_t Q0 = worst_quality(topology_,metric_);
 
   // loop over smoothing iterations

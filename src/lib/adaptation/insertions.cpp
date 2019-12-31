@@ -426,13 +426,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       topology_.apply(inserter_);
       avro_assert( metric_.check(topology_) );
 
-      if (swapout)
-      {
-        // if we're doing swaps then we need to update the quality information
-        //inserter_.evaluate(metric);
-        //topology_.update( inserter_ , metric );
-      }
-
       // determine if any points were removed
       for (index_t j=0;j<inserter_.nb_removedNodes();j++)
       {

@@ -126,8 +126,6 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
 	std::vector<real_t> edge0( topology_.points().dim() );
 	numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
 	numerics::VectorD<real_t> edge(topology_.points().dim(),edge0.data());
-	//library::MetricField_UGAWG_Linear field;
-	//return geometric_interpolation( field(attachment_.points()[n0]) , field(attachment_.points()[n1]) , edge );
   return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
 }
 
@@ -226,7 +224,6 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 
 	// compute the edge lengths under m
   real_t l = 0.,lj;
-	//std::vector<real_t> e( dim , 0. );
 	numerics::VectorD<real_t> e(dim);
   for (index_t j=0;j<master.nb_edges();j++)
   {
@@ -369,13 +366,10 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 		std::vector<numerics::SymMatrixD<real_t>> metrics(alpha.size());
 		for (index_t j=0;j<alpha.size();j++)
 		{
-			//this->Melem_[j] = tensors_[topology_(elem,j)];
 			metrics[j] = Field<type,Metric>::operator()(elem,j);
 		}
-		//tensor.interpolate<LogEuclidean<real_t>>(alpha,this->Melem_);
 		interp(alpha,metrics,tensor);
 		attachment_.add( tensor , elem );
-		avro_assert_not_reached; // philip testing
 		#endif
 		return;
   }
@@ -409,17 +403,12 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
     }
 
     // save the metric at this vertex
-    //this->Melem_[j] = tensors_[ topology_(elem,j) ];
-		//metrics[j] = Field<type,Metric>::value(topology_(elem,j));
 		metrics[j] = Field<type,Metric>::operator()(elem,j);
   }
 
   // perform the interpolation
 	numerics::SymMatrixD<real_t> tensor(number_);
 	interp(alpha,metrics,tensor);
-
-	//library::MetricField_UGAWG_Linear field;
-	//tensor = field(x);
 
   // add the tensor along with its corresponding element to the field
   attachment_.add(tensor,elem);
@@ -445,27 +434,17 @@ MetricField<type>::recompute( index_t p , real_t* x )
     ielem = searcher_.brute(x);
     if (ielem<0)
     {
-			#if 1
 			std::vector<real_t> alpha(number_+1,0.);
 			std::vector<numerics::SymMatrixD<real_t>> metrics(alpha.size());
 			ielem = searcher_.closest( x , alpha );
 			index_t elem = index_t(ielem);
 			for (index_t j=0;j<alpha.size();j++)
 				metrics[j] = Field<type,Metric>::value(topology_(elem,j));
-			//attachment_[p].template interpolate<LogEuclidean<real_t>>(alpha,this->Melem_);
-			//attachment_.cell(p) = elem;
-			//attachment_.sqrtDetM(p) = sqrt( attachment_[p].determinant() );
 
 			interp(alpha,metrics,attachment_[p]);
 			attachment_[p].set_elem(elem);
 			attachment_[p].calculate();
 			return true;
-			#endif
-
-			// point is definitely outside the domain
-			// there might be a projection to a geometry entity
-			// and some tolerances we need to account for
-      return false;
     }
   }
 
@@ -505,8 +484,7 @@ MetricField<type>::recompute( index_t p , real_t* x )
 		// signal a problem
 		//if (alpha[j]<1e-12) problem = true;
 
-    // save the metric at this vertex
-    //this->Melem_[j] = tensors_[ topology_(elem,j) ];
+    // retrieve the metric at this vertex
 		metrics[j] = Field<type,Metric>::value(topology_(elem,j));
   }
 
@@ -539,10 +517,6 @@ MetricField<type>::recompute( index_t p , real_t* x )
 			for (coord_t j=0;j<w.size();j++)
 				wsum += w[j];
 			if (fabs(wsum-1.)>1e-20) return false; // signal an error
-
-  		//attachment_[p].template interpolate<LogEuclidean<real_t>>(w,minterp);
-  		//attachment_.cell(p) = elem;
-			//attachment_.sqrtDetM(p) = sqrt( attachment_[p].determinant() );
 
 			interp( w , minterp , attachment_[p] );
 			attachment_[p].set_elem(elem);
@@ -743,20 +717,8 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 
 		this->operator[](k).set(mk);
 		this->operator[](k).calculate();
-
-		points_.print(k);
-		mk.dump();
-
-		//logM_[k]     = numerics::logm(mk);
-		//sqrtDetM_[k] = sqrt( numerics::determinant(mk) );
-
-		// check positive-definiteness
-		//std::pair< std::vector<real_t> , densMat<real_t> > eig = mk.eig();
-		//for (index_t j=0;j<eig.first.size();j++)
-		//	avro_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
 	}
 	printf("limited %lu metrics out of %lu\n",nb_limited,this->nb());
-	//assert(false);
 }
 
 void
@@ -770,11 +732,6 @@ MetricAttachment::reset( MetricAttachment& fld )
 void
 MetricAttachment::add( numerics::SymMatrixD<real_t>& tensor , index_t elem )
 {
-  //Field<SPDT<real_t>>::add(T);
-  //cell_.push_back(elem);
-	//logM_.push_back( T.log() );
-	//sqrtDetM_.push_back( sqrt(T.determinant()) );
-
 	Metric mk(number_);
 	mk.set(tensor);
 	mk.set_elem(elem);
@@ -796,10 +753,6 @@ void
 MetricAttachment::remove( index_t k , bool recheck )
 {
 	Array<Metric>::remove(k);
-	/*Field<SPDT<real_t>>::remove(k);
-  cell_.erase( cell_.begin() +k );
-	logM_.erase( logM_.begin() +k );
-	sqrtDetM_.erase( sqrtDetM_.begin() +k );*/
 	if (recheck)
 	{
 	  avro_assert_msg( check() ,
@@ -812,11 +765,6 @@ bool
 MetricAttachment::check() const
 {
 	if (points_.nb()!=Array<Metric>::nb()) return false;
-  //if (points_.nb()!=cell_.size()) return false;
-  //if (points_.nb()!=Field<SPDT<real_t>>::nb()) return false;
-	//if (points_.nb()!=logM_.size()) return false;
-	//if (points_.nb()!=sqrtDetM_.size()) return false;
-
   return true;
 }
 

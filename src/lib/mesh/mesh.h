@@ -48,6 +48,15 @@ public:
     return static_cast<Topology<type>&>(*topology_[k].get());
   }
 
+  template<typename type>
+  std::shared_ptr<Topology<type>>
+  retrieve_ptr( index_t k )
+  {
+    avro_assert_msg( topology_[k]->type_name() == type::type_name()  ,
+      "requested topology of type %s but have %s" , topology_[k]->type_name().c_str() , type::type_name().c_str() );
+    return std::static_pointer_cast<Topology<type>>(topology_[k]);
+  }
+
   Points& points() { return points_; }
   const Points& points() const { return points_; }
 

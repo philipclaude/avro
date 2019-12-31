@@ -47,7 +47,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
 
   // retrieve the parameters
   const bool limit_insertion_length = params.limit_insertion_length();
-  const bool swapout = false;//params.swapout();
+  const bool swapout = params.swapout();
   const real_t lt_min = params.lt_min();
   real_t lt_max = params.lt_max();
   const bool smooth_on = params.use_smoothing();
