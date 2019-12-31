@@ -154,7 +154,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
     edge_swapper_.nb_parameter_tests() = 0;
     for (coord_t d=0;d<topology_.number();d++)
       edge_swapper_.nb_geometry_rejections(d) = 0;
-    edge_swapper_.nb_wake() = 0;
+    edge_swapper_.nb_interior() = 0;
     edge_swapper_.nb_invalid_geometry() = 0;
 
     std::vector<index_t> elems;
@@ -260,7 +260,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
     if (topology_.number()>1) printf(", Edges (%lu)",edge_swapper_.nb_geometry_rejections(1));
     if (topology_.number()>2) printf(", Faces (%lu)",edge_swapper_.nb_geometry_rejections(2));
     if (topology_.number()>3) printf(", Cubes (%lu)",edge_swapper_.nb_geometry_rejections(3));
-    printf(", Wake (%lu)",edge_swapper_.nb_wake());
+    printf(", Interior (%lu)",edge_swapper_.nb_interior());
     printf("\n");
     if (nb_swaps==0) break;
     pass++;
@@ -417,7 +417,7 @@ EdgeSwap<type>::valid( const index_t p , const index_t e0 , const index_t e1 )
 
   if (ge->interior())
   {
-    nb_wake_++;
+    nb_interior_++;
   }
 
   return true;

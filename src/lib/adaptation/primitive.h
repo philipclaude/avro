@@ -177,13 +177,13 @@ public:
   index_t& nb_parameter_tests() { return nb_parameter_tests_; }
   index_t& nb_parameter_rejections() { return nb_parameter_rejections_; }
   index_t& nb_geometry_rejections( index_t d ) { return nb_geometry_rejections_[d]; }
-  index_t& nb_wake() { return nb_wake_; }
+  index_t& nb_interior() { return nb_interior_; }
   index_t& nb_invalid_geometry() { return nb_invalid_geometry_; }
 
 private:
   index_t nb_parameter_tests_;
   index_t nb_parameter_rejections_;
-  index_t nb_wake_;
+  index_t nb_interior_;
   std::vector<index_t> nb_geometry_rejections_;
   index_t nb_invalid_geometry_;
 };

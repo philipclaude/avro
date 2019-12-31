@@ -22,6 +22,7 @@ public:
   coord_t number() const { return number_; }
   std::string name() const { return name_; }
 
+  void set_identifier( index_t id ) { identifier_ = id; }
   index_t identifier() const { return identifier_; }
   Body* body() const { return body_; }
 
