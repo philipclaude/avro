@@ -14,7 +14,7 @@ job-release:
     - cmake ../../
     - make
   tags:
-    - avro-commit
+    - arrow-commit
 
 # the coverage test job
 job-coverage:
@@ -32,7 +32,7 @@ job-coverage:
     #- make unit_coverage
     #- make coverage_info
     - cd ../../
-    # - cp -r build/coverage/avroCoverageHTML coverage_results
+    # - cp -r build/coverage/arrowCoverageHTML coverage_results
     # remove this when it actually works!
     - mkdir coverage_results
     - cp cmake/coverage-prolog.html coverage_results/index.html
@@ -40,4 +40,4 @@ job-coverage:
     paths:
       - coverage_results
   tags:
-    - avro-commit
+    - arrow-commit
