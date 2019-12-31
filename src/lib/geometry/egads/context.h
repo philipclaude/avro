@@ -1,9 +1,9 @@
-#ifndef luma_LIB_GEOMETRY_EGADS_CONTEXT_H_
-#define luma_LIB_GEOMETRY_EGADS_CONTEXT_H_
+#ifndef avro_LIB_GEOMETRY_EGADS_CONTEXT_H_
+#define avro_LIB_GEOMETRY_EGADS_CONTEXT_H_
 
 #include "geometry/egads/egads_fwd.h"
 
-namespace luma
+namespace avro
 {
 
 namespace EGADS
@@ -28,6 +28,6 @@ private:
 
 } // EGADS
 
-} // luma
+} // avro
 
 #endif

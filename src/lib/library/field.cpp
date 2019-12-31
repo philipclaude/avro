@@ -1,6 +1,6 @@
 #include "library/field.h"
 
-namespace luma
+namespace avro
 {
 
 namespace library
@@ -8,4 +8,4 @@ namespace library
 
 } // library
 
-} // luma
+} // avro

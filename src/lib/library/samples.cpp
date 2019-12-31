@@ -1,6 +1,6 @@
 #include "library/samples.h"
 
-namespace luma
+namespace avro
 {
 
 namespace library
@@ -44,4 +44,4 @@ TwoTriangles::TwoTriangles() :
 
 } // library
 
-} // luma
+} // avro

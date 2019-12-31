@@ -1,9 +1,9 @@
-#ifndef luma_LIB_LIBRARY_EGADS_H_
-#define luma_LIB_LIBRARY_EGADS_H_
+#ifndef avro_LIB_LIBRARY_EGADS_H_
+#define avro_LIB_LIBRARY_EGADS_H_
 
 #include "geometry/egads/body.h"
 
-namespace luma
+namespace avro
 {
 
 namespace EGADS
@@ -21,6 +21,6 @@ private:
 
 } // EGADS
 
-} // luma
+} // avro
 
 #endif

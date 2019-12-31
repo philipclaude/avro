@@ -1,5 +1,5 @@
-#ifndef luma_MESH_points_H_
-#define luma_MESH_points_H_
+#ifndef avro_MESH_points_H_
+#define avro_MESH_points_H_
 
 #include "common/array.h"
 #include "common/table.h"
@@ -12,7 +12,7 @@
 #include <memory>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 class Entity;
@@ -106,6 +106,6 @@ protected:
   index_t nb_ghost_; // how many ghost vertices
 };
 
-} // luma
+} // avro
 
 #endif

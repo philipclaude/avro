@@ -1,6 +1,6 @@
 #include "geometry/model.h"
 
-namespace luma
+namespace avro
 {
 
 void
@@ -10,4 +10,4 @@ Model::get_entities( std::vector<Entity*>& entities ) const
     body_[k]->get_entities(entities);
 }
 
-} // luma
+} // avro

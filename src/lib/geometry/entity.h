@@ -1,12 +1,12 @@
-#ifndef luma_LIB_GEOMETRICS_ENTITY_H_
-#define luma_LIB_GEOMETRICS_ENTITY_H_
+#ifndef avro_LIB_GEOMETRICS_ENTITY_H_
+#define avro_LIB_GEOMETRICS_ENTITY_H_
 
 #include "common/tree.h"
 #include "common/types.h"
 
 #include <string>
 
-namespace luma
+namespace avro
 {
 
 namespace numerics
@@ -71,6 +71,6 @@ protected:
   bool tessellatable_;
 };
 
-} // luma
+} // avro
 
 #endif

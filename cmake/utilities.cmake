@@ -1,14 +1,14 @@
 
 # utility for adding an executable
-macro( luma_add_executable )
+macro( avro_add_executable )
 
-    if( NOT luma_BUILD_DYNAMIC)
+    if( NOT avro_BUILD_DYNAMIC)
         #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static" )
         #set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static" )
     endif()
     add_executable( ${ARGN} )
-    add_dependencies( ${ARGV0} luma_lib )
-    target_link_libraries( ${ARGV0} luma ${luma_EXTERNAL_LIBRARIES} )
+    add_dependencies( ${ARGV0} avro_lib )
+    target_link_libraries( ${ARGV0} avro ${avro_EXTERNAL_LIBRARIES} )
 endmacro()
 
 #!

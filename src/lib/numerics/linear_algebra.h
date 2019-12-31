@@ -1,5 +1,5 @@
-#ifndef luma_LIB_LINEAR_ALGEBRA_H_
-#define luma_LIB_LINEAR_ALGEBRA_H_
+#ifndef avro_LIB_LINEAR_ALGEBRA_H_
+#define avro_LIB_LINEAR_ALGEBRA_H_
 
 #include "common/error.h"
 
@@ -16,7 +16,7 @@
 
 #include <cmath>
 
-namespace luma
+namespace avro
 {
 
 namespace numerics
@@ -104,7 +104,7 @@ template<typename T>
 inline MatrixD<T>
 inverse( MatrixD<T>& M )
 {
-	luma_assert( M.m() == M.n() );
+	avro_assert( M.m() == M.n() );
 	T idetM = 1./determinant(M);
 
   MatrixD<T> Minv(M.m(),M.n());
@@ -160,7 +160,7 @@ inverse( MatrixD<T>& M )
 		Minv(3,3) = (a1_1*a2_2*a3_3-a1_1*a2_3*a3_2-a1_2*a2_1*a3_3+a1_2*a2_3*a3_1+a1_3*a2_1*a3_2-a1_3*a2_2*a3_1)*idetM;
 	}
 	else
-		luma_implement;
+		avro_implement;
   return Minv;
 }
 
@@ -223,12 +223,12 @@ inverse( SymMatrixD<T>& M )
 		Minv(3,3) = (a1_1*a2_2*a3_3-a1_1*a2_3*a3_2-a1_2*a2_1*a3_3+a1_2*a2_3*a3_1+a1_3*a2_1*a3_2-a1_3*a2_2*a3_1)*idetM;
 	}
 	else
-		luma_implement;
+		avro_implement;
   return Minv;
 }
 
 } // numerics
 
-} // luma
+} // avro
 
 #endif

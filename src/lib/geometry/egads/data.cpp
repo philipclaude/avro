@@ -2,7 +2,7 @@
 
 #include <egads.h>
 
-namespace luma
+namespace avro
 {
 
 namespace EGADS
@@ -52,4 +52,4 @@ get_error_message( const int ierror )
 
 } // EGADS
 
-} // luma
+} // avro

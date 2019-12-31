@@ -1,7 +1,7 @@
 #include "master/basis.h"
 #include "master/simplex.h"
 
-namespace luma
+namespace avro
 {
 
 void
@@ -22,4 +22,4 @@ Bezier<Simplex>::hess(const ReferenceElement<Simplex>& ref , const double* x , d
   printf("hess in bezier!\n");
 }
 
-} // luma
+} // avro

@@ -1,9 +1,9 @@
-#ifndef luma_NUMERICS_FUNCTIONS_H_
-#define luma_NUMERICS_FUNCTIONS_H_
+#ifndef avro_NUMERICS_FUNCTIONS_H_
+#define avro_NUMERICS_FUNCTIONS_H_
 
 #include "common/types.h"
 
-namespace luma
+namespace avro
 {
 
 namespace numerics
@@ -15,6 +15,6 @@ index_t nchoosek( index_t n , index_t k );
 
 } // numerics
 
-} // luma
+} // avro
 
 #endif

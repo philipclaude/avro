@@ -1,17 +1,17 @@
-// luma: Adaptive Voronoi Remesher
+// avro: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 
-#ifndef luma_COMMON_TYPES_H_
-#define luma_COMMON_TYPES_H_
+#ifndef avro_COMMON_TYPES_H_
+#define avro_COMMON_TYPES_H_
 
 #ifndef nil
 #include <cstdlib>
 #define nil NULL
 #endif
 
-namespace luma
+namespace avro
 {
 
 typedef unsigned short coord_t;
@@ -26,6 +26,6 @@ enum Sign
   POSITIVE = 1
 };
 
-} // luma
+} // avro
 
 #endif

@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-namespace luma
+namespace avro
 {
 
 Facets::Facets( const Topology<Simplex>& topology ) :
@@ -19,14 +19,14 @@ Facets::opposite( const index_t f , short side ) const
 {
   if (side==0) return topology_( side0_[f] , indx0_[f] );
   if (side==1) return topology_( side1_[f] , indx1_[f] );
-  luma_assert_not_reached;
+  avro_assert_not_reached;
   return 0;
 }
 
 index_t
 Facets::opposite( const index_t f ) const
 {
-  luma_assert( boundary(f) );
+  avro_assert( boundary(f) );
   if (side0_[f]<0) return topology_( side1_[f] , indx1_[f] );
   else return topology_(side0_[f] , indx0_[f] );
 }
@@ -57,7 +57,7 @@ Facets::opposite( std::vector<index_t>& F ) const
 
     return opposite( k );
   }
-  luma_assert_not_reached;
+  avro_assert_not_reached;
   return 0;
 }
 
@@ -165,7 +165,7 @@ Facets::neighbour( const index_t k , const index_t j ) const
 {
   const index_t f = elem2facet_(k,j);
   if ( side0_[f] == int(k) ) return side1_[f];
-  luma_assert( side1_[f]==int(k) );
+  avro_assert( side1_[f]==int(k) );
   return side0_[f];
 }
 
@@ -200,7 +200,7 @@ Facets::check() const
     }
   }
 
-  luma_assert( elem2facet_.nb()==topology_.nb() );
+  avro_assert( elem2facet_.nb()==topology_.nb() );
   for (index_t k=0;k<topology_.nb();k++)
   {
     for (index_t j=0;j<nf;j++)
@@ -235,7 +235,7 @@ Facets::retrieve( const index_t fid , std::vector<index_t>& f ) const
     facet( side0_[fid] , indx0_[fid] ,  f );
     return;
   }
-  luma_assert_msg( side1_[fid]>=0 , "this facet (%lu) has no neighbours!" , fid );
+  avro_assert_msg( side1_[fid]>=0 , "this facet (%lu) has no neighbours!" , fid );
 
   facet( side1_[fid] , indx1_[fid] , f );
 }
@@ -255,7 +255,7 @@ Facets::retrieve( const index_t fid , std::vector<int>& T ) const
     T[ indx0_[fid] ] = -1;
     return;
   }
-  luma_assert_msg( side1_[fid]>=0 , "this facet (%lu) has no neighbours!" , fid );
+  avro_assert_msg( side1_[fid]>=0 , "this facet (%lu) has no neighbours!" , fid );
 
   // fill T with the side0 element but replace indx0 with -1
   for (index_t j=0;j<T.size();j++)
@@ -287,4 +287,4 @@ Facets::print() const
   elem2facet_.print();
 }
 
-} // luma
+} // avro

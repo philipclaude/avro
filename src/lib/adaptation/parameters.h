@@ -1,5 +1,5 @@
-#ifndef luma_LIB_ADAPTATION_PARAMETERS_H_
-#define luma_LIB_ADAPTATION_PARAMETERS_H_
+#ifndef avro_LIB_ADAPTATION_PARAMETERS_H_
+#define avro_LIB_ADAPTATION_PARAMETERS_H_
 
 #include "common/types.h"
 
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -100,6 +100,6 @@ public:
   }
 };
 
-} // luma
+} // avro
 
 #endif

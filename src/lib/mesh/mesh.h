@@ -1,5 +1,5 @@
-#ifndef luma_LIB_MESH_H_
-#define luma_LIB_MESH_H_
+#ifndef avro_LIB_MESH_H_
+#define avro_LIB_MESH_H_
 
 #include "common/types.h"
 
@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 class Mesh
@@ -34,7 +34,7 @@ public:
   Topology<type>&
   retrieve( index_t k )
   {
-    luma_assert_msg( topology_[k]->type_name() == type::type_name()  ,
+    avro_assert_msg( topology_[k]->type_name() == type::type_name()  ,
       "requested topology of type %s but have %s" , topology_[k]->type_name().c_str() , type::type_name().c_str() );
     return static_cast<Topology<type>&>(*topology_[k].get());
   }
@@ -43,7 +43,7 @@ public:
   const Topology<type>&
   retrieve( index_t k ) const
   {
-    luma_assert_msg( topology_[k]->type_name() == type::type_name()  ,
+    avro_assert_msg( topology_[k]->type_name() == type::type_name()  ,
       "requested topology of type %s but have %s" , topology_[k]->type_name().c_str() , type::type_name().c_str() );
     return static_cast<Topology<type>&>(*topology_[k].get());
   }
@@ -57,6 +57,6 @@ protected:
   std::vector<Topology_ptr> topology_;
 };
 
-} // luma
+} // avro
 
 #endif

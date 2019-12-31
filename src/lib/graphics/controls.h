@@ -1,10 +1,10 @@
-#ifndef luma_LIB_GRAPHICS_CONTROLS_H_
-#define luma_LIB_GRAPHICS_CONTROLS_H_
+#ifndef avro_LIB_GRAPHICS_CONTROLS_H_
+#define avro_LIB_GRAPHICS_CONTROLS_H_
 
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -116,6 +116,6 @@ private:
 
 } // graphics
 
-} // luma
+} // avro
 
 #endif

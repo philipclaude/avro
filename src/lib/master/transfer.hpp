@@ -1,6 +1,6 @@
 #include "simplex.h"
 
-namespace luma
+namespace avro
 {
 
 template<typename T>
@@ -8,8 +8,8 @@ void
 Simplex::transfer( const Simplex& master , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
-  luma_assert( Y.size()==nb_basis() );
-  luma_assert( X.size()==master.nb_basis() );
+  avro_assert( Y.size()==nb_basis() );
+  avro_assert( X.size()==master.nb_basis() );
 
   std::vector<real_t> phi( master.nb_basis() , 0. );
   for (index_t k=0;k<Y.size();k++)
@@ -35,8 +35,8 @@ void
 Simplex::transfer( const Simplex& master , const std::vector<const T>& X , std::vector<T>& Y ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
-  luma_assert( Y.size()==nb_basis() );
-  luma_assert( X.size()==master.nb_basis() );
+  avro_assert( Y.size()==nb_basis() );
+  avro_assert( X.size()==master.nb_basis() );
 
   std::vector<real_t> phi( master.nb_basis() , 0. );
   for (index_t k=0;k<Y.size();k++)
@@ -59,14 +59,14 @@ void
 Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
-  luma_assert( Y.size()==nb_basis() );
-  luma_assert( X.size()==master.nb_basis() );
+  avro_assert( Y.size()==nb_basis() );
+  avro_assert( X.size()==master.nb_basis() );
 
   std::vector<real_t> phi( master.nb_basis() , 0. );
   for (index_t k=0;k<Y.size();k++)
   {
     // evaluate all basis functions associated with this point
-    luma_implement;
+    avro_implement;
 
     // evaluate the basis functions in the original master element
     for (coord_t d=0;d<dim;d++)
@@ -83,14 +83,14 @@ void
 Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T>& X , std::vector<T>& Y ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
-  luma_assert( Y.size()==nb_basis() );
-  luma_assert( X.size()==master.nb_basis() );
+  avro_assert( Y.size()==nb_basis() );
+  avro_assert( X.size()==master.nb_basis() );
 
   std::vector<real_t> phi( master.nb_basis() , 0. );
   for (index_t k=0;k<Y.size();k++)
   {
     // evaluate all basis functions associated with this point
-    luma_implement;
+    avro_implement;
 
     // evaluate the basis functions in the original master element
     for (index_t j=0;j<master.nb_basis();j++)
@@ -100,4 +100,4 @@ Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& master , const std::vecto
 
 #endif
 
-} // luma
+} // avro

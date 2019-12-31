@@ -1,12 +1,12 @@
-#ifndef luma_LIB_NUMERICS_GEOMETRY_H_
-#define luma_LIB_NUMERICS_GEOMETRY_H_
+#ifndef avro_LIB_NUMERICS_GEOMETRY_H_
+#define avro_LIB_NUMERICS_GEOMETRY_H_
 
 #include "common/types.h"
 
 #include <vector>
 #include <cmath>
 
-namespace luma
+namespace avro
 {
 
 class Points;
@@ -40,6 +40,6 @@ void barycentric_signed( real_t* p , const std::vector<const real_t*>& x , const
 
 } // numerics
 
-} // luma
+} // avro
 
 #endif

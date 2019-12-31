@@ -15,7 +15,7 @@
 #include <math.h>
 #include <unordered_map>
 
-namespace luma
+namespace avro
 {
 
 Points::Points() :
@@ -50,7 +50,7 @@ Points::~Points()
 void
 Points::create( const std::vector<real_t>& x )
 {
-	luma_assert(x.size()==dim_);
+	avro_assert(x.size()==dim_);
 	create(x.data());
 }
 
@@ -119,28 +119,28 @@ Points::create_ghost()
 int&
 Points::body( const index_t k )
 {
-	luma_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
+	avro_assert_msg( k<nb() , "k = %lu , nb = %lu" , k , nb() );
 	return body_[k];
 }
 
 void
 Points::set_entity( const index_t k , Entity* e )
 {
-	luma_assert( k<nb() );
+	avro_assert( k<nb() );
 	primitive_[k] = e;
 }
 
 void
 Points::set_param( const index_t k , const std::vector<real_t>& u )
 {
-	luma_assert(u.size()==udim_);
+	avro_assert(u.size()==udim_);
 	set_param( k , u.data() );
 }
 
 void
 Points::set_param( const index_t k , const real_t* u )
 {
-  luma_assert( k<nb() );
+  avro_assert( k<nb() );
 	u_.set( k , u );
 }
 
@@ -201,7 +201,7 @@ Points::print( index_t k , bool info ) const
 void
 Points::remove( const index_t k )
 {
-	luma_assert_msg( k < nb() ,
+	avro_assert_msg( k < nb() ,
 		"k = %lu , nb = %lu" , k , nb() );
 
 	DOF<real_t>::remove(k);
@@ -240,7 +240,7 @@ Points::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 void
 Points::duplicates( std::vector<index_t>& idx , const Table<int>& F ) const
 {
-	luma_assert( F.nb() == nb() );
+	avro_assert( F.nb() == nb() );
 
 	// get the symbolic information of every vertex
 	std::unordered_map<std::string,index_t> symbolic;
@@ -266,11 +266,11 @@ Points::duplicates( std::vector<index_t>& idx , const Table<int>& F ) const
 			printf("symbolic vertex exists! %lu -> %lu\n",k,it->second);
 
 			real_t d = numerics::distance( (*this)[k] , (*this)[it->second] , dim_ );
-			luma_assert( d < 1e-6 ); // pretty loose tolerance
+			avro_assert( d < 1e-6 ); // pretty loose tolerance
 		}
 	}
 	printf("there are %lu unique vertices\n",symbolic.size());
-	luma_implement;
+	avro_implement;
 }
 
 void
@@ -305,7 +305,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
   std::vector<real_t> distances( primitives.size() , 0. );
   std::vector<real_t> u( udim_*primitives.size() );
 
-  if (dim_ != 4) luma_assert_msg(udim_ > 0, "udim = %u" , udim_ );
+  if (dim_ != 4) avro_assert_msg(udim_ > 0, "udim = %u" , udim_ );
   std::vector<real_t> uk(udim_, INFTY);
 
   for (index_t k=0;k<nb();k++)
@@ -342,7 +342,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
     // no candidates, stay null (interior)
     if (e_candidates.size()==0)
     {
-      luma_assert(primitive_[k] == NULL);
+      avro_assert(primitive_[k] == NULL);
 			//printf("no candidates for vertex %lu\n",k);
       continue;
     }
@@ -360,7 +360,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
     }
     if (primitive_[k] != NULL)
     {
-      luma_assert(ek == primitive_[k]);
+      avro_assert(ek == primitive_[k]);
     }
     else
       set_entity(k,ek);
@@ -375,7 +375,7 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
 		{
     	// check the distance is lower than the tolerance
     	real_t d = numerics::distance2(xk,x.data(),dim_);
-    	luma_assert_msg( d < tol , "point %lu , d = %1.16e" , k , d );
+    	avro_assert_msg( d < tol , "point %lu , d = %1.16e" , k , d );
 		}
   }
 }
@@ -498,7 +498,7 @@ Points::from_json( const json& J , const Model* model )
     std::vector<Entity*> primitives;
     model->get_entities(primitives);
     std::vector<int> geometry = J.at("geometry");
-    luma_assert(geometry.size()==nb());
+    avro_assert(geometry.size()==nb());
     for (index_t k=0;k<nb();k++)
     {
       if (geometry[k]<0) continue;
@@ -544,4 +544,4 @@ Points::clear()
   nb_ghost_ = 0;
 }
 
-} // luma
+} // avro

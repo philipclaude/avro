@@ -1,5 +1,5 @@
-#ifndef luma_LIB_GEOMETRY_EGADS_MODEL_H_
-#define luma_LIB_GEOMETRY_EGADS_MODEL_H_
+#ifndef avro_LIB_GEOMETRY_EGADS_MODEL_H_
+#define avro_LIB_GEOMETRY_EGADS_MODEL_H_
 
 #include "geometry/model.h"
 
@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace luma
+namespace avro
 {
 
 namespace EGADS
@@ -16,7 +16,7 @@ namespace EGADS
 class Body;
 class Context;
 
-class Model : public luma::Model
+class Model : public avro::Model
 {
 public:
   Model( const Context& context );
@@ -37,6 +37,6 @@ private:
 
 } // EGADS
 
-} // luma
+} // avro
 
 #endif

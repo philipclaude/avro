@@ -10,7 +10,7 @@
 
 #include <unordered_set>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -26,7 +26,7 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
 {
   EGADS::Object* ep = (EGADS::Object*) ep0;
 
-  luma_assert( ep->number()==2 );
+  avro_assert( ep->number()==2 );
   if (!this->curved_) return true;
   if (ep->interior()) return true;
 
@@ -41,7 +41,7 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
 
   // extract the geometry cavity
   this->extractGeometry( ep ); // no facet information, will assign the cavity to non-ghosts
-  luma_assert(this->G_.nb()>0);
+  avro_assert(this->G_.nb()>0);
 
   // add the parameter coordinates for the inserted point along with the mapped index
   this->u_.create( params );
@@ -49,14 +49,14 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
 
   // the insertion should be visible in parameter space
   bool accept = this->gcavity_.compute( this->u_.nb()-1 , params , this->S_ );
-  luma_assert(accept);
+  avro_assert(accept);
 
   // check the orientation of the facets
   GeometryOrientationChecker checker(this->points_,this->u_,this->u2v_,ep);
   int s = checker.signof( this->gcavity_ );
   if (s<0) return false;
 
-  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype) );
+  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype) );
 
   return true;
 }
@@ -212,7 +212,7 @@ template<typename type>
 void
 AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 {
-  luma_assert( metric_.check(topology_) );
+  avro_assert( metric_.check(topology_) );
 
   real_t dof_factor = params_.insertion_volume_factor();
 
@@ -370,7 +370,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         }
         continue;
       }
-      luma_assert( metric_.check(topology_) );
+      avro_assert( metric_.check(topology_) );
 
       // the vertex needs to be removed because the inserter will add it again
       // TODO clean up this inefficiency
@@ -424,7 +424,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // apply the insertion into the topology
       topology_.apply(inserter_);
-      luma_assert( metric_.check(topology_) );
+      avro_assert( metric_.check(topology_) );
 
       if (swapout)
       {
@@ -500,4 +500,4 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 template class Insert<Simplex>;
 template class AdaptThread<Simplex>;
 
-} // luma
+} // avro

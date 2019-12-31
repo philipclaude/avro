@@ -12,7 +12,7 @@
 
 #include <set>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -45,7 +45,7 @@ template<typename type>
 void
 Primitive<type>::extractGeometry( Entity* e , const std::vector<index_t>& f )
 {
-  luma_assert( e->number()==2 );
+  avro_assert( e->number()==2 );
   u_.clear();
   G_.clear();
   v2u_.clear();
@@ -80,15 +80,15 @@ Primitive<type>::extractGeometry( Entity* e , const std::vector<index_t>& f )
     index_t u0 = v2u_.at(f[0]);
     index_t u1 = v2u_.at(f[1]);
     G_.inverse().shell(u0,u1,S_);
-    luma_assert( S_.size()==2 );
+    avro_assert( S_.size()==2 );
   }
   else
   {
     print_inline(f,"unsupported facet: ");
-    luma_assert_not_reached;
+    avro_assert_not_reached;
   }
 }
 
 template class Primitive<Simplex>;
 
-} // luma
+} // avro

@@ -9,7 +9,7 @@
 
 #include "numerics/geometry.h"
 
-namespace luma
+namespace avro
 {
 
 template<>
@@ -117,7 +117,7 @@ Topology<Simplex>::apply( Cavity<Simplex>& cavity )
 
   // the cache needs to be empty if the topology is closed (null boundary)
   if (this->closed())
-    luma_assert( this->neighbours_.cache().nb()==0 );
+    avro_assert( this->neighbours_.cache().nb()==0 );
 
   index_t elem;
 
@@ -196,7 +196,7 @@ Topology<Simplex>::apply( Cavity<Simplex>& cavity )
       //this->neighbours_.cache().print();
       cavity.print();
     }
-    luma_assert( this->neighbours_.cache().nb()==0 );
+    avro_assert( this->neighbours_.cache().nb()==0 );
 
     // debug check (slow) REMOVE ME!
     //for (index_t k=0;k<this->neighbours_.nb();k++)
@@ -212,7 +212,7 @@ template<>
 void
 Topology<Simplex>::get_boundary( Topology<Simplex>& bnd ) const
 {
-  luma_assert( bnd.number()==number_-1 );
+  avro_assert( bnd.number()==number_-1 );
 
   // compute the facets
   Facets facets(*this);
@@ -233,4 +233,4 @@ Topology<Simplex>::get_boundary( Topology<Simplex>& bnd ) const
 template class Topology<Simplex>;
 template class Tree<Topology<Simplex>>;
 
-} // luma
+} // avro

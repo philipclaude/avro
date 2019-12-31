@@ -8,7 +8,7 @@ set( MASTER_UNIT ${CMAKE_SOURCE_DIR}/test/ut_driver.cpp )
 set( COMMON_UNIT ${CMAKE_SOURCE_DIR}/test/ut_common.cpp )
 
 add_library( ut_third_party_common_lib STATIC ${COMMON_UNIT} )
-target_link_libraries( ut_third_party_common_lib luma_shared )
+target_link_libraries( ut_third_party_common_lib avro_shared )
 
 # needed for the directory class definitions
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -31,7 +31,7 @@ foreach( test_src ${TEST_FILES} )
   set( test_exe ${test_bin}_exe )
 
   # the actual executable: target for simply building
-  luma_add_executable( ${test_exe} ${test_src} )
+  avro_add_executable( ${test_exe} ${test_src} )
   target_link_libraries( ${test_exe} ut_third_party_common_lib )
   target_compile_definitions( ${test_exe} PUBLIC -DSTANDALONE )
 
@@ -49,8 +49,8 @@ foreach( test_src ${TEST_FILES} )
 endforeach()
 
 # create the full unit executable
-luma_add_executable( third_party_unit_exe ${MASTER_UNIT} ${TEST_FILES} )
-target_link_libraries( third_party_unit_exe luma_shared )
+avro_add_executable( third_party_unit_exe ${MASTER_UNIT} ${TEST_FILES} )
+target_link_libraries( third_party_unit_exe avro_shared )
 target_compile_definitions( third_party_unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests.out" )
 
 # target for running all unit tests from a single executable

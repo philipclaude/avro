@@ -1,4 +1,4 @@
-// luma: Adaptive Voronoi Remesher
+// avro: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
@@ -7,7 +7,7 @@
 #include "common/thread.h"
 #include "common/tools.h"
 
-#ifdef luma_GPU_THREAD_MANAGER_OPENCL
+#ifdef avro_GPU_THREAD_MANAGER_OPENCL
   #if __APPLE__
     #include <OpenCL/opencl.h>
   #else
@@ -16,7 +16,7 @@
 
 #include <math.h>
 
-#ifdef luma_GPU_THREAD_MANAGER_OPENCL
+#ifdef avro_GPU_THREAD_MANAGER_OPENCL
 
 static std::string
 clErrorCode(int err)
@@ -47,31 +47,31 @@ clErrorCode(int err)
 #endif
 #endif
 
-namespace luma
+namespace avro
 {
 
 namespace ProcessGPU
 {
   std::shared_ptr<ThreadManager> thread_manager_;
 
-  #ifdef luma_GPU_THREAD_MANAGER_CUDA
+  #ifdef avro_GPU_THREAD_MANAGER_CUDA
   class CUDAThreadManager : public ThreadManager
   {
   public:
     CUDAThreadManager() {}
 
     index_t maxConcurrentThreads()
-      { luma_implement; }
+      { avro_implement; }
     void enterCriticalSection()
-      { luma_implement; }
+      { avro_implement; }
     void leaveCriticalSection()
-      { luma_implement; }
+      { avro_implement; }
     void runConcurrentThreads( ThreadGroup& threads , index_t max_threads )
-      { luma_implement; }
+      { avro_implement; }
   };
   #endif
 
-  #ifdef luma_GPU_THREAD_MANAGER_OPENCL
+  #ifdef avro_GPU_THREAD_MANAGER_OPENCL
   class OpenCLThreadManager : public ThreadManager
   {
   public:
@@ -91,7 +91,7 @@ namespace ProcessGPU
       {
         printf("falling back on opencl-cpu\n");
         err_ = clGetDeviceIDs(platform_,CL_DEVICE_TYPE_CPU,1,&device_,NULL);
-        luma_assert(device_!=NULL);
+        avro_assert(device_!=NULL);
       }
       printf ("gpu enabled!\n");
       clGetDeviceInfo(device_,CL_DEVICE_NAME,len_,name_,NULL);
@@ -119,9 +119,9 @@ namespace ProcessGPU
       { return index_t(CL_DEVICE_MAX_COMPUTE_UNITS); }
 
     void enterCriticalSection()
-      { luma_implement; }
+      { avro_implement; }
     void leaveCriticalSection()
-      { luma_implement; }
+      { avro_implement; }
 
     void runConcurrentThreads( std::string& src , std::string& name , index_t n )
     {
@@ -180,7 +180,7 @@ namespace ProcessGPU
 
     // this just needs to be defined
     void runConcurrentThreads( ThreadGroup& threads , index_t max_threads )
-      { luma_assert_not_reached; }
+      { avro_assert_not_reached; }
 
     virtual ~OpenCLThreadManager()
     {
@@ -223,10 +223,10 @@ void set_thread_manager( std::shared_ptr<ThreadManager> manager )
 void
 initialize()
 {
-  #if defined(luma_GPU_THREAD_MANAGER_CUDA)
+  #if defined(avro_GPU_THREAD_MANAGER_CUDA)
     printf("enabling cuda for GPU threading\n");
     set_thread_manager( std::make_shared<CUDAThreadManager>() );
-  #elif defined(luma_GPU_THREAD_MANAGER_OPENCL)
+  #elif defined(avro_GPU_THREAD_MANAGER_OPENCL)
     printf("enabling opencl for GPU threading\n");
     set_thread_manager( std::make_shared<OpenCLThreadManager>() );
   #else
@@ -281,4 +281,4 @@ template void retrieve_kernel_value(index_t,int*,index_t);
 
 } // ProcessGPU
 
-} // luma
+} // avro

@@ -9,7 +9,7 @@
 
 #include "mesh/boundary.h"
 
-using namespace luma;
+using namespace avro;
 
 #define FULL_TEST 0
 

@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 typedef struct
@@ -105,10 +105,10 @@ template<typename type>
 void
 Builder<type>::transfer( Topology<type>& f ) const
 {
-  luma_assert( topology_.nb() == this->nb() );
-  luma_assert_msg( f.points().nb()==0 , "nb_vertices = %lu" , f.points().nb() );
-  luma_assert( f.points().dim()==topology_.points().dim() );
-  luma_assert( f.nb()==0 );
+  avro_assert( topology_.nb() == this->nb() );
+  avro_assert_msg( f.points().nb()==0 , "nb_vertices = %lu" , f.points().nb() );
+  avro_assert( f.points().dim()==topology_.points().dim() );
+  avro_assert( f.nb()==0 );
 
   // create all the vertices for the outgoing topology
   const std::vector<index_t>& elems = this->data();
@@ -170,12 +170,12 @@ Builder<type>::build()
     for (it=facets_d.begin();it!=facets_d.end();++it)
     {
       const Element& f = it->first;
-      luma_assert( f.dim == dim );
+      avro_assert( f.dim == dim );
 
       const std::vector<index_t>& parents = it->second.parents;
       const std::vector<index_t>& local = it->second.local;
-      luma_assert( parents.size() == local.size() );
-      luma_assert( parents.size() == it->second.canonical.size() );
+      avro_assert( parents.size() == local.size() );
+      avro_assert( parents.size() == it->second.canonical.size() );
 
       // sprinkle the new dof into place
       std::vector<index_t> dof( master_.nb_interior(dim) );
@@ -205,7 +205,7 @@ Builder<type>::build()
 
           // determine which index in the element this corresponds to
           int idx = master_.reference().find_index( ls.data() );
-          luma_assert( idx>=0 );
+          avro_assert( idx>=0 );
 
           (*this)(k,idx) = dof[j];
         }
@@ -217,4 +217,4 @@ Builder<type>::build()
 // builder for high-order meshes and transfer from lagrange to bezier
 template class Builder<Simplex>;
 
-} // luma
+} // avro

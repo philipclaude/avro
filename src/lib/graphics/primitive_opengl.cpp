@@ -10,7 +10,7 @@
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -28,7 +28,7 @@ OpenGLPrimitive::convert()
 
   const Points& points = topology_.points();
 
-  luma_assert( dim==3 );
+  avro_assert( dim==3 );
 
   // allocate the vertex data
   points_.resize( 3*nb_points);
@@ -290,7 +290,7 @@ printBuffer( GLfloat* buffer , index_t nb_prim , index_t nb_data_per_prim  )
 void
 OpenGLPrimitive::draw()
 {
-  luma_assert( shader_!=NULL );
+  avro_assert( shader_!=NULL );
 
   // indicate to the gl that we want to use the shader
   shader_->use();
@@ -373,4 +373,4 @@ OpenGLPrimitive::draw()
 
 } // graphics
 
-} // luma
+} // avro

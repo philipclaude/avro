@@ -1,12 +1,12 @@
-#ifndef luma_LIB_MESH_TRIANGULATION_H_
-#define luma_LIB_MESH_TRIANGULATION_H_
+#ifndef avro_LIB_MESH_TRIANGULATION_H_
+#define avro_LIB_MESH_TRIANGULATION_H_
 
 #include "common/types.h"
 
 #include "master/simplex.h"
 #include "mesh/topology.h"
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -23,6 +23,6 @@ private:
   std::vector<index_t> parents_;
 };
 
-} // luma
+} // avro
 
 #endif

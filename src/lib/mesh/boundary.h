@@ -1,5 +1,5 @@
-#ifndef luma_MESH_BOUNDARY_H_
-#define luma_MESH_BOUNDARY_H_
+#ifndef avro_MESH_BOUNDARY_H_
+#define avro_MESH_BOUNDARY_H_
 
 #include "common/types.h"
 
@@ -10,7 +10,7 @@
 
 #include <map>
 
-namespace luma
+namespace avro
 {
 
 namespace BoundaryUtils
@@ -79,6 +79,6 @@ private:
 };
 
 
-} // luma
+} // avro
 
 #endif

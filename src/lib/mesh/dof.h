@@ -1,9 +1,9 @@
-#ifndef luma_LIB_MESH_DOF_H_
-#define luma_LIB_MESH_DOF_H_
+#ifndef avro_LIB_MESH_DOF_H_
+#define avro_LIB_MESH_DOF_H_
 
 #include "common/table.h"
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -19,7 +19,7 @@ public:
   void
   interpolate( const std::vector<const type*>& uk , const std::vector<real_t>& phi , type* u ) const
   {
-    luma_assert( uk.size() == phi.size() );
+    avro_assert( uk.size() == phi.size() );
     for (index_t j=0;j<rank();j++)
       u[j] = type(0);
     for (index_t j=0;j<rank();j++)
@@ -32,7 +32,7 @@ public:
   void
   interpolate( const index_t* idx , index_t nv , const std::vector<real_t>& phi , type* u ) const
   {
-    luma_assert( nv == phi.size() );
+    avro_assert( nv == phi.size() );
     for (index_t j=0;j<rank();j++)
       u[j] = type(0);
     for (index_t j=0;j<rank();j++)
@@ -44,6 +44,6 @@ public:
 
 };
 
-} // luma
+} // avro
 
 #endif

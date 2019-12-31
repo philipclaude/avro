@@ -3,7 +3,7 @@
 #include "master/master.h"
 #include "master/quadrature.h"
 
-namespace luma
+namespace avro
 {
 
 // needed to create a set/map of elements
@@ -12,7 +12,7 @@ operator==( const Element& fx , const Element& fy )
 {
   // assumes fx and fy have the same topological dimension
   // and that the indices are sorted
-  luma_assert( fx.dim==fy.dim );
+  avro_assert( fx.dim==fy.dim );
   for (index_t j=0;j<fx.dim;j++)
     if (fx.indices[j]!=fy.indices[j])
       return false;
@@ -48,4 +48,4 @@ Master<Shape>::set_basis( BasisFunctionCategory category )
 
 template class Master<Simplex>;
 
-} // luma
+} // avro

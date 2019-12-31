@@ -7,7 +7,7 @@
 #include "adaptation/metric.h"
 #include "adaptation/primitive.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE( insertion_filter_suite )
 

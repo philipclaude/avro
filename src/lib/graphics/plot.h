@@ -1,5 +1,5 @@
-#ifndef luma_LIB_GRAPHICS_PLOT_H_
-#define luma_LIB_GRAPHICS_PLOT_H_
+#ifndef avro_LIB_GRAPHICS_PLOT_H_
+#define avro_LIB_GRAPHICS_PLOT_H_
 
 #include "mesh/topology.h"
 #include "mesh/points.h"
@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 class Fields;
@@ -52,6 +52,6 @@ private:
 
 } // graphics
 
-} // luma
+} // avro
 
 #endif

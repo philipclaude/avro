@@ -132,6 +132,6 @@ template dual determinant(const numerics::densMat<dual>& X);
 
 } // numerics
 
-} // luma
+} // avro
 
 #endif

@@ -1,12 +1,12 @@
-#ifndef luma_LIB_LIBRARY_CKF_H_
-#define luma_LIB_LIBRARY_CKF_H_
+#ifndef avro_LIB_LIBRARY_CKF_H_
+#define avro_LIB_LIBRARY_CKF_H_
 
 #include "common/types.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
-namespace luma
+namespace avro
 {
 
 class CKF_Triangulation : public Topology<Simplex>
@@ -29,6 +29,6 @@ private:
 
 };
 
-} // luma
+} // avro
 
 #endif

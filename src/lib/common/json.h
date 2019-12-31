@@ -1,13 +1,13 @@
-#ifndef luma_COMMON_JSON_H_
-#define luma_COMMON_JSON_H_
+#ifndef avro_COMMON_JSON_H_
+#define avro_COMMON_JSON_H_
 
 #include <json/json_fwd.hpp>
 
-namespace luma
+namespace avro
 {
 
 using json = nlohmann::json;
 
-} // luma
+} // avro
 
 #endif

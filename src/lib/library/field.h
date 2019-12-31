@@ -1,12 +1,12 @@
-#ifndef luma_LIB_LIBRARY_FIELD_H_
-#define luma_LIB_LIBRARY_FIELD_H_
+#ifndef avro_LIB_LIBRARY_FIELD_H_
+#define avro_LIB_LIBRARY_FIELD_H_
 
 #include "mesh/field.h"
 #include "mesh/topology.h"
 
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 namespace library
@@ -14,6 +14,6 @@ namespace library
 
 } // library
 
-} // luma
+} // avro
 
 #endif

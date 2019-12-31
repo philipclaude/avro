@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-namespace luma
+namespace avro
 {
 
 void
@@ -34,4 +34,4 @@ AdaptationParameters::standard()
   if (!boolParams_.has("debug")) boolParams_["debug"] = true;
 }
 
-} // luma
+} // avro

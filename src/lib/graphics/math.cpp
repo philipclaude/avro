@@ -5,7 +5,7 @@
 #include <numpack/dense/static/MatrixS_Transpose.h>
 #include <numpack/Transpose.h>
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -39,4 +39,4 @@ mat4::value_ptr()
 
 } // graphics
 
-} // luma
+} // avro

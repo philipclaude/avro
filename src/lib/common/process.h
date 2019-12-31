@@ -1,17 +1,17 @@
-// luma: Adaptive Voronoi Remesher
+// avro: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 
-#ifndef luma_COMMON_PROCESS_H_
-#define luma_COMMON_PROCESS_H_
+#ifndef avro_COMMON_PROCESS_H_
+#define avro_COMMON_PROCESS_H_
 
 #include "common/thread.h"
 #include "common/types.h"
 
 #include <memory>
 
-namespace luma
+namespace avro
 {
 
 namespace ProcessCPU
@@ -91,6 +91,6 @@ namespace ProcessMPI
 
 } // ProcessMPI
 
-} // luma
+} // avro
 
 #endif

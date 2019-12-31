@@ -1,7 +1,7 @@
-#ifndef luma_LIB_NUMERICS_LAPACK_H_
-#define luma_LIB_NUMERICS_LAPACK_H_
+#ifndef avro_LIB_NUMERICS_LAPACK_H_
+#define avro_LIB_NUMERICS_LAPACK_H_
 
-namespace luma
+namespace avro
 {
 
 namespace numerics
@@ -33,6 +33,6 @@ extern "C" void DGESVD( char *jobu , char* jobvt , int *m , int *n , double *A ,
 
 } // numerics
 
-} // luma
+} // avro
 
 #endif

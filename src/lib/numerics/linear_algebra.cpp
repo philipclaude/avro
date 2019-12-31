@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 namespace numerics
@@ -88,4 +88,4 @@ kernel( const MatrixD<real_t>& A , MatrixD<real_t>& K )
 
 } // numerics
 
-} // luma
+} // avro

@@ -2,7 +2,7 @@
 
 #include "numerics/functions.h"
 
-using namespace luma;
+using namespace avro;
 using namespace numerics;
 
 UT_TEST_SUITE(FunctionsSuite)

@@ -23,7 +23,7 @@ const std::string __wv_fs_src__ =
 #include "shaders/wv.fs"
 ;
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -36,18 +36,18 @@ ShaderProgram::ShaderProgram( const std::string& name ) :
 {
   if (name_=="basic")
   {
-    luma_assert_msg( compile(name_.c_str(),__basic_vs_src__,__basic_fs_src__) , "error compiling basic shaders" );
+    avro_assert_msg( compile(name_.c_str(),__basic_vs_src__,__basic_fs_src__) , "error compiling basic shaders" );
   }
   else if (name_=="edge")
   {
-    luma_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
+    avro_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
   }
   else if (name_=="wv")
   {
-    luma_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
+    avro_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
   }
   else
-    luma_implement;
+    avro_implement;
 }
 
 int
@@ -273,7 +273,7 @@ ShaderProgram::setUniform( const char *name, bool val )
 void
 ShaderProgram::setUniforms( const Window& window )
 {
-  //luma_implement;
+  //avro_implement;
 }
 
 void
@@ -500,11 +500,11 @@ ShaderProgram::compile(const char *name,
      printf("GLSL programm error: %s: shader failed to link!\n%s",name,log().c_str());
      error = true;
   }
-  luma_assert(!error);
+  avro_assert(!error);
   return true;
 }
 
 
 } // graphics
 
-} // luma
+} // avro

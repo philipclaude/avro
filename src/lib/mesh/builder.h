@@ -1,12 +1,12 @@
-#ifndef luma_LIB_MESH_BUILDER_H_
-#define luma_LIB_MESH_BUILDER_H_
+#ifndef avro_LIB_MESH_BUILDER_H_
+#define avro_LIB_MESH_BUILDER_H_
 
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>

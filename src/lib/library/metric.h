@@ -1,11 +1,11 @@
-#ifndef luma_LIB_LIBRARY_METRIC_H_
-#define luma_LIB_LIBRARY_METRIC_H_
+#ifndef avro_LIB_LIBRARY_METRIC_H_
+#define avro_LIB_LIBRARY_METRIC_H_
 
 #include "common/types.h"
 
 #include "numerics/matrix.h"
 
-namespace luma
+namespace avro
 {
 
 namespace library
@@ -82,6 +82,6 @@ public:
 
 } // library
 
-} // luma
+} // avro
 
 #endif

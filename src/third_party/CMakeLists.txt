@@ -1,4 +1,4 @@
-if (luma_WITH_FPG)
+if (avro_WITH_FPG)
 	add_subdirectory(PCK/fpg)
 endif()
 
@@ -18,7 +18,7 @@ add_source_directories( JSON_SOURCES "json source" json )
 set_source_files_properties( ${JSON_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( json )
 
-if (luma_BUILTIN_GLFW)
+if (avro_BUILTIN_GLFW)
 	add_subdirectory( glfw )
 	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
 	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
@@ -30,7 +30,7 @@ set_source_files_properties( ${IMGUI_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" I
 include_directories( imgui )
 
 set( GLAD_SOURCES )
-if (luma_WITH_GL)
+if (avro_WITH_GL)
 	add_source_directories( GLAD_SOURCES "glad source" glad/src )
 	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
 	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
@@ -58,4 +58,4 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
 
-add_library(luma_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )
+add_library(avro_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )

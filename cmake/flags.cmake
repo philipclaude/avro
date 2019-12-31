@@ -32,13 +32,13 @@ if( CMAKE_COMPILER_IS_GNUCXX )
   endif()
 
   # debug flags
-  set( CMAKE_CXX_FLAGS_DEBUG "-g -ftrapv -fbounds-check -Dluma_DEBUG" CACHE STRING "C++ debug flags" FORCE )
+  set( CMAKE_CXX_FLAGS_DEBUG "-g -ftrapv -fbounds-check -Davro_DEBUG" CACHE STRING "C++ debug flags" FORCE )
   if( NOT CYGWIN )
       set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0" CACHE STRING "C++ debug flags" FORCE )
   else()
       set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og" CACHE STRING "C++ debug flags" FORCE )
   endif()
-  set( CMAKE_C_FLAGS_DEBUG "-g -O0 -ftrapv -fbounds-check -Dluma_DEBUG" CACHE STRING "C debug flags" FORCE )
+  set( CMAKE_C_FLAGS_DEBUG "-g -O0 -ftrapv -fbounds-check -Davro_DEBUG" CACHE STRING "C debug flags" FORCE )
 
   # release flags
   set( CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -funroll-loops" CACHE STRING "C++ release flags" FORCE )
@@ -86,8 +86,8 @@ elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
   set( CMAKE_C_FLAGS "-Wall -fPIC -pthread -fstrict-aliasing -ansi-alias-check" CACHE STRING "C flags" FORCE )
 
   # debug flags
-  set( CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Dluma_DEBUG" CACHE STRING "C++ debug flags" FORCE )
-  set( CMAKE_C_FLAGS_DEBUG "-g -O0 -Dluma_DEBUG" CACHE STRING "C debug flags" FORCE )
+  set( CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Davro_DEBUG" CACHE STRING "C++ debug flags" FORCE )
+  set( CMAKE_C_FLAGS_DEBUG "-g -O0 -Davro_DEBUG" CACHE STRING "C debug flags" FORCE )
 
   # release flags
   set( CMAKE_CXX_FLAGS_RELEASE "-O3" CACHE STRING "C++ release flags" FORCE )
@@ -123,8 +123,8 @@ elseif( ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
   endif()
 
   # debug flags
-  set( CMAKE_CXX_FLAGS_DEBUG "-g -O0 -ftrapv -fno-omit-frame-pointer -Dluma_DEBUG" CACHE STRING "C++ debug flags" FORCE )
-  set( CMAKE_C_FLAGS_DEBUG "-g -O0 -ftrapv -fno-omit-frame-pointer -Dluma_DEBUG" CACHE STRING "C debug flags" FORCE )
+  set( CMAKE_CXX_FLAGS_DEBUG "-g -O0 -ftrapv -fno-omit-frame-pointer -Davro_DEBUG" CACHE STRING "C++ debug flags" FORCE )
+  set( CMAKE_C_FLAGS_DEBUG "-g -O0 -ftrapv -fno-omit-frame-pointer -Davro_DEBUG" CACHE STRING "C debug flags" FORCE )
 
   # release flags
   set( CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops" CACHE STRING "C++ release flags" FORCE )

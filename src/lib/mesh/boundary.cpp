@@ -9,7 +9,7 @@
 
 #include <set>
 
-namespace luma
+namespace avro
 {
 
 class FacetTable
@@ -19,7 +19,7 @@ public:
 
   bool contains( std::vector<index_t>& f )
   {
-    luma_assert( f.size()>0 );
+    avro_assert( f.size()>0 );
     std::sort( f.begin() , f.end() );
     std::string s = stringify(f[0]);
     for (index_t j=1;j<f.size();j++)
@@ -44,7 +44,7 @@ private:
 bool
 interior( const Points& points , index_t* v , index_t nv )
 {
-  luma_assert( nv>0 );
+  avro_assert( nv>0 );
 
   for (index_t j=0;j<nv;j++)
   {
@@ -60,7 +60,7 @@ namespace BoundaryUtils
 Entity*
 geometryFacet( const Points& points , index_t* v , index_t nv , bool elem )
 {
-  luma_assert( nv>0 );
+  avro_assert( nv>0 );
 
   Entity* dummy = (Entity*)v;
 
@@ -104,7 +104,7 @@ geometryFacet( const Points& points , index_t* v , index_t nv , bool elem )
     e = entities[0]->intersect( entities[1] , entities[2] , entities[3] );
     return e;
   }
-  luma_implement;
+  avro_implement;
   return NULL;
 }
 
@@ -113,7 +113,7 @@ geometryFacet( const Points& points , index_t* v , index_t nv , bool elem )
 Entity*
 lookForParent( Entity* e , const Points& points , index_t* v , index_t nv )
 {
-  luma_assert(e!=NULL);
+  avro_assert(e!=NULL);
   for (index_t k=0;k<e->nb_parents();k++)
   {
     if (!e->parents()[k]->tessellatable()) continue;
@@ -126,7 +126,7 @@ lookForParent( Entity* e , const Points& points , index_t* v , index_t nv )
     }
     if (count==nv) return e->parents()[k];
   }
-  luma_assert_not_reached;
+  avro_assert_not_reached;
   return NULL;
 }
 
@@ -196,7 +196,7 @@ Boundary<type>::extractall()
     {
       // get the indices of this facet
       // TODO implement this!!!
-      luma_implement;
+      avro_implement;
       //topology_.master().unwindFacet( j , topology_(k) , facet );
 
       // get the geometry this facet is on and lookup which topology this is
@@ -315,11 +315,11 @@ Boundary<type>::extract( bool interior )
     {
 
       if (!topology_.ghost(k)) continue;
-      luma_assert( topology_(k,0)<topology_.points().nb_ghost() );
+      avro_assert( topology_(k,0)<topology_.points().nb_ghost() );
 
       for (index_t j=1;j<topology_.nv(k);j++)
       {
-        luma_assert( topology_(k,j)>=topology_.points().nb_ghost() );
+        avro_assert( topology_(k,j)>=topology_.points().nb_ghost() );
         facet[j-1] = topology_(k,j);
       }
       bnd.add( facet.data() , facet.size() );
@@ -356,7 +356,7 @@ Boundary<type>::extract( bool interior )
       //library::Plottable<type> plot(bnd);
       //gamma.writeMesh(plot,"bnd_debug.mesh");
     }
-    luma_assert(e!=NULL);
+    avro_assert(e!=NULL);
 
     if (e->number()!=bnd.number())
     {
@@ -384,7 +384,7 @@ Boundary<type>::extract( bool interior )
     this->child(id).add( bnd(k) , bnd.nv(k) );
     if (e!=entity_[id])
       e->print();
-    luma_assert( e==entity_[id] );
+    avro_assert( e==entity_[id] );
   }
 
   if (interior)
@@ -490,7 +490,7 @@ Boundary<type>::indexof( Entity* e0 )
   e->print(false);
   for (it=entity2child_.begin();it!=entity2child_.end();++it)
   {
-    //luma_implement; // TODO lookup object?
+    //avro_implement; // TODO lookup object?
     EGADS::Object* obj = (EGADS::Object*)it->first;
     obj->print(false);
     if (obj->object() == e->object()) return it->second;
@@ -501,7 +501,7 @@ Boundary<type>::indexof( Entity* e0 )
 
   for (it=entity2child_.begin();it!=entity2child_.end();++it)
     it->first->print();
-  luma_assert_not_reached;
+  avro_assert_not_reached;
   return 0;
 }
 
@@ -521,7 +521,7 @@ template<typename type>
 Entity*
 Boundary<type>::entity( index_t k )
 {
-  luma_assert( k < entity_.size() );
+  avro_assert( k < entity_.size() );
   return entity_[k];
 }
 
@@ -559,4 +559,4 @@ BoundaryPoints::BoundaryPoints( const Points& points , bool meta ) :
 
 template class Boundary<Simplex>;
 
-} // luma
+} // avro

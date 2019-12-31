@@ -63,7 +63,7 @@
 #define GEOGRAM_API_DEFS
 
 #include "common/types.h"
-using namespace luma;
+using namespace avro;
 
 /*
  * Deactivate warnings about documentation
@@ -123,7 +123,7 @@ typedef index_t geo_index_t;
 typedef coord_t geo_coord_t;
 typedef coord_t geo_coord_index_t;
 
-// pcaplan: not defined in luma
+// pcaplan: not defined in avro
 typedef int geo_signed_index_t;
 typedef int geo_boolean;
 

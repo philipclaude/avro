@@ -18,7 +18,7 @@
 
 #include <cmath>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -63,7 +63,7 @@ public:
       J(3,3) = -1.0;
     }
     else
-      luma_implement;
+      avro_implement;
   }
 };
 
@@ -204,7 +204,7 @@ MeshImpliedMetric<type>::initialize()
       alpha[j] = volk[B[j]];
       v0 += alpha[j];
     }
-    luma_assert_msg( v0 > 0 , "topology may need to be oriented" );
+    avro_assert_msg( v0 > 0 , "topology may need to be oriented" );
 
     // normalize the average and retrieve the element metrics
     mb.resize( B.size() );
@@ -248,9 +248,9 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
   // reference complexity
   complexity0 = topology_.nb_real()*topology_.master().reference().vunit();
 
-  luma_assert( sv.size()==topology_.points().nb() );
+  avro_assert( sv.size()==topology_.points().nb() );
   if (dc_dS.size()!=0)
-    luma_assert( dc_dS.size()==topology_.points().nb() );
+    avro_assert( dc_dS.size()==topology_.points().nb() );
 
   // compute elemental step matrices and elemental costs
   std::vector< numerics::SymMatrixD<real_t> > sk( topology_.nb() , numerics::SymMatrixD<real_t>(DIM) );
@@ -341,9 +341,9 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
 
   real_t delta = 0.0;
 
-  luma_assert( Svec.size()==topology_.points().nb() );
+  avro_assert( Svec.size()==topology_.points().nb() );
   if (df_dS.size()!=0)
-    luma_assert( df_dS.size()==topology_.points().nb() );
+    avro_assert( df_dS.size()==topology_.points().nb() );
 
   // set the nodal metric derivatives
   std::vector<MatrixSymSurrealVertex> nodalMetric( topology_.points().nb() );
@@ -541,7 +541,7 @@ MeshImpliedMetric<type>::optimize()
 	else if (topology_.number()==4)
 		opt.set_min_objective( &impliedMetric_objective<4,type> , static_cast<void*>(&data) );
 	else
-		luma_implement;
+		avro_implement;
 
 	// set the lower and upper bounds on the entries of the step matrix
 	std::vector<real_t> lower_bound( N , -2*log(2.) );
@@ -591,11 +591,11 @@ MeshImpliedMetric<type>::optimize()
     // check the implied metric is positive-definite
     //std::pair< std::vector<real_t> , numerics::SymMatrixD<real_t> > eig = this->data_[k].eig();
     //for (index_t j=0;j<eig.first.size();j++)
-    //  luma_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
+    //  avro_assert_msg( eig.first[j] > 0 , "lambda(%lu) = %g" , j , eig.first[j] );
 	}
 }
 
 template class ElementImpliedMetric<Simplex>;
 template class MeshImpliedMetric<Simplex>;
 
-} // luma
+} // avro

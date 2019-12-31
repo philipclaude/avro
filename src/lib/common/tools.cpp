@@ -3,7 +3,7 @@
 #include <math.h>
 #include <cstdlib>
 
-namespace luma
+namespace avro
 {
 
   real_t

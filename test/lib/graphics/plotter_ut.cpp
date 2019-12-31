@@ -11,8 +11,8 @@
 
 #include "mesh/topology.h"
 
-using namespace luma;
-using namespace luma::graphics;
+using namespace avro;
+using namespace avro::graphics;
 
 UT_TEST_SUITE( PlotterSuite )
 

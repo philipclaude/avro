@@ -1,7 +1,7 @@
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
-namespace luma
+namespace avro
 {
 
 Fields::Fields( const TopologyBase& topology ) :
@@ -18,4 +18,4 @@ TopologyBase::copy( const TopologyBase& topology1 )
   closed_   = topology1.closed();
 }
 
-} // luma
+} // avro

@@ -13,7 +13,7 @@
 
 #include "mesh/boundary.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE(boundary_test_suite)
 

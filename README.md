@@ -1,11 +1,11 @@
-**luma**: library for unstructured mesh adaptation
+**arrow**: library for unstructured mesh adaptation
 (c) Philip Claude Caplan, 2019
 
-<img width="60px" src="doc/fig/luma.svg"/>
+<img width="60px" src="doc/fig/arrow.svg"/>
 
-[![build status](https://gitlab.com/philipclaude/luma/badges/master/build.svg)](https://gitlab.com/philipclaude/luma/badges/master/build.svg)
+[![build status](https://gitlab.com/philipclaude/arrow/badges/master/build.svg)](https://gitlab.com/philipclaude/arrow/badges/master/build.svg)
 
-**luma** is an unstructured mesh adaptation library with the following capabilities:
+**arrow** is an unstructured mesh adaptation library with the following capabilities:
 
 * dimension-independent mesh adaptation given a (1) mesh, (2) geometry description and (3) a metric field
 * dimension-independent calculation of restricted Voronoi diagrams given (1) a set of sites and (2) a background mesh
@@ -21,36 +21,36 @@ current/future developments include:
 * curvilinear mesh adaptation
 
 ```
-cd luma
+cd arrow
 mkdir build
 mkdir build/release
 cd build/release
 cmake ../../
-make luma
+make arrow
 ```
 
-The libraries (**libluma.so** and **libluma.a** ) will be in **luma/build/release/lib**.
+The libraries (**libarrow.so** and **libarrow.a** ) will be in **arrow/build/release/lib**.
 
-The main executable is **luma/build/release/bin/luma**.
+The main executable is **arrow/build/release/bin/arrow**.
 
 Example 1: UGAWG Cube-Linear case
 ```
-$ luma -adapt data/cube.mesh box Linear-3d tmp/cl.mesh
+$ arrow -adapt data/cube.mesh box Linear-3d tmp/cl.mesh
 ```
 
 Example 2: UGAWG Cube-Cylinder Polar 2 case
 ```
-$ luma -adapt ../data/cube-cylinder.mesh ../data/cube-cylinder.egads Polar2 ../tmp/ccp2.mesh
+$ arrow -adapt ../data/cube-cylinder.mesh ../data/cube-cylinder.egads Polar2 ../tmp/ccp2.mesh
 ```
 
 Example 3: mesh adaptation from a metric in a .solb file
 ```
-luma -adapt input.mesh input.egads input.sol tmp/output.mesh
+arrow -adapt input.mesh input.egads input.sol tmp/output.mesh
 ```
 
 Example 4: visualization of a mesh (here, a 4d mesh from the Tesseract Wave case)
 ```
-luma -plot wave.json
+arrow -plot wave.json
 ```
 
 Notes:

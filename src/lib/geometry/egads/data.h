@@ -1,5 +1,5 @@
-#ifndef luma_LIB_GEOMETRY_EGADS_DATA_H_
-#define luma_LIB_GEOMETRY_EGADS_DATA_H_
+#ifndef avro_LIB_GEOMETRY_EGADS_DATA_H_
+#define avro_LIB_GEOMETRY_EGADS_DATA_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -10,7 +10,7 @@
 
 #include <string>
 
-namespace luma
+namespace avro
 {
 
 namespace EGADS
@@ -19,7 +19,7 @@ namespace EGADS
 std::string get_error_message( const int ierror );
 
 #define EGADS_CHECK_SUCCESS(X) { int ierror = (X); if (ierror!=0) printf("egads error: returned %d (%s) at %s (line %d)\n",ierror,get_error_message(ierror).c_str(),__FILE__,__LINE__); }
-#define EGADS_ENSURE_SUCCESS(X) { int ierror = (X); if (ierror!=0) luma_throw(EGADS::get_error_message(ierror).c_str()); }
+#define EGADS_ENSURE_SUCCESS(X) { int ierror = (X); if (ierror!=0) avro_throw(EGADS::get_error_message(ierror).c_str()); }
 
 typedef struct
 {
@@ -50,9 +50,9 @@ object_tessellatable(int object_class, int member_type)
 inline coord_t
 topological_number(int object_class,int member_type)
 {
-  luma_assert_msg( object_class>5 , "object class = %d" , object_class );
-  luma_assert( object_class>5 );
-  luma_assert( member_type>-2 );
+  avro_assert_msg( object_class>5 , "object class = %d" , object_class );
+  avro_assert( object_class>5 );
+  avro_assert( member_type>-2 );
 
   coord_t number = 0;
   if (object_class==20)
@@ -76,7 +76,7 @@ topological_number(int object_class,int member_type)
   else
   {
     printf("unrecognized topological number for oclass = %d\n",object_class);
-    luma_assert(false);
+    avro_assert(false);
   }
   return number;
 }
@@ -165,6 +165,6 @@ member_type_name(int object_class,int member_type)
 
 } // EGADS
 
-} // luma
+} // avro
 
 #endif

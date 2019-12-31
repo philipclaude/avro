@@ -1,4 +1,4 @@
-// luma: unstrucutred adaptation library
+// avro: unstrucutred adaptation library
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
@@ -9,8 +9,8 @@
 
 #include "numerics/vector.h"
 
-using namespace luma;
-using namespace luma::numerics;
+using namespace avro;
+using namespace avro::numerics;
 
 UT_TEST_SUITE(VectorSuite)
 

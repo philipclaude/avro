@@ -2,7 +2,7 @@
 
 #include "common/parallel_for.h"
 
-using namespace luma;
+using namespace avro;
 
 class Threadable
 {

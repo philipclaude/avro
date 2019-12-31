@@ -1,6 +1,6 @@
 #include "mesh/builder.h"
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -23,7 +23,7 @@ template<typename T>
 void
 Builder<type>::transfer( const Field<type,T>& fx , Field<type,T>& fy ) const
 {
-  luma_implement;
+  avro_implement;
 }
 
-} // luma
+} // avro

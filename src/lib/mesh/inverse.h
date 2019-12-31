@@ -1,12 +1,12 @@
-#ifndef luma_LIB_MESH_INVERSE_H_
-#define luma_LIB_MESH_INVERSE_H_
+#ifndef avro_LIB_MESH_INVERSE_H_
+#define avro_LIB_MESH_INVERSE_H_
 
 #include "common/types.h"
 
 #include <unordered_set>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 template<typename type> class Topology;
@@ -57,6 +57,6 @@ private:
 
 };
 
-} // luma
+} // avro
 
 #endif

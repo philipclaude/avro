@@ -1,5 +1,5 @@
-#ifndef luma_LIB_GRAPHICS_MATH_H_
-#define luma_LIB_GRAPHICS_MATH_H_
+#ifndef avro_LIB_GRAPHICS_MATH_H_
+#define avro_LIB_GRAPHICS_MATH_H_
 
 #include "numerics/matrix.h"
 
@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #endif
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -54,6 +54,6 @@ private:
 
 } // graphics
 
-} // luma
+} // avro
 
 #endif

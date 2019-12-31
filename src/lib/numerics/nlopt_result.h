@@ -3,7 +3,7 @@
 
 #include <nlopt.hpp>
 
-namespace luma
+namespace avro
 {
 
 static std::string
@@ -62,6 +62,6 @@ nloptResultDescription(nlopt::result resultcode)
   return "Unknown result code";
 }
 
-} // luma
+} // avro
 
 #endif

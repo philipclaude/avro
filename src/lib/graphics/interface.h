@@ -1,9 +1,9 @@
-#ifndef luma_LIB_GRAPHICS_INTERFACE_H_
-#define luma_LIB_GRAPHICS_INTERFACE_H_
+#ifndef avro_LIB_GRAPHICS_INTERFACE_H_
+#define avro_LIB_GRAPHICS_INTERFACE_H_
 
 #include <imgui/imgui.h>
 
-namespace luma
+namespace avro
 {
 
 namespace graphics

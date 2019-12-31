@@ -1,11 +1,11 @@
-#ifndef luma_LIB_GEOMETRY_MODEL_H_
-#define luma_LIB_GEOMETRY_MODEL_H_
+#ifndef avro_LIB_GEOMETRY_MODEL_H_
+#define avro_LIB_GEOMETRY_MODEL_H_
 
 #include "common/error.h"
 
 #include "geometry/body.h"
 
-namespace luma
+namespace avro
 {
 
 class Entity;
@@ -31,6 +31,6 @@ protected:
 
 };
 
-} // luma
+} // avro
 
 #endif

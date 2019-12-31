@@ -4,7 +4,7 @@
 
 #include "library/egads.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE( library_egads_suite )
 

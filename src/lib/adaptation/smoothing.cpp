@@ -5,7 +5,7 @@
 
 #include <set>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -75,7 +75,7 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
 {
   EGADS::Object* ep = (EGADS::Object*) ep0;
 
-  luma_assert( ep->number()==2 );
+  avro_assert( ep->number()==2 );
   if (!this->curved_) return true;
   if (ep->interior()) return true;
 
@@ -90,8 +90,8 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
 
   // extract the geometry cavity
   this->extractGeometry( ep , {p} );
-  luma_assert( this->G_.nb()>0 );
-  //luma_assert_msg( this->G_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->G_.nb_real() , this->nb_ghost() );
+  avro_assert( this->G_.nb()>0 );
+  //avro_assert_msg( this->G_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->G_.nb_real() , this->nb_ghost() );
 
   for (coord_t d=0;d<2;d++)
     this->u_[this->v2u_[p]][d] = params[d];
@@ -99,7 +99,7 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
   // the following assertion won't hold when p is on an Edge
   if (this->topology_.points().entity(p)->number()==2 && !this->G_.closed())
   {
-    luma_assert_msg( this->G_.nb()==this->nb_ghost() ,
+    avro_assert_msg( this->G_.nb()==this->nb_ghost() ,
                       "|G| = %lu, |smooth ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
   }
 
@@ -119,7 +119,7 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
   if (s<0) return false;
 
   // check the produced volumes are positive
-  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   return true;
 }
@@ -252,7 +252,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
       real_t dg = numerics::distance(result,x.data(),dim);
       real_t gtol = 0;
       EGADS_ENSURE_SUCCESS( EG_tolerance(*eg_entity->object(),&gtol) );
-      luma_assert_msg( dg < gtol , "x = (%g,%g,%g), x(u) = (%g,%g,%g), distance = %g\n",
+      avro_assert_msg( dg < gtol , "x = (%g,%g,%g), x(u) = (%g,%g,%g), distance = %g\n",
                         x[0],x[1],x[2],result[0],result[1],result[2],dg);
       #endif
     }
@@ -417,4 +417,4 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 template class Smooth<Simplex>;
 template class AdaptThread<Simplex>;
 
-} // luma
+} // avro

@@ -3,7 +3,7 @@
 #include "master/simplex.h"
 #include "master/quadrature.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE( MasterSuite )
 

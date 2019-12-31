@@ -4,7 +4,7 @@
 
 #include "mesh/mesh.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE( mesh_test_suite )
 

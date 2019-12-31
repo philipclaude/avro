@@ -1,5 +1,5 @@
-#ifndef luma_LIB_COMMON_KDTREE_H_
-#define luma_LIB_COMMON_KDTREE_H_
+#ifndef avro_LIB_COMMON_KDTREE_H_
+#define avro_LIB_COMMON_KDTREE_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -10,7 +10,7 @@
 
 #include <nanoflann/nanoflann.hpp>
 
-namespace luma
+namespace avro
 {
 
 class Points;
@@ -80,7 +80,7 @@ initializeKdTree( PointCloud& cloud )
   switch (dim)
   {
     case 0:
-      luma_assert_not_reached;
+      avro_assert_not_reached;
     case 1:
       return std::make_shared<KdTree<1>>(cloud);
     case 2:
@@ -106,9 +106,9 @@ initializeKdTree( PointCloud& cloud )
     case 12:
       return std::make_shared<KdTree<12>>(cloud);
     default:
-      luma_implement;
+      avro_implement;
   }
-  luma_assert_not_reached;
+  avro_assert_not_reached;
   return std::make_shared<KdTree<3>>(cloud);
 }
 

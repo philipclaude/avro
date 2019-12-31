@@ -1,12 +1,12 @@
-#ifndef luma_LIB_LIBRARY_OBJ_H_
-#define luma_LIB_LIBRARY_OBJ_H_
+#ifndef avro_LIB_LIBRARY_OBJ_H_
+#define avro_LIB_LIBRARY_OBJ_H_
 
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
 #include <string>
 
-namespace luma
+namespace avro
 {
 
 namespace library
@@ -26,6 +26,6 @@ private:
 
 } // library
 
-} // luma
+} // avro
 
 #endif

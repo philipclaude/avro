@@ -13,7 +13,7 @@
 // we may need to adjust this to deal with real geometries
 #define TOLER 0.0
 
-namespace luma
+namespace avro
 {
 
 BoundarySearch::BoundarySearch( const Points& points ) :
@@ -55,7 +55,7 @@ ElementSearch<type>::find( real_t* x , const index_t guess )
 
   // initialize the depth and make sure we start with a non-ghost
   depth_ = 0;
-  luma_assert( !topology_.ghost(guess) );
+  avro_assert( !topology_.ghost(guess) );
 
   clock_t t0 = clock();
 
@@ -76,7 +76,7 @@ ElementSearch<type>::step( real_t* x , const index_t start )
   depth_++;
   nb_steps_++;
 
-  luma_assert( !topology_.ghost(start) );
+  avro_assert( !topology_.ghost(start) );
 
   // mark this element as visited
   visited_[start] = true;
@@ -228,11 +228,11 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   dmin = numerics::distance2(topology_.points()[q] , x , topology_.points().dim() );
   #endif
 
-  luma_assert( q >= topology_.points().nb_ghost() );
+  avro_assert( q >= topology_.points().nb_ghost() );
 
   // get the ball of the vertex
   std::vector<index_t> B;
-  luma_assert( topology_.inverse().created() );
+  avro_assert( topology_.inverse().created() );
   topology_.inverse().ball( q , B );
 
   // look for the element with the closest barycenter
@@ -258,10 +258,10 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
     real_t alpha_tot = 0.0;
     for (index_t j=0;j<alphak.size();j++)
     {
-      luma_assert_msg( alphak[j] >= -1e-12 , "alpha[%lu] = %g" , j,alphak[j] );
+      avro_assert_msg( alphak[j] >= -1e-12 , "alpha[%lu] = %g" , j,alphak[j] );
       alpha_tot += alphak[j];
     }
-    luma_assert_msg( fabs(alpha_tot-1)<1e-12 , "sum(alpha)-1 = %g" , alpha_tot-1 );
+    avro_assert_msg( fabs(alpha_tot-1)<1e-12 , "sum(alpha)-1 = %g" , alpha_tot-1 );
     #endif
 
     if (distance2<dmin)
@@ -318,7 +318,7 @@ PointSearch::closestPoints( real_t* x , std::vector<index_t>& pts ) const
 void
 PointSearch::insert( const real_t* x )
 {
-  luma_implement;
+  avro_implement;
 }
 
 template class ElementSearch<Simplex>;

@@ -5,7 +5,7 @@
 #include "geometry/entity.h"
 #include "geometry/egads/object.h"
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -23,13 +23,13 @@ bool
 Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool edge )
 {
   EGADS::Object* g = (EGADS::Object*) g0;
-  luma_assert( g->number()==2 );
+  avro_assert( g->number()==2 );
   if (!this->curved_) return true;
   if (g->interior()) return true;
 
   // extract the geometry cavity
   this->extractGeometry( g, {p} );
-  luma_assert( this->G_.nb()>0 );
+  avro_assert( this->G_.nb()>0 );
 
   // based on the type of face, we may need to flip the sign for the volume calculation
   int oclass,mtype;
@@ -43,12 +43,12 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   // compute the cavity about the original configuration
   GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , g );
   bool accept = this->gcavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
-  luma_assert( accept );
+  avro_assert( accept );
 
   // ensure the normals are originally in the right direction
   int s = checker.signof( this->gcavity_ );
-  luma_assert( s > 0 );
-  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert( s > 0 );
+  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   // check visibility in the new configuration
   nb_parameter_tests_++;
@@ -77,7 +77,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // ensure we have all positive volumes
-  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   return true;
 }
@@ -383,7 +383,7 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
         if (lens.size()==0)
         {
           collapser_.print();
-          luma_assert_not_reached;
+          avro_assert_not_reached;
         }
         real_t lmax = * std::max_element( lens.begin() , lens.end() );
         if (lmax>lmax0)
@@ -482,4 +482,4 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
 template class Collapse<Simplex>;
 template class AdaptThread<Simplex>;
 
-} // luma
+} // avro

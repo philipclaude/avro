@@ -3,7 +3,7 @@
 #include "geometry/body.h"
 #include "geometry/entity.h"
 
-namespace luma
+namespace avro
 {
 
 Body::Body( coord_t number ) :
@@ -46,4 +46,4 @@ Body::get_tessellatable( std::vector<Entity*>& entities ) const
   }
 }
 
-} // luma
+} // avro

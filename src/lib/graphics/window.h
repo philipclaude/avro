@@ -1,5 +1,5 @@
-#ifndef luma_LIB_GRAPHICS_WINDOW_H_
-#define luma_LIB_GRAPHICS_WINDOW_H_
+#ifndef avro_LIB_GRAPHICS_WINDOW_H_
+#define avro_LIB_GRAPHICS_WINDOW_H_
 
 #include "graphics/controls.h"
 #include "graphics/gl.h"
@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -105,6 +105,6 @@ private:
 
 } // graphics
 
-} // luma
+} // avro
 
 #endif

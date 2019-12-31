@@ -1,5 +1,5 @@
-#ifndef luma_LIB_LIBRARY_EPS_H_
-#define luma_LIB_LIBRARY_EPS_H_
+#ifndef avro_LIB_LIBRARY_EPS_H_
+#define avro_LIB_LIBRARY_EPS_H_
 
 #include "common/types.h"
 
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 namespace library
@@ -42,7 +42,7 @@ private:
 
 } // library
 
-} // luma
+} // avro
 
 
 #endif

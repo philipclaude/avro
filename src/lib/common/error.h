@@ -1,11 +1,11 @@
-#ifndef luma_COMMON_ERROR_H_
-#define luma_COMMON_ERROR_H_
+#ifndef avro_COMMON_ERROR_H_
+#define avro_COMMON_ERROR_H_
 
 #include <cstdio>
 #include <exception>
 #include <string>
 
-namespace luma
+namespace avro
 {
 #ifndef unlikely
 #ifdef __GNUC__
@@ -15,20 +15,20 @@ namespace luma
 #endif
 #endif
 
-#define luma_throw(args...) throw(luma::Exception(__FILE__,__LINE__,args));
+#define avro_throw(args...) throw(avro::Exception(__FILE__,__LINE__,args));
 
-#if (1 || defined(luma_DEBUG))
-#define luma_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__);luma_throw("assertion error");}
-#define luma_assert_msg(X,...) { try{ luma_assert(X); } catch(...) { printf(__VA_ARGS__); luma_throw("assertion error"); } }
-#define luma_assert_else(X,Y) { try{ luma_assert(X); } catch(...) { Y ; luma_throw("assertion error"); } }
+#if (1 || defined(avro_DEBUG))
+#define avro_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__);avro_throw("assertion error");}
+#define avro_assert_msg(X,...) { try{ avro_assert(X); } catch(...) { printf(__VA_ARGS__); avro_throw("assertion error"); } }
+#define avro_assert_else(X,Y) { try{ avro_assert(X); } catch(...) { Y ; avro_throw("assertion error"); } }
 #else
-#define luma_assert(X) {}
-#define luma_assert_msg(X,...) {}
+#define avro_assert(X) {}
+#define avro_assert_msg(X,...) {}
 #endif
 
-#define luma_implement luma_throw("not implemented");
+#define avro_implement avro_throw("not implemented");
 
-#define luma_assert_not_reached {printf("\nthis should not have been reached!\n"); luma_assert(false);}
+#define avro_assert_not_reached {printf("\nthis should not have been reached!\n"); avro_assert(false);}
 
 void call_backtrace(const int start=1,const int end=2);
 

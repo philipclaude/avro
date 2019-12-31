@@ -1,5 +1,5 @@
-#ifndef luma_SRC_LIB_MASTER_REFERENCE_H_
-#define luma_SRC_LIB_MASTER_REFERENCE_H_
+#ifndef avro_SRC_LIB_MASTER_REFERENCE_H_
+#define avro_SRC_LIB_MASTER_REFERENCE_H_
 
 #include "common/types.h"
 
@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 class Simplex;
@@ -106,6 +106,6 @@ class ReferenceElement<Hypercube> : public ReferenceElementBase
 
 #endif
 
-} // luma
+} // avro
 
 #endif

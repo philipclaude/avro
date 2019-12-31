@@ -1,5 +1,5 @@
-#ifndef luma_LIB_ADAPTATION_CAVITY_H_
-#define luma_LIB_ADAPTATION_CAVITY_H_
+#ifndef avro_LIB_ADAPTATION_CAVITY_H_
+#define avro_LIB_ADAPTATION_CAVITY_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 class Entity;
@@ -118,6 +118,6 @@ private:
 
 };
 
-} // luma
+} // avro
 
 #endif

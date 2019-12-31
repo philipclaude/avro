@@ -1,5 +1,5 @@
-#ifndef luma_TESTING_FRAMEWORK_H_
-#define luma_TESTING_FRAMEWORK_H_
+#ifndef avro_TESTING_FRAMEWORK_H_
+#define avro_TESTING_FRAMEWORK_H_
 
 #include <exception>
 #include <iostream>

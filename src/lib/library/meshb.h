@@ -1,12 +1,12 @@
-#ifndef luma_LIB_LIBRARY_MESHB_H_
-#define luma_LIB_LIBRARY_MESHB_H_
+#ifndef avro_LIB_LIBRARY_MESHB_H_
+#define avro_LIB_LIBRARY_MESHB_H_
 
 #include "mesh/field.h"
 #include "mesh/mesh.h"
 
 #include <string>
 
-namespace luma
+namespace avro
 {
 
 namespace EGADS
@@ -40,6 +40,6 @@ private:
 
 } // library
 
-} // luma
+} // avro
 
 #endif

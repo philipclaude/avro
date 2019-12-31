@@ -1,5 +1,5 @@
-#ifndef luma_MESH_TOPOLOGY_H_
-#define luma_MESH_TOPOLOGY_H_
+#ifndef avro_MESH_TOPOLOGY_H_
+#define avro_MESH_TOPOLOGY_H_
 
 #include "common/table.h"
 #include "common/json.h"
@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 class Points;
@@ -157,6 +157,6 @@ private:
   InverseTopology<type> inverse_;
 };
 
-} // luma
+} // avro
 
 #endif

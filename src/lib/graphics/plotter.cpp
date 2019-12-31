@@ -10,7 +10,7 @@
 #include <imgui/GL/imgui_impl_glfw.h>
 #include <imgui/GL/imgui_impl_opengl3.h>
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -25,7 +25,7 @@ void
 Plotter::initialize()
 {
   // initialize OpenGL
-  luma_assert_msg( glfwInit() , "problem initializing OpenGL!" );
+  avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
 
   // set the version
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -33,8 +33,8 @@ Plotter::initialize()
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   // create and make the window current
-  createWindow( "luma plot" );
-  GLFWwindow* window = window_["luma plot"]->window();
+  createWindow( "avro plot" );
+  GLFWwindow* window = window_["avro plot"]->window();
   glfwMakeContextCurrent(window);
 
   // load gl stuff and print info
@@ -102,19 +102,19 @@ Plotter::createWindow( const std::string& title )
 Window&
 Plotter::window( const std::string& name )
 {
-  if (name=="main") return window("luma plot");
+  if (name=="main") return window("avro plot");
 
-  luma_assert( window_.find(name)!=window_.end() );
+  avro_assert( window_.find(name)!=window_.end() );
   return *window_[name].get();
 }
 
 ShaderProgram&
 Plotter::shader( const std::string& name )
 {
-  luma_assert( shader_.find(name)!=shader_.end() );
+  avro_assert( shader_.find(name)!=shader_.end() );
   return *shader_.at(name).get();
 }
 
 } // graphics
 
-} // luma
+} // avro

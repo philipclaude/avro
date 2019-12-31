@@ -16,7 +16,7 @@
 #include <cmath>
 #include <limits>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -87,7 +87,7 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
   }
   else
   {
-    luma_assert(C0.size()>0);
+    avro_assert(C0.size()>0);
   }
 
   // accumulate the nodes of the cavity elements
@@ -99,7 +99,7 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
   {
     if (!computeBoundary())
     {
-      luma_assert_not_reached;
+      avro_assert_not_reached;
       return false;
     }
   }
@@ -107,7 +107,7 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
   {
     nb_error_++;
     if (rethrow_) // option for debugging
-      luma_assert_not_reached; // any kind of failed assertion
+      avro_assert_not_reached; // any kind of failed assertion
     return false;
   }
 
@@ -131,8 +131,8 @@ template<typename type>
 bool
 Cavity<type>::computeBoundary()
 {
-  luma_assert( boundary_.nb()==0 );
-  luma_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
+  avro_assert( boundary_.nb()==0 );
+  avro_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
 
   idx_.clear();
 
@@ -158,7 +158,7 @@ Cavity<type>::computeBoundary()
       }
 
       if (topology_.closed())
-        luma_assert( neighbour>=0 );
+        avro_assert( neighbour>=0 );
 
       // skip neighbours that are already in the cavity
       if (contains(index_t(neighbour)) && topology_.closed())
@@ -195,7 +195,7 @@ Cavity<type>::computeBoundary()
 void
 geometryParams( Entity* e0 , const Points& points , const index_t* v , const index_t nv , real_t* params )
 {
-  luma_assert( nv>0 );
+  avro_assert( nv>0 );
 
   coord_t udim = points.udim();
 
@@ -218,7 +218,7 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
       count++;
     }
 
-    luma_assert(entities[k] != nil); // all points must have entities
+    avro_assert(entities[k] != nil); // all points must have entities
   }
 
   if (count==nv) return; // all parameters have been retrieved
@@ -226,7 +226,7 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
   //---------------------------------------//
   if (e->object_class()==FACE)
   {
-    luma_assert(udim == 2);
+    avro_assert(udim == 2);
 
     std::vector<std::array<double,2>> uvp(nv), uvm(nv);
 
@@ -312,7 +312,7 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
             if (!ufound[i]) continue;
             uv[0] = params[i*udim  ];
             uv[1] = params[i*udim+1];
-            luma_implement;
+            avro_implement;
             foundGuess = true;
             break;
           }
@@ -332,7 +332,7 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
           real_t tol_edge=0, tol_face=0;
           EGADS_ENSURE_SUCCESS( EG_tolerance( *edge->object(), &tol_edge ) );
           EGADS_ENSURE_SUCCESS( EG_getTolerance( *face->object(), &tol_face ) );
-          luma_assert_msg( d <= std::min(tol_edge,tol_face) ,
+          avro_assert_msg( d <= std::min(tol_edge,tol_face) ,
                            "d = %1.16e, tol_edge = %1.16e, tol_face = %1.16e" , d , tol_edge , tol_face );
         }
         else
@@ -345,7 +345,7 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
         count++;
       }
     }
-    luma_assert(count > 0); // at least one uv value must be set...
+    avro_assert(count > 0); // at least one uv value must be set...
 
     for (index_t k=0;k<nv;k++)
     {
@@ -404,7 +404,7 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
   //---------------------------------------//
   else if (e->object_class()==EDGE)
   {
-    luma_assert(udim >= 1);
+    avro_assert(udim >= 1);
 
     EGADS::Object* edge = e;
 
@@ -450,13 +450,13 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
         count++;
       }
       else
-        luma_assert(false); // this should not happen...
+        avro_assert(false); // this should not happen...
 
       if (count == nv) break; // all parameters found
     }
   }
 
-  luma_assert(count == nv);
+  avro_assert(count == nv);
 
   coord_t dim  = points.dim();
 
@@ -487,7 +487,7 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
       entities[k]->print(false);
     }
 
-    luma_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
+    avro_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
   }
 }
 
@@ -505,7 +505,7 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
     // the points of the geometry topology are requested to be in uv-space!
     uvcoords = true;
   }
-  luma_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
+  avro_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
 
   // loop through all facets on the boundary of the cavity and retrieve
   // facets which are on the requested geometry
@@ -518,7 +518,7 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
     if (!topology_.ghost(elem)) continue;
 
     // the first index should be 0 (ghost)
-    luma_assert( topology_(elem,0) < topology_.points().nb_ghost() );
+    avro_assert( topology_(elem,0) < topology_.points().nb_ghost() );
 
     // first check if this is a facet along the requested entity
     // by counting how many points it has on the entity or lower in the hierarchy
@@ -545,15 +545,15 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
       k1 = topology_.neighbours()(elem,j);
       break;
     }
-    luma_assert( k1 >= 0 );
+    avro_assert( k1 >= 0 );
 
     // get the index of k1
     int j = topology_.neighbours().oppositeIndex(k1,elem);
-    luma_assert( j>=0 );
+    avro_assert( j>=0 );
 
     // get the oriented facet (TODO, not restricted to tetrahedra...)
     f.resize(3);
-    luma_assert_msg(topology_.number()==3,"implement...");
+    avro_assert_msg(topology_.number()==3,"implement...");
     if (j==0)
     {
       f[0] = topology_(k1,1);
@@ -582,15 +582,15 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
 
   } // loop over cavity elements
 
-  luma_assert(geometry.nb()>0);
+  avro_assert(geometry.nb()>0);
   if (geometry.nb()==0) return;
 
   // get all the points in the geometry topology
   std::vector<index_t> N = geometry.data();
   uniquify( N );
 
-  luma_assert( v2u.size()==0 );
-  luma_assert( u2v.size()==0 );
+  avro_assert( v2u.size()==0 );
+  avro_assert( u2v.size()==0 );
 
   // get the parameter coordinates of each vertex
   real_t params[2] = {0,0};;
@@ -616,7 +616,7 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
   if (uvcoords)
   {
     coord_t udim = this->points_.udim();
-    luma_assert(udim == geometry.points().dim());
+    avro_assert(udim == geometry.points().dim());
     std::vector<real_t> params;
     for (index_t k=0;k<geometry.nb();k++)
     {
@@ -625,7 +625,7 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
       for (index_t j=0;j<geometry.nv(k);j++)
       {
         //index_t m = v2u[ geometry(k,j) ];
-        if (v2u.find(geometry(k,j))==v2u.end()) luma_assert(false);
+        if (v2u.find(geometry(k,j))==v2u.end()) avro_assert(false);
         index_t m = v2u.at( geometry(k,j) );
         for (index_t i=0;i<udim;i++)
           geometry.points()[m][i] = params[ udim*j+i ];
@@ -637,7 +637,7 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
   for (index_t k=0;k<geometry.nb();k++)
   for (index_t j=0;j<geometry.nv(k);j++)
   {
-    luma_assert( v2u.find(geometry(k,j))!=v2u.end() );
+    avro_assert( v2u.find(geometry(k,j))!=v2u.end() );
     geometry(k,j) = v2u[ geometry(k,j) ];
   }
 
@@ -648,7 +648,7 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
   geometry.neighbours().compute();
 
   // increment the map indices to account for the ghost
-  luma_assert( geometry.points().nb_ghost()==1 );
+  avro_assert( geometry.points().nb_ghost()==1 );
   std::map<index_t,index_t>::iterator it;
   for (it=v2u.begin();it!=v2u.end();it++)
     it->second++;
@@ -659,9 +659,9 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
   {
     if (k<geometry.points().nb_ghost()) continue;
     index_t v = u2v[k];
-    if (v2u.find(v)==v2u.end()) luma_assert_not_reached;
-    luma_assert( v2u[v]==k );
-    luma_assert( v2u[v]>=geometry.points().nb_ghost() );
+    if (v2u.find(v)==v2u.end()) avro_assert_not_reached;
+    avro_assert( v2u[v]==k );
+    avro_assert( v2u[v]>=geometry.points().nb_ghost() );
   }
 
 }
@@ -675,7 +675,7 @@ Cavity<type>::enlarge( bool verbose )
   std::vector<const real_t*> xk(nf);
 
   std::vector<index_t> C; // new cavity elements
-  luma_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
+  avro_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
 
   // loop through the current cavity
   for (index_t k=0;k<nb_cavity();k++)
@@ -692,7 +692,7 @@ Cavity<type>::enlarge( bool verbose )
       // for closed topologies there should be no boundary
       // so neighbours should have non-negative indices in the topology
       if (topology_.closed())
-        luma_assert( neighbour>=0 );
+        avro_assert( neighbour>=0 );
 
       // skip neighbours that are already in the cavity
       // because then this is not a boundary facet
@@ -800,7 +800,7 @@ Cavity<type>::findGeometry( real_t* x , std::vector<index_t>& C0 )
 
       // for closed topologies there should be no boundary
       if (topology_.closed())
-        luma_assert( neighbour>=0 );
+        avro_assert( neighbour>=0 );
 
       // skip neighbours that are already in the cavity
       // because then this is not a boundary facet
@@ -890,7 +890,7 @@ Cavity<type>::apply()
   std::vector<index_t> t(this->number_+1);
 
   // connect the boundary da to the candidate star_
-  luma_assert( idx_.size()==nb_bnd() );
+  avro_assert( idx_.size()==nb_bnd() );
   for (index_t k=0;k<nb_bnd();k++)
   {
     // skip cavity boundary facets which do not contain the proposed star_
@@ -922,7 +922,7 @@ template<typename type>
 void
 Cavity<type>::computeNodes()
 {
-  luma_assert(nodes_.size()==0);
+  avro_assert(nodes_.size()==0);
 
   // compute the nodes which are initially in the elements of the cavity
   for (index_t k=0;k<nb_cavity();k++)
@@ -1021,4 +1021,4 @@ Cavity<type>::clear()
 
 template class Cavity<Simplex>;
 
-} // luma
+} // avro

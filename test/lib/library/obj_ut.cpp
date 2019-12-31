@@ -2,8 +2,8 @@
 
 #include "library/obj.h"
 
-using namespace luma;
-using namespace luma::library;
+using namespace avro;
+using namespace avro::library;
 
 UT_TEST_SUITE( objFile_suite )
 

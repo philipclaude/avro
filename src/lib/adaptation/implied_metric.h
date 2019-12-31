@@ -1,5 +1,5 @@
-#ifndef luma_LIB_ADAPTATION_IMPLIED_METRIC_H_
-#define luma_LIB_ADAPTATION_IMPLIED_METRIC_H_
+#ifndef avro_LIB_ADAPTATION_IMPLIED_METRIC_H_
+#define avro_LIB_ADAPTATION_IMPLIED_METRIC_H_
 
 #include "common/array.h"
 #include "common/types.h"
@@ -8,7 +8,7 @@
 
 #include "numerics/matrix.h"
 
-namespace luma
+namespace avro
 {
 
 class Points;
@@ -56,6 +56,6 @@ private:
   std::vector< std::vector<index_t> > v2e_;
 };
 
-} // luma
+} // avro
 
 #endif

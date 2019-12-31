@@ -1,10 +1,10 @@
-// luma: Adaptive Voronoi Remesher
+// avro: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 
-#ifndef luma_COMMON_THREAD_H_
-#define luma_COMMON_THREAD_H_
+#ifndef avro_COMMON_THREAD_H_
+#define avro_COMMON_THREAD_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -13,9 +13,9 @@
 #include <string>
 #include <vector>
 
-#define luma_THREAD_LOCAL __thread
+#define avro_THREAD_LOCAL __thread
 
-namespace luma
+namespace avro
 {
 
 class Thread
@@ -65,21 +65,21 @@ public:
   // default thread runner from kernel source
   virtual void
   runConcurrentThreads( std::string& source , std::string& name , index_t n )
-    { luma_assert_not_reached; }
+    { avro_assert_not_reached; }
 
   // default argument adder for kernels compiled from a string
   virtual void
   addArgument( void* arg , size_t sz , index_t n )
-    { luma_assert_not_reached ; }
+    { avro_assert_not_reached ; }
 
   // value retrieval upon terimnination of all threads
   virtual void
   retrieveValue( index_t k , index_t n , size_t sz , void* arg )
-    { luma_assert_not_reached; }
+    { avro_assert_not_reached; }
 
   // thread synchornization
   virtual void synchronize()
-    { luma_assert_not_reached; }
+    { avro_assert_not_reached; }
 
   // these must be defined by the derived thread managers
   virtual index_t maxConcurrentThreads() = 0;
@@ -114,7 +114,7 @@ public:
   void leaveCriticalSection() {}
 
   void runConcurrentThreads( ThreadGroup& threads , index_t max_threads )
-  { luma_implement; }
+  { avro_implement; }
 };
 
 template<class Func>
@@ -167,6 +167,6 @@ private:
   const Func& func_;
 };
 
-} // luma
+} // avro
 
 #endif

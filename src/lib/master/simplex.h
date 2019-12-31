@@ -1,5 +1,5 @@
-#ifndef luma_LIB_MASTER_SIMPLEX_H_
-#define luma_LIB_MASTER_SIMPLEX_H_
+#ifndef avro_LIB_MASTER_SIMPLEX_H_
+#define avro_LIB_MASTER_SIMPLEX_H_
 
 #include "common/error.h"
 
@@ -13,7 +13,7 @@
 #include <map>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 template<typename Shape> class Topology;
@@ -128,6 +128,6 @@ private:
   real_t vorth_;
 };
 
-} // luma
+} // avro
 
 #endif

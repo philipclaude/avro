@@ -9,7 +9,7 @@
 #include <fstream>
 #include <cstring>
 
-namespace luma
+namespace avro
 {
 
 namespace library
@@ -28,7 +28,7 @@ void
 get_vertex( std::string& s , int& vertex , int& normal , int& texture )
 {
   std::vector<std::string> pieces = split(s,"/");
-  luma_assert(pieces.size()>0);
+  avro_assert(pieces.size()>0);
 
   vertex = normal = texture = -1;
   vertex = unstringify<int>(pieces[0]);
@@ -62,7 +62,7 @@ objFile::read()
 
   // read the file
   std::ifstream file( filename_.c_str() , std::ios::in );
-  luma_assert( file.good() );
+  avro_assert( file.good() );
   std::string line,token;
   getline(file,line);
   while (!file.eof())
@@ -113,7 +113,7 @@ objFile::read()
           line_stream >> s;
           parts.push_back(s);
         }
-        luma_assert_msg( parts.size()==3 , "only triangles supported" );
+        avro_assert_msg( parts.size()==3 , "only triangles supported" );
 
         int vertex0[3],vertex1[3],vertex2[3];
         get_vertex( parts[0] , vertex0[0] , vertex0[1] , vertex0[2] );
@@ -137,7 +137,7 @@ objFile::read()
       else
       {
         printf("bad token %s\n",token.c_str());
-        luma_assert_not_reached;
+        avro_assert_not_reached;
       }
     }
     getline(file,line);
@@ -165,13 +165,13 @@ objFile::read()
 
   }
 
-  luma_assert_msg( normal_fld->nb_data()==points_.nb() ,
+  avro_assert_msg( normal_fld->nb_data()==points_.nb() ,
     "|fld| = %lu , |vertices| = %lu", normal_fld->nb(),points_.nb() );
 
   nt_fld->build();
   ut_fld->build();
 
-  //luma_assert( nt_vals.size()==ut_vals.size() );
+  //avro_assert( nt_vals.size()==ut_vals.size() );
   for (index_t k=0;k<nt_vals.size();k++)
   {
     //(*nt_fld)(k,0) = nt_vals[k];
@@ -188,4 +188,4 @@ objFile::read()
 
 } // library
 
-} // luma
+} // avro

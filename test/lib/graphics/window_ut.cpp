@@ -2,8 +2,8 @@
 
 #include "graphics/window.h"
 
-using namespace luma;
-using namespace luma::graphics;
+using namespace avro;
+using namespace avro::graphics;
 
 UT_TEST_SUITE( WindowSuite )
 
@@ -12,7 +12,7 @@ UT_TEST_CASE( test1 )
   // must be run before the window starts
   glfwInit();
 
-  Window window( "luma plot" , NULL );
+  Window window( "avro plot" , NULL );
 
   //window.run();
 

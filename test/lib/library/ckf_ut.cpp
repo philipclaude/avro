@@ -2,7 +2,7 @@
 
 #include "library/ckf.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE( ckf_suite )
 

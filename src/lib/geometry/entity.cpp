@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <set>
 
-namespace luma
+namespace avro
 {
 
 template <typename T>
@@ -142,7 +142,7 @@ Entity::intersect( Entity* e1 , Entity* e2 , bool only_check )
         for (it0=p2.begin();it0!=p2.end();it0++)
           (*it0)->print();
 
-        luma_assert_not_reached;
+        avro_assert_not_reached;
       }
       else if (face!=NULL && only_check)
       {
@@ -216,7 +216,7 @@ Entity::intersect( Entity* e1 , Entity* e2 , Entity* e3 )
           (*it0)->print();
         for (it0=p3.begin();it0!=p3.end();it0++)
           (*it0)->print();
-        luma_assert_not_reached;
+        avro_assert_not_reached;
       }
       vol = *it;
     }
@@ -239,4 +239,4 @@ Entity::above( const Entity* e ) const
 
 template class Tree<Entity>;
 
-} // luma
+} // avro

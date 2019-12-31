@@ -1,12 +1,12 @@
-#ifndef luma_LIB_ARRAY_H_
-#define luma_LIB_ARRAY_H_
+#ifndef avro_LIB_ARRAY_H_
+#define avro_LIB_ARRAY_H_
 
 #include "common/error.h"
 #include "common/types.h"
 
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -23,7 +23,7 @@ public:
 
   void set( index_t k , const type& x )
   {
-    luma_assert( k < nb() );
+    avro_assert( k < nb() );
     data_[k] = x;
   }
 
@@ -70,7 +70,7 @@ public:
 
   void print() const
   {
-    luma_implement;
+    avro_implement;
   }
 
 private:
@@ -85,6 +85,6 @@ protected:
   std::vector<type> data_;
 };
 
-} // luma
+} // avro
 
 #endif

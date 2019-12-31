@@ -1,11 +1,11 @@
-#ifndef luma_LIB_MASTER_QUADRATURE_H_
-#define luma_LIB_MASTER_QUADRATURE_H_
+#ifndef avro_LIB_MASTER_QUADRATURE_H_
+#define avro_LIB_MASTER_QUADRATURE_H_
 
 #include "common/types.h"
 
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 class Quadrature
@@ -66,6 +66,6 @@ private:
   index_t rule_;
 };
 
-} // luma
+} // avro
 
 #endif

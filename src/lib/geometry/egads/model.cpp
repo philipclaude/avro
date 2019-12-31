@@ -7,24 +7,24 @@
 
 #include <egads.h>
 
-namespace luma
+namespace avro
 {
 
 namespace EGADS
 {
 
 Model::Model( const Context& context ) :
-  luma::Model(0),
+  avro::Model(0),
   context_(context)
 {}
 
 Model::Model( const Context& context , const std::string& filename , bool split  ) :
-  luma::Model(0),
+  avro::Model(0),
   context_(context)
 {
   int flag = (split) ? 1 : 2;
   int status = EG_loadModel( *context_.get() , flag , filename.c_str() , &object_ );
-  luma_assert( status==EGADS_SUCCESS );
+  avro_assert( status==EGADS_SUCCESS );
 
   // get all bodies
   egoData data;
@@ -76,4 +76,4 @@ Model::print() const
 
 } // EGADS
 
-} // luma
+} // avro

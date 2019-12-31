@@ -7,7 +7,7 @@
 
 #include "mesh/field.h"
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -82,4 +82,4 @@ Plot::add( Primitive_ptr prim )
 
 } // graphics
 
-} // luma
+} // avro

@@ -3,7 +3,7 @@
 
 #include "mesh/topology.h"
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -176,7 +176,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
       topology_.intersect(edge,elems);
       if (elems.size()==0) continue;
-      luma_assert( elems.size()>0 );
+      avro_assert( elems.size()>0 );
 
       // initial worst quality
       real_t q0 = -1;
@@ -301,35 +301,35 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
 
   // extract the geometry cavity
   this->extractGeometry( face, {e0,e1} );
-  luma_assert( this->G_.nb()>0 );
+  avro_assert( this->G_.nb()>0 );
 
   if (!this->G_.closed())
-    luma_assert_msg( this->G_.nb()==2 ,
+    avro_assert_msg( this->G_.nb()==2 ,
                     "|G| = %lu, |swap ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
 
   if (this->G_.closed())
-    luma_assert( this->G_.nb_real()==2 );
+    avro_assert( this->G_.nb_real()==2 );
 
   // ensure the e0 is visible to the cavity boundary
   bool accept = this->gcavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
-  luma_assert( accept );
+  avro_assert( accept );
 
   GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , face );
   int s = checker.signof( this->gcavity_ );
-  luma_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
-  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
+  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   // ensure e1 is visible to the cavity boundary
   accept = this->gcavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
-  luma_assert( accept );
+  avro_assert( accept );
   s = checker.signof( this->gcavity_ );
-  luma_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
-  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
+  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   // check for visibility of p
   nb_parameter_tests_++;
   accept = this->gcavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
-  luma_assert( this->gcavity_.nb_real()==2 );
+  avro_assert( this->gcavity_.nb_real()==2 );
   if (!accept)
   {
     //printf("swap not visible in parameter space!\n");
@@ -352,7 +352,7 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   }
 
   // the geometry cavity should have positive volumes
-  luma_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   return true;
 }
@@ -527,4 +527,4 @@ template class FacetSwap<Simplex>;
 template class EdgeSwap<Simplex>;
 template class AdaptThread<Simplex>;
 
-} // luma
+} // avro

@@ -1,5 +1,5 @@
-#ifndef luma_LIB_MASTER_MASTER_H_
-#define luma_LIB_MASTER_MASTER_H_
+#ifndef avro_LIB_MASTER_MASTER_H_
+#define avro_LIB_MASTER_MASTER_H_
 
 #include "common/types.h"
 
@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 class Quadrature;
@@ -50,7 +50,7 @@ public:
 
   void eval( const double* x , double* phi )
   {
-    luma_assert( basis_!=nullptr );
+    avro_assert( basis_!=nullptr );
     basis_->evaluate(x,phi);
   }
 
@@ -59,8 +59,8 @@ public:
   real_t quad_weight(index_t k) const { return wquad_[k]; }
   const real_t* quad_point(index_t k) const { return &xquad_[number_*k]; }
 
-  const Basis<Shape>& basis() const { luma_assert(basis_!=nullptr); return *basis_.get(); }
-  Basis<Shape>& basis() { luma_assert(basis_!=nullptr); return *basis_.get(); }
+  const Basis<Shape>& basis() const { avro_assert(basis_!=nullptr); return *basis_.get(); }
+  Basis<Shape>& basis() { avro_assert(basis_!=nullptr); return *basis_.get(); }
 
 protected:
   coord_t number_;
@@ -90,6 +90,6 @@ typedef struct
 bool operator< ( const Element& f , const Element& g );
 bool operator== ( const Element& f , const Element& g );
 
-} // luma
+} // avro
 
 #endif

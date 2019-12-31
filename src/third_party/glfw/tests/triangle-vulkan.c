@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2015-2016 The Khronos Group Inc.
  * Copyright (c) 2015-2016 Valve Corporation
- * Copyright (c) 2015-2016 lumarG, Inc.
+ * Copyright (c) 2015-2016 avrorG, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
  * limitations under the License.
  *
  * Author: Chia-I Wu <olvaffe@gmail.com>
- * Author: Cody Northrop <cody@lumarg.com>
- * Author: Courtney Goeltzenleuchter <courtney@lumarG.com>
- * Author: Ian Elliott <ian@lumarG.com>
- * Author: Jon Ashburn <jon@lumarg.com>
+ * Author: Cody Northrop <cody@avrorg.com>
+ * Author: Courtney Goeltzenleuchter <courtney@avrorG.com>
+ * Author: Ian Elliott <ian@avrorG.com>
+ * Author: Jon Ashburn <jon@avrorg.com>
  * Author: Piers Daniell <pdaniell@nvidia.com>
  * Author: Gwan-gyeong Mun <elongbug@gmail.com>
  * Porter: Camilla Löwy <elmindreda@glfw.org>
@@ -1672,13 +1672,13 @@ static void demo_init_vk(struct demo *demo) {
     demo->enabled_layer_count = 0;
 
     char *instance_validation_layers_alt1[] = {
-        "VK_LAYER_lumaRG_standard_validation"
+        "VK_LAYER_avroRG_standard_validation"
     };
 
     char *instance_validation_layers_alt2[] = {
-        "VK_LAYER_GOOGLE_threading",       "VK_LAYER_lumaRG_parameter_validation",
-        "VK_LAYER_lumaRG_object_tracker",  "VK_LAYER_lumaRG_image",
-        "VK_LAYER_lumaRG_core_validation", "VK_LAYER_lumaRG_swapchain",
+        "VK_LAYER_GOOGLE_threading",       "VK_LAYER_avroRG_parameter_validation",
+        "VK_LAYER_avroRG_object_tracker",  "VK_LAYER_avroRG_image",
+        "VK_LAYER_avroRG_core_validation", "VK_LAYER_avroRG_swapchain",
         "VK_LAYER_GOOGLE_unique_objects"
     };
 
@@ -1704,7 +1704,7 @@ static void demo_init_vk(struct demo *demo) {
                     instance_layers);
             if (validation_found) {
                 demo->enabled_layer_count = ARRAY_SIZE(instance_validation_layers_alt1);
-                demo->enabled_layers[0] = "VK_LAYER_lumaRG_standard_validation";
+                demo->enabled_layers[0] = "VK_LAYER_avroRG_standard_validation";
                 validation_layer_count = 1;
             } else {
                 // use alternative set of validation layers

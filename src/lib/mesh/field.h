@@ -1,5 +1,5 @@
-#ifndef luma_LIB_MESH_FIELD_H_
-#define luma_LIB_MESH_FIELD_H_
+#ifndef avro_LIB_MESH_FIELD_H_
+#define avro_LIB_MESH_FIELD_H_
 
 #include "common/table.h"
 #include "common/json.h"
@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 template<typename T> class Table;
@@ -170,6 +170,6 @@ private:
   const TopologyBase& topology_;
 };
 
-} // luma
+} // avro
 
 #endif

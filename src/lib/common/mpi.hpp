@@ -1,4 +1,4 @@
-// luma: Adaptive Voronoi Remesher
+// avro: Adaptive Voronoi Remesher
 // Copyright 2017-2019, Massachusetts Institute of Technology
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
@@ -14,11 +14,11 @@
 #include <type_traits>
 #include <vector>
 
-#ifdef luma_WITH_MPI
+#ifdef avro_WITH_MPI
 
 #include <mpi.h>
 
-namespace luma
+namespace avro
 {
 
 namespace mpi
@@ -270,7 +270,7 @@ std::enable_if<std::is_arithmetic<typename T::value_type>::value, T>::type
 receive( int const source_process, int const message_tag = 0,
          communicator const comm = communicator::world )
 {
-  luma::mpi::status probe_status;
+  avro::mpi::status probe_status;
 
   // Probe for an incoming message from the sending process
   MPI_Probe(source_process,
@@ -662,6 +662,6 @@ public:
 
 } // mpi
 
-} // luma
+} // avro
 
 #endif

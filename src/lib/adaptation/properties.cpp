@@ -9,7 +9,7 @@
 
 #include <fstream>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -145,4 +145,4 @@ template Properties::Properties( const Topology<Simplex>& ,
                                  MetricField<Simplex>& );
 template void Properties::compute( const Topology<Simplex>& , MetricField<Simplex>& );
 
-} // luma
+} // avro

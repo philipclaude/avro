@@ -1,5 +1,5 @@
-#ifndef luma_LIB_TABLE_H_
-#define luma_LIB_TABLE_H_
+#ifndef avro_LIB_TABLE_H_
+#define avro_LIB_TABLE_H_
 
 #include "common/error.h"
 #include "common/tools.h"
@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 enum TableLayoutCategory
@@ -39,7 +39,7 @@ public:
 
   void allocate( index_t n )
   {
-    luma_assert( layout_ == TableLayout_Rectangular );
+    avro_assert( layout_ == TableLayout_Rectangular );
     data_.resize( n*rank_ , type(0) );
   }
 
@@ -63,12 +63,12 @@ public:
 
   void set_rank( index_t rank )
   {
-    luma_assert( layout_ == TableLayout_Rectangular );
+    avro_assert( layout_ == TableLayout_Rectangular );
     rank_ = rank;
   }
   index_t rank() const
   {
-    luma_assert( layout_==TableLayout_Rectangular );
+    avro_assert( layout_==TableLayout_Rectangular );
     return rank_;
   }
 
@@ -91,14 +91,14 @@ public:
   {
     if (layout_==TableLayout_Rectangular) return rank_;
     else if (layout_==TableLayout_Jagged) return last_[k]-first_[k];
-    else luma_assert_not_reached;
+    else avro_assert_not_reached;
   }
 
   index_t nb() const
   {
     if (layout_==TableLayout_Rectangular) return data_.size()/rank_;
     else if (layout_==TableLayout_Jagged) return first_.size();
-    else luma_assert_not_reached;
+    else avro_assert_not_reached;
     return 0;
   }
 
@@ -120,7 +120,7 @@ public:
   void add( type* x , index_t n )
   {
     if (layout_==TableLayout_Rectangular)
-      luma_assert( n == rank_ );
+      avro_assert( n == rank_ );
     if (layout_==TableLayout_Jagged)
       first_.push_back( data_.size() );
     for (index_t j=0;j<n;j++)
@@ -132,7 +132,7 @@ public:
   void add( const type* x , index_t n )
   {
     if (layout_==TableLayout_Rectangular)
-      luma_assert_msg( n == rank_ , "n = %lu, rank = %lu" , n , rank_ );
+      avro_assert_msg( n == rank_ , "n = %lu, rank = %lu" , n , rank_ );
     if (layout_==TableLayout_Jagged)
       first_.push_back( data_.size() );
     for (index_t j=0;j<n;j++)
@@ -204,7 +204,7 @@ private:
   {
     if (layout_==TableLayout_Rectangular) return k*rank_;
     else if (layout_==TableLayout_Jagged) return first_[k];
-    else luma_assert_not_reached;
+    else avro_assert_not_reached;
   }
 
 protected:
@@ -218,6 +218,6 @@ protected:
 
 };
 
-} // luma
+} // avro
 
 #endif

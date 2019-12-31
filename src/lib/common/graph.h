@@ -1,7 +1,7 @@
-#ifndef luma_LIB_COMMON_GRAPH_H_
-#define luma_LIB_COMMON_GRAPH_H_
+#ifndef avro_LIB_COMMON_GRAPH_H_
+#define avro_LIB_COMMON_GRAPH_H_
 
-namespace luma
+namespace avro
 {
 
 template<typename Derived_t>
@@ -19,6 +19,6 @@ private:
 
 };
 
-} // luma
+} // avro
 
 #endif

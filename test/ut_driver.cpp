@@ -7,14 +7,14 @@
 #include "common/tools.h"
 #include "common/process.h"
 
-typedef luma::real_t REAL;
+typedef avro::real_t REAL;
 #include <tetgen1.5.0/predicates.h>
 
 #include <triangle/predicates.h>
 
 TestDriver* __driver__ = new TestDriver;
 
-using namespace luma;
+using namespace avro;
 
 int
 main()
@@ -22,7 +22,7 @@ main()
   printInfo();
 
   // initialize the distributed/shared memory task/thread managers
-  #ifdef luma_WITH_MPI
+  #ifdef avro_WITH_MPI
   ProcessMPI::initialize();
   #endif
   ProcessCPU::initialize();

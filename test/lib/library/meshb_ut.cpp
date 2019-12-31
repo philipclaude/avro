@@ -5,7 +5,7 @@
 
 #include "library/meshb.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE( meshb_test_suite )
 

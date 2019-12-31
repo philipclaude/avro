@@ -1,7 +1,7 @@
 #include "mesh/points.h"
 #include "mesh/triangulation.h"
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -41,7 +41,7 @@ Triangulation<type>::extract()
     // loop through the created simplices
     for (index_t j=nt0;j<nt;j++)
     {
-      luma_assert( this->nv(j)==index_t(this->number()+1) );
+      avro_assert( this->nv(j)==index_t(this->number()+1) );
       for (index_t i=0;i<this->nv(j);i++)
       {
         // add the parent data for this vertex
@@ -57,4 +57,4 @@ Triangulation<type>::extract()
 
 template class Triangulation<Simplex>;
 
-} // luma
+} // avro

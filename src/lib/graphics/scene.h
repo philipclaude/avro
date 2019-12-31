@@ -1,12 +1,12 @@
-#ifndef luma_LIB_GRAPHICS_SCENE_H_
-#define luma_LIB_GRAPHICS_SCENE_H_
+#ifndef avro_LIB_GRAPHICS_SCENE_H_
+#define avro_LIB_GRAPHICS_SCENE_H_
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -33,6 +33,6 @@ private:
 
 } // graphics
 
-} // luma
+} // avro
 
 #endif

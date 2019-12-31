@@ -1,5 +1,5 @@
-#ifndef luma_MESH_SEARCH_H_
-#define luma_MESH_SEARCH_H_
+#ifndef avro_MESH_SEARCH_H_
+#define avro_MESH_SEARCH_H_
 
 #include "common/types.h"
 
@@ -9,7 +9,7 @@
 #include <time.h>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 template<typename type> class Neighbours;
@@ -90,6 +90,6 @@ private:
 
 };
 
-} // luma
+} // avro
 
 #endif

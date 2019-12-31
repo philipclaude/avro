@@ -2,7 +2,7 @@
 
 #include "numerics/coordinate.h"
 
-namespace luma
+namespace avro
 {
 
 namespace PLC
@@ -22,4 +22,4 @@ Object::evaluate( const numerics::Coordinate& u , numerics::Coordinate& x ) cons
 
 } // PLC
 
-} // luma
+} // avro

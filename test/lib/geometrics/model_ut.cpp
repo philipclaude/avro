@@ -3,7 +3,7 @@
 #include "geometry/egads/context.h"
 #include "geometry/egads/model.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE( geometry_egads_model )
 

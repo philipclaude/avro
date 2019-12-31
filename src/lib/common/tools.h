@@ -1,5 +1,5 @@
-#ifndef luma_COMMON_TOOLS_H_
-#define luma_COMMON_TOOLS_H_
+#ifndef avro_COMMON_TOOLS_H_
+#define avro_COMMON_TOOLS_H_
 
 #include "common/error.h"
 #include "common/types.h"
@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 #define UNUSED(x) (void)(x);
@@ -112,7 +112,7 @@ indexof( const type* x , const std::vector<type*>& X )
 	{
 		if (X[k]==x) return k;
 	}
-	luma_assert_not_reached;
+	avro_assert_not_reached;
 	return 0; // to avoid compiler warnings
 }
 
@@ -152,7 +152,7 @@ template<typename T>
 std::string
 unique_label( T& x0 , T& x1 )
 {
-  luma_assert(x0!=x1);
+  avro_assert(x0!=x1);
   if (x0>x1) std::swap(x0,x1);
   std::string s = stringify(x0)+"|"+stringify(x1);
   return s;
@@ -162,7 +162,7 @@ template<typename T>
 std::string
 unique_label( std::vector<T>& x )
 {
-  luma_assert( x.size()>0 );
+  avro_assert( x.size()>0 );
   std::sort( x.begin() , x.end() );
   std::string s = stringify(x[0]);
   for (index_t k=1;k<x.size();k++)
@@ -183,14 +183,14 @@ inline void
 printInfo()
 {
 
-  printf("\nluma compiled with ");
+  printf("\navro compiled with ");
 
   if (__cplusplus == 201103L) printf("c++11");
   else if (__cplusplus == 199711L ) printf("c++98");
   else printf("pre-standard c++");
 
   printf("deleting memory upon termination using");
-  #ifdef luma_SMART_PTR
+  #ifdef avro_SMART_PTR
     printf(" internal smart pointers.\n");
   #else
     printf(" std::shared_ptr (c++11).\n");
@@ -198,7 +198,7 @@ printInfo()
   printf("\n");
 }
 
-void lumaPrintf( const char* fmt , ... );
+void avroPrintf( const char* fmt , ... );
 
 template<typename type>
 static void

@@ -1,5 +1,5 @@
-#ifndef luma_LIB_GEOMETRY_PLC_H_
-#define luma_LIB_GEOMETRY_PLC_H_
+#ifndef avro_LIB_GEOMETRY_PLC_H_
+#define avro_LIB_GEOMETRY_PLC_H_
 
 #include "common/types.h"
 
@@ -7,7 +7,7 @@
 
 #include "numerics/matrix.h"
 
-namespace luma
+namespace avro
 {
 
 namespace numerics
@@ -35,6 +35,6 @@ private:
 
 } // PLC
 
-} // luma
+} // avro
 
 #endif

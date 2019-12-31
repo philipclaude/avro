@@ -16,21 +16,21 @@ add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
 
 
-# add the bin sources but remove the luma.cpp (main) executable source
+# add the bin sources but remove the avro.cpp (main) executable source
 add_source_directories(SOURCES "Source Files\\bin" bin)
-list(REMOVE_ITEM SOURCES bin/luma.cpp )
+list(REMOVE_ITEM SOURCES bin/avro.cpp )
 
 # create an object library for all the sources
-add_library( luma_src OBJECT ${SOURCES} )
+add_library( avro_src OBJECT ${SOURCES} )
 
 # create both shared and static libraries with same name
-add_library(luma_shared SHARED $<TARGET_OBJECTS:luma_src> $<TARGET_OBJECTS:luma_third_party> )
-set_target_properties( luma_shared PROPERTIES OUTPUT_NAME luma CLEAN_DIRECT_OUTPUT 1 )
-add_library(luma_static STATIC $<TARGET_OBJECTS:luma_src> $<TARGET_OBJECTS:luma_third_party>)
-set_target_properties( luma_static PROPERTIES OUTPUT_NAME luma CLEAN_DIRECT_OUTPUT 1 )
+add_library(avro_shared SHARED $<TARGET_OBJECTS:avro_src> $<TARGET_OBJECTS:avro_third_party> )
+set_target_properties( avro_shared PROPERTIES OUTPUT_NAME avro CLEAN_DIRECT_OUTPUT 1 )
+add_library(avro_static STATIC $<TARGET_OBJECTS:avro_src> $<TARGET_OBJECTS:avro_third_party>)
+set_target_properties( avro_static PROPERTIES OUTPUT_NAME avro CLEAN_DIRECT_OUTPUT 1 )
 
 # create a target to build both shared and static libraries
-add_custom_target( luma_lib DEPENDS luma_shared luma_static )
+add_custom_target( avro_lib DEPENDS avro_shared avro_static )
 
 # add include directories for third party softwares
 include_directories( ${ESP_INCLUDE_DIRS} )
@@ -44,37 +44,37 @@ include_directories( third_party/glfw/include )
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )
 
-set(luma_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} dl blas z )
-if (luma_WITH_OPENMP)
-  set( luma_EXTERNAL_LIBRARIES ${luma_EXTERNAL_LIBRARIES} ${OPENMP_LINK_FLAG} )
+set(avro_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} dl blas z )
+if (avro_WITH_OPENMP)
+  set( avro_EXTERNAL_LIBRARIES ${avro_EXTERNAL_LIBRARIES} ${OPENMP_LINK_FLAG} )
 endif()
 
-if (luma_MPI_ON)
-  set( luma_EXTERNAL_LIBRARIES ${luma_EXTERNAL_LIBRARIES}
+if (avro_MPI_ON)
+  set( avro_EXTERNAL_LIBRARIES ${avro_EXTERNAL_LIBRARIES}
                                ${PARMETIS_LIBRARIES}
                                ${METIS_LIBRARIES}
                                ${MPI_CXX_LIBRARIES} )
   include_directories( ${PARMETIS_INCLUDE_DIRS} )
 endif()
 
-if (luma_OPENCL_ON)
-  set( luma_EXTERNAL_LIBRARIES ${luma_EXTERNAL_LIBRARIES} ${OPENCL_LIBRARY} )
+if (avro_OPENCL_ON)
+  set( avro_EXTERNAL_LIBRARIES ${avro_EXTERNAL_LIBRARIES} ${OPENCL_LIBRARY} )
 endif()
 
-if (luma_WITH_GL)
-  set( luma_EXTERNAL_LIBRARIES ${luma_EXTERNAL_LIBRARIES} ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} glfw )
+if (avro_WITH_GL)
+  set( avro_EXTERNAL_LIBRARIES ${avro_EXTERNAL_LIBRARIES} ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} glfw )
   if (APPLE)
-    set( luma_EXTERNAL_LIBRARIES ${luma_EXTERNAL_LIBRARIES} ${COCOA_LIBRARY} )
+    set( avro_EXTERNAL_LIBRARIES ${avro_EXTERNAL_LIBRARIES} ${COCOA_LIBRARY} )
   endif()
 endif()
 
-set( luma_EXTERNAL_LIBRARIES_SHARED ${luma_EXTERNAL_LIBRARIES}  dl )
-set( luma_EXTERNAL_LIBRARIES_STATIC ${luma_EXTERNAL_LIBRARIES} ${ESP_LIBRARIES_STATIC} )
+set( avro_EXTERNAL_LIBRARIES_SHARED ${avro_EXTERNAL_LIBRARIES}  dl )
+set( avro_EXTERNAL_LIBRARIES_STATIC ${avro_EXTERNAL_LIBRARIES} ${ESP_LIBRARIES_STATIC} )
 
 # add links to third party softwares
-if (luma_STATIC_LINK_CXX)
-  target_link_libraries( luma_shared ${luma_EXTERNAL_LIBRARIES_SHARED} -static-libgcc -static-libstdc++ )
+if (avro_STATIC_LINK_CXX)
+  target_link_libraries( avro_shared ${avro_EXTERNAL_LIBRARIES_SHARED} -static-libgcc -static-libstdc++ )
 else()
-  target_link_libraries( luma_shared ${luma_EXTERNAL_LIBRARIES_SHARED})
+  target_link_libraries( avro_shared ${avro_EXTERNAL_LIBRARIES_SHARED})
 endif()
-target_link_libraries( luma_static ${luma_EXTERNAL_LIBRARIES_STATIC} )
+target_link_libraries( avro_static ${avro_EXTERNAL_LIBRARIES_STATIC} )

@@ -5,7 +5,7 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -384,4 +384,4 @@ Trackball::MouseMove(int xpos,int ypos)
 
 } // graphics
 
-} // luma
+} // avro

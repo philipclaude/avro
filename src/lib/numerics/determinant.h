@@ -1,9 +1,9 @@
-#ifndef luma_LIB_NUMERICS_DETERMINANT_H_
-#define luma_LIB_NUMERICS_DETERMINANT_H_
+#ifndef avro_LIB_NUMERICS_DETERMINANT_H_
+#define avro_LIB_NUMERICS_DETERMINANT_H_
 
 #include "common/types.h"
 
-namespace luma
+namespace avro
 {
 
 namespace numerics
@@ -15,6 +15,6 @@ template<typename type> type determinant(const densMat<type>& X);
 
 } // numerics
 
-} // luma
+} // avro
 
 #endif

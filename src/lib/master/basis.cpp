@@ -1,6 +1,6 @@
 #include "master/basis.h"
 
-namespace luma
+namespace avro
 {
 
-} // luma
+} // avro

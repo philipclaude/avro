@@ -1,5 +1,5 @@
-#ifndef luma_LIB_GRAPHICS_GL_H_
-#define luma_LIB_GRAPHICS_GL_H_
+#ifndef avro_LIB_GRAPHICS_GL_H_
+#define avro_LIB_GRAPHICS_GL_H_
 
 #include "common/error.h"
 
@@ -18,7 +18,7 @@
 #include <GL/gl.h>
 #endif
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -59,12 +59,12 @@ void dumpGLInfo(bool dumpExtensions = false);
     glerr = glGetError(); \
     error = true; \
   } \
-  luma_assert(!error); \
+  avro_assert(!error); \
 }
 
 
 } // graphics
 
-} // luma
+} // avro
 
 #endif

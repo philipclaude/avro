@@ -1,11 +1,11 @@
-#ifndef luma_LIB_NUMERICS_COORDINATE_H_
-#define luma_LIB_NUMERICS_COORDINATE_H_
+#ifndef avro_LIB_NUMERICS_COORDINATE_H_
+#define avro_LIB_NUMERICS_COORDINATE_H_
 
 #include "common/types.h"
 
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 namespace numerics
@@ -34,6 +34,6 @@ private:
 
 } // numerics
 
-} // luma
+} // avro
 
 #endif

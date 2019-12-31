@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <set>
 
-namespace luma
+namespace avro
 {
 
 template<typename type>
@@ -56,7 +56,7 @@ template<typename type>
 void
 Topology<type>::get_triangles( std::vector<index_t>& triangles ) const
 {
-  luma_assert( number_==2 );
+  avro_assert( number_==2 );
   triangles.clear();
   for (index_t k=0;k<nb();k++)
   {
@@ -79,7 +79,7 @@ template<typename type>
 void
 Topology<type>::get_boundary( Topology<type>& boundary ) const
 {
-  luma_implement;
+  avro_implement;
 }
 
 template<typename type>
@@ -118,7 +118,7 @@ template<typename type>
 bool
 Topology<type>::ghost( index_t k ) const
 {
-  luma_assert_msg( k < nb() , "requested cell %lu but nb = %lu", k , nb() );
+  avro_assert_msg( k < nb() , "requested cell %lu but nb = %lu", k , nb() );
   return ghost( (*this)(k) , nv(k) );
 }
 
@@ -252,7 +252,7 @@ void
 Topology<type>::orient( real_t* q )
 {
   if (q!=NULL)
-    luma_assert( number_+1 == points_.dim() );
+    avro_assert( number_+1 == points_.dim() );
 
   for (index_t k=0;k<nb();k++)
     orient( operator()(k) , nv(k) , q );
@@ -361,13 +361,13 @@ Topology<type>::close()
     pbody = bodies[k];
     break;
   }
-  luma_assert( pbody > 0 );
+  avro_assert( pbody > 0 );
 
   // create ghost elements
   for (index_t k=0;k<bnd.nb();k++)
   {
     // look ahead which boundary this is
-    luma_assert( bnd.nv(k)>0 );
+    avro_assert( bnd.nv(k)>0 );
     int ibnd = this->points().body( bnd(k,0) );
 
     // reset the body for partition boundaries
@@ -393,7 +393,7 @@ Topology<type>::intersect( const std::vector<index_t>& facet , std::vector<index
   else if (facet.size()==3)
     inverse_.shell( facet[0] , facet[1] , facet[2] , elems );
   else
-    luma_implement;
+    avro_implement;
 }
 
-} // luma
+} // avro

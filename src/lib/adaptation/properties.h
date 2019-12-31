@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace luma
+namespace avro
 {
 
 template<typename type> class Topology;
@@ -93,6 +93,6 @@ private:
   std::vector<real_t> qlims_;
 };
 
-} // luma
+} // avro
 
 #endif

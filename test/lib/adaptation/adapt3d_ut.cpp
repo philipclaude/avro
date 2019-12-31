@@ -18,7 +18,7 @@
 
 #include "mesh/mesh.h"
 
-using namespace luma;
+using namespace avro;
 
 UT_TEST_SUITE( adaptation_adapt3d_suite)
 

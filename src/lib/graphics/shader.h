@@ -1,12 +1,12 @@
-#ifndef luma_LIB_GRAPHICS_SHADER_H_
-#define luma_LIB_GRAPHICS_SHADER_H_
+#ifndef avro_LIB_GRAPHICS_SHADER_H_
+#define avro_LIB_GRAPHICS_SHADER_H_
 
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
 #include <string>
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -77,6 +77,6 @@ private:
 
 } // graphics
 
-} // luma
+} // avro
 
 #endif

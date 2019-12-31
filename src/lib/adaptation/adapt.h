@@ -1,11 +1,11 @@
-#ifndef luma_LIB_ADAPTATION_ADAPT_H_
-#define luma_LIB_ADAPTATION_ADAPT_H_
+#ifndef avro_LIB_ADAPTATION_ADAPT_H_
+#define avro_LIB_ADAPTATION_ADAPT_H_
 
 #include "adaptation/primitive.h"
 
 #include <memory>
 
-namespace luma
+namespace avro
 {
 
 template<typename type> class Topology;
@@ -65,6 +65,6 @@ private:
 
 };
 
-} // luma
+} // avro
 
 #endif

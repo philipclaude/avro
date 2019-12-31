@@ -1,6 +1,6 @@
 #include "mesh/mesh.h"
 
-namespace luma
+namespace avro
 {
 
 Mesh::Mesh( coord_t dim ) :
@@ -13,4 +13,4 @@ Mesh::Mesh( coord_t number , coord_t dim ) :
   number_(number)
 {}
 
-} // luma
+} // avro

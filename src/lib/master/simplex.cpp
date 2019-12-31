@@ -10,7 +10,7 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/matrix.h"
 
-namespace luma
+namespace avro
 {
 
 Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
@@ -55,7 +55,7 @@ Simplex::facet( const index_t j , const index_t i ) const
     }
   }
   else
-    luma_assert_not_reached;
+    avro_assert_not_reached;
   return f;
 }
 
@@ -97,7 +97,7 @@ Simplex::precalculate()
 void
 Simplex::get_canonical_indices( const index_t* v , index_t nv , const Element& f , std::vector<index_t>& canonical ) const
 {
-  luma_assert_msg( order_==1 , "should this only be called for linear simplices?" );
+  avro_assert_msg( order_==1 , "should this only be called for linear simplices?" );
   for (index_t k=0;k<f.indices.size();k++)
   {
     bool found = false;
@@ -110,7 +110,7 @@ Simplex::get_canonical_indices( const index_t* v , index_t nv , const Element& f
         break;
       }
     }
-    luma_assert( found );
+    avro_assert( found );
   }
 }
 
@@ -126,7 +126,7 @@ Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , El
   }
   if (f.dim==number_)
   {
-    luma_assert( ifacet==0 );
+    avro_assert( ifacet==0 );
     for (index_t j=0;j<nv;j++)
       f.indices[j] = v[j];
     if (f.sorted)
@@ -141,7 +141,7 @@ Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , El
   else if (f.dim==number_-1)
     get_facet_vertices( v,nv,ifacet,f.indices );
   else
-    luma_implement;
+    avro_implement;
 
   if (f.sorted)
     std::sort( f.indices.begin() , f.indices.end() );
@@ -171,7 +171,7 @@ Simplex::get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) 
   index_t p0;
   index_t p1;
 
-  luma_assert( number_>=1 );
+  avro_assert( number_>=1 );
   if (iedge==0)
   {
     p0 = get_vertex(v,nv,0);
@@ -230,7 +230,7 @@ Simplex::get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) 
   }
   if (number_==4) goto sort;
 
-  luma_implement;
+  avro_implement;
 
 sort:
   if (p0<p1)
@@ -253,7 +253,7 @@ Simplex::get_triangle( const index_t* v , index_t nv , index_t itriangle, index_
   t[1] = v[triangles_[itriangle*3+1]];
   t[2] = v[triangles_[itriangle*3+2]];
   return;
-  luma_implement;
+  avro_implement;
   index_t p0 = get_vertex( v , nv ,  itriangle   %3 );
   index_t p1 = get_vertex( v , nv , (itriangle+1)%3 );
   index_t p2 = get_vertex( v , nv , (itriangle+2)%3 );
@@ -304,7 +304,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
 
   // set the matrix of vertex coordinates
   #if 0
-  luma_implement
+  avro_implement
   #else
   numerics::VectorD<real_t> p(x.dim(),p0);
   numerics::MatrixD<real_t> V(x.dim(),nv);
@@ -400,14 +400,14 @@ simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
   if (x.size()==3 && dim==2) return numerics::volume2(x);
   if (x.size()==4 && dim==3) return numerics::volume3(x);
   if (x.size()==5 && dim==4) return numerics::volume4(x);
-  luma_assert_not_reached;
+  avro_assert_not_reached;
   return numerics::volume_nd(x,dim);
 }
 
 real_t
 Simplex::volume( const Points& points , const index_t* v , index_t nv ) const
 {
-  luma_assert( index_t(number_+1)==nv );
+  avro_assert( index_t(number_+1)==nv );
   std::vector<const real_t*> x(nv);
   for (index_t k=0;k<nv;k++)
     x[k] = points[v[k]];
@@ -417,14 +417,14 @@ Simplex::volume( const Points& points , const index_t* v , index_t nv ) const
 index_t
 Simplex::edge( index_t k , index_t i ) const
 {
-  luma_assert( i <= 2 );
+  avro_assert( i <= 2 );
   return edges_[2*k+i];
 }
 
 void
 Simplex::triangulate( coord_t number , Topology<Simplex>& topology , Points& points , const index_t* v , index_t nv ) const
 {
-  luma_assert(nv==index_t(number+1));
+  avro_assert(nv==index_t(number+1));
   std::vector<index_t> tk(number+1);
   if (number==2)
   {
@@ -438,7 +438,7 @@ Simplex::triangulate( coord_t number , Topology<Simplex>& topology , Points& poi
     return;
   }
 
-  luma_assert(number==number_);
+  avro_assert(number==number_);
   for (index_t j=0;j<index_t(number+1);j++)
     tk[j] = v[j];
   topology.add(tk.data(),tk.size());
@@ -453,9 +453,9 @@ Simplex::jacobian( const std::vector<const real_t*>& x , coord_t dim ) const
 void
 Simplex::jacobian( const std::vector<const real_t*>& xk , numerics::MatrixD<real_t>& J ) const
 {
-  luma_assert( J.m()==number_ );
-  luma_assert( J.n()==number_ );
-  luma_assert( order_==1 );
+  avro_assert( J.m()==number_ );
+  avro_assert( J.n()==number_ );
+  avro_assert( order_==1 );
   for (index_t j=0;j<number_;j++)
   for (index_t d=0;d<number_;d++)
     J(d,j) = xk[j+1][d] -xk[0][d];
@@ -464,12 +464,12 @@ Simplex::jacobian( const std::vector<const real_t*>& xk , numerics::MatrixD<real
 void
 Simplex::jacobian( const index_t* v , index_t nv , const Points& points , numerics::MatrixD<real_t>& J ) const
 {
-  luma_assert( J.m()==number_ );
-  luma_assert( J.n()==number_ );
-  luma_assert( order_==1 );
+  avro_assert( J.m()==number_ );
+  avro_assert( J.n()==number_ );
+  avro_assert( order_==1 );
   for (index_t j=0;j<number_;j++)
   for (index_t d=0;d<points.dim();d++)
     J(d,j) = points[v[j+1]][d] -points[v[0]][d];
 }
 
-} // luma
+} // avro

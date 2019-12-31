@@ -5,7 +5,7 @@
 #include "mesh/field.h"
 #include "mesh/topology.h"
 
-namespace luma
+namespace avro
 {
 
 namespace graphics
@@ -69,7 +69,7 @@ Primitive::selectShader( Plotter* plotter )
     shader_->setUniform( "vbonum" , 0 );
   }
   else
-    luma_implement;
+    avro_implement;
 
   // TODO: assign the shaders for the children too
 }
@@ -94,15 +94,15 @@ WebGLPrimitive::write()
   // send to wv
   handle_ = -1;
 
-  luma_implement;
+  avro_implement;
 }
 
 void
 WebGLPrimitive::draw()
 {
-  luma_implement;
+  avro_implement;
 }
 
 } // graphics
 
-} // luma
+} // avro

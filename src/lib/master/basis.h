@@ -1,11 +1,11 @@
-#ifndef luma_LIB_MASTER_BASIS_H_
-#define luma_LIB_MASTER_BASIS_H_
+#ifndef avro_LIB_MASTER_BASIS_H_
+#define avro_LIB_MASTER_BASIS_H_
 
 #include "common/types.h"
 
 #include "master/reference.h"
 
-namespace luma
+namespace avro
 {
 
 template<typename Shape> class Bezier;
@@ -111,6 +111,6 @@ private:
   const eval_hess_ptr hptr_;
 };
 
-} // luma
+} // avro
 
 #endif

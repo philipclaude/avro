@@ -1,5 +1,5 @@
-#ifndef luma_LIB_GRAPHICS_PRIMITIVE_H_
-#define luma_LIB_GRAPHICS_PRIMITIVE_H_
+#ifndef avro_LIB_GRAPHICS_PRIMITIVE_H_
+#define avro_LIB_GRAPHICS_PRIMITIVE_H_
 
 #include "common/tree.h"
 
@@ -7,7 +7,7 @@
 
 #include <map>
 
-namespace luma
+namespace avro
 {
 
 template<typename Master_t> class Topology;
@@ -108,6 +108,6 @@ private:
 
 } // graphics
 
-} // luma
+} // avro
 
 #endif
