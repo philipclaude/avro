@@ -15,6 +15,8 @@ add_source_directories(SOURCES "Source Files\\mesh" lib/master)
 add_source_directories(SOURCES "Source Files\\mesh" lib/mesh)
 add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
+add_source_directories(SOURCES "Source Files\\voronoi" lib/voronoi)
+
 
 
 # add the bin sources but remove the avro.cpp (main) executable source
@@ -37,7 +39,6 @@ add_custom_target( avro_lib DEPENDS avro_shared avro_static )
 include_directories( ${ESP_INCLUDE_DIRS} )
 include_directories( ${NLOPT_INCLUDE_DIRS} )
 include_directories( ${THIRD_PARTY_INCLUDE_DIRS} )
-message( STATUS "tp incldue = " ${THIRD_PARTY_INCLUDE_DIRS} )
 
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )

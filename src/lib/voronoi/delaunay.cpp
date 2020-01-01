@@ -1,14 +1,10 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
 #include "common/error.h"
 
-#include "mesh/geometrics.h"
-#include "mesh/vertices.h"
+#include "mesh/points.h"
 
-#include "mesh/delaunay/delaunay.h"
+#include "voronoi/delaunay.h"
+
+#include "numerics/geometry.h"
 
 namespace avro
 {
@@ -30,14 +26,14 @@ Delaunay::seeds( const int b , index_t& i , index_t& j ) const
 }
 
 index_t
-Delaunay::closest( const real* x ) const
+Delaunay::closest( const real_t* x ) const
 {
 	avro_assert( nb()>0 );
 	int k0 = 0;
-	real d,dmin = geometrics::distance2( x , operator[](0) , dim_ );
+	real_t d,dmin = numerics::distance2( x , operator[](0) , dim_ );
 	for (index_t k=1;k<nb();k++)
 	{
-		d = geometrics::distance2( x , operator[](k) , dim_ );
+		d = numerics::distance2( x , operator[](k) , dim_ );
 		if (d<dmin)
 		{
 			dmin = d;

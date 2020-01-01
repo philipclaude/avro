@@ -23,6 +23,7 @@ Points::Points() :
 	dim_(0),
 	udim_(0),
 	u_(0),
+	incidence_(TableLayout_Jagged),
 	nb_ghost_(0)
 {}
 
@@ -31,6 +32,7 @@ Points::Points( const coord_t _dim ) :
 	dim_(_dim),
 	udim_(dim_-1), // default to assuming parameter space is dim-1
 	u_(udim_),
+	incidence_(TableLayout_Jagged),
 	nb_ghost_(0)
 {}
 
@@ -39,6 +41,7 @@ Points::Points( const coord_t _dim , const coord_t _udim ) :
 	dim_(_dim),
 	udim_(_udim),
 	u_(udim_),
+	incidence_(TableLayout_Jagged),
 	nb_ghost_(0)
 {}
 

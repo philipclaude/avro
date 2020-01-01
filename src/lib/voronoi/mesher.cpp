@@ -1,7 +1,4 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
+#if 0
 
 #include "geometry/body.h"
 #include "geometry/model.h"
@@ -486,3 +483,5 @@ TetGen::call( const std::string& switches )
 }
 
 } // avro
+
+#endif

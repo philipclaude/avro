@@ -1,17 +1,14 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
-#include "mesh/delaunay/voronoi.h"
-
 #include "common/set.h"
 
-#include "mesh/delaunay/delaunay.h"
-#include "mesh/vertices.h"
-#include "mesh/types.h"
+#include "master/simplex.h"
+#include "master/polytope.h"
+
+#include "mesh/points.h"
 
 #include "numerics/predicates.h"
+
+#include "voronoi/delaunay.h"
+#include "voronoi/voronoi.h"
 
 #include <cmath>
 
@@ -33,12 +30,12 @@ Vertex::Vertex( const coord_t _dim , const coord_t _number ) :
 	init();
 }
 
-Vertex::Vertex( const std::vector<real> _x , const coord_t _number ) :
+Vertex::Vertex( const std::vector<real_t> _x , const coord_t _number ) :
 	dim_( _x.size() ) , number_(_number) , x_(_x)
 {
 }
 
-Vertex::Vertex( const real* _x , const coord_t _dim ) :
+Vertex::Vertex( const real_t* _x , const coord_t _dim ) :
 	dim_(_dim)
 {
 	init();
@@ -119,7 +116,7 @@ Vertex::setSites( const Delaunay& delaunay )
 }
 
 void
-Vertex::intersectGeometric( const real* q1 , const real* q2 , const real* p1 , const real *p2 )
+Vertex::intersectGeometric( const real_t* q1 , const real_t* q2 , const real_t* p1 , const real_t *p2 )
 {
 	double d = 0., l1 = 0., l2 = 0.;
   for (coord_t c=0;c<dim_;c++)
@@ -150,7 +147,7 @@ Vertex::intersectGeometric( const real* q1 , const real* q2 , const real* p1 , c
 }
 
 GEO::Sign
-Vertex::sideFast( const real *zi , const real *zj )
+Vertex::sideFast( const real_t *zi , const real_t *zj )
 {
   double di=0.,dj=0.;
   for (coord_t d=0;d<dim_;d++)
@@ -163,7 +160,7 @@ Vertex::sideFast( const real *zi , const real *zj )
 }
 
 GEO::Sign
-Vertex::side(const real *zi , const real *zj , const bool exact )
+Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
 {
   GEO::Sign result;
 

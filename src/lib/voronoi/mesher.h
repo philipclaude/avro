@@ -6,9 +6,10 @@
 #ifndef AVRO_MESH_DELAUNAY_MESHER_H_
 #define AVRO_MESH_DELAUNAY_MESHER_H_
 
+#if 0
+
 #include "common/types.h"
 
-//#include "geometry/model.h"
 #include "geometry/tessellation.h"
 
 #include "mesh/topology.h"
@@ -17,7 +18,7 @@
 namespace avro
 {
 
-template<typename type> class Mesh;
+class Mesh;
 class Model;
 class Entity;
 
@@ -27,7 +28,7 @@ class Mesher
 protected:
   typedef smart_ptr(Topology<type>) Topology_ptr;
 
-  Mesher( Model* _model , Mesh<type>& _mesh );
+  Mesher( Model* _model , Mesh& _mesh );
   Mesher( Topology<type>& boundary , Mesh<type>& _mesh );
 
   Mesher( Vertices& vertices , Mesh<type>& _mesh ) :
@@ -100,5 +101,7 @@ public:
 };
 
 } // avro
+
+#endif
 
 #endif

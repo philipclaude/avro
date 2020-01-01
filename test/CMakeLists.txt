@@ -11,6 +11,7 @@ add_test_files( TEST_FILES "ut" lib/mesh )
 add_test_files( TEST_FILES "ut" lib/mesh/delaunay )
 add_test_files( TEST_FILES "ut" lib/mesh/frontal )
 add_test_files( TEST_FILES "ut" lib/numerics )
+add_test_files( TEST_FILES "ut" lib/voronoi )
 add_test_files( TEST_FILES "ut" bin )
 
 add_test_files( SBX_FILES "sbx" sandbox )

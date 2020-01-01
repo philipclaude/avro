@@ -4,13 +4,12 @@
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 
 #include "common/array.h"
+#include "common/nearest_neighbours.h"
 
-#include "mesh/geometrics.h"
+#include "voronoi/voronoi.h"
+#include "voronoi/delaunay.h"
 
-#include "mesh/delaunay/voronoi.h"
-#include "mesh/delaunay/delaunay.h"
-
-#include "graph/neighbours.h"
+#include "numerics/geometry.h"
 
 namespace avro
 {
@@ -20,27 +19,28 @@ namespace delaunay
 
 RestrictedVoronoiSimplex::RestrictedVoronoiSimplex(
    const index_t k , const Topology<Simplex>& topology , RVDFacets& facets ,
-   Delaunay& _delaunay , graph::Neighbours& _neighbours , bool _exact ) :
-   Mesh<ConvexPolytope>(topology.vertices().dim(),topology.number()),
+   Delaunay& _delaunay , NearestNeighbours& _neighbours , bool _exact ) :
+   Topology<Polytope>(points_,topology.number()),
    facets_(facets),
    delaunay_(_delaunay),
    neighbours_(_neighbours),
    exact_(_exact),
-   topology_(vertices_,topology.number())
+   topology_(points_,topology.number()),
+   points_(topology.points().dim())
 {
   // mark all the delaunay seeds as unclipped
   clipped_.resize( delaunay_.nb() );
   std::fill( clipped_.begin() , clipped_.end() , false );
 
-  // create the initial vertices
+  // create the initial points
   vertex_.resize( topology.nv(k) );
   for (index_t j=0;j<topology.nv(k);j++)
   {
     vertex_[j] = Vertex(delaunay_.dim(),number_);
-    vertex_[j].setCoordinates( topology.vertices()[ topology(k)[j] ] ,
-                topology.vertices().dim() );
+    vertex_[j].setCoordinates( topology.points()[ topology(k)[j] ] ,
+                topology.points().dim() );
     vertex_[j].setNumber( topology.number() );
-    vertex_[j].addSimplexVertex( topology.vertices()[ topology(k,j) ] );
+    vertex_[j].addSimplexVertex( topology.points()[ topology(k,j) ] );
   }
 
   // create the initial simplex
@@ -119,7 +119,7 @@ RestrictedVoronoiSimplex::clip()
 void
 RestrictedVoronoiSimplex::reset()
 {
-  // the original simplex vertices are stored at the beginning
+  // the original simplex points are stored at the beginning
   polytope_ = linspace( number_+1 );
 }
 
@@ -131,40 +131,41 @@ RestrictedVoronoiSimplex::clip( const index_t i )
   // only polytopes of an admissible size are created
   if (polytope_.size()>number_)
   {
-    // we create the vertices in order so the created cell is also in order
+    // we create the points in order so the created cell is also in order
     std::vector<index_t> cell = linspace( polytope_.size() );
     for (index_t k=0;k<cell.size();k++)
-      cell[k] += vertices_.nb();
+      cell[k] += points_.nb();
 
-    // add the vertices
+    // add the points
     for (index_t j=0;j<polytope_.size();j++)
     {
       // save the geometry and bisector information
-      vertices_.create( vertex_[polytope_[j]].X() );
-      topology_.master().vertexFacetMatrix().add( vertex_[ polytope_[j]].bisectors() );
+      points_.create( vertex_[polytope_[j]].X() );
+      const std::vector<int>& bisectors = vertex_[ polytope_[j]].bisectors();
+      topology_.points().incidence().add( bisectors.data() , bisectors.size() );
     }
     // save the cell and which delaunay seed it belongs to
-    topology_.add( cell );
+    topology_.add( cell.data() , cell.size() );
     seed_.push_back(site_);
   }
 }
 
 bool
-RestrictedVoronoiSimplex::securityRadiusReached( const real* zi ,
-                                                 const real* zj ) const
+RestrictedVoronoiSimplex::securityRadiusReached( const real_t* zi ,
+                                                 const real_t* zj ) const
 {
   const coord_t dim = delaunay_.dim();
-  real R = -1.;
-  real d;
+  real_t R = -1.;
+  real_t d;
   for (index_t k=0;k<polytope_.size();k++)
   {
-    d = geometrics::distance2( vertex_[polytope_[k]].X() , zi , dim );
+    d = numerics::distance2( vertex_[polytope_[k]].X() , zi , dim );
     if (d>R) R = d;
   }
   // a little more than 2^2 (4.1) because we need to make sure that we clip
   // against all possible bisectors (this just means we might try to clip
   // with a non-contributing cell which will terminate anyway)
-  if (geometrics::distance2(zi,zj,dim)>4.1*R) return true;
+  if (numerics::distance2(zi,zj,dim)>4.1*R) return true;
   return false;
 }
 
@@ -196,7 +197,7 @@ RestrictedVoronoiSimplex::clipPolytope( index_t j )
   {
     index_t e0 = polytope_[ii];
     index_t e1 = polytope_[jj];
-    if (topology_.master().isEdge( vertex_[e0].bisectors() ,
+    if (topology_.master().is_edge( vertex_[e0].bisectors() ,
                         vertex_[e1].bisectors() ) )
     {
       // clip the edge and save the result into q
@@ -234,8 +235,8 @@ RestrictedVoronoiSimplex::clipEdge( const index_t e0 , const index_t e1 ,
   index_t pi,pj;
   delaunay_.seeds(b,pi,pj);
 
-  const real* zi = delaunay_[site_];
-  const real* zj;
+  const real_t* zi = delaunay_[site_];
+  const real_t* zj;
   if (pi!=site_)
   {
     avro_assert(pj==site_);
@@ -293,16 +294,16 @@ RestrictedVoronoiSimplex::clipEdge( const index_t e0 , const index_t e1 ,
   }
   else
   {
-    // both vertices are on the same side
+    // both points are on the same side
     if (side1==GEO::POSITIVE)
     {
-      // both vertices are in the voronoi cell
+      // both points are in the voronoi cell
       q.push_back( e0 );
       q.push_back( e1 );
     }
     else
     {
-      // both vertices are outside the voronoi cell
+      // both points are outside the voronoi cell
     }
   }
 

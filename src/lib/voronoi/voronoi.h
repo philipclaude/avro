@@ -6,13 +6,13 @@
 #ifndef AVRO_MESH_DELAUNAY_VORONOI_H_
 #define AVRO_MESH_DELAUNAY_VORONOI_H_
 
-#include "common/pointer.h"
+#include "common/nearest_neighbours.h"
 
-#include "graph/neighbours.h"
+#include "master/polytope.h"
+#include "master/simplex.h"
 
 #include "mesh/mesh.h"
 #include "mesh/topology.h"
-#include "mesh/types.h"
 
 #include "numerics/predicates.h"
 
@@ -36,8 +36,8 @@ public:
   Vertex( const coord_t _dim , const coord_t _number );
   Vertex( const Vertex& v0 );
   Vertex(Vertex&& v);
-  Vertex( const std::vector<real> _x , const coord_t _number=0 );
-  Vertex( const real* x, const coord_t dim );
+  Vertex( const std::vector<real_t> _x , const coord_t _number=0 );
+  Vertex( const real_t* x, const coord_t dim );
 
   Vertex& operator=( const Vertex& rhs) { return *this; }
 
@@ -46,11 +46,11 @@ public:
   coord_t dim() const { return dim_; }
   coord_t number() const { return number_; }
   void setNumber( coord_t _number ) { number_ = _number; }
-  const std::vector<real>& x() const { return x_; }
-  const real* X() const { return x_.data(); }
-  const real& operator[] ( const index_t d ) const { return x_[d]; }
-  const real& coord( const index_t d ) const { return x_[d]; }
-  void setCoordinates( const real* x , const coord_t _dim )
+  const std::vector<real_t>& x() const { return x_; }
+  const real_t* X() const { return x_.data(); }
+  const real_t& operator[] ( const index_t d ) const { return x_[d]; }
+  const real_t& coord( const index_t d ) const { return x_[d]; }
+  void setCoordinates( const real_t* x , const coord_t _dim )
   {
     dim_ = _dim;
     init();
@@ -70,32 +70,32 @@ public:
   Topology<Simplex>* topology( const index_t k ) const { return topology_[k]; }
 
   // simplex retrieval/addition functions
-  void addSimplexVertex( const real* v ) { simplex_.push_back(v); }
-  const std::vector<const real*>& simplices() const { return simplex_; }
+  void addSimplexVertex( const real_t* v ) { simplex_.push_back(v); }
+  const std::vector<const real_t*>& simplices() const { return simplex_; }
   index_t nb_simplices() const { return simplex_.size(); }
-  const real* simplex( const index_t k ) const { return simplex_[k]; }
+  const real_t* simplex( const index_t k ) const { return simplex_[k]; }
 
   // site addition function
-  void addSite( const real* zj ) { site_.push_back(zj); }
-  std::vector<const real*> sites() const { return site_; }
-  const real* site( const index_t k ) const { return site_[k]; }
+  void addSite( const real_t* zj ) { site_.push_back(zj); }
+  std::vector<const real_t*> sites() const { return site_; }
+  const real_t* site( const index_t k ) const { return site_[k]; }
   index_t nb_sites() const { return site_.size(); }
 
   // intersection functions
   void intersectSymbolic( const Vertex* v0 , const Vertex* v1 ,
       const Delaunay& delaunay );
-  void intersectGeometric( const real* q1 , const real* q2 , const real* p1 , const real* p2 );
+  void intersectGeometric( const real_t* q1 , const real_t* q2 , const real_t* p1 , const real_t* p2 );
   void intersectBisectors( const Vertex* v0 , const Vertex* v1 );
   void intersectMeshes( const Vertex* v0 , const Vertex* v1 );
   void intersectSimplices( const Vertex* v0 , const Vertex* v1 );
   void setSites( const Delaunay& delaunay );
-  void setBaseSite( const real* z0 ) { z0_ = z0; }
-  void setDelaunaySite( const index_t k , const real* z )
+  void setBaseSite( const real_t* z0 ) { z0_ = z0; }
+  void setDelaunaySite( const index_t k , const real_t* z )
     { (k==0) ? z0_ = z : site_[k-1] = z; }
 
   // side query relative to a bisector
-  GEO::Sign sideFast( const real* zi , const real *zj );
-  GEO::Sign side( const real* zi , const real* zj , const bool exact = true );
+  GEO::Sign sideFast( const real_t* zi , const real_t *zj );
+  GEO::Sign side( const real_t* zi , const real_t* zj , const bool exact = true );
 
   // print function
   void print( const std::string& pre , const bool symbolic=false ) const;
@@ -103,13 +103,13 @@ public:
 private:
   coord_t dim_;
   coord_t number_;
-  std::vector<real>  x_;
+  std::vector<real_t>  x_;
 
-  const real* z0_;
+  const real_t* z0_;
   std::vector<int> bisector_;
   std::vector< Topology<Simplex>* > topology_;
-  std::vector<const real*> simplex_;
-  std::vector<const real*> site_;
+  std::vector<const real_t*> simplex_;
+  std::vector<const real_t*> site_;
 };
 
 class RVDFacets
@@ -133,14 +133,14 @@ private:
 };
 
 
-class RestrictedVoronoiSimplex : public Mesh<ConvexPolytope>
+class RestrictedVoronoiSimplex : public Topology<Polytope>
 {
   friend class RestrictedSimplex_tester;
 
 public:
   RestrictedVoronoiSimplex(
     const index_t k , const Topology<Simplex>& mesh , RVDFacets& facets ,
-    Delaunay& _delaunay , graph::Neighbours& _neighbours , bool _exact );
+    Delaunay& _delaunay , NearestNeighbours& _neighbours , bool _exact );
 
   void reset();
 
@@ -163,15 +163,15 @@ public:
   index_t site() const { return site_; }
   void addSite( const index_t zj );
 
-  bool securityRadiusReached( const real* zi , const real* zj ) const;
+  bool securityRadiusReached( const real_t* zi , const real_t* zj ) const;
 
-  // function to send the vertices into their location after merging and stuff
+  // function to send the points into their location after merging and stuff
   void finalize();
 
   index_t seed( const index_t k ) const { return seed_[k]; }
 
-  Topology<ConvexPolytope>& topology() { return topology_; }
-  using Mesh<ConvexPolytope>::topology; // silences clang warning
+  Topology<Polytope>& topology() { return topology_; }
+  //using Mesh<ConvexPolytope>::topology; // silences clang warning
 
 private:
   index_t site_;
@@ -183,24 +183,26 @@ private:
   // and then populating its fields from the created one
   std::vector<Vertex> vertex_;
 
-  std::vector<index_t> simplex_;   // original simplex vertices
-  std::vector<index_t> polytope_;  // current polytope vertices
+  std::vector<index_t> simplex_;   // original simplex points
+  std::vector<index_t> polytope_;  // current polytope points
 
   // the delaunay neighbours for each cell in this RVS
-  Data<index_t> region_;
+  Table<index_t> region_;
 
   const RVDFacets& facets_;
   const Delaunay& delaunay_;
-  const graph::Neighbours& neighbours_;
+  const NearestNeighbours& neighbours_;
   const bool exact_;
 
   std::vector<index_t> seed_;
 
-  Topology<ConvexPolytope> topology_;
+  Topology<Polytope> topology_;
+
+  Points points_;
 
 };
 
-class RestrictedVoronoiDiagram : public Mesh<ConvexPolytope>
+class RestrictedVoronoiDiagram : public Topology<Polytope>
 {
 public:
 
@@ -216,14 +218,14 @@ public:
 
   index_t nb_simplices() const { return simplices_.size(); }
   RestrictedVoronoiSimplex* simplex( const index_t k ) const
-    { return smart_raw(simplices_[k]); }
+    { return simplices_[k].get(); }
 
-  void computeCentroids( Vertices& centroids );
+  void computeCentroids( Points& centroids );
 
-  real energy();
-  real energy() const { return energy_; }
+  real_t energy();
+  real_t energy() const { return energy_; }
 
-  real energy_nd();
+  real_t energy_nd();
 
   bool& parallel() { return parallel_; }
   bool& gpu() { return gpu_; }
@@ -239,25 +241,28 @@ public:
 
 private:
 
+  Points points_;
+
   const Topology<Simplex>& mesh_;
   Delaunay& delaunay_;
-  graph::Neighbours neighbours_;
+  NearestNeighbours neighbours_;
 
-  std::vector<smart_ptr(RestrictedVoronoiSimplex)> simplices_;
+  std::vector<std::shared_ptr<RestrictedVoronoiSimplex>> simplices_;
 
   bool parallel_;
   bool gpu_;
-  real energy_;
+  real_t energy_;
   std::string outdir_;
 
-  class VoronoiSites : public CellField<real>
+  /*
+  class VoronoiSites : public CellField<real_t>
   {
   public:
     VoronoiSites() {}
 
-    void addCell( const real z )
+    void addCell( const real_t z )
     {
-      Field<real>::add(z+1);
+      Field<real_t>::add(z+1);
     }
 
     index_t rank() const { return 1; }
@@ -266,6 +271,7 @@ private:
   };
 
   VoronoiSites sites_;
+  */
 
 };
 

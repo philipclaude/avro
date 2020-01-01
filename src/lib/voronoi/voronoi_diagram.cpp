@@ -4,20 +4,14 @@
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 
 #include "common/parallel_for.h"
-#include "common/stringify.h"
+#include "common/tools.h"
 
 #include "geometry/entity.h"
 
-#include "graph/neighbours.h"
+#include "numerics/geometry.h"
 
-#include "mesh/delaunay/delaunay.h"
-#include "mesh/delaunay/voronoi.h"
-
-#include "mesh/geometrics.h"
-
-#include "numerics/integrand.h"
-#include "numerics/quadrature.h"
-#include "numerics/tools.h"
+#include "voronoi/delaunay.h"
+#include "voronoi/voronoi.h"
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -141,7 +135,8 @@ RVDFacets::print() const
 
 RestrictedVoronoiDiagram::RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh ,
     Delaunay& _delaunay ) :
-  Mesh<ConvexPolytope>( _delaunay.dim() , _mesh.number() ),
+  Topology<Polytope>( points_ , _mesh.number() ),
+  points_( _delaunay.dim() ),
   mesh_(_mesh) , delaunay_(_delaunay),
   neighbours_( delaunay_ ),
   parallel_(false), gpu_(false),
@@ -160,7 +155,7 @@ RestrictedVoronoiDiagram::compute( const bool exact )
   simplices_.resize( mesh_.nb() );
   for (index_t k=0;k<mesh_.nb();k++)
   {
-    simplices_[k] = smart_new(RestrictedVoronoiSimplex)( k , mesh_ ,
+    simplices_[k] = std::make_shared<RestrictedVoronoiSimplex>( k , mesh_ ,
                         facets  , delaunay_ , neighbours_ , exact );
   }
 
@@ -200,7 +195,7 @@ RestrictedVoronoiDiagram::compute( const std::vector<index_t>& S , const bool ex
   simplices_.resize( S.size() );
   for (index_t k=0;k<S.size();k++)
   {
-    simplices_[k] = smart_new(RestrictedVoronoiSimplex)( S[k] , mesh_ ,
+    simplices_[k] = std::make_shared<RestrictedVoronoiSimplex>( S[k] , mesh_ ,
                         facets  , delaunay_ , neighbours_ , exact );
   }
 
@@ -235,16 +230,15 @@ void
 RestrictedVoronoiDiagram::accumulate()
 {
   // create the topology where the rvd will be stored
-  smart_ptr(Topology<ConvexPolytope>) t = smart_new(Topology<ConvexPolytope>)
-                                                      (vertices_,number_);
+  std::shared_ptr<Topology<Polytope>> t = std::make_shared<Topology<Polytope>>(points_,number_);
 
   // clear the site information
   fields_.remove("sites");
-  sites_.clear();
+  //sites_.clear();
 
-  // clear the vertices
-  vertices_.clear();
-  topology_.clear();
+  // clear the points
+  points_.clear();
+  this->child_.clear();
 
   for (index_t k=0;k<simplices_.size();k++)
   {
@@ -252,61 +246,61 @@ RestrictedVoronoiDiagram::accumulate()
     // add the cells
     for (index_t j=0;j<simplices_[k]->topology().nb();j++)
     {
-      std::vector<index_t> cell = simplices_[k]->topology()[j];
+      //std::vector<index_t> cell = simplices_[k]->topology()[j];
+      std::vector<index_t> cell = simplices_[k]->topology().get(j);
       for (index_t i=0;i<cell.size();i++)
-        cell[i] += vertices_.nb();
-      t->add( cell.data() , cell.size() );
-      sites_.addCell( real(simplices_[k]->seed(j)) );
+        cell[i] += points_.nb();
+      add( cell.data() , cell.size() );
+      //sites_.addCell( real(simplices_[k]->seed(j)) );
     }
 
-    // add the vertices
-    for (index_t j=0;j<simplices_[k]->vertices().nb();j++)
-      vertices_.create( simplices_[k]->vertices()[j] );
+    // add the points
+    for (index_t j=0;j<simplices_[k]->points().nb();j++)
+      points_.create( simplices_[k]->points()[j] );
 
     // add the vertex facet information
-    const Data<int>& vf = simplices_[k]->topology().master().vertexFacetMatrix();
+    const Table<int>& vf = simplices_[k]->topology().master().incidence();
     for (index_t j=0;j<vf.nb();j++)
     {
       std::vector<int> f = vf.get(j);
-      t->master().vertexFacetMatrix().add( f.data() , f.size() );
+      points_.incidence().add( f.data() , f.size() );
     }
 
   }
-  addTopology(t);
-  fields_.make("sites",sites_);
-  setFields();
+  //add_child(t);
+  //fields_.make("sites",sites_);
 }
 
 void
-RestrictedVoronoiDiagram::computeCentroids( Vertices& centroids )
+RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
 {
 
   // retrieve the site information
-  Topology<ConvexPolytope>& rvd = topology(0);
+  Topology<Polytope>& rvd = topology(0);
 
-  // copy the vertices so the master can triangulate
-  Vertices vertices0( rvd.vertices().dim() );
-  rvd.vertices().copy( vertices0 );
+  // copy the points so the master can triangulate
+  Points points0( rvd.points().dim() );
+  rvd.points().copy( points0 );
 
-  std::vector<real> V( delaunay_.nb() , 0. );
+  std::vector<real_t> V( delaunay_.nb() , 0. );
 
   // initialize size of centroids
   centroids.clear();
-  std::vector<real> x0( delaunay_.dim() , 0. );
+  std::vector<real_t> x0( delaunay_.dim() , 0. );
   for (index_t k=0;k<delaunay_.nb();k++)
     centroids.create( x0.data() );
 
   for (index_t k=0;k<rvd.nb();k++)
   {
     // get the site this piece is associate with
-    index_t s = sites_[k] -1;
+    index_t s = 0;avro_implement;//sites_[k] -1;
 
     // compute the volume of this piece
-    real vk = rvd.master().volume( vertices0 , rvd(k) , rvd.nv(k) );
+    real_t vk = rvd.master().volume( points0 , rvd(k) , rvd.nv(k) );
 
     // compute the centroid of this piece
-    std::vector<real> c( delaunay_.dim() );
-    geometrics::centroid( rvd(k) , rvd.nv(k) , rvd.vertices() , c );
+    std::vector<real_t> c( delaunay_.dim() );
+    numerics::centroid( rvd(k) , rvd.nv(k) , rvd.points() , c );
 
     // add the contribution to x*V and V
     for (coord_t d=0;d<delaunay_.dim();d++)
@@ -327,43 +321,44 @@ RestrictedVoronoiDiagram::computeCentroids( Vertices& centroids )
   }
 }
 
-real
-cvtEnergy( const std::vector<real>& x , void* data )
+real_t
+cvtEnergy( const std::vector<real_t>& x , void* data )
 {
-  real* z = (real*) data;
+  real_t* z = (real_t*) data;
 
-  real e = 0.;
+  real_t e = 0.;
   for (coord_t d=0;d<x.size();d++)
     e += ( x[d] -z[d] )*( x[d] -z[d] );
   return e;
 }
 
-real
-volume_integrand( const std::vector<real>& x , void* data )
+real_t
+volume_integrand( const std::vector<real_t>& x , void* data )
 {
   return 1.;
 }
 
-real
+#if 0
+real_t
 RestrictedVoronoiDiagram::energy()
 {
   // retrieve the topology where the rvd is stored
-  Topology<ConvexPolytope>& rvd = topology(0);
+  Topology<Polytope>& rvd = topology(0);
 
-  // copy the vertices so the master can triangulate
-  Vertices vertices0( rvd.vertices().dim() );
-  rvd.vertices().copy( vertices0 );
+  // copy the points so the master can triangulate
+  Points points0( rvd.points().dim() );
+  rvd.points().copy( points0 );
 
   // compute the CVT energy
-  real E = 0.;
+  real_t E = 0.;
   for (index_t k=0;k<rvd.nb();k++)
   {
     // get the site this piece is associated with
-    index_t s = sites_[k] -1;
-    real* z = delaunay_[s];
+    index_t s = 0;avro_implement;//sites_[k] -1;
+    real_t* z = delaunay_[s];
 
     // integrate the deviation between the site and the centroid
-    real dE = rvd.master().integrate( vertices0 , rvd(k) , rvd.nv(k) ,  &cvtEnergy , (void*) z );
+    real_t dE = rvd.master().integrate( points0 , rvd(k) , rvd.nv(k) ,  &cvtEnergy , (void*) z );
 
     E += dE;
   }
@@ -371,30 +366,30 @@ RestrictedVoronoiDiagram::energy()
   return E;
 }
 
-real
+real_t
 RestrictedVoronoiDiagram::energy_nd()
 {
   // retrieve the topology where the rvd is stored
-  Topology<ConvexPolytope>& rvd = topology(0);
+  Topology<Polytope>& rvd = topology(0);
 
-  numerics::SimplexQuadrature quadrature( rvd.number() , rvd.vertices().dim() , 2 );
+  numerics::SimplexQuadrature quadrature( rvd.number() , rvd.points().dim() , 2 );
 
-  // copy the vertices so the master can triangulate
-  Vertices vertices0( rvd.vertices().dim() );
-  rvd.vertices().copy( vertices0 );
+  // copy the points so the master can triangulate
+  Points points0( rvd.points().dim() );
+  rvd.points().copy( points0 );
 
   // compute the CVT energy
-  real E = 0.;
-  real V = 0.;
+  real_t E = 0.;
+  real_t V = 0.;
   for (index_t k=0;k<rvd.nb();k++)
   {
     // get the site this piece is associate with
-    index_t s = sites_[k] -1;
-    real* z = delaunay_[s];
+    index_t s = 0;avro_implement;//sites_[k] -1;
+    real_t* z = delaunay_[s];
 
     // integrate the deviation between the site and the centroid
-    real dE = rvd.master().integrate( vertices0 , rvd(k) , rvd.nv(k) ,  &cvtEnergy , (void*) z , &quadrature );
-    real dV = rvd.master().integrate( vertices0 , rvd(k) , rvd.nv(k) ,  &volume_integrand , NULL , &quadrature );
+    real_t dE = rvd.master().integrate( points0 , rvd(k) , rvd.nv(k) ,  &cvtEnergy , (void*) z , &quadrature );
+    real_t dV = rvd.master().integrate( points0 , rvd(k) , rvd.nv(k) ,  &volume_integrand , NULL , &quadrature );
 
     E += dE;
     V += dV;
@@ -402,6 +397,7 @@ RestrictedVoronoiDiagram::energy_nd()
 
   return E;
 }
+#endif
 
 void
 RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* fid )
@@ -414,13 +410,13 @@ RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* f
     compute(exact);
 
     // compute the centroids
-    Vertices centroids( delaunay_.dim() );
+    Points centroids( delaunay_.dim() );
     computeCentroids( centroids );
 
-    real omega = 0.2;
+    real_t omega = 0.2;
 
-    // move the vertices to the centroids
-    real dx = 0;
+    // move the points to the centroids
+    real_t dx = 0;
     for (index_t k=0;k<centroids.nb();k++)
     {
       if (delaunay_.entity(k)) continue;
@@ -437,7 +433,7 @@ RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* f
     // recompute the nearest neighbour information
     neighbours_.compute();
 
-    energy_ = energy_nd();
+    energy_ = 0;avro_implement;//energy_nd();
     printf("iter[%lu]: e = %.6e, dx = %.6e\n",iter,energy_,dx);
     if (fid!=NULL)
       fprintf(fid,"%.12e\n",energy_);
@@ -447,8 +443,8 @@ RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* f
 void
 RestrictedVoronoiDiagram::extract( Topology<Simplex>& triangulation ) const
 {
-  // first make a unique set of vertices based on the vertex facet matrix
-  Data<int>& vfm = topology_[0]->master().vertexFacetMatrix();
+  // first make a unique set of points based on the vertex facet matrix
+  const Table<int>& vfm = child(0).master().incidence();
 
   // find unique entries of the vfm
   std::unordered_set<std::string> labels;
@@ -510,7 +506,6 @@ RestrictedVoronoiDiagram::extract( Topology<Simplex>& triangulation ) const
   }
   printf("RDT contains %lu simplices\n",triangulation.nb());
 }
-
 
 } // delaunay
 
