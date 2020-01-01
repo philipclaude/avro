@@ -1,5 +1,5 @@
 **avro**: library for unstructured mesh adaptation
-(c) Philip Claude Caplan, 2019
+(c) Philip Claude Caplan, 2019-2020
 
 <img width="60px" src="doc/fig/avro.svg"/>
 
