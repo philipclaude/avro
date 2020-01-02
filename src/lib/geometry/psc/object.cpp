@@ -69,11 +69,21 @@ Facet::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
   avro_assert( basis_.m() == dim_ );
   avro_assert_msg( basis_.n() == number_ , "basis = %d x %d , number_ = %u, dim_ = %u" , basis_.m(),basis_.n(),number_,dim_ );
 
+  // set the last barycentric coordinate
+  numerics::VectorD<real_t> u0(number_+1);
+  u0(number_) = 1;
+  for (coord_t d=0;d<number_;d++)
+  {
+    u0(d)        = u[d];
+    u0(number_) -= u0(d);
+  }
+
+  // compute the linear combination of the basis using the barycentric coordinates
   for (coord_t j=0;j<dim_;j++)
   {
     x[j] = 0;
     for (index_t k=0;k<number_+1;k++)
-      x[j] += V_(j,k)*u[k];
+      x[j] += V_(j,k)*u0[k];
   }
 }
 

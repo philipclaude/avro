@@ -34,13 +34,7 @@ Points::Points( const coord_t _dim ) :
 	u_(udim_),
 	incidence_(TableLayout_Jagged),
 	nb_ghost_(0)
-{
-	if (dim_==4)
-	{
-		udim_ = 4;
-		u_.set_rank(udim_);
-	}
-}
+{}
 
 Points::Points( const coord_t _dim , const coord_t _udim ) :
 	DOF<real_t>(_dim),
@@ -49,13 +43,7 @@ Points::Points( const coord_t _dim , const coord_t _udim ) :
 	u_(udim_),
 	incidence_(TableLayout_Jagged),
 	nb_ghost_(0)
-{
-	if (dim_==4)
-	{
-		udim_ = 4;
-		u_.set_rank(udim_);
-	}
-}
+{}
 
 Points::~Points()
 {
