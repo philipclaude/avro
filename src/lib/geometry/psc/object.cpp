@@ -1,3 +1,5 @@
+#include "common/tools.h"
+
 #include "geometry/psc/object.h"
 
 #include "numerics/geometry.h"
@@ -12,7 +14,6 @@ namespace PSC
 Object::Object( coord_t number , coord_t dim ) :
   Entity(number),
   dim_(dim)
-  //basis_(dim,number)
 {
   tessellatable_ = true;
   interior_ = false;
@@ -37,18 +38,20 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
     alpha[j] = y[j];
   numerics::VectorD<real_t> z = V_*alpha;
 
+  // save the parameter values
   for (index_t j=0;j<alpha.size();j++)
     u[j] = alpha[j];
 
   real_t d = numerics::distance2( z.data() , x.data() , dim_ );
-  //printf("d = %g\n",d);
-  if (d<1e-12) return;
+  if (d<1e-12)
+  {
+    return;
+  }
 
   // the projected point is outside the polytope
   // set it to something far away
   for (coord_t d=0;d<dim_;d++)
     x[d] = 1e20;
-
 }
 
 void
@@ -62,17 +65,15 @@ Node::inverse( std::vector<real_t>& x , std::vector<real_t>& ) const
 void
 Facet::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
 {
-  avro_assert( u.size() == dim_-1 );
   avro_assert( x.size() == dim_ );
   avro_assert( basis_.m() == dim_ );
   avro_assert_msg( basis_.n() == number_ , "basis = %d x %d , number_ = %u, dim_ = %u" , basis_.m(),basis_.n(),number_,dim_ );
-  for (index_t j=0;j<dim_;j++)
+
+  for (coord_t j=0;j<dim_;j++)
   {
-    x[j] = 0.0;
-    for (index_t k=0;k<basis_.n();k++)
-    {
-      x[j] += u[k]*basis_(j,k);
-    }
+    x[j] = 0;
+    for (index_t k=0;k<number_+1;k++)
+      x[j] += V_(j,k)*u[k];
   }
 }
 
