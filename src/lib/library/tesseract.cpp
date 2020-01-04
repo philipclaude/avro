@@ -1,6 +1,9 @@
 #include "common/table.h"
 #include "common/tools.h"
 
+#include "geometry/psc/facet.h"
+#include "geometry/psc/node.h"
+
 #include "library/tesseract.h"
 
 #include "master/polytope.h"

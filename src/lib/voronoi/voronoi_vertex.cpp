@@ -83,7 +83,10 @@ Vertex::intersectMeshes( const Vertex* v0 , const Vertex* v1 )
 void
 Vertex::intersectSimplices( const Vertex* v0 , const Vertex* v1 )
 {
-	//Set::intersection( v0->simplices() , v1->simplices() , simplex_ );
+	#if 0
+	Set::intersection( v0->simplices() , v1->simplices() , simplex_ );
+	uniquify(simplex_);
+	#else
 	simplex_.resize( v0->nb_simplices() +v1->nb_simplices() );
 	index_t j=0;
 	for (index_t k=0;k<v0->nb_simplices();k++,j++)
@@ -91,6 +94,7 @@ Vertex::intersectSimplices( const Vertex* v0 , const Vertex* v1 )
 	for (index_t k=0;k<v1->nb_simplices();k++,j++)
 		simplex_[j] = v1->simplex(k);
 	uniquify(simplex_);
+	#endif
 }
 
 void
@@ -194,11 +198,44 @@ Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
     case 3:
       // this vertex is the intersection of two bisectors with a triangle (p0-p1-p2) of the topology
       result = GEO::PCK::side3_SOS(zi,site_[0],site_[1],zj,simplex_[0],simplex_[1],simplex_[2],dim_);
+			if (result==GEO::ZERO)
+			{
+				for (index_t k=0;k<site_.size();k++)
+				{
+					std::vector<real_t> simplex_coords(simplex_[k],simplex_[k]+dim_);
+					print_inline( simplex_coords , "simplex " + stringify(k ) );
+				}
+
+				std::vector<real_t> zi_coord( zi , zi+dim_ );
+				std::vector<real_t> zj_coord( zj , zj+dim_ );
+				print_inline( zi_coord , "zi" );
+				print_inline( zj_coord , "zj" );
+
+			}
       avro_assert( result!=GEO::ZERO );
       break;
     case 4:
       // this vertex is the intersection of three bisectors with a tetrahedron (p0-p1-p2-p3) of the topology
       result = GEO::PCK::side4_SOS(zi,site_[0],site_[1],site_[2],zj,simplex_[0],simplex_[1],simplex_[2],simplex_[3],dim_);
+			if (result==GEO::ZERO)
+			{
+				for (index_t k=0;k<simplex_.size();k++)
+				{
+					std::vector<real_t> simplex_coords(simplex_[k],simplex_[k]+dim_);
+					print_inline( simplex_coords , "simplex " + stringify(k ) );
+				}
+				for (index_t k=0;k<site_.size();k++)
+				{
+					std::vector<real_t> site_coords(simplex_[k],simplex_[k]+dim_);
+					print_inline( site_coords , "site " + stringify(k ) );
+				}
+				std::vector<real_t> zi_coord( zi , zi+dim_ );
+				std::vector<real_t> zj_coord( zj , zj+dim_ );
+				print_inline( zi_coord , "zi" );
+				print_inline( zj_coord , "zj" );
+				print("v",true);
+				//printf("zero = %d, geo::zero = %d, equal? %s\n",ZERO,GEO::ZERO,ZERO==GEO::ZERO?"true":"false");
+			}
       avro_assert( result!=GEO::ZERO );
       break;
     case 5:

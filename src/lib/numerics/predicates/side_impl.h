@@ -17,6 +17,11 @@
 	#include "numerics/predicates/geo_side_filters.h"
 	using namespace GEO;
 	using namespace PCK;
+
+	namespace GEO
+	{
+		Sign ZERO = (Sign)avro::ZERO;
+	}
 #endif
 
 

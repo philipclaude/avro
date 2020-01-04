@@ -31,12 +31,7 @@ main()
   // initialize the predicates
   exactinit(1,0,0,10,10,10);
   exactinit();
-
-  // create a graphics plotter instance
-  //Server server;
-  //Plotter* plotter = new Plotter(&server);
-  //__plotter__ = (void*) plotter;
-  //plotter->on() = false;
+  GEO::PCK::initialize();
 
   #ifdef STDOUT_REDIRECT
   FILE *fid = fopen(STDOUT_REDIRECT,"w");

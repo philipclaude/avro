@@ -485,19 +485,24 @@ template<typename type>
 index_t
 Boundary<type>::indexof( Entity* e0 )
 {
+  #if 0
   EGADS::Object* e = (EGADS::Object*)e0;
   std::map<Entity*,index_t>::const_iterator it;
-  e->print(false);
   for (it=entity2child_.begin();it!=entity2child_.end();++it)
   {
-    //avro_implement; // TODO lookup object?
     EGADS::Object* obj = (EGADS::Object*)it->first;
-    obj->print(false);
     if (obj->object() == e->object()) return it->second;
-    //if (it->first->object()==e->object()) return it->second;
   }
+  #else
+  std::map<Entity*,index_t>::const_iterator it;
+  for (it=entity2child_.begin();it!=entity2child_.end();++it)
+  {
+    Entity* obj = it->first;
+    if (obj->identifier() == e0->identifier()) return it->second;
+  }
+  #endif
   printf("could not find entity:\n");
-  e->print();
+  e0->print();
 
   for (it=entity2child_.begin();it!=entity2child_.end();++it)
     it->first->print();

@@ -1447,6 +1447,24 @@ namespace GEO {
         return this->assign_sum(a11c11, a12c12, a13c13);
     }
 
+    expansion& expansion::assign_det4x4(
+        const expansion& a11, const expansion& a12, const expansion& a13, const expansion& a14,
+        const expansion& a21, const expansion& a22, const expansion& a23, const expansion& a24,
+        const expansion& a31, const expansion& a32, const expansion& a33, const expansion& a34,
+        const expansion& a41, const expansion& a42, const expansion& a43, const expansion& a44
+    ) {
+        // Development w.r.t. first row
+        const expansion& c11 = expansion_det3x3(a22, a23, a24, a32, a33, a34, a42, a43, a44);
+        const expansion& c12 = expansion_det3x3(a21, a23, a24, a31, a33, a34, a41, a43, a44 ); // -1
+        const expansion& c13 = expansion_det3x3(a21, a22, a24, a31, a32, a34, a41, a42, a44 );
+        const expansion& c14 = expansion_det3x3(a21, a22, a23, a31, a32, a33, a41, a42, a43 ); // -1
+        const expansion& a11c11 = expansion_product(a11, c11);
+        const expansion& a12c12 = expansion_product(a12, c12).negate();
+        const expansion& a13c13 = expansion_product(a13, c13);
+        const expansion& a14c14 = expansion_product(a14, c14).negate();
+        return this->assign_sum(a11c11, a12c12, a13c13, a14c14 );
+    }
+
     expansion& expansion::assign_det_111_2x3(
         const expansion& a21, const expansion& a22, const expansion& a23,
         const expansion& a31, const expansion& a32, const expansion& a33
@@ -1455,6 +1473,18 @@ namespace GEO {
         const expansion& c12 = expansion_det2x2(a23, a21, a33, a31);
         const expansion& c13 = expansion_det2x2(a21, a22, a31, a32);
         return this->assign_sum(c11, c12, c13);
+    }
+
+    expansion& expansion::assign_det_1111_3x4(
+      const expansion& a21, const expansion& a22, const expansion& a23, const expansion& a24,
+      const expansion& a31, const expansion& a32, const expansion& a33, const expansion& a34,
+      const expansion& a41, const expansion& a42, const expansion& a43, const expansion& a44
+    ) {
+        const expansion& c11 = expansion_det3x3(a22, a23, a24, a32, a33, a34, a42, a43, a44);
+        const expansion& c12 = expansion_det3x3(a21, a23, a24, a31, a33, a34, a41, a43, a44).negate();
+        const expansion& c13 = expansion_det3x3(a21, a22, a24, a31, a32, a34, a41, a42, a44);
+        const expansion& c14 = expansion_det3x3(a21, a22, a23, a31, a32, a33, a41, a42, a43).negate();
+        return this->assign_sum(c11, c12, c13, c14);
     }
 
     // =============  geometric operations ==================================

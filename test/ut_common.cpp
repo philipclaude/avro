@@ -1,7 +1,7 @@
 #include "common/process.h"
 #include "common/tools.h"
 
-//#include "graphics/plotter.h"
+#include "numerics/predicates.h"
 
 typedef avro::real_t REAL;
 #include <tetgen1.5.0/predicates.h>
@@ -31,12 +31,7 @@ ut_pre(int argc, char** argv)
   // initialize the predicates
   exactinit(1,0,0,10,10,10);
   exactinit();
-
-  // create a graphics plotter instance and save globally
-  //Server server;
-  //Plotter* plotter = NULL;
-  //plotter = new Plotter(&server);
-  //__plotter__ = (void*) plotter;
+  GEO::PCK::initialize();
 
   if (!plot_on)
   {

@@ -25,6 +25,7 @@ Object::Object( const Context& context , ego* object ) :
   interior_ = false;
   sense_required_ = false;
   egads_ = true;
+  identifier_ = 0;
 }
 
 Object::Object( ego* object , EGADS::Body* body ) :
@@ -41,6 +42,7 @@ Object::Object( ego* object , EGADS::Body* body ) :
   sense_required_ = false;
   egads_ = true;
 
+  identifier_ = EG_indexBodyTopo( *body_->object() , *object_ );
 }
 
 ego*

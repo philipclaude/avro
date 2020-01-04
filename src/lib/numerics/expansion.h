@@ -330,6 +330,32 @@ expansion& new_expansion_on_stack(index_t capa);
         const expansion& a31, const expansion& a32, const expansion& a33
     );
 
+    static index_t det4x4_capacity(
+        const expansion& a11, const expansion& a12, const expansion& a13, const expansion& a14,
+        const expansion& a21, const expansion& a22, const expansion& a23, const expansion& a24,
+        const expansion& a31, const expansion& a32, const expansion& a33, const expansion& a34,
+        const expansion& a41, const expansion& a42, const expansion& a43, const expansion& a44
+    ) {
+        // Development w.r.t. first row
+        index_t c11_capa = det3x3_capacity(a22, a23, a24 , a32, a33 , a34 , a42 , a43 , a44 );
+        index_t c12_capa = det3x3_capacity(a21, a23, a24 , a31, a33 , a34 , a41 , a43 , a44 );
+        index_t c13_capa = det3x3_capacity(a21, a22, a24 , a31, a32 , a34 , a41 , a42 , a44 );
+        index_t c14_capa = det3x3_capacity(a21, a22, a23 , a31, a32 , a33 , a41 , a42 , a43 );
+        return 2 * (
+            a11.length() * c11_capa +
+            a12.length() * c12_capa +
+            a13.length() * c13_capa +
+            a14.length() * c14_capa
+        );
+    }
+
+    expansion& assign_det4x4(
+      const expansion& a11, const expansion& a12, const expansion& a13, const expansion& a14,
+      const expansion& a21, const expansion& a22, const expansion& a23, const expansion& a24,
+      const expansion& a31, const expansion& a32, const expansion& a33, const expansion& a34,
+      const expansion& a41, const expansion& a42, const expansion& a43, const expansion& a44
+    );
+
     static index_t det_111_2x3_capacity(
         const expansion& a21, const expansion& a22, const expansion& a23,
         const expansion& a31, const expansion& a32, const expansion& a33
@@ -343,6 +369,24 @@ expansion& new_expansion_on_stack(index_t capa);
     expansion& assign_det_111_2x3(
         const expansion& a21, const expansion& a22, const expansion& a23,
         const expansion& a31, const expansion& a32, const expansion& a33
+    );
+
+    static index_t det_1111_3x4_capacity(
+        const expansion& a21, const expansion& a22, const expansion& a23, const expansion& a24,
+        const expansion& a31, const expansion& a32, const expansion& a33, const expansion& a34,
+        const expansion& a41, const expansion& a42, const expansion& a43, const expansion& a44
+    ) {
+        return
+            det3x3_capacity(a22, a23, a24, a32, a33, a34, a42, a43, a44) +
+            det3x3_capacity(a21, a23, a24, a31, a33, a34, a41, a43, a44) +
+            det3x3_capacity(a21, a22, a24, a31, a32, a34, a41, a42, a44) +
+            det3x3_capacity(a21, a22, a23, a31, a32, a32, a41, a42, a43);
+    }
+
+    expansion& assign_det_1111_3x4(
+      const expansion& a21, const expansion& a22, const expansion& a23, const expansion& a24,
+      const expansion& a31, const expansion& a32, const expansion& a33, const expansion& a34,
+      const expansion& a41, const expansion& a42, const expansion& a43, const expansion& a44
     );
 
     // ======= Geometry-specific initializations =======

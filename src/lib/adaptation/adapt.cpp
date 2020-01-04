@@ -478,6 +478,10 @@ adapt( AdaptationProblem& problem )
 
   std::string mesh_file = params.directory()+params.prefix()+"_"+stringify(params.adapt_iter())+".mesh";
 
+  // extract the boundary
+  Boundary<type> boundary( mesh_topology );
+  boundary.extractall();
+
   if (params.write_mesh())
   {
     #if 0

@@ -9,11 +9,6 @@
 namespace avro
 {
 
-namespace numerics
-{
-  class Coordinate;
-}
-
 class Body;
 
 class Entity : public Tree<Entity>
@@ -64,7 +59,7 @@ protected:
 
   coord_t number_;
   std::string name_;
-  index_t identifier_;
+  int identifier_;
   Body* body_;
 
   bool interior_;

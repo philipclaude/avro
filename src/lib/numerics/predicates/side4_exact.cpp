@@ -12,11 +12,9 @@ namespace GEO {
 
 namespace PCK {
 
-
 Sign avro_side4_nd_exact_pck(const double* p0,const double* p1,const double* p2,const double* p3,const double* p4,
  const double* q0,const double* q1,const double* q2,const double* q3 ,unsigned short dim )
 {
-
     const expansion& l1 = expansion_sq_dist(p1, p0, dim);
     const expansion& l2 = expansion_sq_dist(p2, p0, dim);
     const expansion& l3 = expansion_sq_dist(p3, p0, dim);
@@ -133,7 +131,7 @@ Sign avro_side4_nd_exact_pck(const double* p0,const double* p1,const double* p2,
                 Sign z_sign = z.sign();
                 len_side4_SOS = geo_max(len_side4_SOS, z.length());
                 if(z_sign != ZERO) {
-                    return Sign(Delta_sign * z_sign);
+                  return Sign(Delta_sign * z_sign);
                 }
             } else if(p_sort[i] == p1) {
                 const expansion& z1 = expansion_product(a40, b01);
@@ -144,7 +142,7 @@ Sign avro_side4_nd_exact_pck(const double* p0,const double* p1,const double* p2,
                 Sign z_sign = z.sign();
                 len_side4_SOS = geo_max(len_side4_SOS, z.length());
                 if(z_sign != ZERO) {
-                    return Sign(Delta_sign * z_sign);
+                  return Sign(Delta_sign * z_sign);
                 }
             } else if(p_sort[i] == p2) {
                 const expansion& z1 = expansion_product(a40, b02);
@@ -155,7 +153,7 @@ Sign avro_side4_nd_exact_pck(const double* p0,const double* p1,const double* p2,
                 Sign z_sign = z.sign();
                 len_side4_SOS = geo_max(len_side4_SOS, z.length());
                 if(z_sign != ZERO) {
-                    return Sign(Delta_sign * z_sign);
+                  return Sign(Delta_sign * z_sign);
                 }
             } else if(p_sort[i] == p3) {
                 const expansion& z1 = expansion_product(a40, b03);
@@ -166,7 +164,7 @@ Sign avro_side4_nd_exact_pck(const double* p0,const double* p1,const double* p2,
                 Sign z_sign = z.sign();
                 len_side4_SOS = geo_max(len_side4_SOS, z.length());
                 if(z_sign != ZERO) {
-                    return Sign(Delta_sign * z_sign);
+                  return Sign(Delta_sign * z_sign);
                 }
             } else if(p_sort[i] == p4) {
                 return NEGATIVE;
