@@ -653,20 +653,10 @@ namespace GEO {
 
       // =============== geometric functions ==============================
 
-  #if 0
-  #define expansion_det4x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44)  \
-      expansion_sum( \
-        expansion_diff( expansion_product(a11,expansion_det3x3(a22,a23,a24,a32,a33,a34,a42,a43,a44) ) , \
-                        expansion_product(a12,expansion_det3x3(a21,a23,a24,a31,a33,a34,a41,a43,a44) ) ) , \
-        expansion_diff( expansion_product(a13,expansion_det3x3(a21,a22,a24,a31,a32,a34,a41,a42,a44) ) ,   \
-                        expansion_product(a14,expansion_det3x3(a21,a22,a23,a31,a32,a33,a41,a42,a43) ) ) \
-                )
-  #else
   #define expansion_det4x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44)  \
     new_expansion_on_stack(                                             \
         expansion::det4x4_capacity(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44) \
     )->assign_det4x4(a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44 )
-  #endif
 
   #define expansion_det5x5(a11,a12,a13,a14,a15,a21,a22,a23,a24,a25,a31,a32,a33,a34,a35,a41,a42,a43,a44,a45,a51,a52,a53,a54,a55) \
   expansion_sum3( \
@@ -677,18 +667,10 @@ namespace GEO {
                     expansion_product(a15,expansion_det4x4(a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44,a51,a52,a53,a54) ) \
   )
 
-  #if 0
-  #define expansion_det_1111_3x4(a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44) \
-    expansion_sum( \
-      expansion_diff( expansion_det3x3(a22,a23,a24,a32,a33,a34,a42,a43,a44) , expansion_det3x3(a21,a23,a24,a31,a33,a34,a41,a43,a44) ) , \
-      expansion_diff( expansion_det3x3(a21,a22,a24,a31,a32,a34,a41,a42,a44) , expansion_det3x3(a21,a22,a23,a31,a32,a33,a41,a42,a43) ) \
-    )
-  #else
   #define expansion_det_1111_3x4(a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44) \
     new_expansion_on_stack(                                      \
         expansion::det_1111_3x4_capacity(a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44) \
     )->assign_det_1111_3x4(a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44)
-  #endif
 
   #define expansion_sq_dist(a, b, dim)           \
       new_expansion_on_stack(                  \

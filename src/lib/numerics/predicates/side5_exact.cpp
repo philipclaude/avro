@@ -58,8 +58,6 @@ Sign avro_side5_nd_exact_pck(const double* p0,const double* p1,const double* p2,
  // [ b30 b31 b32 b33 b34 ]           [ a30 a31 a32 a33 a34 ]
  // [ b40 b41 b42 b43 b44 ]           [ a40 a41 a42 a43 a44 ]
 
-#if 1
- // debug
  const expansion& b00 = expansion_det4x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);
  const expansion& b01 = expansion_det_1111_3x4(a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44).negate();
  const expansion& b02 = expansion_det_1111_3x4(a11,a12,a13,a14,a31,a32,a33,a34,a41,a42,a43,a44);
@@ -89,38 +87,6 @@ Sign avro_side5_nd_exact_pck(const double* p0,const double* p1,const double* p2,
  const expansion& b42 = expansion_det_1111_3x4(a10,a11,a12,a13,a30,a31,a32,a33,a40,a41,a42,a43);
  const expansion& b43 = expansion_det_1111_3x4(a10,a11,a12,a13,a20,a21,a22,a23,a40,a41,a42,a43).negate();
  const expansion& b44 = expansion_det_1111_3x4(a10,a11,a12,a13,a20,a21,a22,a23,a30,a31,a32,a33);
-#else
-  // original
-  const expansion& b00 = expansion_det4x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);
-  const expansion& b01 = expansion_det_1111_3x4(a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44).negate();
-  const expansion& b02 = expansion_det_1111_3x4(a11,a12,a13,a14,a31,a32,a33,a34,a41,a42,a43,a44);
-  const expansion& b03 = expansion_det_1111_3x4(a11,a12,a13,a14,a21,a22,a23,a24,a41,a42,a43,a44).negate();
-  const expansion& b04 = expansion_det_1111_3x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34);
-
-  const expansion& b10 = expansion_det4x4(a10,a12,a13,a14,a20,a22,a23,a24,a30,a32,a33,a34,a40,a42,a43,a44).negate();
-  const expansion& b11 = expansion_det_1111_3x4(a20,a22,a23,a24,a30,a32,a33,a34,a40,a42,a43,a44);
-  const expansion& b12 = expansion_det_1111_3x4(a10,a12,a13,a14,a30,a32,a33,a34,a40,a42,a43,a44).negate();
-  const expansion& b13 = expansion_det_1111_3x4(a10,a12,a13,a14,a20,a22,a23,a24,a40,a42,a43,a44);
-  const expansion& b14 = expansion_det_1111_3x4(a10,a12,a13,a14,a20,a22,a23,a24,a30,a32,a33,a34).negate();
-
-  const expansion& b20 = expansion_det4x4(a10,a11,a13,a14,a20,a21,a23,a24,a30,a31,a33,a34,a40,a41,a43,a44);
-  const expansion& b21 = expansion_det_1111_3x4(a20,a21,a23,a24,a30,a31,a33,a34,a40,a41,a43,a44).negate();
-  const expansion& b22 = expansion_det_1111_3x4(a10,a11,a13,a14,a30,a31,a33,a34,a40,a41,a43,a44);
-  const expansion& b23 = expansion_det_1111_3x4(a10,a11,a13,a14,a20,a21,a23,a24,a40,a41,a43,a44).negate();
-  const expansion& b24 = expansion_det_1111_3x4(a10,a11,a13,a14,a20,a21,a23,a24,a30,a31,a33,a34);
-
-  const expansion& b30 = expansion_det4x4(a10,a11,a12,a14,a20,a21,a22,a24,a30,a31,a32,a34,a40,a41,a42,a44).negate();
-  const expansion& b31 = expansion_det_1111_3x4(a20,a21,a22,a24,a30,a31,a32,a34,a40,a41,a42,a44);
-  const expansion& b32 = expansion_det_1111_3x4(a10,a11,a12,a14,a30,a31,a32,a34,a40,a41,a42,a44).negate();
-  const expansion& b33 = expansion_det_1111_3x4(a10,a11,a12,a14,a20,a21,a22,a24,a40,a41,a42,a44);
-  const expansion& b34 = expansion_det_1111_3x4(a10,a11,a12,a14,a20,a21,a22,a24,a30,a31,a32,a34).negate();
-
-  const expansion& b40 = expansion_det4x4(a10,a11,a12,a13,a20,a21,a22,a23,a30,a31,a32,a33,a40,a41,a42,a43);
-  const expansion& b41 = expansion_det_1111_3x4(a20,a21,a22,a23,a30,a31,a32,a33,a40,a41,a42,a43).negate();
-  const expansion& b42 = expansion_det_1111_3x4(a10,a11,a12,a13,a30,a31,a32,a33,a40,a41,a42,a43);
-  const expansion& b43 = expansion_det_1111_3x4(a10,a11,a12,a13,a20,a21,a22,a23,a40,a41,a42,a43).negate();
-  const expansion& b44 = expansion_det_1111_3x4(a10,a11,a12,a13,a20,a21,a22,a23,a30,a31,a32,a33);
-#endif
 
 // expansion Delta = b00+b10+b20+b30+b40;
  expansion& Delta = expansion_sum( expansion_sum4(b00,b10,b20,b30),b40);
