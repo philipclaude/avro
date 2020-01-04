@@ -9,22 +9,37 @@ UT_TEST_SUITE( voronoi_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 3;
-  std::vector<index_t> dims(number,7);
-  CKF_Triangulation topology( dims );
+  for (coord_t number=2;number<=4;number++)
+  {
+    for (index_t N=2;N<=4;N++)
+    {
 
-  Delaunay delaunay(topology.points().dim());
-  topology.points().copy(delaunay);
-  for (index_t k=0;k<delaunay.nb();k++)
-  for (coord_t d=0;d<number;d++)
-    delaunay[k][d] += 0.5;
+      if (number==4 && N > 3) break;
 
-  delaunay::RestrictedVoronoiDiagram rvd(topology,delaunay);
+      std::vector<index_t> dims(number,N);
+      CKF_Triangulation topology( dims );
 
-  rvd.parallel() = true;
-  rvd.compute(true);
+      Delaunay delaunay(topology.points().dim());
+      topology.points().copy(delaunay);
 
-  //rvd.print();
+      printf("running rvd test for %u-simplex mesh with %lu elements and %lu delaunay vertices\n",number,topology.nb(),delaunay.nb());
+
+      delaunay::RestrictedVoronoiDiagram rvd(topology,delaunay);
+      rvd.parallel() = true;
+
+      // test 1: sites at mesh points
+      rvd.compute(true);
+      rvd.compute(false);
+
+      // test 2: sites offset to test exact precision
+      for (index_t k=0;k<delaunay.nb();k++)
+      for (coord_t d=0;d<number;d++)
+        delaunay[k][d] += 0.5;
+
+      rvd.compute(true);
+      rvd.compute(false);
+    }
+  }
 
 }
 UT_TEST_CASE_END( test1 )
