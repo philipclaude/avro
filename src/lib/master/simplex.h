@@ -16,7 +16,8 @@
 namespace avro
 {
 
-template<typename Shape> class Topology;
+template<typename type> class Topology;
+template<typename type> class Triangulation;
 class Points;
 
 class Simplex : public Master<Simplex>
@@ -96,7 +97,8 @@ public:
 
   index_t edge( index_t k , index_t i ) const;
 
-  void triangulate( coord_t number , Topology<Simplex>& topology , Points& points , const index_t* v , index_t nv ) const;
+  void triangulate( const index_t* v , index_t nv , Triangulation<Simplex>& topology ) const;
+
 
   real_t jacobian( const std::vector<const real_t*>& x , coord_t dim ) const;
   void   jacobian( const std::vector<const real_t*>& xk , numerics::MatrixD<real_t>& J ) const;

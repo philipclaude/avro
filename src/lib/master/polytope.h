@@ -10,6 +10,7 @@ namespace avro
 {
 
 template<typename type> class Topology;
+template<typename type> class Triangulation;
 
 class Polytope : public Master<Polytope>
 {
@@ -42,12 +43,13 @@ public:
   index_t edge( index_t k , index_t j ) const
     { avro_assert_not_reached; return 0; }
 
-  // triangulation functions (simplicial decomposition and triangle retrieval)
-  void triangulate( coord_t num , Table<index_t>& t , Points& vertices , const index_t* v , const index_t nv ) const;
+  void triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& triangulation ) const;
 
   bool& fullmesh() { return fullmesh_; }
 
 private:
+  void triangulate( coord_t number , Table<index_t>& table , Points& points , const index_t* v , index_t nv ) const;
+
   Simplex simplex_;
   const Table<int>& incidence_;
 

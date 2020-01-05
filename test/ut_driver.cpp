@@ -7,6 +7,8 @@
 #include "common/tools.h"
 #include "common/process.h"
 
+#include "numerics/predicates.h"
+
 typedef avro::real_t REAL;
 #include <tetgen1.5.0/predicates.h>
 

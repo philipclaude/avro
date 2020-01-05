@@ -7,8 +7,9 @@
 
 #include "library/eps.h"
 
-#include "mesh/topology.h"
 #include "mesh/points.h"
+#include "mesh/topology.h"
+#include "mesh/triangulation.h"
 
 namespace avro
 {
@@ -23,12 +24,12 @@ OpenGLPrimitive::convert()
   index_t nb_points = topology_.points().nb();
   index_t nb_triangles = 0;
   index_t nb_edges = 0;
-  coord_t dim = topology_.points().dim();
+  coord_t dim0 = topology_.points().dim();
   coord_t number = topology_.number();
 
   const Points& points = topology_.points();
 
-  avro_assert( dim==3 );
+  //avro_assert( dim==3 );
 
   // allocate the vertex data
   points_.resize( 3*nb_points);
@@ -46,10 +47,15 @@ OpenGLPrimitive::convert()
   if (number>=2)
   {
     // get the triangles from the topology (TODO)
-    std::vector<index_t> triangles;
-    triangles_.clear();
-    topology_.get_triangles(triangles);
-    nb_triangles = triangles.size()/3;
+    std::shared_ptr<TriangulationBase> ptriangulation;
+    if (true or topology_.name()=="simplex")
+      ptriangulation = std::make_shared<Triangulation<Simplex>>(*dynamic_cast<const Topology<Simplex>*>(&topology_));
+    else
+      ptriangulation = std::make_shared<Triangulation<Polytope>>(*dynamic_cast<const Topology<Polytope>*>(&topology_));
+    ptriangulation->extract();
+    const TriangulationBase& triangulation = *ptriangulation.get();
+    nb_triangles = triangulation.nb()/3;
+    const std::vector<index_t>& triangles = triangulation.data();
     triangles_.assign( triangles.begin() , triangles.end() );
   }
 
@@ -61,10 +67,18 @@ OpenGLPrimitive::convert()
     colors_[3*k+1] = 255;
     colors_[3*k+2] = 0;
 
-    for (index_t j=0;j<dim;j++)
+    for (index_t j=0;j<dim0;j++)
     {
       points_[n] = points(k,j);
       n++;
+    }
+    if (dim0<3)
+    {
+      for (coord_t j=dim0;j<3;j++)
+      {
+        points_[n] = 0;
+        n++;
+      }
     }
   }
 

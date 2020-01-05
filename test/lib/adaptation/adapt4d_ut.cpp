@@ -57,7 +57,7 @@ UT_TEST_CASE(adapt_test)
   params.insertion_volume_factor() = -1;
   params.curved() = false;
 
-  index_t niter = 5;
+  index_t niter = 0;
   for (index_t iter=0;iter<=niter;iter++)
   {
 

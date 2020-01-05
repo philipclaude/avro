@@ -64,51 +64,6 @@ Topology<Simplex>::orient( index_t* v , const index_t nv , real_t* q )
 
 template<>
 void
-Topology<Simplex>::get_triangles( std::vector<index_t>& t ) const
-{
-  std::vector<index_t> tk;
-  std::set<std::string> MAP;
-  std::vector<index_t> triangle(3);
-  std::string s;
-
-  // loop through all the cells
-  for (index_t k=0;k<nb();k++)
-  {
-    if (ghost(k)) continue;
-
-    const index_t* v0 = (*this)(k);
-
-    // get the edges of this cell
-    master_.get_triangles( v0 , nv(k) , tk );
-
-    // add the edges
-    for (index_t j=0;j<tk.size()/3;j++)
-    {
-      index_t p0 = tk[3*j];
-      index_t p1 = tk[3*j+1];
-      index_t p2 = tk[3*j+2];
-
-      if (p0<points_.nb_ghost() || p1<points_.nb_ghost() || p2<points_.nb_ghost())
-        continue;
-
-      triangle[0] = p0;
-      triangle[1] = p1;
-      triangle[2] = p2;
-      s = unique_label(triangle);
-
-      if (MAP.find(s)==MAP.end())
-      {
-        MAP.insert(s);
-        t.push_back(p0);
-        t.push_back(p1);
-        t.push_back(p2);
-      }
-    }
-  }
-}
-
-template<>
-void
 Topology<Simplex>::apply( Cavity<Simplex>& cavity )
 {
   // this simply applies the cavity operator in terms of element

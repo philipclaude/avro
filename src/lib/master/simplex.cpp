@@ -5,6 +5,7 @@
 
 #include "mesh/points.h"
 #include "mesh/topology.h"
+#include "mesh/triangulation.h"
 
 #include "numerics/geometry.h"
 #include "numerics/linear_algebra.h"
@@ -422,26 +423,25 @@ Simplex::edge( index_t k , index_t i ) const
 }
 
 void
-Simplex::triangulate( coord_t number , Topology<Simplex>& topology , Points& points , const index_t* v , index_t nv ) const
+Simplex::triangulate( const index_t* v , index_t nv , Triangulation<Simplex>& triangulation ) const
 {
-  avro_assert(nv==index_t(number+1));
-  std::vector<index_t> tk(number+1);
-  if (number==2)
+  std::vector<index_t> tk(triangulation.number()+1);
+  if (triangulation.number()==2)
   {
     // we were requested triangles
     for (index_t k=0;k<triangles_.size()/3;k++)
     {
       for (index_t j=0;j<3;j++)
         tk[j] = v[ triangles_[3*k+j] ];
-      topology.add(tk.data(),tk.size());
+      triangulation.add(tk.data(),tk.size());
     }
     return;
   }
 
-  avro_assert(number==number_);
-  for (index_t j=0;j<index_t(number+1);j++)
+  avro_assert(triangulation.number()==number_);
+  for (index_t j=0;j<index_t(triangulation.number()+1);j++)
     tk[j] = v[j];
-  topology.add(tk.data(),tk.size());
+  triangulation.add(tk.data(),tk.size());
 }
 
 real_t

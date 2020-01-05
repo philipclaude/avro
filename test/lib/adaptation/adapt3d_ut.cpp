@@ -33,7 +33,7 @@ UT_TEST_CASE(adapt_test)
   std::vector<real_t> x0(number,0.0);
 
   // parameters
-  library::MetricField_UGAWG_Polar1 analytic;
+  library::MetricField_UGAWG_Linear analytic;
 
   // geometry
   std::vector<real_t> lengths(number,1);
@@ -64,7 +64,7 @@ UT_TEST_CASE(adapt_test)
   params.insertion_volume_factor() = -1;
   params.curved() = true;
 
-  index_t niter = 5;
+  index_t niter = 0;
   for (index_t iter=0;iter<=niter;iter++)
   {
 

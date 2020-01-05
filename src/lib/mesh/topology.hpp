@@ -52,20 +52,65 @@ Topology<type>::get_edges( std::vector<index_t>& edges ) const
   }
 }
 
+#if 0
+
 template<typename type>
 void
-Topology<type>::get_triangles( std::vector<index_t>& triangles ) const
+Topology<type>::triangulate( Topology<Simplex>& triangulation ) const
 {
-  avro_assert( number_==2 );
-  triangles.clear();
+
+  if (number_==0)
+  {
+    // add the simplices
+    for (index_t k=0;k<nb();k++)
+      triangulation.add( operator()(k,0) );
+  }
+
+  // loop through the cells
   for (index_t k=0;k<nb();k++)
   {
+
     if (ghost(k)) continue;
 
-    for (index_t j=0;j<this->nv(k);j++)
-      triangles.push_back( this->operator()(k,j) );
+    // record the number of vertices and simplices we currently have
+    index_t np0 = triangulation.points().nb();
+    index_t nt0 = triangulation.nb();
+
+    // ask the master to triangulate -- it needs these vertices to compute the
+    // geometry of the vertices it creates
+    master_.triangulate( triangulation , (*this)(k) , nv(k) );
+
+    // loop through the created simplices
+    for (index_t j=nt0;j<triangulation.nb();j++)
+    {
+      avro_assert( triangulation.nv(j)==index_t(triangulation.number()+1) );
+      for (index_t i=0;i<triangulation.nv(j);i++)
+      {
+        // add the parent data for this vertex
+        //parent.push_back( k ); // TODO
+      }
+    }
   }
 }
+
+template<typename type>
+void
+Topology<type>::get_triangles( Topology<Simplex>& triangulation ) const
+{
+  avro_assert( triangulation.points().nb() == 0 );
+  avro_assert( triangulation.number() == 2 );
+  avro_assert( triangulation.nb() == 0 );
+
+  // the reason we add all the vertices is in case the caller doesn't want to
+  // actually change the points
+  for (index_t k=0;k<points_.nb();k++)
+    triangulation.points().create( points_[k] );
+
+  // setting the number to 2 will instruct the triangulator to only save
+  // simplices once we get to triangles
+  triangulate( triangulation );
+}
+#endif
 
 template<typename type>
 void

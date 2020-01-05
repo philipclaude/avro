@@ -48,7 +48,6 @@ public:
 
   virtual void get_points( std::vector<index_t>& p ) const = 0;
   virtual void get_edges( std::vector<index_t>& e ) const = 0;
-  virtual void get_triangles( std::vector<index_t>& t ) const = 0;
 
   const std::string& name() const { return name_; }
   void setName( const std::string& _name ) { name_ = _name; }
@@ -109,7 +108,6 @@ public:
 
   void get_points( std::vector<index_t>& p ) const {}
   void get_edges( std::vector<index_t>& e ) const;
-  void get_triangles( std::vector<index_t>& t ) const;
 
   void get_elem( index_t k , std::vector<real_t*>& X ) const;
   void get_elem( index_t k , std::vector<const real_t*>& X ) const;

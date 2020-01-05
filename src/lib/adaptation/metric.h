@@ -163,7 +163,6 @@ public:
         mk.dump();
 			}
     }
-    assert(false);
 	}
 
   MetricAttachment( Points& points , const std::vector<numerics::SymMatrixD<real_t>>& metrics );
