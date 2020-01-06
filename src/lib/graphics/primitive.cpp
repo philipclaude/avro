@@ -35,7 +35,7 @@ Primitive::selectShader( Plotter* plotter )
     shader_->use();
     shader_->setUniform( "lightDir" , 0.0 , 0.3 , 1.0 );
     shader_->setUniform( "wAmbient" , 0.25f );
-    shader_->setUniform( "xpar" , 1.0f );
+    shader_->setUniform( "xpar" , 0.25f );
     shader_->setUniform( "conNormal" , 0. , 0. , 1. );
     shader_->setUniform( "conColor" , 0. , 1. , 1. );
     shader_->setUniform( "bacColor" , 0.0 , 0.5 , 0.5 );

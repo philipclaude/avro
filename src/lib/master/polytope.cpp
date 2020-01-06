@@ -103,150 +103,67 @@ Polytope::vrep( const index_t* v , index_t nv , const int facet , std::vector<in
   }
 }
 
-void
+std::vector<index_t>
 Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& triangulation ) const
 {
-  const Topology<Polytope>& topology = triangulation.topology();
-  const Points& points = topology.points();
+  std::vector<index_t> simplex_idx;
+  if (number_<=1)
+  {
+    index_t idx = triangulation.add_simplex( number_ , v );
+    simplex_idx.push_back(idx);
+    return simplex_idx;
+  }
 
   // construct a lower dimensional polytope with the same vertex facet matrix
   Polytope facetope(number_-1,order_,incidence_);
 
-  if (triangulation.number()<=1) return;
-
-  // compute the geometry of the vertex we will create
-  std::vector<real_t> xc( points.dim() );
-  numerics::centroid( v , nv , points , xc );
-
-  // save the id of the vertex we create
-  int id = points.nb();
-
-  // create the new vertex with number 'id'
-  triangulation.points().create( xc );
+  // the triangulation keeps track of which points have been added
+  // and from which facet points symbolically created that point
+  index_t id = 0;
+  if (nv>index_t(number_+1))
+    id = triangulation.add_point( number_ , v , nv );
 
   // get the hrep of this cell
   std::vector<int> facets;
   hrep( v ,  nv , facets );
 
   // loop through each facet
+  std::vector<index_t> facet_idx;
   for (index_t j=0;j<facets.size();j++)
   {
     // get the points with this bisector
     std::vector<index_t> vf;
     vrep( v , nv , facets[j] , vf );
 
-    // this also defines a polytope which we need to triangulate!
-    Table<index_t> tf(TableLayout_Jagged);
-
-    if (vf.size()==index_t(number_))
-    {
-      // add the vrep to the triangulation
-      tf.add( vf.data() , vf.size() );
-    }
-
     // triangulate the lower dimensional polytope
-    else facetope.triangulate( number_-1 , tf , triangulation.points() , vf.data() , vf.size() );
+    std::vector<index_t> idx = facetope.triangulate( vf.data() , vf.size() , triangulation );
 
-    // now connect the resulting simplices to the created vertex
-    if (number_==3 && triangulation.number()==2)
-    {
-      // this was a 3d polytope but we want the bounding triangles, likely to plot
-      // do not connect the facets, simply store them
-      for (index_t k=0;k<tf.nb();k++)
-      {
-        std::vector<index_t> tk(3);
-        for (index_t i=0;i<tf.nv(k);i++)
-          tk[i] = tf(k,i);
-        triangulation.add(tk.data(),tk.size());
-      }
-    }
-    else
-    {
-      for (index_t k=0;k<tf.nb();k++)
-      {
-        avro_assert( tf.nv(k)==index_t(number_) );
-        std::vector<index_t> tk(number_+1);
-        for (index_t i=0;i<tf.nv(k);i++)
-          tk[i] = tf(k,i);
-        tk[ number_ ] = id; // the added vertex
-
-        // add the new simplex
-        triangulation.add( tk.data() , tk.size() );
-      }
-    }
+    // add the lower-dimensional facet identifiers
+    for (index_t k=0;k<idx.size();k++)
+      facet_idx.push_back(idx[k]);
   }
-}
 
-void
-Polytope::triangulate( coord_t number , Table<index_t>& simplices , Points& points , const index_t* v , index_t nv ) const
-{
-  // construct a lower dimensional polytope with the same vertex facet matrix
-  Polytope facetope(number_-1,order_,incidence_);
-
-  // nothing to triangulate if we have reached points or edges
-  if (number<=1) return;
-
-  // compute the coordinates of the point we will create
-  std::vector<real_t> xc( points.dim() );
-  numerics::centroid( v , nv , points , xc );
-
-  // save the id of the point we create
-  int id = points.nb();
-
-  // create the new vertex with number 'id'
-  points.create( xc );
-
-  // get the hrep of this cell
-  std::vector<int> facets;
-  hrep( v ,  nv , facets );
-
-  // loop through each facet
-  for (index_t j=0;j<facets.size();j++)
+  // loop through all the simplicial facets
+  if (nv==number_+1)
   {
-    // get the points with this bisector
-    std::vector<index_t> vf;
-    vrep( v , nv , facets[j] , vf );
-
-    // this also defines a polytope which we need to triangulate!
-    Table<index_t> facets(TableLayout_Jagged);
-
-    if (vf.size()==index_t(number_))
+    simplex_idx.push_back( triangulation.add_simplex( number_ , v ) );
+  }
+  else
+  {
+    for (index_t k=0;k<facet_idx.size();k++)
     {
-      // add the vrep to the triangulation
-      facets.add( vf.data() , vf.size() );
-    }
+      std::vector<index_t> simplex(number_+1);
+      for (index_t i=0;i<number_;i++)
+        simplex[i] = triangulation.child(number_-1)(facet_idx[k],i);
+      simplex[number_] = id; // the added vertex
 
-    // triangulate the lower dimensional polytope
-    else facetope.triangulate( number-1 , facets , points , vf.data() , vf.size() );
-
-    // now connect the resulting simplices to the created vertex
-    if (number_==3 && number==2)
-    {
-      // this was a 3d polytope but we want the bounding triangles, likely to plot
-      // do not connect the facets, simply store them
-      for (index_t k=0;k<facets.nb();k++)
-      {
-        std::vector<index_t> tk(3);
-        for (index_t i=0;i<facets.nv(k);i++)
-          tk[i] = facets(k,i);
-        simplices.add(tk.data(),tk.size());
-      }
-    }
-    else
-    {
-      for (index_t k=0;k<facets.nb();k++)
-      {
-        avro_assert( facets.nv(k)==index_t(number_) );
-        std::vector<index_t> tk(number_+1);
-        for (index_t i=0;i<facets.nv(k);i++)
-          tk[i] = facets(k,i);
-        tk[ number_ ] = id; // the added vertex
-
-        // add the new simplex
-        simplices.add( tk.data() , tk.size() );
-      }
+      // add the new simplex
+      index_t idx = triangulation.add_simplex( number_ , simplex.data() );
+      simplex_idx.push_back(idx);
     }
   }
+
+  return simplex_idx;
 }
 
 bool

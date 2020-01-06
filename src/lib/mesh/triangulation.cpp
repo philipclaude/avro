@@ -1,8 +1,11 @@
+#include "master/master.h"
 #include "master/polytope.h"
 #include "master/simplex.h"
 
 #include "mesh/points.h"
 #include "mesh/triangulation.h"
+
+#include "numerics/geometry.h"
 
 #include <algorithm>
 #include <set>
@@ -12,10 +15,79 @@ namespace avro
 
 template<typename type>
 Triangulation<type>::Triangulation( const Topology<type>& topology ) :
-  TriangulationBase(points_,topology.number()),
-  topology_(topology),
-  points_(topology.points().dim())
-{}
+  TriangulationBase(topology.number(),topology.points().dim()),
+  topology_(topology)
+{
+  // create topologies to store the lower-dimensional simplices
+  for (index_t k=0;k<=number_;k++)
+  {
+    add_child( std::make_shared<Topology<Simplex>>(points_,k) );
+    elements_.push_back( std::map<Element,index_t>() );
+  }
+}
+
+template<typename type>
+index_t
+Triangulation<type>::add_simplex( index_t number , const index_t* v )
+{
+  std::vector<index_t> simplex(v,v+number+1);
+  std::sort( simplex.begin() , simplex.end() );
+  Element element;
+  element.dim     = number;
+  element.indices = simplex;
+  element.sorted  = true;
+  if (elements_[number].find(element)==elements_[number].end())
+  {
+    elements_[number].insert( {element,child_[number]->nb()} );
+    child_[number]->add( v , number+1 );
+  }
+  return elements_[number].at(element);
+}
+
+template<typename type>
+index_t
+Triangulation<type>::add_point( coord_t number , const index_t* v , index_t nv )
+{
+  std::vector<index_t> polytope(v,v+nv);
+  std::sort( polytope.begin() , polytope.end() );
+  Element element;
+  element.dim     = number;
+  element.indices = polytope;
+  element.sorted  = true;
+  if (centroids_.find(element)==centroids_.end())
+  {
+    centroids_.insert( {element,points_.nb()} );
+    centroid2dim_.insert( {points_.nb(),number} );
+    std::vector<real_t> xc( points_.dim() );
+    numerics::centroid( v , nv , topology_.points() , xc );
+    points_.create( xc.data() );
+  }
+  else printf("retrieving point!!\n");
+  return centroids_.at(element);
+}
+
+template<typename type>
+void
+Triangulation<type>::get_triangles( std::vector<index_t>& triangles ) const
+{
+  for (index_t k=0;k<child_[2]->nb();k++)
+  {
+    bool skip = false;
+    for (index_t j=0;j<3;j++)
+    {
+      index_t idx = (*child_[2])(k,j);
+      if (centroid2dim_.find(idx)==centroid2dim_.end()) continue;
+      if (centroid2dim_.at(idx)!=2)
+      {
+        skip = true;
+        break;
+      }
+    }
+    if (skip) continue;
+    for (index_t j=0;j<3;j++)
+      triangles.push_back( (*child_[2])(k,j) );
+  }
+}
 
 template<>
 void
@@ -26,15 +98,16 @@ Triangulation<Simplex>::extract()
   std::vector<index_t> triangle(3);
   std::string s;
 
-  // loop through all the cells
-  for (index_t k=0;k<nb();k++)
-  {
-    if (ghost(k)) continue;
+  for (index_t k=0;k<topology_.points().nb();k++)
+    points_.create( topology_.points()[k] );
 
-    const index_t* v0 = topology_(k);
+  // loop through all the cells
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    if (topology_.ghost(k)) continue;
 
     // get the edges of this cell
-    topology_.master().get_triangles( v0 , nv(k) , tk );
+    topology_.master().get_triangles( topology_(k) , topology_.nv(k) , tk );
 
     // add the edges
     for (index_t j=0;j<tk.size()/3;j++)
@@ -56,7 +129,7 @@ Triangulation<Simplex>::extract()
       if (MAP.find(s)==MAP.end())
       {
         MAP.insert(s);
-        add( triangle.data() , triangle.size() );
+        add_simplex( 2 , triangle.data() );
       }
     }
   }
@@ -66,43 +139,17 @@ template<>
 void
 Triangulation<Polytope>::extract()
 {
-  if (number_==0)
-  {
-    // add the simplices
-    for (index_t k=0;k<topology_.nb();k++)
-      add( topology_(k) , 1 );
-  }
+  for (index_t k=0;k<topology_.points().nb();k++)
+    points_.create( topology_.points()[k] );
 
   // loop through the cells
   for (index_t k=0;k<topology_.nb();k++)
   {
-
     if (topology_.ghost(k)) continue;
 
-    // record the number of vertices and simplices we currently have
-    index_t nv0 = points_.nb();
-    index_t nt0 = this->nb();
-
-    // ask the master to triangulate -- it needs these vertices to compute the
-    // geometry of the vertices it creates
+    // ask the master to triangulate, points will be added to points stored
+    // in the triangulation object upon triangulation by the master
     topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this );
-
-    index_t nt = this->nb();
-
-    // loop through the created simplices
-    for (index_t j=nt0;j<nt;j++)
-    {
-      avro_assert( this->nv(j)==index_t(this->number()+1) );
-      for (index_t i=0;i<this->nv(j);i++)
-      {
-        // add the parent data for this vertex
-        parents_.push_back( k );
-      }
-    }
-
-    // add these vertices to the vertex list for the interpolator (graphics)
-    for (index_t j=nv0;j<topology_.points().nb();j++)
-      points_.create( topology_.points()[k] );
   }
 }
 

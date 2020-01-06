@@ -21,42 +21,57 @@ void
 OpenGLPrimitive::convert()
 {
   index_t n = 0;
-  index_t nb_points = topology_.points().nb();
   index_t nb_triangles = 0;
   index_t nb_edges = 0;
   coord_t dim0 = topology_.points().dim();
   coord_t number = topology_.number();
 
-  const Points& points = topology_.points();
+  // get the triangles from the topology
+  std::shared_ptr<TriangulationBase> ptriangulation;
+  if (topology_.type_name()=="simplex")
+    ptriangulation = std::make_shared<Triangulation<Simplex>>(*dynamic_cast<const Topology<Simplex>*>(&topology_));
+  else
+    ptriangulation = std::make_shared<Triangulation<Polytope>>(*dynamic_cast<const Topology<Polytope>*>(&topology_));
+  ptriangulation->extract();
+  const TriangulationBase& triangulation = *ptriangulation.get();
 
-  //avro_assert( dim==3 );
+  const Points& points = triangulation.points();
+  std::vector<index_t> triangles;
+  triangulation.get_triangles(triangles);
+  index_t nb_points = triangles.size(); // duplicated points for cell-based colors
 
   // allocate the vertex data
-  points_.resize( 3*nb_points);
   colors_.resize( 3*nb_points, 0 );
   normals_.resize( 3*nb_points, 0 );
+
+  printf("triangulation pts nb = %lu, topology points nb = %lu\n",points.nb(),topology_.points().nb() );
+
+  std::vector<index_t> point_map( points.nb() );
+  n = 0;
+  for (index_t k=0;k<triangles.size();k++)
+  {
+    for (index_t j=0;j<dim0;j++)
+      points_.push_back( points[triangles[k]][j] );
+    for (index_t j=dim0;j<3;j++)
+      points_.push_back( 0.0 );
+
+    point_map[ triangles[k] ] = triangles_.size();
+
+    if (number>=2)
+      triangles_.push_back( triangles_.size() );
+  }
 
   if (number>=1)
   {
     // get the edges from the topology
     std::vector<index_t> edges;
     topology_.get_edges( edges );
-    nb_edges = edges_.size()/2;
-    edges_.assign( edges.begin() , edges.end() );
+    for (index_t k=0;k<edges.size();k++)
+      edges_.push_back( point_map[ edges[k] ] );
   }
   if (number>=2)
   {
-    // get the triangles from the topology (TODO)
-    std::shared_ptr<TriangulationBase> ptriangulation;
-    if (true or topology_.name()=="simplex")
-      ptriangulation = std::make_shared<Triangulation<Simplex>>(*dynamic_cast<const Topology<Simplex>*>(&topology_));
-    else
-      ptriangulation = std::make_shared<Triangulation<Polytope>>(*dynamic_cast<const Topology<Polytope>*>(&topology_));
-    ptriangulation->extract();
-    const TriangulationBase& triangulation = *ptriangulation.get();
-    nb_triangles = triangulation.nb()/3;
-    const std::vector<index_t>& triangles = triangulation.data();
-    triangles_.assign( triangles.begin() , triangles.end() );
+    nb_triangles = triangles_.size()/3;
   }
 
   // save the vertex data that gets passed to the shaders
@@ -66,20 +81,6 @@ OpenGLPrimitive::convert()
     colors_[3*k  ] = 255;
     colors_[3*k+1] = 255;
     colors_[3*k+2] = 0;
-
-    for (index_t j=0;j<dim0;j++)
-    {
-      points_[n] = points(k,j);
-      n++;
-    }
-    if (dim0<3)
-    {
-      for (coord_t j=dim0;j<3;j++)
-      {
-        points_[n] = 0;
-        n++;
-      }
-    }
   }
 
   // compute the normals
@@ -171,10 +172,8 @@ OpenGLPrimitive::convert()
 void
 OpenGLPrimitive::write()
 {
-  transform_feedback_ = false;
-
   // bind the buffers to the opengl context
-  index_t nb_points = topology_.points().nb();
+  transform_feedback_ = false;
 
   // allocate the buffers
   std::vector<GLuint> vbo(7);
@@ -189,6 +188,8 @@ OpenGLPrimitive::write()
 
   // convert the data for the gl
   convert();
+
+  index_t nb_points = points_.size()/3;
 
   if (topology_.number()>=2)
   {

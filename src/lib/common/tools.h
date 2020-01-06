@@ -213,6 +213,13 @@ printValue( const index_t& x )
 
 template<>
 inline void
+printValue( const unsigned& x )
+{
+  printf("%d ",int(x));
+}
+
+template<>
+inline void
 printValue( const int& x )
 {
   printf("%d ",int(x));
@@ -291,6 +298,7 @@ struct SortBy
   }
 };
 
+template void print_inline( const std::vector<unsigned>& s , const std::string& name , const int id , const index_t nt );
 template void print_inline( const std::vector<index_t>& s , const std::string& name , const int id , const index_t nt );
 template void print_inline( const std::vector<double>& s , const std::string& name , const int id , const index_t nt );
 template void print_inline( const std::vector<float>& s , const std::string& name , const int id , const index_t nt );

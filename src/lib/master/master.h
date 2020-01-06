@@ -4,6 +4,7 @@
 #include "common/types.h"
 
 #include "master/basis.h"
+#include "master/master.h"
 #include "master/reference.h"
 
 #include "numerics/matrix.h"
