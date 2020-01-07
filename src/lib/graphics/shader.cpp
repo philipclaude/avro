@@ -83,12 +83,10 @@ ShaderProgram::link()
       log_ = c_log;
       delete [] c_log;
     }
-    printf("not linked :(\n");
     return false;
   }
   else
   {
-    printf("linked!!\n");
     linked_ = true;
     return linked_;
   }

@@ -21,9 +21,7 @@ namespace graphics
 void
 OpenGLPrimitive::convert()
 {
-  index_t n = 0;
   index_t nb_triangles = 0;
-  index_t nb_edges = 0;
   coord_t dim0 = topology_.points().dim();
   coord_t number = topology_.number();
 
@@ -46,8 +44,6 @@ OpenGLPrimitive::convert()
   colors_.resize( 3*nb_points, 0 );
   normals_.resize( 3*nb_points, 0 );
 
-  printf("triangulation pts nb = %lu, topology points nb = %lu\n",points.nb(),topology_.points().nb() );
-
   index_t max_parent = *std::max_element( parents.begin() , parents.end() );
 
   std::vector<index_t> point_map0( points.nb() );
@@ -65,6 +61,7 @@ OpenGLPrimitive::convert()
     if (number>=2)
       triangles_.push_back( triangles_.size() );
   }
+  nb_triangles = triangles_.size()/3;
 
   if (number>=1)
   {
@@ -74,39 +71,50 @@ OpenGLPrimitive::convert()
     for (index_t k=0;k<edges.size();k++)
       edges_.push_back( point_map0[ edges[k] ] );
   }
-  if (number>=2)
-  {
-    nb_triangles = triangles_.size()/3;
-  }
 
-  // save the vertex data that gets passed to the shaders
-  n = 0;
-  for (index_t k=0;k<nb_points;k++)
-  {
-    colors_[3*k  ] = 255;
-    colors_[3*k+1] = 255;
-    colors_[3*k+2] = 0;
-  }
+  // retrieve the active field
+  index_t active = 0;
+  index_t rank = 0;
+  const Fields& fields = topology_.fields();
+  real_t umin = 0;//fields[active][rank].min();
+  real_t umax = max_parent-1;//fields[active][rank].max();
+  float lims[2] = {float(umin),float(umax)};
 
+  Table<index_t> dof;
+  Table<real_t> barycentric;
+  triangulation.get_barycentric( 2 , dof , barycentric );
+
+  Table<real_t> U;
+  fields["site"].evaluate( rank , parents , dof , barycentric , U );
+
+  // compute the color of the point
   Colormap colormap;
-  float lims[2] = {0,1.0f*max_parent-1};
   colormap.set_limits(lims);
   std::vector<index_t> color0( points.nb()*3 );
+  index_t nb_native = 0,nb_non_native = 0;
   for (index_t k=0;k<triangles.size()/3;k++)
   {
     // retrieve the parent
     index_t parent = parents[k];
     float color[3];
-    colormap.map( parent*1.0f , color );
     for (index_t j=0;j<3;j++)
     {
       index_t p = triangles[3*k+j];
+      if (!triangulation.native(p)) nb_non_native++;
+      else nb_native++;
+
+      real_t u = parent;//fields[active][rank].eval( parent , alpha );
+      //u = fields["voronoi_cell"].eval(parent,alpha);
+      colormap.map( u , color );
+
       color0[3*p  ] = 255*color[0];
       color0[3*p+1] = 255*color[1];
       color0[3*p+2] = 255*color[2];
     }
   }
+  //printf("have %lu native vertices and %lu non_native\n",nb_native,nb_non_native);
 
+  // map the colors to all the vertices
   for (index_t k=0;k<nb_points;k++)
   {
     for (index_t j=0;j<3;j++)
@@ -132,9 +140,9 @@ OpenGLPrimitive::convert()
       y3 = points_[ 3*triangles_[3*k+2] + 1 ];
       z3 = points_[ 3*triangles_[3*k+2] + 2 ];
 
-      xnor = 10;//(y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
-      ynor = 10;//(z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
-      znor = 10;//(x3-x1)*(y2-y1)-(y3-y1)*(x2-x1);
+      xnor = (y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
+      ynor = (z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
+      znor = (x3-x1)*(y2-y1)-(y3-y1)*(x2-x1);
 
       dis  = sqrtf(xnor*xnor + ynor*ynor + znor*znor);
 
@@ -161,9 +169,9 @@ OpenGLPrimitive::convert()
     {
       if (count[k] <= 1) continue;
       dis  = count[k];
-      xnor = 10;//normals_[3*k  ] / dis;
-      ynor = 10;//normals_[3*k+1] / dis;
-      znor = 10;//normals_[3*k+2] / dis;
+      xnor = normals_[3*k  ] / dis;
+      ynor = normals_[3*k+1] / dis;
+      znor = normals_[3*k+2] / dis;
       dis  = sqrtf(xnor*xnor + ynor*ynor + znor*znor);
       normals_[3*k  ] = xnor/dis;
       normals_[3*k+1] = ynor/dis;

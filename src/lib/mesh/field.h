@@ -26,6 +26,10 @@ class Coordinate;
 
 class FieldHolder
 {
+public:
+  virtual void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<index_t>& dof , const Table<real_t>& alpha , Table<real_t>& result ) const = 0;
+  virtual ~FieldHolder() {}
+
 private:
   std::string name_;
 };
@@ -39,6 +43,8 @@ template<typename T>
 class FieldBase : public FieldHolder, public Table<index_t>
 {
 public:
+  virtual ~FieldBase() {}
+
   T& eval( index_t elem , const Parameter& u ) const;
   T& eval( index_t elem , const Coordinate& x ) const;
   T& eval( const Coordinate& x ) const;
@@ -61,6 +67,8 @@ public:
   T& value( index_t k ) { return *data_[k]; }
 
   const DOF<T>& dof() const { return data_; }
+
+  virtual void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<index_t>& dof , const Table<real_t>& alpha , Table<real_t>& result ) const = 0;
 
 protected:
   FieldBase( FieldType type , TableLayoutCategory category=TableLayout_Jagged );
@@ -86,6 +94,10 @@ public:
   void evaluate( const Function& function );
 
   const Topology<Simplex>& topology() const { return topology_; }
+
+  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<index_t>& dof, const Table<real_t>& alpha , Table<real_t>& result ) const
+  { avro_implement; }
+
 
 private:
   const Topology<Simplex>& topology_;
@@ -117,6 +129,9 @@ public:
 
   derived_t& base() { return base_; }
   const derived_t& base() const { return base_; }
+
+  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<index_t>& dof , const Table<real_t>& alpha , Table<real_t>& result ) const
+  { avro_implement; }
 
 private:
   std::string name_;
@@ -155,6 +170,11 @@ public:
     {
       const FieldHolder* f = fields_.at(name).get();
       return static_cast<const FieldClass<type>*>(f)->base();
+    }
+
+    const FieldHolder& operator[] ( const std::string& name ) const
+    {
+      return *fields_.at(name).get();
     }
 
     void remove( const std::string& name )

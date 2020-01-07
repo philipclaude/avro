@@ -25,7 +25,7 @@ UT_TEST_CASE_END( simplex_topologies )
 
 UT_TEST_CASE( voronoi_tests )
 {
-  CKF_Triangulation topology( {4,4,4} );
+  CKF_Triangulation topology( {4,4} );
   library::RegularPolygon polygon(6);
 
   Delaunay z(topology.points());
@@ -42,6 +42,11 @@ UT_TEST_CASE( voronoi_tests )
   Window::Plot_ptr plot2 = std::make_shared<Plot>(topology,&window);
   Window::Plot_ptr plot3 = std::make_shared<Plot>(polygon,&window);
   plotter.window("main").attach(plot1);
+
+  BasicInterface basic( window );
+  PlotTree tree(window);
+  window.set_interface(&tree);
+
   plotter.run();
 }
 UT_TEST_CASE_END( voronoi_tests )

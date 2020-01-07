@@ -25,6 +25,35 @@ Triangulation<type>::Triangulation( const Topology<type>& topology ) :
     elements_.push_back( std::map<Element,index_t>() );
     parents_.push_back( std::map<index_t,std::vector<index_t>>() );
   }
+
+  // copy all the points and set them as native
+  for (index_t k=0;k<topology_.points().nb();k++)
+  {
+    points_.create( topology_.points()[k] );
+    native_.push_back(true);
+  }
+
+  barycentric_.set_layout(TableLayout_Jagged);
+
+  point2element_.resize( topology_.points().nb() );
+  std::vector<bool> visited( topology_.points().nb() , false );
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    for (index_t j=0;j<topology_.nv(k);j++)
+    {
+      if (visited[topology_(k,j)]) continue;
+      visited[topology(k,j)] = true;
+
+      Element element;
+      element.indices.assign( topology_(k) , topology_(k)+topology_.nv(k) );
+      element.dim = topology_.number();
+      element.sorted = false;
+      point2element_[topology(k,j)] = element;
+      std::vector<real_t> alpha(topology_.nv(k),0.0);
+      alpha[j] = 1.0;
+      barycentric_.add( alpha.data() , alpha.size() );
+    }
+  }
 }
 
 template<typename type>
@@ -66,6 +95,11 @@ Triangulation<type>::add_point( coord_t number , const index_t* v , index_t nv )
     std::vector<real_t> xc( points_.dim() );
     numerics::centroid( v , nv , topology_.points() , xc );
     points_.create( xc.data() );
+    native_.push_back(false);
+    point2element_.push_back( element );
+
+    std::vector<real_t> alpha( nv , 1./nv );
+    barycentric_.add( alpha.data() , alpha.size() );
   }
   return centroids_.at(element);
 }
@@ -93,11 +127,46 @@ Triangulation<type>::get_simplices( coord_t number , std::vector<index_t>& simpl
     for (index_t j=0;j<number+1;j++)
       simplices.push_back(s(k,j));
 
-    if (topology_.number()==2) avro_assert( parents_[number].at(k).size()==1 ); // all triangles have cardinality 1
-    if (topology_.number()==3) avro_assert( parents_[number].at(k).size()<=2 ); // boundary facets have cardinality 1, interior 2
+    if (topology_.number()==2)
+      avro_assert( parents_[number].at(k).size()==1 ); // all triangles have cardinality 1
+    if (topology_.number()==3)
+      avro_assert( parents_[number].at(k).size()<=2 ); // boundary facets have cardinality 1, interior 2
 
     parents.push_back( parents_[number].at(k)[0] );
   }
+}
+
+template<>
+void
+Triangulation<Polytope>::get_barycentric( coord_t number , Table<index_t>& dof , Table<real_t>& barycentric ) const
+{
+  dof.set_layout( TableLayout_Jagged );
+  barycentric.set_layout( TableLayout_Jagged );
+
+  avro_assert( point2element_.size() == points_.nb() );
+  avro_assert( barycentric_.nb() == points_.nb() );
+
+  // create interpolation data for each point
+  for (index_t k=0;k<points_.nb();k++)
+  {
+    // add the dof data for this point
+    const Element& element = point2element_[k];
+    print_inline(element.indices);
+    avro_assert( element.dim == number );
+
+    dof.add( element.indices.data() , element.indices.size() );
+    barycentric.add( barycentric_(k) , barycentric_.nv(k) );
+
+    std::vector<real_t> alpha( barycentric_(k) , barycentric_(k)+barycentric_.nv(k) );
+    print_inline(alpha);
+  }
+}
+
+template<>
+void
+Triangulation<Simplex>::get_barycentric( coord_t number , Table<index_t>& dof , Table<real_t>& barycentric ) const
+{
+  avro_implement;
 }
 
 template<>
@@ -108,9 +177,6 @@ Triangulation<Simplex>::extract()
   std::set<std::string> MAP;
   std::vector<index_t> triangle(3);
   std::string s;
-
-  for (index_t k=0;k<topology_.points().nb();k++)
-    points_.create( topology_.points()[k] );
 
   // loop through all the cells
   for (index_t k=0;k<topology_.nb();k++)
@@ -151,9 +217,6 @@ template<>
 void
 Triangulation<Polytope>::extract()
 {
-  for (index_t k=0;k<topology_.points().nb();k++)
-    points_.create( topology_.points()[k] );
-
   // loop through the cells
   for (index_t k=0;k<topology_.nb();k++)
   {
@@ -163,7 +226,6 @@ Triangulation<Polytope>::extract()
     // in the triangulation object upon triangulation by the master
     topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this , k );
   }
-
   child(number_).orient();
 }
 
