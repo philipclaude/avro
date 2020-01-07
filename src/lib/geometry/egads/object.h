@@ -40,7 +40,7 @@ public:
   ego* object();
   const ego* object() const;
 
-  const ego egchild( index_t k ) const;
+  ego egchild( index_t k ) const;
 
   int object_class() const { return data_.object_class; }
 

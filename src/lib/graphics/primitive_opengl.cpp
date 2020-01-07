@@ -399,16 +399,13 @@ OpenGLPrimitive::draw()
       GL_CALL( glBindVertexArray(vao_edges_) );
       GL_CALL( glDrawElements( GL_LINES , edges_.size() , GL_UNSIGNED_INT , 0 ) )
     }
-  }
-  if (topology_.number()>=0)
+  } 
+  // draw the points
+  if (points_on_)
   {
-    // draw the points
-    if (points_on_)
-    {
-      GL_CALL( glBindVertexArray(vao_points_) );
-      GL_CALL( glPointSize(10.0f) );
-      GL_CALL( glDrawArrays( GL_POINTS , 0 , points_.size()/3 ) );
-    }
+    GL_CALL( glBindVertexArray(vao_points_) );
+    GL_CALL( glPointSize(10.0f) );
+    GL_CALL( glDrawArrays( GL_POINTS , 0 , points_.size()/3 ) );
   }
 
   // reset the vao bound to the gl

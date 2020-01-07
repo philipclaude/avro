@@ -21,7 +21,7 @@ Body::build_hierarchy()
   printf("nb_children = %d\n",data_.nb_children);
   // loop through the children obtained from egads
   // and create the topological entities
-  for (index_t k=0;k<data_.nb_children;k++)
+  for (int k=0;k<data_.nb_children;k++)
   {
     // create the new entity
     std::shared_ptr<EGADS::Object> entity;

@@ -57,7 +57,7 @@ Object::object() const
   return object_;
 }
 
-const ego
+ego
 Object::egchild( index_t k ) const
 {
   return data_.children[k];
@@ -178,7 +178,7 @@ void
 Object::print(bool with_children) const
 {
   if (with_children)
-    for (index_t i=0;i<body_->number()-number_;i++)
+    for (coord_t i=0;i<body_->number()-number_;i++)
       printf("\t");
   printf("EGADS: number = %u , class = %s, type = %s at %p\n",number_,
   EGADS::utilities::object_class_name(data_.object_class).c_str(),

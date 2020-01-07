@@ -59,13 +59,12 @@ protected:
 
   coord_t number_;
   std::string name_;
+  Entity* parent_;
   int identifier_;
   Body* body_;
 
   bool interior_;
   bool sense_required_;
-
-  Entity* parent_;
   bool tessellatable_;
 
   bool egads_;

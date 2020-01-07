@@ -40,19 +40,19 @@ intersection( const std::vector<T>& s0 , const std::vector<T>& s1 , std::vector<
 Entity::Entity( coord_t number ) :
   number_(number),
   name_("unnamed"),
-	parent_(nullptr),
-	tessellatable_(false),
-	identifier_(0),
-	egads_(false)
+  parent_(nullptr),
+  identifier_(0),
+  tessellatable_(false),	
+  egads_(false)
 {}
 
 Entity::Entity( coord_t number , const std::string& name ) :
   number_(number),
   name_(name),
-	parent_(nullptr),
-	tessellatable_(false),
-	identifier_(0),
-	egads_(false)
+  parent_(nullptr),
+  identifier_(0),
+  tessellatable_(false), 
+  egads_(false)
 {}
 
 Entity*

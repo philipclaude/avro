@@ -67,8 +67,8 @@ Simplex::precalculate()
   // TODO
 
   // save the edges
-  for (index_t k=0;k<number_+1;k++)
-  for (index_t i=k+1;i<number_+1;i++)
+  for (coord_t k=0;k<number_+1;k++)
+  for (coord_t i=k+1;i<number_+1;i++)
   {
     edges_.push_back(k);
     edges_.push_back(i);

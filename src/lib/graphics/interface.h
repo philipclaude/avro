@@ -54,8 +54,8 @@ public:
   void show();
 };
 
-};
+} // graphics
 
-};
+} // avro
 
 #endif

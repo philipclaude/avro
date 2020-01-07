@@ -747,9 +747,9 @@ UT_TEST_CASE( ATransposeA_rectangle_ctor )
   UT_ASSERT_EQUALS( 54, sm1b(2,1) );
   UT_ASSERT_EQUALS( 65, sm1b(2,2) );
 
-  const Int data2[6] = {7,6,
+  /*const Int data2[6] = {7,6,
                         5,4,
-                        3,2};
+                        3,2};*/
   MatrixD mb(3,2);
   mb(0,0) = 7; mb(0,1) = 6;
   mb(1,0) = 5; mb(1,1) = 4;
@@ -1093,11 +1093,11 @@ UT_TEST_CASE_END( ATransposeA_rectangle_ctor )
 //----------------------------------------------------------------------------//
 UT_TEST_CASE( MatrixSymS_Transpose_xTMx_test )
 {
-  Int Mdata[] = {1,
+  /*Int Mdata[] = {1,
                  3, 4};
 
   Int xdata[] = {3, 4};
-
+  */
   MatrixSymD M(2);
   M(0,0) = 1;
   M(0,1) = 3;

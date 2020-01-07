@@ -217,7 +217,7 @@ ReferenceElement<Simplex>::precalculate()
   for (index_t k=0;k<nb_basis();k++)
   {
     bool anyzero = false;
-    for (index_t j=0;j<number_+1;j++)
+    for (coord_t j=0;j<number_+1;j++)
     {
       if (lref_[k*(number_+1)+j]==0)
       {

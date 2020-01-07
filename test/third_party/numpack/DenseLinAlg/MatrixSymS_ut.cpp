@@ -30,8 +30,6 @@ typedef MatrixSymS<2,Int> MatrixSymS;*/
 
 UT_TEST_CASE( test1 )
 {
-  const int n = 2;
-
   DLA::MatrixSymS<2,Real> m1;
   DLA::MatrixSymS<2,Real> m2;
 

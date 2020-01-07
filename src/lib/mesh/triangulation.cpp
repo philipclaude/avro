@@ -120,7 +120,7 @@ Triangulation<type>::get_simplices( coord_t number , std::vector<index_t>& simpl
   for (index_t k=0;k<s.nb();k++)
   {
     bool skip = false;
-    for (index_t j=0;j<number+1;j++)
+    for (coord_t j=0;j<number+1;j++)
     {
       index_t idx = s(k,j);
       if (centroid2dim_.find(idx)==centroid2dim_.end()) continue;
@@ -131,7 +131,7 @@ Triangulation<type>::get_simplices( coord_t number , std::vector<index_t>& simpl
       }
     }
     if (skip) continue;
-    for (index_t j=0;j<number+1;j++)
+    for (coord_t j=0;j<number+1;j++)
       simplices.push_back(s(k,j));
 
     if (topology_.number()==2)

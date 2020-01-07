@@ -431,11 +431,11 @@ MatrixSymD<T>::operator=( const std::initializer_list< std::initializer_list<T> 
 
   int n = 0;
   auto row = s.begin();
-  for (std::size_t i = 0; i < M; ++i, row++)
+  for (int i = 0; i < M; ++i, row++)
   {
-    SANS_ASSERT( i+1 == row->size() );
+    SANS_ASSERT( i+1 == (int)row->size() );
     auto col = row->begin();
-    for (std::size_t j = 0; j < i+1; ++j, col++)
+    for (int j = 0; j < i+1; ++j, col++)
       data[n++] = *col;
   }
 

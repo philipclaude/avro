@@ -146,7 +146,7 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
   }
 
   // loop through all the simplicial facets
-  if (nv==number_+1)
+  if (nv==index_t(number_+1))
   {
     simplex_idx.push_back( triangulation.add_simplex( number_ , v , parent ) );
   }

@@ -47,7 +47,7 @@ private:
   typedef void (*eval_grad_ptr)(const ReferenceElement<Shape>&,const double*,double*);
   typedef void (*eval_hess_ptr)(const ReferenceElement<Shape>&,const double*,double*);
 
-  const eval_func_ptr
+  eval_func_ptr
   get_func( BasisFunctionCategory category )
   {
     if (category==BasisFunctionCategory_Lagrange)
@@ -57,7 +57,7 @@ private:
     return NULL;
   }
 
-  const eval_grad_ptr
+  eval_grad_ptr
   get_grad( BasisFunctionCategory category )
   {
     if (category==BasisFunctionCategory_Lagrange)
@@ -67,7 +67,7 @@ private:
     return NULL;
   }
 
-  const eval_hess_ptr
+  eval_hess_ptr
   get_hess( BasisFunctionCategory category )
   {
     if (category==BasisFunctionCategory_Lagrange)

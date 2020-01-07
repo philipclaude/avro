@@ -51,14 +51,14 @@ Facet::build_basis()
 
   for (index_t j=0;j<dim_;j++)
     V_(j,0) = (*nodes[0])(j);
-  for (index_t k=1;k<number_+1;k++)
-  for (index_t j=0;j<dim_;j++)
+  for (coord_t k=1;k<number_+1;k++)
+  for (coord_t j=0;j<dim_;j++)
     V_(j,k) = (*nodes[0])(j) + basis_(j,k-1);
 
   B_ = 1;
   numerics::MatrixD<real_t> VtV = numpack::Transpose(V_)*V_;
-  for (index_t i=0;i<number_+1;i++)
-  for (index_t j=0;j<number_+1;j++)
+  for (coord_t i=0;i<number_+1;i++)
+  for (coord_t j=0;j<number_+1;j++)
     B_(i,j) = VtV(i,j);
 }
 
@@ -82,7 +82,7 @@ Facet::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
   for (coord_t j=0;j<dim_;j++)
   {
     x[j] = 0;
-    for (index_t k=0;k<number_+1;k++)
+    for (coord_t k=0;k<number_+1;k++)
       x[j] += V_(j,k)*u0[k];
   }
 }
@@ -102,12 +102,12 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
 
   // compute the closest point (z)
   numerics::VectorD<real_t> alpha(number_+1);
-  for (index_t j=0;j<number_+1;j++)
+  for (coord_t j=0;j<number_+1;j++)
     alpha[j] = y[j];
   numerics::VectorD<real_t> z = V_*alpha;
 
   // save the parameter values
-  for (index_t j=0;j<alpha.size();j++)
+  for (int j=0;j<alpha.size();j++)
     u[j] = alpha[j];
 
   real_t d = numerics::distance2( z.data() , x.data() , dim_ );
