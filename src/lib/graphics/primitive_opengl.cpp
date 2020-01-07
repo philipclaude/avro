@@ -92,7 +92,6 @@ OpenGLPrimitive::convert()
   for (index_t k=0;k<triangles.size()/3;k++)
   {
     // retrieve the parent
-    index_t parent = parents[k];
     float color[3];
     for (index_t j=0;j<3;j++)
     {

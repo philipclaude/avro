@@ -276,7 +276,8 @@ epsFile::print_triangles() const
     ynor = (z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
     znor = (x3-x1)*(y2-y1)-(y3-y1)*(x2-x1);
 
-    if (znor > 0.0) continue;
+    // if culling is active!!!
+    //if (znor > 0.0) continue;
 
     idx.push_back(count++);
     visible.push_back( k );

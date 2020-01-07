@@ -72,14 +72,16 @@ template<>
 inline real_t
 FieldBase<real_t>::min( index_t rank ) const
 {
-  return *std::min_element( data_.data().begin() , data_.data().end() );
+  const std::vector<real_t>& u = data_.template DOF<real_t>::data();
+  return *std::min_element( u.begin() , u.end() );
 }
 
 template<>
 inline real_t
 FieldBase<real_t>::max( index_t rank ) const
 {
-  return *std::max_element( data_.data().begin() , data_.data().end() );
+  const std::vector<real_t>& u = data_.template DOF<real_t>::data();
+  return *std::max_element( u.begin() , u.end() );
 }
 
 } // avro
