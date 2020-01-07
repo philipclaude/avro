@@ -121,7 +121,7 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
   // and from which facet points symbolically created that point
   index_t id = 0;
   if (nv>index_t(number_+1))
-    id = triangulation.add_point( number_ , v , nv );
+    id = triangulation.add_point( number_ , v , nv , parent );
 
   // get the hrep of this cell
   std::vector<int> facets;

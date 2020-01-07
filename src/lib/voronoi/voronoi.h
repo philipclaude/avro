@@ -11,6 +11,7 @@
 #include "master/polytope.h"
 #include "master/simplex.h"
 
+#include "mesh/field.hpp"
 #include "mesh/mesh.h"
 #include "mesh/topology.h"
 
@@ -254,24 +255,25 @@ private:
   real_t energy_;
   std::string outdir_;
 
-  /*
-  class VoronoiSites : public CellField<real_t>
+  class VoronoiSites : public Field<Polytope,real_t>
   {
   public:
-    VoronoiSites() {}
+    VoronoiSites( RestrictedVoronoiDiagram& rvd ) :
+      Field<Polytope,real_t>(rvd,0,DISCONTINUOUS)
+    {}
 
-    void addCell( const real_t z )
+    void add_cell( const real_t z )
     {
-      Field<real_t>::add(z+1);
+      //Field<real_t>::add(z+1);
     }
 
     index_t rank() const { return 1; }
+
     std::vector<std::string> ranknames() const
      {std::vector<std::string> result; result.push_back("sites"); return result;}
   };
 
-  VoronoiSites sites_;
-  */
+  std::shared_ptr<VoronoiSites> sites_;
 
 };
 

@@ -8,6 +8,7 @@
 
 #include "library/eps.h"
 
+#include "mesh/field.hpp"
 #include "mesh/points.h"
 #include "mesh/topology.h"
 #include "mesh/triangulation.h"
@@ -44,8 +45,6 @@ OpenGLPrimitive::convert()
   colors_.resize( 3*nb_points, 0 );
   normals_.resize( 3*nb_points, 0 );
 
-  index_t max_parent = *std::max_element( parents.begin() , parents.end() );
-
   std::vector<index_t> point_map0( points.nb() );
   std::vector<index_t> point_map1;
   for (index_t k=0;k<triangles.size();k++)
@@ -73,25 +72,23 @@ OpenGLPrimitive::convert()
   }
 
   // retrieve the active field
-  index_t active = 0;
+  std::string active = "sites"; // TODO more generic
   index_t rank = 0;
   const Fields& fields = topology_.fields();
-  real_t umin = 0;//fields[active][rank].min();
-  real_t umax = max_parent-1;//fields[active][rank].max();
+  real_t umin = fields[active].min(rank);
+  real_t umax = fields[active].max(rank);
   float lims[2] = {float(umin),float(umax)};
 
-  Table<index_t> dof;
-  Table<real_t> barycentric;
-  triangulation.get_barycentric( 2 , dof , barycentric );
+  // evaluate the active field (with rank) on the triangulation points
+  const std::vector<index_t>& point_parents = triangulation.point_parents();
+  const Table<real_t>& reference_coordinates = triangulation.reference_coordinates();
+  std::vector<real_t> U;
+  fields[active].evaluate( rank , point_parents , reference_coordinates , U );
 
-  Table<real_t> U;
-  fields["site"].evaluate( rank , parents , dof , barycentric , U );
-
-  // compute the color of the point
+  // compute the color of the (unduplicated) triangulation points
   Colormap colormap;
   colormap.set_limits(lims);
   std::vector<index_t> color0( points.nb()*3 );
-  index_t nb_native = 0,nb_non_native = 0;
   for (index_t k=0;k<triangles.size()/3;k++)
   {
     // retrieve the parent
@@ -100,19 +97,14 @@ OpenGLPrimitive::convert()
     for (index_t j=0;j<3;j++)
     {
       index_t p = triangles[3*k+j];
-      if (!triangulation.native(p)) nb_non_native++;
-      else nb_native++;
-
-      real_t u = parent;//fields[active][rank].eval( parent , alpha );
-      //u = fields["voronoi_cell"].eval(parent,alpha);
-      colormap.map( u , color );
+      real_t  u = U[p];
+      colormap.map( u , color ); // between [0,1]
 
       color0[3*p  ] = 255*color[0];
       color0[3*p+1] = 255*color[1];
       color0[3*p+2] = 255*color[2];
     }
   }
-  //printf("have %lu native vertices and %lu non_native\n",nb_native,nb_non_native);
 
   // map the colors to all the vertices
   for (index_t k=0;k<nb_points;k++)

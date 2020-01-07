@@ -234,12 +234,12 @@ RestrictedVoronoiDiagram::accumulate()
 
   // clear the site information
   fields_.remove("sites");
-  //sites_.clear();
 
   // clear the points
   points_.clear();
   this->child_.clear();
 
+  std::vector<index_t> sites;
   for (index_t k=0;k<simplices_.size();k++)
   {
 
@@ -251,7 +251,7 @@ RestrictedVoronoiDiagram::accumulate()
       for (index_t i=0;i<cell.size();i++)
         cell[i] += points_.nb();
       add( cell.data() , cell.size() );
-      //sites_.addCell( real(simplices_[k]->seed(j)) );
+      sites.push_back( simplices_[k]->seed(j) );
     }
 
     // add the points
@@ -265,10 +265,15 @@ RestrictedVoronoiDiagram::accumulate()
       std::vector<int> f = vf.get(j);
       points_.incidence().add( f.data() , f.size() );
     }
-
   }
-  //add_child(t);
-  //fields_.make("sites",sites_);
+
+  sites_ = std::make_shared<VoronoiSites>(*this);
+  sites_->build();
+
+  for (index_t k=0;k<sites.size();k++)
+    sites_->value(k) = sites[k];
+
+  fields_.make("sites",sites_);
 }
 
 void

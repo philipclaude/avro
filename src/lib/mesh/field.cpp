@@ -8,6 +8,7 @@
 #include "mesh/builder.h"
 #include "mesh/builder.hpp"
 #include "mesh/field.h"
+#include "mesh/field.hpp"
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
@@ -30,7 +31,6 @@ Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , Fie
   master_(topology.number(),order)
 {
   Table<index_t>::set_rank( master_.nb_basis() );
-  //build();
 }
 
 template<typename T>

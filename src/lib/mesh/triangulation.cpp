@@ -33,9 +33,8 @@ Triangulation<type>::Triangulation( const Topology<type>& topology ) :
     native_.push_back(true);
   }
 
-  barycentric_.set_layout(TableLayout_Jagged);
-
-  point2element_.resize( topology_.points().nb() );
+  reference_coordinates_.set_layout(TableLayout_Jagged);
+  point_parents_.resize( topology_.points().nb() );
   std::vector<bool> visited( topology_.points().nb() , false );
   for (index_t k=0;k<topology_.nb();k++)
   {
@@ -44,14 +43,11 @@ Triangulation<type>::Triangulation( const Topology<type>& topology ) :
       if (visited[topology_(k,j)]) continue;
       visited[topology(k,j)] = true;
 
-      Element element;
-      element.indices.assign( topology_(k) , topology_(k)+topology_.nv(k) );
-      element.dim = topology_.number();
-      element.sorted = false;
-      point2element_[topology(k,j)] = element;
       std::vector<real_t> alpha(topology_.nv(k),0.0);
       alpha[j] = 1.0;
-      barycentric_.add( alpha.data() , alpha.size() );
+
+      reference_coordinates_.add( alpha.data() , alpha.size() );
+      point_parents_[ topology_(k,j) ] = k;
     }
   }
 }
@@ -80,7 +76,7 @@ Triangulation<type>::add_simplex( index_t number , const index_t* v , index_t pa
 
 template<typename type>
 index_t
-Triangulation<type>::add_point( coord_t number , const index_t* v , index_t nv )
+Triangulation<type>::add_point( coord_t number , const index_t* v , index_t nv , index_t parent )
 {
   std::vector<index_t> polytope(v,v+nv);
   std::sort( polytope.begin() , polytope.end() );
@@ -96,10 +92,21 @@ Triangulation<type>::add_point( coord_t number , const index_t* v , index_t nv )
     numerics::centroid( v , nv , topology_.points() , xc );
     points_.create( xc.data() );
     native_.push_back(false);
-    point2element_.push_back( element );
+    point_parents_.push_back(parent);
 
-    std::vector<real_t> alpha( nv , 1./nv );
-    barycentric_.add( alpha.data() , alpha.size() );
+    std::vector<real_t> alpha( topology_.nv(parent) , 0 );
+    for (index_t j=0;j<topology_.nv(parent);j++)
+    {
+      for (index_t i=0;i<nv;i++)
+      {
+        if (v[i]==topology_(parent,j))
+        {
+          alpha[j] = 1./nv;
+          break;
+        }
+      }
+    }
+    reference_coordinates_.add( alpha.data() , alpha.size() );
   }
   return centroids_.at(element);
 }
@@ -134,39 +141,6 @@ Triangulation<type>::get_simplices( coord_t number , std::vector<index_t>& simpl
 
     parents.push_back( parents_[number].at(k)[0] );
   }
-}
-
-template<>
-void
-Triangulation<Polytope>::get_barycentric( coord_t number , Table<index_t>& dof , Table<real_t>& barycentric ) const
-{
-  dof.set_layout( TableLayout_Jagged );
-  barycentric.set_layout( TableLayout_Jagged );
-
-  avro_assert( point2element_.size() == points_.nb() );
-  avro_assert( barycentric_.nb() == points_.nb() );
-
-  // create interpolation data for each point
-  for (index_t k=0;k<points_.nb();k++)
-  {
-    // add the dof data for this point
-    const Element& element = point2element_[k];
-    print_inline(element.indices);
-    avro_assert( element.dim == number );
-
-    dof.add( element.indices.data() , element.indices.size() );
-    barycentric.add( barycentric_(k) , barycentric_.nv(k) );
-
-    std::vector<real_t> alpha( barycentric_(k) , barycentric_(k)+barycentric_.nv(k) );
-    print_inline(alpha);
-  }
-}
-
-template<>
-void
-Triangulation<Simplex>::get_barycentric( coord_t number , Table<index_t>& dof , Table<real_t>& barycentric ) const
-{
-  avro_implement;
 }
 
 template<>

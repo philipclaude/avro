@@ -1,4 +1,8 @@
+#include "master/polytope.h"
+#include "master/simplex.h"
+
 #include "mesh/field.h"
+#include "mesh/topology.h"
 
 namespace avro
 {
@@ -32,6 +36,49 @@ Field<Simplex,T>::evaluate( const Function& function )
       (*this)(k,j) = function(x.data());
     }
   }
+}
+
+template<typename T>
+void
+Field<Polytope,T>::evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
+{
+  avro_assert( master_.order() == 0 );
+  avro_assert( this->type() == DISCONTINUOUS );
+
+  result.resize( parents.size() );
+  for (index_t k=0;k<parents.size();k++)
+  {
+    // compute a linear combination of the vertex dof
+    result[k] = this->data_[parents[k]][0];
+  }
+}
+
+template<typename T>
+real_t
+FieldBase<T>::min( index_t rank ) const
+{
+  avro_implement;
+}
+
+template<typename T>
+real_t
+FieldBase<T>::max( index_t rank ) const
+{
+  avro_implement;
+}
+
+template<>
+inline real_t
+FieldBase<real_t>::min( index_t rank ) const
+{
+  return *std::min_element( data_.data().begin() , data_.data().end() );
+}
+
+template<>
+inline real_t
+FieldBase<real_t>::max( index_t rank ) const
+{
+  return *std::max_element( data_.data().begin() , data_.data().end() );
 }
 
 } // avro

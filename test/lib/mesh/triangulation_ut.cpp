@@ -25,7 +25,7 @@ UT_TEST_CASE_END( simplex_topologies )
 
 UT_TEST_CASE( voronoi_tests )
 {
-  CKF_Triangulation topology( {4,4} );
+  CKF_Triangulation topology( {4,4,4} );
   library::RegularPolygon polygon(6);
 
   Delaunay z(topology.points());

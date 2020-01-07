@@ -27,8 +27,11 @@ class Coordinate;
 class FieldHolder
 {
 public:
-  virtual void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<index_t>& dof , const Table<real_t>& alpha , Table<real_t>& result ) const = 0;
+  virtual void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const = 0;
   virtual ~FieldHolder() {}
+
+  virtual real_t min( index_t rank ) const = 0;
+  virtual real_t max( index_t rank ) const = 0;
 
 private:
   std::string name_;
@@ -68,7 +71,10 @@ public:
 
   const DOF<T>& dof() const { return data_; }
 
-  virtual void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<index_t>& dof , const Table<real_t>& alpha , Table<real_t>& result ) const = 0;
+  real_t min( index_t rank ) const;
+  real_t max( index_t rank ) const;
+
+  virtual void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const = 0;
 
 protected:
   FieldBase( FieldType type , TableLayoutCategory category=TableLayout_Jagged );
@@ -95,9 +101,8 @@ public:
 
   const Topology<Simplex>& topology() const { return topology_; }
 
-  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<index_t>& dof, const Table<real_t>& alpha , Table<real_t>& result ) const
+  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
   { avro_implement; }
-
 
 private:
   const Topology<Simplex>& topology_;
@@ -110,6 +115,8 @@ class Field<Polytope,T> : public FieldBase<T>
 public:
   Field( Topology<Polytope>& topology , coord_t order , FieldType type );
   void build();
+
+  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const;
 
 private:
   const Topology<Polytope>& topology_;
@@ -130,8 +137,13 @@ public:
   derived_t& base() { return base_; }
   const derived_t& base() const { return base_; }
 
-  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<index_t>& dof , const Table<real_t>& alpha , Table<real_t>& result ) const
-  { avro_implement; }
+  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
+    { base_.evaluate(rank,parents,alpha,result); }
+
+  real_t min( index_t rank ) const
+    { return base_.min(rank); }
+  real_t max( index_t rank ) const
+    { return base_.max(rank); }
 
 private:
   std::string name_;
@@ -161,6 +173,7 @@ public:
     template<typename type>
     type* get( const std::string& name )
     {
+      avro_assert_msg( fields_.find(name)!=fields_.end() , "could not find field %s" , name.c_str() );
       FieldHolder* f = fields_[name].get();
       return static_cast<FieldClass<type>*>(f)->base();
     }
@@ -168,12 +181,14 @@ public:
     template<typename type>
     const type* get( const std::string& name ) const
     {
+      avro_assert_msg( fields_.find(name)!=fields_.end() , "could not find field %s" , name.c_str() );
       const FieldHolder* f = fields_.at(name).get();
       return static_cast<const FieldClass<type>*>(f)->base();
     }
 
     const FieldHolder& operator[] ( const std::string& name ) const
     {
+      avro_assert_msg( fields_.find(name)!=fields_.end() , "could not find field %s" , name.c_str() );
       return *fields_.at(name).get();
     }
 
