@@ -2,6 +2,7 @@
 #include "master/simplex.h"
 
 #include "mesh/field.h"
+#include "mesh/points.h"
 #include "mesh/topology.h"
 
 namespace avro
