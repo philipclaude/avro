@@ -1,5 +1,6 @@
 #include "common/tools.h"
 
+#include "graphics/colormap.h"
 #include "graphics/gl.h"
 #include "graphics/primitive.h"
 #include "graphics/shader.h"
@@ -37,7 +38,8 @@ OpenGLPrimitive::convert()
 
   const Points& points = triangulation.points();
   std::vector<index_t> triangles;
-  triangulation.get_triangles(triangles);
+  std::vector<index_t> parents;
+  triangulation.get_simplices(2,triangles,parents); // setting 2 retrieves triangles
   index_t nb_points = triangles.size(); // duplicated points for cell-based colors
 
   // allocate the vertex data
@@ -46,8 +48,10 @@ OpenGLPrimitive::convert()
 
   printf("triangulation pts nb = %lu, topology points nb = %lu\n",points.nb(),topology_.points().nb() );
 
-  std::vector<index_t> point_map( points.nb() );
-  n = 0;
+  index_t max_parent = *std::max_element( parents.begin() , parents.end() );
+
+  std::vector<index_t> point_map0( points.nb() );
+  std::vector<index_t> point_map1;
   for (index_t k=0;k<triangles.size();k++)
   {
     for (index_t j=0;j<dim0;j++)
@@ -55,7 +59,8 @@ OpenGLPrimitive::convert()
     for (index_t j=dim0;j<3;j++)
       points_.push_back( 0.0 );
 
-    point_map[ triangles[k] ] = triangles_.size();
+    point_map0[ triangles[k] ] = triangles_.size();
+    point_map1.push_back( triangles[k] );
 
     if (number>=2)
       triangles_.push_back( triangles_.size() );
@@ -67,7 +72,7 @@ OpenGLPrimitive::convert()
     std::vector<index_t> edges;
     topology_.get_edges( edges );
     for (index_t k=0;k<edges.size();k++)
-      edges_.push_back( point_map[ edges[k] ] );
+      edges_.push_back( point_map0[ edges[k] ] );
   }
   if (number>=2)
   {
@@ -83,6 +88,31 @@ OpenGLPrimitive::convert()
     colors_[3*k+2] = 0;
   }
 
+  Colormap colormap;
+  float lims[2] = {0,1.0f*max_parent-1};
+  colormap.set_limits(lims);
+  std::vector<index_t> color0( points.nb()*3 );
+  for (index_t k=0;k<triangles.size()/3;k++)
+  {
+    // retrieve the parent
+    index_t parent = parents[k];
+    float color[3];
+    colormap.map( parent*1.0f , color );
+    for (index_t j=0;j<3;j++)
+    {
+      index_t p = triangles[3*k+j];
+      color0[3*p  ] = 255*color[0];
+      color0[3*p+1] = 255*color[1];
+      color0[3*p+2] = 255*color[2];
+    }
+  }
+
+  for (index_t k=0;k<nb_points;k++)
+  {
+    for (index_t j=0;j<3;j++)
+      colors_[3*k+j] = color0[3*point_map1[k]+j];
+  }
+
   // compute the normals
   if (topology_.number()>=2)
   {
@@ -92,19 +122,19 @@ OpenGLPrimitive::convert()
     std::vector<index_t> count( nb_points, 0 );
     for (index_t k=0;k<nb_triangles;k++)
     {
-      x1 = points( triangles_[3*k  ] , 0 );
-      y1 = points( triangles_[3*k  ] , 1 );
-      z1 = points( triangles_[3*k  ] , 2 );
-      x2 = points( triangles_[3*k+1] , 0 );
-      y2 = points( triangles_[3*k+1] , 1 );
-      z2 = points( triangles_[3*k+1] , 2 );
-      x3 = points( triangles_[3*k+2] , 0 );
-      y3 = points( triangles_[3*k+2] , 1 );
-      z3 = points( triangles_[3*k+2] , 2 );
+      x1 = points_[ 3*triangles_[3*k  ] + 0 ];
+      y1 = points_[ 3*triangles_[3*k  ] + 1 ];
+      z1 = points_[ 3*triangles_[3*k  ] + 2 ];
+      x2 = points_[ 3*triangles_[3*k+1] + 0 ];
+      y2 = points_[ 3*triangles_[3*k+1] + 1 ];
+      z2 = points_[ 3*triangles_[3*k+1] + 2 ];
+      x3 = points_[ 3*triangles_[3*k+2] + 0 ];
+      y3 = points_[ 3*triangles_[3*k+2] + 1 ];
+      z3 = points_[ 3*triangles_[3*k+2] + 2 ];
 
-      xnor = (y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
-      ynor = (z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
-      znor = (x3-x1)*(y2-y1)-(y3-y1)*(x2-x1);
+      xnor = 10;//(y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
+      ynor = 10;//(z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
+      znor = 10;//(x3-x1)*(y2-y1)-(y3-y1)*(x2-x1);
 
       dis  = sqrtf(xnor*xnor + ynor*ynor + znor*znor);
 
@@ -131,9 +161,9 @@ OpenGLPrimitive::convert()
     {
       if (count[k] <= 1) continue;
       dis  = count[k];
-      xnor = normals_[3*k  ] / dis;
-      ynor = normals_[3*k+1] / dis;
-      znor = normals_[3*k+2] / dis;
+      xnor = 10;//normals_[3*k  ] / dis;
+      ynor = 10;//normals_[3*k+1] / dis;
+      znor = 10;//normals_[3*k+2] / dis;
       dis  = sqrtf(xnor*xnor + ynor*ynor + znor*znor);
       normals_[3*k  ] = xnor/dis;
       normals_[3*k+1] = ynor/dis;

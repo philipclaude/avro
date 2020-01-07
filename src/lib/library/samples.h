@@ -22,6 +22,14 @@ private:
   Topology<Simplex> edges_;
 };
 
+class RegularPolygon : public Topology<Polytope>
+{
+public:
+  RegularPolygon( index_t nb_side );
+private:
+  Points points_;  
+};
+
 } // library
 
 } // avro

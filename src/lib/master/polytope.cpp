@@ -104,12 +104,12 @@ Polytope::vrep( const index_t* v , index_t nv , const int facet , std::vector<in
 }
 
 std::vector<index_t>
-Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& triangulation ) const
+Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& triangulation , index_t parent ) const
 {
   std::vector<index_t> simplex_idx;
   if (number_<=1)
   {
-    index_t idx = triangulation.add_simplex( number_ , v );
+    index_t idx = triangulation.add_simplex( number_ , v , parent );
     simplex_idx.push_back(idx);
     return simplex_idx;
   }
@@ -136,7 +136,7 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
     vrep( v , nv , facets[j] , vf );
 
     // triangulate the lower dimensional polytope
-    std::vector<index_t> idx = facetope.triangulate( vf.data() , vf.size() , triangulation );
+    std::vector<index_t> idx = facetope.triangulate( vf.data() , vf.size() , triangulation , parent );
 
     // add the lower-dimensional facet identifiers
     for (index_t k=0;k<idx.size();k++)
@@ -146,7 +146,7 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
   // loop through all the simplicial facets
   if (nv==number_+1)
   {
-    simplex_idx.push_back( triangulation.add_simplex( number_ , v ) );
+    simplex_idx.push_back( triangulation.add_simplex( number_ , v , parent ) );
   }
   else
   {
@@ -158,7 +158,7 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
       simplex[number_] = id; // the added vertex
 
       // add the new simplex
-      index_t idx = triangulation.add_simplex( number_ , simplex.data() );
+      index_t idx = triangulation.add_simplex( number_ , simplex.data() , parent );
       simplex_idx.push_back(idx);
     }
   }

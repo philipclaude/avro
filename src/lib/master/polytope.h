@@ -43,7 +43,7 @@ public:
   index_t edge( index_t k , index_t j ) const
     { avro_assert_not_reached; return 0; }
 
-  std::vector<index_t> triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& triangulation ) const;
+  std::vector<index_t> triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& triangulation , index_t parent ) const;
 
   bool& fullmesh() { return fullmesh_; }
 

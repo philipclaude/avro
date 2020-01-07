@@ -23,12 +23,13 @@ Triangulation<type>::Triangulation( const Topology<type>& topology ) :
   {
     add_child( std::make_shared<Topology<Simplex>>(points_,k) );
     elements_.push_back( std::map<Element,index_t>() );
+    parents_.push_back( std::map<index_t,std::vector<index_t>>() );
   }
 }
 
 template<typename type>
 index_t
-Triangulation<type>::add_simplex( index_t number , const index_t* v )
+Triangulation<type>::add_simplex( index_t number , const index_t* v , index_t parent )
 {
   std::vector<index_t> simplex(v,v+number+1);
   std::sort( simplex.begin() , simplex.end() );
@@ -36,11 +37,15 @@ Triangulation<type>::add_simplex( index_t number , const index_t* v )
   element.dim     = number;
   element.indices = simplex;
   element.sorted  = true;
-  if (elements_[number].find(element)==elements_[number].end())
+  std::map<Element,index_t>::iterator it = elements_[number].find(element);
+  if (it==elements_[number].end())
   {
-    elements_[number].insert( {element,child_[number]->nb()} );
+    elements_[number].insert( { element,child_[number]->nb() } );
+    parents_[number].insert( {child_[number]->nb(),{}} );
     child_[number]->add( v , number+1 );
   }
+  index_t idx = elements_[number].at(element);
+  parents_[number][idx].push_back(parent);
   return elements_[number].at(element);
 }
 
@@ -62,30 +67,36 @@ Triangulation<type>::add_point( coord_t number , const index_t* v , index_t nv )
     numerics::centroid( v , nv , topology_.points() , xc );
     points_.create( xc.data() );
   }
-  else printf("retrieving point!!\n");
   return centroids_.at(element);
 }
 
 template<typename type>
 void
-Triangulation<type>::get_triangles( std::vector<index_t>& triangles ) const
+Triangulation<type>::get_simplices( coord_t number , std::vector<index_t>& simplices , std::vector<index_t>& parents ) const
 {
-  for (index_t k=0;k<child_[2]->nb();k++)
+  const Topology<Simplex>& s = *child_[number];
+
+  for (index_t k=0;k<s.nb();k++)
   {
     bool skip = false;
-    for (index_t j=0;j<3;j++)
+    for (index_t j=0;j<number+1;j++)
     {
-      index_t idx = (*child_[2])(k,j);
+      index_t idx = s(k,j);
       if (centroid2dim_.find(idx)==centroid2dim_.end()) continue;
-      if (centroid2dim_.at(idx)!=2)
+      if (centroid2dim_.at(idx)!=number)
       {
         skip = true;
         break;
       }
     }
     if (skip) continue;
-    for (index_t j=0;j<3;j++)
-      triangles.push_back( (*child_[2])(k,j) );
+    for (index_t j=0;j<number+1;j++)
+      simplices.push_back(s(k,j));
+
+    if (topology_.number()==2) avro_assert( parents_[number].at(k).size()==1 ); // all triangles have cardinality 1
+    if (topology_.number()==3) avro_assert( parents_[number].at(k).size()<=2 ); // boundary facets have cardinality 1, interior 2
+
+    parents.push_back( parents_[number].at(k)[0] );
   }
 }
 
@@ -129,10 +140,11 @@ Triangulation<Simplex>::extract()
       if (MAP.find(s)==MAP.end())
       {
         MAP.insert(s);
-        add_simplex( 2 , triangle.data() );
+        add_simplex( 2 , triangle.data() , k );
       }
     }
   }
+  child(number_).orient();
 }
 
 template<>
@@ -149,8 +161,10 @@ Triangulation<Polytope>::extract()
 
     // ask the master to triangulate, points will be added to points stored
     // in the triangulation object upon triangulation by the master
-    topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this );
+    topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this , k );
   }
+
+  child(number_).orient();
 }
 
 template class Triangulation<Simplex>;

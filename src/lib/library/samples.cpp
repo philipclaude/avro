@@ -1,3 +1,5 @@
+#include "common/tools.h"
+
 #include "library/samples.h"
 
 namespace avro
@@ -39,6 +41,35 @@ TwoTriangles::TwoTriangles() :
   edges_.add( e2 , 2 );
   edges_.add( e3 , 2 );
   edges_.add( e4 , 2 );
+}
+
+RegularPolygon::RegularPolygon( index_t nb_side ) :
+  Topology<Polytope>(points_,2),
+  points_(2)
+{
+  real_t dtheta = 2.0*M_PI/real_t(nb_side);
+
+  std::vector<real_t> x(2);
+  for (index_t k=0;k<nb_side;k++)
+  {
+    x[0] = cos(k*dtheta);
+    x[1] = sin(k*dtheta);
+
+    points_.create(x.data());
+  }
+
+  Table<int>& incidence = points_.incidence();
+  int hrep[2];
+  for (index_t k=0;k<nb_side;k++)
+  {
+    hrep[0] = k;
+    if (k==nb_side-1) hrep[1] = 0;
+    else hrep[1] = k+1;
+    incidence.add(hrep,2);
+  }
+
+  std::vector<index_t> polytope = linspace(nb_side);
+  add(polytope.data(),polytope.size());
 
 }
 

@@ -21,7 +21,7 @@ public:
   {}
 
   virtual void extract() = 0;
-  virtual void get_triangles( std::vector<index_t>& triangles ) const = 0;
+  virtual void get_simplices( coord_t number , std::vector<index_t>& simplices , std::vector<index_t>& parents ) const = 0;
 
 protected:
   Points points_;
@@ -35,21 +35,21 @@ public:
 
   void extract();
 
-  index_t add_simplex( index_t number , const index_t* v );
+  index_t add_simplex( index_t number , const index_t* v , index_t parent );
 
   const Topology<type>& topology() const { return topology_; }
 
-  void get_triangles( std::vector<index_t>& triangles ) const;
+  void get_simplices( coord_t number , std::vector<index_t>& simplices , std::vector<index_t>& parents ) const;
 
   index_t add_point( coord_t number , const index_t *v , index_t nv );
 
 private:
   const Topology<type>& topology_;
-  std::vector<index_t> parents_;
 
   std::vector< std::map<Element,index_t> > elements_;
   std::map<Element,index_t> centroids_;
   std::map<index_t,coord_t> centroid2dim_;
+  std::vector< std::map<index_t,std::vector<index_t> > > parents_;
 };
 
 } // avro
