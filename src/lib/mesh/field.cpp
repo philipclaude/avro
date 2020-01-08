@@ -103,6 +103,50 @@ Field<Polytope,T>::build()
     avro_assert_not_reached;
 }
 
+template<>
+real_t
+__at_rank__( const real_t& x , index_t r )
+{
+  return x;
+}
+
+template<>
+real_t
+__at_rank__( const numerics::SymMatrixD<real_t>& x , index_t r )
+{
+  return x(0,0);
+}
+
+template<>
+real_t
+__at_rank__( const Metric& x , index_t r )
+{
+  return __at_rank__<numerics::SymMatrixD<real_t>>(x,r);
+}
+
+template<>
+real_t
+__at_rank__( const std::vector<real_t>& x , index_t r )
+{
+  return x[r];
+}
+
+template<>
+real_t
+__at_rank__( const std::vector<index_t>& x , index_t r )
+{
+  return x[r];
+}
+
+template<>
+real_t
+__at_rank__( Entity* const& entity , index_t r )
+{
+  return real_t(entity->identifier());
+}
+
+template class FieldBase<Metric>;
+
 template class Field< Simplex , real_t >;
 template class Field< Polytope , real_t >;
 

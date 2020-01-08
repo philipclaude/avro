@@ -14,7 +14,8 @@ namespace graphics
 Primitive::Primitive( const TopologyBase& topology , Window* window ) :
   number_(topology.number()),
   topology_(topology),
-  active_(-1),
+  rank_(0),
+  active_(""),
   shader_(NULL),
   window_(window),
   visible_(true),

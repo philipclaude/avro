@@ -8,10 +8,10 @@
 
 #include "library/eps.h"
 
+#include "mesh/decomposition.h"
 #include "mesh/field.hpp"
 #include "mesh/points.h"
 #include "mesh/topology.h"
-#include "mesh/triangulation.h"
 
 namespace avro
 {
@@ -27,18 +27,18 @@ OpenGLPrimitive::convert()
   coord_t number = topology_.number();
 
   // get the triangles from the topology
-  std::shared_ptr<TriangulationBase> ptriangulation;
+  std::shared_ptr<SimplicialDecompositionBase> pdecomposition;
   if (topology_.type_name()=="simplex")
-    ptriangulation = std::make_shared<Triangulation<Simplex>>(*dynamic_cast<const Topology<Simplex>*>(&topology_));
+    pdecomposition = std::make_shared<SimplicialDecomposition<Simplex>>(*dynamic_cast<const Topology<Simplex>*>(&topology_));
   else
-    ptriangulation = std::make_shared<Triangulation<Polytope>>(*dynamic_cast<const Topology<Polytope>*>(&topology_));
-  ptriangulation->extract();
-  const TriangulationBase& triangulation = *ptriangulation.get();
+    pdecomposition = std::make_shared<SimplicialDecomposition<Polytope>>(*dynamic_cast<const Topology<Polytope>*>(&topology_));
+  pdecomposition->extract();
+  const SimplicialDecompositionBase& decomposition = *pdecomposition.get();
 
-  const Points& points = triangulation.points();
+  const Points& points = decomposition.points();
   std::vector<index_t> triangles;
   std::vector<index_t> parents;
-  triangulation.get_simplices(2,triangles,parents); // setting 2 retrieves triangles
+  decomposition.get_simplices(2,triangles,parents); // setting 2 retrieves triangles
   index_t nb_points = triangles.size(); // duplicated points for cell-based colors
 
   // allocate the vertex data
@@ -71,19 +71,35 @@ OpenGLPrimitive::convert()
       edges_.push_back( point_map0[ edges[k] ] );
   }
 
-  // retrieve the active field
-  std::string active = "sites"; // TODO more generic
-  index_t rank = 0;
-  const Fields& fields = topology_.fields();
-  real_t umin = fields[active].min(rank);
-  real_t umax = fields[active].max(rank);
-  float lims[2] = {float(umin),float(umax)};
-
-  // evaluate the active field (with rank) on the triangulation points
-  const std::vector<index_t>& point_parents = triangulation.point_parents();
-  const Table<real_t>& reference_coordinates = triangulation.reference_coordinates();
   std::vector<real_t> U;
-  fields[active].evaluate( rank , point_parents , reference_coordinates , U );
+  real_t umin,umax;
+
+  bool constant_color = false;
+  float color[3];
+  const Fields& fields = topology_.fields();
+  if (fields.has(active_))
+  {
+    // retrieve the active field
+    umin = fields[active_].min(rank_);
+    umax = fields[active_].max(rank_);
+
+    // evaluate the active field (with rank) on the triangulation points
+    const std::vector<index_t>& point_parents = decomposition.point_parents();
+    const Table<real_t>& reference_coordinates = decomposition.reference_coordinates();
+    fields[active_].evaluate( rank_ , point_parents , reference_coordinates , U );
+  }
+  else
+  {
+    // constant color
+    umin = 0.0;
+    umax = 1.0;
+    U.resize( decomposition.points().nb() , 0.5 );
+    color[0] = 0.7;
+    color[1] = 0.7;
+    color[2] = 0.7;
+    constant_color = true;
+  }
+  float lims[2] = {float(umin),float(umax)};
 
   // compute the color of the (unduplicated) triangulation points
   Colormap colormap;
@@ -92,12 +108,12 @@ OpenGLPrimitive::convert()
   for (index_t k=0;k<triangles.size()/3;k++)
   {
     // retrieve the parent
-    float color[3];
     for (index_t j=0;j<3;j++)
     {
       index_t p = triangles[3*k+j];
       real_t  u = U[p];
-      colormap.map( u , color ); // between [0,1]
+      if (!constant_color)
+        colormap.map( u , color );
 
       color0[3*p  ] = 255*color[0];
       color0[3*p+1] = 255*color[1];
@@ -174,28 +190,6 @@ OpenGLPrimitive::convert()
     printf("setting color for lines!!\n");
     colors_.resize( 3*nb_points, 255.0f );
   }
-
-  // TODO add extra stuff stored in the topology
-  /*
-  const Fields& fields = topology_.fields();
-  if (fields.has("vertex_normals"))
-  {
-    printf("add vertex normals!!!\n");
-  }
-  if (fields.has("vertex_uv"))
-  {
-    printf("add vertex uv values!!\n");
-  }
-
-  if (fields.has("triangle_normals"))
-  {
-    printf("add triangle normals!!!\n");
-  }
-  if (fields.has("triangle_uv"))
-  {
-    printf("add triangle uv values!!\n");
-  }
-  */
 }
 
 void
@@ -399,7 +393,7 @@ OpenGLPrimitive::draw()
       GL_CALL( glBindVertexArray(vao_edges_) );
       GL_CALL( glDrawElements( GL_LINES , edges_.size() , GL_UNSIGNED_INT , 0 ) )
     }
-  } 
+  }
   // draw the points
   if (points_on_)
   {

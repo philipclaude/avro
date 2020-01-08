@@ -3,6 +3,7 @@
 
 #include "library/metric.h"
 
+#include "mesh/field.hpp"
 #include "mesh/search.h"
 #include "mesh/topology.h"
 #include "mesh/points.h"

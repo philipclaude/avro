@@ -10,7 +10,7 @@ namespace avro
 {
 
 template<typename type> class Topology;
-template<typename type> class Triangulation;
+template<typename type> class SimplicialDecomposition;
 
 class Polytope : public Master<Polytope>
 {
@@ -43,7 +43,7 @@ public:
   index_t edge( index_t k , index_t j ) const
     { avro_assert_not_reached; return 0; }
 
-  std::vector<index_t> triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& triangulation , index_t parent ) const;
+  std::vector<index_t> triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Polytope>& triangulation , index_t parent ) const;
 
   bool& fullmesh() { return fullmesh_; }
 

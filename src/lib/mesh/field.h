@@ -59,7 +59,7 @@ public:
     { return *data_[Table<index_t>::operator()(i,j)]; }
 
   const T& operator()( index_t i , index_t j ) const
-    { return data_[Table<index_t>::operator()(i,j)]; }
+    { return *data_[Table<index_t>::operator()(i,j)]; }
 
   FieldType& type() { return type_; }
   const FieldType& type() const { return type_; }

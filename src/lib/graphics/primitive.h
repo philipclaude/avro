@@ -39,12 +39,14 @@ public:
   bool& triangles_on() { return triangles_on_; }
 
   void set_transform_feedback( bool x ) { transform_feedback_ = x; }
+  void set_active( const std::string& x ) { active_ = x; }
 
 protected:
   coord_t number_;
   const TopologyBase& topology_;
 
-  int active_;
+  index_t rank_;
+  std::string active_;
   ShaderProgram* shader_;
   Window* window_;
   bool visible_;
@@ -83,13 +85,6 @@ private:
 class OpenGLPrimitive : public Primitive
 {
 private:
-  /*typedef struct
-  {
-    std::vector<GLfloat> coordinates;
-    std::vector<GLuint> indices;
-    std::vector<GLfloat> colours;
-    std::vector<GLfloat> normals;
-  } glData;*/
 
 public:
   using Primitive::Primitive;
@@ -97,12 +92,6 @@ public:
   void write();
   void draw();
   void convert();
-
-private:
-  //std::vector<GLuint> vbo_;
-  //GLuint vao_;
-
-  //glData data_;
 
 };
 

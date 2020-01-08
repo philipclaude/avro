@@ -4,9 +4,9 @@
 
 #include "master/polytope.h"
 
+#include "mesh/decomposition.h"
 #include "mesh/points.h"
 #include "mesh/topology.h"
-#include "mesh/triangulation.h"
 
 #include "numerics/geometry.h"
 
@@ -106,12 +106,12 @@ Polytope::vrep( const index_t* v , index_t nv , const int facet , std::vector<in
 }
 
 std::vector<index_t>
-Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& triangulation , index_t parent ) const
+Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Polytope>& decomposition , index_t parent ) const
 {
   std::vector<index_t> simplex_idx;
   if (number_<=1)
   {
-    index_t idx = triangulation.add_simplex( number_ , v , parent );
+    index_t idx = decomposition.add_simplex( number_ , v , parent );
     simplex_idx.push_back(idx);
     return simplex_idx;
   }
@@ -123,7 +123,7 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
   // and from which facet points symbolically created that point
   index_t id = 0;
   if (nv>index_t(number_+1))
-    id = triangulation.add_point( number_ , v , nv , parent );
+    id = decomposition.add_point( number_ , v , nv , parent );
 
   // get the hrep of this cell
   std::vector<int> facets;
@@ -138,7 +138,7 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
     vrep( v , nv , facets[j] , vf );
 
     // triangulate the lower dimensional polytope
-    std::vector<index_t> idx = facetope.triangulate( vf.data() , vf.size() , triangulation , parent );
+    std::vector<index_t> idx = facetope.triangulate( vf.data() , vf.size() , decomposition , parent );
 
     // add the lower-dimensional facet identifiers
     for (index_t k=0;k<idx.size();k++)
@@ -148,7 +148,7 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
   // loop through all the simplicial facets
   if (nv==index_t(number_+1))
   {
-    simplex_idx.push_back( triangulation.add_simplex( number_ , v , parent ) );
+    simplex_idx.push_back( decomposition.add_simplex( number_ , v , parent ) );
   }
   else
   {
@@ -156,11 +156,11 @@ Polytope::triangulate( const index_t* v , index_t nv , Triangulation<Polytope>& 
     {
       std::vector<index_t> simplex(number_+1);
       for (index_t i=0;i<number_;i++)
-        simplex[i] = triangulation.child(number_-1)(facet_idx[k],i);
+        simplex[i] = decomposition.child(number_-1)(facet_idx[k],i);
       simplex[number_] = id; // the added vertex
 
       // add the new simplex
-      index_t idx = triangulation.add_simplex( number_ , simplex.data() , parent );
+      index_t idx = decomposition.add_simplex( number_ , simplex.data() , parent );
       simplex_idx.push_back(idx);
     }
   }

@@ -8,6 +8,23 @@
 namespace avro
 {
 
+template<typename T> real_t __at_rank__( const T& x , index_t r );
+
+template<typename T>
+struct __comparator__
+{
+  __comparator__( index_t rank=0 ) :
+    rank(rank)
+  {}
+
+  bool operator() ( const T& x , const T& y ) const
+  {
+    return __at_rank__(x,rank) < __at_rank__(y,rank);
+  }
+
+  index_t rank;
+};
+
 template<typename T>
 template<typename Function>
 void
@@ -58,7 +75,9 @@ template<typename T>
 real_t
 FieldBase<T>::min( index_t rank ) const
 {
-  avro_implement;
+  const std::vector<T>& u = data_.template DOF<T>::data();
+  typename std::vector<T>::const_iterator it = std::min_element( u.begin() , u.end() , __comparator__<T>(rank) );
+  return __at_rank__<T>(*it,rank);
 }
 
 template<typename T>
@@ -68,6 +87,7 @@ FieldBase<T>::max( index_t rank ) const
   avro_implement;
 }
 
+/*
 template<>
 inline real_t
 FieldBase<real_t>::min( index_t rank ) const
@@ -83,5 +103,6 @@ FieldBase<real_t>::max( index_t rank ) const
   const std::vector<real_t>& u = data_.template DOF<real_t>::data();
   return *std::max_element( u.begin() , u.end() );
 }
+*/
 
 } // avro

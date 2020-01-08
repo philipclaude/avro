@@ -3,9 +3,9 @@
 #include "master/quadrature.h"
 #include "master/simplex.h"
 
+#include "mesh/decomposition.h"
 #include "mesh/points.h"
 #include "mesh/topology.h"
-#include "mesh/triangulation.h"
 
 #include "numerics/geometry.h"
 #include "numerics/linear_algebra.h"
@@ -423,25 +423,25 @@ Simplex::edge( index_t k , index_t i ) const
 }
 
 void
-Simplex::triangulate( const index_t* v , index_t nv , Triangulation<Simplex>& triangulation ) const
+Simplex::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Simplex>& decomposition ) const
 {
-  std::vector<index_t> tk(triangulation.number()+1);
-  if (triangulation.number()==2)
+  std::vector<index_t> tk(decomposition.number()+1);
+  if (decomposition.number()==2)
   {
     // we were requested triangles
     for (index_t k=0;k<triangles_.size()/3;k++)
     {
       for (index_t j=0;j<3;j++)
         tk[j] = v[ triangles_[3*k+j] ];
-      triangulation.add(tk.data(),tk.size());
+      decomposition.add(tk.data(),tk.size());
     }
     return;
   }
 
-  avro_assert(triangulation.number()==number_);
-  for (index_t j=0;j<index_t(triangulation.number()+1);j++)
+  avro_assert(decomposition.number()==number_);
+  for (index_t j=0;j<index_t(decomposition.number()+1);j++)
     tk[j] = v[j];
-  triangulation.add(tk.data(),tk.size());
+  decomposition.add(tk.data(),tk.size());
 }
 
 real_t
