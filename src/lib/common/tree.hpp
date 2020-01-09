@@ -70,6 +70,15 @@ Tree<Node_t>::has_parent( const Node_t* P ) const
 }
 
 template<typename Node_t>
+bool
+Tree<Node_t>::has_child( const Node_t* c ) const
+{
+  for (index_t k=0;k<nb_children();k++)
+    if (child_ptr(k)==c) return true;
+  return false;
+}
+
+template<typename Node_t>
 void
 Tree<Node_t>::get_children( std::vector<Node_t*>& children )
 {
@@ -77,6 +86,41 @@ Tree<Node_t>::get_children( std::vector<Node_t*>& children )
   {
     children.push_back(child_ptr(k));
     child(k).get_children(children);
+  }
+}
+
+template<typename Node_t>
+void
+Tree<Node_t>::get_children( std::vector<const Node_t*>& children ) const
+{
+  for (index_t k=0;k<nb_children();k++)
+  {
+    children.push_back(child_ptr(k));
+    child(k).get_children(children);
+  }
+}
+
+template<typename Node_t>
+index_t
+Tree<Node_t>::indexof( index_t k , const std::vector<const TreeBase*>& array ) const
+{
+  const TreeBase* c = static_cast<const TreeBase*>(child_ptr(k));
+  for (index_t i=0;i<array.size();i++)
+  {
+    if (array[i] == c) return i;
+  }
+  avro_assert_not_reached;
+}
+
+template<typename Node_t>
+void
+Tree<Node_t>::get_adjacency( const std::vector<const Node_t*>& children , numerics::MatrixD<index_t>& A ) const
+{
+  for (index_t i=0;i<children.size();i++)
+  for (index_t j=0;j<children.size();j++)
+  {
+    if (children[i]->has_child(children[j]))
+      A(i,j) = 1;
   }
 }
 

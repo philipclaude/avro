@@ -114,6 +114,7 @@ template<>
 real_t
 __at_rank__( const numerics::SymMatrixD<real_t>& x , index_t r )
 {
+  avro_implement;
   return x(0,0);
 }
 

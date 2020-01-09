@@ -24,9 +24,17 @@ UT_TEST_CASE( simplex_tests )
   std::shared_ptr< Topology<Simplex> > leaf = std::make_shared<Topology<Simplex>>(vertices,number);
   topology.add_child(leaf);
 
+  std::shared_ptr< Topology<Simplex> > node = std::make_shared<Topology<Simplex>>(vertices,0);
+  leaf->add_child(node);
+
   Topology<Simplex>& c = topology.topology(0);
   UNUSED(c);
 
+  Topology<Simplex> topology_copy( vertices , number );
+  topology_copy.template Tree<Topology<Simplex>>::copy(topology);
+
+  UT_ASSERT_EQUALS( topology_copy.nb_children() , 1 );
+  UT_ASSERT_EQUALS( topology_copy.child(0).nb_children() , 1 );
 }
 UT_TEST_CASE_END( simplex_tests )
 
@@ -34,7 +42,7 @@ UT_TEST_CASE( simplex_close )
 {
   for (coord_t dim=2;dim<=4;dim++)
   {
-    for (index_t N=4;N<=8;N+=2)
+    for (index_t N=4;N<=4;N+=2)
     {
       std::vector<index_t> dims(dim,N);
       CKF_Triangulation topology(dims);

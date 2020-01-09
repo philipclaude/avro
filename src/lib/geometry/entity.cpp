@@ -42,7 +42,7 @@ Entity::Entity( coord_t number ) :
   name_("unnamed"),
   parent_(nullptr),
   identifier_(0),
-  tessellatable_(false),	
+  tessellatable_(false),
   egads_(false)
 {}
 
@@ -51,7 +51,7 @@ Entity::Entity( coord_t number , const std::string& name ) :
   name_(name),
   parent_(nullptr),
   identifier_(0),
-  tessellatable_(false), 
+  tessellatable_(false),
   egads_(false)
 {}
 

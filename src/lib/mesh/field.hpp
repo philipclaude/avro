@@ -13,7 +13,7 @@ template<typename T> real_t __at_rank__( const T& x , index_t r );
 template<typename T>
 struct __comparator__
 {
-  __comparator__( index_t rank=0 ) :
+  __comparator__( index_t rank ) :
     rank(rank)
   {}
 
@@ -84,25 +84,9 @@ template<typename T>
 real_t
 FieldBase<T>::max( index_t rank ) const
 {
-  avro_implement;
+  const std::vector<T>& u = data_.template DOF<T>::data();
+  typename std::vector<T>::const_iterator it = std::max_element( u.begin() , u.end() , __comparator__<T>(rank) );
+  return __at_rank__<T>(*it,rank);
 }
-
-/*
-template<>
-inline real_t
-FieldBase<real_t>::min( index_t rank ) const
-{
-  const std::vector<real_t>& u = data_.template DOF<real_t>::data();
-  return *std::min_element( u.begin() , u.end() );
-}
-
-template<>
-inline real_t
-FieldBase<real_t>::max( index_t rank ) const
-{
-  const std::vector<real_t>& u = data_.template DOF<real_t>::data();
-  return *std::max_element( u.begin() , u.end() );
-}
-*/
 
 } // avro

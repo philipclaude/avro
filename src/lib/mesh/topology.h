@@ -93,6 +93,8 @@ public:
   Topology( Points& vertices , const Topology<type>& topology , coord_t order );
   Topology( Points& vertices , const json& J );
 
+  template<typename Friend_t> void construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<Friend_t>& root ) const;
+
   Topology_t& topology( index_t k ) { return Tree<Topology_t>::child(k); }
 
   type& master() { return master_; }

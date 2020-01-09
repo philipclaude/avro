@@ -51,11 +51,11 @@ public:
   virtual void evaluate( const std::vector<real_t>& u , std::vector<real_t>& p ) const = 0;
 
   bool egads() const { return egads_; }
+
 protected:
+  virtual ~Entity() {}
   Entity( coord_t number );
   Entity( coord_t number , const std::string& name );
-
-  virtual ~Entity() {}
 
   coord_t number_;
   std::string name_;

@@ -1,3 +1,5 @@
+#include "common/tree.hpp"
+
 #include "graphics/plotter.h"
 #include "graphics/primitive.h"
 #include "graphics/shader.h"
@@ -103,5 +105,7 @@ WebGLPrimitive::draw()
 }
 
 } // graphics
+
+template class Tree<graphics::Primitive>;
 
 } // avro

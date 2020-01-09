@@ -191,6 +191,9 @@ Window::run()
   //glEnable(GL_BLEND);
   //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1.0, 1.5);
 

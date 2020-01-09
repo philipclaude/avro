@@ -15,6 +15,14 @@ Topology<type>::Topology( Points& points , coord_t number ) :
 {}
 
 template<typename type>
+template<typename Friend_t>
+void
+Topology<type>::construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<Friend_t>& root ) const
+{
+  node = std::make_shared<Topology<Friend_t>>(root.points(),number_,order_);
+}
+
+template<typename type>
 void
 Topology<type>::get_edges( std::vector<index_t>& edges ) const
 {

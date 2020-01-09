@@ -24,5 +24,7 @@ Topology<Polytope>::orient( index_t* v , const index_t nv , real_t* p )
 
 template class Topology<Polytope>;
 template class Tree<Topology<Polytope>>;
+template void Topology<Polytope>::construct( std::shared_ptr<Topology<Simplex>>& node , Topology<Simplex>& ) const;
+template void Topology<Polytope>::construct( std::shared_ptr<Topology<Polytope>>& node , Topology<Polytope>& ) const;
 
 } // avro
