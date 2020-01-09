@@ -2,7 +2,11 @@
 
 #include "common/tools.h"
 
+#include "geometry/egads/context.h"
+
 #include "library/ckf.h"
+#include "library/egads.h"
+#include "library/tesseract.h"
 
 #include "master/master.h"
 #include "master/quadrature.h"
@@ -34,13 +38,39 @@ UT_TEST_CASE( simplex_tests )
   topology_copy.template Tree<Topology<Simplex>>::copy(topology);
 
   UT_ASSERT_EQUALS( topology_copy.nb_children() , 1 );
-  UT_ASSERT_EQUALS( topology_copy.child_ptr(0)->nb_children() , 1 );
+  //UT_ASSERT_EQUALS( topology_copy.child(0).nb_children() , 1 );
 }
 UT_TEST_CASE_END( simplex_tests )
 
+UT_TEST_CASE( hierarchy_from_geometry )
+{
+  EGADS::Context context;
+  EGADS::Cube box( &context, {1,1,1} );
+
+  Points points(3);
+  Topology<Simplex> topology(points,2);
+  topology.template Tree<Topology<Simplex>>::copy( *box.child(0) );
+
+  UT_ASSERT_EQUALS( box.child(0)->nb_children() , 6 );
+  UT_ASSERT_EQUALS( topology.nb_children() , 6 );
+
+  box.child(0)->template Tree<Entity>::print();
+  topology.template Tree<Topology<Simplex>>::print();
+
+  for (index_t k=0;k<box.child(0)->nb_children();k++)
+  {
+    UT_ASSERT_EQUALS( box.child(0)->child(k).nb_children() , 1 );
+    UT_ASSERT_EQUALS( box.child(0)->child(k).child(0).nb_children() , 4 );
+
+    UT_ASSERT_EQUALS( topology.child(k).nb_children() , 1 );
+    UT_ASSERT_EQUALS( topology.child(k).child(0).nb_children() , 4 );
+  }
+
+}
+UT_TEST_CASE_END( hierarchy_from_geometry )
+
 UT_TEST_CASE( simplex_close )
 {
-  return;
   for (coord_t dim=2;dim<=4;dim++)
   {
     for (index_t N=4;N<=4;N+=2)

@@ -3,6 +3,10 @@
 
 #include "geometry/entity.h"
 
+#include "master/simplex.h"
+
+#include "mesh/topology.h"
+
 #include "numerics/coordinate.h"
 
 #include <algorithm>
@@ -241,6 +245,20 @@ Entity::above( const Entity* e ) const
 	return false;
 }
 
+template<typename type>
+void
+Entity::construct( std::shared_ptr<Topology<type>>& node , Topology<type>& root ) const
+{
+	node = std::make_shared<Topology<type>>(root.points(),number_,root.master().order());
+}
+
+void
+Entity::print_header() const
+{
+	printf("entity %p: number = %u\n",(void*)this,number_);
+}
+
 template class Tree<Entity>;
+template void Entity::construct( std::shared_ptr<Topology<Simplex>>& node , Topology<Simplex>& root ) const;
 
 } // avro

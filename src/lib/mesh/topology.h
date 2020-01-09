@@ -22,6 +22,11 @@ namespace avro
 class Points;
 template<typename type> class Cavity;
 
+namespace graphics
+{
+class Primitive;
+}
+
 class TopologyBase : public Table<index_t>
 {
 protected:
@@ -93,8 +98,6 @@ public:
   Topology( Points& vertices , const Topology<type>& topology , coord_t order );
   Topology( Points& vertices , const json& J );
 
-  template<typename Friend_t> void construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<Friend_t>& root ) const;
-
   Topology_t& topology( index_t k ) { return Tree<Topology_t>::child(k); }
 
   type& master() { return master_; }
@@ -118,7 +121,6 @@ public:
   bool has( index_t p ) const;
 
   void offset_by( index_t offset );
-
 
   void close();
 
@@ -149,6 +151,11 @@ public:
   // local operator functions
   void remove_point( index_t k );
   void apply( Cavity<type>& cavity );
+
+  template<typename Friend_t> void construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<Friend_t>& root ) const;
+  void construct( std::shared_ptr<graphics::Primitive>& node , graphics::Primitive& root ) const;
+
+  void print_header() const;
 
 private:
   type master_;

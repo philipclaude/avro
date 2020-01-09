@@ -10,6 +10,7 @@ namespace avro
 {
 
 class Body;
+template<typename type> class Topology;
 
 class Entity : public Tree<Entity>
 {
@@ -51,6 +52,10 @@ public:
   virtual void evaluate( const std::vector<real_t>& u , std::vector<real_t>& p ) const = 0;
 
   bool egads() const { return egads_; }
+
+  template<typename type> void construct( std::shared_ptr<Topology<type>>& node , Topology<type>& root ) const;
+
+  void print_header() const;
 
 protected:
   virtual ~Entity() {}

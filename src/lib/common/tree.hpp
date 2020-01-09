@@ -87,6 +87,7 @@ Tree<Node_t>::get_children( std::vector<Node_t*>& children )
     children.push_back(child_ptr(k));
     child(k).get_children(children);
   }
+  uniquify(children);
 }
 
 template<typename Node_t>
@@ -98,18 +99,41 @@ Tree<Node_t>::get_children( std::vector<const Node_t*>& children ) const
     children.push_back(child_ptr(k));
     child(k).get_children(children);
   }
+  uniquify(children);
 }
 
 template<typename Node_t>
 void
-Tree<Node_t>::get_adjacency( const std::vector<const Node_t*>& children , numerics::MatrixD<index_t>& A ) const
+Tree<Node_t>::get_adjacency( numerics::MatrixD<int>& A ) const
 {
+  std::vector<const Node_t*> children;
+  children.push_back(derived());
+  get_children(children);
+  A.resize( children.size() , children.size() );
+  A = 0;
   for (index_t i=0;i<children.size();i++)
-  for (index_t j=0;j<children.size();j++)
+  for (index_t j=i+1;j<children.size();j++)
   {
     if (children[i]->has_child(children[j]))
       A(i,j) = 1;
   }
+}
+
+template<typename Node_t>
+void
+Tree<Node_t>::print( index_t level ) const
+{
+  for (index_t i=0;i<level;i++) printf("    ");
+  derived()->print_header();
+  for (index_t k=0;k<nb_children();k++)
+    child(k).template Tree<Node_t>::print(level+1);
+}
+
+template<typename Node_t>
+void
+Tree<Node_t>::print_header() const
+{
+  printf("default print!!\n");
 }
 
 } // avro

@@ -54,13 +54,17 @@ public:
 
   void get_children( std::vector<Node_t*>& children );
   void get_children( std::vector<const Node_t*>& children ) const;
-  void get_adjacency( const std::vector<const Node_t*>& children , numerics::MatrixD<index_t>& A ) const;
+  void get_adjacency( numerics::MatrixD<int>& A ) const;
+
+  void print( index_t level=0 ) const;
+  void print_header() const;
 
 protected:
   std::vector<Node_ptr> child_;
   std::vector<Node_t*> parents_; // list of all parents owning this
 
   Node_t* derived() { return static_cast<Node_t*>(this); }
+  const Node_t* derived() const { return static_cast<const Node_t*>(this); }
 };
 
 template<typename Node_t>
@@ -72,9 +76,8 @@ Tree<Node_t>::copy( const Friend_t& tree )
   children0.push_back( &tree );
   tree.get_children(children0);
 
-  numerics::MatrixD<index_t> A( children0.size() , children0.size() );
-  A = index_t(0);
-  tree.get_adjacency( children0 , A );
+  numerics::MatrixD<int> A;
+  tree.get_adjacency(A);
 
   std::vector<std::shared_ptr<Node_t>> children1( children0.size() );
   for (index_t k=0;k<children0.size();k++)
@@ -82,13 +85,13 @@ Tree<Node_t>::copy( const Friend_t& tree )
 
   // assign the children
   for (index_t i=0;i<A.m();i++)
-  for (index_t j=0;j<A.n();j++)
+  for (index_t j=i+1;j<A.n();j++)
   {
     if (A(i,j)==0) continue;
     if (i==0)
-      add_child( children1[ A(i,j) ] );
+      add_child( children1[ A(i,j) ] ); // add to root
     else
-      children1[i]->add_child( children1[ A(i,j) ] );
+      children1[i]->add_child( children1[j] ); // add to leaf
   }
 }
 

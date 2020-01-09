@@ -1,5 +1,7 @@
 #include "common/tools.h"
 
+#include "graphics/primitive.h"
+
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
@@ -20,6 +22,13 @@ void
 Topology<type>::construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<Friend_t>& root ) const
 {
   node = std::make_shared<Topology<Friend_t>>(root.points(),number_,order_);
+}
+
+template<typename type>
+void
+Topology<type>::construct( std::shared_ptr<graphics::Primitive>& node , graphics::Primitive& root ) const
+{
+  node = std::make_shared<graphics::Primitive>(*this,root.window());
 }
 
 template<typename type>
@@ -447,6 +456,13 @@ Topology<type>::intersect( const std::vector<index_t>& facet , std::vector<index
     inverse_.shell( facet[0] , facet[1] , facet[2] , elems );
   else
     avro_implement;
+}
+
+template<typename type>
+void
+Topology<type>::print_header() const
+{
+  printf("topology %p: order = %u, number = %u\n",(void*)this,master_.order(),master_.number());
 }
 
 } // avro

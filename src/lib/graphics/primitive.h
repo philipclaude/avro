@@ -26,8 +26,8 @@ public:
   Primitive( const TopologyBase& topology , Window* window );
   virtual ~Primitive() {}
 
-  virtual void write() = 0;
-  virtual void draw() = 0;
+  virtual void write() {};
+  virtual void draw() {};
 
   void selectShader( Plotter* plotter );
   ShaderProgram& shader();
@@ -40,6 +40,8 @@ public:
 
   void set_transform_feedback( bool x ) { transform_feedback_ = x; }
   void set_active( const std::string& x ) { active_ = x; }
+
+  Window* window() { return window_; }
 
 protected:
   coord_t number_;
