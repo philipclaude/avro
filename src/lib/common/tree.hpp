@@ -101,18 +101,6 @@ Tree<Node_t>::get_children( std::vector<const Node_t*>& children ) const
 }
 
 template<typename Node_t>
-index_t
-Tree<Node_t>::indexof( index_t k , const std::vector<const TreeBase*>& array ) const
-{
-  const TreeBase* c = static_cast<const TreeBase*>(child_ptr(k));
-  for (index_t i=0;i<array.size();i++)
-  {
-    if (array[i] == c) return i;
-  }
-  avro_assert_not_reached;
-}
-
-template<typename Node_t>
 void
 Tree<Node_t>::get_adjacency( const std::vector<const Node_t*>& children , numerics::MatrixD<index_t>& A ) const
 {

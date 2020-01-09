@@ -13,23 +13,7 @@ namespace avro
 {
 
 class TreeBase
-{
-public:
-  /*
-  virtual ~TreeBase() {}
-  virtual void get_children( std::vector<const TreeBase*>& all ) const = 0;
-  virtual index_t nb_children() const = 0;
-
-  template<typename Node_t>
-  void construct( std::shared_ptr<Node_t> node ) const
-  {
-    node = std::make_shared<Node_t>(*this);
-  }
-
-private:
-  virtual index_t indexof( index_t k , const std::vector<const TreeBase*>& children ) const = 0;
-  */
-};
+{};
 
 template<typename Node_t>
 class Tree : public TreeBase
@@ -71,9 +55,6 @@ public:
   void get_children( std::vector<Node_t*>& children );
   void get_children( std::vector<const Node_t*>& children ) const;
   void get_adjacency( const std::vector<const Node_t*>& children , numerics::MatrixD<index_t>& A ) const;
-
-private:
-  index_t indexof( index_t k , const std::vector<const TreeBase*>& children ) const;
 
 protected:
   std::vector<Node_ptr> child_;
