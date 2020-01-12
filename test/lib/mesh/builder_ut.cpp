@@ -17,7 +17,7 @@ UT_TEST_CASE( simplex_tests )
 
   Topology<Simplex> topology_curved( vertices , topology , 2 );
 
-  topology_curved.print();
+  topology_curved.template Table<index_t>::print();
 
   vertices.print();
 }

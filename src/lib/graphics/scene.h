@@ -14,21 +14,27 @@ namespace graphics
 
 class Plot;
 class Shader;
+class Primitive;
 
-class Scene
+class SceneGraph
 {
-  typedef std::shared_ptr<Plot> Plot_ptr;
-  typedef std::shared_ptr<Shader> Shader_ptr;
+  typedef std::shared_ptr<Primitive> Primitive_ptr;
 
 public:
-  Scene();
 
-  void render();
+  void add_primitive( Primitive_ptr prim )
+  {
+    primitive_.insert( {"0x1" , prim} );
+  }
 
 private:
-  std::map< std::string , Plot_ptr > plot_;
-
-  std::vector< Shader_ptr > shaders_;
+  // you might be wondering: why store a string representation of
+  // the pointer to the primitive? why not just use a vector of
+  // primitive and look up a pointer as necessary?
+  // well, when sending things over to the WebViewer, we can't
+  // compare pointers anymore...we need to look things up via some
+  // identifier, hence a string
+  std::map<std::string,Primitive_ptr> primitive_;
 };
 
 } // graphics

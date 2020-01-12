@@ -7,9 +7,6 @@ namespace avro
 namespace graphics
 {
 
-Scene::Scene()
-{}
-
 } // graphics
 
 } // avro

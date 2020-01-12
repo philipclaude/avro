@@ -41,9 +41,6 @@ public:
 
   std::string title() const { return title_; }
 
-  Scene& scene() { return scene_; }
-  const Scene& scene() const { return scene_; }
-
   void attach( Plot_ptr plot );
 
   GLFWwindow* window() { return window_; }
@@ -73,7 +70,6 @@ public:
 
 private:
   std::string title_;
-  Scene scene_;
   Plotter* plotter_;
   GLFWwindow* window_;
 

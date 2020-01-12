@@ -97,7 +97,7 @@ void
 Window::setMatrices()
 {
   modelMatrix_ = mat4(1.0);
-  projMatrix_ = glm::perspective(glm::radians(fov_), float(width_)/float(height_) , 1.0f, 100.0f);
+  projMatrix_  = glm::perspective(glm::radians(fov_), float(width_)/float(height_) , 1.0f, 100.0f);
 
   trackball_.update();
 

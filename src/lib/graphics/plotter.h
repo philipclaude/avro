@@ -1,7 +1,6 @@
 #ifndef avro_LIB_GRAPHICS_PLOTTER_H_
 #define avro_LIB_GRAPHICS_PLOTTER_H_
 
-#include "graphics/client.h"
 #include "graphics/interface.h"
 #include "graphics/server.h"
 
