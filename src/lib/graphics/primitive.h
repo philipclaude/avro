@@ -19,6 +19,7 @@ namespace graphics
 class ShaderProgram;
 class Plotter;
 class Window;
+class GraphicsManager;
 
 class Primitive : public Tree<Primitive>
 {
@@ -26,8 +27,12 @@ public:
   Primitive( const TopologyBase& topology , Window* window );
   virtual ~Primitive() {}
 
+  virtual void write( GraphicsManager& manager ) {};
   virtual void write() {};
   virtual void draw() {};
+  void draw(ShaderProgram&);
+
+  void convert();
 
   void selectShader( Plotter* plotter );
   ShaderProgram& shader();
@@ -71,19 +76,6 @@ protected:
   bool transform_feedback_;
 };
 
-class WebGLPrimitive : public Primitive
-{
-public:
-  using Primitive::Primitive;
-
-  void write();
-  void draw();
-
-private:
-  int handle_;
-
-};
-
 class OpenGLPrimitive : public Primitive
 {
 private:
@@ -91,9 +83,9 @@ private:
 public:
   using Primitive::Primitive;
 
+  void draw(GraphicsManager&);
   void write();
   void draw();
-  void convert();
 
 };
 

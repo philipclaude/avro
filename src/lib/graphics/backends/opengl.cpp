@@ -20,7 +20,7 @@ namespace graphics
 {
 
 void
-OpenGLPrimitive::convert()
+Primitive::convert()
 {
   index_t nb_triangles = 0;
   coord_t dim0 = topology_.points().dim();

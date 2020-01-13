@@ -81,29 +81,6 @@ Primitive::shader()
   return *shader_;
 }
 
-void
-WebGLPrimitive::write()
-{
-  // print to the web server
-
-  // get the points
-
-  // get the edges
-
-  // get the triangles
-
-  // send to wv
-  handle_ = -1;
-
-  avro_implement;
-}
-
-void
-WebGLPrimitive::draw()
-{
-  avro_implement;
-}
-
 } // graphics
 
 template class Tree<graphics::Primitive>;
