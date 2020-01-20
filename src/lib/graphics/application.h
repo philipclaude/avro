@@ -50,6 +50,10 @@ public:
     return shaders_.at(name);
   }
 
+  void set_matrices( SceneGraph& scene );
+
+private:
+
   // store all the shaders
   std::map<std::string,ShaderProgram> shaders_;
 };
@@ -61,13 +65,19 @@ public:
   virtual void write_points() = 0;
   virtual void write_edges() = 0;
   virtual void write_triangles() = 0;
-
-protected:
-  ShaderLibrary shaders_;
 };
 
 class TransformFeedbackResult
 {
+public:
+  GLuint& vao() { return vao_; }
+  GLuint& query() { return query_; }
+  GLuint& buffer() { return buffer_; }
+
+private:
+  GLuint vao_;
+  GLuint query_;
+  GLuint buffer_;
 
 };
 
@@ -84,25 +94,20 @@ public:
   void write_edges() { avro_implement; }
   void write_triangles() { avro_implement; }
 
-  void draw();
-  void capture( SceneGraph& scene , TransformFeedbackResult& feedback );
+  void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr );
 
 private:
 
-  // map from vao to number of primitives to draw
-  std::map<index_t,index_t> vao_points_;
-  std::map<index_t,index_t> vao_edges_;
-  std::map<index_t,index_t> vao_triangles_;
+  void set_matrices( SceneGraph& scene );
+  void draw( Primitive& primitive , TransformFeedbackResult* feedback=nullptr );
 
-  // map from vao to whether the primitive is active
-  std::map<index_t,bool> vao_points_active_;
-  std::map<index_t,bool> vao_edges_active_;
-  std::map<index_t,bool> vao_triangles_active_;
+  // map from Primitive to vao
+  std::map<Primitive*,index_t> vao_points_;
+  std::map<Primitive*,index_t> vao_edges_;
+  std::map<Primitive*,index_t> vao_triangles_;
 
-  // map from vao to shader program
-  std::map<index_t,ShaderProgram*> vao_points_shader_;
-  std::map<index_t,ShaderProgram*> vao_edges_shader_;
-  std::map<index_t,ShaderProgram*> vao_triangles_shader_;
+  std::map<Primitive*,ShaderProgram*> shader_;
+  ShaderLibrary shaders_;
 };
 
 class Vulkan_Manager : public GraphicsManager
@@ -115,6 +120,10 @@ private:
   void write_points() { avro_implement; }
   void write_edges() { avro_implement; }
   void write_triangles() { avro_implement; }
+
+  void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
+  { avro_implement; }
+
 };
 
 class WV_Manager : public GraphicsManager
@@ -134,18 +143,14 @@ class SceneGraph
 public:
   typedef std::shared_ptr<Primitive> Primitive_ptr;
 
-  SceneGraph( ShaderLibrary& shaders ) :
-    shader_library_(shaders),
-    needs_update_(false)
+  SceneGraph() :
+    update_(true)
   {}
 
   void add_primitive( TopologyBase& topology , const std::string& shader_name="default" )
   {
-    ShaderProgram* shader = &shader_library_[shader_name];
     Primitive_ptr primitive ;avro_implement;//= std::make_shared<Primitive>(topology,shader,*this);
     primitive_.push_back(primitive);
-    shaders_.push_back(shader);
-    uniquify(shaders_);
   }
 
   void write( GraphicsManager& manager )
@@ -154,36 +159,21 @@ public:
       primitive_[k]->write(manager);
   }
 
-  void set_matrices()
-  {
-    // go through all the active shaders and assign the MVP and normalMatrix
-    for (index_t k=0;k<shaders_.size();k++)
-    {
-      ShaderProgram& shader = *shaders_[k];
-      shader.setUniform("MVP" , mvpMatrix_ );
-      shader.setUniform("u_normalMatrix" , normalMatrix_ );
-    }
-  }
+  bool update() const { return update_; }
+  void set_update( bool x ) { update_ = x; }
 
-  void draw()
-  {
-    if (!needs_update_) return;
+  const mat4& mvp_matrix() const { return mvpMatrix_; }
+  const mat4& normal_matrix() const { return normalMatrix_; }
 
-    set_matrices();
+  mat4& mvp_matrix() { return mvpMatrix_; }
+  mat4& normal_matrix() { return normalMatrix_; }
 
-    for (index_t k=0;k<primitive_.size();k++)
-    {
-      // use the shader to draw
-      primitive_[k]->draw();
-    }
+  index_t nb_primitives() const { return primitive_.size(); }
 
-    needs_update_ = false;
-  }
+  Primitive& primitive( index_t k ) { return *primitive_[k].get(); }
 
 private:
-  std::vector<Primitive_ptr> primitive_;
-  std::vector<ShaderProgram*> shaders_; // active shaders <= primitive_.size()
-  ShaderLibrary& shader_library_; // list of all shaders
+  std::vector<Primitive_ptr> primitive_; // roots of the scene graph
 
   // store all the matrices here
   mat4 mvpMatrix_;
@@ -193,7 +183,7 @@ private:
   mat4 normalMatrix_;
   mat4 modelViewMatrix_;
 
-  bool needs_update_;
+  bool update_;
 };
 
 class ApplicationBase
@@ -212,14 +202,14 @@ protected:
 
   void add_scene()
   {
-    scene_.push_back(SceneGraph(shader_library_));
+    scene_.push_back(SceneGraph());
   }
+
   SceneGraph& scene( index_t k ) { return scene_[k]; }
 
   index_t nb_scene() const { return scene_.size(); }
 
 private:
-  ShaderLibrary shader_library_;
   GraphicsManager& manager_;
   std::vector<SceneGraph> scene_;
 };
@@ -237,15 +227,13 @@ public:
     ApplicationBase(manager_)
   {}
 
-  void render();
-
   void run()
   {
      // start the rendering loop
      while (true)
      {
        for (index_t k=0;k<nb_scene();k++)
-        scene(k).draw();
+        manager_.draw(scene(k));
      }
   }
 
@@ -272,7 +260,7 @@ public:
     OpenGL_Manager manager_gl;
     scene(0).write(manager_gl);
     TransformFeedbackResult feedback;
-    manager_gl.capture(scene(0),feedback);
+    manager_gl.draw(scene(0),&feedback);
   }
 
 private:

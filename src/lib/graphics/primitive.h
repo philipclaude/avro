@@ -30,6 +30,7 @@ public:
   virtual void write( GraphicsManager& manager ) {};
   virtual void write() {};
   virtual void draw() {};
+  
   void draw(ShaderProgram&);
 
   void convert();
@@ -43,8 +44,14 @@ public:
   bool& edges_on() { return edges_on_; }
   bool& triangles_on() { return triangles_on_; }
 
+  index_t nb_triangles() const { return triangles_.size()/3; }
+  index_t nb_edges() const { return edges_.size()/2; }
+  index_t nb_points() const { return points_.size()/3; }
+
   void set_transform_feedback( bool x ) { transform_feedback_ = x; }
   void set_active( const std::string& x ) { active_ = x; }
+
+  coord_t number() const { return number_; }
 
   Window* window() { return window_; }
 
