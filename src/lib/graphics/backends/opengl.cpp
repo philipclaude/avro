@@ -195,6 +195,8 @@ Primitive::convert()
 void
 OpenGLPrimitive::write()
 {
+  printf("writing!!\n");
+  
   // bind the buffers to the opengl context
   transform_feedback_ = false;
 

@@ -20,17 +20,21 @@ class ShaderProgram;
 class Plotter;
 class Window;
 class GraphicsManager;
+class SceneGraph;
 
 class Primitive : public Tree<Primitive>
 {
 public:
   Primitive( const TopologyBase& topology , Window* window );
+  Primitive( const TopologyBase& topology , SceneGraph* scene );
   virtual ~Primitive() {}
 
-  virtual void write( GraphicsManager& manager ) {};
+  void write( GraphicsManager& manager );
   virtual void write() {};
   virtual void draw() {};
-  
+
+  void extract();
+
   void draw(ShaderProgram&);
 
   void convert();
@@ -48,6 +52,12 @@ public:
   index_t nb_edges() const { return edges_.size()/2; }
   index_t nb_points() const { return points_.size()/3; }
 
+  const std::vector<index_t> triangles() const { return triangles0_; }
+  const std::vector<index_t> edges() const { return edges0_; }
+  const std::vector<real_t> points() const { return points0_; }
+  const std::vector<real_t> colors() const { return colors0_; }
+  const std::vector<real_t> normals() const { return normals0_; }
+
   void set_transform_feedback( bool x ) { transform_feedback_ = x; }
   void set_active( const std::string& x ) { active_ = x; }
 
@@ -63,6 +73,7 @@ protected:
   std::string active_;
   ShaderProgram* shader_;
   Window* window_;
+  SceneGraph* scene_;
   bool visible_;
 
   std::vector<GLuint>  edges_;
@@ -70,6 +81,12 @@ protected:
   std::vector<GLfloat> points_;
   std::vector<GLfloat> normals_;
   std::vector<GLfloat> colors_;
+
+  std::vector<index_t> edges0_;
+  std::vector<index_t> triangles0_;
+  std::vector<real_t>  points0_;
+  std::vector<real_t>  normals0_;
+  std::vector<real_t>  colors0_;
 
   GLuint vao_triangles_;
   GLuint vao_edges_;

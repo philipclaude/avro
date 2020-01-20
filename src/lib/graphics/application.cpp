@@ -10,61 +10,10 @@ void
 ApplicationBase::write()
 {
   // write all the data present in the scene graph
-  for (index_t k=0;k<scene_.size();k++)
-    scene_[k].write(manager_);
+  printf("nb_scenes = %lu\n",scenes_.size());
+  for (index_t k=0;k<scenes_.size();k++)
+    scenes_[k]->write(manager_);
 }
-
-/*
-void
-OpenGL_Manager::draw()
-{
-  // draws with the current shader (selected by the scene graph)
-  std::map<index_t,index_t>::iterator it;
-
-  for (it=vao_triangles_.begin();it!=vao_triangles_.end();it++)
-  {
-    index_t vao = it->first;
-    index_t nb = it->second;
-    bool active = vao_triangles_active_[vao];
-    ShaderProgram* shader = vao_triangles_shader_[vao];
-
-    if (!active) continue;
-
-    shader->use();
-    GL_CALL( glBindVertexArray(vao) );
-    GL_CALL( glDrawElements(GL_TRIANGLES,nb, GL_UNSIGNED_INT , 0 ) )
-  }
-
-  for (it=vao_edges_.begin();it!=vao_edges_.end();it++)
-  {
-    index_t vao = it->first;
-    index_t nb = it->second;
-    bool active = vao_edges_active_[vao];
-    ShaderProgram* shader = vao_edges_shader_[vao];
-
-    if (!active) continue;
-
-    shader->use();
-    GL_CALL( glBindVertexArray(vao) );
-    GL_CALL( glDrawElements( GL_LINES , nb , GL_UNSIGNED_INT , 0 ) )
-  }
-
-  for (it=vao_points_.begin();it!=vao_points_.end();it++)
-  {
-    index_t vao = it->first;
-    index_t nb = it->second;
-    bool active = vao_points_active_[vao];
-    ShaderProgram* shader = vao_points_shader_[vao];
-
-    if (!active) continue;
-
-    shader->use();
-    GL_CALL( glBindVertexArray(vao) );
-    GL_CALL( glPointSize(10.0f) );
-    GL_CALL( glDrawArrays( GL_POINTS , 0 , nb ) );
-  }
-}
-*/
 
 void
 ShaderLibrary::set_matrices( SceneGraph& scene )
@@ -77,6 +26,99 @@ ShaderLibrary::set_matrices( SceneGraph& scene )
     shader.setUniform("MVP" , scene.mvp_matrix() );
     shader.setUniform("u_normalMatrix" , scene.normal_matrix() );
   }
+}
+
+void
+OpenGL_Manager::write( Primitive& primitive )
+{
+  // allocate the buffers
+  std::vector<GLuint> vbo(7);
+  GL_CALL( glGenBuffers( vbo.size() , vbo.data() ) );
+  GLuint& vbo_position  = vbo[0];
+  GLuint& vbo_colour    = vbo[1];
+  GLuint& vbo_normal    = vbo[2];
+  GLuint& vbo_triangles = vbo[3];
+  GLuint& vbo_edges     = vbo[4];
+  GLuint& vbo_points    = vbo[5]; UNUSED(vbo_points);
+  GLuint& vbo_feedback  = vbo[6];
+
+  index_t nb_points = primitive.nb_points();
+
+  if (primitive.number()>=2)
+  {
+    // bind the triangles
+    std::vector<GLuint> triangles( primitive.triangles().begin() , primitive.triangles().end() );
+    GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_triangles) );
+    GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(GLuint), triangles.data() , GL_STATIC_DRAW) );
+  }
+
+  // bind the position buffer
+  std::vector<GLfloat> points( primitive.points().begin() , primitive.points().end() );
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_position) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(GLfloat), points.data() , GL_STATIC_DRAW) );
+
+  // bind the colour buffer
+  std::vector<GLfloat> colors( primitive.colors().begin() , primitive.colors().end() );
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_colour) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat), colors.data() , GL_STATIC_DRAW) );
+
+  // bind the normal buffer
+  if (primitive.number()>=2)
+  {
+    std::vector<GLfloat> normals( primitive.normals().begin() , primitive.normals().end() );
+    GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_normal) );
+    GL_CALL( glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat), normals.data() , GL_STATIC_DRAW) );
+  }
+
+  // bind the triangle data
+  GLuint id_vao_triangles;
+  GL_CALL( glGenVertexArrays( 1, &id_vao_triangles ) );
+  GL_CALL( glBindVertexArray(id_vao_triangles) );
+  vao_triangles_.insert( {&primitive,id_vao_triangles} );
+
+  GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo_triangles ) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_position ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_colour ) );
+  GL_CALL( glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(1) );
+
+  if (primitive.number()>=2)
+  {
+    GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_normal ) );
+    GL_CALL( glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+    GL_CALL( glEnableVertexAttribArray(2) );
+  }
+
+  // bind the edges
+  GLuint id_vao_edges;
+  GL_CALL( glGenVertexArrays( 1, &id_vao_edges ) );
+  GL_CALL( glBindVertexArray(id_vao_edges) );
+  vao_edges_.insert( {&primitive,id_vao_edges} );
+
+  std::vector<GLuint> edges( primitive.edges().begin() , primitive.edges().end() );
+  GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo_edges ) );
+  GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, edges.size() * sizeof(GLuint), edges.data() , GL_STATIC_DRAW) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_position ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+
+  // bind the points
+  GLuint id_vao_points;
+  GL_CALL( glGenVertexArrays( 1, &id_vao_points ) );
+  GL_CALL( glBindVertexArray(id_vao_points) );
+  vao_points_.insert( {&primitive,id_vao_points} );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_position ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+
+  // reset the vao bound to the gl
+  GL_CALL( glBindVertexArray(0) );
 }
 
 void
@@ -170,6 +212,73 @@ OpenGL_Manager::draw( SceneGraph& scene , TransformFeedbackResult* feedback )
   }
 
   scene.set_update(false);
+}
+
+static Trackball* trackball_instance = nullptr;
+
+static void
+mouse_button_callback(GLFWwindow* win ,int button,int action,int mods)
+{
+  if (action == GLFW_PRESS)
+  {
+    double xpos,ypos;
+    glfwGetCursorPos(win,&xpos,&ypos);
+    trackball_instance->MouseDown(button,action,mods,(int)xpos,(int)ypos);
+  }
+  if (action == GLFW_RELEASE)
+  {
+    trackball_instance->MouseUp();
+  }
+}
+
+static void
+mouse_move_callback(GLFWwindow* win, double xpos, double ypos)
+{
+  trackball_instance->MouseMove((int)xpos,(int)ypos);
+}
+
+static void
+mouse_scroll_callback(GLFWwindow* win, double xpos, double ypos)
+{
+  trackball_instance->MouseWheel(xpos,ypos);
+}
+
+static void
+keyboard_callback(GLFWwindow* win,int key,int scancode,int action,int mods)
+{
+  if (action == GLFW_PRESS)
+  {
+    trackball_instance->KeyDown(key);
+  }
+
+  if (action == GLFW_RELEASE)
+  {
+    trackball_instance->KeyUp();
+  }
+}
+
+GLFW_Window::GLFW_Window( int width , int height ) :
+  title_("avro window"),
+  width_(width),
+  height_(height),
+  camera_(glm::vec3(0.0f,0.0f,7.0f)),
+  trackball_(&camera_,glm::vec4(0.0f,0.0f,(float)width_,(float)height_))
+{
+  window_ = glfwCreateWindow( width_ , height_ , title_.c_str() , NULL, NULL);
+  if (!window_)
+  {
+    glfwTerminate();
+    avro_assert_not_reached;
+  }
+  glfwMakeContextCurrent(window_);
+
+  trackball_instance = &trackball_;
+
+  // initialize the trackball callbacks
+  glfwSetCursorPosCallback(window_,&mouse_move_callback);
+  glfwSetMouseButtonCallback(window_,&mouse_button_callback);
+  glfwSetScrollCallback(window_,&mouse_scroll_callback);
+  glfwSetKeyCallback(window_,&keyboard_callback);
 }
 
 template class Application<GLFW_Interface<OpenGL_Manager>>;

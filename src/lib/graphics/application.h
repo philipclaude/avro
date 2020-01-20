@@ -5,6 +5,7 @@
 #include "common/tools.h"
 #include "common/types.h"
 
+#include "graphics/controls.h"
 #include "graphics/primitive.h"
 #include "graphics/shader.h"
 
@@ -18,16 +19,93 @@ namespace avro
 {
 
 class Mesh;
-class Window;
+class TopologyBase;
 
 namespace graphics
 {
 
-class SceneGraph;
-
-class EmptyShader : public ShaderProgram
+class SceneGraph
 {
-  // used for webviewer
+public:
+  typedef std::shared_ptr<Primitive> Primitive_ptr;
+
+  SceneGraph() :
+    update_(true)
+  {}
+
+  void add_primitive( TopologyBase& topology )
+  {
+    Primitive_ptr primitive = std::make_shared<Primitive>(topology,this);
+    primitive_.push_back(primitive);
+  }
+
+  void write( GraphicsManager& manager )
+  {
+    printf("nb_primitive = %lu\n",primitive_.size());
+    for (index_t k=0;k<primitive_.size();k++)
+      primitive_[k]->write(manager);
+  }
+
+  bool update() const { return update_; }
+  void set_update( bool x ) { update_ = x; }
+
+  const mat4& mvp_matrix() const { return mvpMatrix_; }
+  const mat4& normal_matrix() const { return normalMatrix_; }
+
+  mat4& mvp_matrix() { return mvpMatrix_; }
+  mat4& normal_matrix() { return normalMatrix_; }
+
+  index_t nb_primitives() const { return primitive_.size(); }
+
+  Primitive& primitive( index_t k ) { return *primitive_[k].get(); }
+
+private:
+  std::vector<Primitive_ptr> primitive_; // roots of the scene graph
+
+  // store all the matrices here
+  mat4 mvpMatrix_;
+  mat4 viewMatrix_;
+  mat4 projMatrix_;
+  mat4 modelMatrix_;
+  mat4 normalMatrix_;
+  mat4 modelViewMatrix_;
+
+  bool update_;
+};
+
+class GLFW_Window
+{
+public:
+  GLFW_Window( int width , int height );
+
+  void make_current()
+  {
+    glfwMakeContextCurrent(window_);
+  }
+
+  index_t nb_scene() const { return scene_.size(); }
+  SceneGraph& scene( index_t k ) { return scene_[k]; }
+
+  index_t create_scene()
+  {
+    index_t id = scene_.size();
+    scene_.push_back(SceneGraph());
+    return id;
+  }
+
+private:
+  std::string title_;
+  GLFWwindow* window_;
+
+  int width_;
+  int height_;
+
+  vec3 position_;
+  float angles_[2];
+
+  std::vector<SceneGraph> scene_;
+  Trackball trackball_;
+  Camera camera_;
 };
 
 class ShaderLibrary
@@ -62,9 +140,7 @@ class GraphicsManager
 {
 public:
   virtual ~GraphicsManager() {}
-  virtual void write_points() = 0;
-  virtual void write_edges() = 0;
-  virtual void write_triangles() = 0;
+  virtual void write( Primitive& primitive ) = 0;
 };
 
 class TransformFeedbackResult
@@ -90,10 +166,9 @@ private:
   {}
 
 public:
-  void write_points() { avro_implement; }
-  void write_edges() { avro_implement; }
-  void write_triangles() { avro_implement; }
+  void write( Primitive& primitive );
 
+  void draw( GLFW_Window& window , TransformFeedbackResult* feedback=nullptr );
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr );
 
 private:
@@ -101,7 +176,7 @@ private:
   void set_matrices( SceneGraph& scene );
   void draw( Primitive& primitive , TransformFeedbackResult* feedback=nullptr );
 
-  // map from Primitive to vao
+  // map from primitive to vao
   std::map<Primitive*,index_t> vao_points_;
   std::map<Primitive*,index_t> vao_edges_;
   std::map<Primitive*,index_t> vao_triangles_;
@@ -117,10 +192,7 @@ class Vulkan_Manager : public GraphicsManager
 private:
   Vulkan_Manager() {}
 
-  void write_points() { avro_implement; }
-  void write_edges() { avro_implement; }
-  void write_triangles() { avro_implement; }
-
+  void write( Primitive& primitive ) { avro_implement; }
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
   { avro_implement; }
 
@@ -133,57 +205,7 @@ class WV_Manager : public GraphicsManager
 private:
   WV_Manager();
 
-  void write_points() { avro_implement; }
-  void write_edges() { avro_implement; }
-  void write_triangles() { avro_implement; }
-};
-
-class SceneGraph
-{
-public:
-  typedef std::shared_ptr<Primitive> Primitive_ptr;
-
-  SceneGraph() :
-    update_(true)
-  {}
-
-  void add_primitive( TopologyBase& topology , const std::string& shader_name="default" )
-  {
-    Primitive_ptr primitive ;avro_implement;//= std::make_shared<Primitive>(topology,shader,*this);
-    primitive_.push_back(primitive);
-  }
-
-  void write( GraphicsManager& manager )
-  {
-    for (index_t k=0;k<primitive_.size();k++)
-      primitive_[k]->write(manager);
-  }
-
-  bool update() const { return update_; }
-  void set_update( bool x ) { update_ = x; }
-
-  const mat4& mvp_matrix() const { return mvpMatrix_; }
-  const mat4& normal_matrix() const { return normalMatrix_; }
-
-  mat4& mvp_matrix() { return mvpMatrix_; }
-  mat4& normal_matrix() { return normalMatrix_; }
-
-  index_t nb_primitives() const { return primitive_.size(); }
-
-  Primitive& primitive( index_t k ) { return *primitive_[k].get(); }
-
-private:
-  std::vector<Primitive_ptr> primitive_; // roots of the scene graph
-
-  // store all the matrices here
-  mat4 mvpMatrix_;
-  mat4 viewMatrix_;
-  mat4 projMatrix_;
-  mat4 modelMatrix_;
-  mat4 normalMatrix_;
-  mat4 modelViewMatrix_;
-
-  bool update_;
+  void write( Primitive& primitive ) { avro_implement; }
 };
 
 class ApplicationBase
@@ -198,20 +220,11 @@ protected:
   virtual void run() = 0;
   void write();
 
-  void add( const Mesh& Mesh );
-
-  void add_scene()
-  {
-    scene_.push_back(SceneGraph());
-  }
-
-  SceneGraph& scene( index_t k ) { return scene_[k]; }
-
-  index_t nb_scene() const { return scene_.size(); }
+protected:
+  std::vector<SceneGraph*> scenes_;
 
 private:
   GraphicsManager& manager_;
-  std::vector<SceneGraph> scene_;
 };
 
 template<typename type> class Application;
@@ -225,21 +238,52 @@ class Application<GLFW_Interface<API_t>> : public ApplicationBase
 public:
   Application() :
     ApplicationBase(manager_)
-  {}
+  {
+    // initialize OpenGL
+    avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
+
+    // set the version
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  }
+
+  void initialize()
+  {
+    avro_assert( window_.size()!=0 );
+    window_[0]->make_current();
+
+    // load gl stuff and print info
+    gladLoadGL();
+    dumpGLInfo();
+  }
 
   void run()
   {
+    printf("writing!!\n");
+    write();
+
      // start the rendering loop
      while (true)
      {
-       for (index_t k=0;k<nb_scene();k++)
-        manager_.draw(scene(k));
+       printf("bla!\n");
+       for (index_t k=0;k<window_.size();k++)
+       {
+         printf("drawing window %lu\n",k);
+         window_[k]->make_current();
+         for (index_t j=0;j<window_[k]->nb_scene();j++)
+          manager_.draw(window_[k]->scene(j));
+       }
      }
   }
 
+protected:
+  void add_window( GLFW_Window* window )
+    { window_.push_back(window); }
+
 private:
   API_t manager_;
-  std::vector<std::shared_ptr<Window>> window_;
+  std::vector<GLFW_Window*> window_;
 };
 
 template<>
@@ -248,9 +292,7 @@ class Application<Web_Interface> : public ApplicationBase
 public:
   Application() :
     ApplicationBase(manager_)
-  {
-    add_scene(); // single scene graph passed to the web for now
-  }
+  {}
 
   void run() { avro_implement; } // run the server
 
@@ -258,13 +300,54 @@ public:
   {
     // first set the transformation to the scene
     OpenGL_Manager manager_gl;
-    scene(0).write(manager_gl);
+    scene_.write(manager_gl);
     TransformFeedbackResult feedback;
-    manager_gl.draw(scene(0),&feedback);
+    manager_gl.draw(scene_,&feedback);
   }
 
 private:
   WV_Manager manager_;
+  SceneGraph scene_;
+};
+
+class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
+{
+public:
+  Visualizer() :
+    main_(1024,612),
+    side_(1024,612)
+  {
+    add_window( &main_ );
+    add_window( &side_ );
+
+    initialize();
+  }
+
+  void add_topology( TopologyBase& topology )
+  {
+    // add the topology to the relevant windows
+    index_t id = main_.create_scene();
+    main_.scene(id).add_primitive(topology); // create a new root in the scene graph
+    scenes_.push_back( &main_.scene(id) );
+  }
+
+  GLFW_Window main_;
+  GLFW_Window side_;
+};
+
+class WebVisualizer : public Application<Web_Interface>
+{
+public:
+
+  void add_topology( TopologyBase& topology )
+  {
+    // create a new root in the scene graph
+    scene_.add_primitive(topology);
+  }
+
+private:
+  SceneGraph scene_;
+
 };
 
 } // graphics
