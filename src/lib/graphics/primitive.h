@@ -52,11 +52,11 @@ public:
   index_t nb_edges() const { return edges_.size()/2; }
   index_t nb_points() const { return points_.size()/3; }
 
-  const std::vector<index_t> triangles() const { return triangles0_; }
-  const std::vector<index_t> edges() const { return edges0_; }
-  const std::vector<real_t> points() const { return points0_; }
-  const std::vector<real_t> colors() const { return colors0_; }
-  const std::vector<real_t> normals() const { return normals0_; }
+  const std::vector<index_t>& triangles() const { return triangles0_; }
+  const std::vector<index_t>& edges() const { return edges0_; }
+  const std::vector<real_t>& points() const { return points0_; }
+  const std::vector<real_t>& colors() const { return colors0_; }
+  const std::vector<real_t>& normals() const { return normals0_; }
 
   void set_transform_feedback( bool x ) { transform_feedback_ = x; }
   void set_active( const std::string& x ) { active_ = x; }

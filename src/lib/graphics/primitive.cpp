@@ -103,6 +103,7 @@ Primitive::shader()
 void
 Primitive::extract()
 {
+  printf("extracting..\n");
   index_t nb_triangles = 0;
   coord_t dim0 = topology_.points().dim();
   coord_t number = topology_.number();

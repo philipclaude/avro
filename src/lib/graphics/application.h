@@ -33,10 +33,12 @@ public:
     update_(true)
   {}
 
-  void add_primitive( TopologyBase& topology )
+  index_t add_primitive( TopologyBase& topology )
   {
+    index_t id = primitive_.size();
     Primitive_ptr primitive = std::make_shared<Primitive>(topology,this);
     primitive_.push_back(primitive);
+    return id;
   }
 
   void write( GraphicsManager& manager )
@@ -76,11 +78,61 @@ private:
 class GLFW_Window
 {
 public:
-  GLFW_Window( int width , int height );
+  GLFW_Window( int width , int height , const std::string& title );
 
   void make_current()
   {
     glfwMakeContextCurrent(window_);
+  }
+
+  bool should_close()
+  {
+    return glfwWindowShouldClose(window_) || (glfwGetKey(window_, GLFW_KEY_ESCAPE ) == GLFW_PRESS);
+  }
+
+  void setup()
+  {
+    // ensure we can capture the escape key being pressed below
+    glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
+
+    // hide the mouse and enable unlimited mouvement
+    //glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glfwPollEvents();
+    glfwSetCursorPos(window_, width_/2, height_/2);
+
+    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    // Cull triangles which normal is not towards the camera
+    glDisable(GL_CULL_FACE);
+
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1.0, 1.5);
+  }
+
+  void begin_draw()
+  {
+    make_current();
+
+    glfwPollEvents();
+
+    glClearColor (1.0, 1.0, 1.0, 0.0); // white
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+
+  void end_draw()
+  {
+    glfwSwapBuffers(window_);
   }
 
   index_t nb_scene() const { return scene_.size(); }
@@ -130,6 +182,8 @@ public:
 
   void set_matrices( SceneGraph& scene );
 
+  void create();
+
 private:
 
   // store all the shaders
@@ -171,6 +225,10 @@ public:
   void draw( GLFW_Window& window , TransformFeedbackResult* feedback=nullptr );
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr );
 
+  void select_shader( Primitive& primitive , const std::string& name )
+  { shader_[&primitive] = &shaders_[name]; }
+  void create_shaders() { shaders_.create(); }
+
 private:
 
   void set_matrices( SceneGraph& scene );
@@ -194,6 +252,9 @@ private:
 
   void write( Primitive& primitive ) { avro_implement; }
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
+  { avro_implement; }
+
+  void create_shaders()
   { avro_implement; }
 
 };
@@ -256,23 +317,36 @@ public:
     // load gl stuff and print info
     gladLoadGL();
     dumpGLInfo();
+
+    manager_.create_shaders();
   }
 
   void run()
   {
-    printf("writing!!\n");
+    for (index_t k=0;k<window_.size();k++)
+      window_[k]->setup();
+
     write();
 
      // start the rendering loop
-     while (true)
+     bool done = false;
+     while (!done)
      {
-       printf("bla!\n");
        for (index_t k=0;k<window_.size();k++)
        {
-         printf("drawing window %lu\n",k);
-         window_[k]->make_current();
+         window_[k]->begin_draw();
+
          for (index_t j=0;j<window_[k]->nb_scene();j++)
-          manager_.draw(window_[k]->scene(j));
+           manager_.draw(window_[k]->scene(j));
+
+         window_[k]->end_draw();
+
+         if (window_[k]->should_close())
+         {
+           printf("window %lu requested close\n",k);
+           done = true;
+         }
+
        }
      }
   }
@@ -281,7 +355,7 @@ protected:
   void add_window( GLFW_Window* window )
     { window_.push_back(window); }
 
-private:
+protected:
   API_t manager_;
   std::vector<GLFW_Window*> window_;
 };
@@ -305,7 +379,7 @@ public:
     manager_gl.draw(scene_,&feedback);
   }
 
-private:
+protected:
   WV_Manager manager_;
   SceneGraph scene_;
 };
@@ -314,8 +388,8 @@ class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
 {
 public:
   Visualizer() :
-    main_(1024,612),
-    side_(1024,612)
+    main_(1024,612,"3D"),
+    side_(512,306,"2D")
   {
     add_window( &main_ );
     add_window( &side_ );
@@ -327,8 +401,9 @@ public:
   {
     // add the topology to the relevant windows
     index_t id = main_.create_scene();
-    main_.scene(id).add_primitive(topology); // create a new root in the scene graph
     scenes_.push_back( &main_.scene(id) );
+    index_t prim_id = main_.scene(id).add_primitive(topology); // create a new root in the scene graph
+    manager_.select_shader( main_.scene(id).primitive(prim_id) , "wv" );
   }
 
   GLFW_Window main_;

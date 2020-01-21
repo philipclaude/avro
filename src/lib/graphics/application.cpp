@@ -23,9 +23,19 @@ ShaderLibrary::set_matrices( SceneGraph& scene )
   for (it=shaders_.begin();it!=shaders_.end();it++)
   {
     ShaderProgram& shader = it->second;
+    shader.use();
     shader.setUniform("MVP" , scene.mvp_matrix() );
     shader.setUniform("u_normalMatrix" , scene.normal_matrix() );
   }
+}
+
+void
+ShaderLibrary::create()
+{
+  // create all the shaders
+  shaders_.insert( { "wv" , ShaderProgram("wv") } );
+
+  // TODO the rest of the shaders...
 }
 
 void
@@ -125,6 +135,7 @@ void
 OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
 {
   // indicate to the gl that we want to use the shader
+  avro_assert_msg( shader_.find(&primitive)!=shader_.end() , "shader not set" );
   ShaderProgram shader = *shader_.at(&primitive);
   shader.use();
 
@@ -202,7 +213,7 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
 void
 OpenGL_Manager::draw( SceneGraph& scene , TransformFeedbackResult* feedback )
 {
-  if (!scene.update()) return;
+  //if (!scene.update()) return;
 
   shaders_.set_matrices(scene);
 
@@ -211,7 +222,7 @@ OpenGL_Manager::draw( SceneGraph& scene , TransformFeedbackResult* feedback )
     draw( scene.primitive(k) , feedback );
   }
 
-  scene.set_update(false);
+  //scene.set_update(false);
 }
 
 static Trackball* trackball_instance = nullptr;
@@ -257,8 +268,8 @@ keyboard_callback(GLFWwindow* win,int key,int scancode,int action,int mods)
   }
 }
 
-GLFW_Window::GLFW_Window( int width , int height ) :
-  title_("avro window"),
+GLFW_Window::GLFW_Window( int width , int height , const std::string& title ) :
+  title_(title),
   width_(width),
   height_(height),
   camera_(glm::vec3(0.0f,0.0f,7.0f)),
