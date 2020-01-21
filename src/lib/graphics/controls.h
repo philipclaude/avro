@@ -26,7 +26,7 @@ public:
   void lookAt(const glm::vec3& target);
 
   glm::vec3 eye, up;
-  glm::mat4 viewMatrix;
+  glm::mat4 view_matrix;
   glm::mat4 mvp_;
   glm::mat4 mv_;
 };
@@ -37,6 +37,8 @@ public:
   Trackball(Camera* cam,glm::vec4 screenSize);
 
   void reset(glm::vec4 screensize);
+
+  const Camera& camera() const { return *camera_; }
 
   void update();
   void MouseDown(int button, int action, int mods,int xpos,int ypos);

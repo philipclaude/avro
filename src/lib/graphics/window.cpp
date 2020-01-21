@@ -108,7 +108,7 @@ Window::setMatrices()
   }
 
   // compute the matrices that need to be passed to the shaders
-  viewMatrix_ = camera_.viewMatrix;
+  viewMatrix_ = camera_.view_matrix;
   mvp_ = projMatrix_ * viewMatrix_ * modelMatrix_;
   normalMatrix_ = glm::transpose(glm::inverse(glm::mat3( modelMatrix_*viewMatrix_)));
 }

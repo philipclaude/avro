@@ -15,13 +15,13 @@ namespace graphics
 #define   SQRT1_2  0.7071067811865476
 
 Camera::Camera(const glm::vec3& e) :
-  eye(e), up(0.0f,1.0f,0.0f), viewMatrix(1.0f)
+  eye(e), up(0.0f,1.0f,0.0f), view_matrix(1.0f)
 {}
 
 void
 Camera::lookAt(const glm::vec3& target)
 {
-  viewMatrix = glm::lookAt(eye,target,up);
+  view_matrix = glm::lookAt(eye,target,up);
 }
 
 Trackball::Trackball(Camera* cam,glm::vec4 screenSize) :

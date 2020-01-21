@@ -51,11 +51,13 @@ public:
   bool update() const { return update_; }
   void set_update( bool x ) { update_ = x; }
 
-  const mat4& mvp_matrix() const { return mvpMatrix_; }
-  const mat4& normal_matrix() const { return normalMatrix_; }
+  void update_matrices( const Trackball& trackball , float,float,float );
 
-  mat4& mvp_matrix() { return mvpMatrix_; }
-  mat4& normal_matrix() { return normalMatrix_; }
+  const mat4& mvp_matrix() const { return mvp_matrix_; }
+  const mat4& normal_matrix() const { return normal_matrix_; }
+
+  mat4& mvp_matrix() { return mvp_matrix_; }
+  mat4& normal_matrix() { return normal_matrix_; }
 
   index_t nb_primitives() const { return primitive_.size(); }
 
@@ -65,12 +67,12 @@ private:
   std::vector<Primitive_ptr> primitive_; // roots of the scene graph
 
   // store all the matrices here
-  mat4 mvpMatrix_;
-  mat4 viewMatrix_;
-  mat4 projMatrix_;
-  mat4 modelMatrix_;
-  mat4 normalMatrix_;
-  mat4 modelViewMatrix_;
+  mat4 mvp_matrix_;
+  mat4 view_matrix_;
+  mat4 proj_matrix_;
+  mat4 model_matrix_;
+  mat4 normal_matrix_;
+  //mat4 modelViewMatrix_;
 
   bool update_;
 };
@@ -80,10 +82,44 @@ class GLFW_Window
 public:
   GLFW_Window( int width , int height , const std::string& title );
 
+  void
+  mouse_button_callback(int button,int action,int mods)
+  {
+    if (action == GLFW_PRESS)
+    {
+      double xpos,ypos;
+      glfwGetCursorPos(window_,&xpos,&ypos);
+      trackball_.MouseDown(button,action,mods,(int)xpos,(int)ypos);
+    }
+    if (action == GLFW_RELEASE)
+    {
+      trackball_.MouseUp();
+    }
+  }
+
+  void
+  mouse_move_callback(double xpos, double ypos)
+  {
+    trackball_.MouseMove((int)xpos,(int)ypos);
+  }
+
+  void
+  mouse_scroll_callback(double xpos, double ypos)
+  {
+    trackball_.MouseWheel(xpos,ypos);
+  }
+
+  void key_callback(int key, int scancode, int action, int mods)
+  {
+    printf("key cb!\n");
+  }
+
   void make_current()
   {
     glfwMakeContextCurrent(window_);
   }
+
+  void update_view();
 
   bool should_close()
   {
@@ -128,6 +164,8 @@ public:
 
     glClearColor (1.0, 1.0, 1.0, 0.0); // white
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    update_view();
   }
 
   void end_draw()
@@ -151,6 +189,7 @@ private:
 
   int width_;
   int height_;
+  float fov_ = 45.0f;
 
   vec3 position_;
   float angles_[2];

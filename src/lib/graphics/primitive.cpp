@@ -278,7 +278,6 @@ void
 Primitive::write( GraphicsManager& manager )
 {
   extract();
-
   manager.write( *this );
 }
 

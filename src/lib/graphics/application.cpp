@@ -1,5 +1,7 @@
 #include "graphics/application.h"
 
+#include <glm/gtx/string_cast.hpp>
+
 namespace avro
 {
 
@@ -34,6 +36,23 @@ ShaderLibrary::create()
 {
   // create all the shaders
   shaders_.insert( { "wv" , ShaderProgram("wv") } );
+
+  // set the uniforms
+  ShaderProgram& shader = shaders_.at("wv");
+  shader.use();
+  shader.setUniform( "lightDir" , 0.0 , 0.3 , 1.0 );
+  shader.setUniform( "wAmbient" , 0.25f );
+  shader.setUniform( "xpar" , 1.0f );
+  shader.setUniform( "conNormal" , 0. , 0. , 1. );
+  shader.setUniform( "conColor" , 0. , 1. , 1. );
+  shader.setUniform( "bacColor" , 0.5 , 0.5 , 0.5 );
+  shader.setUniform( "wColor" , 1.0f );
+  shader.setUniform( "bColor" , 0.0f );
+  shader.setUniform( "wNormal" , 1.0f );
+  shader.setUniform( "wLight" , 1.0f );
+  shader.setUniform( "pointSize" , 2.0f );
+  shader.setUniform( "picking" , 0 );
+  shader.setUniform( "vbonum" , 0 );
 
   // TODO the rest of the shaders...
 }
@@ -164,7 +183,7 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
     if (primitive.triangles_on())
     {
       GL_CALL( glBindVertexArray( vao_triangles_.at(&primitive) ) );
-      GL_CALL( glDrawElements(GL_TRIANGLES, 3*primitive.nb_triangles() , GL_UNSIGNED_INT , 0 ) )
+      GL_CALL( glDrawElements(GL_TRIANGLES, primitive.triangles().size() , GL_UNSIGNED_INT , 0 ) )
     }
   }
 
@@ -194,7 +213,7 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
     if (primitive.edges_on())
     {
       GL_CALL( glBindVertexArray( vao_edges_.at(&primitive) ) );
-      GL_CALL( glDrawElements( GL_LINES , primitive.nb_edges()*2 , GL_UNSIGNED_INT , 0 ) )
+      GL_CALL( glDrawElements( GL_LINES , primitive.edges().size() , GL_UNSIGNED_INT , 0 ) )
     }
   }
 
@@ -203,7 +222,7 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
   {
     GL_CALL( glBindVertexArray(vao_points_.at(&primitive) ) );
     GL_CALL( glPointSize(10.0f) );
-    GL_CALL( glDrawArrays( GL_POINTS , 0 , primitive.nb_points() ) );
+    GL_CALL( glDrawArrays( GL_POINTS , 0 , primitive.points().size() ) );
   }
 
   // reset the vao bound to the gl
@@ -228,8 +247,9 @@ OpenGL_Manager::draw( SceneGraph& scene , TransformFeedbackResult* feedback )
 static Trackball* trackball_instance = nullptr;
 
 static void
-mouse_button_callback(GLFWwindow* win ,int button,int action,int mods)
+_mouse_button_callback(GLFWwindow* window ,int button,int action,int mods)
 {
+  /*
   if (action == GLFW_PRESS)
   {
     double xpos,ypos;
@@ -239,25 +259,28 @@ mouse_button_callback(GLFWwindow* win ,int button,int action,int mods)
   if (action == GLFW_RELEASE)
   {
     trackball_instance->MouseUp();
-  }
+  }*/
+  static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->mouse_button_callback(button,action,mods);
 }
 
 static void
-mouse_move_callback(GLFWwindow* win, double xpos, double ypos)
+_mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
 {
-  trackball_instance->MouseMove((int)xpos,(int)ypos);
+  //trackball_instance->MouseMove((int)xpos,(int)ypos);
+  static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->mouse_move_callback(xpos,ypos);
 }
 
 static void
-mouse_scroll_callback(GLFWwindow* win, double xpos, double ypos)
+_mouse_scroll_callback(GLFWwindow* window, double xpos, double ypos)
 {
-  trackball_instance->MouseWheel(xpos,ypos);
+  //trackball_instance->MouseWheel(xpos,ypos);
+  static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->mouse_move_callback(xpos,ypos);
 }
 
 static void
-keyboard_callback(GLFWwindow* win,int key,int scancode,int action,int mods)
+_keyboard_callback(GLFWwindow* window,int key,int scancode,int action,int mods)
 {
-  if (action == GLFW_PRESS)
+  /*if (action == GLFW_PRESS)
   {
     trackball_instance->KeyDown(key);
   }
@@ -265,7 +288,8 @@ keyboard_callback(GLFWwindow* win,int key,int scancode,int action,int mods)
   if (action == GLFW_RELEASE)
   {
     trackball_instance->KeyUp();
-  }
+  }*/
+  static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->key_callback(key,scancode,action,mods);
 }
 
 GLFW_Window::GLFW_Window( int width , int height , const std::string& title ) :
@@ -285,11 +309,38 @@ GLFW_Window::GLFW_Window( int width , int height , const std::string& title ) :
 
   trackball_instance = &trackball_;
 
+  glfwSetWindowUserPointer(window_, this);
+
   // initialize the trackball callbacks
-  glfwSetCursorPosCallback(window_,&mouse_move_callback);
-  glfwSetMouseButtonCallback(window_,&mouse_button_callback);
-  glfwSetScrollCallback(window_,&mouse_scroll_callback);
-  glfwSetKeyCallback(window_,&keyboard_callback);
+  glfwSetCursorPosCallback(window_,&_mouse_move_callback);
+  glfwSetMouseButtonCallback(window_,&_mouse_button_callback);
+  glfwSetScrollCallback(window_,&_mouse_scroll_callback);
+  //glfwSetKeyCallback(window_,&keyboard_callback);
+  glfwSetKeyCallback( window_ , &_keyboard_callback );
+}
+
+void
+SceneGraph::update_matrices( const Trackball& trackball , float fov , float width , float height )
+{
+  model_matrix_ = mat4(1.0);
+  proj_matrix_  = glm::perspective(glm::radians(fov), float(width)/float(height) , 1.0f, 100.0f);
+
+  // compute the matrices that need to be passed to the shaders
+  view_matrix_   = trackball.camera().view_matrix;
+  mvp_matrix_    = proj_matrix_ * view_matrix_ * model_matrix_;
+  normal_matrix_ = glm::transpose(glm::inverse(glm::mat3( model_matrix_*view_matrix_)));
+}
+
+void
+GLFW_Window::update_view()
+{
+  trackball_.update();
+  for (index_t k=0;k<scene_.size();k++)
+  {
+    // TODO only update if this scenegraph is selected
+    scene_[k].update_matrices(trackball_,fov_,width_,height_);
+  }
+
 }
 
 template class Application<GLFW_Interface<OpenGL_Manager>>;
