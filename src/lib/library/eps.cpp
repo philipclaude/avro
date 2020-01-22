@@ -207,9 +207,9 @@ epsFile::write( const std::string& filename )
             "closepath clip\n",
             x, y, x+w, y, x+w, y+h, x, y+h);
 
-
-
-  print_triangles();
+  //print_triangles();
+  //print_edges();
+  print_primitives();
 
   fprintf(fid_,"grestore\n"
             "showpage\n"
@@ -239,6 +239,25 @@ epsFile::add_triangles( const std::vector<real_t>& t , const std::vector<real_t>
     triangles_.push_back(100*t[k]);
   for (index_t k=0;k<c.size();k++)
     triangle_colors_.push_back(c[k]);
+
+  for (index_t k=0;k<t.size()/9;k++)
+  {
+    primitives_.emplace_back( 3 , 3 , &t[9*k] , &c[9*k] , primitives_.size() );
+  }
+}
+
+void
+epsFile::add_edges( const std::vector<real_t>& e , const std::vector<real_t>& c )
+{
+  for (index_t k=0;k<e.size();k++)
+    edges_.push_back(100*e[k]);
+  for (index_t k=0;k<c.size();k++)
+    edge_colors_.push_back(c[k]);
+
+  for (index_t k=0;k<e.size()/6;k++)
+  {
+    primitives_.emplace_back( 2 , 3 , &e[6*k] , &c[6*k] , primitives_.size() );
+  }
 }
 
 void
@@ -247,6 +266,45 @@ get_constant_color( const real_t* data , float* c )
   c[0] = ( data[0] + data[3] + data[6] )/3.;
   c[1] = ( data[1] + data[4] + data[7] )/3.;
   c[2] = ( data[2] + data[5] + data[8] )/3.;
+}
+
+void
+epsFile::print_primitives()
+{
+  int w = 640/2,h = 320;
+
+  std::sort( primitives_.begin() , primitives_.end() );
+
+  std::reverse( primitives_.begin() , primitives_.end() );
+  for (index_t k=0;k<primitives_.size();k++)
+  {
+    if (primitives_[k].nb_vertices()==3)
+    {
+      // triangle
+      float c[3];
+      get_constant_color( primitives_[k].color() , c );
+      fprintf(fid_,"%g %g %g C\n",c[0],c[1],c[2]);
+
+      const real_t* vertices = primitives_[k].vertices();
+      fprintf(fid_,"%g %g %g %g %g %g T\n",
+          vertices[0]+w,vertices[1]+h,
+          vertices[3]+w,vertices[4]+h,
+          vertices[6]+w,vertices[7]+h );
+     }
+
+     if (primitives_[k].nb_vertices()==2)
+     {
+       // edge
+       float c[3];
+       get_constant_color( primitives_[k].color() , c );
+       fprintf(fid_,"%g %g %g C\n",0.,0.,0.); // black for now
+
+       const real_t* vertices = primitives_[k].vertices();
+       fprintf(fid_,"%g %g LS\n", vertices[0]+w,vertices[1]+h );
+       fprintf(fid_,"%g %g LE\n", vertices[3]+w,vertices[4]+h );
+      }
+
+  }
 }
 
 void
@@ -311,6 +369,47 @@ epsFile::print_triangles() const
 
         triangles_[9*k+6]+w,triangles_[9*k+7]+h,
         triangle_colors_[9*k+6],triangle_colors_[9*k+7],triangle_colors_[9*k+8] );
+    #endif
+  }
+
+}
+
+void
+epsFile::print_edges() const
+{
+  int w = 640/2,h = 320;
+  std::vector<real_t> zbuffer;
+  std::vector<index_t> visible;
+  std::vector<real_t> distance( edges_.size()/6 , -1 );
+  std::vector<index_t> idx;
+  index_t count = 0;
+  for (index_t k=0;k<edges_.size()/6;k++)
+  {
+    // compute the triangle normal
+    real_t z1 = edges_[6*k+2];
+    real_t z2 = edges_[6*k+5];
+
+    idx.push_back(count++);
+    visible.push_back( k );
+
+    real_t z0 = (z1+z2)/2.0;
+    zbuffer.push_back( z0 );
+    distance[k] = z0;
+  }
+
+  fprintf(fid_,"1 W\n");
+  fprintf(fid_,"%g %g %g C\n",0,0,0);
+  std::sort( idx.begin() , idx.end() , SortBy<real_t>(zbuffer) );
+  std::reverse( idx.begin() , idx.end() );
+  for (index_t i=0;i<idx.size();i++)
+  {
+    index_t k = visible[idx[i]];
+
+    #if 1
+    fprintf(fid_,"%g %g LS\n", edges_[6*k]   +w,edges_[6*k+1]+h );
+    fprintf(fid_,"%g %g LE\n", edges_[6*k +3]+w,edges_[6*k+4]+h );
+    #else
+    avro_implement;
     #endif
   }
 

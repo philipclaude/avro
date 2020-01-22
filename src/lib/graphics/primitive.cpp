@@ -103,10 +103,12 @@ Primitive::shader()
 void
 Primitive::extract()
 {
-  printf("extracting..\n");
   index_t nb_triangles = 0;
   coord_t dim0 = topology_.points().dim();
   coord_t number = topology_.number();
+
+  if (topology_.fields().has("sites"))
+    active_ = "sites";
 
   // get the triangles from the topology
   std::shared_ptr<SimplicialDecompositionBase> pdecomposition;

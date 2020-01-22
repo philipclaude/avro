@@ -226,6 +226,33 @@ RestrictedVoronoiDiagram::compute( const std::vector<index_t>& S , const bool ex
 
 }
 
+typedef struct
+{
+  std::vector<int> indices;
+} SymbolicVertex;
+
+// needed to create a set/map of elements
+bool
+operator==( const SymbolicVertex& fx , const SymbolicVertex& fy )
+{
+  // assumes fx and fy have the same topological dimension
+  // and that the indices are sorted
+  avro_assert( fx.indices.size()==fy.indices.size() );
+  for (index_t j=0;j<fx.indices.size();j++)
+    if (fx.indices[j]!=fy.indices[j])
+      return false;
+  return true;
+}
+
+// needed to create a map of elements
+bool
+operator<( const SymbolicVertex& f , const SymbolicVertex& g )
+{
+  // lexicographically compare the indices
+  return std::lexicographical_compare(f.indices.begin(), f.indices.end(),
+                                      g.indices.begin(), g.indices.end());
+}
+
 void
 RestrictedVoronoiDiagram::accumulate()
 {
@@ -274,6 +301,30 @@ RestrictedVoronoiDiagram::accumulate()
     sites_->value(k) = sites[k];
 
   fields_.make("sites",sites_);
+
+  // merge the vertices
+  return;
+  std::map<SymbolicVertex,index_t> symbolic;
+
+  std::vector<index_t> merge( points_.nb() );
+  for (index_t k=0;k<points_.nb();k++)
+  {
+    merge[k] = k;
+    SymbolicVertex s;
+    s.indices = points_.incidence().get(k);
+    std::sort( s.indices.begin() , s.indices.end() );
+    if (symbolic.find(s)==symbolic.end())
+      symbolic.insert( {s,k} );
+    else
+      merge[k] = symbolic[s];
+  }
+
+  for (index_t k=0;k<this->nb();k++)
+  {
+    for (index_t j=0;j<this->nv(k);j++)
+      (*this)(k,j) = merge[ (*this)(k,j) ];
+  }
+
 }
 
 void

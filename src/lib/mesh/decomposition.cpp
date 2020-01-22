@@ -131,13 +131,16 @@ SimplicialDecomposition<type>::get_simplices( coord_t number , std::vector<index
       }
     }
     if (skip) continue;
-    for (coord_t j=0;j<number+1;j++)
-      simplices.push_back(s(k,j));
 
     if (topology_.number()==2)
       avro_assert( parents_[number].at(k).size()==1 ); // all triangles have cardinality 1
-    if (topology_.number()==3)
-      avro_assert( parents_[number].at(k).size()<=2 ); // boundary facets have cardinality 1, interior 2
+    //if (topology_.number()==3)
+    //  avro_assert_msg( parents_[number].at(k).size()<=2 , "cardinality = %lu" , parents_[number].at(k).size() ); // boundary facets have cardinality 1, interior 2
+
+    //if (topology_.number()==3 && parents_[number].at(k).size()!=1) continue;
+
+    for (coord_t j=0;j<number+1;j++)
+      simplices.push_back(s(k,j));
 
     parents.push_back( parents_[number].at(k)[0] );
   }

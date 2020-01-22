@@ -1,3 +1,4 @@
+#include "graphics/application.h"
 #include "graphics/controls.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -24,7 +25,8 @@ Camera::lookAt(const glm::vec3& target)
   view_matrix = glm::lookAt(eye,target,up);
 }
 
-Trackball::Trackball(Camera* cam,glm::vec4 screenSize) :
+Trackball::Trackball(Camera* cam,glm::vec4 screenSize,GLFW_Window* window) :
+  window_(window),
   m_rotateSpeed(1.0f),
   m_zoomSpeed(1.2f),
   m_panSpeed(0.3f),
@@ -275,6 +277,8 @@ Trackball::MouseDown(int button, int action, int mods,int xpos,int ypos)
 {
   if (!m_enabled) return;
 
+  bool updated = false;
+
   if (state_ == TCB_STATE::NONE)
   {
     if (button == GLFW_MOUSE_BUTTON_RIGHT)
@@ -291,18 +295,23 @@ Trackball::MouseDown(int button, int action, int mods,int xpos,int ypos)
   {
     m_rotStart = GetMouseProjectionOnBall(xpos, ypos);
     m_rotEnd   = m_rotStart;
-
+    updated    = true;
   }
   else if (state_ == TCB_STATE::ZOOM && !m_noZoom)
   {
     m_zoomStart = GetMouseOnScreen(xpos, ypos);
     m_zoomEnd   = m_zoomStart;
+    updated     = true;
   }
   else if (state_ == TCB_STATE::PAN && !m_noPan)
   {
     m_panStart = GetMouseOnScreen(xpos, ypos);
     m_panEnd   = m_panStart;
+    updated    = true;
   }
+
+  if (updated)
+    window_->update_view();
 }
 
 void
@@ -345,6 +354,12 @@ Trackball::KeyDown(int key)
     camera_->eye = glm::vec3(0.0f,0.0f,7.0f);
     camera_->up  = glm::vec3(0.0f,1.0f,0.0f);
     reset(glm::vec4(0.0f,0.0f,(float)1024,(float)640));
+    window_->update_view();
+  }
+  else if ( key == GLFW_KEY_S )
+  {
+    if (window_!=nullptr)
+      window_->save_eps("test.eps");
   }
 }
 
@@ -361,6 +376,8 @@ Trackball::MouseWheel(double xoffset ,double yoffset)
   }
 
   m_zoomStart.y += delta*0.05f;
+
+  window_->update_view();
 }
 
 void
@@ -368,18 +385,25 @@ Trackball::MouseMove(int xpos,int ypos)
 {
   if (!m_enabled) return;
 
+  bool updated = false;
   if (state_ == TCB_STATE::ROTATE && !m_noRotate)
   {
     m_rotEnd = GetMouseProjectionOnBall(xpos,ypos);
+    updated  = true;
   }
   else if (state_ == TCB_STATE::ZOOM && !m_noZoom)
   {
     m_zoomEnd = GetMouseOnScreen(xpos,ypos);
+    updated   = true;
   }
   else if (state_ == TCB_STATE::PAN && !m_noPan)
   {
     m_panEnd = GetMouseOnScreen(xpos,ypos);
+    updated  = true;
   }
+
+  if (updated)
+    window_->update_view();
 }
 
 } // graphics

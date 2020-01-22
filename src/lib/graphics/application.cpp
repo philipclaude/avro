@@ -20,6 +20,7 @@ ApplicationBase::write()
 void
 ShaderLibrary::set_matrices( SceneGraph& scene )
 {
+  printf("updating matrices!!\n");
   // go through all the active shaders and assign the MVP and normalMatrix
   std::map<std::string,ShaderProgram>::iterator it;
   for (it=shaders_.begin();it!=shaders_.end();it++)
@@ -61,7 +62,7 @@ void
 OpenGL_Manager::write( Primitive& primitive )
 {
   // allocate the buffers
-  std::vector<GLuint> vbo(7);
+  std::vector<GLuint> vbo(9);
   GL_CALL( glGenBuffers( vbo.size() , vbo.data() ) );
   GLuint& vbo_position  = vbo[0];
   GLuint& vbo_colour    = vbo[1];
@@ -69,7 +70,10 @@ OpenGL_Manager::write( Primitive& primitive )
   GLuint& vbo_triangles = vbo[3];
   GLuint& vbo_edges     = vbo[4];
   GLuint& vbo_points    = vbo[5]; UNUSED(vbo_points);
-  GLuint& vbo_feedback  = vbo[6];
+
+  GLuint& vbo_feedback_points    = vbo[6];
+  GLuint& vbo_feedback_edges     = vbo[7];
+  GLuint& vbo_feedback_triangles = vbo[8];
 
   index_t nb_points = primitive.nb_points();
 
@@ -85,6 +89,19 @@ OpenGL_Manager::write( Primitive& primitive )
   std::vector<GLfloat> points( primitive.points().begin() , primitive.points().end() );
   GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_position) );
   GL_CALL( glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(GLfloat), points.data() , GL_STATIC_DRAW) );
+
+  // bind the transform feedback buffer
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_feedback_points) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(GLfloat) , NULL , GL_STATIC_COPY) );
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_feedback_edges) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(GLfloat) , NULL , GL_STATIC_COPY) );
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_feedback_triangles) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(GLfloat) , NULL , GL_STATIC_COPY) );
+  glBindBuffer(GL_ARRAY_BUFFER,0);
 
   // bind the colour buffer
   std::vector<GLfloat> colors( primitive.colors().begin() , primitive.colors().end() );
@@ -146,6 +163,31 @@ OpenGL_Manager::write( Primitive& primitive )
   GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
   GL_CALL( glEnableVertexAttribArray(0) );
 
+  // bind the transform feedback buffer
+  GLuint id_vao_feedback_points;
+  GL_CALL( glGenVertexArrays( 1, &id_vao_feedback_points ) );
+  GL_CALL( glBindVertexArray( id_vao_feedback_points ) );
+  vao_feedback_points_.insert( {&primitive,id_vao_feedback_points} );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , vbo_feedback_points ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+
+  GLuint id_vao_feedback_edges;
+  GL_CALL( glGenVertexArrays( 1, &id_vao_feedback_edges ) );
+  GL_CALL( glBindVertexArray( id_vao_feedback_edges ) );
+  vao_feedback_edges_.insert( {&primitive,id_vao_feedback_edges} );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , vbo_feedback_edges ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+
+  GLuint id_vao_feedback_triangles;
+  GL_CALL( glGenVertexArrays( 1, &id_vao_feedback_triangles ) );
+  GL_CALL( glBindVertexArray( id_vao_feedback_triangles) );
+  vao_feedback_triangles_.insert( {&primitive,id_vao_feedback_triangles} );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , vbo_feedback_triangles ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+
   // reset the vao bound to the gl
   GL_CALL( glBindVertexArray(0) );
 }
@@ -158,19 +200,19 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
   ShaderProgram shader = *shader_.at(&primitive);
   shader.use();
 
+  GLuint query;// = feedback->query();
+  GLuint buffer;// = feedback->buffer();
   if (feedback!=nullptr)
   {
-    GLuint& query = feedback->query();
-    GLuint& buffer = feedback->buffer();
 
     glGenQueries(1, &query );
     GL_CALL( glBeginQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN , query ) );
 
     GL_CALL( glGenBuffers( 1 , &buffer ) );
     GL_CALL( glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER , buffer ) );
-    GL_CALL( glBufferData( GL_TRANSFORM_FEEDBACK_BUFFER , 8*primitive.nb_triangles()*sizeof(GLfloat) , NULL , GL_DYNAMIC_COPY ) );
+    GL_CALL( glBufferData( GL_TRANSFORM_FEEDBACK_BUFFER , 24*primitive.triangles().size()*sizeof(GLfloat) , NULL , GL_DYNAMIC_COPY ) );
     GL_CALL( glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER , 0 , buffer ) );
-    GL_CALL( glBindVertexArray( feedback->vao() ) );
+    GL_CALL( glBindVertexArray( vao_feedback_triangles_[&primitive] ) );
 
     GL_CALL( glEnable(GL_RASTERIZER_DISCARD) );
     GL_CALL( glBeginTransformFeedback(GL_TRIANGLES) );
@@ -194,18 +236,30 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
 
     GLuint nb_primitives = 0;
     GL_CALL( glEndQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ) );
-    GL_CALL( glGetQueryObjectuiv( feedback->query() , GL_QUERY_RESULT , &nb_primitives ) );
-    printf("primitives written = %u\n",nb_primitives);
+    GL_CALL( glGetQueryObjectuiv( query , GL_QUERY_RESULT , &nb_primitives ) );
+    printf("triangles written = %u\n",nb_primitives);
 
     // there are 4 coordinates for every output and 3 vertices per prim (color + coord)
     index_t nb_data_per_prim = 4*3*2;
     index_t size = nb_primitives*nb_data_per_prim;
 
     GLfloat* feedbackBuffer = (GLfloat*) malloc( size*sizeof(GLfloat) );
-    GL_CALL( glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER , feedback->buffer() ) );
+    GL_CALL( glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER , buffer ) );
     GL_CALL( glGetBufferSubData( GL_TRANSFORM_FEEDBACK_BUFFER , 0 , size*sizeof(GLfloat) , feedbackBuffer ) );
 
-    //printBuffer(feedbackBuffer, nb_primitives , nb_data_per_prim );
+    feedback->append_triangles(feedbackBuffer,nb_primitives);
+
+    // begin transform feedback for edges
+    GL_CALL( glBeginQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN , query ) );
+
+    GL_CALL( glGenBuffers( 1 , &buffer ) );
+    GL_CALL( glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER , buffer ) );
+    GL_CALL( glBufferData( GL_TRANSFORM_FEEDBACK_BUFFER , 16*primitive.edges().size()*sizeof(GLfloat) , NULL , GL_DYNAMIC_COPY ) );
+    GL_CALL( glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER , 0 , buffer ) );
+    GL_CALL( glBindVertexArray( vao_feedback_edges_[&primitive] ) );
+
+    GL_CALL( glEnable(GL_RASTERIZER_DISCARD) );
+    GL_CALL( glBeginTransformFeedback(GL_LINES) );
   }
 
   if (primitive.number()>=1)
@@ -216,6 +270,28 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
       GL_CALL( glDrawElements( GL_LINES , primitive.edges().size() , GL_UNSIGNED_INT , 0 ) )
     }
   }
+
+  if (feedback!=nullptr)
+  {
+    GL_CALL( glEndTransformFeedback() );
+    GL_CALL( glDisable(GL_RASTERIZER_DISCARD) );
+
+    GLuint nb_primitives = 0;
+    GL_CALL( glEndQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ) );
+    GL_CALL( glGetQueryObjectuiv( query , GL_QUERY_RESULT , &nb_primitives ) );
+    printf("edges written = %u\n",nb_primitives);
+
+    // there are 4 coordinates for every output and 3 vertices per prim (color + coord)
+    index_t nb_data_per_prim = 4*2*2;
+    index_t size = nb_primitives*nb_data_per_prim;
+
+    GLfloat* feedbackBuffer = (GLfloat*) malloc( size*sizeof(GLfloat) );
+    GL_CALL( glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER , buffer ) );
+    GL_CALL( glGetBufferSubData( GL_TRANSFORM_FEEDBACK_BUFFER , 0 , size*sizeof(GLfloat) , feedbackBuffer ) );
+
+    feedback->append_edges(feedbackBuffer,nb_primitives);
+  }
+
 
   // draw the points
   if (primitive.points_on())
@@ -232,72 +308,48 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
 void
 OpenGL_Manager::draw( SceneGraph& scene , TransformFeedbackResult* feedback )
 {
-  //if (!scene.update()) return;
-
-  shaders_.set_matrices(scene);
+  if (scene.update())
+    shaders_.set_matrices(scene);
 
   for (index_t k=0;k<scene.nb_primitives();k++)
   {
     draw( scene.primitive(k) , feedback );
   }
 
-  //scene.set_update(false);
+  scene.set_update(false);
 }
-
-static Trackball* trackball_instance = nullptr;
 
 static void
 _mouse_button_callback(GLFWwindow* window ,int button,int action,int mods)
 {
-  /*
-  if (action == GLFW_PRESS)
-  {
-    double xpos,ypos;
-    glfwGetCursorPos(win,&xpos,&ypos);
-    trackball_instance->MouseDown(button,action,mods,(int)xpos,(int)ypos);
-  }
-  if (action == GLFW_RELEASE)
-  {
-    trackball_instance->MouseUp();
-  }*/
   static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->mouse_button_callback(button,action,mods);
 }
 
 static void
 _mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
 {
-  //trackball_instance->MouseMove((int)xpos,(int)ypos);
   static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->mouse_move_callback(xpos,ypos);
 }
 
 static void
 _mouse_scroll_callback(GLFWwindow* window, double xpos, double ypos)
 {
-  //trackball_instance->MouseWheel(xpos,ypos);
-  static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->mouse_move_callback(xpos,ypos);
+  static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->mouse_scroll_callback(xpos,ypos);
 }
 
 static void
 _keyboard_callback(GLFWwindow* window,int key,int scancode,int action,int mods)
 {
-  /*if (action == GLFW_PRESS)
-  {
-    trackball_instance->KeyDown(key);
-  }
-
-  if (action == GLFW_RELEASE)
-  {
-    trackball_instance->KeyUp();
-  }*/
   static_cast<GLFW_Window*>(glfwGetWindowUserPointer(window))->key_callback(key,scancode,action,mods);
 }
 
-GLFW_Window::GLFW_Window( int width , int height , const std::string& title ) :
+GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , const std::string& title ) :
+  manager_(manager),
   title_(title),
   width_(width),
   height_(height),
   camera_(glm::vec3(0.0f,0.0f,7.0f)),
-  trackball_(&camera_,glm::vec4(0.0f,0.0f,(float)width_,(float)height_))
+  trackball_(&camera_,glm::vec4(0.0f,0.0f,(float)width_,(float)height_),this)
 {
   window_ = glfwCreateWindow( width_ , height_ , title_.c_str() , NULL, NULL);
   if (!window_)
@@ -307,15 +359,13 @@ GLFW_Window::GLFW_Window( int width , int height , const std::string& title ) :
   }
   glfwMakeContextCurrent(window_);
 
-  trackball_instance = &trackball_;
-
+  // save the window for performing callbacks with the correct trackball
   glfwSetWindowUserPointer(window_, this);
 
   // initialize the trackball callbacks
   glfwSetCursorPosCallback(window_,&_mouse_move_callback);
   glfwSetMouseButtonCallback(window_,&_mouse_button_callback);
   glfwSetScrollCallback(window_,&_mouse_scroll_callback);
-  //glfwSetKeyCallback(window_,&keyboard_callback);
   glfwSetKeyCallback( window_ , &_keyboard_callback );
 }
 
@@ -323,7 +373,7 @@ void
 SceneGraph::update_matrices( const Trackball& trackball , float fov , float width , float height )
 {
   model_matrix_ = mat4(1.0);
-  proj_matrix_  = glm::perspective(glm::radians(fov), float(width)/float(height) , 1.0f, 100.0f);
+  proj_matrix_  = glm::perspective(glm::radians(fov), float(width)/float(height) , 0.1f, 100.0f);
 
   // compute the matrices that need to be passed to the shaders
   view_matrix_   = trackball.camera().view_matrix;
@@ -339,8 +389,8 @@ GLFW_Window::update_view()
   {
     // TODO only update if this scenegraph is selected
     scene_[k].update_matrices(trackball_,fov_,width_,height_);
+    scene_[k].set_update(true);
   }
-
 }
 
 template class Application<GLFW_Interface<OpenGL_Manager>>;

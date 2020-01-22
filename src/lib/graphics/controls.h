@@ -9,6 +9,7 @@ namespace avro
 
 namespace graphics
 {
+class GLFW_Window;
 
 class Controls
 {
@@ -34,7 +35,8 @@ public:
 class Trackball
 {
 public:
-  Trackball(Camera* cam,glm::vec4 screenSize);
+  Trackball(Camera* cam,glm::vec4 screenSize,GLFW_Window* window=nullptr);
+
 
   void reset(glm::vec4 screensize);
 
@@ -45,6 +47,8 @@ public:
   void MouseMove(int xpos, int ypos);
   void KeyDown(int key);
   void MouseWheel(double xoffset ,double yoffset);
+
+  GLFW_Window* window_;
 
   float m_rotateSpeed;
   float m_zoomSpeed;

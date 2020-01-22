@@ -97,6 +97,7 @@ ShaderProgram::use()
 {
   if (!check()) return;
   if (handle_ <= 0 || !linked_) return;
+  //printf("handle = %d\n",handle_);
   GL_CALL( glUseProgram( handle_ ) );
 }
 

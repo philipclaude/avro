@@ -9,6 +9,8 @@
 #include "graphics/primitive.h"
 #include "graphics/shader.h"
 
+#include "library/eps.h"
+
 #include <map>
 #include <memory>
 #include <unordered_set>
@@ -43,7 +45,6 @@ public:
 
   void write( GraphicsManager& manager )
   {
-    printf("nb_primitive = %lu\n",primitive_.size());
     for (index_t k=0;k<primitive_.size();k++)
       primitive_[k]->write(manager);
   }
@@ -72,15 +73,85 @@ private:
   mat4 proj_matrix_;
   mat4 model_matrix_;
   mat4 normal_matrix_;
-  //mat4 modelViewMatrix_;
 
   bool update_;
+};
+
+class TransformFeedbackResult
+{
+public:
+
+  void append_triangles( const GLfloat* buffer , index_t nb_triangles )
+  {
+    index_t n = 0;
+    for (index_t k=0;k<nb_triangles;k++)
+    {
+      //printf("primitve %lu\n",k);
+      for (index_t j=0;j<3;j++)
+      {
+        for (coord_t d=0;d<3;d++)
+          triangle_points_.push_back( buffer[n+d] );
+        for (coord_t d=0;d<3;d++)
+          triangle_colors_.push_back( buffer[n+4+d] );
+
+        /*printf("v = (%g,%g,%g,%g), c = (%g,%g,%g,%g)\n",
+                buffer[n  ],buffer[n+1],buffer[n+2],buffer[n+3] ,
+                buffer[n+4],buffer[n+5],buffer[n+6],buffer[n+7]);*/
+        n += 8;
+      }
+    }
+  }
+
+  void append_edges( const GLfloat* buffer , index_t nb_edges )
+  {
+    index_t n = 0;
+    for (index_t k=0;k<nb_edges;k++)
+    {
+      //printf("primitve %lu\n",k);
+      for (index_t j=0;j<2;j++)
+      {
+        for (coord_t d=0;d<3;d++)
+          edge_points_.push_back( buffer[n+d] );
+        for (coord_t d=0;d<3;d++)
+          edge_colors_.push_back( buffer[n+4+d] );
+
+        /*printf("v = (%g,%g,%g,%g), c = (%g,%g,%g,%g)\n",
+                buffer[n  ],buffer[n+1],buffer[n+2],buffer[n+3] ,
+                buffer[n+4],buffer[n+5],buffer[n+6],buffer[n+7]);*/
+        n += 8;
+      }
+    }
+  }
+
+  const std::vector<real_t>& triangle_points() const { return triangle_points_; }
+  const std::vector<real_t>& triangle_colors() const { return triangle_colors_; }
+
+  const std::vector<real_t>& edge_points() const { return edge_points_; }
+  const std::vector<real_t>& edge_colors() const { return edge_colors_; }
+
+private:
+  std::vector<real_t> triangle_points_;
+  std::vector<real_t> triangle_colors_;
+
+  std::vector<real_t> edge_points_;
+  std::vector<real_t> edge_colors_;
+
+  std::vector<real_t> vertex_points_;
+  std::vector<real_t> vertex_colors_;
+};
+
+class GraphicsManager
+{
+public:
+  virtual ~GraphicsManager() {}
+  virtual void write( Primitive& primitive ) = 0;
+  virtual void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr ) = 0;
 };
 
 class GLFW_Window
 {
 public:
-  GLFW_Window( int width , int height , const std::string& title );
+  GLFW_Window( GraphicsManager& manager , int width , int height , const std::string& title );
 
   void
   mouse_button_callback(int button,int action,int mods)
@@ -111,7 +182,7 @@ public:
 
   void key_callback(int key, int scancode, int action, int mods)
   {
-    printf("key cb!\n");
+    trackball_.KeyDown(key);
   }
 
   void make_current()
@@ -124,6 +195,24 @@ public:
   bool should_close()
   {
     return glfwWindowShouldClose(window_) || (glfwGetKey(window_, GLFW_KEY_ESCAPE ) == GLFW_PRESS);
+  }
+
+  void save_eps( const std::string& filename )
+  {
+    TransformFeedbackResult feedback;
+    for (index_t k=0;k<scene_.size();k++)
+    {
+      printf("capture with transform feedback!!\n");
+      manager_.draw(scene_[k],&feedback);
+    }
+
+
+    library::epsFile eps;
+    int viewport[4] = {0,0,1024,640};
+    eps.set_viewport(viewport);
+    eps.add_triangles( feedback.triangle_points() , feedback.triangle_colors() );
+    eps.add_edges( feedback.edge_points() , feedback.edge_colors() );
+    eps.write( filename );
   }
 
   void setup()
@@ -139,11 +228,11 @@ public:
 
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
-    // Enable depth test
+    // enable depth test
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    // Cull triangles which normal is not towards the camera
+    // option to cull triangles which normal is not towards the camera
     glDisable(GL_CULL_FACE);
 
     //glEnable(GL_BLEND);
@@ -165,7 +254,7 @@ public:
     glClearColor (1.0, 1.0, 1.0, 0.0); // white
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    update_view();
+    //update_view();
   }
 
   void end_draw()
@@ -186,6 +275,7 @@ public:
 private:
   std::string title_;
   GLFWwindow* window_;
+  GraphicsManager& manager_;
 
   int width_;
   int height_;
@@ -229,27 +319,6 @@ private:
   std::map<std::string,ShaderProgram> shaders_;
 };
 
-class GraphicsManager
-{
-public:
-  virtual ~GraphicsManager() {}
-  virtual void write( Primitive& primitive ) = 0;
-};
-
-class TransformFeedbackResult
-{
-public:
-  GLuint& vao() { return vao_; }
-  GLuint& query() { return query_; }
-  GLuint& buffer() { return buffer_; }
-
-private:
-  GLuint vao_;
-  GLuint query_;
-  GLuint buffer_;
-
-};
-
 class OpenGL_Manager : public GraphicsManager
 {
   template<typename type> friend class Application;
@@ -277,6 +346,10 @@ private:
   std::map<Primitive*,index_t> vao_points_;
   std::map<Primitive*,index_t> vao_edges_;
   std::map<Primitive*,index_t> vao_triangles_;
+
+  std::map<Primitive*,index_t> vao_feedback_points_;
+  std::map<Primitive*,index_t> vao_feedback_edges_;
+  std::map<Primitive*,index_t> vao_feedback_triangles_;
 
   std::map<Primitive*,ShaderProgram*> shader_;
   ShaderLibrary shaders_;
@@ -306,6 +379,9 @@ private:
   WV_Manager();
 
   void write( Primitive& primitive ) { avro_implement; }
+  void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
+  { avro_assert_not_reached; }
+
 };
 
 class ApplicationBase
@@ -367,26 +443,47 @@ public:
 
     write();
 
+    for (index_t k=0;k<window_.size();k++)
+      window_[k]->update_view();
+
+    const double fps = 1.0 / 60.0;
+    double last_update_time = 0;  // number of seconds since the last loop
+    double last_frame_time = 0;   // number of seconds since the last frame
+
      // start the rendering loop
      bool done = false;
      while (!done)
      {
-       for (index_t k=0;k<window_.size();k++)
+
+       double now = glfwGetTime();
+
+       // This if-statement only executes once every 60th of a second
+       if ((now - last_frame_time) >= fps)
        {
-         window_[k]->begin_draw();
-
-         for (index_t j=0;j<window_[k]->nb_scene();j++)
-           manager_.draw(window_[k]->scene(j));
-
-         window_[k]->end_draw();
-
-         if (window_[k]->should_close())
+         // draw your frame here
+         for (index_t k=0;k<window_.size();k++)
          {
-           printf("window %lu requested close\n",k);
-           done = true;
+           window_[k]->begin_draw();
+
+           for (index_t j=0;j<window_[k]->nb_scene();j++)
+             manager_.draw(window_[k]->scene(j));
+
+           window_[k]->end_draw();
+
+           if (window_[k]->should_close())
+           {
+             printf("window %lu requested close\n",k);
+             done = true;
+           }
+
          }
 
-       }
+         // only set lastFrameTime when you actually draw something
+         last_frame_time = now;
+        }
+
+        // set lastUpdateTime every iteration
+        last_update_time = now;
      }
   }
 
@@ -427,11 +524,11 @@ class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
 {
 public:
   Visualizer() :
-    main_(1024,612,"3D"),
-    side_(512,306,"2D")
+    main_(manager_,1024,612,"3D")
+    //side_(manager_,512,306,"2D")
   {
     add_window( &main_ );
-    add_window( &side_ );
+    //add_window( &side_ );
 
     initialize();
   }
@@ -443,10 +540,18 @@ public:
     scenes_.push_back( &main_.scene(id) );
     index_t prim_id = main_.scene(id).add_primitive(topology); // create a new root in the scene graph
     manager_.select_shader( main_.scene(id).primitive(prim_id) , "wv" );
+
+    #if 0
+    // add the topology to the relevant windows
+    id = side_.create_scene();
+    scenes_.push_back( &side_.scene(id) );
+    prim_id = side_.scene(id).add_primitive(topology); // create a new root in the scene graph
+    manager_.select_shader( side_.scene(id).primitive(prim_id) , "wv" );
+    #endif
   }
 
   GLFW_Window main_;
-  GLFW_Window side_;
+  //GLFW_Window side_;
 };
 
 class WebVisualizer : public Application<Web_Interface>
