@@ -12,7 +12,7 @@ namespace avro
 namespace graphics
 {
 
-class Window;
+class SceneGraph;
 
 enum GLSLShaderType
 {
@@ -40,8 +40,6 @@ public:
   std::string log();
   int handle();
   bool linked();
-
-  void setUniforms( const Window& window );
 
   void bindAttribLocation( GLuint location, const char* name);
   void bindFragDataLocation( GLuint location, const char* name );
@@ -73,6 +71,36 @@ private:
   bool linked_;
   std::string log_;
   std::string name_;
+};
+
+class ShaderLibrary
+{
+public:
+  ShaderLibrary()
+  {
+    // generate all the shaders!!
+  }
+
+  const ShaderProgram& operator[] ( const std::string& name ) const
+  {
+    avro_assert( shaders_.find(name)!=shaders_.end() );
+    return shaders_.at(name);
+  }
+
+  ShaderProgram& operator[] ( const std::string& name )
+  {
+    avro_assert( shaders_.find(name)!=shaders_.end() );
+    return shaders_.at(name);
+  }
+
+  void set_matrices( SceneGraph& scene );
+
+  void create();
+
+private:
+
+  // store all the shaders
+  std::map<std::string,ShaderProgram> shaders_;
 };
 
 } // graphics

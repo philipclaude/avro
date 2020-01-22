@@ -8,10 +8,6 @@
 
 #include "geometry/egads/context.h"
 
-#include "graphics/plot.h"
-#include "graphics/plotter.h"
-#include "graphics/window.h"
-
 #include "library/ckf.h"
 #include "library/tesseract.h"
 #include "library/meshb.h"

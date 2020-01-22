@@ -9,6 +9,7 @@ namespace avro
 
 namespace graphics
 {
+
 class GLFW_Window;
 
 class Controls

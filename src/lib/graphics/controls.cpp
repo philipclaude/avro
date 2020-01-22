@@ -1,5 +1,6 @@
 #include "graphics/application.h"
 #include "graphics/controls.h"
+#include "graphics/window.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/quaternion.hpp>

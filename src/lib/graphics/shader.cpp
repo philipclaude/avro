@@ -270,12 +270,6 @@ ShaderProgram::setUniform( const char *name, bool val )
 }
 
 void
-ShaderProgram::setUniforms( const Window& window )
-{
-  //avro_implement;
-}
-
-void
 ShaderProgram::printActiveUniforms()
 {
   GLint nUniforms, size, location, maxLen;
@@ -503,6 +497,46 @@ ShaderProgram::compile(const char *name,
   return true;
 }
 
+void
+ShaderLibrary::set_matrices( SceneGraph& scene )
+{
+  printf("updating matrices!!\n");
+  // go through all the active shaders and assign the MVP and normalMatrix
+  std::map<std::string,ShaderProgram>::iterator it;
+  for (it=shaders_.begin();it!=shaders_.end();it++)
+  {
+    ShaderProgram& shader = it->second;
+    shader.use();
+    shader.setUniform("MVP" , scene.mvp_matrix() );
+    shader.setUniform("u_normalMatrix" , scene.normal_matrix() );
+  }
+}
+
+void
+ShaderLibrary::create()
+{
+  // create all the shaders
+  shaders_.insert( { "wv" , ShaderProgram("wv") } );
+
+  // set the uniforms
+  ShaderProgram& shader = shaders_.at("wv");
+  shader.use();
+  shader.setUniform( "lightDir" , 0.0 , 0.3 , 1.0 );
+  shader.setUniform( "wAmbient" , 0.25f );
+  shader.setUniform( "xpar" , 1.0f );
+  shader.setUniform( "conNormal" , 0. , 0. , 1. );
+  shader.setUniform( "conColor" , 0. , 1. , 1. );
+  shader.setUniform( "bacColor" , 0.5 , 0.5 , 0.5 );
+  shader.setUniform( "wColor" , 1.0f );
+  shader.setUniform( "bColor" , 0.0f );
+  shader.setUniform( "wNormal" , 1.0f );
+  shader.setUniform( "wLight" , 1.0f );
+  shader.setUniform( "pointSize" , 2.0f );
+  shader.setUniform( "picking" , 0 );
+  shader.setUniform( "vbonum" , 0 );
+
+  // TODO the rest of the shaders...
+}
 
 } // graphics
 

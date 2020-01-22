@@ -18,14 +18,12 @@ namespace graphics
 
 class ShaderProgram;
 class Plotter;
-class Window;
 class GraphicsManager;
 class SceneGraph;
 
 class Primitive : public Tree<Primitive>
 {
 public:
-  Primitive( const TopologyBase& topology , Window* window );
   Primitive( const TopologyBase& topology , SceneGraph* scene );
   virtual ~Primitive() {}
 
@@ -63,7 +61,7 @@ public:
 
   coord_t number() const { return number_; }
 
-  Window* window() { return window_; }
+  SceneGraph* scene() { return scene_; }
 
 protected:
   coord_t number_;
@@ -72,7 +70,6 @@ protected:
   index_t rank_;
   std::string active_;
   ShaderProgram* shader_;
-  Window* window_;
   SceneGraph* scene_;
   bool visible_;
 
@@ -98,19 +95,6 @@ protected:
   bool points_on_;
 
   bool transform_feedback_;
-};
-
-class OpenGLPrimitive : public Primitive
-{
-private:
-
-public:
-  using Primitive::Primitive;
-
-  void draw(GraphicsManager&);
-  void write();
-  void draw();
-
 };
 
 } // graphics

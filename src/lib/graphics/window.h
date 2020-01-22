@@ -1,6 +1,7 @@
 #ifndef avro_LIB_GRAPHICS_WINDOW_H_
 #define avro_LIB_GRAPHICS_WINDOW_H_
 
+#include "graphics/application.h"
 #include "graphics/controls.h"
 #include "graphics/gl.h"
 #include "graphics/math.h"
@@ -15,88 +16,127 @@ namespace avro
 namespace graphics
 {
 
-class Interface;
-class Plot;
-class Plotter;
-class Scene;
-
-class Window
+class GLFW_Window
 {
 public:
-  typedef std::shared_ptr<Plot> Plot_ptr;
+  GLFW_Window( GraphicsManager& manager , int width , int height , const std::string& title );
 
-  Window( const std::string& title , Plotter* plotter );
-  virtual ~Window();
+  void
+  mouse_button_callback(int button,int action,int mods)
+  {
+    if (action == GLFW_PRESS)
+    {
+      double xpos,ypos;
+      glfwGetCursorPos(window_,&xpos,&ypos);
+      trackball_.MouseDown(button,action,mods,(int)xpos,(int)ypos);
+    }
+    if (action == GLFW_RELEASE)
+    {
+      trackball_.MouseUp();
+    }
+  }
 
-  void setMatrices();
+  void
+  mouse_move_callback(double xpos, double ypos)
+  {
+    trackball_.MouseMove((int)xpos,(int)ypos);
+  }
 
-  virtual void draw();
-  virtual void write();
+  void
+  mouse_scroll_callback(double xpos, double ypos)
+  {
+    trackball_.MouseWheel(xpos,ypos);
+  }
 
-  void save( const std::string& filename );
+  void key_callback(int key, int scancode, int action, int mods)
+  {
+    trackball_.KeyDown(key);
+  }
 
-  void set_interface( Interface* interface );
+  void make_current()
+  {
+    glfwMakeContextCurrent(window_);
+  }
 
-  void run();
+  void update_view();
 
-  std::string title() const { return title_; }
+  bool should_close()
+  {
+    return glfwWindowShouldClose(window_) || (glfwGetKey(window_, GLFW_KEY_ESCAPE ) == GLFW_PRESS);
+  }
 
-  void attach( Plot_ptr plot );
+  void save_eps( const std::string& filename );
 
-  GLFWwindow* window() { return window_; }
+  void setup()
+  {
+    // ensure we can capture the escape key being pressed below
+    glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
 
-  const mat4& mvp() const { return mvp_; }
-  mat4& mvp() { return mvp_; }
+    // hide the mouse and enable unlimited mouvement
+    //glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-  const mat4& mv() const { return modelViewMatrix_; }
-  mat4& mv() { return modelViewMatrix_; }
+    glfwPollEvents();
+    glfwSetCursorPos(window_, width_/2, height_/2);
 
-  const mat4& normal() const { return normalMatrix_; }
-  mat4& normal() { return normalMatrix_; }
+    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
-  const mat4& viewMatrix() const { return viewMatrix_; }
-  mat4& viewMatrix() { return viewMatrix_; }
+    // enable depth test
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 
-  const mat4& projMatrix() const { return projMatrix_; }
-  mat4& projMatrix() { return projMatrix_; }
+    // option to cull triangles which normal is not towards the camera
+    glDisable(GL_CULL_FACE);
 
-  const mat4& modelMatrix() const { return modelMatrix_; }
-  mat4& modelMatrix() { return modelMatrix_; }
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  Plotter* plotter() { return plotter_; }
-  const Plotter* plotter() const { return plotter_; }
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
-  void reset();
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1.0, 1.5);
+  }
+
+  void begin_draw()
+  {
+    make_current();
+
+    glfwPollEvents();
+
+    glClearColor (1.0, 1.0, 1.0, 0.0); // white
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+
+  void end_draw()
+  {
+    glfwSwapBuffers(window_);
+  }
+
+  index_t nb_scene() const { return scene_.size(); }
+  SceneGraph& scene( index_t k ) { return scene_[k]; }
+
+  index_t create_scene()
+  {
+    index_t id = scene_.size();
+    scene_.push_back(SceneGraph());
+    return id;
+  }
 
 private:
   std::string title_;
-  Plotter* plotter_;
   GLFWwindow* window_;
+  GraphicsManager& manager_;
 
-  int width_ = 1024;
-  int height_ = 640;
-
-  std::vector<Plot_ptr> plot_;
-
-  mat4 mvp_;
-  mat4 viewMatrix_;
-  mat4 projMatrix_;
-  mat4 modelMatrix_;
-  mat4 normalMatrix_;
-  mat4 modelViewMatrix_;
-
+  int width_;
+  int height_;
   float fov_ = 45.0f;
-  float speed_ = 3.0f;
-  float mouseSpeed_ = 0.005f;
 
   vec3 position_;
-
   float angles_[2];
 
-  Camera camera_;
+  std::vector<SceneGraph> scene_;
   Trackball trackball_;
-
-  Interface* interface_;
+  Camera camera_;
 };
 
 } // graphics

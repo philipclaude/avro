@@ -1,7 +1,6 @@
 #include "common/tools.h"
 
 #include "graphics/interface.h"
-#include "graphics/plotter.h"
 #include "graphics/window.h"
 
 #include <imgui/GL/imgui_impl_glfw.h>
@@ -31,11 +30,8 @@ InterfaceManager::initialize()
 }
 
 Interface::Interface( Window& window ) :
-  manager_(window.plotter()->manager()),
   window_(window)
-{
-  UNUSED(manager_);
-}
+{}
 
 void
 Interface::render()
@@ -115,7 +111,6 @@ PlotTree::show()
           if (ImGui::MenuItem("Save", "Ctrl+S"))
           {
             printf("save file!\n");
-            window_.save("test.eps");
           }
           if (ImGui::MenuItem("Close", "Ctrl+W"))  { active = false; }
           ImGui::EndMenu();

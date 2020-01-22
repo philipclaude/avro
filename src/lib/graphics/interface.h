@@ -35,7 +35,6 @@ public:
   void render();
 
 protected:
-  InterfaceManager& manager_;
   Window& window_;
 };
 

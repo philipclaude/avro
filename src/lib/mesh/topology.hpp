@@ -28,7 +28,7 @@ template<typename type>
 void
 Topology<type>::construct( std::shared_ptr<graphics::Primitive>& node , graphics::Primitive& root ) const
 {
-  node = std::make_shared<graphics::Primitive>(*this,root.window());
+  node = std::make_shared<graphics::Primitive>(*this,root.scene());
 }
 
 template<typename type>

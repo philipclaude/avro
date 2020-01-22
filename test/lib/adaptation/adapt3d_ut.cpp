@@ -8,9 +8,7 @@
 
 #include "geometry/egads/context.h"
 
-#include "graphics/plot.h"
-#include "graphics/plotter.h"
-#include "graphics/window.h"
+#include "graphics/application.h"
 
 #include "library/ckf.h"
 #include "library/egads.h"
@@ -95,17 +93,13 @@ UT_TEST_CASE(adapt_test)
 
     if (iter==niter)
     {
-      graphics::Plotter plotter;
-      graphics::Window& window = plotter.window("main");
+      graphics::Visualizer vis;
 
-      graphics::Window::Plot_ptr plot1 = std::make_shared<graphics::Plot>(topology_out,&window);
-      plotter.window("main").attach(plot1);
+      //vis.add_topology(topology);
+      vis.add_topology(topology_out);
 
-      graphics::BasicInterface basic( window );
-      graphics::PlotTree tree(window);
-      window.set_interface(&tree);
+      vis.run();
 
-      plotter.run();
     }
 
     params.has_uv() = true;

@@ -1,8 +1,6 @@
 #include "unit_tester.hpp"
 
-#include "graphics/plot.h"
-#include "graphics/plotter.h"
-#include "graphics/window.h"
+#include "graphics/application.h"
 
 #include "library/ckf.h"
 
@@ -31,11 +29,12 @@ UT_TEST_CASE( test0 )
 
   rvd.compute(true);
 
-  Plotter plotter;
-  Window& window = plotter.window("main");
-  Window::Plot_ptr plot1 = std::make_shared<Plot>(rvd,&window);
-  plotter.window("main").attach(plot1);
-  plotter.run();
+  Visualizer vis;
+
+  //vis.add_topology(topology);
+  vis.add_topology(rvd);
+
+  vis.run();
 }
 UT_TEST_CASE_END( test0 )
 

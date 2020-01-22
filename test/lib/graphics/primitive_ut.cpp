@@ -22,7 +22,7 @@ UT_TEST_CASE( tree_test )
   std::shared_ptr< Topology<Simplex> > node = std::make_shared<Topology<Simplex>>(vertices,0);
   leaf->add_child(node);
 
-  graphics::OpenGLPrimitive primitive( topology , nullptr );
+  graphics::Primitive primitive( topology , nullptr );
   primitive.copy( topology );
 
   UT_ASSERT_EQUALS( primitive.nb_children() , 1 );
