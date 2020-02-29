@@ -500,7 +500,6 @@ ShaderProgram::compile(const char *name,
 void
 ShaderLibrary::set_matrices( SceneGraph& scene )
 {
-  printf("updating matrices!!\n");
   // go through all the active shaders and assign the MVP and normalMatrix
   std::map<std::string,ShaderProgram>::iterator it;
   for (it=shaders_.begin();it!=shaders_.end();it++)

@@ -187,7 +187,8 @@ SimplicialDecomposition<Simplex>::extract()
       }
     }
   }
-  child(number_).orient();
+  if (number_==topology_.points().dim())
+    child(number_).orient();
 }
 
 template<>
@@ -203,7 +204,8 @@ SimplicialDecomposition<Polytope>::extract()
     // in the SimplicialDecomposition object upon decomposition by the master
     topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this , k );
   }
-  child(number_).orient();
+  if (number_==topology_.points().dim())
+    child(number_).orient();
 }
 
 template class SimplicialDecomposition<Simplex>;

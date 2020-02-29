@@ -8,6 +8,7 @@
 #include "graphics/gl.h"
 #include "graphics/manager.h"
 #include "graphics/scene.h"
+#include "graphics/wv.h"
 
 #include <map>
 #include <memory>
@@ -26,6 +27,9 @@ namespace graphics
 
 class ApplicationBase
 {
+public:
+  void receive( const std::string& text ) const;
+
 protected:
   ApplicationBase( GraphicsManager& manager ) :
     manager_(manager)
@@ -84,12 +88,15 @@ public:
     ApplicationBase(manager_)
   {}
 
-  void run() { avro_implement; } // run the server
+  void run();
   void save_eps();
 
 protected:
   WV_Manager manager_;
   SceneGraph scene_;
+
+private:
+  void connect_client();
 };
 
 class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
@@ -107,6 +114,11 @@ class WebVisualizer : public Application<Web_Interface>
 {
 public:
 
+  WebVisualizer()
+  {
+    scenes_.push_back( &scene_ );
+  }
+
   void add_topology( TopologyBase& topology )
   {
     // create a new root in the scene graph
@@ -114,8 +126,7 @@ public:
   }
 
 private:
-  SceneGraph scene_;
-
+  //SceneGraph scene_;
 };
 
 } // graphics

@@ -20,6 +20,12 @@ ApplicationBase::write()
 }
 
 void
+ApplicationBase::receive( const std::string& text ) const
+{
+  printf("received text %s\n",text.c_str());  
+}
+
+void
 Application<Web_Interface>::save_eps()
 {
   // first set the transformation to the scene

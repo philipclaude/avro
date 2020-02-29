@@ -62,6 +62,7 @@ public:
   coord_t number() const { return number_; }
 
   SceneGraph* scene() { return scene_; }
+  const TopologyBase& topology() const;
 
 protected:
   coord_t number_;

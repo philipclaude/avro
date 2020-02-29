@@ -1,0 +1,187 @@
+@font-face {
+	font-family: 'Ubuntu-R';/*'inconsolata'; */
+	src: url('Ubuntu-R.ttf');
+	font-weight: normal;
+	font-style: normal;
+}
+
+body {
+	color: #555;
+	font-family: 'Ubuntu-R' !important;/*'inconsolata'; */
+	src: url('Ubuntu-R.ttf');
+	font-size: 12px;
+	line-height: 18px;
+	tab-size: 4;
+	overflow: auto;
+}
+
+/* background for table data entries (light-yellow) */
+td {
+    padding-left:               5px;
+    padding-right:              5px;
+    padding-top:                0px;
+    padding-bottom:             0px;
+    background-color:       #FFFFF0;
+}
+
+/* background for error table data entries (light-red) */
+/* used for Branch names that caused error */
+.errorTD {
+    padding-left:               5px;
+    padding-right:              5px;
+    padding-top:                0px;
+    padding-bottom:             0px;
+    background-color:       #FF7F7F;
+}
+
+/* background for linked table data entries (light-green) */
+/* not used */
+.linkedTD {
+    padding-left:               5px;
+    padding-right:              5px;
+    padding-top:                0px;
+    padding-bottom:             0px;
+    background-color:       #7FFF7F;
+}
+
+/* background for current table data entries (magenta) */
+/* used for Branch or Parameter that is being editted */
+.currentTD {
+    padding-left:               5px;
+    padding-right:              5px;
+    padding-top:                0px;
+    padding-bottom:             0px;
+    background-color:       #FF00FF;
+}
+
+/* background for parent table data entries (cyan) */
+/* used for parent of Branch that is being editted */
+.parentTD {
+    padding-left:               5px;
+    padding-right:              5px;
+    padding-top:                0px;
+    padding-bottom:             0px;
+    background-color:       #00FFFF;
+}
+
+/* background for child table data entries (yellow) */
+/* used for child of Branch that is being editted */
+.childTD {
+    padding-left:               5px;
+    padding-right:              5px;
+    padding-top:                0px;
+    padding-bottom:             0px;
+    background-color:       #FFFF00;
+}
+
+/* real text that looks like a link that has context-menu (green) */
+/* used for Design Parameters that can be editted */
+/* used for Branch names */
+.fakelinkcmenu {
+    cursor:                 pointer;
+    font-weight:               bold;
+    color:                  #00BF00;
+}
+
+/* real text that looks like a link that is "on" (blue) */
+/* used for Display attributes that are on */
+.fakelinkon {
+    cursor:                 pointer;
+    font-weight:               bold;
+    color:                  #0000FF;
+}
+
+/* real text that looks like a link that is "off" (red) */
+/* used for Display attributes that are off */
+.fakelinkoff {
+    cursor:                 pointer;
+    font-weight:               bold;
+    color:                  #FF0000;
+}
+
+/* + or - that looks like a link that is "on" (blue) */
+/* used for Expand/Collapse */
+.fakelinkexpand {
+    cursor:                 pointer;
+    font-weight:               bold;
+    color:                  #0000FF;
+}
+
+/* frame on top left that contains butnfrm and treefrm */
+#tlframe {
+    width:                    20%;/*450px;*/
+    height:                   600px; /*600px; */
+    float:                     left;
+    font-size:                  9pt;
+    background:             #F7F7F7;
+}
+
+/* frame on top left that contains menus, trees, etc */
+#butnfrm {
+    width:                    20%;
+    height:                    300px;
+    float:                     left;
+    font-size:                  9pt;
+    background:             #F7F7F7;
+}
+
+/* frame on top left that contains menus, trees, etc */
+#treefrm {
+    width:                    20%;
+    height:                   290px;
+    float:                     left;
+    overflow:                scroll;
+    font-size:                  9pt;
+    background:             #F7F7F7;
+}
+
+/* frame on top right that contains the viewer */
+#trframe {
+    width:                    60%;/*550px;*/
+    height:                   600px;
+    float:                     left;
+    overflow:                scroll;
+		position: relative;
+}
+
+/* frame on bottom right that contains messages */
+#brframe {
+    width:                    100%;/*550px;*/
+    height:                   150px;
+    overflow:                scroll;
+    font-family: courier, monospace;
+    font-size:                  9pt;
+    background:             #F7F7F7;
+}
+
+/* bottom right may be a terminal */
+#console {
+    width: 100%;
+    height: 150px;
+    overflow: scroll;
+		background: #000000;
+}
+
+/* canvas that holds WebGL image */
+canvas {
+    width:                    230px;/*230px;*/
+    height:                   600px;
+    border-width:               0px;
+		background: #ffffff;/*#585C5C;*/
+}
+
+#under {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+.over {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 20;
+}
+
+input[type="number"] {
+  width: 50px;
+}

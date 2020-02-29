@@ -35,6 +35,12 @@ Primitive::shader()
   return *shader_;
 }
 
+const TopologyBase&
+Primitive::topology() const
+{
+  return topology_;
+}
+
 void
 Primitive::extract()
 {

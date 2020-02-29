@@ -1,0 +1,58 @@
+#ifndef avro_LIB_GRAPHICS_WV_H_
+#define avro_LIB_GRAPHICS_WV_H_
+
+#include "common/types.h"
+
+#include "graphics/manager.h"
+
+#include <wsss.h>
+
+#include <map>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+void browserMessage( void* wsi , char* text , /*@unused@*/ int lena );
+#ifdef __cplusplus
+}
+#endif
+
+namespace avro
+{
+
+namespace graphics
+{
+
+class WV_Manager : public GraphicsManager
+{
+  template<typename type> friend class Application;
+
+private:
+  WV_Manager();
+
+  void write( Primitive& primitive );
+  void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
+  { avro_assert_not_reached; }
+
+  wvContext* context() { return context_; }
+
+private:
+
+  wvContext* context_;
+
+  // map from primitive to wv gprim index
+  std::map<Primitive*,index_t> index_;
+
+  int bias_;
+  float fov_,znear_,zfar_;
+  float eye_[3],center_[3],up_[3];
+
+
+};
+
+} // graphics
+
+} // avro
+
+#endif

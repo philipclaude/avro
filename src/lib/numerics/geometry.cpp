@@ -119,9 +119,7 @@ volume_nd( const std::vector<const real_t*>& x , const coord_t dim )
   // assume this is a simplex because there's no other way to compute it
   coord_t n = x.size() -1;
 
-  //numerics::densMat<real_t> B(n+2,n+2);
   numerics::MatrixD<real_t> B(n+2,n+2);
-
   B(0,0) = 0;
   for (index_t i=1;i<index_t(n+2);i++)
   {

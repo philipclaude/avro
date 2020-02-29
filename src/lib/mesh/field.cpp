@@ -17,6 +17,22 @@
 namespace avro
 {
 
+void
+Fields::get_names( std::vector<std::string>& names ) const
+{
+
+  // get a json describing all the field names with ranks
+  std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
+  for (it=fields_.begin();it!=fields_.end();it++)
+  {
+    index_t rank = it->second->nb_rank();
+    printf("rank = %lu\n",rank);
+    for (index_t j=0;j<rank;j++)
+      names.push_back( it->second->get_name(j) );
+
+  }
+}
+
 template<typename T>
 FieldBase<T>::FieldBase( FieldType type , TableLayoutCategory category ) :
   Table<index_t>(category),

@@ -33,7 +33,10 @@ public:
   virtual real_t min( index_t rank ) const = 0;
   virtual real_t max( index_t rank ) const = 0;
 
-private:
+  virtual std::string get_name( index_t j ) const = 0;
+  virtual index_t nb_rank() const = 0;
+
+protected:
   std::string name_;
 };
 
@@ -51,6 +54,9 @@ public:
   T& eval( index_t elem , const Parameter& u ) const;
   T& eval( index_t elem , const Coordinate& x ) const;
   T& eval( const Coordinate& x ) const;
+
+  virtual std::string get_name( index_t j ) const { return name_+std::to_string(j); }
+  virtual index_t nb_rank() const { return 0; }
 
   void allocate( index_t n )
     { data_.allocate(n); }
@@ -145,6 +151,9 @@ public:
   real_t max( index_t rank ) const
     { return base_.max(rank); }
 
+  std::string get_name( index_t j ) const { return base_.get_name(j); }
+  index_t nb_rank() const { return base_.nb_rank(); }
+
 private:
   std::string name_;
   derived_t&  base_;
@@ -197,7 +206,8 @@ public:
       fields_.erase(name);
     }
 
-    void fromJSON( const json& J );
+    void from_json( const json& J );
+    void get_names( std::vector<std::string>& names ) const;
 
 private:
   std::map<std::string,std::shared_ptr<FieldHolder>> fields_;

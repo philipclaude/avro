@@ -19,7 +19,11 @@ UT_TEST_SUITE( application_suite )
 UT_TEST_CASE( test1 )
 {
 
+  #if 1
+  library::objFile topology( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
+  #elif 0
   CKF_Triangulation topology( {4,4,4} );
+  #endif
 
   Delaunay delaunay(topology.points().dim());
   topology.points().copy(delaunay);
@@ -34,8 +38,8 @@ UT_TEST_CASE( test1 )
 
   Visualizer vis;
 
-  //vis.add_topology(topology);
-  vis.add_topology(rvd);
+  vis.add_topology(topology);
+  //vis.add_topology(rvd);
 
   vis.run();
 }

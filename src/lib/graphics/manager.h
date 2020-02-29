@@ -1,6 +1,9 @@
 #ifndef avro_LIB_GRAPHICS_MANAGER_H_
 #define avro_LIB_GRAPHICS_MANAGER_H_
 
+#include "common/error.h"
+#include "common/types.h"
+
 namespace avro
 {
 
@@ -32,19 +35,6 @@ private:
 
   void create_shaders()
   { avro_implement; }
-
-};
-
-class WV_Manager : public GraphicsManager
-{
-  template<typename type> friend class Application;
-
-private:
-  WV_Manager();
-
-  void write( Primitive& primitive ) { avro_implement; }
-  void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
-  { avro_assert_not_reached; }
 
 };
 
