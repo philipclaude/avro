@@ -1,6 +1,6 @@
-#include "common/tools.h"
+#include "common/error.h"
 
-#include "graphics/interface.h"
+#include "graphics/user_interface.h"
 #include "graphics/window.h"
 
 #include <imgui/GL/imgui_impl_glfw.h>
@@ -12,86 +12,56 @@ namespace avro
 namespace graphics
 {
 
-InterfaceManager::InterfaceManager()
+Widget::Widget( const GLFW_Window& window ) :
+  window_(window),
+  context_(window.interface().context())
+{}
+
+Interface::Interface( GLFW_Window& window ) :
+  window_(window)
 {
   initialize();
 }
 
 void
-InterfaceManager::initialize()
+Interface::initialize()
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  context_ = ImGui::GetIO();
+  //context_ = ImGui::GetIO();
 
-  // Setup Dear ImGui style
+  // setup Dear ImGui style
   ImGui::StyleColorsDark();
   //ImGui::StyleColorsClassic();
+
+  const char* glsl_version = "#version 410";
+
+  // Setup Platform/Renderer bindings
+  ImGui_ImplGlfw_InitForOpenGL(window_.window(), true);
+  ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-Interface::Interface( Window& window ) :
-  window_(window)
+void
+Interface::begin_draw() const
+{
+  for (index_t k=0;k<widgets_.size();k++)
+    widgets_[k]->begin_draw();
+}
+
+void
+Interface::end_draw() const
+{
+  for (index_t k=0;k<widgets_.size();k++)
+    widgets_[k]->end_draw();
+}
+
+
+Toolbar::Toolbar( const GLFW_Window& window ) :
+  Widget(window)
 {}
 
 void
-Interface::render()
-{
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-BasicInterface::BasicInterface( Window& window ) :
-  Interface(window)
-{}
-
-void
-BasicInterface::show()
-{
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
-
-/*
-  bool show_demo_window = true;
-  ImGui::ShowDemoWindow(&show_demo_window);
-*/
-
-  // initialize the ImGui render before we actually render with the gl
-  ImGui::Render();
-}
-
-// Helper to display basic user controls.
-void showUserGuide()
-{
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::BulletText("Double-click on title bar to collapse window.");
-    ImGui::BulletText("Click and drag on lower corner to resize window\n(double-click to auto fit window to its contents).");
-    if (io.ConfigWindowsMoveFromTitleBarOnly)
-        ImGui::BulletText("Click and drag on title bar to move window.");
-    else
-        ImGui::BulletText("Click and drag on any empty space to move window.");
-    ImGui::BulletText("TAB/SHIFT+TAB to cycle through keyboard editable fields.");
-    ImGui::BulletText("CTRL+Click on a slider or drag box to input value as text.");
-    if (io.FontAllowUserScaling)
-        ImGui::BulletText("CTRL+Mouse Wheel to zoom window contents.");
-    ImGui::BulletText("Mouse Wheel to scroll.");
-    ImGui::BulletText("While editing text:\n");
-    ImGui::Indent();
-    ImGui::BulletText("Hold SHIFT or use mouse to select text.");
-    ImGui::BulletText("CTRL+Left/Right to word jump.");
-    ImGui::BulletText("CTRL+A or double-click to select all.");
-    ImGui::BulletText("CTRL+X,CTRL+C,CTRL+V to use clipboard.");
-    ImGui::BulletText("CTRL+Z,CTRL+Y to undo/redo.");
-    ImGui::BulletText("ESCAPE to revert.");
-    ImGui::BulletText("You can apply arithmetic operators +,*,/ on numerical values.\nUse +- to subtract.");
-    ImGui::Unindent();
-}
-
-PlotTree::PlotTree( Window& window ) :
-  Interface(window)
-{}
-
-void
-PlotTree::show()
+Toolbar::begin_draw() const
 {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -171,13 +141,18 @@ PlotTree::show()
       ImGui::Separator();
 
       ImGui::Text("USER GUIDE:");
-      showUserGuide();
+      //showUserGuide();
     }
   }
 
   ImGui::End();
+}
 
+void
+Toolbar::end_draw() const
+{
   ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 } // graphics

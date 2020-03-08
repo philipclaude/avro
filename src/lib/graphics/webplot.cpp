@@ -35,7 +35,7 @@ Application<Web_Interface>::run()
 
     connect_client();
 
-    while( wv_statusServer(0) ) usleep(500000);
+    while ( wv_statusServer(0) ) usleep(500000);
   }
 }
 

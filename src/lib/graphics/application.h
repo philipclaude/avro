@@ -106,6 +106,8 @@ public:
 
   void add_topology( const TopologyBase& topology );
 
+  GLFW_Window& main_window() { return *main_.get(); }
+
   std::shared_ptr<GLFW_Window> main_;
   //GLFW_Window side_;
 };

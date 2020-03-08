@@ -22,7 +22,7 @@ ApplicationBase::write()
 void
 ApplicationBase::receive( const std::string& text ) const
 {
-  printf("received text %s\n",text.c_str());  
+  printf("received text %s\n",text.c_str());
 }
 
 void
@@ -72,10 +72,10 @@ Application<GLFW_Interface<API_t>>::run()
 
      double now = glfwGetTime();
 
-     // This if-statement only executes once every 60th of a second
+     // this if-statement only executes once every 60th of a second
      if ((now - last_frame_time) >= fps)
      {
-       // draw your frame here
+       // draw frame
        for (index_t k=0;k<window_.size();k++)
        {
          window_[k]->begin_draw();
@@ -109,6 +109,9 @@ Visualizer::Visualizer()
   //add_window( &side_ );
 
   initialize();
+
+  main_->create_interface();
+
 }
 
 void

@@ -303,7 +303,7 @@ RestrictedVoronoiDiagram::accumulate()
   fields_.make("sites",sites_);
 
   // merge the vertices
-  return;
+  #if 0
   std::map<SymbolicVertex,index_t> symbolic;
 
   std::vector<index_t> merge( points_.nb() );
@@ -324,6 +324,7 @@ RestrictedVoronoiDiagram::accumulate()
     for (index_t j=0;j<this->nv(k);j++)
       (*this)(k,j) = merge[ (*this)(k,j) ];
   }
+  #endif
 
 }
 

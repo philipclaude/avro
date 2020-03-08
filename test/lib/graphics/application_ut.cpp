@@ -1,6 +1,8 @@
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
+#include "graphics/user_interface.h"
+#include "graphics/window.h"
 
 #include "library/ckf.h"
 #include "library/obj.h"
@@ -19,9 +21,9 @@ UT_TEST_SUITE( application_suite )
 UT_TEST_CASE( test1 )
 {
 
-  #if 1
+  #if 0
   library::objFile topology( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
-  #elif 0
+  #else
   CKF_Triangulation topology( {4,4,4} );
   #endif
 
@@ -38,8 +40,11 @@ UT_TEST_CASE( test1 )
 
   Visualizer vis;
 
-  vis.add_topology(topology);
-  //vis.add_topology(rvd);
+  std::shared_ptr<Widget> toolbar = std::make_shared<Toolbar>(vis.main_window());
+  vis.main_window().interface().add_widget( toolbar );
+
+  //vis.add_topology(topology);
+  vis.add_topology(rvd);
 
   vis.run();
 }

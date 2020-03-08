@@ -5,6 +5,7 @@
 #include "graphics/controls.h"
 #include "graphics/gl.h"
 #include "graphics/math.h"
+#include "graphics/user_interface.h"
 #include "graphics/scene.h"
 
 #include <memory>
@@ -67,6 +68,11 @@ public:
 
   void save_eps( const std::string& filename );
 
+  void create_interface()
+  {
+    interface_ = std::make_shared<Interface>(*this);
+  }
+
   void setup()
   {
     // ensure we can capture the escape key being pressed below
@@ -105,10 +111,17 @@ public:
 
     glClearColor (1.0, 1.0, 1.0, 0.0); // white
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (interface_!=nullptr)
+      interface_->begin_draw();
   }
+
+  void draw_interface() const;
 
   void end_draw()
   {
+    if (interface_!=nullptr)
+      interface_->end_draw();
     glfwSwapBuffers(window_);
   }
 
@@ -121,6 +134,12 @@ public:
     scene_.push_back(SceneGraph());
     return id;
   }
+
+  Interface& interface() { return *interface_.get(); }
+  const Interface& interface() const { return *interface_.get(); }
+
+  GLFWwindow* window() { return window_; }
+  const GLFWwindow* window() const { return window_; }
 
 private:
   std::string title_;
@@ -137,6 +156,8 @@ private:
   std::vector<SceneGraph> scene_;
   Trackball trackball_;
   Camera camera_;
+
+  std::shared_ptr<Interface> interface_;
 };
 
 } // graphics
