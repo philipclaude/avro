@@ -46,6 +46,9 @@ public:
   bool& edges_on() { return edges_on_; }
   bool& triangles_on() { return triangles_on_; }
 
+  void set_transparency( real_t x ) { transparency_ = x; }
+  real_t transparency() const { return transparency_; }
+
   index_t nb_triangles() const { return triangles_.size()/3; }
   index_t nb_edges() const { return edges_.size()/2; }
   index_t nb_points() const { return points_.size()/3; }
@@ -94,6 +97,7 @@ protected:
   bool triangles_on_;
   bool edges_on_;
   bool points_on_;
+  real_t transparency_;
 
   bool transform_feedback_;
 };

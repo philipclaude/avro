@@ -52,7 +52,8 @@ Trackball::Trackball(Camera* cam,glm::vec4 screenSize,GLFW_Window* window) :
   m_panStart(0.0f),
   m_panEnd(0.0f),
   state_(TCB_STATE::NONE),
-  m_prevState(TCB_STATE::NONE)
+  m_prevState(TCB_STATE::NONE),
+  enabled_(true)
 {}
 
 void
@@ -120,6 +121,8 @@ Trackball::update()
 void
 Trackball::RotateCamera()
 {
+  if (!enabled_) return;
+
   float angle = (float)acos(glm::dot(m_rotStart, m_rotEnd) / glm::length(m_rotStart) / glm::length(m_rotEnd));
 
   if (!std::isnan(angle) && angle != 0.0f)
@@ -156,6 +159,8 @@ Trackball::RotateCamera()
 void
 Trackball::ZoomCamera()
 {
+  if (!enabled_) return;
+
   float factor = 1.0f + (float)(m_zoomEnd.y - m_zoomStart.y) * m_zoomSpeed;
 
   if (factor != 1.0f && factor > 0.0f)
@@ -175,6 +180,8 @@ Trackball::ZoomCamera()
 
 void Trackball::PanCamera()
 {
+  if (!enabled_) return;
+
   glm::vec2 mouseChange = m_panEnd - m_panStart;
 
   if (glm::length(mouseChange) != 0.0f)
@@ -276,6 +283,7 @@ Trackball::GetMouseProjectionOnBall(int clientX, int clientY)
 void
 Trackball::MouseDown(int button, int action, int mods,int xpos,int ypos)
 {
+  if (!enabled_) return;
   if (!m_enabled) return;
 
   bool updated = false;
@@ -318,6 +326,7 @@ Trackball::MouseDown(int button, int action, int mods,int xpos,int ypos)
 void
 Trackball::KeyDown(int key)
 {
+  if (!enabled_) return;
   if (!m_enabled) return;
 
   m_prevState = state_;
@@ -367,6 +376,7 @@ Trackball::KeyDown(int key)
 void
 Trackball::MouseWheel(double xoffset ,double yoffset)
 {
+  if (!enabled_) return;
   if (!m_enabled) return;
 
   float delta = 0.0f;
@@ -384,6 +394,7 @@ Trackball::MouseWheel(double xoffset ,double yoffset)
 void
 Trackball::MouseMove(int xpos,int ypos)
 {
+  if (!enabled_) return;
   if (!m_enabled) return;
 
   bool updated = false;

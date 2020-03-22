@@ -26,7 +26,8 @@ Primitive::Primitive( const TopologyBase& topology , SceneGraph* scene ) :
   visible_(true),
   triangles_on_(true),
   edges_on_(true),
-  points_on_(false)
+  points_on_(false),
+  transparency_(1.0)
 {}
 
 ShaderProgram&

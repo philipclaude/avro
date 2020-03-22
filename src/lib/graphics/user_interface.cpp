@@ -12,7 +12,7 @@ namespace avro
 namespace graphics
 {
 
-Widget::Widget( const GLFW_Window& window ) :
+Widget::Widget( GLFW_Window& window ) :
   window_(window),
   context_(window.interface().context())
 {}
@@ -42,7 +42,7 @@ Interface::initialize()
 }
 
 void
-Interface::begin_draw() const
+Interface::begin_draw()
 {
   for (index_t k=0;k<widgets_.size();k++)
     widgets_[k]->begin_draw();
@@ -56,19 +56,28 @@ Interface::end_draw() const
 }
 
 
-Toolbar::Toolbar( const GLFW_Window& window ) :
+Toolbar::Toolbar( GLFW_Window& window ) :
   Widget(window)
 {}
 
 void
-Toolbar::begin_draw() const
+Toolbar::begin_draw()
 {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
+  // determine if imgui wants the mouse or if we should send it to the trackball
+  bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
+  if (capture_mouse)
+    window_.trackball().disable();
+  else
+    window_.trackball().enable();
+
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_NoCollapse;
+
+  std::vector<std::string> entities = {"Volumes","Faces","Edges","Nodes"};
 
   bool active = true;
   ImGui::Begin("Plot controls",&active,ImGuiWindowFlags_MenuBar);
@@ -105,28 +114,52 @@ Toolbar::begin_draw() const
 
     if (ImGui::CollapsingHeader("Plots"))
     {
-      if (ImGui::TreeNode("Plot 1"))
+      for (index_t k=0;k<window_.nb_scene();k++)
       {
-        ImGui::Text("hello!");
+        const SceneGraph& scene = window_.scene(k);
+        const json& menu = scene.menu();
 
-        if (ImGui::TreeNode("Face 1"))
+        const std::vector<std::string>& primitives = menu["primitives"];
+        for (index_t j=0;j<primitives.size();j++)
         {
-          if (ImGui::TreeNode("Edge1"))
-          {
-            if (ImGui::TreeNode("Node 2"))
-            {
+          const json& plot = json::parse(primitives[k]);
 
-              ImGui::TreePop();
+          std::string label = "Plot " + std::to_string(j);
+          if (ImGui::TreeNode(label.c_str()))
+          {
+            for (index_t i=0;i<entities.size();i++)
+            {
+              if (ImGui::TreeNode(entities[i].c_str()))
+              {
+                std::vector<std::string> entity = plot[entities[i]];
+                for (index_t m=0;m<entity.size();m++)
+                {
+                  static bool viz = true;
+                  static float alpha = 1.0f;
+                  static bool edg = true;
+                  ImGui::Text(entity[m].c_str());
+                  ImGui::SameLine();
+                  ImGui::Checkbox("viz",&viz);
+                  ImGui::SameLine();
+                  ImGui::Checkbox("edg",&edg);
+                  ImGui::SameLine();
+                  ImGui::PushItemWidth(50);
+                  ImGui::SliderFloat("alpha",&alpha,0.1f,1.0f,"%.2f");
+
+                  unsigned long address = std::stoul(entity[m],0,16);
+                  Primitive* primitive = (Primitive*) address;
+
+                  primitive->triangles_on() = viz;
+                  primitive->edges_on() = edg;
+                  primitive->set_transparency(alpha);
+                }
+                ImGui::TreePop();
+              }
             }
             ImGui::TreePop();
           }
-          ImGui::TreePop();
         }
-        ImGui::TreePop();
-      }
-      if (ImGui::TreeNode("Plot 2"))
-      {
-        ImGui::TreePop();
+
       }
     }
 

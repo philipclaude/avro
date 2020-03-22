@@ -93,8 +93,8 @@ public:
     // option to cull triangles which normal is not towards the camera
     glDisable(GL_CULL_FACE);
 
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -127,6 +127,7 @@ public:
 
   index_t nb_scene() const { return scene_.size(); }
   SceneGraph& scene( index_t k ) { return scene_[k]; }
+  const SceneGraph& scene( index_t k ) const { return scene_[k]; }
 
   index_t create_scene()
   {
@@ -137,6 +138,8 @@ public:
 
   Interface& interface() { return *interface_.get(); }
   const Interface& interface() const { return *interface_.get(); }
+
+  Trackball& trackball() { return trackball_; }
 
   GLFWwindow* window() { return window_; }
   const GLFWwindow* window() const { return window_; }

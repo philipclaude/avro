@@ -78,6 +78,9 @@ public:
 
   const Controls& controls() const { return controls_; }
 
+  void enable() { enabled_ = true; }
+  void disable() { enabled_ = false; }
+
 private:
 
   glm::vec3 GetMouseProjectionOnBall(int clientX, int clientY);
@@ -119,6 +122,8 @@ private:
   glm::vec2 m_panEnd;
   TCB_STATE state_;
   TCB_STATE m_prevState;
+
+  bool enabled_;
 };
 
 } // graphics

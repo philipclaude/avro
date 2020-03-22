@@ -126,7 +126,7 @@ public:
       primitives.push_back( entry.dump() );
     }
     menu_["primitives"] = primitives;
-    std::cout << menu_ << std::endl;
+    //std::cout << menu_ << std::endl;
   }
 
   bool update() const { return update_; }

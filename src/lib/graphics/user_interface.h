@@ -19,15 +19,15 @@ class GLFW_Window;
 class Widget
 {
 protected:
-  Widget( const GLFW_Window& window );
+  Widget( GLFW_Window& window );
   virtual ~Widget() {}
 
 public:
-  virtual void begin_draw() const = 0;
+  virtual void begin_draw() = 0;
   virtual void end_draw() const = 0;
 
 protected:
-  const GLFW_Window& window_;
+  GLFW_Window& window_;
   const ImGuiIO& context_;
 };
 
@@ -38,7 +38,7 @@ public:
 
   void initialize();
 
-  void begin_draw() const;
+  void begin_draw();
   void end_draw() const;
 
   void add_widget( std::shared_ptr<Widget> widget )
@@ -59,9 +59,9 @@ private:
 class Toolbar : public Widget
 {
 public:
-  Toolbar( const GLFW_Window& window );
+  Toolbar( GLFW_Window& window );
 
-  void begin_draw() const;
+  void begin_draw();
   void end_draw() const;
 
 private:

@@ -262,6 +262,9 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
   // bind the vao associated with this primitive
   if (primitive.number()>=2)
   {
+    // set the transparency
+    shader.setUniform( "xpar" , (float)primitive.transparency() );
+
     // draw the triangles
     if (primitive.triangles_on())
     {
