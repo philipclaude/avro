@@ -73,12 +73,13 @@ Application<GLFW_Interface<API_t>>::run()
      double now = glfwGetTime();
 
      // this if-statement only executes once every 60th of a second
-     if ((now - last_frame_time) >= fps)
+     if ((now - last_frame_time) >= fps || true)
      {
        // draw frame
        for (index_t k=0;k<window_.size();k++)
        {
          window_[k]->begin_draw();
+         window_[k]->update_view();
 
          for (index_t j=0;j<window_[k]->nb_scene();j++)
            manager_.draw(window_[k]->scene(j));
@@ -104,7 +105,7 @@ Application<GLFW_Interface<API_t>>::run()
 
 Visualizer::Visualizer()
 {
-  main_ = std::make_shared<GLFW_Window>(manager_,1024,612,"3D");
+  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"3D");
   add_window( main_.get() );
   //add_window( &side_ );
 

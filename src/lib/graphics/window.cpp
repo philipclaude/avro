@@ -44,9 +44,11 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
   title_(title),
   width_(width),
   height_(height),
-  camera_(glm::vec3(0.0f,0.0f,7.0f)),
-  trackball_(&camera_,glm::vec4(0.0f,0.0f,(float)width_,(float)height_),this),
-  interface_(nullptr)
+  //camera_(glm::vec3(0.0f,0.0f,7.0f)),
+  //trackball_(&camera_,glm::vec4(0.0f,0.0f,(float)width_,(float)height_),this),
+  interface_(nullptr),
+  controls_(45.0f,width_,height_,0.1f,100.0f),
+  updated_(true)
 {
   window_ = glfwCreateWindow( width_ , height_ , title_.c_str() , NULL, NULL);
   if (!window_)
@@ -69,11 +71,10 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
 void
 GLFW_Window::update_view()
 {
-  trackball_.update();
+  controls_.calculate_view();
   for (index_t k=0;k<scene_.size();k++)
   {
-    // TODO only update if this scenegraph is selected
-    scene_[k].update_matrices(trackball_,fov_,width_,height_);
+    scene_[k].update_matrices(controls_);
     scene_[k].set_update(true);
   }
 }

@@ -70,9 +70,9 @@ Toolbar::begin_draw()
   // determine if imgui wants the mouse or if we should send it to the trackball
   bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
   if (capture_mouse)
-    window_.trackball().disable();
+    window_.controls().disable();
   else
-    window_.trackball().enable();
+    window_.controls().enable();
 
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_NoCollapse;

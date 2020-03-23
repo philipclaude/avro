@@ -25,6 +25,7 @@ namespace graphics
 {
 
 class Primitive;
+class Controller;
 
 class SceneGraph
 {
@@ -132,7 +133,8 @@ public:
   bool update() const { return update_; }
   void set_update( bool x ) { update_ = x; }
 
-  void update_matrices( const Trackball& trackball , float,float,float );
+  //void update_matrices( const Trackball& trackball , float,float,float );
+  void update_matrices( const Controller& controls );
 
   const mat4& mvp_matrix() const { return mvp_matrix_; }
   const mat4& normal_matrix() const { return normal_matrix_; }

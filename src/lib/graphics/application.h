@@ -8,6 +8,7 @@
 #include "graphics/gl.h"
 #include "graphics/manager.h"
 #include "graphics/scene.h"
+#include "graphics/window.h"
 #include "graphics/wv.h"
 
 #include <map>

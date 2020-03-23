@@ -1,6 +1,7 @@
 #ifndef avro_LIB_GRAPHICS_CONTROLS_H_
 #define avro_LIB_GRAPHICS_CONTROLS_H_
 
+#if 0
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
@@ -27,10 +28,27 @@ public:
 
   void lookAt(const glm::vec3& target);
 
+  void update( bool , int , float , float );
+
+  glm::mat4& mv() { return mv_; }
+  glm::mat4& mvp() { return mvp_; }
+  const glm::mat4& mvp() const { return mvp_; }
+
   glm::vec3 eye, up;
   glm::mat4 view_matrix;
+
   glm::mat4 mvp_;
   glm::mat4 mv_;
+  glm::mat4 perspective_;
+  glm::mat4 normal_;
+  glm::mat4 ui_;
+
+  float startx_;
+  float starty_;
+  float scale_;
+
+  float cursorx_;
+  float cursory_;
 };
 
 class Trackball
@@ -124,10 +142,15 @@ private:
   TCB_STATE m_prevState;
 
   bool enabled_;
+
+  float startx_;
+  float starty_;
 };
 
 } // graphics
 
 } // avro
+
+#endif
 
 #endif
