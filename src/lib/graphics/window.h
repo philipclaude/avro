@@ -7,7 +7,6 @@
 #include "graphics/math.h"
 #include "graphics/user_interface.h"
 #include "graphics/scene.h"
-#include "graphics/trackball.h"
 
 #include <memory>
 #include <string>
@@ -30,12 +29,10 @@ public:
     {
       double xpos,ypos;
       glfwGetCursorPos(window_,&xpos,&ypos);
-      //trackball_.MouseDown(button,action,mods,(int)xpos,(int)ypos);
       controls_.mouse_down(button,action,mods,(int)xpos,(int)ypos);
     }
     if (action == GLFW_RELEASE)
     {
-      //trackball_.MouseUp();
       controls_.mouse_up();
     }
   }
@@ -43,20 +40,17 @@ public:
   void
   mouse_move_callback(double xpos, double ypos)
   {
-    //trackball_.MouseMove((int)xpos,(int)ypos);
     controls_.mouse_move((int)xpos,(int)ypos);
   }
 
   void
   mouse_scroll_callback(double xpos, double ypos)
   {
-    //trackball_.MouseWheel(xpos,ypos);
     controls_.mouse_wheel(xpos,ypos);
   }
 
   void key_callback(int key, int scancode, int action, int mods)
   {
-    //trackball_.KeyDown(key);
     controls_.key_down(key);
   }
 
@@ -147,8 +141,7 @@ public:
   Interface& interface() { return *interface_.get(); }
   const Interface& interface() const { return *interface_.get(); }
 
-  //Trackball& trackball() { return trackball_; }
-  Controller& controls() { return controls_; }
+  Controls& controls() { return controls_; }
 
   GLFWwindow* window() { return window_; }
   const GLFWwindow* window() const { return window_; }
@@ -169,10 +162,7 @@ private:
   float angles_[2];
 
   std::vector<SceneGraph> scene_;
-  //Trackball trackball_;
-  //Camera camera_;
-
-  Controller controls_;
+  Controls controls_;
 
   std::shared_ptr<Interface> interface_;
 

@@ -1,7 +1,6 @@
-#ifndef avro_LIB_GRAPHICS_CONTROLS_H_
-#define avro_LIB_GRAPHICS_CONTROLS_H_
+#ifndef AVRO_LIB_GRAPHICS_CONTROLS_H_
+#define AVRO_LIB_GRAPHICS_CONTROLS_H_
 
-#if 0
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
@@ -11,146 +10,61 @@ namespace avro
 namespace graphics
 {
 
-class GLFW_Window;
-
 class Controls
 {
+
 public:
-  bool edges_visible;
-  bool faces_visible;
-  bool points_visible;
-};
 
-class Camera
-{
-public:
-  Camera(const glm::vec3& e);
+  Controls( float fov , int width , int height , float znear=0.1f , float zfar=100.0f );
 
-  void lookAt(const glm::vec3& target);
+  bool update();
+  void calculate_view();
 
-  void update( bool , int , float , float );
+  void mouse_down(int button, int action, int mods,int xpos,int ypos);
+  void mouse_up();
+  void mouse_move(int x, int y);
+  void key_down(int key);
+  void mouse_wheel(double xoffset ,double yoffset);
 
-  glm::mat4& mv() { return mv_; }
-  glm::mat4& mvp() { return mvp_; }
-  const glm::mat4& mvp() const { return mvp_; }
+  const glm::mat4& model_view_projection() const {return model_view_projection_; }
+  const glm::mat4& normal() const { return normal_; }
 
-  glm::vec3 eye, up;
-  glm::mat4 view_matrix;
+  bool dragging;
+  int modifier;
 
-  glm::mat4 mvp_;
-  glm::mat4 mv_;
-  glm::mat4 perspective_;
-  glm::mat4 normal_;
-  glm::mat4 ui_;
-
-  float startx_;
-  float starty_;
-  float scale_;
-
-  float cursorx_;
-  float cursory_;
-};
-
-class Trackball
-{
-public:
-  Trackball(Camera* cam,glm::vec4 screenSize,GLFW_Window* window=nullptr);
-
-
-  void reset(glm::vec4 screensize);
-
-  const Camera& camera() const { return *camera_; }
-
-  void update();
-  void MouseDown(int button, int action, int mods,int xpos,int ypos);
-  void MouseMove(int xpos, int ypos);
-  void KeyDown(int key);
-  void MouseWheel(double xoffset ,double yoffset);
-
-  GLFW_Window* window_;
-
-  float m_rotateSpeed;
-  float m_zoomSpeed;
-  float m_panSpeed;
-  float m_dynamicDampingFactor;
-  float m_minDistance;
-  float m_maxDistance;
-  bool m_enabled;
-  bool m_noRotate;
-  bool m_noZoom;
-  bool m_noPan;
-  bool m_noRoll;
-  bool m_staticMoving;
-
-  inline void MouseUp()
-  {
-    if (!m_enabled) return;
-    state_ = TCB_STATE::NONE;
-  }
-
-  inline void KeyUp()
-  {
-    if (!m_enabled) return;
-    state_ = m_prevState;
-  }
-
-  const Controls& controls() const { return controls_; }
-
-  void enable() { enabled_ = true; }
   void disable() { enabled_ = false; }
+  void enable() { enabled_ = true; }
 
 private:
+  glm::mat4 perspective_;
+  glm::mat4 model_view_;
+  glm::mat4 model_view_projection_;
+  glm::mat4 normal_;
+  glm::mat4 ui_matrix_;
 
-  glm::vec3 GetMouseProjectionOnBall(int clientX, int clientY);
+  int width_;
+  int height_;
 
-  inline glm::vec2
-  GetMouseOnScreen(int clientX, int clientY)
-  {
-    return glm::vec2(
-      (float)(clientX - m_screen.x) / m_screen.z,
-      (float)(clientY - m_screen.y) / m_screen.w
-      );
-  }
+  int offleft_;
+  int offtop_;
 
-  void RotateCamera();
-  void ZoomCamera();
-  void PanCamera();
-  void CheckDistances();
+  int startx_;
+  int starty_;
 
-  enum class TCB_STATE:uint8_t
-  {
-    NONE,
-    ROTATE,
-    ZOOM,
-    PAN
-  };
+  int cursorx_;
+  int cursory_;
 
-  Camera*   camera_;
-  glm::vec4 m_screen;
-  Controls controls_;
+  float scale_;
 
-  glm::vec3 m_target;
-  glm::vec3 m_lastPos;
-  glm::vec3 m_eye;
-  glm::vec3 m_rotStart;
-  glm::vec3 m_rotEnd;
-  glm::vec2 m_zoomStart;
-  glm::vec2 m_zoomEnd;
-  glm::vec2 m_panStart;
-  glm::vec2 m_panEnd;
-  TCB_STATE state_;
-  TCB_STATE m_prevState;
+  const glm::vec3 eye_ = {0,0,7};
+  const glm::vec3 center_ = {0,0,0};
+  const glm::vec3 up_ = {0,1,0};
 
   bool enabled_;
-
-  float startx_;
-  float starty_;
 };
 
 } // graphics
 
 } // avro
-
-#endif
 
 #endif

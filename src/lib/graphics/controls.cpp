@@ -1,14 +1,6 @@
-#if 0
-
-#include "graphics/application.h"
 #include "graphics/controls.h"
-#include "graphics/window.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/norm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace avro
 {
@@ -16,549 +8,191 @@ namespace avro
 namespace graphics
 {
 
-#define   FloatInfinity std::numeric_limits<float>::infinity()
-#define   SQRT1_2  0.7071067811865476
-
-Camera::Camera(const glm::vec3& e) :
-  eye(e), up(0.0f,1.0f,0.0f), view_matrix(1.0f)
+Controls::Controls( float fov , int width , int height , float znear , float zfar ) :
+  width_(width),
+  height_(height),
+  offleft_(0),
+  offtop_(0),
+  scale_(1.0),
+  enabled_(true)
 {
-  perspective_ = glm::perspective(30.0f, 1024.0f/624.0f ,0.1f,100.0f);
-  perspective_ = glm::lookAt( eye , {0,0,0} , up );
+  perspective_ = glm::perspective(fov,(float)width_/(float)height_,znear,zfar);
+  perspective_ = perspective_ * glm::lookAt( eye_ , center_ , up_ );
+
+  model_view_ = glm::mat4(1.0);
+  ui_matrix_  = model_view_;
+
+  std::cout << glm::to_string(perspective_) << std::endl;
+  std::cout << glm::to_string(model_view_) << std::endl;
 
   startx_ = -1;
   starty_ = -1;
-  scale_  =  1;
+  cursorx_ = -1;
+  cursory_ = -1;
+
+  modifier = 0;
+  dragging = false;
 }
 
-void
-Camera::update( bool dragging , int modifier , float x , float y )
+bool
+Controls::update()
 {
-  ui_ = mv_;
-  mv_ = glm::mat4(1.0);
+  ui_matrix_  = model_view_;
+  model_view_ = glm::mat4(1.0);
 
   bool updated = false;
+  if (!enabled_) return updated;
 
   // mouse-movement
   if ( dragging )
   {
     if (modifier==4) // control is down (rotate)
     {
-      float anglex =  (starty_ -y)/4.0;
-      float angley = -(startx_ -x)/4.0;
+      float anglex =  (starty_ -cursory_)/10.0;
+      float angley = -(startx_ -cursorx_)/10.0;
 
       if (anglex!=0.0f || angley!=0.0f)
       {
-        mv_ = glm::rotate( mv_ , anglex , {1,0,0} );
-        mv_ = glm::rotate( mv_ , angley , {0,1,0} );
+        model_view_ = glm::rotate( model_view_ , anglex , {1,0,0} );
+        model_view_ = glm::rotate( model_view_ , angley , {0,1,0} );
         updated = true;
       }
     }
     else if (modifier==3) // alt-shift is down (rotate)
     {
-      float anglex =  (starty_ -y)/4.0;
-      float angley = -(startx_ -x)/4.0;
+      float anglex =  (starty_ -cursory_)/10.0;
+      float angley = -(startx_ -cursorx_)/10.0;
 
       if (anglex!=0.0f || angley!=0.0f)
       {
-        mv_ = glm::rotate( mv_ , anglex , {1,0,0} );
-        mv_ = glm::rotate( mv_ , angley , {0,1,0} );
+        model_view_ = glm::rotate( model_view_ , anglex , {1,0,0} );
+        model_view_ = glm::rotate( model_view_ , angley , {0,1,0} );
         updated = true;
       }
     }
     else if (modifier==2) // alt is down (splin)
     {
+      float xf = 1.0f*startx_ - width_*1.0f/2.0;
+      float yf = 1.0f*starty_ - height_*1.0f/2.0;
 
+      if (xf!=0.0 || yf!=0.0)
+      {
+        float theta = std::atan2(yf,xf);
+        xf = 1.0f*cursorx_ - width_*1.0f/2.;
+        yf = 1.0f*cursory_ - height_*1.0f/2.;
+
+        if (xf!=0.0 || yf!=0.0)
+        {
+          float dtheta = std::atan2(yf,xf) - theta;
+          if (dtheta < 1.5708)
+          {
+            float anglez = 128*dtheta/3.141592654;
+            model_view_  = glm::rotate( model_view_ , anglez , {0,0,1} );
+            updated = true;
+          }
+        }
+
+      }
     }
     else if (modifier==1) // shift is down (zoom)
     {
+      if (cursory_!=starty_)
+      {
+        float scale = std::exp( (cursory_ - starty_)/512.0 );
+        model_view_ = glm::scale( model_view_ , {scale,scale,scale} );
+        scale_ *= scale;
+        updated = true;
+      }
 
     }
     else // no modifier (translate)
     {
-
+      float transx = (cursorx_ - startx_) / 256.0;
+      float transy = (cursory_ - starty_) / 256.0;
+      if (transx!=0.0 || transy!=0.0)
+      {
+        model_view_ = glm::translate( model_view_ , {transx,transy,0} );
+        updated = true;
+      }
     }
 
-    startx_ = x;
-    starty_ = y;
+    startx_ = cursorx_;
+    starty_ = cursory_;
   }
 
+  return updated;
+}
 
-  if (updated)
-  {
-    // compute the normal matrix
-    normal_ = glm::inverse( mv_ );
-    normal_ = glm::scale( normal_ , {scale_ , scale_ , scale_} );
-    normal_ = glm::transpose( normal_ );
+void
+Controls::calculate_view()
+{
+  model_view_ = model_view_*ui_matrix_;
 
-    // compute the model-view-projection matrix
-    mvp_ = glm::scale( perspective_ , {1. , 1. , 1./scale_} );
-  }
+  // construct normal matrix from model-view
+  normal_ = glm::inverse( model_view_ );
+  normal_ = glm::transpose( glm::scale( normal_ , {scale_,scale_,scale_} ) );
+
+  // construct model-view-projection from original perspective and model-view
+  model_view_projection_ = glm::scale( perspective_ , {1.,1.,1./scale_} ) * model_view_;
+  //std::cout << glm::to_string(model_view_projection_) << std::endl;
+}
+
+void
+Controls::mouse_up()
+{
+  dragging = false;
+  modifier = 0;
+}
+
+void
+Controls::mouse_down(int button, int action, int mods,int x,int y)
+{
+  startx_ = x;
+  starty_ = y;
+
+  startx_ -= offleft_ +1;
+  starty_  = height_ - starty_ + offtop_ +1;
+
+  dragging = true;
+
+  modifier = 0;
+  if (mods==GLFW_MOD_SHIFT) modifier = 1;
+  if (mods==GLFW_MOD_ALT) modifier = 2;
+  if (mods==GLFW_MOD_CONTROL) modifier = 4;
+}
+
+void
+Controls::mouse_move(int x, int y)
+{
+  cursorx_ = x;
+  cursory_ = y;
+
+  cursorx_ -= offleft_ + 1;
+  cursory_  = height_ - cursory_ + offtop_ + 1;
+}
+
+void
+Controls::key_down(int key)
+{
 
 }
 
 void
-Camera::lookAt(const glm::vec3& target)
+Controls::mouse_wheel(double deltax ,double deltay)
 {
-  view_matrix = glm::lookAt(eye,target,up);
-}
-
-Trackball::Trackball(Camera* cam,glm::vec4 screenSize,GLFW_Window* window) :
-  window_(window),
-  m_rotateSpeed(1.0f),
-  m_zoomSpeed(1.2f),
-  m_panSpeed(0.3f),
-  m_dynamicDampingFactor(0.2f),
-  m_minDistance(0.0f),
-  m_maxDistance(FloatInfinity),
-  m_enabled(true),
-  m_noRotate(false),
-  m_noZoom(false),
-  m_noPan(false),
-  m_noRoll(false),
-  m_staticMoving(false),
-  camera_(cam),
-  m_screen(screenSize),
-  m_target(0.0f),
-  m_lastPos(0.0f),
-  m_eye(0.0f),
-  m_rotStart(0.0f),
-  m_rotEnd(0.0f),
-  m_zoomStart(0.0f),
-  m_zoomEnd(0.0f),
-  m_panStart(0.0f),
-  m_panEnd(0.0f),
-  state_(TCB_STATE::NONE),
-  m_prevState(TCB_STATE::NONE),
-  enabled_(true),
-  startx_(-1),
-  starty_(-1)
-{}
-
-void
-Trackball::reset(glm::vec4 screenSize)
-{
-  m_screen = screenSize;
-  m_enabled = true;
-  m_rotateSpeed = 1.0f;
-  m_zoomSpeed=1.2f;
-  m_panSpeed=0.3f;
-  m_noRotate=false;
-  m_noPan=false;
-  m_noZoom=false;
-  m_noRoll=false;
-  m_staticMoving=false;
-  m_dynamicDampingFactor=0.2f;
-  m_minDistance=0.0f;
-  m_maxDistance=FloatInfinity;
-  //m_target=0.0f;
-  //m_lastPos=0.0f;
-  state_=TCB_STATE::NONE;
-  m_prevState=TCB_STATE::NONE;
-  //m_eye=0.0f;
-  //m_rotStart=0.0f;
-  //m_rotEnd=0.0f;
-  //m_zoomStart=0.0f;
-  //m_zoomEnd=0.0f;
-  //m_panStart=0.0f;
-  //m_panEnd=0.0f;
-}
-
-void
-Trackball::update()
-{
-  m_eye = camera_->eye - m_target;
-
-  if (!m_noRotate)
+  if (deltay > 0)
   {
-    RotateCamera();
+    model_view_ = glm::scale( model_view_ , {1.1,1.1,1.1} );
+    scale_ *= 1.1;
   }
-
-  if (!m_noZoom)
+  else if (deltay < 0)
   {
-    ZoomCamera();
-  }
-
-  if (!m_noPan)
-  {
-    PanCamera();
-  }
-
-  // object.position =  target + _eye;
-  camera_->eye = (m_target + m_eye);
-
-  CheckDistances();
-
-  camera_->lookAt(m_target);
-
-  if (glm::length2(m_lastPos - camera_->eye) > 0.0f)
-  {
-    m_lastPos = camera_->eye;
+    model_view_ = glm::scale( model_view_ , {0.9,0.9,0.9} );
+    scale_ *= 0.9;
   }
 }
 
-void
-Trackball::RotateCamera()
-{
-  if (!enabled_) return;
-
-  float angle = (float)acos(glm::dot(m_rotStart, m_rotEnd) / glm::length(m_rotStart) / glm::length(m_rotEnd));
-
-  if (!std::isnan(angle) && angle != 0.0f)
-  {
-    glm::vec3 axis = glm::normalize(glm::cross( m_rotStart, m_rotEnd ));
-
-    if (glm::isnan(axis.x) || glm::isnan(axis.y) || glm::isnan(axis.z))
-      return;
-
-    glm::quat quaternion;
-
-    angle *= m_rotateSpeed;
-
-    quaternion = glm::angleAxis(-angle,axis);
-
-    m_eye = glm::rotate( quaternion ,  m_eye);
-
-    camera_->up =  glm::rotate(quaternion , camera_->up);
-
-    m_rotEnd = glm::rotate( quaternion , m_rotEnd);
-
-    if (m_staticMoving)
-    {
-      m_rotStart = m_rotEnd;
-    }
-    else
-    {
-      quaternion = glm::angleAxis( angle * (m_dynamicDampingFactor - 1.0f),axis);
-      m_rotStart = glm::rotate(quaternion,m_rotStart);
-    }
-  }
-}
-
-void
-Trackball::ZoomCamera()
-{
-  if (!enabled_) return;
-
-  float factor = 1.0f + (float)(m_zoomEnd.y - m_zoomStart.y) * m_zoomSpeed;
-
-  if (factor != 1.0f && factor > 0.0f)
-  {
-    m_eye = m_eye * (float)factor;
-
-    if (m_staticMoving)
-    {
-      m_zoomStart = m_zoomEnd;
-    }
-    else
-    {
-      m_zoomStart.y += (float)(m_zoomEnd.y - m_zoomStart.y) * m_dynamicDampingFactor;
-    }
-  }
-}
-
-void Trackball::PanCamera()
-{
-  if (!enabled_) return;
-
-  glm::vec2 mouseChange = m_panEnd - m_panStart;
-
-  if (glm::length(mouseChange) != 0.0f)
-  {
-    mouseChange *= glm::length( m_eye) * m_panSpeed;
-
-    glm::vec3 pan =glm::normalize(glm::cross(m_eye, camera_->up));
-
-    pan *= mouseChange.x;
-
-    glm::vec3 camUpClone = glm::normalize(camera_->up);
-
-    camUpClone *=  mouseChange.y;
-    pan += camUpClone;
-
-    camera_->eye += pan;
-
-    m_target +=  pan;
-    if (m_staticMoving)
-    {
-      m_panStart = m_panEnd;
-    }
-    else
-    {
-      m_panStart += (m_panEnd - m_panStart) * m_dynamicDampingFactor;
-    }
-  }
-}
-
-void
-Trackball::CheckDistances()
-{
-  if (!m_noZoom || !m_noPan)
-  {
-    if (glm::length2(camera_->eye)	 > m_maxDistance * m_maxDistance)
-    {
-      camera_->eye = glm::normalize(camera_->eye) * m_maxDistance;
-    }
-
-    if (glm::length2(m_eye) < m_minDistance * m_minDistance)
-    {
-      m_eye = glm::normalize(m_eye) * m_minDistance;
-      camera_->eye = m_target + m_eye;
-    }
-  }
-}
-
-glm::vec3
-Trackball::GetMouseProjectionOnBall(int clientX, int clientY)
-{
-  glm::vec3 mouseOnBall = glm::vec3
-  (
-    ((float)clientX - (float)m_screen.z * 0.5f) / (float)(m_screen.z * 0.5f),
-    ((float)clientY - (float)m_screen.w * 0.5f) / (float)(m_screen.w * 0.5f),
-    0.0f
-  );
-
-  double length = (double) glm::length(mouseOnBall);
-
-  if (m_noRoll)
-  {
-    if (length < SQRT1_2)
-    {
-      mouseOnBall.z = (float)sqrt(1.0 - length * length);
-    }
-    else
-    {
-      mouseOnBall.z = (float)(0.5 / length);
-    }
-  }
-  else if (length > 1.0)
-  {
-    mouseOnBall = glm::normalize(mouseOnBall);
-  }
-  else
-  {
-    mouseOnBall.z = (float)sqrt(1.0 - length * length);
-  }
-
-  m_eye = m_target - camera_->eye;
-
-  glm::vec3 upClone = camera_->up;
-
-  upClone = glm::normalize(upClone);
-  glm::vec3 projection = upClone * mouseOnBall.y;
-
-  glm::vec3 cross = glm::normalize( glm::cross(camera_->up,m_eye) );
-
-  cross      *= mouseOnBall.x;
-  projection += cross;
-
-  glm::vec3 eyeClone = glm::normalize(m_eye);
-
-  projection += eyeClone * mouseOnBall.z;
-
-  return projection;
-}
-
-void
-Trackball::MouseDown(int button, int action, int mods,int xpos,int ypos)
-{
-  if (!enabled_) return;
-  if (!m_enabled) return;
-
-  bool updated = false;
-
-  if (state_ == TCB_STATE::NONE)
-  {
-    if (button == GLFW_MOUSE_BUTTON_RIGHT)
-    {
-      state_ = TCB_STATE::PAN;
-    }
-    else
-    {
-      state_ = TCB_STATE::ROTATE;
-    }
-  }
-
-  startx_ = xpos;
-  starty_ = ypos;
-
-  float offleft = 0, offtop = 0;
-
-  startx_ -= offleft + 1;
-  starty_  = window_->height() - starty_ + offtop + 1;
-
-  if (state_ == TCB_STATE::ROTATE && !m_noRotate)
-  {
-
-    #if 0
-    float anglex =  (startx_ - xpos)/4.0;
-    float angley = -(starty_ - ypos)/4.0;
-
-    if (anglex!=0.0f || angley!=0.0f)
-    {
-      // calculate the mv matrix
-      camera_->mv() = glm::mat4(1.0f);
-      camera_->mv() = glm::rotate( camera_->mv() , anglex , glm::vec3(1.,0,0) );
-
-      // calculate the normal matrix
-
-      // calculate the model-view-projection matrix
-      //camera_->mvp() = glm::perspective( 30.0f, window_.width()/window_.height() ,0.1f,100.0f);
-      camera_->mvp() = camera_->perspective_;
-
-      float scale_ = 1.0f;
-      //camera_->mvp().scale( 1.0,1.0,1./scale_);
-      camera_->mvp() = camera_->mvp()*camera_->mv();
-
-      std::cout << glm::to_string(camera_->mvp()) << std::endl;
-    }
-
-    startx_ = xpos;
-    starty_ = ypos;
-    #endif
-
-    m_rotStart = GetMouseProjectionOnBall(xpos,ypos);
-    m_rotEnd   = m_rotStart;
-    window_->update_view();
-
-  }
-  else if (state_ == TCB_STATE::ZOOM && !m_noZoom)
-  {
-    m_zoomStart = GetMouseOnScreen(xpos, ypos);
-    m_zoomEnd   = m_zoomStart;
-    window_->update_view();
-  }
-  else if (state_ == TCB_STATE::PAN && !m_noPan)
-  {
-    m_panStart = GetMouseOnScreen(xpos, ypos);
-    m_panEnd   = m_panStart;
-    window_->update_view();
-  }
-
-}
-
-void
-Trackball::KeyDown(int key)
-{
-  if (!enabled_) return;
-  if (!m_enabled) return;
-
-  m_prevState = state_;
-
-  if (state_ != TCB_STATE::NONE)
-  {
-    return;
-  }
-  else if ((key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_CONTROL) && !m_noRotate)
-  {
-    state_ = TCB_STATE::ROTATE;
-  }
-  else if (key == GLFW_KEY_Z && !m_noZoom)
-  {
-    state_ = TCB_STATE::ZOOM;
-  }
-  else if ( (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT) && !m_noPan)
-  {
-    state_ = TCB_STATE::PAN;
-  }
-  else if ( key == GLFW_KEY_E )
-  {
-    controls_.edges_visible = !controls_.edges_visible;
-  }
-  else if ( key == GLFW_KEY_F )
-  {
-    controls_.faces_visible = !controls_.faces_visible;
-  }
-  else if ( key == GLFW_KEY_P )
-  {
-    controls_.points_visible = !controls_.points_visible;
-  }
-  else if ( key == GLFW_KEY_R )
-  {
-    camera_->eye = glm::vec3(0.0f,0.0f,7.0f);
-    camera_->up  = glm::vec3(0.0f,1.0f,0.0f);
-    reset(glm::vec4(0.0f,0.0f,(float)1024,(float)640));
-    window_->update_view();
-  }
-  else if ( key == GLFW_KEY_S )
-  {
-    if (window_!=nullptr)
-      window_->save_eps("test.eps");
-  }
-}
-
-void
-Trackball::MouseWheel(double xoffset ,double yoffset)
-{
-  if (!enabled_) return;
-  if (!m_enabled) return;
-
-  float delta = 0.0f;
-
-  if (yoffset != 0.0)
-  {
-    delta = (float) yoffset/3.0f;
-  }
-
-  m_zoomStart.y += delta*0.05f;
-
-  window_->update_view();
-}
-
-void
-Trackball::MouseMove(int xpos,int ypos)
-{
-  if (!enabled_) return;
-  if (!m_enabled) return;
-
-  bool updated = false;
-  if (state_ == TCB_STATE::ROTATE && !m_noRotate)
-  {
-    #if 0
-    float anglex =  (startx_ - xpos)/4.0;
-    float angley = -(starty_ - ypos)/4.0;
-
-    if (anglex!=0.0f || angley!=0.0f)
-    {
-      // calculate the mv matrix
-      camera_->mv() = glm::mat4(1.0f);
-      camera_->mv() = glm::rotate( camera_->mv() , anglex , glm::vec3(1.,0,0) );
-      camera_->mv() = glm::rotate( camera_->mv() , angley , glm::vec3(0,1.,0) );
-
-      // calculate the normal matrix
-
-      // calculate the model-view-projection matrix
-      camera_->mvp() = glm::perspective( 45.0f,1.0f,0.1f,100.0f);
-      float scale_ = 1.0f;
-      //camera_->mvp().scale( 1.0,1.0,1./scale_);
-      camera_->mvp() = camera_->mvp()*camera_->mv();
-
-      std::cout << glm::to_string(camera_->mvp()) << std::endl;
-
-    }
-    #endif
-
-    m_rotEnd = GetMouseProjectionOnBall(xpos,ypos);
-    window_->update_view();
-  }
-  else if (state_ == TCB_STATE::ZOOM && !m_noZoom)
-  {
-    m_zoomEnd = GetMouseOnScreen(xpos,ypos);
-    window_->update_view();
-  }
-  else if (state_ == TCB_STATE::PAN && !m_noPan)
-  {
-    m_panEnd = GetMouseOnScreen(xpos,ypos);
-    window_->update_view();
-  }
-
-
-
-  startx_ = xpos;
-  starty_ = ypos;
-}
 
 } // graphics
 
 } // avro
-
-#endif
