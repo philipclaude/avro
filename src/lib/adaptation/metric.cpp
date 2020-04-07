@@ -606,6 +606,11 @@ edge_vector( const index_t i , const index_t j , const Points& v ,
     X[d] = v[j][d] -v[i][d];
 }
 
+MetricAttachment::MetricAttachment( Points& points ) :
+	number_(points.dim()),
+	points_(points)
+{}
+
 MetricAttachment::MetricAttachment( Points& points , const std::vector<numerics::SymMatrixD<real_t>>& metrics ) :
   number_(metrics[0].n()),
 	points_(points)
@@ -632,6 +637,12 @@ MetricAttachment::MetricAttachment( Points& points , const std::vector<numerics:
 		  Array<Metric>::add( mk );
 		}
   }
+}
+
+void
+MetricAttachment::from_solb( const std::string& filename )
+{
+	avro_implement;
 }
 
 template<typename type>

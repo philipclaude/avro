@@ -115,6 +115,10 @@ Toolbar::begin_draw()
       ImGui::EndMenuBar();
     }
 
+    ImGuiIO& io = ImGui::GetIO();
+    ImFont* pfont = io.Fonts->Fonts[0];
+    int width = pfont->FontSize;
+
     ImGui::SetNextItemWidth(100);
     if (ImGui::CollapsingHeader("I/O"))
     {
@@ -125,7 +129,7 @@ Toolbar::begin_draw()
 
       std::vector<std::string> dirs;
       std::vector<std::string> files;
-      index_t lmax = 0;
+      index_t lmax = 10;
       for (index_t k=0;k<directory.size();k++)
       {
         const std::string& s = directory[k]["entry"];
@@ -141,9 +145,7 @@ Toolbar::begin_draw()
       for (index_t k=0;k<dirs.size();k++)
         items.push_back( dirs[k].c_str() );
 
-      ImGuiIO& io = ImGui::GetIO();
-      ImFont* pfont = io.Fonts->Fonts[0];
-      int width = pfont->FontSize;
+
 
       static int dir_current = 0;
       ImGui::SetNextItemWidth(lmax*width);
@@ -223,12 +225,27 @@ Toolbar::begin_draw()
       }
     }
 
+    if (ImGui::CollapsingHeader("Tools"))
+    {
+      ImGui::SetNextItemWidth(100);
+
+      static int fps = 60;
+      ImGui::SliderInt("fps",&fps,5,120,"%3d");
+      window_.set_fps( fps );
+    }
+
     if (ImGui::CollapsingHeader("Adapt"))
     {
       ImGui::SetNextItemWidth(100);
       static int mesh_current = 0;
       const char* meshes[] = {"mesh0","mesh1","mesh2"};
       ImGui::Combo("Mesh",&mesh_current, meshes , 3 );
+
+      ImGui::SameLine();
+      ImGui::SetNextItemWidth(5*width);
+      static char iter_str[5] = "1";
+      ImGui::InputText("Iter.", iter_str , IM_ARRAYSIZE(iter_str));
+      int nb_adapt = atoi(iter_str);
 
       ImGui::SetNextItemWidth(100);
       static int geometry_current = 0;

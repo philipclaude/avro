@@ -24,6 +24,9 @@ public:
 
   void get_entities( std::vector<Entity*>& entities ) const;
 
+  void add_body( std::shared_ptr<Body>& body )
+  { body_.push_back(body); }
+
 protected:
   coord_t number_;
 

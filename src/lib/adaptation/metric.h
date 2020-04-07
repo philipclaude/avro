@@ -167,6 +167,8 @@ public:
 
   MetricAttachment( Points& points , const std::vector<numerics::SymMatrixD<real_t>>& metrics );
 
+  MetricAttachment( Points& points );
+
 	const numerics::SymMatrixD<real_t>& log( const index_t k ) const
     { return Array<Metric>::data_[k].log(); }
 	real_t sqdet( index_t k ) const

@@ -149,6 +149,9 @@ public:
   int width() const { return width_; }
   int height() const { return height_; }
 
+  index_t fps() const { return fps_; }
+  void set_fps( index_t fps ) { fps_ = fps; }
+
 private:
   std::string title_;
   GLFWwindow* window_;
@@ -167,6 +170,8 @@ private:
   std::shared_ptr<Interface> interface_;
 
   bool updated_;
+
+  index_t fps_;
 };
 
 } // graphics

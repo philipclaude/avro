@@ -21,6 +21,8 @@ public:
 
   virtual numerics::SymMatrixD<real_t> operator()( const real_t* x ) const = 0;
 
+  coord_t dim() const { return dim_; }
+
 protected:
   coord_t dim_;
 };
@@ -37,8 +39,6 @@ public:
     MetricField_Analytic(dim),
     h_(h)
   {}
-
-  coord_t dim() const { return dim_; }
 
   numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
   {
@@ -209,7 +209,7 @@ public:
     MetricField_Analytic(3)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x )
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
   {
     real_t eps = 0.001; // offset for singularity at origin
   	real_t X = x[0] +eps;

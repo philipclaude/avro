@@ -19,20 +19,24 @@ class Context;
 class Model : public avro::Model
 {
 public:
-  Model( const Context& context );
-  Model( const Context& context , const std::string& filename , bool split=false );
+  Model( Context* context );
+  Model( Context* context , const std::string& filename , bool split=false );
+  Model( const std::string& filename , bool split=false );
+
+  ~Model();
 
   void determine_number();
 
-  const Context& context() const { return context_; }
+  const Context& context() const { return *context_; }
 
   Entity* find_entity( index_t id , int object_class ) const;
 
   void print() const;
 
 private:
-   const Context& context_;
+   Context* context_;
    ego object_;
+   bool mine_;
 };
 
 } // EGADS

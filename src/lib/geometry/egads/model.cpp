@@ -13,17 +13,47 @@ namespace avro
 namespace EGADS
 {
 
-Model::Model( const Context& context ) :
+Model::Model( Context* context ) :
   avro::Model(0),
-  context_(context)
+  context_(context),
+  mine_(false)
 {}
 
-Model::Model( const Context& context , const std::string& filename , bool split  ) :
+Model::Model( Context* context , const std::string& filename , bool split  ) :
   avro::Model(0),
-  context_(context)
+  context_(context),
+  mine_(false)
 {
   int flag = (split) ? 1 : 2;
-  int status = EG_loadModel( *context_.get() , flag , filename.c_str() , &object_ );
+  int status = EG_loadModel( *context_->get() , flag , filename.c_str() , &object_ );
+  avro_assert( status==EGADS_SUCCESS );
+
+  // get all bodies
+  egoData data;
+  status = EG_getTopology( object_ , &data.reference , &data.object_class ,
+                                     &data.member_type , NULL , &data.nb_children ,
+                                     &data.children , &data.senses );
+  printf("detected %d bodies\n",data.nb_children);
+
+  // define and build the hierarchy for each body
+  for (int k=0;k<data.nb_children;k++)
+  {
+    std::shared_ptr<EGADS::Body> body = std::make_shared<EGADS::Body>( data.children+k , this );
+
+    body->build_hierarchy();
+    body_.push_back(body);
+  }
+  determine_number();
+}
+
+Model::Model( const std::string& filename , bool split  ) :
+  avro::Model(0)
+{
+  context_ = new Context;
+  mine_    = true;
+
+  int flag = (split) ? 1 : 2;
+  int status = EG_loadModel( *context_->get() , flag , filename.c_str() , &object_ );
   avro_assert( status==EGADS_SUCCESS );
 
   // get all bodies
@@ -72,6 +102,11 @@ Model::print() const
 {
   for (index_t k=0;k<nb_bodies();k++)
     body_[k]->print();
+}
+
+Model::~Model()
+{
+  if (mine_) delete context_;
 }
 
 } // EGADS

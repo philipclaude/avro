@@ -37,7 +37,7 @@ UT_TEST_CASE(adapt_test)
   std::vector<real_t> lengths(number,1);
   //EGADS::Cube box(&context,lengths);
 
-  EGADS::Model model(context,"/Users/pcaplan/Desktop/cube-cylinder.egads");
+  EGADS::Model model(&context,"/Users/pcaplan/Desktop/cube-cylinder.egads");
   Body& box = model.body(0);
 
   // structured grid

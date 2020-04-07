@@ -21,6 +21,16 @@
   #define filesep '/'
 #endif
 
+inline std::string
+get_file_ext( const std::string& filename )
+{
+  std::string::size_type idx;
+  idx = filename.rfind('.'); // find the '.' in reverse order
+  if (idx!=std::string::npos)
+    return filename.substr(idx+1);
+  return filename;
+}
+
 namespace avro
 {
 

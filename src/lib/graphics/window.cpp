@@ -46,7 +46,8 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
   height_(height),
   interface_(nullptr),
   controls_(fov_,width_,height_,0.1f,100.0f),
-  updated_(true)
+  updated_(true),
+  fps_(60)
 {
   window_ = glfwCreateWindow( width_ , height_ , title_.c_str() , NULL, NULL);
   if (!window_)

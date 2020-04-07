@@ -61,7 +61,11 @@ Application<GLFW_Interface<API_t>>::run()
   for (index_t k=0;k<window_.size();k++)
     window_[k]->update_view();
 
-  const double fps = 1.0 / 60.0;
+  index_t fps = 120;
+  for (index_t k=0;k<window_.size();k++)
+    fps = std::min( fps , window_[k]->fps() );
+
+  const double spf = 1.0 / fps;
   double last_update_time = 0;  // number of seconds since the last loop
   double last_frame_time = 0;   // number of seconds since the last frame
 
@@ -73,7 +77,7 @@ Application<GLFW_Interface<API_t>>::run()
      double now = glfwGetTime();
 
      // this if-statement only executes once every 60th of a second
-     if ((now - last_frame_time) >= fps || true)
+     if ((now - last_frame_time) >= spf)
      {
        // draw frame
        for (index_t k=0;k<window_.size();k++)
