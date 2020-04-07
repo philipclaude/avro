@@ -14,11 +14,13 @@ namespace graphics
 
 Widget::Widget( GLFW_Window& window ) :
   window_(window),
-  context_(window.interface().context())
+  context_(window.interface().context()),
+  listener_(nullptr)
 {}
 
-Interface::Interface( GLFW_Window& window ) :
-  window_(window)
+Interface::Interface( GLFW_Window& window , Listener& listener ) :
+  window_(window),
+  listener_(listener)
 {
   initialize();
 }
@@ -80,7 +82,8 @@ Toolbar::begin_draw()
   std::vector<std::string> entities = {"Volumes","Faces","Edges","Nodes"};
 
   bool active = true;
-  ImGui::Begin("Plot controls",&active,ImGuiWindowFlags_MenuBar);
+  ImGui::SetNextItemWidth(200);
+  ImGui::Begin("Controls",&active,ImGuiWindowFlags_MenuBar);
   {
     if (ImGui::BeginMenuBar())
     {
@@ -110,6 +113,63 @@ Toolbar::begin_draw()
           ImGui::EndMenu();
       }
       ImGui::EndMenuBar();
+    }
+
+    ImGui::SetNextItemWidth(100);
+    if (ImGui::CollapsingHeader("I/O"))
+    {
+      json request,response;
+      request["command"] = "ls";
+      listener_->send(request,response);
+      const std::vector<json>& directory = response["ls-response"];
+
+      std::vector<std::string> dirs;
+      std::vector<std::string> files;
+      index_t lmax = 0;
+      for (index_t k=0;k<directory.size();k++)
+      {
+        const std::string& s = directory[k]["entry"];
+        if (directory[k]["type"] == "file")
+          files.push_back( s );
+        else if (directory[k]["type"] == "dir")
+          dirs.push_back( s );
+        lmax = std::max ( lmax , s.size() );
+      }
+
+      std::vector<const char*> items;
+      items.push_back("[pwd]");
+      for (index_t k=0;k<dirs.size();k++)
+        items.push_back( dirs[k].c_str() );
+
+      ImGuiIO& io = ImGui::GetIO();
+      ImFont* pfont = io.Fonts->Fonts[0];
+      int width = pfont->FontSize;
+
+      static int dir_current = 0;
+      ImGui::SetNextItemWidth(lmax*width);
+      ImGui::Combo("Directory", &dir_current, items.data() , items.size() );
+
+      if (dir_current!=0)
+      {
+        request["command"] = "cd";
+        request["data"]    = dirs[dir_current-1];
+        listener_->send(request,response);
+        dir_current = 0;
+      }
+
+      items.clear();
+      for (index_t k=0;k<files.size();k++)
+        items.push_back( files[k].c_str() );
+
+      static int file_current = 0;
+      ImGui::SetNextItemWidth(lmax*width);
+      ImGui::Combo("File",&file_current, items.data() , items.size() );
+
+      static char str0[128] = "[id name]";
+      ImGui::SetNextItemWidth(lmax*width);
+      ImGui::InputText("", str0, IM_ARRAYSIZE(str0));
+      ImGui::SameLine();
+      ImGui::Button("Load");
     }
 
     if (ImGui::CollapsingHeader("Plots"))
@@ -161,6 +221,45 @@ Toolbar::begin_draw()
         }
 
       }
+    }
+
+    if (ImGui::CollapsingHeader("Adapt"))
+    {
+      ImGui::SetNextItemWidth(100);
+      static int mesh_current = 0;
+      const char* meshes[] = {"mesh0","mesh1","mesh2"};
+      ImGui::Combo("Mesh",&mesh_current, meshes , 3 );
+
+      ImGui::SetNextItemWidth(100);
+      static int geometry_current = 0;
+      const char* geometries[] = {"geometry0","geometry1","geometry2"};
+      ImGui::Combo("Geometry",&geometry_current, geometries , 3 );
+
+      ImGui::SetNextItemWidth(100);
+      static int metric_current = 0;
+      const char* metrics[] = {"metric0","metric1","metric2"};
+      ImGui::Combo("Metric",&metric_current, metrics , 3 );
+
+      ImGui::Button("Load");
+      ImGui::SameLine();
+      ImGui::Button("Compute");
+    }
+
+    if (ImGui::CollapsingHeader("Voronoi"))
+    {
+      ImGui::SetNextItemWidth(100);
+      static int mesh_current = 0;
+      const char* meshes[] = {"mesh0","mesh1","mesh2"};
+      ImGui::Combo("Mesh",&mesh_current, meshes , 3 );
+
+      ImGui::SetNextItemWidth(100);
+      static int sites_current = 0;
+      const char* sites[] = {"vertices","centroids","random"};
+      ImGui::Combo("Sites",&sites_current, sites , 3 );
+
+      ImGui::Button("Load");
+      ImGui::SameLine();
+      ImGui::Button("Compute");
     }
 
     if (ImGui::CollapsingHeader("Help"))

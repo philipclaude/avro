@@ -70,7 +70,7 @@ public:
 
   void create_interface()
   {
-    interface_ = std::make_shared<Interface>(*this);
+    interface_ = std::make_shared<Interface>(*this,manager_.listener());
   }
 
   void setup()

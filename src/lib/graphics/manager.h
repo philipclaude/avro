@@ -4,6 +4,8 @@
 #include "common/error.h"
 #include "common/types.h"
 
+#include "graphics/listener.h"
+
 namespace avro
 {
 
@@ -20,6 +22,11 @@ public:
   virtual ~GraphicsManager() {}
   virtual void write( Primitive& primitive ) = 0;
   virtual void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr ) = 0;
+
+  Listener& listener() { return listener_; }
+
+private:
+  Listener listener_;
 };
 
 class Vulkan_Manager : public GraphicsManager

@@ -116,8 +116,6 @@ OpenGL_Manager::write( Primitive& primitive )
   GLuint& vbo_feedback_edges     = vbo[7];
   GLuint& vbo_feedback_triangles = vbo[8];
 
-  index_t nb_points = primitive.nb_points();
-
   if (primitive.number()>=2)
   {
     // bind the triangles
