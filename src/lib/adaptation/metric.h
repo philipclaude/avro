@@ -160,7 +160,6 @@ public:
         mk.set( fn(points_[k]) );
         mk.calculate();
 			  Array<Metric>::add( mk );
-        mk.dump();
 			}
     }
 	}

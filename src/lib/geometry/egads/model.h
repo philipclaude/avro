@@ -22,6 +22,7 @@ public:
   Model( Context* context );
   Model( Context* context , const std::string& filename , bool split=false );
   Model( const std::string& filename , bool split=false );
+  Model( coord_t number );
 
   ~Model();
 

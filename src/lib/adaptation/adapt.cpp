@@ -465,8 +465,6 @@ adapt( AdaptationProblem& problem )
   field.set_cells( topology );
   avro_assert( field.check () );
 
-  field.limit( topology , 2. );
-
   // create a discrete metric with the input topology
   MetricField<type> metric( topology , field );
 
@@ -480,7 +478,7 @@ adapt( AdaptationProblem& problem )
 
   // extract the boundary
   Boundary<type> boundary( mesh_topology );
-  boundary.extractall();
+  //boundary.extractall();
 
   if (params.write_mesh())
   {

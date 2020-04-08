@@ -74,6 +74,13 @@ Model::Model( const std::string& filename , bool split  ) :
   determine_number();
 }
 
+Model::Model( coord_t number ) :
+  avro::Model(number)
+{
+  context_ = new Context;
+  mine_    = true;
+}
+
 Entity*
 Model::find_entity( index_t id , int object_class ) const
 {
