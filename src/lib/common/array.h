@@ -57,6 +57,7 @@ public:
   }
 
   std::vector<type> data() const { return data_; }
+  std::vector<type>& get_data() const { return data_; }
 
   void clear()
   {

@@ -94,7 +94,7 @@ get_metric( const std::string& name , Points& points , bool& is_analytic ,
 }
 
 std::shared_ptr<Model>
-getGeometry( const std::string& name , bool& curved )
+get_geometry( const std::string& name , bool& curved )
 {
   // get the file extension
   std::string ext = get_file_ext(name);

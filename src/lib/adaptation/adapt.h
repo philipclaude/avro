@@ -12,12 +12,12 @@ template<typename type> class Topology;
 class Mesh;
 
 class AdaptationParameters;
+class MetricAttachment;
 
 struct AdaptationProblem
 {
   Mesh& mesh_in; // also modified
   std::vector<numerics::SymMatrixD<real_t>>& fld;
-  //VertexField<numerics::SPDT<real>>& fld;
   AdaptationParameters& params;
   Mesh& mesh_out;
 };
