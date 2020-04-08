@@ -474,21 +474,18 @@ adapt( AdaptationProblem& problem )
   // call the adaptation!
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );
 
+  // option to output the mesh
   std::string mesh_file = params.directory()+params.prefix()+"_"+stringify(params.adapt_iter())+".mesh";
-
-  // extract the boundary
-  Boundary<type> boundary( mesh_topology );
-  //boundary.extractall();
-
   if (params.write_mesh())
   {
-    #if 0
     if (topology.number()<=3 && !params.has_interior_boundaries() && params.write_meshb())
     {
       // write the full mesh
-      gamma.writeMesh( problem.mesh_out , mesh_file );
+      library::meshb meshb;
+      meshb.write( problem.mesh_out , mesh_file , true );
       printf("wrote mesh %s\n",mesh_file.c_str());
     }
+    #if 0
     else if (topology.number()==4 && params.write_meshb())
     {
       // get the boundary of the mesh
@@ -506,8 +503,6 @@ adapt( AdaptationProblem& problem )
         }
       }
     }
-    #else
-    //avro_implement;
     #endif
 
     if (topology.number()==3 && params.has_interior_boundaries())
@@ -528,8 +523,6 @@ adapt( AdaptationProblem& problem )
 
       gamma.writeMesh( problem.mesh_out , mesh_file , false );
       printf("wrote mesh %s\n",mesh_file.c_str());
-      #else
-      //avro_implement;
       #endif
     }
 
@@ -538,8 +531,6 @@ adapt( AdaptationProblem& problem )
       #if 0
       const std::string json_file = params.directory()+"mesh_"+stringify(params.adapt_iter())+".json";
       io::writeMesh<Simplex>( json_file , topology , &metric.field() );
-      #else
-      //avro_implement;
       #endif
     }
 

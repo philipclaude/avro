@@ -239,8 +239,8 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
   ShaderProgram shader = *shader_.at(&primitive);
   shader.use();
 
-  GLuint query;// = feedback->query();
-  GLuint buffer;// = feedback->buffer();
+  GLuint query;
+  GLuint buffer;
   if (feedback!=nullptr)
   {
 
@@ -345,6 +345,11 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
 
   // reset the vao bound to the gl
   GL_CALL( glBindVertexArray(0) );
+
+  for (index_t k=0;k<primitive.nb_children();k++)
+  {
+    draw( primitive.child(k) , feedback );
+  }
 }
 
 void

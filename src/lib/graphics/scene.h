@@ -104,11 +104,21 @@ public:
     menu_["primitives"] = {};
   }
 
-  index_t add_primitive( const TopologyBase& topology )
+  template<typename type>
+  index_t add_primitive( const Topology<type>& topology )
   {
     index_t id = primitive_.size();
     Primitive_ptr primitive = std::make_shared<Primitive>(topology,this);
     primitive_.push_back(primitive);
+
+    std::vector<const Topology<type>*> children;
+    topology.get_children(children);
+    printf("add children of topology = %lu\n",children.size());
+    for (index_t k=0;k<children.size();k++)
+    {
+      primitive->add_child( std::make_shared<Primitive>(*children[k],this) );
+    }
+
     return id;
   }
 

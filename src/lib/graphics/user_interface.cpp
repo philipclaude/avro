@@ -196,24 +196,23 @@ Toolbar::begin_draw()
                 std::vector<std::string> entity = plot[entities[i]];
                 for (index_t m=0;m<entity.size();m++)
                 {
-                  static bool viz = true;
                   static float alpha = 1.0f;
-                  static bool edg = true;
-                  ImGui::Text(entity[m].c_str());
-                  ImGui::SameLine();
-                  ImGui::Checkbox("viz",&viz);
-                  ImGui::SameLine();
-                  ImGui::Checkbox("edg",&edg);
-                  ImGui::SameLine();
-                  ImGui::PushItemWidth(50);
-                  ImGui::SliderFloat("alpha",&alpha,0.1f,1.0f,"%.2f");
 
                   unsigned long address = std::stoul(entity[m],0,16);
                   Primitive* primitive = (Primitive*) address;
 
-                  primitive->triangles_on() = viz;
-                  primitive->edges_on() = edg;
-                  primitive->set_transparency(alpha);
+                  ImGui::Text("%s",entity[m].c_str());
+                  ImGui::SameLine();
+                  std::string viz_label = "viz-" + std::to_string(m);
+                  ImGui::Checkbox(viz_label.c_str(), &primitive->triangles_on() );
+                  ImGui::SameLine();
+                  std::string edg_label = "edg-" + std::to_string(m);
+                  ImGui::Checkbox(edg_label.c_str(), &primitive->edges_on() );
+                  ImGui::SameLine();
+                  ImGui::PushItemWidth(50);
+                  std::string alpha_label = "alpha-" + std::to_string(m);
+                  ImGui::SliderFloat(alpha_label.c_str(),&primitive->transparency(),0.1f,1.0f,"%.2f");
+
                 }
                 ImGui::TreePop();
               }

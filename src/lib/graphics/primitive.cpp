@@ -223,6 +223,9 @@ Primitive::write( GraphicsManager& manager )
 {
   extract();
   manager.write( *this );
+
+  for (index_t k=0;k<nb_children();k++)
+    child(k).write(manager);
 }
 
 } // graphics

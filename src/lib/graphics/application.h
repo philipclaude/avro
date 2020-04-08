@@ -105,7 +105,18 @@ class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
 public:
   Visualizer();
 
-  void add_topology( const TopologyBase& topology );
+  template<typename type>
+  void add_topology( const Topology<type>& topology )
+  {
+    // add the topology to the relevant windows
+    index_t id = main_->create_scene();
+    scenes_.push_back( &main_->scene(id) );
+    index_t prim_id = main_->scene(id).add_primitive(topology); // create a new root in the scene graph
+    manager_.select_shader( main_->scene(id).primitive(prim_id) , "wv" );
+
+    for (index_t j=0;j<main_->scene(id).primitive(prim_id).nb_children();j++)
+      manager_.select_shader( main_->scene(id).primitive(prim_id).child(j) , "wv" );
+  }
 
   GLFW_Window& main_window() { return *main_.get(); }
 
@@ -122,7 +133,8 @@ public:
     scenes_.push_back( &scene_ );
   }
 
-  void add_topology( TopologyBase& topology )
+  template<typename type>
+  void add_topology( Topology<type>& topology )
   {
     // create a new root in the scene graph
     scene_.add_primitive(topology);

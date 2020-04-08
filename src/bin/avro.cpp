@@ -36,8 +36,8 @@ main( int argc , char** argv )
   int result = 0;
   if (program=="adapt")
     result = programs::adapt(nb_inputs,inputs);
-  //else if (program=="plot")
-  //  result = programs::plot(nb_inputs,inputs);
+  else if (program=="plot")
+    result = programs::plot(nb_inputs,inputs);
   else
   {
     printf("unknown program :(\n");

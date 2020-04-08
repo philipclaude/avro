@@ -3,6 +3,8 @@
 
 #include "library/meshb.h"
 
+#include "mesh/boundary.h"
+
 #include <libmeshb/libmeshb7.h>
 
 namespace avro
@@ -106,6 +108,8 @@ meshb::read_elements( int GmfType )
       ref_index_.insert( { ref , nb_topologies() } );
       add( topology );
 
+      if (ref>0) static_cast<Topology<type>*>(topology_[0].get())->add_child(topology);
+
       topology->add(simplex, nv(GmfType) );
     }
     else
@@ -136,7 +140,7 @@ meshb::read()
   fid_ = GmfOpenMesh(filename_.c_str(),GmfRead,&version_,&dim);
   avro_assert_msg( fid_ , "could not open mesh file %s ",filename_.c_str() );
 
-  printf("--> vertices dimension = %d\n",dim);
+  printf("--> points dimension = %d\n",dim);
 
   points_.set_dim(coord_t(dim));
   points_.set_parameter_dim(coord_t(dim-1));
@@ -155,7 +159,7 @@ meshb::read()
     number = 0;
   }
 
-  // first read the vertices
+  // first read the points
   avro_assert( GmfGotoKwd( fid_ , GmfVertices ) > 0 );
   read_elements<Simplex>( GmfVertices );
 
@@ -203,7 +207,7 @@ meshb::read()
     if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricTriangles ) > 0 )
     {
       nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricTriangles ) );
-      printf("--> reading %lu vertices on Triangles!\n",nb);
+      printf("--> reading %lu points on Triangles!\n",nb);
       int v,f;
       real_t u[3]; // u[0] = u, u[1] = v, u[2] = distance
       for (index_t k=0;k<nb;k++)
@@ -222,7 +226,7 @@ meshb::read()
     if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricEdges ) > 0 )
     {
       nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricEdges ) );
-      printf("--> reading %lu vertices on Edges!\n",nb);
+      printf("--> reading %lu points on Edges!\n",nb);
       int v,e;
       real_t u[2]; // u[0] = parameter, u[1] = distance
       for (index_t k=0;k<nb;k++)
@@ -241,7 +245,7 @@ meshb::read()
     if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricVertices ) > 0 )
     {
       nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricVertices ) );
-      printf("--> reading %lu vertices on Nodes!\n",nb);
+      printf("--> reading %lu points on Nodes!\n",nb);
       for (index_t k=0;k<nb;k++)
       {
         // read the vertex and which EGADS node this corresponds to
@@ -250,7 +254,6 @@ meshb::read()
         avro_assert( status==1 );
         entity = model_->find_entity( index_t(n) , NODE );
         if (entity==NULL) printf("ERROR entity not found :(\n");
-        //entity->print();
         avro_assert(entity->number()==0);
         points_.set_entity(v-1,entity);
       }
@@ -258,7 +261,331 @@ meshb::read()
   }
 
   GmfCloseMesh(fid_);
+}
 
+#if 0
+template<typename type>
+void
+Gamma<type>::read( const std::string& meshfile , Model& model )
+{
+  // open the mesh file
+  int dim;
+  fid_ = GmfOpenMesh(meshfile.c_str(),GmfRead,&meshVersion_,&dim);
+  avro_assert_msg( fid_ ,
+    "could not open mesh file %s ",meshfile.c_str() );
+
+  index_t nb;
+  int status = 1;
+  Entity* entity;
+
+  // read the VerticesOnGeometricTriangles
+  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricTriangles ) > 0 )
+  {
+    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricTriangles ) );
+    printf("there are %lu points on geometry Triangles!\n",nb);
+    int v,f;
+    real_t u[2],d;
+    for (index_t k=0;k<nb;k++)
+    {
+      status = GmfGetLin( fid_ , GmfVerticesOnGeometricTriangles , &v , &f , u , u+1 , &d );
+      avro_assert(status==1);
+      //printf("vertex %d on Face %d with parameters (%g,%g) (d = %g)\n",v,f,u[0],u[1],d);
+      entity = model.findEntity( index_t(f) , FACE );
+      avro_assert(entity->number()==2);
+      if (entity==NULL) printf("ERROR entity not found :(\n");
+      this->points_.setEntity(v-1,entity);
+    }
+  }
+
+  // read the VerticesOnGeometricEdges
+  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricEdges ) > 0 )
+  {
+    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricEdges ) );
+    printf("there are %lu points on geometry Edges!\n",nb);
+    int v,e;
+    real_t t,d;
+    for (index_t k=0;k<nb;k++)
+    {
+      status = GmfGetLin( fid_ , GmfVerticesOnGeometricEdges , &v , &e , &t , &d );
+      avro_assert(status==1);
+      //printf("vertex %d on Edge %d with parameter %g (d = %g)\n",v,e,t,d);
+      entity = model.findEntity( index_t(e) , EDGE );
+      if (entity==NULL) printf("ERROR entity not found :(\n");
+      avro_assert(entity->number()==1);
+      this->points_.setEntity(v-1,entity);
+    }
+  }
+
+  // read the VerticesOnGeometricVertices
+  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricVertices ) > 0 )
+  {
+    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricVertices ) );
+    printf("there are %lu points on geometry Nodes!\n",nb);
+    for (index_t k=0;k<nb;k++)
+    {
+      // read the vertex and which EGADS node this corresponds to
+      int v,n;
+      status = GmfGetLin( fid_ , GmfVerticesOnGeometricVertices , &v , &n );
+      avro_assert( status==1 );
+      //printf("vertex %d on Node %d\n",v,n);
+      entity = model.findEntity( index_t(n) , NODE );
+      if (entity==NULL) printf("ERROR entity not found :(\n");
+      avro_assert(entity->number()==0);
+      this->points_.setEntity(v-1,entity);
+    }
+  }
+
+  // project the mesh_topology points to the geometry
+  this->points_.setParameterDimension(this->points_.dim()-1);
+  for (index_t k=0;k<this->points_.nb();k++)
+  {
+    if (this->points_.entity(k)==NULL) continue;
+    Entity* e = this->points_.entity(k);
+    real_t* x = this->points_[k];
+    std::vector<real_t> X(x,x+this->points_.dim());
+    std::vector<real_t> u(this->points_.udim());
+    e->project(X,u);
+    for (coord_t d=0;d<this->points_.dim();d++)
+      x[d] = X[d];
+    this->points_.setParam( k , u );
+
+  }
+  GmfCloseMesh(fid_);
+
+}
+
+template<typename type>
+void
+meshb<type>::read_sol( const std::string& filename )
+{
+  // open the file
+  int dim,status;
+  int nb_sol,numberType,solSize , TypTab[GmfMaxTyp];
+  float fvalues[GmfMaxTyp];
+  real_t dvalues[GmfMaxTyp];
+
+  solfile_ = GmfOpenMesh(filename.c_str(),GmfRead,&solVersion_,&dim);
+  avro_assert_msg( solfile_ ,
+    "could not open sol file %s ",filename.c_str() );
+
+  printf("version = %d, dimension = %d\n",solVersion_,dim);
+
+  // create a field whether this is attached at points or cells
+
+  nb_sol = GmfStatKwd( solfile_ , GmfSolAtVertices , &numberType , &solSize , TypTab );
+  printf("nb_sol = %d, numberType = %d, solSize = %d\n",nb_sol,numberType,solSize);
+
+  avro_assert( nb_sol == int(this->points_.nb()) );
+  avro_assert( solSize == int(dim*(dim+1)/2) );
+
+  // create a field of tensors
+  TargetMetric *metric = new TargetMetric(dim);
+
+  avro_assert( GmfGotoKwd( solfile_ , GmfSolAtVertices ) > 0 );
+  for (int k=0;k<nb_sol;k++)
+  {
+
+    // read the metric
+    if (solVersion_==1)
+    {
+      status = GmfGetLin( solfile_ , GmfSolAtVertices , fvalues );
+      for (index_t j=0;j<6;j++)
+        dvalues[j] = real(fvalues[j]);
+    }
+    else
+      status = GmfGetLin( solfile_ , GmfSolAtVertices , dvalues );
+
+    avro_assert( status==1 );
+
+    std::vector<real_t> data(dvalues,dvalues+solSize);
+    numerics::SPDT<real_t> m(data);
+    metric->add(m);
+
+  }
+
+  this->fields_.make("metric",*metric);
+  this->setFields();
+
+}
+#endif
+
+template<>
+void
+meshb::write( const Topology<Simplex>& topology , const std::vector<index_t>& refs )
+{
+  const coord_t num = topology.number();
+
+  if (refs.size()!=1) avro_assert( topology.nb() == refs.size() );
+
+  int gmfType;
+  int indices[ GmfMaxTyp ];
+
+  if (num==0) gmfType = GmfCorners;
+  else if (num==1) gmfType = GmfEdges;
+  else if (num==2) gmfType = GmfTriangles;
+  else if (num==3) gmfType = GmfTetrahedra;
+  else avro_assert_not_reached;
+
+  index_t nb = 0;
+  for (index_t k=0;k<topology.nb();k++)
+  {
+    if (topology.ghost(k)) continue;
+    nb++;
+  }
+
+  GmfSetKwd( fid_ , gmfType , nb );
+
+  for (index_t k=0;k<topology.nb();k++)
+  {
+    if (topology.ghost(k)) continue;
+
+    // fill the buffer
+    for (index_t j=0;j<topology.nv(k);j++)
+      indices[j] = int( topology(k,j)+1-topology.points().nb_ghost() );
+
+    if (refs.size() != topology.nb())
+      indices[num+1] = refs[0];
+    else
+      indices[num+1] = refs[k];
+
+    if (num==0)
+      GmfSetLin( fid_ , gmfType , indices[0] );
+    else if (num==1)
+      GmfSetLin( fid_ , gmfType , indices[0] , indices[1] , indices[2] );
+    else if (num==2)
+      GmfSetLin( fid_ , gmfType , indices[0] , indices[1] , indices[2] , indices[3] );
+    else if (num==3)
+      GmfSetLin( fid_ , gmfType , indices[0] , indices[1] , indices[2] , indices[3] , indices[4] );
+    else if (num==4)
+      GmfSetLin( fid_ , gmfType , indices[0] , indices[1] , indices[2] , indices[3] , indices[4] , indices[5] );
+    else avro_assert_not_reached;
+
+  }
+
+}
+
+void
+meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
+{
+
+  int dim = mesh.points().dim();
+  if (dim==4) dim = 3;
+  fid_ = GmfOpenMesh(filename.c_str(),GmfWrite,GmfDouble,dim);
+  avro_assert( fid_ );
+
+  // write the points
+  GmfSetKwd( fid_ , GmfVertices , mesh.points().nb()-mesh.points().nb_ghost() );
+  for (index_t k=0;k<mesh.points().nb();k++)
+  {
+    if (k<mesh.points().nb_ghost())
+    {
+      continue;
+    }
+    const real_t* x = mesh.points()[k];
+    if (dim==2)
+      GmfSetLin( fid_ , GmfVertices , x[0], x[1] , mesh.points().body(k)+1 );
+    else if (dim>=3)
+      GmfSetLin( fid_ , GmfVertices , x[0], x[1] , x[2] , mesh.points().body(k)+1 );
+    else
+      avro_assert_not_reached;
+  }
+
+  // get all the topologies
+  std::vector<const TopologyBase*> topologies;
+  mesh.retrieve(topologies);
+
+  printf("nb topologies to write = %lu\n",topologies.size());
+
+  index_t ref = 0;
+  for (index_t k=0;k<topologies.size();k++)
+  {
+    if (topologies[k]->dummy()) continue;
+
+    if (topologies[k]->type_name()=="simplex")
+      write<Simplex>( *static_cast<const Topology<Simplex>*>(topologies[k]) , {ref++} );
+    else
+      avro_implement;
+  }
+
+  // option to write the boundary discretization
+  if (with_bnd)
+  {
+    // we don't necessarily know where all the elements are stored
+    Topology<Simplex> T(mesh.points(),mesh.number());
+    mesh.retrieve(T);
+    Boundary<Simplex> boundary(T);
+    boundary.extract();
+
+    write<Simplex>( boundary.nodes() , boundary.node_entities() );
+    write<Simplex>( boundary.edges() , boundary.edge_entities() );
+    if (mesh.number()>2)
+      write<Simplex>( boundary.triangles() , boundary.triangle_entities() );
+  }
+
+  if (!with_bnd)
+  {
+    GmfCloseMesh( fid_ );
+    return;
+  }
+
+  // gather all the geometry information
+  std::vector<index_t> nodeVertices;
+  std::vector<index_t> edgeVertices;
+  std::vector<index_t> faceVertices;
+  for (index_t k=0;k<mesh.points().nb();k++)
+  {
+    Entity* e = mesh.points().entity(k);
+    if (e==NULL) continue;
+    if (e->number()==0) nodeVertices.push_back(k);
+    else if (e->number()==1) edgeVertices.push_back(k);
+    else if (e->number()==2) faceVertices.push_back(k);
+  }
+
+  // write the GmfVerticesOnGeometricVertices
+  GmfSetKwd( fid_ , GmfVerticesOnGeometricVertices , nodeVertices.size() );
+  for (index_t k=0;k<nodeVertices.size();k++)
+  {
+    Entity* e = mesh.points().entity(nodeVertices[k]);
+
+    // get the index of this entity in the body
+    index_t id = e->identifier();
+
+    // write the information
+    GmfSetLin( fid_ , GmfVerticesOnGeometricVertices ,
+                int(nodeVertices[k]+1-mesh.points().nb_ghost()) , int(id) );
+  }
+
+  // write the GmfVerticesOnGeometricEdges
+  GmfSetKwd( fid_ , GmfVerticesOnGeometricEdges , edgeVertices.size() );
+  for (index_t k=0;k<edgeVertices.size();k++)
+  {
+    Entity* e = mesh.points().entity(edgeVertices[k]);
+
+    // get the index of this entity in the body
+    index_t id = e->identifier();
+
+    // write the information
+    // TODO retrieve the t parameter of this vertex on the Edge
+    GmfSetLin( fid_ , GmfVerticesOnGeometricEdges ,
+               int(edgeVertices[k]+1-mesh.points().nb_ghost()) , int(id) , 0. );
+  }
+
+  // write the GmfVerticesOnGeometricTriangles
+  GmfSetKwd( fid_ , GmfVerticesOnGeometricTriangles , faceVertices.size() );
+  for (index_t k=0;k<faceVertices.size();k++)
+  {
+    Entity* e = mesh.points().entity(faceVertices[k]);
+
+    // get the index of this entity in the body
+    index_t id = e->identifier();
+
+    // write the information
+    // TODO retrieve the parameters of this vertex on the Face
+    GmfSetLin( fid_ , GmfVerticesOnGeometricTriangles ,
+               int(faceVertices[k]+1-mesh.points().nb_ghost()) , int(id) , 0. , 0. );
+  }
+
+  GmfCloseMesh(fid_);
 }
 
 } // library

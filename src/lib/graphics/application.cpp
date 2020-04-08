@@ -119,16 +119,6 @@ Visualizer::Visualizer()
 
 }
 
-void
-Visualizer::add_topology( const TopologyBase& topology )
-{
-  // add the topology to the relevant windows
-  index_t id = main_->create_scene();
-  scenes_.push_back( &main_->scene(id) );
-  index_t prim_id = main_->scene(id).add_primitive(topology); // create a new root in the scene graph
-  manager_.select_shader( main_->scene(id).primitive(prim_id) , "wv" );
-}
-
 template class Application<GLFW_Interface<OpenGL_Manager>>;
 template class Application<GLFW_Interface<Vulkan_Manager>>;
 

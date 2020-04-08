@@ -238,10 +238,43 @@ Boundary<type>::extractall()
       if (table.contains(facet)) continue;
 
       // add the facet to the topology
-      index_t id = entity2child_[e];
+      /*index_t id = entity2child_[e];
       this->child(id).add( facet.data() , facet.size() );
+      */
+      add( facet.data() , facet.size() , e );
 
     }
+  }
+}
+
+template<typename type>
+void
+Boundary<type>::add( index_t* v , index_t nv , Entity* e )
+{
+  index_t id = entity2child_[e];
+  this->child(id).add( v , nv );
+  if (e!=entity_[id])
+    e->print();
+
+  if (e->number()==0)
+  {
+    nodes_.add( v , nv );
+    node_entities_.push_back(e->identifier());
+  }
+  else if (e->number()==1)
+  {
+    edges_.add( v , nv );
+    edge_entities_.push_back(e->identifier());
+  }
+  else if (e->number()==2)
+  {
+    triangles_.add( v , nv );
+    triangle_entities_.push_back(e->identifier());
+  }
+  else if (e->number()==3)
+  {
+    tetrahedra_.add( v , nv );
+    tetrahedron_entities_.push_back(e->identifier());
   }
 }
 
@@ -290,7 +323,7 @@ Boundary<type>::extract( bool interior )
   for (index_t j=0;j<E0.size();j++)
   {
     if (E0[j]->number()==num-1)
-        entity_.push_back( E0[j] );
+      entity_.push_back( E0[j] );
   }
 
   // create the sub-topologies to hold the facets
@@ -380,11 +413,13 @@ Boundary<type>::extract( bool interior )
           ent->parents()[ii]->print();
       }
     }
-    index_t id = entity2child_[e];
+    /*index_t id = entity2child_[e];
     this->child(id).add( bnd(k) , bnd.nv(k) );
     if (e!=entity_[id])
       e->print();
     avro_assert( e==entity_[id] );
+    */
+    add( bnd(k) , bnd.nv(k) , e );
   }
 
   if (interior)
@@ -431,8 +466,9 @@ Boundary<type>::extract( bool interior )
       if (!e->interior()) continue;
 
       // should be a geometry facet!
-      index_t id = entity2child_[e];
-      this->child(id).add( F.data() , F.size() );
+      /*index_t id = entity2child_[e];
+      this->child(id).add( F.data() , F.size() );*/
+      add( F.data() , F.size() , e );
     }
   }
 

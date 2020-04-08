@@ -7,6 +7,7 @@
 #include "numerics/matrix.h"
 
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 namespace avro
@@ -55,6 +56,14 @@ public:
   void get_children( std::vector<Node_t*>& children );
   void get_children( std::vector<const Node_t*>& children ) const;
   void get_adjacency( numerics::MatrixD<int>& A ) const;
+  template <typename T> void get_children( std::vector<const T*>& children ) const
+  {
+    static_assert( std::is_base_of<T,Node_t>::value , "bad types" );
+    std::vector<const Node_t*> children0;
+    get_children(children0);
+    for (index_t k=0;k<children0.size();k++)
+      children.push_back( static_cast<const T*>(children0[k]) );
+  }
 
   void print( index_t level=0 ) const;
   void print_header() const;

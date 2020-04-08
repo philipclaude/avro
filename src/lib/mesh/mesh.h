@@ -60,11 +60,38 @@ public:
   Points& points() { return points_; }
   const Points& points() const { return points_; }
 
+  void retrieve( std::vector<const TopologyBase*>& topologies ) const
+  {
+    topologies.clear();
+    for (index_t k=0;k<topology_.size();k++)
+    {
+      topologies.push_back( static_cast<const TopologyBase*>(topology_[k].get()) );
+      if (topology_[k]->type_name()=="simplex")
+      {
+        static_cast<const Topology<Simplex>&>(*topology_[k]).get_children<TopologyBase>(topologies);
+      }
+      else
+        avro_implement;
+    }
+  }
+
+  template<typename type>
+  void retrieve( Topology<type>& topology )
+  {
+    for (index_t k=0;k<topology_.size();k++)
+    {
+      if (topology_[k]->type_name()==type::type_name())
+        static_cast<Topology<type>&>(*topology_[k]).get_elements(topology);
+    }
+  }
+
 protected:
   Points points_;
   coord_t number_;
   std::vector<Topology_ptr> topology_;
 };
+
+
 
 } // avro
 

@@ -21,8 +21,13 @@ class meshb : public Mesh
 {
 public:
   meshb( const std::string& filename , const EGADS::Model* model=nullptr );
+  meshb() :
+    Mesh(0,0)
+  {}
 
   void read();
+  void write( Mesh& mesh , const std::string& filename , bool with_bnd );
+  template<typename type> void write( const Topology<type>& topology , const std::vector<index_t>& refs );
 
   index_t nv( const int GmfType ) const;
 

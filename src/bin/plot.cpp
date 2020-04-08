@@ -1,23 +1,17 @@
-#if 0
 #include "programs.h"
 
 #include "common/directory.h"
 #include "common/process.h"
-#include "common/stringify.h"
+#include "common/tools.h"
 
-#include "geometry/context.h"
 #include "geometry/entity.h"
 
-#include "graphics/plotter.h"
+#include "graphics/application.h"
 
-#include "library/metric.h"
-#include "library/plots.h"
+#include "library/factory.h"
 
 #include "mesh/boundary.h"
-#include "mesh/gamma.h"
 #include "mesh/mesh.h"
-
-#include "numerics/metric.h"
 
 #include <stdio.h>
 
@@ -59,62 +53,47 @@ plot( int nb_input , char** inputs )
   // get the input mesh
   std::string meshname( inputs[0] );
   std::shared_ptr<Topology<type>> ptopology = nullptr;
-  std::shared_ptr<Mesh<type>> pmesh = getMesh<type>(meshname,ptopology);
-  Mesh<type>& mesh = *pmesh;
+  std::shared_ptr<Mesh> pmesh = library::get_mesh<type>(meshname,ptopology);
+  Mesh& mesh = *pmesh;
   Topology<type>& topology = *ptopology.get();
   coord_t number = mesh.number();
 
   // get the input geometry if provided
-  Context context;
   std::shared_ptr<Model> pmodel = nullptr;
   std::string geometryname = lookfor(options,nb_options,"geometry");
   if (!geometryname.empty())
-    pmodel = getGeometry( geometryname , context , curved );
+    pmodel = library::get_geometry( geometryname , curved );
 
-  // check the vertices are on the geometry...
+  // check the points are on the geometry...
   if (pmodel!=nullptr)
   {
-    // check if the vertices are already on the geometry
+    // check if the points are already on the geometry
 
     // if not...project them
-    mesh.vertices().findGeometry(*pmodel);
+    mesh.points().attach(*pmodel);
   }
 
-  // create a graphics plotter instance
-  Server server;
-  std::shared_ptr<Plotter> plotter = std::make_shared<Plotter>(&server);
-
-  // save it globally (some internal functions use the plotter)
-  __plotter__ = (void*) plotter.get();
+  graphics::Visualizer vis;
+  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window());
+  vis.main_window().interface().add_widget( toolbar );
 
   // option to plot the boundary
-  Boundary<Simplex> boundary(topology);
-  std::shared_ptr<library::BoundaryPlot<type>> bplot = nullptr;
+  Boundary<type> boundary(topology);
   if (pmodel!=nullptr && number<4)
   {
     if (!all_bnd)
       boundary.extract(); // only num-1 children
     else
       boundary.extractall(); // all children
-    bplot = std::make_shared<library::BoundaryPlot<type>>(boundary);
+    //bplot = std::make_shared<library::BoundaryPlot<type>>(boundary);
   }
 
-  if (number==4)
-    plotter->addSlice(topology);
-  else
-    plotter->addPlot( mesh );
-  if (bplot!=nullptr)
-    plotter->addPlot(bplot->mesh());
-
-  plotter->run();
+  vis.add_topology( topology );
+  vis.run();
 
   return 0;
 }
 
-
-
 } // programs
 
 } // avro
-
-#endif

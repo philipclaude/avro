@@ -131,7 +131,6 @@ public:
   void all_with( const std::vector<index_t>& facet , std::vector<index_t>& elems ) const;
 
   void get_boundary( Topology<type>& boundary ) const;
-
   void get_elements( Topology<type>& topology ) const;
 
   void facet( const index_t k , const index_t j , std::vector<index_t>& f ) const;
