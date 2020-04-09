@@ -17,6 +17,7 @@ namespace graphics
 {
 
 class GLFW_Window;
+class Visualizer;
 
 class Widget
 {
@@ -68,14 +69,14 @@ private:
 class Toolbar : public Widget
 {
 public:
-  Toolbar( GLFW_Window& window );
+  Toolbar( GLFW_Window& window , Visualizer& app );
 
   void begin_draw();
   void end_draw() const;
 
 private:
-  // nothing yet
-  
+  Visualizer& application_;
+
 };
 
 } // graphics

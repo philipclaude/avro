@@ -31,6 +31,8 @@ class ApplicationBase
 public:
   void receive( const std::string& text ) const;
 
+  void write();
+
 protected:
   ApplicationBase( GraphicsManager& manager ) :
     manager_(manager)
@@ -39,7 +41,6 @@ protected:
   virtual ~ApplicationBase() {}
 
   virtual void run() = 0;
-  void write();
 
 protected:
   std::vector<SceneGraph*> scenes_;

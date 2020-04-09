@@ -5,7 +5,7 @@
 using namespace avro;
 
 int
-main( int argc , char** argv )
+main( int argc , const char** argv )
 {
   // check the global calling sequence
   if (argc<2)
@@ -30,7 +30,7 @@ main( int argc , char** argv )
 
   // only pass in relevant arguments to the program
   int nb_inputs = argc -2;
-  char** inputs = argv +2;
+  const char** inputs = argv +2;
 
   printf("running program %s\n",program.c_str());
   int result = 0;

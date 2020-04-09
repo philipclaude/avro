@@ -1,7 +1,15 @@
+#include "../bin/programs.h"
+
 #include "common/error.h"
 
+#include "graphics/application.h"
 #include "graphics/user_interface.h"
 #include "graphics/window.h"
+
+#include "library/factory.h"
+#include "library/library.h"
+
+#include "mesh/mesh.h"
 
 #include <imgui/GL/imgui_impl_glfw.h>
 #include <imgui/GL/imgui_impl_opengl3.h>
@@ -58,8 +66,9 @@ Interface::end_draw() const
 }
 
 
-Toolbar::Toolbar( GLFW_Window& window ) :
-  Widget(window)
+Toolbar::Toolbar( GLFW_Window& window , Visualizer& app ) :
+  Widget(window),
+  application_(app)
 {}
 
 void
@@ -68,6 +77,9 @@ Toolbar::begin_draw()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+
+  // the global library that we will add to
+  Library* lib = Library::get();
 
   // determine if imgui wants the mouse or if we should send it to the trackball
   bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
@@ -145,8 +157,6 @@ Toolbar::begin_draw()
       for (index_t k=0;k<dirs.size();k++)
         items.push_back( dirs[k].c_str() );
 
-
-
       static int dir_current = 0;
       ImGui::SetNextItemWidth(lmax*width);
       ImGui::Combo("Directory", &dir_current, items.data() , items.size() );
@@ -171,11 +181,52 @@ Toolbar::begin_draw()
       ImGui::SetNextItemWidth(lmax*width);
       ImGui::InputText("", str0, IM_ARRAYSIZE(str0));
       ImGui::SameLine();
-      ImGui::Button("Load");
+      if (ImGui::Button("Load"))
+      {
+        std::string ext = get_file_ext( items[file_current] );
+        if (ext=="mesh")
+        {
+          printf("load mesh!!\n");
+          lib->add_mesh( items[file_current] , listener_->pwd() );
+        }
+      }
     }
 
     if (ImGui::CollapsingHeader("Plots"))
     {
+      std::vector<const char*> items;
+
+      ImGui::SetNextItemWidth(100);
+      static int mesh_current_plot = 0;
+      const std::vector<std::string>& meshes = lib->meshes();
+      items.resize( meshes.size() );
+      for (index_t k=0;k<meshes.size();k++)
+        items[k] = meshes[k].c_str();
+      ImGui::Combo("Plot Mesh",&mesh_current_plot, items.data() , items.size() );
+
+      ImGui::SameLine();
+      if (ImGui::Button("Load Plot"))
+      {
+        // get the mesh
+        printf("herr mesh = %s\n",meshes[mesh_current_plot].c_str());
+        std::string path = lib->meshname2file(meshes[mesh_current_plot]);
+        if (path!="n/a")
+        {
+          typedef Simplex type;
+
+          // load the mesh
+          std::shared_ptr<Topology<type>> ptopology = nullptr;
+          std::shared_ptr<Mesh> pmesh = library::get_mesh<type>(path,ptopology);
+          Mesh& mesh = *pmesh;
+          Topology<type>& topology = *ptopology.get();
+          coord_t number = mesh.number();
+
+          // TODO load the topology and write to the visualizer
+          //application_.add_topology(topology);
+          //application_.write();
+        }
+      }
+
       for (index_t k=0;k<window_.nb_scene();k++)
       {
         const SceneGraph& scene = window_.scene(k);
@@ -220,25 +271,20 @@ Toolbar::begin_draw()
             ImGui::TreePop();
           }
         }
-
       }
-    }
-
-    if (ImGui::CollapsingHeader("Tools"))
-    {
-      ImGui::SetNextItemWidth(100);
-
-      static int fps = 60;
-      ImGui::SliderInt("fps",&fps,5,120,"%3d");
-      window_.set_fps( fps );
     }
 
     if (ImGui::CollapsingHeader("Adapt"))
     {
+      std::vector<const char*> items;
+
       ImGui::SetNextItemWidth(100);
       static int mesh_current = 0;
-      const char* meshes[] = {"mesh0","mesh1","mesh2"};
-      ImGui::Combo("Mesh",&mesh_current, meshes , 3 );
+      const std::vector<std::string>& meshes = lib->meshes();
+      items.resize( meshes.size() );
+      for (index_t k=0;k<meshes.size();k++)
+        items[k] = meshes[k].c_str();
+      ImGui::Combo("Mesh",&mesh_current, items.data() , items.size() );
 
       ImGui::SameLine();
       ImGui::SetNextItemWidth(5*width);
@@ -246,19 +292,53 @@ Toolbar::begin_draw()
       ImGui::InputText("Iter.", iter_str , IM_ARRAYSIZE(iter_str));
       int nb_adapt = atoi(iter_str);
 
+      ImGui::SameLine();
+      static char output_name[128] = "[output].mesh";
+      ImGui::SetNextItemWidth(100);
+      ImGui::InputText("Output:", output_name, IM_ARRAYSIZE(output_name));
+
       ImGui::SetNextItemWidth(100);
       static int geometry_current = 0;
-      const char* geometries[] = {"geometry0","geometry1","geometry2"};
-      ImGui::Combo("Geometry",&geometry_current, geometries , 3 );
+      const std::vector<std::string>& geometries = lib->geometries();
+      items.resize( geometries.size() );
+      for (index_t k=0;k<geometries.size();k++)
+        items[k] = geometries[k].c_str();
+      ImGui::Combo("Geometry",&geometry_current, items.data() , items.size() );
+
+      coord_t dim = 3;
 
       ImGui::SetNextItemWidth(100);
       static int metric_current = 0;
-      const char* metrics[] = {"metric0","metric1","metric2"};
-      ImGui::Combo("Metric",&metric_current, metrics , 3 );
+      const std::vector<std::string>& metrics = lib->metrics();
+      items.resize( metrics.size() );
+      for (index_t k=0;k<metrics.size();k++)
+        items[k] = metrics[k].c_str();
+      ImGui::Combo("Metric",&metric_current, items.data() , items.size() );
 
-      ImGui::Button("Load");
-      ImGui::SameLine();
-      ImGui::Button("Compute");
+      std::string mesh_name = meshes[mesh_current];
+      if (ImGui::Button("Compute"))
+      {
+        ImGui::OpenPopup("adapt-mesh");
+
+      }
+      if (ImGui::BeginPopupModal("adapt-mesh", NULL, ImGuiWindowFlags_MenuBar))
+      {
+        if (mesh_name=="CKF")
+        {
+          for (index_t d=0;d<dim;d++)
+            mesh_name += "-3";
+        }
+        ImGui::Text("Adapt mesh %s, metric %s, geometry %s?\n",mesh_name.c_str(),metrics[metric_current].c_str(),geometries[geometry_current].c_str());
+        if (ImGui::Button("Adapt"))
+        {
+
+          ImGui::CloseCurrentPopup();
+          std::string iter_cmd = "nb_iter="+std::to_string(nb_adapt);
+          const char* command[] = {mesh_name.c_str(),geometries[geometry_current].c_str(),metrics[metric_current].c_str(),output_name,iter_cmd.c_str()};
+          int result = programs::adapt(5,command);
+        }
+        ImGui::EndPopup();
+      }
     }
 
     if (ImGui::CollapsingHeader("Voronoi"))
@@ -278,18 +358,22 @@ Toolbar::begin_draw()
       ImGui::Button("Compute");
     }
 
+    if (ImGui::CollapsingHeader("Tools"))
+    {
+      ImGui::SetNextItemWidth(100);
+
+      static int fps = 60;
+      ImGui::SliderInt("fps",&fps,5,120,"%3d");
+      window_.set_fps( fps );
+    }
+
     if (ImGui::CollapsingHeader("Help"))
     {
-      ImGui::Text("PROGRAMMER GUIDE:");
-      ImGui::BulletText("Please see the ShowDemoWindow() code in imgui_demo.cpp. <- you are here!");
-      ImGui::BulletText("Please see the comments in imgui.cpp.");
-      ImGui::BulletText("Please see the examples/ application.");
-      ImGui::BulletText("Enable 'io.ConfigFlags |= NavEnableKeyboard' for keyboard controls.");
-      ImGui::BulletText("Enable 'io.ConfigFlags |= NavEnableGamepad' for gamepad controls.");
+      ImGui::Text("avro (c) Philip Caplan 2019-2020\ncaplan.philip@gmail.com");
+      ImGui::BulletText("rotatee: hold ctrl (cmd) and click/move mouse");
+      ImGui::BulletText("zoom: hold shift key and click/move mouse");
+      ImGui::BulletText("pan: click/move mouse");
       ImGui::Separator();
-
-      ImGui::Text("USER GUIDE:");
-      //showUserGuide();
     }
   }
 

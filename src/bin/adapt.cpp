@@ -23,7 +23,7 @@ namespace programs
 {
 
 int
-adapt( int nb_input , char** inputs )
+adapt( int nb_input , const char** inputs )
 {
   // so far only simplex adaptation is supported
   typedef Simplex type;
@@ -41,7 +41,7 @@ adapt( int nb_input , char** inputs )
 
   // options
   bool found;
-  char **options = inputs +4;
+  const char **options = inputs +4;
   int  nb_options = nb_input -4;
 
   bool analytic_metric = true;

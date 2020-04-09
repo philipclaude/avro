@@ -113,12 +113,10 @@ public:
 
     std::vector<const Topology<type>*> children;
     topology.get_children(children);
-    printf("add children of topology = %lu\n",children.size());
     for (index_t k=0;k<children.size();k++)
     {
       primitive->add_child( std::make_shared<Primitive>(*children[k],this) );
     }
-
     return id;
   }
 

@@ -18,6 +18,8 @@ public:
 
   void send( const json& request , json& response );
 
+  std::string pwd() const { return directory_.pwd(); }
+
 private:
   Directory directory_;
 };

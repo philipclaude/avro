@@ -105,6 +105,8 @@ public:
     current_ = "";
   }
 
+  std::string pwd() const { return current_; }
+
 private:
   enum DirectoryItemType { Folder , File , Path };
 

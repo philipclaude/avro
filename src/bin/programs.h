@@ -26,7 +26,7 @@ namespace programs
 {
 
 void help();
-std::string lookfor( char** args , int nb_args , const std::string& option );
+std::string lookfor( const char** args , int nb_args , const std::string& option );
 
 template<typename type>
 bool
@@ -37,8 +37,8 @@ parse( const std::string& str_arg , type& arg )
   return true;
 }
 
-int adapt( int argc , char** argv );
-int plot( int argc , char** argv );
+int adapt( int argc , const char** argv );
+int plot( int argc , const char** argv );
 
 } // programs
 

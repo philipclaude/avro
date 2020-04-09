@@ -22,7 +22,7 @@ namespace programs
 {
 
 int
-plot( int nb_input , char** inputs )
+plot( int nb_input , const char** inputs )
 {
   // so far only simplex adaptation is supported
   typedef Simplex type;
@@ -42,7 +42,7 @@ plot( int nb_input , char** inputs )
 
   // options
   bool found;
-  char **options = inputs +1;
+  const char **options = inputs +1;
   int  nb_options = nb_input -1;
 
   bool curved = true;
@@ -74,7 +74,7 @@ plot( int nb_input , char** inputs )
   }
 
   graphics::Visualizer vis;
-  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window());
+  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
   vis.main_window().interface().add_widget( toolbar );
 
   // option to plot the boundary

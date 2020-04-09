@@ -19,7 +19,7 @@ help()
 
 // look for an argument in the list and return the value
 std::string
-lookfor( char** args , int nb_args , const std::string& option )
+lookfor( const char** args , int nb_args , const std::string& option )
 {
   for (int k=0;k<nb_args;k++)
   {
