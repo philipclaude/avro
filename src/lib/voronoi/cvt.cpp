@@ -74,7 +74,7 @@ CentroidalVoronoiTessellation::compute( index_t nb_iter )
     printf("nb sites on entity %lu = %lu\n",k,z.nb());
 
     // create the restricted voronoi diagram structure
-    RestrictedVoronoiDiagram rvd( topology , z ); // TODO add entity information
+    RestrictedVoronoiDiagram rvd( topology , z ); // TODO add entity information to know which points to keep fixed
 
     rvd.parallel() = true;
 

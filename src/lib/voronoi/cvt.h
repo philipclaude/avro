@@ -13,6 +13,7 @@ namespace delaunay
 {
 
 class RestrictedVoronoiDiagram;
+class VoronoiSites;
 
 class CentroidalVoronoiTessellation : public Topology<Polytope>
 {

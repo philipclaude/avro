@@ -99,7 +99,7 @@ voronoi( int nb_input , const char** inputs )
   else if (sitesname=="random")
   {
     // retrieve the number of sites (if random)
-    index_t nb_sites = 10;
+    index_t nb_sites = 100;
     if (nb_input>3)
       found = parse(lookfor(options,nb_options,"nb_sites"),nb_sites);
 
