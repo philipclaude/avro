@@ -313,18 +313,13 @@ Toolbar::begin_draw()
       items.resize( meshes.size() );
       for (index_t k=0;k<meshes.size();k++)
         items[k] = meshes[k].c_str();
-      ImGui::Combo("Mesh",&mesh_current, items.data() , items.size() );
+      ImGui::Combo("Mesh    ",&mesh_current, items.data() , items.size() );
 
       ImGui::SameLine();
       ImGui::SetNextItemWidth(5*width);
       static char iter_str[5] = "1";
-      ImGui::InputText("Iter.", iter_str , IM_ARRAYSIZE(iter_str));
+      ImGui::InputText("Iter. ", iter_str , IM_ARRAYSIZE(iter_str));
       int nb_adapt = atoi(iter_str);
-
-      ImGui::SameLine();
-      static char output_name[128] = "[output].mesh";
-      ImGui::SetNextItemWidth(100);
-      ImGui::InputText("Output:", output_name, IM_ARRAYSIZE(output_name));
 
       ImGui::SetNextItemWidth(100);
       static int geometry_current = 0;
@@ -334,6 +329,11 @@ Toolbar::begin_draw()
         items[k] = geometries[k].c_str();
       ImGui::Combo("Geometry",&geometry_current, items.data() , items.size() );
 
+      ImGui::SameLine();
+      static char output_name[128] = "output";
+      ImGui::SetNextItemWidth(100);
+      ImGui::InputText("Prefix", output_name, IM_ARRAYSIZE(output_name));
+
       coord_t dim = 3;
 
       ImGui::SetNextItemWidth(100);
@@ -342,8 +342,9 @@ Toolbar::begin_draw()
       items.resize( metrics.size() );
       for (index_t k=0;k<metrics.size();k++)
         items[k] = metrics[k].c_str();
-      ImGui::Combo("Metric",&metric_current, items.data() , items.size() );
+      ImGui::Combo("Metric  ",&metric_current, items.data() , items.size() );
 
+      ImGui::SameLine();
       std::string mesh_name = meshes[mesh_current];
       if (ImGui::Button("Compute"))
       {
@@ -365,6 +366,11 @@ Toolbar::begin_draw()
           std::string iter_cmd = "nb_iter="+std::to_string(nb_adapt);
           const char* command[] = {mesh_name.c_str(),geometries[geometry_current].c_str(),metrics[metric_current].c_str(),output_name,iter_cmd.c_str()};
           int result = programs::adapt(5,command);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
+        {
+          ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
       }
