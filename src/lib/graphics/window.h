@@ -128,13 +128,13 @@ public:
   }
 
   index_t nb_scene() const { return scene_.size(); }
-  SceneGraph& scene( index_t k ) { return scene_[k]; }
-  const SceneGraph& scene( index_t k ) const { return scene_[k]; }
+  SceneGraph& scene( index_t k ) { return *scene_[k].get(); }
+  const SceneGraph& scene( index_t k ) const { return *scene_[k].get(); }
 
   index_t create_scene()
   {
     index_t id = scene_.size();
-    scene_.push_back(SceneGraph());
+    scene_.push_back(std::make_shared<SceneGraph>());
     return id;
   }
 
@@ -164,7 +164,7 @@ private:
   vec3 position_;
   float angles_[2];
 
-  std::vector<SceneGraph> scene_;
+  std::vector<std::shared_ptr<SceneGraph>> scene_;
   Controls controls_;
 
   std::shared_ptr<Interface> interface_;

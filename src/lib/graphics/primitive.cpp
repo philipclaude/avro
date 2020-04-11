@@ -27,7 +27,8 @@ Primitive::Primitive( const TopologyBase& topology , SceneGraph* scene ) :
   triangles_on_(true),
   edges_on_(true),
   points_on_(false),
-  transparency_(1.0)
+  transparency_(1.0),
+  hidden_(false)
 {}
 
 ShaderProgram&
@@ -51,6 +52,12 @@ Primitive::extract()
 
   if (topology_.fields().has("sites"))
     active_ = "sites";
+
+  points0_.clear();
+  edges0_.clear();
+  triangles0_.clear();
+  normals0_.clear();
+  colors0_.clear();
 
   // get the triangles from the topology
   std::shared_ptr<SimplicialDecompositionBase> pdecomposition;
@@ -216,6 +223,30 @@ Primitive::extract()
     printf("setting color for lines!!\n");
     colors0_.resize( 3*nb_points, 255.0f );
   }
+}
+
+void
+Primitive::hide(bool hidden)
+{
+  triangles_on_ = !hidden;
+  edges_on_ = !hidden;
+
+  for (index_t k=0;k<nb_children();k++)
+    child(k).hide(hidden);
+}
+
+void
+Primitive::hide()
+{
+  hidden_ = true;
+  hide(true);
+}
+
+void
+Primitive::show()
+{
+  hidden_ = false;
+  hide(false);
 }
 
 void

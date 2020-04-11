@@ -73,8 +73,8 @@ GLFW_Window::update_view()
   controls_.calculate_view();
   for (index_t k=0;k<scene_.size();k++)
   {
-    scene_[k].update_matrices(controls_);
-    scene_[k].set_update(true);
+    scene_[k]->update_matrices(controls_);
+    scene_[k]->set_update(true);
   }
 }
 
@@ -85,7 +85,7 @@ GLFW_Window::save_eps( const std::string& filename )
   for (index_t k=0;k<scene_.size();k++)
   {
     printf("capture with transform feedback!!\n");
-    manager_.draw(scene_[k],&feedback);
+    manager_.draw(*scene_[k].get(),&feedback);
   }
 
 

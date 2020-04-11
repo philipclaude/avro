@@ -59,7 +59,8 @@ class Application<GLFW_Interface<API_t>> : public ApplicationBase
 {
 public:
   Application() :
-    ApplicationBase(manager_)
+    ApplicationBase(manager_),
+    restart_(false)
   {
     // initialize OpenGL
     avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
@@ -73,6 +74,8 @@ public:
   void initialize();
   void run();
 
+  bool& restart() { return restart_; }
+
 protected:
   void add_window( GLFW_Window* window )
     { window_.push_back(window); }
@@ -80,6 +83,7 @@ protected:
 protected:
   API_t manager_;
   std::vector<GLFW_Window*> window_;
+  bool restart_;
 };
 
 template<>

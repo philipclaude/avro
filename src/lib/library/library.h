@@ -33,6 +33,11 @@ public:
   void add_points( const std::string& points )
   { points_.push_back(points); }
 
+  void add_mesh_ptr( std::shared_ptr<Mesh> mesh )
+  {
+    mesh_ptr_.push_back(mesh);
+  }
+
   std::string meshname2file( const std::string& mesh ) const
   {
     if (meshname2file_.find(mesh)==meshname2file_.end()) return "n/a";
@@ -62,6 +67,8 @@ private:
   std::vector<std::string> points_ = points0_;
 
   std::map<std::string,std::string> meshname2file_;
+
+  std::vector< std::shared_ptr<Mesh> > mesh_ptr_;
 
   Library() {}
 };

@@ -177,16 +177,12 @@ Toolbar::begin_draw()
       ImGui::SetNextItemWidth(lmax*width);
       ImGui::Combo("File",&file_current, items.data() , items.size() );
 
-      static char str0[128] = "[id name]";
-      ImGui::SetNextItemWidth(lmax*width);
-      ImGui::InputText("", str0, IM_ARRAYSIZE(str0));
       ImGui::SameLine();
       if (ImGui::Button("Load"))
       {
         std::string ext = get_file_ext( items[file_current] );
         if (ext=="mesh")
         {
-          printf("load mesh!!\n");
           lib->add_mesh( items[file_current] , listener_->pwd() );
         }
       }
@@ -208,38 +204,66 @@ Toolbar::begin_draw()
       if (ImGui::Button("Load Plot"))
       {
         // get the mesh
-        printf("herr mesh = %s\n",meshes[mesh_current_plot].c_str());
         std::string path = lib->meshname2file(meshes[mesh_current_plot]);
         if (path!="n/a")
         {
+          // todo generalize this to other mesh types
+          // i.e. determine what type of mesh this is first
           typedef Simplex type;
 
           // load the mesh
           std::shared_ptr<Topology<type>> ptopology = nullptr;
           std::shared_ptr<Mesh> pmesh = library::get_mesh<type>(path,ptopology);
-          Mesh& mesh = *pmesh;
           Topology<type>& topology = *ptopology.get();
-          coord_t number = mesh.number();
 
-          // TODO load the topology and write to the visualizer
-          //application_.add_topology(topology);
-          //application_.write();
+          // load the topology and write to the visualizer
+          // we first need someone to hold onto the mesh pointer (the library)
+          lib->add_mesh_ptr(pmesh);
+          application_.add_topology(topology);
+          application_.restart() = true;
         }
       }
 
+      index_t counter = 0;
       for (index_t k=0;k<window_.nb_scene();k++)
       {
+        // skip this if we need to restart
+        if (application_.restart()) break;
+
         const SceneGraph& scene = window_.scene(k);
         const json& menu = scene.menu();
 
         const std::vector<std::string>& primitives = menu["primitives"];
         for (index_t j=0;j<primitives.size();j++)
         {
-          const json& plot = json::parse(primitives[k]);
+          json plot = json::parse(primitives[j]);
 
-          std::string label = "Plot " + std::to_string(j);
+          std::string label = "Plot " + std::to_string(counter++);
           if (ImGui::TreeNode(label.c_str()))
           {
+            if (!window_.scene(k).primitive(j).hidden())
+            {
+              std::string hide_label = "Hide" + std::to_string(counter-1);
+              if (ImGui::Button(hide_label.c_str()))
+              {
+                for (index_t i=0;i<window_.scene(j).nb_primitives();i++)
+                {
+                  window_.scene(k).primitive(j).hide();
+                }
+              }
+            }
+            else
+            {
+              std::string show_label = "Show" + std::to_string(counter-1);
+              if (ImGui::Button(show_label.c_str()))
+              {
+                for (index_t i=0;i<window_.scene(j).nb_primitives();i++)
+                {
+                  window_.scene(k).primitive(j).show();
+                }
+              }
+            }
+
             for (index_t i=0;i<entities.size();i++)
             {
               if (ImGui::TreeNode(entities[i].c_str()))
@@ -252,6 +276,12 @@ Toolbar::begin_draw()
                   unsigned long address = std::stoul(entity[m],0,16);
                   Primitive* primitive = (Primitive*) address;
 
+/*                  if (hide)
+                  {
+                    primitive->triangles_on() = false;
+                    primitive->edges_on() = false;
+                  }*/
+
                   ImGui::Text("%s",entity[m].c_str());
                   ImGui::SameLine();
                   std::string viz_label = "viz-" + std::to_string(m);
@@ -263,7 +293,6 @@ Toolbar::begin_draw()
                   ImGui::PushItemWidth(50);
                   std::string alpha_label = "alpha-" + std::to_string(m);
                   ImGui::SliderFloat(alpha_label.c_str(),&primitive->transparency(),0.1f,1.0f,"%.2f");
-
                 }
                 ImGui::TreePop();
               }

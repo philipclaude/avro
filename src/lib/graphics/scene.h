@@ -163,7 +163,6 @@ private:
   mat4 normal_matrix_;
 
   bool update_;
-
 };
 
 } // graphics

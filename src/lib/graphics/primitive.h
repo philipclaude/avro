@@ -65,6 +65,12 @@ public:
   SceneGraph* scene() { return scene_; }
   const TopologyBase& topology() const;
 
+  void hide(bool hidden);
+
+  bool& hidden() { return hidden_; }
+  void hide();
+  void show();
+
 protected:
   coord_t number_;
   const TopologyBase& topology_;
@@ -98,6 +104,8 @@ protected:
   float transparency_;
 
   bool transform_feedback_;
+
+  bool hidden_;
 };
 
 } // graphics

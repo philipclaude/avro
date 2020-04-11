@@ -53,8 +53,15 @@ template<typename API_t>
 void
 Application<GLFW_Interface<API_t>>::run()
 {
-  for (index_t k=0;k<window_.size();k++)
-    window_[k]->setup();
+  if (!restart_)
+  {
+    for (index_t k=0;k<window_.size();k++)
+      window_[k]->setup();
+  }
+  else
+    printf("restarting..\n");
+
+  restart_ = false;
 
   write();
 
@@ -85,6 +92,7 @@ Application<GLFW_Interface<API_t>>::run()
          window_[k]->begin_draw();
          window_[k]->update_view();
 
+         if (!restart_)
          for (index_t j=0;j<window_[k]->nb_scene();j++)
            manager_.draw(window_[k]->scene(j));
 
@@ -98,6 +106,8 @@ Application<GLFW_Interface<API_t>>::run()
 
        }
 
+       if (restart_) break;
+
        // only set lastFrameTime when you actually draw something
        last_frame_time = now;
       }
@@ -105,6 +115,8 @@ Application<GLFW_Interface<API_t>>::run()
       // set lastUpdateTime every iteration
       last_update_time = now;
    }
+
+   if (restart_) run();
 }
 
 Visualizer::Visualizer()

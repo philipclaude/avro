@@ -135,7 +135,6 @@ get_geometry( const std::string& name , bool& curved )
     pbody  = std::make_shared<EGADS::Cube>(context,lengths,x0);
     pmodel = emodel;
   }
-  printf("cannot find geometry %s\n",name.c_str());
   avro_assert( pbody!=nullptr );
   pmodel->add_body(pbody);
 

@@ -1,10 +1,5 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2018, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
-#ifndef NLOHMANN_JSON_FWD_HPP
-#define NLOHMANN_JSON_FWD_HPP
+#ifndef INCLUDE_NLOHMANN_JSON_FWD_HPP_
+#define INCLUDE_NLOHMANN_JSON_FWD_HPP_
 
 #include <cstdint> // int64_t, uint64_t
 #include <map> // map
@@ -21,11 +16,12 @@ namespace nlohmann
 {
 /*!
 @brief default JSONSerializer template argument
+
 This serializer ignores the template arguments and uses ADL
-([argument-dependent lookup](http://en.cppreference.com/w/cpp/language/adl))
+([argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl))
 for serialization.
 */
-template<typename = void, typename = void>
+template<typename T = void, typename SFINAE = void>
 struct adl_serializer;
 
 template<template<typename U, typename V, typename... Args> class ObjectType =
@@ -42,10 +38,13 @@ class basic_json;
 
 /*!
 @brief JSON Pointer
+
 A JSON pointer defines a string syntax for identifying a specific value
 within a JSON document. It can be used with functions `at` and
 `operator[]`. Furthermore, JSON pointers are the base for JSON patches.
+
 @sa [RFC 6901](https://tools.ietf.org/html/rfc6901)
+
 @since version 2.0.0
 */
 template<typename BasicJsonType>
@@ -53,11 +52,13 @@ class json_pointer;
 
 /*!
 @brief default JSON class
+
 This type is the default specialization of the @ref basic_json class which
 uses the standard template types.
+
 @since version 1.0.0
 */
 using json = basic_json<>;
-}
+}  // namespace nlohmann
 
-#endif
+#endif  // INCLUDE_NLOHMANN_JSON_FWD_HPP_
