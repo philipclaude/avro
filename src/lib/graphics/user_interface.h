@@ -8,6 +8,7 @@
 #include <imgui/imgui.h>
 
 #include <memory>
+#include <set>
 #include <vector>
 
 namespace avro
@@ -76,6 +77,8 @@ public:
 
 private:
   Visualizer& application_;
+
+  std::map<std::string,std::pair<index_t,index_t>> primitives_;
 
 };
 

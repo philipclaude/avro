@@ -10,6 +10,7 @@
 #include "graphics/application.h"
 
 #include "library/factory.h"
+#include "library/library.h"
 
 #include "mesh/mesh.h"
 #include "avro.h"
@@ -161,6 +162,12 @@ adapt( int nb_input , const char** inputs )
     if (params.curved()) params.has_uv() = true;
   }
 
+  Library* lib = Library::get();
+  lib->add_mesh_ptr(pmesh);
+  char mesh_label[128];
+  sprintf(mesh_label,"%p",(void*)pmesh.get());
+  lib->add_mesh(mesh_label);
+  
   return 0;
 }
 

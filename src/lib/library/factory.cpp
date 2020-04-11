@@ -166,7 +166,42 @@ get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology ,
     avro_implement;
   }
 
+  if (ext.empty())
+  {
+    // check if this is a memory address
+    if (name.substr(0,2) == "0x")
+    {
+      unsigned long address = std::stoul(name,0,16);
+      Mesh* mesh0 = (Mesh*) address;
+      std::vector<Topology<type>*> topologies;
+      mesh0->retrieve(topologies);
+      printf("mesh has %lu topologies\n",topologies.size());
+      index_t maxnumber = 0;
+      Topology<type>* topology = nullptr;
+      for (index_t k=0;k<topologies.size();k++)
+      {
+        printf("topology(%lu) number = %u with %lu elements\n",k,topologies[k]->number(),topologies[k]->nb());
+        if (topologies[k]->number()<=maxnumber) continue;
+        maxnumber = topologies[k]->number();
+        topology  = topologies[k];
+      }
+      printf("determined mesh number = %lu, using topology with %lu elements\n",maxnumber,topology->nb());
+
+      std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(maxnumber,mesh0->points().dim());
+      mesh0->points().copy( pmesh->points() );
+
+      ptopology = std::make_shared<Topology<type>>(pmesh->points(),maxnumber);
+      ptopology->TopologyBase::copy( *topology );
+
+      printf("adding mesh with %lu points\n",pmesh->points().nb());
+      printf("topology type = %s\n",ptopology->type_name().c_str());
+      pmesh->add( ptopology );
+      return pmesh;
+    }
+  }
+
   // if no file extension, it must be a mesh in the library
+  #if 0
   std::vector<std::string> s = split(name,"-");
   if (s[0]=="CKF")
   {
@@ -185,12 +220,14 @@ get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology ,
     ptopology->points().copy( pmesh->points() );
     return pmesh;
   }
+  #endif
   printf("cannot find mesh %s\n",name.c_str());
   avro_assert_not_reached;
   return nullptr;
 }
 
 template std::shared_ptr<Mesh> get_mesh( const std::string& , std::shared_ptr<Topology<Simplex>>& , coord_t );
+template std::shared_ptr<Mesh> get_mesh( const std::string& , std::shared_ptr<Topology<Polytope>>& , coord_t );
 
 } // programs
 

@@ -16,7 +16,7 @@ namespace avro
 namespace BoundaryUtils
 {
   Entity*
-  geometryFacet( const Points& points , index_t* v , index_t nv , bool elem=false );
+  geometryFacet( const Points& points , const index_t* v , index_t nv , bool elem=false );
 }
 
 class Entity;
@@ -36,7 +36,7 @@ template<typename type>
 class Boundary : public Topology<type>
 {
 public:
-  Boundary( Topology<type>& _topology ) :
+  Boundary( const Topology<type>& _topology ) :
       Topology<type>( _topology.points() , _topology.number() ),
       topology_(_topology),
       nodes_(topology_.points(),0),
@@ -84,7 +84,7 @@ public:
   const std::vector<index_t>& tetrahedron_entities() const { return tetrahedron_entities_; }
 
 private:
-  Topology<type>& topology_;
+  const Topology<type>& topology_;
 
   std::map< Entity* , index_t > entity2child_;
   std::map< index_t , index_t > bnd2child_;

@@ -20,6 +20,7 @@ public:
   Polytope( Topology<Polytope>& topology , const coord_t order , const Table<int>& incidence );
 
   static std::string type_name() { return "polytope"; }
+  static TableLayoutCategory layout() { return TableLayout_Jagged; }
 
   const Table<int>& incidence() const { return incidence_; }
 

@@ -68,7 +68,7 @@ public:
   }
   index_t rank() const
   {
-    avro_assert( layout_==TableLayout_Rectangular );
+    //avro_assert( layout_==TableLayout_Rectangular );
     return rank_;
   }
 

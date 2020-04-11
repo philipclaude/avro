@@ -65,6 +65,13 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
   glfwSetMouseButtonCallback(window_,&_mouse_button_callback);
   glfwSetScrollCallback(window_,&_mouse_scroll_callback);
   glfwSetKeyCallback( window_ , &_keyboard_callback );
+
+  /*
+  GLFWimage images[1];
+  images[0] = load_icon( "avro.png" );
+  glfwSetWindowIcon(window_,1,images);
+  glfwSetWindowIcon(window_,0,NULL);
+  */
 }
 
 void

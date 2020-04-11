@@ -9,6 +9,7 @@
 #include "graphics/application.h"
 
 #include "library/factory.h"
+#include "library/library.h"
 
 #include "mesh/boundary.h"
 #include "mesh/mesh.h"
@@ -40,6 +41,9 @@ plot( int nb_input , const char** inputs )
   ProcessCPU::initialize();
   ProcessGPU::initialize();
 
+  // the global library that we will add to
+  Library* lib = Library::get();
+
   // options
   bool found;
   const char **options = inputs +1;
@@ -57,6 +61,11 @@ plot( int nb_input , const char** inputs )
   Mesh& mesh = *pmesh;
   Topology<type>& topology = *ptopology.get();
   coord_t number = mesh.number();
+
+  lib->add_mesh_ptr(pmesh);
+  char mesh_label[128];
+  sprintf(mesh_label,"%p",(void*)pmesh.get());
+  lib->add_mesh(mesh_label);
 
   // get the input geometry if provided
   std::shared_ptr<Model> pmodel = nullptr;

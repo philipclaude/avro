@@ -2,6 +2,7 @@
 #define avro_LIB_MASTER_SIMPLEX_H_
 
 #include "common/error.h"
+#include "common/table.h"
 
 #include "master/basis.h"
 #include "master/master.h"
@@ -26,6 +27,7 @@ public:
   Simplex( const coord_t number , const coord_t order );
 
   static std::string type_name() { return "simplex"; }
+  static TableLayoutCategory layout() { return TableLayout_Rectangular; }
 
   Simplex( const Topology<Simplex>& topology , const coord_t order );
 

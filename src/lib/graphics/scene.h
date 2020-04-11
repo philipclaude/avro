@@ -136,6 +136,11 @@ public:
     menu_["primitives"] = primitives;
   }
 
+  void remove( index_t k )
+  {
+    primitive_.erase( primitive_.begin()+k );
+  }
+
   bool update() const { return update_; }
   void set_update( bool x ) { update_ = x; }
 

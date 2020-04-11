@@ -123,6 +123,15 @@ public:
       manager_.select_shader( main_->scene(id).primitive(prim_id).child(j) , "wv" );
   }
 
+  void remove( index_t scene , index_t root )
+  {
+    scenes_[scene]->remove(root);
+    if (scenes_[scene]->nb_primitives()==0)
+    {
+      scenes_.erase( scenes_.begin() + root );
+    }
+  }
+
   GLFW_Window& main_window() { return *main_.get(); }
 
   std::shared_ptr<GLFW_Window> main_;

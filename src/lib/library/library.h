@@ -1,11 +1,14 @@
 #ifndef AVRO_SRC_LIBRARY_LIBRARY_H_
 #define AVRO_SRC_LIBRARY_LIBRARY_H_
 
+#include <map>
 #include <string>
 #include <vector>
 
 namespace avro
 {
+
+class Mesh;
 
 class Library
 {
@@ -24,8 +27,11 @@ public:
     if (!path.empty()) meshname2file_.insert({mesh,path});
   }
 
-  void add_geometry( const std::string& geometry )
-  { geometries_.push_back(geometry); }
+  void add_geometry( const std::string& geometry , const std::string& path=std::string() )
+  {
+    geometries_.push_back(geometry);
+    if (!path.empty()) geometryname2file_.insert({geometry,path});
+  }
 
   void add_metric( const std::string& metric )
   { metrics_.push_back(metric); }
@@ -56,7 +62,7 @@ public:
   const std::vector<std::string>& geometries() const { return geometries_; }
 
 private:
-  const std::vector<std::string> meshes0_ = {"CKF","file"};
+  const std::vector<std::string> meshes0_ = {"Structured"};
   const std::vector<std::string> metrics0_ = {"Linear-3d","Polar1","Polar2","Linear-4d","Wave-4d"};
   const std::vector<std::string> geometries0_ = {"square","box","tesseract"};
   const std::vector<std::string> points0_ = {"Random"};
@@ -67,13 +73,12 @@ private:
   std::vector<std::string> points_ = points0_;
 
   std::map<std::string,std::string> meshname2file_;
+  std::map<std::string,std::string> geometryname2file_;
 
   std::vector< std::shared_ptr<Mesh> > mesh_ptr_;
 
   Library() {}
 };
-
-Library* Library::instance = nullptr;
 
 } // avro
 

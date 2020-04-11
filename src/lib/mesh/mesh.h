@@ -76,6 +76,22 @@ public:
   }
 
   template<typename type>
+  void retrieve( std::vector<Topology<type>*>& topologies )
+  {
+    topologies.clear();
+    for (index_t k=0;k<topology_.size();k++)
+    {
+      if (topology_[k]->type_name()==type::type_name())
+      {
+        topologies.push_back( static_cast<Topology<type>*>(topology_[k].get()) );
+        static_cast<Topology<type>&>(*topology_[k]).get_children(topologies);
+      }
+      else
+        avro_implement;
+    }
+  }
+
+  template<typename type>
   void retrieve( Topology<type>& topology )
   {
     for (index_t k=0;k<topology_.size();k++)

@@ -39,6 +39,7 @@ parse( const std::string& str_arg , type& arg )
 
 int adapt( int argc , const char** argv );
 int plot( int argc , const char** argv );
+int voronoi( int argc , const char** argv );
 
 } // programs
 

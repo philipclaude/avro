@@ -71,6 +71,29 @@ Toolbar::Toolbar( GLFW_Window& window , Visualizer& app ) :
   application_(app)
 {}
 
+int
+request_n()
+{
+  if (ImGui::BeginPopupModal("request-n", NULL, ImGuiWindowFlags_MenuBar))
+  {
+    static int N = 2;
+    ImGui::InputInt("Enter N = ", &N);
+    if (ImGui::Button("Enter"))
+    {
+      ImGui::CloseCurrentPopup();
+      return N;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel"))
+    {
+      ImGui::CloseCurrentPopup();
+      return -1;
+    }
+    ImGui::EndPopup();
+  }
+  return -1;
+}
+
 void
 Toolbar::begin_draw()
 {
@@ -117,11 +140,6 @@ Toolbar::begin_draw()
       if (ImGui::BeginMenu("View"))
       {
           if (ImGui::MenuItem("2D window", NULL)) { /* Do stuff */ }
-          ImGui::EndMenu();
-      }
-      if (ImGui::BeginMenu("Help"))
-      {
-          if (ImGui::MenuItem("Usage", "Ctrl+H")) { /* Do stuff */ }
           ImGui::EndMenu();
       }
       ImGui::EndMenuBar();
@@ -185,11 +203,16 @@ Toolbar::begin_draw()
         {
           lib->add_mesh( items[file_current] , listener_->pwd() );
         }
+        if (ext=="egads")
+        {
+          lib->add_geometry( items[file_current] , listener_->pwd() );
+        }
       }
     }
 
     if (ImGui::CollapsingHeader("Plots"))
     {
+      primitives_.clear();
       std::vector<const char*> items;
 
       ImGui::SetNextItemWidth(100);
@@ -205,23 +228,40 @@ Toolbar::begin_draw()
       {
         // get the mesh
         std::string path = lib->meshname2file(meshes[mesh_current_plot]);
+        std::string mesh_name;
         if (path!="n/a")
+          mesh_name = path;
+        else
+          mesh_name = meshes[mesh_current_plot];
+
+        // todo generalize this to other mesh types
+        // i.e. determine what type of mesh this is first
+        std::shared_ptr<Mesh> pmesh = nullptr;
+        try
         {
-          // todo generalize this to other mesh types
-          // i.e. determine what type of mesh this is first
           typedef Simplex type;
 
           // load the mesh
           std::shared_ptr<Topology<type>> ptopology = nullptr;
-          std::shared_ptr<Mesh> pmesh = library::get_mesh<type>(path,ptopology);
+          pmesh = library::get_mesh<type>(mesh_name,ptopology);
           Topology<type>& topology = *ptopology.get();
-
-          // load the topology and write to the visualizer
-          // we first need someone to hold onto the mesh pointer (the library)
-          lib->add_mesh_ptr(pmesh);
           application_.add_topology(topology);
-          application_.restart() = true;
         }
+        catch(...)
+        {
+          typedef Polytope type;
+
+          // load the mesh
+          std::shared_ptr<Topology<type>> ptopology = nullptr;
+          pmesh = library::get_mesh<type>(mesh_name,ptopology);
+          Topology<type>& topology = *ptopology.get();
+          application_.add_topology(topology);
+        }
+
+        // load the topology and write to the visualizer
+        // we first need someone to hold onto the mesh pointer (the library)
+        lib->add_mesh_ptr(pmesh);
+        application_.restart() = true;
       }
 
       index_t counter = 0;
@@ -264,6 +304,17 @@ Toolbar::begin_draw()
               }
             }
 
+            // TODO field selector
+            ImGui::SetNextItemWidth(100);
+            static int current_field = 0;
+            const char* field_names[] = {"Metric","Velocity","Pressure"};
+            ImGui::Combo("Fields",&current_field,field_names,3);
+            ImGui::SameLine();
+            if (ImGui::Button("Load"))
+            {
+              printf("switch to field %s!\n",field_names[current_field]);
+            }
+
             for (index_t i=0;i<entities.size();i++)
             {
               if (ImGui::TreeNode(entities[i].c_str()))
@@ -273,16 +324,12 @@ Toolbar::begin_draw()
                 {
                   static float alpha = 1.0f;
 
+                  primitives_.insert( {entity[m],{k,j} } );
+
                   unsigned long address = std::stoul(entity[m],0,16);
                   Primitive* primitive = (Primitive*) address;
 
-/*                  if (hide)
-                  {
-                    primitive->triangles_on() = false;
-                    primitive->edges_on() = false;
-                  }*/
-
-                  ImGui::Text("%s",entity[m].c_str());
+                  ImGui::Text("%s %lu",entities[i].c_str(),m);
                   ImGui::SameLine();
                   std::string viz_label = "viz-" + std::to_string(m);
                   ImGui::Checkbox(viz_label.c_str(), &primitive->triangles_on() );
@@ -349,12 +396,12 @@ Toolbar::begin_draw()
       if (ImGui::Button("Compute"))
       {
         ImGui::OpenPopup("adapt-mesh");
-
       }
       if (ImGui::BeginPopupModal("adapt-mesh", NULL, ImGuiWindowFlags_MenuBar))
       {
         if (mesh_name=="CKF")
         {
+          int N = request_n();
           for (index_t d=0;d<dim;d++)
             mesh_name += "-3";
         }
@@ -366,6 +413,26 @@ Toolbar::begin_draw()
           std::string iter_cmd = "nb_iter="+std::to_string(nb_adapt);
           const char* command[] = {mesh_name.c_str(),geometries[geometry_current].c_str(),metrics[metric_current].c_str(),output_name,iter_cmd.c_str()};
           int result = programs::adapt(5,command);
+          if (result!=0) printf("error in adaptation!\n");
+
+          // check if this mesh needs to be updated
+          printf("mesh name = %s\n",mesh_name.c_str());
+          std::map<std::string,std::pair<index_t,index_t>>::iterator it;
+          for (it=primitives_.begin();it!=primitives_.end();++it)
+            printf("primitive %s -> scene = %lu, prim = %lu\n",it->first.c_str(),it->second.first,it->second.second);
+          if (primitives_.find(mesh_name)!=primitives_.end())
+          {
+            // reload the mesh
+            std::pair<index_t,index_t> plot = primitives_[mesh_name];
+            index_t s = plot.first;  // scene
+            index_t p = plot.second; // primitive
+
+            // delete this root from the scene graph
+            application_.remove( s , p );
+
+            // restart the plotter
+            application_.restart() = true;
+          }
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
@@ -378,37 +445,68 @@ Toolbar::begin_draw()
 
     if (ImGui::CollapsingHeader("Voronoi"))
     {
+      std::vector<const char*> items;
+
       ImGui::SetNextItemWidth(100);
       static int mesh_current = 0;
-      const char* meshes[] = {"mesh0","mesh1","mesh2"};
-      ImGui::Combo("Mesh",&mesh_current, meshes , 3 );
+      const std::vector<std::string>& meshes = lib->meshes();
+      items.resize( meshes.size() );
+      for (index_t k=0;k<meshes.size();k++)
+        items[k] = meshes[k].c_str();
+      ImGui::Combo("Mesh    ",&mesh_current, items.data() , items.size() );
+
+      ImGui::SameLine();
+      ImGui::SetNextItemWidth(5*width);
+      static char iter_str[5] = "0";
+      ImGui::InputText("Iter. ", iter_str , IM_ARRAYSIZE(iter_str));
+      int nb_iter = atoi(iter_str);
+
+      ImGui::SetNextItemWidth(100);
+      static int geometry_current = 0;
+      const std::vector<std::string>& geometries = lib->geometries();
+      items.resize( geometries.size() + 1 );
+      items[0] = "none";
+      for (index_t k=0;k<geometries.size();k++)
+        items[k+1] = geometries[k].c_str();
+      ImGui::Combo("Geometry",&geometry_current, items.data() , items.size() );
+
+      ImGui::SameLine();
+      static bool hierarchical = false;
+      ImGui::Checkbox("Hierarchical", &hierarchical );
 
       ImGui::SetNextItemWidth(100);
       static int sites_current = 0;
-      const char* sites[] = {"vertices","centroids","random"};
-      ImGui::Combo("Sites",&sites_current, sites , 3 );
+      const char* sites[] = {"vertices","sample","random","exact"};
+      ImGui::Combo("Sites   ",&sites_current, sites , 3 );
 
-      ImGui::Button("Load");
       ImGui::SameLine();
-      ImGui::Button("Compute");
+      if (ImGui::Button("Compute"))
+      {
+        // TODO treat CKF
+        std::string mesh_name = meshes[mesh_current];
+
+        printf("running voronoi with mesh %s, sites %s, geometry %s\n",mesh_name.c_str(),sites[sites_current],geometries[geometry_current+1].c_str());
+
+        std::string iter_cmd = "nb_iter="+std::to_string(nb_iter);
+        const char* command[] = {mesh_name.c_str(),sites[sites_current],geometries[geometry_current+1].c_str(),iter_cmd.c_str()};
+        int result = programs::voronoi(4,command);
+      }
     }
 
-    if (ImGui::CollapsingHeader("Tools"))
+    if (ImGui::CollapsingHeader("Help"))
     {
+      ImGui::Text("avro (c) Philip Caplan 2019-2020\nMiddlebury College, pcaplan@middlebury.edu\n");
+      ImGui::Text("\n!!! warning !!!\nthis is a pre-alpha release so the interface is very rough!\n\n");
+      ImGui::BulletText("rotate: hold ctrl (cmd) and click/move mouse");
+      ImGui::BulletText("zoom: hold shift key and click/move mouse or scroll");
+      ImGui::BulletText("pan: click/move mouse");
+      ImGui::Separator();
+
       ImGui::SetNextItemWidth(100);
 
       static int fps = 60;
       ImGui::SliderInt("fps",&fps,5,120,"%3d");
       window_.set_fps( fps );
-    }
-
-    if (ImGui::CollapsingHeader("Help"))
-    {
-      ImGui::Text("avro (c) Philip Caplan 2019-2020\ncaplan.philip@gmail.com");
-      ImGui::BulletText("rotatee: hold ctrl (cmd) and click/move mouse");
-      ImGui::BulletText("zoom: hold shift key and click/move mouse");
-      ImGui::BulletText("pan: click/move mouse");
-      ImGui::Separator();
     }
   }
 

@@ -28,7 +28,7 @@ get_file_ext( const std::string& filename )
   idx = filename.rfind('.'); // find the '.' in reverse order
   if (idx!=std::string::npos)
     return filename.substr(idx+1);
-  return filename;
+  return "";
 }
 
 namespace avro

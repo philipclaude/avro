@@ -98,6 +98,12 @@ Points::copy( Points& v , const bool ghosts) const
     v.set_fixed( k , fixed_[k] );
     v.set_param( k , u(k) );
   }
+
+	for (index_t k=0;k<incidence_.nb();k++)
+	{
+		std::vector<int> f = incidence_.get(k);
+		v.incidence().add( f.data() , f.size() );
+	}
 }
 
 void

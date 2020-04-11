@@ -42,7 +42,7 @@ private:
 };
 
 bool
-interior( const Points& points , index_t* v , index_t nv )
+interior( const Points& points , const index_t* v , index_t nv )
 {
   avro_assert( nv>0 );
 
@@ -58,7 +58,7 @@ namespace BoundaryUtils
 {
 
 Entity*
-geometryFacet( const Points& points , index_t* v , index_t nv , bool elem )
+geometryFacet( const Points& points , const index_t* v , index_t nv , bool elem )
 {
   avro_assert( nv>0 );
 
