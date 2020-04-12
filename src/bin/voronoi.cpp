@@ -140,12 +140,13 @@ voronoi( int nb_input , const char** inputs )
   printf("cvt has %lu points with %lu polytopes in main topology\n",cvt->points().nb(),cvt->nb());
 
   std::shared_ptr<Mesh> pmesh_out = std::make_shared<Mesh>(cvt->number(),cvt->points().dim());
-  //pmesh_out->add( cvt );
+  pmesh_out->add( cvt );
   cvt->points().copy( pmesh_out->points() );
 
+/*
   std::shared_ptr<Topology<Polytope>> topology_out = std::make_shared<Topology<Polytope>>(pmesh_out->points(),topology.number());
   topology_out->TopologyBase::copy( *cvt );
-  pmesh_out->add( topology_out );
+  pmesh_out->add( topology_out );*/
 
   Library* lib = Library::get();
   lib->add_mesh_ptr(pmesh_out);

@@ -32,6 +32,7 @@ private:
 
   std::vector<std::shared_ptr<Topology<Simplex>>> topologies_;
   std::vector<Entity*> entities_;
+  std::vector<std::shared_ptr<VoronoiSites>> sites_fields_;
 };
 
 } // delaunay

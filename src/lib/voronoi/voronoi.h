@@ -203,6 +203,8 @@ private:
 
 };
 
+class VoronoiSites;
+
 class RestrictedVoronoiDiagram : public Topology<Polytope>
 {
 public:
@@ -240,6 +242,8 @@ public:
 
   void extract( Topology<Simplex>& triangulation ) const;
 
+  VoronoiSites& sites() { return *sites_.get(); }
+
 private:
 
   Points points_;
@@ -255,26 +259,26 @@ private:
   real_t energy_;
   std::string outdir_;
 
-  class VoronoiSites : public Field<Polytope,real_t>
-  {
-  public:
-    VoronoiSites( RestrictedVoronoiDiagram& rvd ) :
-      Field<Polytope,real_t>(rvd,0,DISCONTINUOUS)
-    {}
-
-    void add_cell( const real_t z )
-    {
-      //Field<real_t>::add(z+1);
-    }
-
-    index_t rank() const { return 1; }
-
-    std::vector<std::string> ranknames() const
-     {std::vector<std::string> result; result.push_back("sites"); return result;}
-  };
-
   std::shared_ptr<VoronoiSites> sites_;
 
+};
+
+class VoronoiSites : public Field<Polytope,real_t>
+{
+public:
+  VoronoiSites( Topology<Polytope>& rvd ) :
+    Field<Polytope,real_t>(rvd,0,DISCONTINUOUS)
+  {}
+
+  void add_cell( const real_t z )
+  {
+    //Field<real_t>::add(z+1);
+  }
+
+  index_t rank() const { return 1; }
+
+  std::vector<std::string> ranknames() const
+   {std::vector<std::string> result; result.push_back("sites"); return result;}
 };
 
 } // delaunay

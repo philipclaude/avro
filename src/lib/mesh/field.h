@@ -206,6 +206,8 @@ public:
       fields_.erase(name);
     }
 
+    index_t nb() const { return fields_.size(); }
+
     void from_json( const json& J );
     void get_names( std::vector<std::string>& names ) const;
 

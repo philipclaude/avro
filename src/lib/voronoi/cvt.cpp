@@ -107,6 +107,15 @@ CentroidalVoronoiTessellation::compute( index_t nb_iter )
           pj[i] += offset;
         this->add(pj.data(),pj.size());
       }
+
+      std::shared_ptr<VoronoiSites> s = std::make_shared<VoronoiSites>(*this);
+      s->build();
+
+      for (index_t k=0;k<rvd.sites().nb_data();k++)
+        s->value(k) = rvd.sites().value(k);
+
+      sites_fields_.push_back(s);
+      fields_.make("sites",s);
     }
 
   }
