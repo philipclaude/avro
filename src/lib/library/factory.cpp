@@ -190,23 +190,20 @@ get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology ,
       std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(maxnumber,mesh0->points().dim());
       mesh0->points().copy( pmesh->points() );
 
-      ptopology = std::make_shared<Topology<type>>(pmesh->points(),maxnumber);
-      ptopology->TopologyBase::copy( *topology );
-
       printf("topology has %lu fields to copy\n",topology->fields().nb());
-
       printf("adding mesh with %lu points\n",pmesh->points().nb());
-      printf("topology type = %s\n",ptopology->type_name().c_str());
-
+      ptopology = nullptr;
       for (index_t k=0;k<mesh0->nb_topologies();k++)
       {
         if ( &mesh0->retrieve<type>(k)==topology)
         {
-          //pmesh->add( mesh0->retrieve_ptr<type>(k) );
-          printf("found!!!\n");
+          ptopology = mesh0->retrieve_ptr<type>(k);
+          break;
         }
       }
+      avro_assert( ptopology!=nullptr );
 
+      printf("topology type = %s\n",ptopology->type_name().c_str());
       pmesh->add( ptopology );
       return pmesh;
     }

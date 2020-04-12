@@ -21,7 +21,7 @@ public:
   CentroidalVoronoiTessellation( const Topology<Simplex>& topology , Points& sites , bool hierarchical=false );
 
   void compute( index_t nb_iter );
-  void generate_sites() { avro_implement; }
+  void generate_sites( int nb_samples=-1 );
 
 private:
   Points points_;  // to accumulate the points in the calculation
@@ -33,6 +33,8 @@ private:
   std::vector<std::shared_ptr<Topology<Simplex>>> topologies_;
   std::vector<Entity*> entities_;
   std::vector<std::shared_ptr<VoronoiSites>> sites_fields_;
+
+  void sample_geometry( Entity* entity , index_t nb_samples );
 };
 
 } // delaunay

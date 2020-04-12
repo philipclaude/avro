@@ -132,7 +132,7 @@ voronoi( int nb_input , const char** inputs )
 
   if (sitesname=="sample")
   {
-    cvt->generate_sites();
+    cvt->generate_sites(100);
   }
 
   cvt->compute(nb_iter);
@@ -142,11 +142,6 @@ voronoi( int nb_input , const char** inputs )
   std::shared_ptr<Mesh> pmesh_out = std::make_shared<Mesh>(cvt->number(),cvt->points().dim());
   pmesh_out->add( cvt );
   cvt->points().copy( pmesh_out->points() );
-
-/*
-  std::shared_ptr<Topology<Polytope>> topology_out = std::make_shared<Topology<Polytope>>(pmesh_out->points(),topology.number());
-  topology_out->TopologyBase::copy( *cvt );
-  pmesh_out->add( topology_out );*/
 
   Library* lib = Library::get();
   lib->add_mesh_ptr(pmesh_out);

@@ -119,7 +119,117 @@ CentroidalVoronoiTessellation::compute( index_t nb_iter )
     }
 
   }
+}
 
+void
+random_point_in_simplex( const Points& points , const index_t* v , index_t nv , std::vector<real_t>& p )
+{
+  coord_t dim = points.dim();
+
+  // calculate random barycentric coordinates
+  std::vector<real_t> alpha(nv);
+  alpha[nv-1] = 1.0;
+  for (coord_t j=0;j<nv-1;j++)
+  {
+    alpha[j]    = real_t(rand())/real_t(RAND_MAX);
+    alpha[nv-1] -= alpha[j];
+  }
+
+  // use barycentric coordinates to compute p
+  std::fill(p.begin(),p.end(),0.);
+  for (coord_t i=0;i<nv;i++)
+  {
+    for (coord_t d=0;d<dim;d++)
+      p[d] += alpha[i] * points[v[i]][d];
+  }
+}
+
+void
+CentroidalVoronoiTessellation::sample_geometry( Entity* entity , index_t nb_samples )
+{
+  int idx = -1;
+  for (index_t k=0;k<entities_.size();k++)
+  {
+    if (entities_[k] == entity)
+    {
+      idx = k;
+      break;
+    }
+  }
+  avro_assert( idx>=0 );
+  const Topology<Simplex>& topology = *topologies_[idx].get();
+
+  coord_t np = topology.number() +1;
+  index_t simplex_begin = 0;
+  index_t simplex_end = topology.nb();
+  coord_t dim = sites_.dim();
+
+  avro_assert( dim == topology.points().dim() );
+  avro_assert( topology.nb()>0 );
+
+  if (np==1)
+  {
+    avro_assert(topology.nb()==1);
+    index_t id = sites_.nb();
+    sites_.create(topology.points()[ topology(0)[0] ]);
+    sites_.set_entity(id,entity);
+    return;
+  }
+
+  // generate random numbers for every sample
+  std::vector<real_t> s(nb_samples);
+  for (index_t i=0;i<nb_samples;i++)
+    s[i] = real_t( double(rand())/double(RAND_MAX) );
+  std::sort(s.begin(),s.end());
+
+  // measure the volume of each element and the total volume
+  std::vector<real_t> vt(topology.nb());
+  real_t vtot = 0.;
+  topology.get_volumes(vt);
+  for (index_t k=0;k<vt.size();k++)
+    vtot += vt[k];
+
+  int first_s = -1;
+  int last_s  = 0;
+
+  index_t cur_t = simplex_begin;
+  real_t cur_s = vt[0]/vtot;
+  for (index_t i=0;i<nb_samples;i++)
+  {
+    avro_assert( i<s.size() );
+    while (s[i] > cur_s && cur_t < simplex_end-1 )
+    {
+      cur_t++;
+      avro_assert( cur_t < simplex_end );
+      cur_s += vt[cur_t]/vtot;
+    }
+    if (first_s==-1)
+      first_s = int(cur_t);
+    last_s = ( last_s > int(cur_t) ) ? last_s : int(cur_t);
+
+    // generate random point in simplex
+    std::vector<real_t> cur_p(dim);
+    random_point_in_simplex( topology.points() , topology(cur_t) , topology.nv(cur_t) , cur_p );
+
+    // do something with the point
+    index_t id = sites_.nb();
+    sites_.create(cur_p.data());
+    sites_.set_entity(id,entity);
+  }
+}
+
+void
+CentroidalVoronoiTessellation::generate_sites( int nb_samples )
+{
+  if (nb_samples<0)
+  {
+    avro_implement;
+  }
+
+  for (index_t k=0;k<entities_.size();k++)
+  {
+    sample_geometry( entities_[k] , nb_samples );
+  }
 }
 
 } // delaunay

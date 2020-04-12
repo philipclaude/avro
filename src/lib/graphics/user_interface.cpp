@@ -476,7 +476,7 @@ Toolbar::begin_draw()
 
       ImGui::SetNextItemWidth(100);
       static int sites_current = 0;
-      const char* sites[] = {"vertices","sample","random","exact"};
+      const char* sites[] = {"points","sample","random","exact"};
       ImGui::Combo("Sites   ",&sites_current, sites , 3 );
 
       ImGui::SameLine();
