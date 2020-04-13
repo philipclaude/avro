@@ -38,6 +38,10 @@ UT_TEST_CASE( test1 )
   delaunay::RestrictedVoronoiDiagram rvd(topology,z);
   rvd.compute(true);
 
+  rvd.compute(true);
+
+  rvd.compute(true);
+
   Visualizer vis;
 
   std::shared_ptr<Widget> toolbar = std::make_shared<Toolbar>(vis.main_window(),vis);

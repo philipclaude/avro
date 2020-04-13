@@ -83,9 +83,15 @@ public:
     { return &data_[location(k)]; }
 
   type& operator()       (index_t k, index_t j)
-    { return data_[location(k)+j]; }
+  {
+    avro_assert_msg( location(k)+j < data_.size() , "k = %lu, j = %lu, nb = %lu, nv = %lu",k,j,nb(),nv(k) );
+    return data_[location(k)+j];
+  }
   const type operator() (index_t k, index_t j) const
-    { return data_[location(k)+j]; }
+  {
+      avro_assert_msg( location(k)+j < data_.size() , "k = %lu, j = %lu, nb = %lu, nv = %lu",k,j,nb(),nv(k) );
+      return data_[location(k)+j];
+  }
 
   index_t nv( index_t k ) const
   {

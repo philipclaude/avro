@@ -47,7 +47,6 @@ CentroidalVoronoiTessellation::compute( index_t nb_iter )
   // optimize the lower-dimensional rvd's first
   for (index_t k=0;k<topologies_.size();k++)
   {
-
     // get the geometry entity this rvd corresponds to
     Entity* entity = entities_[k];
 
@@ -75,19 +74,10 @@ CentroidalVoronoiTessellation::compute( index_t nb_iter )
 
     // create the restricted voronoi diagram structure
     RestrictedVoronoiDiagram rvd( topology , z ); // TODO add entity information to know which points to keep fixed
-
     rvd.parallel() = true;
 
-    // compute the rvd
-    rvd.compute(exact_);
-
-    // optimize this rvd
-    for (index_t iter=0;iter<nb_iter;iter++)
-    {
-      // TODO move these sites closer to the centroids
-
-      // TODO track the cvt energy
-    }
+    // optimize the rvd
+    rvd.optimise( nb_iter , exact_ );
 
     // add the rvd to this topology
     index_t offset = points_.nb();
@@ -223,8 +213,13 @@ CentroidalVoronoiTessellation::generate_sites( int nb_samples )
 {
   if (nb_samples<0)
   {
+    // TODO calculate the total volume and make an assumption about
+    // valency to compute the total number of simplices and hence points
     avro_implement;
   }
+
+  // TODO calculate how many samples are needed on each geometry entity
+  // using the valency assumptions
 
   for (index_t k=0;k<entities_.size();k++)
   {

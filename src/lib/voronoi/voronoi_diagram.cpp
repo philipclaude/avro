@@ -1,12 +1,9 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-
 #include "common/parallel_for.h"
 #include "common/tools.h"
 
 #include "geometry/entity.h"
+
+#include "mesh/decomposition.h"
 
 #include "numerics/geometry.h"
 
@@ -133,10 +130,9 @@ RVDFacets::print() const
   }
 }
 
-RestrictedVoronoiDiagram::RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh ,
-    Delaunay& _delaunay ) :
-  Topology<Polytope>( points_ , _mesh.number() ),
-  points_( _delaunay.dim() ),
+RestrictedVoronoiDiagram::RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay ) :
+  Topology<Polytope>( vertices_ , _mesh.number() ),
+  vertices_( _delaunay.dim() ),
   mesh_(_mesh) , delaunay_(_delaunay),
   neighbours_( delaunay_ ),
   parallel_(false), gpu_(false),
@@ -180,6 +176,8 @@ RestrictedVoronoiDiagram::compute( const bool exact )
       avro_implement;
     }
   }
+
+  printf("accumulating\n");
 
   // accumulate the result
   accumulate();
@@ -256,20 +254,17 @@ operator<( const SymbolicVertex& f , const SymbolicVertex& g )
 void
 RestrictedVoronoiDiagram::accumulate()
 {
-  // create the topology where the rvd will be stored
-  std::shared_ptr<Topology<Polytope>> t = std::make_shared<Topology<Polytope>>(points_,number_);
-
   // clear the site information
   fields_.remove("sites");
 
   // clear the points
   points_.clear();
   this->child_.clear();
+  this->Topology<Polytope>::clear();
 
   std::vector<index_t> sites;
   for (index_t k=0;k<simplices_.size();k++)
   {
-
     // add the cells
     for (index_t j=0;j<simplices_[k]->topology().nb();j++)
     {
@@ -285,7 +280,7 @@ RestrictedVoronoiDiagram::accumulate()
     for (index_t j=0;j<simplices_[k]->points().nb();j++)
       points_.create( simplices_[k]->points()[j] );
 
-    // add the vertex facet information
+    // add the vertex-to-facet information
     const Table<int>& vf = simplices_[k]->topology().master().incidence();
     for (index_t j=0;j<vf.nb();j++)
     {
@@ -325,7 +320,6 @@ RestrictedVoronoiDiagram::accumulate()
       (*this)(k,j) = merge[ (*this)(k,j) ];
   }
   #endif
-
 }
 
 void
@@ -333,13 +327,12 @@ RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
 {
 
   // retrieve the site information
-  Topology<Polytope>& rvd = topology(0);
+  //Topology<Polytope>& rvd = topology(0);
+  Topology<Polytope>& rvd = (*this);
 
   // copy the points so the master can triangulate
   Points points0( rvd.points().dim() );
   rvd.points().copy( points0 );
-
-  std::vector<real_t> V( delaunay_.nb() , 0. );
 
   // initialize size of centroids
   centroids.clear();
@@ -347,10 +340,44 @@ RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
   for (index_t k=0;k<delaunay_.nb();k++)
     centroids.create( x0.data() );
 
+  std::vector<real_t> V( delaunay_.nb() , 0. );
+
+  //rvd.Table<index_t>::print();
+  //rvd.points().print();
+
+  coord_t number = rvd.number();
+  SimplicialDecomposition<Polytope> decomposition(rvd);
+  decomposition.extract();
+
+  std::vector<index_t> simplices;
+  std::vector<index_t> parents;
+  decomposition.get_simplices( rvd.number() , simplices , parents );
+
+  index_t nb_simplices = simplices.size()/(number+1);
+
+  const Simplex& master = decomposition.master();
+  for (index_t k=0;k<nb_simplices;k++)
+  {
+    real_t vk = master.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
+
+    index_t s = sites_->value( parents[k] );
+    V[s] += vk;
+
+    // compute the centroid of this piece
+    std::vector<real_t> c( delaunay_.dim() );
+    numerics::centroid( &simplices[k*(number+1)] , number+1 , decomposition.points() , c );
+
+    // add the contribution to x*V and V
+    for (coord_t d=0;d<delaunay_.dim();d++)
+      centroids[s][d] += c[d]*vk;
+  }
+
+  /*
+
   for (index_t k=0;k<rvd.nb();k++)
   {
     // get the site this piece is associate with
-    index_t s = 0;avro_implement;//sites_[k] -1;
+    index_t s = sites_->value(k);//sites_[k] -1;
 
     // compute the volume of this piece
     real_t vk = rvd.master().volume( points0 , rvd(k) , rvd.nv(k) );
@@ -365,6 +392,7 @@ RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
 
     V[s] += vk;
   }
+  */
 
   // go back and divide by the volume
   for (index_t k=0;k<centroids.nb();k++)
@@ -462,7 +490,6 @@ RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* f
   // perform some iterations of Lloyd relaxation
   for (index_t iter=0;iter<nb_iter;iter++)
   {
-
     // compute the rvd
     compute(exact);
 
@@ -490,7 +517,7 @@ RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* f
     // recompute the nearest neighbour information
     neighbours_.compute();
 
-    energy_ = 0;avro_implement;//energy_nd();
+    energy_ = 0;//avro_implement;//energy_nd();
     printf("iter[%lu]: e = %.6e, dx = %.6e\n",iter,energy_,dx);
     if (fid!=NULL)
       fprintf(fid,"%.12e\n",energy_);

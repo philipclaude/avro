@@ -137,8 +137,6 @@ voronoi( int nb_input , const char** inputs )
 
   cvt->compute(nb_iter);
 
-  printf("cvt has %lu points with %lu polytopes in main topology\n",cvt->points().nb(),cvt->nb());
-
   std::shared_ptr<Mesh> pmesh_out = std::make_shared<Mesh>(cvt->number(),cvt->points().dim());
   pmesh_out->add( cvt );
   cvt->points().copy( pmesh_out->points() );
@@ -148,6 +146,8 @@ voronoi( int nb_input , const char** inputs )
   char mesh_label[128];
   sprintf(mesh_label,"%p",(void*)pmesh_out.get());
   lib->add_mesh(mesh_label);
+
+  printf("done computing CVT!\n");
 
   return 0;
 }

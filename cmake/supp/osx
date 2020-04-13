@@ -347,3 +347,35 @@
    ...
    fun:_dyld_start
 }
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:objc_memmove_collectable
+   ...
+   fun:_dyld_start
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_objc_rootAlloc
+   ...
+   fun:_dyld_start
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:objc_memmove_collectable
+   ...
+   fun:_dyld_start
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:objc_initializeClassPair
+   ...
+   fun:_dyld_start
+}

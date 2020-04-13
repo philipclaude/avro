@@ -46,6 +46,8 @@ SimplicialDecomposition<type>::SimplicialDecomposition( const Topology<type>& to
       std::vector<real_t> alpha(topology_.nv(k),0.0);
       alpha[j] = 1.0;
 
+      avro_assert( topology_(k,j) < topology_.points().nb() );
+
       reference_coordinates_.add( alpha.data() , alpha.size() );
       point_parents_[ topology_(k,j) ] = k;
     }
@@ -133,7 +135,7 @@ SimplicialDecomposition<type>::get_simplices( coord_t number , std::vector<index
     if (skip) continue;
 
     if (topology_.number()==2)
-      avro_assert( parents_[number].at(k).size()==1 ); // all triangles have cardinality 1
+      avro_assert_msg( parents_[number].at(k).size()==1 , "nb_parents of elem %lu = %lu" , k , parents_[number].at(k).size() ); // all triangles have cardinality 1
     //if (topology_.number()==3)
     //  avro_assert_msg( parents_[number].at(k).size()<=2 , "cardinality = %lu" , parents_[number].at(k).size() ); // boundary facets have cardinality 1, interior 2
 

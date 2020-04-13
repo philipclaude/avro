@@ -550,6 +550,7 @@ Points::clear()
   body_.clear();
   primitive_.clear();
   nb_ghost_ = 0;
+	incidence_.clear();
 }
 
 } // avro

@@ -246,7 +246,8 @@ public:
 
 private:
 
-  Points points_;
+  //Points points_;
+  Points vertices_;
 
   const Topology<Simplex>& mesh_;
   Delaunay& delaunay_;
