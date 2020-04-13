@@ -16,7 +16,7 @@ UT_TEST_SUITE( cvt_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 2;
+  coord_t number = 3;
   index_t N = 2;
 
   std::vector<index_t> dims(number,N);

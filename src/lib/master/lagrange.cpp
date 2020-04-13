@@ -39,7 +39,7 @@ eval_lagrange_basis( index_t m, const index_t *alpha , const type* x )
     }
   }
 
-  w = 1.0 - vector_sum ( m, x );
+  w = 1.0 - vector_sum<type>( m, x );
 
   for (index_t p = 0; p < alpha[m]; p++ )
   {
@@ -55,10 +55,14 @@ eval_lagrange_basis( index_t m, const index_t *alpha , const type* x )
 void
 Lagrange<Simplex>::eval( const ReferenceElement<Simplex>& reference , const real_t* x , real_t* phi )
 {
+  //printf("reference nb_basis = %lu for number %u\n",reference.nb_basis(),reference.number());
   for (index_t k=0;k<reference.nb_basis();k++)
   {
     // get the lattice coordinates for this basis function
     const index_t* alpha = reference.get_lattice_coordinate(k);
+
+    //std::vector<index_t> ALPHA(alpha,alpha+reference.number()+1);
+    //print_inline(ALPHA,"ALPHA");
 
     // evaluate the basis function
     phi[k] = eval_lagrange_basis( reference.number() , alpha , x );

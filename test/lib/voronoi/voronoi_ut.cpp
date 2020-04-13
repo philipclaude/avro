@@ -4,6 +4,8 @@
 
 #include "library/ckf.h"
 
+#include "mesh/decomposition.h"
+
 #include "voronoi/delaunay.h"
 #include "voronoi/voronoi.h"
 
@@ -32,9 +34,9 @@ UT_TEST_CASE( test0 )
   Visualizer vis;
 
   //vis.add_topology(topology);
-  vis.add_topology(rvd);
+  //vis.add_topology(rvd);
 
-  vis.run();
+  //vis.run();
 }
 UT_TEST_CASE_END( test0 )
 
@@ -69,6 +71,16 @@ UT_TEST_CASE( test1 )
 
       rvd.compute(true);
       rvd.compute(false);
+
+      SimplicialDecomposition<Polytope> simplices(rvd);
+      simplices.extract();
+      std::vector<index_t> S,P;
+      simplices.get_simplices( rvd.number(),S,P );
+
+      Topology<Simplex> T(simplices.points(),rvd.number());
+      for (index_t k=0;k<S.size()/(rvd.number()+1);k++)
+        T.add( &S[k*(rvd.number()+1)],rvd.number()+1);
+      printf("--> volume = %g\n",T.volume());
     }
   }
 

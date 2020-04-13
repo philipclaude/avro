@@ -60,10 +60,15 @@ public:
     std::vector<T> u(field_.dof().rank());
     std::vector<T> ux,uxx;
 
+    //printf("integrand field in elem %lu with nb_basis = %lu\n",k,field_.master().nb_basis());
+
     if (functor_.needs_solution())
     {
+      //printf("evaluating basis\n");
       field_.master().basis().evaluate( xref , phi.data() );
+      //printf("interpolating dof\n");
       field_.dof().interpolate( field_[k] , field_.nv(k) , phi , u.data() );
+      //printf("done\n");
     }
     if (functor_.needs_gradient())
     {
@@ -149,6 +154,8 @@ public:
 
       // evaluate the integrand at the quadrature point
       f += w*integrand( k , xref , x.data() )*dj;
+
+      avro_assert( dj > 0.0 );
     }
   }
 

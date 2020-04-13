@@ -223,7 +223,7 @@ public:
   RestrictedVoronoiSimplex* simplex( const index_t k ) const
     { return simplices_[k].get(); }
 
-  void computeCentroids( Points& centroids );
+  real_t compute_centroids( Points& centroids );
 
   real_t energy();
   real_t energy() const { return energy_; }
@@ -233,7 +233,7 @@ public:
   bool& parallel() { return parallel_; }
   bool& gpu() { return gpu_; }
 
-  void optimise( const index_t nb_iter , bool exact=false , FILE* fid=NULL );
+  void optimise( const index_t nb_iter , bool exact=false );
 
   std::string& outdir() { return outdir_; }
 

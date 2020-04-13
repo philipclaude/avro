@@ -176,6 +176,9 @@ ReferenceElement<Simplex>::precalculate()
       xunit_.push_back( X(j,i) );
   }
 
+  vunit_ = sqrt(number_+1)/(numerics::factorial(number_)*sqrt(pow(2.,number_)));
+  vorth_ = 1./numerics::factorial(number_);
+
   // set the orthogonal coordinates
   xorth_.resize( number_*(number_+1) );
   std::fill( xorth_.begin() , xorth_.end() , 0. );
@@ -187,7 +190,7 @@ ReferenceElement<Simplex>::precalculate()
   {
     // it doesn't really make sense to have a zero-order lagrange element
     // but we can hack it by setting the coordinates to the centroid
-    for (index_t j=0;j<number_;j++)
+    for (index_t j=0;j<number_+1;j++)
     {
       lref_.push_back( 1 );
       xref_.push_back( 1./(number_+1) );
@@ -210,9 +213,6 @@ ReferenceElement<Simplex>::precalculate()
 
     if (!more) break;
   }
-
-  vunit_ = sqrt(number_+1)/(numerics::factorial(number_)*sqrt(pow(2.,number_)));
-  vorth_ = 1./numerics::factorial(number_);
 
   for (index_t k=0;k<nb_basis();k++)
   {

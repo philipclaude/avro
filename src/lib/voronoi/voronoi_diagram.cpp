@@ -3,9 +3,12 @@
 
 #include "geometry/entity.h"
 
+#include "master/quadrature.h"
+
 #include "mesh/decomposition.h"
 
 #include "numerics/geometry.h"
+#include "numerics/integration.h"
 
 #include "voronoi/delaunay.h"
 #include "voronoi/voronoi.h"
@@ -177,8 +180,6 @@ RestrictedVoronoiDiagram::compute( const bool exact )
     }
   }
 
-  printf("accumulating\n");
-
   // accumulate the result
   accumulate();
 }
@@ -322,12 +323,42 @@ RestrictedVoronoiDiagram::accumulate()
   #endif
 }
 
-void
-RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
-{
 
+template<typename _T>
+class Integrand_CVT_Energy : public Integrand<Integrand_CVT_Energy<_T>>
+{
+public:
+
+  typedef _T T;
+
+  Integrand_CVT_Energy( Points& sites , const std::vector<index_t>& parents ) :
+    sites_(sites),
+    parents_(parents)
+  {}
+
+  bool needs_solution() const { return false; }
+  bool needs_gradient() const { return false; }
+  bool needs_hessian() const { return false; }
+
+  T operator()( index_t k , const real_t* xref , const real_t* x ) const
+  {
+    const real_t* z = sites_[parents_[k]];
+    real_t f = 0;
+    for (coord_t d=0;d<sites_.dim();d++)
+      f += (z[d] - x[d])*(z[d] - x[d]);
+    return 1.0;//x[0]*x[0] + 2*x[1];
+    return f;
+  }
+
+  private:
+    Points& sites_;
+    const std::vector<index_t>& parents_;
+};
+
+real_t
+RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
+{
   // retrieve the site information
-  //Topology<Polytope>& rvd = topology(0);
   Topology<Polytope>& rvd = (*this);
 
   // copy the points so the master can triangulate
@@ -342,12 +373,10 @@ RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
 
   std::vector<real_t> V( delaunay_.nb() , 0. );
 
-  //rvd.Table<index_t>::print();
-  //rvd.points().print();
-
   coord_t number = rvd.number();
   SimplicialDecomposition<Polytope> decomposition(rvd);
   decomposition.extract();
+
 
   std::vector<index_t> simplices;
   std::vector<index_t> parents;
@@ -355,9 +384,13 @@ RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
 
   index_t nb_simplices = simplices.size()/(number+1);
 
+  Topology<Simplex> simplex_topology( decomposition.points() , rvd.number() );
+
   const Simplex& master = decomposition.master();
   for (index_t k=0;k<nb_simplices;k++)
   {
+    simplex_topology.add( &simplices[k*(number+1)] , number+1 );
+
     real_t vk = master.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
 
     index_t s = sites_->value( parents[k] );
@@ -372,28 +405,6 @@ RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
       centroids[s][d] += c[d]*vk;
   }
 
-  /*
-
-  for (index_t k=0;k<rvd.nb();k++)
-  {
-    // get the site this piece is associate with
-    index_t s = sites_->value(k);//sites_[k] -1;
-
-    // compute the volume of this piece
-    real_t vk = rvd.master().volume( points0 , rvd(k) , rvd.nv(k) );
-
-    // compute the centroid of this piece
-    std::vector<real_t> c( delaunay_.dim() );
-    numerics::centroid( rvd(k) , rvd.nv(k) , rvd.points() , c );
-
-    // add the contribution to x*V and V
-    for (coord_t d=0;d<delaunay_.dim();d++)
-      centroids[s][d] += c[d]*vk;
-
-    V[s] += vk;
-  }
-  */
-
   // go back and divide by the volume
   for (index_t k=0;k<centroids.nb();k++)
   for (coord_t d=0;d<centroids.dim();d++)
@@ -404,88 +415,38 @@ RestrictedVoronoiDiagram::computeCentroids( Points& centroids )
     else
       centroids[k][d] /= V[k];
   }
-}
-
-real_t
-cvtEnergy( const std::vector<real_t>& x , void* data )
-{
-  real_t* z = (real_t*) data;
-
-  real_t e = 0.;
-  for (coord_t d=0;d<x.size();d++)
-    e += ( x[d] -z[d] )*( x[d] -z[d] );
-  return e;
-}
-
-real_t
-volume_integrand( const std::vector<real_t>& x , void* data )
-{
-  return 1.;
-}
-
-#if 0
-real_t
-RestrictedVoronoiDiagram::energy()
-{
-  // retrieve the topology where the rvd is stored
-  Topology<Polytope>& rvd = topology(0);
-
-  // copy the points so the master can triangulate
-  Points points0( rvd.points().dim() );
-  rvd.points().copy( points0 );
 
   // compute the CVT energy
-  real_t E = 0.;
-  for (index_t k=0;k<rvd.nb();k++)
-  {
-    // get the site this piece is associated with
-    index_t s = 0;avro_implement;//sites_[k] -1;
-    real_t* z = delaunay_[s];
+  Field<Simplex,real_t> sites_field( simplex_topology , 0 , DISCONTINUOUS );
+  sites_field.build();
 
-    // integrate the deviation between the site and the centroid
-    real_t dE = rvd.master().integrate( points0 , rvd(k) , rvd.nv(k) ,  &cvtEnergy , (void*) z );
+  sites_field.master().set_basis( BasisFunctionCategory_Lagrange );
+  simplex_topology.master().set_basis( BasisFunctionCategory_Lagrange );
 
-    E += dE;
-  }
+  for (index_t k=0;k<sites_field.nb_data();k++)
+    sites_field.value(k) = sites_->value( parents[k] );
 
-  return E;
+  // integrate the sites field
+  ConicalProductQuadrature quadrature(rvd.number(),3);
+  quadrature.define();
+
+  sites_field.master().load_quadrature(quadrature);
+  simplex_topology.master().load_quadrature(quadrature);
+
+  typedef Integrand_CVT_Energy<real_t> Integrand_t;
+  Integrand_t integrand(delaunay_,parents);
+
+  real_t vs = simplex_topology.volume();
+  printf("vs = %g\n",vs);
+
+  Functional<Integrand_t> f(integrand);
+  f.integrate( sites_field );
+
+  return f.value();
 }
-
-real_t
-RestrictedVoronoiDiagram::energy_nd()
-{
-  // retrieve the topology where the rvd is stored
-  Topology<Polytope>& rvd = topology(0);
-
-  numerics::SimplexQuadrature quadrature( rvd.number() , rvd.points().dim() , 2 );
-
-  // copy the points so the master can triangulate
-  Points points0( rvd.points().dim() );
-  rvd.points().copy( points0 );
-
-  // compute the CVT energy
-  real_t E = 0.;
-  real_t V = 0.;
-  for (index_t k=0;k<rvd.nb();k++)
-  {
-    // get the site this piece is associate with
-    index_t s = 0;avro_implement;//sites_[k] -1;
-    real_t* z = delaunay_[s];
-
-    // integrate the deviation between the site and the centroid
-    real_t dE = rvd.master().integrate( points0 , rvd(k) , rvd.nv(k) ,  &cvtEnergy , (void*) z , &quadrature );
-    real_t dV = rvd.master().integrate( points0 , rvd(k) , rvd.nv(k) ,  &volume_integrand , NULL , &quadrature );
-
-    E += dE;
-    V += dV;
-  }
-
-  return E;
-}
-#endif
 
 void
-RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* fid )
+RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact )
 {
   // perform some iterations of Lloyd relaxation
   for (index_t iter=0;iter<nb_iter;iter++)
@@ -495,7 +456,7 @@ RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* f
 
     // compute the centroids
     Points centroids( delaunay_.dim() );
-    computeCentroids( centroids );
+    energy_ = compute_centroids( centroids );
 
     real_t omega = 0.2;
 
@@ -513,14 +474,10 @@ RestrictedVoronoiDiagram::optimise( const index_t nb_iter , bool exact , FILE* f
     }
     dx = std::sqrt(dx/delaunay_.nb());
 
+    printf("iter[%lu]: e = %.6e, dx = %.6e\n",iter,energy_,dx);
 
     // recompute the nearest neighbour information
     neighbours_.compute();
-
-    energy_ = 0;//avro_implement;//energy_nd();
-    printf("iter[%lu]: e = %.6e, dx = %.6e\n",iter,energy_,dx);
-    if (fid!=NULL)
-      fprintf(fid,"%.12e\n",energy_);
   }
 }
 
