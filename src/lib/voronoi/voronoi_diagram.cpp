@@ -331,7 +331,8 @@ public:
 
   typedef _T T;
 
-  Integrand_CVT_Energy( Points& sites , const std::vector<index_t>& parents ) :
+  Integrand_CVT_Energy( Points& delaunay , VoronoiSites& sites , const std::vector<index_t>& parents ) :
+    delaunay_(delaunay),
     sites_(sites),
     parents_(parents)
   {}
@@ -342,16 +343,21 @@ public:
 
   T operator()( index_t k , const real_t* xref , const real_t* x ) const
   {
-    const real_t* z = sites_[parents_[k]];
+    avro_assert_msg( k < parents_.size() , "elem = %lu, nb_parents = %lu", k , parents_.size() );
+    avro_assert_msg( parents_[k] < sites_.nb_data() , "parents[%lu] = %lu, nb_sites = %lu" , k , parents_[k] , sites_.nb() );
+
+    index_t site = index_t(sites_.value(parents_[k]));
+    avro_assert_msg( site < delaunay_.nb() , "requested site %lu but nb_delaunay = %lu",site,delaunay_.nb());
+    const real_t* z = delaunay_[ sites_.value(parents_[k]) ];
     real_t f = 0;
-    for (coord_t d=0;d<sites_.dim();d++)
+    for (coord_t d=0;d<delaunay_.dim();d++)
       f += (z[d] - x[d])*(z[d] - x[d]);
-    return 1.0;//x[0]*x[0] + 2*x[1];
     return f;
   }
 
   private:
-    Points& sites_;
+    const Points& delaunay_;
+    VoronoiSites& sites_;
     const std::vector<index_t>& parents_;
 };
 
@@ -394,6 +400,7 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
     real_t vk = master.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
 
     index_t s = sites_->value( parents[k] );
+    avro_assert( s < V.size() );
     V[s] += vk;
 
     // compute the centroid of this piece
@@ -417,30 +424,16 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
   }
 
   // compute the CVT energy
-  Field<Simplex,real_t> sites_field( simplex_topology , 0 , DISCONTINUOUS );
-  sites_field.build();
-
-  sites_field.master().set_basis( BasisFunctionCategory_Lagrange );
-  simplex_topology.master().set_basis( BasisFunctionCategory_Lagrange );
-
-  for (index_t k=0;k<sites_field.nb_data();k++)
-    sites_field.value(k) = sites_->value( parents[k] );
-
-  // integrate the sites field
   ConicalProductQuadrature quadrature(rvd.number(),3);
+  simplex_topology.master().set_basis( BasisFunctionCategory_Lagrange );
   quadrature.define();
-
-  sites_field.master().load_quadrature(quadrature);
   simplex_topology.master().load_quadrature(quadrature);
 
   typedef Integrand_CVT_Energy<real_t> Integrand_t;
-  Integrand_t integrand(delaunay_,parents);
-
-  real_t vs = simplex_topology.volume();
-  printf("vs = %g\n",vs);
+  Integrand_t integrand(delaunay_,*sites_.get(),parents);
 
   Functional<Integrand_t> f(integrand);
-  f.integrate( sites_field );
+  f.integrate( simplex_topology );
 
   return f.value();
 }

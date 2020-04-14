@@ -6,6 +6,8 @@
 #include "master/master.h"
 #include "master/simplex.h"
 
+#include <set>
+
 namespace avro
 {
 
@@ -44,7 +46,7 @@ public:
   index_t edge( index_t k , index_t j ) const
     { avro_assert_not_reached; return 0; }
 
-  std::vector<index_t> triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Polytope>& triangulation , index_t parent ) const;
+  std::vector<index_t> triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Polytope>& triangulation , index_t parent , std::set<int>& h ) const;
 
   bool& fullmesh() { return fullmesh_; }
 

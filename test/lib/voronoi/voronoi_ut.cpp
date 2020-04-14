@@ -17,12 +17,18 @@ UT_TEST_SUITE( voronoi_test_suite )
 UT_TEST_CASE( test0 )
 {
   coord_t number = 3;
-  index_t N = 4;
+  index_t N = 2;
   std::vector<index_t> dims(number,N);
   CKF_Triangulation topology( dims );
 
   Delaunay delaunay(topology.points().dim());
   topology.points().copy(delaunay);
+
+  #if 0
+  for (index_t k=0;k<delaunay.nb();k++)
+  for (coord_t d=0;d<number;d++)
+    delaunay[k][d] += 0.5;
+  #endif
 
   printf("running rvd test for %u-simplex mesh with %lu elements and %lu delaunay vertices\n",number,topology.nb(),delaunay.nb());
 
@@ -31,17 +37,34 @@ UT_TEST_CASE( test0 )
 
   rvd.compute(true);
 
+  rvd.Table<index_t>::print();
+  rvd.points().incidence().print();
+
+  SimplicialDecomposition<Polytope> simplices(rvd);
+  simplices.extract();
+  std::vector<index_t> S,P;
+  simplices.get_simplices( rvd.number(),S,P );
+
+  Topology<Simplex> T(simplices.points(),rvd.number());
+  for (index_t k=0;k<S.size()/(rvd.number()+1);k++)
+    T.add( &S[k*(rvd.number()+1)],rvd.number()+1);
+  printf("--> volume = %g\n",T.volume());
+
+  //T.Table<index_t>::print();
+
   Visualizer vis;
 
   //vis.add_topology(topology);
-  //vis.add_topology(rvd);
+  vis.add_topology(rvd);
+  //vis.add_topology(T);
 
-  //vis.run();
+  vis.run();
 }
 UT_TEST_CASE_END( test0 )
 
 UT_TEST_CASE( test1 )
 {
+  return;
   for (coord_t number=2;number<=4;number++)
   {
     for (index_t N=2;N<=4;N++)

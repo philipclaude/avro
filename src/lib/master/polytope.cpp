@@ -106,19 +106,19 @@ Polytope::vrep( const index_t* v , index_t nv , const int facet , std::vector<in
 }
 
 std::vector<index_t>
-Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Polytope>& decomposition , index_t parent ) const
+Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Polytope>& decomposition , index_t parent , std::set<int>& h ) const
 {
   std::vector<index_t> simplex_idx;
   if (number_<=1)
   {
-    std::vector<index_t> V(v,v+nv);
+    avro_assert_msg( nv == number_+1 , "nv = %lu , number = %u" , nv , number_ );
     index_t idx = decomposition.add_simplex( number_ , v , parent );
     simplex_idx.push_back(idx);
     return simplex_idx;
   }
 
   // construct a lower dimensional polytope with the same vertex facet matrix
-  Polytope facetope(number_-1,order_,incidence_);
+  Polytope facetope(number_-1,order_,incidence_); // TODO save this in class to avoid constructing simplex every time
 
   // the triangulation keeps track of which points have been added
   // and from which facet points symbolically created that point
@@ -134,12 +134,17 @@ Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<P
   std::vector<index_t> facet_idx;
   for (index_t j=0;j<facets.size();j++)
   {
+    // skip redundant bisectors
+    if (h.find(facets[j])!=h.end()) continue;
+
     // get the points with this bisector
     std::vector<index_t> vf;
     vrep( v , nv , facets[j] , vf );
 
     // triangulate the lower dimensional polytope
-    std::vector<index_t> idx = facetope.triangulate( vf.data() , vf.size() , decomposition , parent );
+    h.insert( facets[j] );
+    std::vector<index_t> idx = facetope.triangulate( vf.data() , vf.size() , decomposition , parent , h );
+    h.erase( facets[j] );
 
     // add the lower-dimensional facet identifiers
     for (index_t k=0;k<idx.size();k++)
@@ -153,6 +158,7 @@ Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<P
   }
   else
   {
+    avro_assert( id > 0 );
     avro_assert( nv > number_ );
     for (index_t k=0;k<facet_idx.size();k++)
     {

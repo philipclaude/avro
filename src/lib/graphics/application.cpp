@@ -121,7 +121,7 @@ Application<GLFW_Interface<API_t>>::run()
 
 Visualizer::Visualizer()
 {
-  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"3D");
+  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"avro 2.0 2020");
   add_window( main_.get() );
   //add_window( &side_ );
 

@@ -121,19 +121,6 @@ SimplicialDecomposition<type>::get_simplices( coord_t number , std::vector<index
 
   for (index_t k=0;k<s.nb();k++)
   {
-    bool skip = false;
-    for (coord_t j=0;j<number+1;j++)
-    {
-      index_t idx = s(k,j);
-      if (centroid2dim_.find(idx)==centroid2dim_.end()) continue;
-      if (centroid2dim_.at(idx)!=number)
-      {
-        skip = true;
-        break;
-      }
-    }
-    if (skip) continue;
-
     if (topology_.number()==2)
       avro_assert_msg( parents_[number].at(k).size()==1 , "nb_parents of elem %lu = %lu" , k , parents_[number].at(k).size() ); // all triangles have cardinality 1
     //if (topology_.number()==3)
@@ -204,7 +191,9 @@ SimplicialDecomposition<Polytope>::extract()
 
     // ask the master to triangulate, points will be added to points stored
     // in the SimplicialDecomposition object upon decomposition by the master
-    topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this , k );
+    std::set<int> h;
+    topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this , k , h );
+    avro_assert( h.size()==0 );
   }
   if (number_==topology_.points().dim())
     child(number_).orient();

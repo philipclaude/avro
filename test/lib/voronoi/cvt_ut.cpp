@@ -17,7 +17,7 @@ UT_TEST_SUITE( cvt_test_suite )
 UT_TEST_CASE( test1 )
 {
   coord_t number = 3;
-  index_t N = 2;
+  index_t N = 6;
 
   std::vector<index_t> dims(number,N);
   CKF_Triangulation topology( dims );
