@@ -150,7 +150,7 @@ Toolbar::begin_draw()
     int width = pfont->FontSize;
 
     ImGui::SetNextItemWidth(100);
-    if (ImGui::CollapsingHeader("I/O"))
+    if (ImGui::CollapsingHeader("Library"))
     {
       json request,response;
       request["command"] = "ls";
@@ -196,7 +196,7 @@ Toolbar::begin_draw()
       ImGui::Combo("File",&file_current, items.data() , items.size() );
 
       ImGui::SameLine();
-      if (ImGui::Button("Load"))
+      if (ImGui::Button("Add"))
       {
         std::string ext = get_file_ext( items[file_current] );
         if (ext=="mesh")
@@ -208,6 +208,26 @@ Toolbar::begin_draw()
           lib->add_geometry( items[file_current] , listener_->pwd() );
         }
       }
+
+      // custom parameter loader
+      ImGui::SetNextItemWidth(100);
+      items.clear();
+      items.push_back("Structured Simplices");
+      items.push_back("Structured Cube");
+      items.push_back("Tesseract Linear");
+      static int builtin_current = 0;
+      ImGui::Combo("Built-in",&builtin_current,items.data(),items.size());
+
+      ImGui::SameLine();
+      static char param_name[128] = "params";
+      ImGui::SetNextItemWidth(100);
+      ImGui::InputText("Parameters", param_name, IM_ARRAYSIZE(param_name));
+      ImGui::SameLine();
+      if (ImGui::Button("Load"))
+      {
+        printf("parse parameters and load mesh/metric/geometry!\n");
+      }
+
     }
 
     if (ImGui::CollapsingHeader("Plots"))
