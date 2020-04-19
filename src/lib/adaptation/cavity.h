@@ -79,6 +79,7 @@ public:
 
   void set_enlarge( bool x ) { enlarge_ = x; }
   void set_ignore( bool x ) { ignore_ = x; }
+  void check_visibility( bool x ) { check_visibility_ = x; }
 
   const Topology<type>& topology() const { return topology_; }
 

@@ -6,6 +6,8 @@
 #include "graphics/user_interface.h"
 #include "graphics/window.h"
 
+#include "library/ckf.h"
+
 #include "mesh/points.h"
 
 #include "voronoi/algorithms.h"
@@ -17,7 +19,7 @@ UT_TEST_SUITE( voronoi_bower_watson_suite )
 UT_TEST_CASE( test1 )
 {
 
-  index_t nb_points = 100;
+  index_t nb_points = 10000;
   coord_t dim = 2;
 
   Points points(dim);
@@ -29,9 +31,20 @@ UT_TEST_CASE( test1 )
     points.create(x.data());
   }
 
+  #if 0
+  points.clear();
+  std::vector<index_t> dims(dim,4);
+  CKF_Triangulation triangulation(dims);
+  triangulation.points().copy(points);
+  #endif
+
+
   BowerWatson delaunay(points);
 
   delaunay.compute();
+
+  //points.print();
+  //delaunay.points().print();
 
   graphics::Visualizer vis;
   vis.add_topology(delaunay);

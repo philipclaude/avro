@@ -36,15 +36,10 @@ BowerWatson::initialize()
   std::vector<real_t> xmid( points_.dim() );
   for (coord_t d=0;d<points_.dim();d++)
   {
-    xmin[d] *= 1.01;
-    xmax[d] *= 1.01;
+    xmin[d] = xmin[d]*1.01 -0.01;
+    xmax[d] = xmax[d]*1.01 +0.01;
     xmid[d] = xmin[d] + 0.5*( xmax[d] - xmin[d] );
-
   }
-
-  print_inline( xmin , "xmin" );
-  print_inline( xmax , "xmax" );
-  print_inline( xmid , "xmid" );
 
   std::vector<index_t> dims( points_.dim() , 2 );
   CKF_Triangulation cube(dims);
@@ -56,6 +51,7 @@ BowerWatson::initialize()
     {
       cube.points()[k][d] = xmin[d] + (xmax[d] - xmin[d])*cube.points()[k][d];
     }
+    fake_.push_back( points_.nb() );
     points_.create( cube.points()[k] );
   }
 
@@ -68,20 +64,17 @@ BowerWatson::initialize()
   this->inverse().build();
 }
 
-int
+real_t
 BowerWatson::insphere( index_t elem , index_t point )
 {
-  std::vector<real_t*> x( number_ + 1 );
-  for (index_t j=0;j<nv(elem);j++)
-    x[j] = points_[operator()(elem)[j]];
-
+  const index_t* t = operator()(elem);
   if (points_.dim()==2)
   {
-    return ::incircle( x[0] , x[1] , x[2] , points_[point] );
+    return ::incircle( points_[t[0]] , points_[t[1]] , points_[t[2]] , points_[point] );
   }
   if (points_.dim()==3)
   {
-    return -::insphere( x[0] , x[1] , x[2] , x[3] , points_[point] );
+    return -::insphere( points_[t[0]] , points_[t[1]] , points_[t[2]] , points_[t[3]], points_[point] );
   }
   else
     avro_implement;
@@ -95,10 +88,14 @@ BowerWatson::compute()
 
   // create a cavity operator to handle the removal/insertion
   Cavity<Simplex> cavity( *this );
+  cavity.set_enlarge(false);
+  cavity.check_visibility(false);
 
   // add every points one by one
   for (index_t k=0;k<delaunay_.nb();k++)
   {
+    cavity.clear();
+
     // add the point into the triangulation
     index_t point = points_.nb();
     points_.create( delaunay_[k] );
@@ -107,26 +104,41 @@ BowerWatson::compute()
     // find all triangles whose circumsphere contains this point
     std::vector<index_t> elems;
 
+    // TODO more efficient search through mesh
+    // using the simplex connectivity (since this is currently O(n^2))
     for (index_t j=0;j<nb();j++)
     {
       if (ghost(j)) continue;
-      if (insphere(j, point )>=0)
+      if (insphere(j, point )>0)
         elems.push_back(j);
     }
-
-    print_inline(elems);
-    if (elems.size()==0) continue;
+    avro_assert( elems.size()>0 );
 
     // apply the cavity operator to this point
     // (connect the point to the boundary and insert into triangulation)
     bool result = cavity.compute( point , points_[point] , elems );
+    avro_assert( result );
 
     // apply the change to the topology
     apply(cavity);
   }
 
   // delete the points added from the initial supertriangle
-  // TODO
+  // as well as any triangle connected to one of these fake points
+  std::vector<index_t> removed;
+  for (index_t k=0;k<nb();k++)
+  {
+    for (index_t j=0;j<fake_.size();j++)
+      if (has(k,fake_[j]))
+        removed.push_back(k);
+  }
+  uniquify(removed);
+
+  for (index_t k=0;k<removed.size();k++)
+    remove( removed[k] - k );
+
+  for (index_t k=0;k<fake_.size();k++)
+    remove_point( fake_[k] - k );
 }
 
 } // avro

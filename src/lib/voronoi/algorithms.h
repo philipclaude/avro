@@ -18,12 +18,13 @@ public:
 
   void initialize();
 
-  int insphere( index_t elem , index_t point );
+  real_t insphere( index_t elem , index_t point );
 
 private:
   Points points_;
   Points& delaunay_;
 
+  std::vector<index_t> fake_;
 };
 
 }
