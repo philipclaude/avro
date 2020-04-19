@@ -203,7 +203,7 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
         {
           v[0] = n0;
           v[1] = n1;
-          geometryParams( eg , topology.points() , v , 2 , params.data() );
+          geometry_params( eg , topology.points() , v , 2 , params.data() );
 
           // interpolate in parameter space
           params[0] = params[0] +j*ds*( params[udim  ] -params[0] );

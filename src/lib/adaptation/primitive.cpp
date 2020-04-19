@@ -43,7 +43,7 @@ Primitive<type>::geometry( index_t p0 , index_t p1 )
 
 template<typename type>
 void
-Primitive<type>::extractGeometry( Entity* e , const std::vector<index_t>& f )
+Primitive<type>::extract_geometry( Entity* e , const std::vector<index_t>& f )
 {
   avro_assert( e->number()==2 );
   u_.clear();
@@ -55,7 +55,7 @@ Primitive<type>::extractGeometry( Entity* e , const std::vector<index_t>& f )
   G_.neighbours().forceCompute(); // forces the neighbours to be recomputed
   G_.set_closed(false); // forces the re-closing of the mesh
 
-  this->computeGeometry( e , G_ , v2u_ , u2v_ );
+  this->compute_geometry( e , G_ , v2u_ , u2v_ );
   if (G_.nb()==0) return;
 
   G_.inverse().build();

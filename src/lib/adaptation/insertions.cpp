@@ -40,7 +40,7 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
     this->gcavity_.sign() = 1;
 
   // extract the geometry cavity
-  this->extractGeometry( ep ); // no facet information, will assign the cavity to non-ghosts
+  this->extract_geometry( ep ); // no facet information, will assign the cavity to non-ghosts
   avro_assert(this->G_.nb()>0);
 
   // add the parameter coordinates for the inserted point along with the mapped index
@@ -71,7 +71,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
 
   // insertions should not enlarge the initial set of cavity elements
   this->enlarge_ = false;
-  this->checkVisibility_ = true;
+  this->check_visibility_ = true;
   enlarged_ = false; // no enlargement (for geometry) yet
 
   // determine the cavity elements if none were provided
@@ -131,7 +131,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     // enlarge the cavity for boundary insertions
     // if the shell was given, then this should have been precomputed
     std::vector<index_t> elems0 = elems_;
-    if (!this->findGeometry( x , elems_ ))
+    if (!this->find_geometry( x , elems_ ))
     {
       // we could not enlarge to find the inserted point
       this->topology_.remove_point(ns);
@@ -155,7 +155,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   }
 
   // check if all produce elements have a positive determinant of implied metric
-  if (!this->positiveImpliedMetrics())
+  if (!this->positive_implied_metrics())
   {
     this->topology_.remove_point(ns);
     return false;
@@ -190,7 +190,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     }
   }
 
-  if (this->nb_removedNodes()>0)
+  if (this->nb_removed_nodes()>0)
   {
     // when we are enlarging, do not allow points to be removed
     this->topology_.remove_point(ns);
@@ -427,9 +427,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       avro_assert( metric_.check(topology_) );
 
       // determine if any points were removed
-      for (index_t j=0;j<inserter_.nb_removedNodes();j++)
+      for (index_t j=0;j<inserter_.nb_removed_nodes();j++)
       {
-        index_t removed_node = inserter_.removedNode(j);
+        index_t removed_node = inserter_.removed_node(j);
         if (removed.find(removed_node)==removed.end())
         {
           printf("vertex %lu was removed!\n",removed_node);

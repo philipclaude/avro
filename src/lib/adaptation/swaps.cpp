@@ -52,7 +52,7 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
 
   // assign the cavity used by the swapper since this is the same
   // for all candidates
-  edge_swapper_.setCavity( shell );
+  edge_swapper_.set_cavity( shell );
 
   // loop through all candidates
   int m = -1;
@@ -88,7 +88,7 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
     real_t qws = worst_quality(edge_swapper_,metric_);
     if (qws>qw)
     {
-      if (!edge_swapper_.philipcondition()) continue;
+      if (!edge_swapper_.has_unique_elems()) continue;
       m  = candidates[j];
       qw = qws;
     }
@@ -198,7 +198,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
       // assign the cavity used by the swapper since this is the same
       // for all candidates
-      edge_swapper_.setCavity( elems );
+      edge_swapper_.set_cavity( elems );
 
       // loop through all candidates
       int m = -1;
@@ -239,7 +239,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         if (qw_swap>qw)
         {
           // check that no elements (ghosts) become duplicated
-          if (!edge_swapper_.philipcondition()) continue;
+          if (!edge_swapper_.has_unique_elems()) continue;
           m  = candidates[j];
           qw = qw_swap;
         }
@@ -299,7 +299,7 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
     this->gcavity_.sign() = 1;
 
   // extract the geometry cavity
-  this->extractGeometry( face, {e0,e1} );
+  this->extract_geometry( face, {e0,e1} );
   avro_assert( this->G_.nb()>0 );
 
   if (!this->G_.closed())
@@ -446,7 +446,7 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
   if (!accept) return false;
 
   // check if all produce elements have a positive determinant of implied metric
-  if (!this->positiveImpliedMetrics())
+  if (!this->positive_implied_metrics())
     return false;
 
   // check visibility in the parametric space
@@ -517,7 +517,7 @@ FacetSwap<type>::apply( const index_t p , const index_t k1 , const index_t k2 )
   bool accept = this->compute( p , this->topology_.points()[p] , elems );
 
   // check if all produced elements have a positive determinant of implied metric
-  if (!this->positiveImpliedMetrics())
+  if (!this->positive_implied_metrics())
     return false;
   return accept;
 }

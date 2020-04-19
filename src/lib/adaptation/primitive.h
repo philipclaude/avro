@@ -14,7 +14,7 @@
 
 #define ALL_WITH_EDGE 1
 
-#define PRIMITIVE_CHECK(X) if(!(X)) { this->logError( (#X) ); }
+#define PRIMITIVE_CHECK(X) if(!(X)) { this->log_error( (#X) ); }
 
 namespace avro
 {
@@ -39,8 +39,8 @@ public:
     debug_(true)
   {
     // do not allow the geometry cavity to enlarge
-    gcavity_.setEnlarge(false);
-    gcavity_.setIgnore(true);
+    gcavity_.set_enlarge(false);
+    gcavity_.set_ignore(true);
   }
 
   bool invalidatesTopology() const
@@ -51,14 +51,14 @@ public:
   }
 
   // cavity assignment and reset functions
-  void setCavity( const std::vector<index_t>& C ) { C_ = C; }
+  void set_cavity( const std::vector<index_t>& C ) { C_ = C; }
   void restart() { C_.clear(); }
 
   // geometry-related functions
   Entity* geometry( index_t e0 , index_t e1 );
-  void extractGeometry( Entity* entity , const std::vector<index_t>& f=std::vector<index_t>() );
+  void extract_geometry( Entity* entity , const std::vector<index_t>& f=std::vector<index_t>() );
 
-  real_t worstQualityGeometry( MetricField<type>& metric ) const;
+  real_t worst_quality_geometry( MetricField<type>& metric ) const;
 
   bool& delay() { return delay_; }
   bool& curved() { return curved_; }
@@ -66,12 +66,12 @@ public:
   bool& debug() { return debug_; }
 
   index_t nb_error() const { return errors_.size(); }
-  void logError( const std::string& s )
+  void log_error( const std::string& s )
   {
     errors_.push_back(s);
   }
 
-  void printErrors() const
+  void print_errors() const
   {
     if (nb_error()==0) return;
     printf("%s:\n",this->name_.c_str());

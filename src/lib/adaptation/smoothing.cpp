@@ -88,7 +88,7 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
     this->gcavity_.sign() = 1;
 
   // extract the geometry cavity
-  this->extractGeometry( ep , {p} );
+  this->extract_geometry( ep , {p} );
   avro_assert( this->G_.nb()>0 );
   //avro_assert_msg( this->G_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->G_.nb_real() , this->nb_ghost() );
 
@@ -258,7 +258,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 
     // make sure the cavity is not enlarged
     std::vector<index_t> C0 = this->C_;
-    this->findGeometry( x.data() , this->C_ );
+    this->find_geometry( x.data() , this->C_ );
     if (this->C_.size()!=C0.size())
     {
       nb_enlarged_rejections_++;
@@ -282,7 +282,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 
   this->enlarge_ = false;
   bool accept = this->compute( p , x.data() , this->C_ );
-  if (this->nb_removedNodes()>0)
+  if (this->nb_removed_nodes()>0)
   {
     nb_removed_rejections_++;
     return false;
@@ -306,7 +306,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   }
 
   // check if all produce elements have a positive determinant of implied metric
-  if (!this->positiveImpliedMetrics())
+  if (!this->positive_implied_metrics())
   {
     nb_implied_metric_rejections_++;
 
