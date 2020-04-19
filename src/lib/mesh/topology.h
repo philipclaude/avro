@@ -53,6 +53,7 @@ public:
 
   virtual void get_points( std::vector<index_t>& p ) const = 0;
   virtual void get_edges( std::vector<index_t>& e ) const = 0;
+  virtual void get_topologies( std::vector<const TopologyBase*>& c ) const = 0;
 
   const std::string& name() const { return name_; }
   void setName( const std::string& _name ) { name_ = _name; }
@@ -116,6 +117,8 @@ public:
 
   void get_elem( index_t k , std::vector<real_t*>& X ) const;
   void get_elem( index_t k , std::vector<const real_t*>& X ) const;
+
+  void get_topologies( std::vector<const TopologyBase*>& c ) const;
 
   bool has( index_t k , index_t idx ) const;
   bool has( index_t p ) const;

@@ -110,8 +110,7 @@ class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
 public:
   Visualizer();
 
-  template<typename type>
-  void add_topology( const Topology<type>& topology )
+  void add_topology( const TopologyBase& topology )
   {
     // add the topology to the relevant windows
     index_t id = main_->create_scene();

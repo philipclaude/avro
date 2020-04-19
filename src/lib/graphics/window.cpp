@@ -91,13 +91,11 @@ GLFW_Window::save_eps( const std::string& filename )
   TransformFeedbackResult feedback;
   for (index_t k=0;k<scene_.size();k++)
   {
-    printf("capture with transform feedback!!\n");
     manager_.draw(*scene_[k].get(),&feedback);
   }
 
-
   library::epsFile eps;
-  int viewport[4] = {0,0,1024,640};
+  int viewport[4] = {0,0,width_,height_};
   eps.set_viewport(viewport);
   eps.add_triangles( feedback.triangle_points() , feedback.triangle_colors() );
   eps.add_edges( feedback.edge_points() , feedback.edge_colors() );

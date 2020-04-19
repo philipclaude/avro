@@ -62,8 +62,8 @@ adapt( int nb_input , const char** inputs )
 
   // get the original input mesh
   std::string meshname( inputs[0] );
-  std::shared_ptr<Topology<type>> ptopology = nullptr;
-  std::shared_ptr<Mesh> pmesh0 = library::get_mesh<type>(meshname,ptopology);
+  std::shared_ptr<TopologyBase> ptopology = nullptr;
+  std::shared_ptr<Mesh> pmesh0 = library::get_mesh(meshname,ptopology);
 
   // define the input mesh for the adaptation
   std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(pmesh0->points().dim(),pmesh0->number());
@@ -71,7 +71,7 @@ adapt( int nb_input , const char** inputs )
   number = pmesh->number();
 
   // get the topology and add it to the input mesh
-  Topology<type>& topology = *ptopology.get();
+  Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
   topology.orient();
   pmesh->add(ptopology);
 
@@ -167,7 +167,7 @@ adapt( int nb_input , const char** inputs )
   char mesh_label[128];
   sprintf(mesh_label,"%p",(void*)pmesh.get());
   lib->add_mesh(mesh_label);
-  
+
   return 0;
 }
 

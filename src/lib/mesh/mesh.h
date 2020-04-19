@@ -30,6 +30,8 @@ public:
   TopologyBase& topology(index_t k) { return *topology_[k].get(); }
   const TopologyBase& topology(index_t k) const { return *topology_[k].get(); }
 
+  Topology_ptr topology_ptr( index_t k ) { return topology_[k]; }
+
   template<typename type>
   Topology<type>&
   retrieve( index_t k )
@@ -88,6 +90,16 @@ public:
       }
       else
         avro_implement;
+    }
+  }
+
+  void retrieve( std::vector<const TopologyBase*>& topologies )
+  {
+    topologies.clear();
+    for (index_t k=0;k<topology_.size();k++)
+    {
+      topologies.push_back( topology_[k].get() );
+      topology_[k]->get_topologies(topologies);
     }
   }
 

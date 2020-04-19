@@ -1,6 +1,7 @@
 #include "../bin/programs.h"
 
 #include "common/error.h"
+#include "common/tools.h"
 
 #include "graphics/application.h"
 #include "graphics/user_interface.h"
@@ -71,27 +72,57 @@ Toolbar::Toolbar( GLFW_Window& window , Visualizer& app ) :
   application_(app)
 {}
 
-int
-request_n()
+void
+parse_parameters( const std::string& builtin , const std::string& params )
 {
-  if (ImGui::BeginPopupModal("request-n", NULL, ImGuiWindowFlags_MenuBar))
+  Library* lib = Library::get();
+
+  std::cout << builtin << std::endl;
+  std::vector<std::string> s = split(builtin,":");
+  if (s[0]=="Mesh")
   {
-    static int N = 2;
-    ImGui::InputInt("Enter N = ", &N);
-    if (ImGui::Button("Enter"))
-    {
-      ImGui::CloseCurrentPopup();
-      return N;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Cancel"))
-    {
-      ImGui::CloseCurrentPopup();
-      return -1;
-    }
-    ImGui::EndPopup();
+    avro_assert( s.size() == 2 );
+    s[1].erase(remove_if(s[1].begin(), s[1].end(), isspace), s[1].end());
+    std::cout << s[1] << std::endl;
+    std::shared_ptr<TopologyBase> ptopology;
+    std::shared_ptr<Mesh> pmesh = library::get_mesh(s[1]+"-"+params,ptopology);
+    char mesh_label[128];
+    sprintf(mesh_label,"%p",(void*)pmesh.get());
+    lib->add_mesh(mesh_label);
+    lib->add_mesh_ptr(pmesh);
   }
-  return -1;
+  if (s[1]=="Metric")
+  {
+    avro_implement;
+  }
+}
+
+void
+Toolbar::save_eps(bool& open) const
+{
+  ImGui::SetNextWindowSize(ImVec2(250, 100));
+  ImGui::Begin("Save file", &open);
+
+  static char output_name[128] = ".eps";
+  ImGui::SetNextItemWidth(150);
+  ImGui::InputText("Filename", output_name, IM_ARRAYSIZE(output_name));
+
+  if (ImGui::Button("Save"))
+  {
+
+    std::string filename(output_name);
+    application_.main_window().save_eps( filename );
+    
+    open = false;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Cancel"))
+  {
+    open = false;
+  }
+
+  ImGui::End();
+
 }
 
 void
@@ -116,6 +147,10 @@ Toolbar::begin_draw()
 
   std::vector<std::string> entities = {"Volumes","Faces","Edges","Nodes"};
 
+  static bool show_save_eps = false;
+
+  if (show_save_eps) save_eps(show_save_eps);
+
   bool active = true;
   ImGui::SetNextItemWidth(200);
   ImGui::Begin("Controls",&active,ImGuiWindowFlags_MenuBar);
@@ -125,10 +160,21 @@ Toolbar::begin_draw()
       if (ImGui::BeginMenu("File"))
       {
           if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
-          if (ImGui::MenuItem("Save", "Ctrl+S"))
+          if (ImGui::BeginMenu("Save"))
           {
-            printf("save file!\n");
+            if (ImGui::MenuItem("EPS",NULL,&show_save_eps))
+            {
+              ImGui::Text("enter file name");
+              ImGui::SameLine();
+              ImGui::Button("save file!");
+              ImGui::OpenPopup("save-window");
+            }
+
+            ImGui::MenuItem("PNG");
+            ImGui::EndMenu();
           }
+
+
           if (ImGui::MenuItem("Close", "Ctrl+W"))  { active = false; }
           ImGui::EndMenu();
       }
@@ -212,9 +258,9 @@ Toolbar::begin_draw()
       // custom parameter loader
       ImGui::SetNextItemWidth(100);
       items.clear();
-      items.push_back("Structured Simplices");
-      items.push_back("Structured Cube");
-      items.push_back("Tesseract Linear");
+      items.push_back("Mesh: CKF-simplex");
+      items.push_back("Mesh: CKF-cube");
+      items.push_back("Metric: Linear");
       static int builtin_current = 0;
       ImGui::Combo("Built-in",&builtin_current,items.data(),items.size());
 
@@ -225,6 +271,9 @@ Toolbar::begin_draw()
       ImGui::SameLine();
       if (ImGui::Button("Load"))
       {
+        std::string builtin(items[builtin_current]);
+        std::string params(param_name);
+        parse_parameters( builtin , params );
         printf("parse parameters and load mesh/metric/geometry!\n");
       }
 
@@ -254,29 +303,12 @@ Toolbar::begin_draw()
         else
           mesh_name = meshes[mesh_current_plot];
 
-        // todo generalize this to other mesh types
-        // i.e. determine what type of mesh this is first
+        // load the mesh
         std::shared_ptr<Mesh> pmesh = nullptr;
-        try
-        {
-          typedef Simplex type;
-
-          // load the mesh
-          std::shared_ptr<Topology<type>> ptopology = nullptr;
-          pmesh = library::get_mesh<type>(mesh_name,ptopology);
-          Topology<type>& topology = *ptopology.get();
-          application_.add_topology(topology);
-        }
-        catch(...)
-        {
-          typedef Polytope type;
-
-          // load the mesh
-          std::shared_ptr<Topology<type>> ptopology = nullptr;
-          pmesh = library::get_mesh<type>(mesh_name,ptopology);
-          Topology<type>& topology = *ptopology.get();
-          application_.add_topology(topology);
-        }
+        std::shared_ptr<TopologyBase> ptopology = nullptr;
+        pmesh = library::get_mesh(mesh_name,ptopology);
+        TopologyBase& topology = *ptopology.get();
+        application_.add_topology(topology);
 
         // load the topology and write to the visualizer
         // we first need someone to hold onto the mesh pointer (the library)
@@ -342,8 +374,6 @@ Toolbar::begin_draw()
                 std::vector<std::string> entity = plot[entities[i]];
                 for (index_t m=0;m<entity.size();m++)
                 {
-                  static float alpha = 1.0f;
-
                   primitives_.insert( {entity[m],{k,j} } );
 
                   unsigned long address = std::stoul(entity[m],0,16);
@@ -401,8 +431,6 @@ Toolbar::begin_draw()
       ImGui::SetNextItemWidth(100);
       ImGui::InputText("Prefix", output_name, IM_ARRAYSIZE(output_name));
 
-      coord_t dim = 3;
-
       ImGui::SetNextItemWidth(100);
       static int metric_current = 0;
       const std::vector<std::string>& metrics = lib->metrics();
@@ -419,12 +447,6 @@ Toolbar::begin_draw()
       }
       if (ImGui::BeginPopupModal("adapt-mesh", NULL, ImGuiWindowFlags_MenuBar))
       {
-        if (mesh_name=="CKF")
-        {
-          int N = request_n();
-          for (index_t d=0;d<dim;d++)
-            mesh_name += "-3";
-        }
         ImGui::Text("Adapt mesh %s, metric %s, geometry %s?\n",mesh_name.c_str(),metrics[metric_current].c_str(),geometries[geometry_current].c_str());
         if (ImGui::Button("Adapt"))
         {
@@ -500,7 +522,7 @@ Toolbar::begin_draw()
       ImGui::Combo("Sites   ",&sites_current, sites , 3 );
 
       ImGui::SameLine();
-      if (ImGui::Button("Compute"))
+      if (ImGui::Button("Calculate"))
       {
         // TODO treat CKF
         std::string mesh_name = meshes[mesh_current];
@@ -510,6 +532,7 @@ Toolbar::begin_draw()
         std::string iter_cmd = "nb_iter="+std::to_string(nb_iter);
         const char* command[] = {mesh_name.c_str(),sites[sites_current],geometries[geometry_current+1].c_str(),iter_cmd.c_str()};
         int result = programs::voronoi(4,command);
+        UNUSED(result);
       }
     }
 

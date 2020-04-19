@@ -69,6 +69,18 @@ Topology<type>::get_edges( std::vector<index_t>& edges ) const
   }
 }
 
+template<typename type>
+void
+Topology<type>::get_topologies( std::vector<const TopologyBase*>& c ) const
+{
+  for (index_t k=0;k<nb_children();k++)
+  {
+    c.push_back(this->child_ptr(k));
+    this->child(k).get_topologies(c);
+  }
+  uniquify(c);
+}
+
 #if 0
 
 template<typename type>
