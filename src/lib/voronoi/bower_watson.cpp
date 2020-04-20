@@ -77,9 +77,14 @@ BowerWatson::insphere( index_t elem , index_t point )
   {
     return ::incircle( points_[t[0]] , points_[t[1]] , points_[t[2]] , points_[point] );
   }
-  if (points_.dim()==3)
+  else if (points_.dim()==3)
   {
     return -::insphere( points_[t[0]] , points_[t[1]] , points_[t[2]] , points_[t[3]], points_[point] );
+  }
+  else if (points_.dim()==4)
+  {
+    avro_implement;
+    //return -::inhypersphere( points_[t[0]] , points_[t[1]] , points_[t[2]] , points_[t[3]], , points_[t[4]] , points_[point] );
   }
   else
     avro_implement;

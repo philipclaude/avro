@@ -19,33 +19,34 @@ UT_TEST_SUITE( voronoi_bower_watson_suite )
 UT_TEST_CASE( test1 )
 {
 
-  index_t nb_points = 100000;
-  coord_t dim = 3;
+  coord_t dim = 2;
 
-  Points points(dim);
-  for (index_t k=0;k<nb_points;k++)
+  //FILE *fid = fopen("delaunay_timing.dat","w");
+
+  for (index_t i=0;i<3;i++)
   {
-    std::vector<real_t> x(dim);
-    for (coord_t d=0;d<dim;d++)
-      x[d] = random_within( -1.0 , 1.0 );
-    points.create(x.data());
+    index_t nb_points = pow(10,i);
+
+    Points points(dim);
+    for (index_t k=0;k<nb_points;k++)
+    {
+      std::vector<real_t> x(dim);
+      for (coord_t d=0;d<dim;d++)
+        x[d] = random_within( -1.0 , 1.0 );
+      points.create(x.data());
+    }
+
+    BowerWatson delaunay(points);
+
+    clock_t t0 = clock();
+    delaunay.compute();
+    clock_t t1 = clock();
+
+    //fprintf(fid,"%lu %g\n",nb_points,real_t(t1-t0)/CLOCKS_PER_SEC);
   }
+  //fclose(fid);
 
   #if 0
-  points.clear();
-  std::vector<index_t> dims(dim,4);
-  CKF_Triangulation triangulation(dims);
-  triangulation.points().copy(points);
-  #endif
-
-
-  BowerWatson delaunay(points);
-
-  delaunay.compute();
-
-  //points.print();
-  //delaunay.points().print();
-
   graphics::Visualizer vis;
   vis.add_topology(delaunay);
 
@@ -53,6 +54,7 @@ UT_TEST_CASE( test1 )
   vis.main_window().interface().add_widget( toolbar );
 
   vis.run();
+  #endif
 
 }
 UT_TEST_CASE_END( test1 )
