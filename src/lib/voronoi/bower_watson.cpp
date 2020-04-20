@@ -3,6 +3,7 @@
 #include "library/ckf.h"
 
 #include "mesh/points.h"
+#include "mesh/search.h"
 
 #include "voronoi/algorithms.h"
 
@@ -14,12 +15,16 @@ namespace avro
 BowerWatson::BowerWatson( Points& delaunay ) :
   Topology<Simplex>( points_ , delaunay.dim() ),
   points_( delaunay.dim() ),
-  delaunay_(delaunay)
+  delaunay_(delaunay),
+  cloud_(delaunay)
 {}
 
 void
 BowerWatson::initialize()
 {
+  kdtree_ = initializeKdTree(cloud_);
+  kdtree_->build();
+
   std::vector<real_t> xmin( points_.dim() ,  1e20 );
   std::vector<real_t> xmax( points_.dim() , -1e20);
 
@@ -81,6 +86,24 @@ BowerWatson::insphere( index_t elem , index_t point )
 }
 
 void
+BowerWatson::search( index_t point , index_t elem , std::set<index_t>& elems )
+{
+  for (index_t j=0;j<number_+1;j++)
+  {
+    int neighbour = neighbours()(elem,j);
+    if (neighbour<0) continue;
+    if (ghost(neighbour)) continue;
+    if (elems.find(neighbour)!=elems.end()) continue;
+
+    if (insphere(neighbour,point)>0)
+    {
+      elems.insert( neighbour );
+      search(point,neighbour,elems);
+    }
+  }
+}
+
+void
 BowerWatson::compute()
 {
   // compute super-triangle
@@ -91,32 +114,77 @@ BowerWatson::compute()
   cavity.set_enlarge(false);
   cavity.check_visibility(false);
 
+  // build a kdtree so we insert vertices close to the last one
+  std::vector<index_t> idx( delaunay_.nb() );
+  std::vector<real_t> dist( delaunay_.nb() );
+  index_t nu = delaunay_.nb();
+  kdtree_->getNearestNeighbours( delaunay_[0] , idx , dist , nu );
+
+  ElementSearch<Simplex> searcher(*this);
+
   // add every points one by one
   for (index_t k=0;k<delaunay_.nb();k++)
   {
+
     cavity.clear();
 
     // add the point into the triangulation
     index_t point = points_.nb();
-    points_.create( delaunay_[k] );
+    points_.create( delaunay_[idx[k]] );
     inverse().create(1);
 
     // find all triangles whose circumsphere contains this point
-    std::vector<index_t> elems;
-
-    // TODO more efficient search through mesh
-    // using the simplex connectivity (since this is currently O(n^2))
-    for (index_t j=0;j<nb();j++)
+    std::set<index_t> elems;
+    index_t start = nb();
+    if (k==0) // first point
     {
-      if (ghost(j)) continue;
-      if (insphere(j, point )>0)
-        elems.push_back(j);
+      for (index_t j=0;j<nb();j++)
+      {
+        if (ghost(j)) continue;
+        if (insphere(j, point )>0)
+        {
+          start = j;
+          break;
+        }
+      }
     }
-    avro_assert( elems.size()>0 );
+    else
+    {
+      // get the ball of the previous vertex since this is close to the one
+      // currently being added
+      std::vector<index_t> ball;
+      inverse().ball( point-1 , ball );
+
+      // check if any simplex in the ball of the previous vertex encloses
+      // the current point
+      for (index_t j=0;j<ball.size();j++)
+      {
+        if (ghost(ball[j])) continue;
+        if (insphere(ball[j], point )>0)
+        {
+          start = ball[j];
+          break;
+        }
+      }
+      if (start==nb())
+      {
+        // the ball of the previous point does not enclose the current point
+        // so search the mesh for an element enclosing the point
+        int result = searcher.find( points_[point] , ball[0] );
+        avro_assert( result>=0 );
+        start = result;
+      }
+    }
+    avro_assert( start < nb() );
+
+    // search for all elements broken by this point, starting with the one we found
+    elems.insert(start);
+    search( point , start , elems );
 
     // apply the cavity operator to this point
     // (connect the point to the boundary and insert into triangulation)
-    bool result = cavity.compute( point , points_[point] , elems );
+    std::vector<index_t> C(elems.begin(),elems.end());
+    bool result = cavity.compute( point , points_[point] , C );
     avro_assert( result );
 
     // apply the change to the topology

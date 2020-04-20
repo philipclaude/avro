@@ -19,8 +19,8 @@ UT_TEST_SUITE( voronoi_bower_watson_suite )
 UT_TEST_CASE( test1 )
 {
 
-  index_t nb_points = 10000;
-  coord_t dim = 2;
+  index_t nb_points = 100000;
+  coord_t dim = 3;
 
   Points points(dim);
   for (index_t k=0;k<nb_points;k++)
