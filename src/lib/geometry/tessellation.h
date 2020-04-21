@@ -30,30 +30,25 @@ public:
   }
 };
 
-class BodyTessellationBase
+class BodyTessellation : public Mesh
 {
 public:
+  BodyTessellation( Body& body , TessellationParameters& params );
+
   const real_t* internal_point( const index_t k ) const { return internal_points_[k]; }
   index_t nb_internal() const { return internal_points_.nb(); }
 
-private:
-  Points points_;
-  Points internal_points_;
-
-};
-
-template<typename type>
-class BodyTessellation : public Topology<type>, public BodyTessellationBase
-{
-
-public:
-  BodyTessellation( Body& body , TessellationParameters& params );
 
   void make_internal_points();
   real_t volume();
 
+  TessellationParameters& parameters() { return params_; }
+
 private:
   Body& body_;
+  TessellationParameters& params_;
+
+  Points internal_points_;
 };
 
 class ModelTessellation : public Mesh
@@ -63,10 +58,10 @@ public:
 
   ModelTessellation(Model& model , TessellationParameters& params );
 
-  void copy_mesh( const BodyTessellationBase& body_tess );
+  void copy_mesh( const BodyTessellation& body_tess );
   Model& model() const;
 
-  void get_body_internal_points( const BodyTessellationBase& body_tess );
+  void get_body_internal_points( const BodyTessellation& body_tess );
   const real_t* internal_vertex( const index_t k ) const { return internal_points_[k]; }
   index_t nb_internal() const { return internal_points_.nb(); }
 

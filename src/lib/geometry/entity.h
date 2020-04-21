@@ -10,6 +10,7 @@ namespace avro
 {
 
 class Body;
+class BodyTessellation;
 template<typename type> class Topology;
 
 class Entity : public Tree<Entity>

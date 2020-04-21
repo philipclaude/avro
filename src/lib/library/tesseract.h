@@ -32,6 +32,8 @@ public:
     }
   }
 
+  void tessellate( BodyTessellation& body_tess ) const { avro_implement; }
+
 private:
   std::vector<real_t> x0_;
   std::vector<real_t> length_;

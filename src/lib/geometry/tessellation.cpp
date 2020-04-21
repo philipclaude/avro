@@ -38,12 +38,10 @@ ModelTessellation::ModelTessellation( Model& model , TessellationParameters& par
     //if (model.body(k)->number()!=2) continue;
 
     // tessellate the body in the model
-    std::shared_ptr<BodyTessellationBase> body_tess;
+    std::shared_ptr<BodyTessellation> body_tess;
     if (params.type() == "simplex")
     {
-      std::shared_ptr<BodyTessellation<Simplex>> body_tess_simplex = std::make_shared< BodyTessellation<Simplex>>( model.body(k) , params );
-      add(body_tess_simplex);
-      body_tess = body_tess_simplex;
+      body_tess = std::make_shared<BodyTessellation>( model.body(k) , params );
     }
     else
       avro_implement;
@@ -78,11 +76,12 @@ ModelTessellation::ModelTessellation( Model& model , TessellationParameters& par
     }
     */
 
+    //add(body_tess);
   }
 }
 
 void
-ModelTessellation::copy_mesh( const BodyTessellationBase& body_tess )
+ModelTessellation::copy_mesh( const BodyTessellation& body_tess )
 {
 /*
   for (index_t k=0;k<body_tess.nb_topologies();k++)
@@ -125,7 +124,7 @@ ModelTessellation::model() const
 }
 
 void
-ModelTessellation::get_body_internal_points( const BodyTessellationBase& body_tess )
+ModelTessellation::get_body_internal_points( const BodyTessellation& body_tess )
 {
   for (index_t k=0;k<body_tess.nb_internal();k++)
     internal_points_.create( body_tess.internal_point(k) );
