@@ -31,8 +31,6 @@ public:
   void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const;
   void evaluate( const std::vector<real_t>& u , std::vector<real_t>& p ) const;
 
-  void tessellate( BodyTessellation& body_tess , ego egads_tess ) const;
-
   void project( std::vector<real_t>& x , std::vector<real_t>& u ) const;
 
   void set_object( ego* object );

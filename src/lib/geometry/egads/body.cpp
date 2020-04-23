@@ -1,6 +1,7 @@
 #include "geometry/tessellation.h"
 
 #include "geometry/egads/body.h"
+#include "geometry/egads/data.h"
 #include "geometry/egads/object.h"
 
 #include <egads.h>
@@ -168,6 +169,8 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
   else
     avro_implement;
 
+  if (!edge.tessellatable()) return topology;
+
   int status,idx;
   int nv,ne;
   const double *x,*u;
@@ -188,7 +191,8 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
   // get the index of the first point
   status = EG_localToGlobal(egads_tess,-idx,1,&e0);
   if (status!=EGADS_SUCCESS)
-    printf("could not find global index %d for edge %d\n",1,-idx);
+    printf("could not find global index %d for edge %d: member_type = %s, object_class = %s\n",
+      1,-idx,utilities::member_type_name(edge.object_class(),edge.member_type()).c_str(),utilities::object_class_name(edge.object_class()).c_str());
   avro_assert( status==EGADS_SUCCESS );
   e00 = e0; // needed for periodic edges
 
@@ -348,6 +352,7 @@ Body::tessellate( BodyTessellation& tess ) const
     {
       Entity* e = it->second.get();
       ego egads_object = it->first;
+
       if (e->number()==0 && ptype==0)
       {
         index_t idx = EG_indexBodyTopo( *object_ , egads_object );

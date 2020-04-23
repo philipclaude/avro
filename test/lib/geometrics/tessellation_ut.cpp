@@ -17,7 +17,8 @@ UT_TEST_SUITE( geometry_tessellation_suite )
 UT_TEST_CASE(test1)
 {
   EGADS::Context context;
-  EGADS::Model model(&context,"data/cube-cylinder.egads" );
+  //EGADS::Model model(&context,"data/cube-cylinder.egads" );
+  EGADS::Model model(&context,"/Users/pcaplan/Codes/EngSketchPad/data/basic/import_2.egads" );
 
   TessellationParameters params;
   params.standard();
