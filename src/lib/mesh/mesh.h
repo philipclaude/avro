@@ -24,6 +24,7 @@ public:
   index_t nb_topologies() const { return topology_.size(); }
 
   coord_t number() const { return number_; }
+  void set_number( coord_t number ) { number_ = number; }
 
   void add( Topology_ptr topology ) { topology_.push_back(topology); }
 

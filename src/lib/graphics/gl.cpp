@@ -102,6 +102,9 @@ OpenGL_Manager::create_shaders()
 void
 OpenGL_Manager::write( Primitive& primitive )
 {
+
+  if (vao_edges_.find(&primitive)!=vao_edges_.end()) return;
+
   // allocate the buffers
   std::vector<GLuint> vbo(9);
   GL_CALL( glGenBuffers( vbo.size() , vbo.data() ) );
@@ -340,7 +343,7 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
   {
     GL_CALL( glBindVertexArray(vao_points_.at(&primitive) ) );
     GL_CALL( glPointSize(10.0f) );
-    GL_CALL( glDrawArrays( GL_POINTS , 0 , primitive.points().size() ) );
+    GL_CALL( glDrawArrays( GL_POINTS , 0 , primitive.points().size()/3 ) );
   }
 
   // reset the vao bound to the gl

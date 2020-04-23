@@ -112,7 +112,7 @@ Toolbar::save_eps(bool& open) const
 
     std::string filename(output_name);
     application_.main_window().save_eps( filename );
-    
+
     open = false;
   }
   ImGui::SameLine();
@@ -390,6 +390,8 @@ Toolbar::begin_draw()
                   ImGui::PushItemWidth(50);
                   std::string alpha_label = "alpha-" + std::to_string(m);
                   ImGui::SliderFloat(alpha_label.c_str(),&primitive->transparency(),0.1f,1.0f,"%.2f");
+
+                  if (primitive->number()==0) primitive->points_on() = primitive->triangles_on();
                 }
                 ImGui::TreePop();
               }

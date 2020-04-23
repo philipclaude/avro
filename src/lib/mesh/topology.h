@@ -44,12 +44,16 @@ public:
 
   Points& points() const { return points_; }
 
+  void set_points( Points& points );
+
   coord_t number() const { return number_; }
   coord_t order() const { return order_; }
 
   void set_number( coord_t number ) { number_ = number; set_rank(number_+1); }
 
   void copy( const TopologyBase& topology );
+
+  void offset_by( index_t offset );
 
   virtual void get_points( std::vector<index_t>& p ) const = 0;
   virtual void get_edges( std::vector<index_t>& e ) const = 0;
@@ -67,6 +71,20 @@ public:
   void attach( const std::string& name , std::shared_ptr<derived_t>& fld )
   {
     fields_.make( name , fld );
+  }
+
+  template<typename type>
+  void add_child_type( std::shared_ptr<Topology<type>> child_topology )
+  {
+    avro_assert( child_topology->type_name() == type_name() );
+    static_cast< Topology<type>* >(this)->add_child(child_topology);
+  }
+
+  void add_child_type( std::shared_ptr<TopologyBase> child_topology )
+  {
+    avro_assert( child_topology->type_name() == type_name() );
+    if (type_name() == "simplex")
+      add_child_type<Simplex>( std::static_pointer_cast< Topology<Simplex> >(child_topology) );
   }
 
   Fields& fields() { return fields_; }
@@ -123,8 +141,6 @@ public:
   bool has( index_t k , index_t idx ) const;
   bool has( index_t p ) const;
 
-  void offset_by( index_t offset );
-
   void close();
 
   index_t cardinality( const index_t* v , index_t nv ) const;
@@ -158,6 +174,8 @@ public:
   void construct( std::shared_ptr<graphics::Primitive>& node , graphics::Primitive& root ) const;
 
   void print_header() const;
+
+  void set_points( Points& points );
 
 private:
   type master_;

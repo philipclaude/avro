@@ -114,6 +114,7 @@ public:
     topology.get_topologies(children);
     for (index_t k=0;k<children.size();k++)
     {
+      //if (children[k]->number()<1) continue;
       primitive->add_child( std::make_shared<Primitive>(*children[k],this) );
     }
     return id;

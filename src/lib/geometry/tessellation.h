@@ -20,6 +20,9 @@ public:
   }
 
   std::string& type() { return stringParams_["type"]; }
+  real_t& min_size() { return realParams_["min-size"]; }
+  real_t& min_length() { return realParams_["min-length"]; }
+  real_t& min_angle() { return realParams_["min-angle"]; }
 
   void standard()
   {
@@ -33,7 +36,7 @@ public:
 class BodyTessellation : public Mesh
 {
 public:
-  BodyTessellation( Body& body , TessellationParameters& params );
+  BodyTessellation( Points& model_points , Body& body , TessellationParameters& params );
 
   const real_t* internal_point( const index_t k ) const { return internal_points_[k]; }
   index_t nb_internal() const { return internal_points_.nb(); }
@@ -44,9 +47,12 @@ public:
 
   TessellationParameters& parameters() { return params_; }
 
+  Points& model_points() { return model_points_; }
+
 private:
   Body& body_;
   TessellationParameters& params_;
+  Points& model_points_;
 
   Points internal_points_;
 };
@@ -58,7 +64,7 @@ public:
 
   ModelTessellation(Model& model , TessellationParameters& params );
 
-  void copy_mesh( const BodyTessellation& body_tess );
+  void copy_mesh( BodyTessellation& body_tess );
   Model& model() const;
 
   void get_body_internal_points( const BodyTessellation& body_tess );

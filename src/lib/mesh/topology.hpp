@@ -372,19 +372,6 @@ Topology<type>::remove_point( const index_t k )
 
 template<typename type>
 void
-Topology<type>::offset_by( const index_t offset )
-{
-  // offset the indices
-  for (index_t k=0;k<data_.size();k++)
-    data_[k] += offset;
-
-  // offset the children too
-  for (index_t k=0;k<nb_children();k++)
-    this->child(k).offset_by(offset);
-}
-
-template<typename type>
-void
 Topology<type>::close()
 {
   if (closed_) return;
@@ -468,6 +455,16 @@ Topology<type>::intersect( const std::vector<index_t>& facet , std::vector<index
     inverse_.shell( facet[0] , facet[1] , facet[2] , elems );
   else
     avro_implement;
+}
+
+template<typename type>
+void
+Topology<type>::set_points( Points& points )
+{
+  points_ = points;
+  //points_.print();
+  for (index_t k=0;k<nb_children();k++)
+    Tree<Topology<type>>::child(k).set_points(points);
 }
 
 template<typename type>

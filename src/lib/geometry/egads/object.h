@@ -45,6 +45,7 @@ public:
   ego egchild( index_t k ) const;
 
   int object_class() const { return data_.object_class; }
+  int member_type() const { return data_.member_type; }
 
 
   void print(bool with_children=true) const;
