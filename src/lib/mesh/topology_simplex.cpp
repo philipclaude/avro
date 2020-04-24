@@ -36,6 +36,9 @@ Topology<Simplex>::orient( index_t* v , const index_t nv , real_t* q )
 {
   std::vector<const real_t*> x(nv);
   std::vector<index_t> p = linspace(nv);
+  std::vector<index_t> idx(nv);
+
+  if (q!=NULL) avro_implement;
 
   // options to orient with a given vertex,
   // e.g. when a 2d topology is oriented in 3d
@@ -49,8 +52,12 @@ Topology<Simplex>::orient( index_t* v , const index_t nv , real_t* q )
 
     if (q!=NULL) x[nv] = q;
 
-    if (numerics::simplex_volume(x,points_.dim())>0.)
-      break;
+    for (coord_t j=0;j<nv;j++)
+      idx[j] = v[p[j]];
+
+    if (master_.volume(points_,idx.data(),nv)>0.) break;
+    //if (numerics::simplex_volume(x,points_.dim())>0.)
+    //  break;
 
   } while (std::next_permutation(p.begin(),p.end()));
 

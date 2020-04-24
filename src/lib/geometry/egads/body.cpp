@@ -4,6 +4,8 @@
 #include "geometry/egads/data.h"
 #include "geometry/egads/object.h"
 
+#include "numerics/geometry.h"
+
 #include <egads.h>
 
 namespace avro
@@ -196,6 +198,7 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
   avro_assert( status==EGADS_SUCCESS );
   e00 = e0; // needed for periodic edges
 
+  tess.model_points().set_param( e0-1 , {u[0],1e20} );
   for (int k=1;k<nv;k++)
   {
     // get the next point on the edge
@@ -208,6 +211,8 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
     edges[2*(k-1)  ] = (index_t) e0 -1;
     edges[2*(k-1)+1] = (index_t) e1 -1;
 
+    tess.model_points().set_param( e1-1 , {u[k],1e20} );
+
     // the first index is now the last one
     e0 = e1;
   }
@@ -217,14 +222,9 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
   std::vector<index_t> s(2);
   for (index_t k=0;k<index_t(ne);k++)
   {
-		std::vector<real_t> uv(2,0.);
     for (index_t i=0;i<2;i++)
 		{
       s[i] = edges[2*k+i];
-
-      // save the parameter coordinates
-      index_t v = 2*k+i;
-      tess.model_points().set_param( s[i] , {u[v],1e20} );
 		}
     topology->add(s.data(),s.size());
   }
@@ -352,6 +352,7 @@ Body::tessellate( BodyTessellation& tess ) const
     {
       Entity* e = it->second.get();
       ego egads_object = it->first;
+      if (!e->tessellatable()) continue; // don't assign non-tessellatable entities (e.g. loops)
 
       if (e->number()==0 && ptype==0)
       {
@@ -448,6 +449,19 @@ Body::tessellate( BodyTessellation& tess ) const
       else
         avro_implement;
     }
+  }
+
+  for (index_t k=0;k<tess.points().nb();k++)
+  {
+    std::vector<real_t> u(tess.points().u(k) , tess.points().u(k)+2 );
+    std::vector<real_t> x(3);
+    tess.points().entity(k)->evaluate( u , x );
+
+    real_t d = numerics::distance( x.data() , tess.points()[k] , 3 );
+
+    // todo get actual tolerance from egads object...wait until this check fails until implementing this
+    avro_assert( d < 1e-12 );
+
   }
 }
 

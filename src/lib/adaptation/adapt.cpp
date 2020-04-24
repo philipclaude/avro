@@ -116,30 +116,34 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
           U[d] = mesh_topology.points().u( k )[d];
       }
 
-      // evaluate the coordinates for the parameters we found
-      std::vector<real_t> x_eval(3);
-      e->evaluate(U, x_eval);
-
-      // check the coordinates are close
-      const real_t *x0 = mesh_topology.points()[k];
-      real_t d = numerics::distance2(x0,x_eval.data(),mesh_topology.points().dim() );
-      real_t tol=0;
-      EGADS::Object* e0 = (EGADS::Object*)e;
-      EGADS_ENSURE_SUCCESS( EG_getTolerance( *e0->object(), &tol ) );
-
-      if (d>tol)
+      // skip this check if we are operating purely in parameter space
+      if (!mesh_topology.master().parameter())
       {
-        real_t u[2];
-        u[0] = U[0];
-        u[1] = udim == 2 ? U[1] : mesh_topology.points().INFTY;
-        printf("Vertex %lu is not on geometry!\n",k);
-        printf("Provided x0 = (%g,%g,%g), x_eval = (%g,%g,%g) with param coordinates (%g,%g)\n",
-                  x0[0],x0[1],x0[2],x_eval[0],x_eval[1],x_eval[2],u[0],u[1]);
-        printf("For entity:\n");
-        e->print(false);
-      }
+        // evaluate the coordinates for the parameters we found
+        std::vector<real_t> x_eval(3);
+        e->evaluate(U, x_eval);
 
-      avro_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
+        // check the coordinates are close
+        const real_t *x0 = mesh_topology.points()[k];
+        real_t d = numerics::distance2(x0,x_eval.data(),mesh_topology.points().dim() );
+        real_t tol=0;
+        EGADS::Object* e0 = (EGADS::Object*)e;
+        EGADS_ENSURE_SUCCESS( EG_getTolerance( *e0->object(), &tol ) );
+
+        if (d>tol)
+        {
+          real_t u[2];
+          u[0] = U[0];
+          u[1] = udim == 2 ? U[1] : mesh_topology.points().INFTY;
+          printf("Vertex %lu is not on geometry!\n",k);
+          printf("Provided x0 = (%g,%g,%g), x_eval = (%g,%g,%g) with param coordinates (%g,%g)\n",
+                    x0[0],x0[1],x0[2],x_eval[0],x_eval[1],x_eval[2],u[0],u[1]);
+          printf("For entity:\n");
+          e->print(false);
+        }
+
+        avro_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
+      }
     }
   }
 
@@ -366,13 +370,14 @@ adapt( AdaptationProblem& problem )
   avro_assert( number == topology.number() );
 
   const coord_t dim = mesh.points().dim();
-  avro_assert( number == dim );
+  //avro_assert( number == dim );
 
   // create a mesh topology by copying the input one
   Points points( dim );
   mesh.points().copy( points );
   Topology<type> mesh_topology( points , number );
   mesh_topology.TopologyBase::copy( topology );
+  mesh_topology.master().set_parameter( topology.master().parameter() );
 
   if (!params.prepared())
   {
@@ -386,7 +391,9 @@ adapt( AdaptationProblem& problem )
 
     // close the mesh topology, compute the neighours and mesh inverse
     mesh_topology.close();
-    mesh_topology.orient();
+
+    if (dim==number)
+      mesh_topology.orient();
 
     mesh_topology.neighbours().fromscratch() = true; // speed up
     mesh_topology.neighbours().compute();
@@ -396,6 +403,7 @@ adapt( AdaptationProblem& problem )
     // copy the data into the background topology used by the discrete metric
     points.copy( topology.points() );
     topology.TopologyBase::copy( mesh_topology );
+    topology.master().set_parameter( mesh_topology.master().parameter() );
     mesh_topology.neighbours().copy( topology.neighbours() );
 
     topology.inverse().build();
@@ -469,7 +477,7 @@ adapt( AdaptationProblem& problem )
   MetricField<type> metric( topology , field );
 
   // initial volume to compare with later
-  real_t v0 = mesh_topology.volume();
+  //real_t v0 = mesh_topology.volume();
 
   // call the adaptation!
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );
@@ -543,8 +551,8 @@ adapt( AdaptationProblem& problem )
     fld.push_back( field[k] );
 
   // print some information about the volume (for straight-sided geometries)
-  real_t v1 = mesh_topology.volume();
-  printf("v0 = %1.16e, v1 = %1.16e\n",v0,v1);
+  //real_t v1 = mesh_topology.volume();
+  //printf("v0 = %1.16e, v1 = %1.16e\n",v0,v1);
 
   if (!output_redirect.empty())
   {

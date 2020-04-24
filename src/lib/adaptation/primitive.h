@@ -31,8 +31,10 @@ class Primitive : public Cavity<type>
 public:
   Primitive( Topology<type>& _topology ) :
     Cavity<type>(_topology),
-    u_(_topology.points().dim()-1),
-    G_( u_ , _topology.number()-1 ),
+    //u_(_topology.points().dim()-1),
+    u_(_topology.master().parameter()?(_topology.points().dim()):(_topology.points().dim()-1)),
+    //G_( u_ , _topology.number()-1 ),
+    G_(u_,_topology.master().parameter()?(_topology.number()):(_topology.number()-1)),
     gcavity_( G_ ),
     delay_(false),
     curved_(true),
@@ -270,8 +272,10 @@ public:
     entity_((EGADS::Object*)entity),
     normal_(TableLayout_Rectangular,3)
   {
+    #if 0 // philip april 23
     avro_assert( u_.dim()==v_.dim()-1 );
     avro_assert( v_.dim()==3 );
+    #endif
     avro_assert( u2v_.size()==u_.nb() );
 
     // compute the normal to every vertex

@@ -290,7 +290,14 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
         edge = entities[k];
         t = points.u( v[k] )[0];
       }
+      else
+      {
+        printf("%s\n",EGADS::utilities::object_class_name(entities[k]->object_class()).c_str());
+        entities[k]->print_header();
+        avro_assert_not_reached;
+      }
 
+      avro_assert( edge!=nil );
       if (edge->sense_required())
       {
         // need to sort out which uv should be used later
@@ -460,6 +467,7 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
 
   coord_t dim  = points.dim();
 
+#if 0
   for (index_t k=0;k<nv;k++)
   {
     // evaluate the coordinates for the parameters we found
@@ -489,6 +497,7 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
 
     avro_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
   }
+#endif
 }
 
 template<typename type>
@@ -582,6 +591,19 @@ Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std
 
   } // loop over cavity elements
 
+  if (topology_.master().parameter())
+  {
+    // add all elements in the cavity
+    avro_assert(geometry.nb()==0);
+    for (index_t k=0;k<nb_cavity();k++)
+    {
+      f.resize(3);
+      for (index_t j=0;j<3;j++)
+        f[j] = topology_( cavity_[k],j );
+      geometry.add(f.data(),f.size());
+    }
+  }
+
   avro_assert(geometry.nb()>0);
   if (geometry.nb()==0) return;
 
@@ -616,6 +638,8 @@ Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std
   if (uvcoords)
   {
     coord_t udim = this->points_.udim();
+    if (udim!=geometry.points().dim())
+      geometry.points().print(true);
     avro_assert(udim == geometry.points().dim());
     std::vector<real_t> params;
     for (index_t k=0;k<geometry.nb();k++)

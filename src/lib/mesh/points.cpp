@@ -193,13 +193,15 @@ Points::print( index_t k , bool info ) const
 	if (info)
 	{
 		std::string geo;
+		int num = -1;
 		if (primitive_[k]!=NULL)
 		{
 			geo = "-"+primitive_[k]->name();
+			num = primitive_[k]->number();
 		}
 		else geo = "";
-		printf(" : %s , b[ %3d ] , g[ %p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
-						body_[k],(void*)primitive_[k],geo.c_str());
+		printf(" : %s , b[ %3d ] , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
+						body_[k],num,(void*)primitive_[k],geo.c_str());
 		for (index_t d=0;d<udim_;d++)
 			printf("%12.4e ",u(k)[d]);
 		printf(")");

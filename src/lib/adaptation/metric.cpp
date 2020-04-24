@@ -1,5 +1,8 @@
+#include "adaptation/cavity.h"
 #include "adaptation/implied_metric.h"
 #include "adaptation/metric.h"
+
+#include "geometry/entity.h"
 
 #include "library/metric.h"
 
@@ -125,7 +128,38 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
   avro_assert_msg( n1 < attachment_.nb() ,
                   "n1 = %lu, attachment_.nb() = %lu" , n1, attachment_.nb() );
 	std::vector<real_t> edge0( topology_.points().dim() );
-	numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
+
+	if (topology_.master().parameter())
+	{
+		// retrieve appropriate parametric coordinates!
+		index_t e[2] = {n0,n1};
+		Entity* entity = BoundaryUtils::geometryFacet( attachment_.points() , e , 2 );
+		if (entity==NULL)
+		{
+			attachment_.points().print(n0,true);
+			attachment_.points().print(n1,true);
+		}
+		avro_assert( entity!=NULL );
+		real_t u[4];
+		geometry_params( entity , attachment_.points() , e , 2 , u );
+		edge0[0] = u[2] - u[0];
+		edge0[1] = u[3] = u[1];
+
+		if (fabs(edge0[0])>1e10) edge0[0] = 0;
+		if (fabs(edge0[1])>1e10) edge0[1] = 0;
+
+		if (fabs(edge0[1])>1e10 || fabs(edge0[0])>1e10)
+		{
+			attachment_.points().print(true);
+			printf("n0 = %lu, n1 = %lu\n",n0,n1);
+			entity->print_header();
+		}
+
+		avro_assert( fabs(edge0[0]) < 1e10 );
+		avro_assert( fabs(edge0[1]) < 1e10 );
+	}
+	else
+		numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
 	numerics::VectorD<real_t> edge(topology_.points().dim(),edge0.data());
   return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
 }
@@ -231,13 +265,31 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
     index_t p0 = master.edge(j,0);
     index_t p1 = master.edge(j,1);
 
-		numerics::vector( points[V[p0]] , points[V[p1]] , dim , e.data() );
+		if (topology.master().parameter())
+		{
+			// retrieve appropriate parametric coordinates!
+			index_t edge[2] = {V[p0],V[p1]};
+			Entity* entity = BoundaryUtils::geometryFacet( points , edge , 2 );
+			avro_assert( entity!=NULL );
+			if (entity->number()==1) return 0;
+			real_t u[4];
+			geometry_params( entity , points , edge , 2 , u );
+			e(0) = u[2] - u[0];
+			e(1) = u[3] = u[1];
+		}
+		else
+			numerics::vector( points[V[p0]] , points[V[p1]] , dim , e.data() );
 		lj = numpack::Transpose(e)*M*e;
     l  += lj;
   }
 
 	// compute the volume under m
 	real_t v = sqrtdetM*master.volume(topology.points(),V,NV);
+	if (v<0)
+	{
+		for (index_t j=0;j<NV;j++)
+			topology.points().print(V[j],true);
+	}
 	avro_assert_msg( v>=0. , "v = %g, sqrtDetM = %g, v_e = %g" , v , sqrtdetM , master.volume(topology.points(),V,NV) );
 	v = std::pow( v , 2./num );
 

@@ -28,6 +28,8 @@ Primitive<type>::geometry( index_t p0 , index_t p1 )
 
   if (g->interior()) return g; // skip the ghost check
 
+  if (this->topology_.master().parameter()) return g;
+
   // we need to make sure the edge is attached to some ghosts
   std::vector<index_t> shell;
   this->topology_.intersect( {p0,p1} , shell );

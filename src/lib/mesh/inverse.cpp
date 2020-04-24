@@ -52,6 +52,7 @@ InverseTopology<type>::build()
   // make sure all points are set
   for (index_t k=0;k<nb();k++)
   {
+    if (k<topology_.points().nb_ghost()) continue;
     if (elem_[k]>= topology_.nb()+1) topology_.points().print(true);
     avro_assert_msg(elem_[k] < topology_.nb()+1 , "inverse not found for vertex %lu" , k );
   }

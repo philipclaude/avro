@@ -51,6 +51,10 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
   bool accept = this->gcavity_.compute( this->u_.nb()-1 , params , this->S_ );
   avro_assert(accept);
 
+  #if 1 // philip april 23
+  if (this->topology_.master().parameter()) return true;
+  #endif
+
   // check the orientation of the facets
   GeometryOrientationChecker checker(this->points_,this->u_,this->u2v_,ep);
   int s = checker.signof( this->gcavity_ );
@@ -213,6 +217,7 @@ void
 AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 {
   avro_assert( metric_.check(topology_) );
+  //return;
 
   real_t dof_factor = params_.insertion_volume_factor();
 
@@ -293,6 +298,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       index_t n1 = filter.edge( idx , 1 );
 
       real_t lk = metric_.length( topology_.points() , n0 , n1 );
+      printf("calculated length!\n");
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
@@ -342,6 +348,11 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       Entity* ge = inserter_.geometry(n0,n1);
       if (ge!=NULL && ge->number()==1)
         Lmin = 0.25;
+
+
+      #if 1 // philip april 23rd
+      topology_.points().set_entity(ns,ge);
+      #endif
 
       for (index_t j=0;j<N.size();j++)
       {
@@ -421,6 +432,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           continue;
         }
       }
+
+      printf("inserted!!\n");
 
       // apply the insertion into the topology
       topology_.apply(inserter_);

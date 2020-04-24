@@ -26,6 +26,8 @@ Object::Object( const Context& context , ego* object ) :
   sense_required_ = false;
   egads_ = true;
   identifier_ = 0;
+  if (data_.member_type == SREVERSE) sign_ = -1;
+  name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
 }
 
 Object::Object( ego* object , EGADS::Body* body ) :
@@ -43,6 +45,10 @@ Object::Object( ego* object , EGADS::Body* body ) :
   egads_ = true;
 
   identifier_ = EG_indexBodyTopo( *body_->object() , *object_ );
+
+  if (data_.member_type == SREVERSE) sign_ = -1;
+
+  name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
 }
 
 ego*
