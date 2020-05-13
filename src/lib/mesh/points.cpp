@@ -24,7 +24,8 @@ Points::Points() :
 	udim_(0),
 	u_(0),
 	incidence_(TableLayout_Jagged),
-	nb_ghost_(0)
+	nb_ghost_(0),
+	parameter_space_(false)
 {}
 
 Points::Points( const coord_t _dim ) :
@@ -33,7 +34,8 @@ Points::Points( const coord_t _dim ) :
 	udim_(dim_-1), // default to assuming parameter space is dim-1
 	u_(udim_),
 	incidence_(TableLayout_Jagged),
-	nb_ghost_(0)
+	nb_ghost_(0),
+	parameter_space_(false)
 {}
 
 Points::Points( const coord_t _dim , const coord_t _udim ) :
@@ -42,7 +44,8 @@ Points::Points( const coord_t _dim , const coord_t _udim ) :
 	udim_(_udim),
 	u_(udim_),
 	incidence_(TableLayout_Jagged),
-	nb_ghost_(0)
+	nb_ghost_(0),
+	parameter_space_(false)
 {}
 
 Points::~Points()
@@ -542,6 +545,54 @@ Points::compute_params()
 {
 	for (index_t k=0;k<nb();k++)
 		compute_param(k);
+}
+
+void
+Points::extract_params( index_t k , Entity* e0 , real_t* param ) const
+{
+
+	const real_t* uk = (parameter_space_) ? (*this)[k] : u(k);
+
+	if (e0 == entity(k))
+	{
+		for (coord_t d=0;d<udim_;d++)
+			param[d] = uk[d];
+		return;
+	}
+
+#if 0
+	EGADS::Object* e = (EGADS::Object*) e0;
+	EGADS::Object* g = (EGADS::Object*) entity(k);
+	if (e->number()==2)
+	{
+		if (g->number()==1)
+			e->extract_params_edge_on_face( uk , g , param );
+		else if (g->number()==0)
+			e->extract_params_node_on_face( uk , g , param );
+		else
+			avro_assert_not_reached;
+	}
+	else if (e->number()==1)
+	{
+		// extract_params_face_on_edge()
+		if (g->number()==0)
+			e->extract_params_node_on_edge( uk , g , param );
+		else
+			avro_assert_not_reached;
+	}
+
+	// check the coordinates are close if we have physical coordinates
+	if (!parameter_space_)
+	{
+		/*
+		real_t d = 0.0;
+		real_t tol = min of tolerance on e and g
+		e->evaluate();
+		d = numerics::distance( )
+		avro_assert( d < tol );
+		*/
+	}
+	#endif
 }
 
 void

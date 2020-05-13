@@ -87,10 +87,17 @@ public:
   void to_json( json& J ) const;
   void from_json( const json& J , const Model* model=NULL );
 
+  // computing parameters from inverse evaluations
   void compute_param( index_t k );
   void compute_params();
 
+  // extracting parameters for a point on an entity
+  void extract_params( index_t k , Entity* face , real_t* u ) const;
+
   real_t INFTY = 1.0e20;
+
+  bool parameter_space() const { return parameter_space_; }
+  void set_parameter_space( bool x ) { parameter_space_ = x; }
 
 protected:
 
@@ -104,6 +111,8 @@ protected:
   Table<int>     incidence_; // vertex-facet/bisector incidence matrix
 
   index_t nb_ghost_; // how many ghost vertices
+
+  bool parameter_space_;
 };
 
 } // avro
