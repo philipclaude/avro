@@ -311,7 +311,7 @@ void
 epsFile::print_triangles() const
 {
   int w = 640/2,h = 320;
-  real_t xnor,ynor,znor;
+//  real_t xnor,ynor,znor;
   std::vector<real_t> zbuffer;
   std::vector<index_t> visible;
   std::vector<real_t> distance( triangles_.size()/9 , -1 );
@@ -320,19 +320,20 @@ epsFile::print_triangles() const
   for (index_t k=0;k<triangles_.size()/9;k++)
   {
     // compute the triangle normal
-    real_t x1 = triangles_[9*k  ];
-    real_t y1 = triangles_[9*k+1];
+    //real_t x1 = triangles_[9*k  ];
+    //real_t y1 = triangles_[9*k+1];
     real_t z1 = triangles_[9*k+2];
-    real_t x2 = triangles_[9*k+3];
-    real_t y2 = triangles_[9*k+4];
+    //real_t x2 = triangles_[9*k+3];
+    //real_t y2 = triangles_[9*k+4];
     real_t z2 = triangles_[9*k+5];
-    real_t x3 = triangles_[9*k+6];
-    real_t y3 = triangles_[9*k+7];
+    //real_t x3 = triangles_[9*k+6];
+    //real_t y3 = triangles_[9*k+7];
     real_t z3 = triangles_[9*k+8];
 
-    xnor = (y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
-    ynor = (z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
-    znor = (x3-x1)*(y2-y1)-(y3-y1)*(x2-x1);
+    //xnor = (y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
+    //ynor = (z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
+    //znor = (x3-x1)*(y2-y1)-(y3-y1)*(x2-x1);
+    
 
     // if culling is active!!!
     //if (znor > 0.0) continue;
@@ -398,7 +399,7 @@ epsFile::print_edges() const
   }
 
   fprintf(fid_,"1 W\n");
-  fprintf(fid_,"%g %g %g C\n",0,0,0);
+  fprintf(fid_,"%g %g %g C\n",0.,0.,0.);
   std::sort( idx.begin() , idx.end() , SortBy<real_t>(zbuffer) );
   std::reverse( idx.begin() , idx.end() );
   for (index_t i=0;i<idx.size();i++)

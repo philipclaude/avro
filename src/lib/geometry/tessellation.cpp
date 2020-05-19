@@ -92,9 +92,9 @@ ModelTessellation::get_body_internal_points( const BodyTessellation& body_tess )
 
 BodyTessellation::BodyTessellation( Points& model_points , Body& body , TessellationParameters& params ) :
   Mesh(body.number(),model_points.dim()),
-  model_points_(model_points),
   body_(body),
-  params_(params)
+  params_(params), 
+  model_points_(model_points)
 {
   printf("number = %u, dim = %u\n",body.number(),points_.dim());
   body_.tessellate(*this);

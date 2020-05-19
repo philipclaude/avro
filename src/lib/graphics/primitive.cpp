@@ -62,8 +62,6 @@ Primitive::extract()
   if (number==0)
   {
     // get the edges from the topology
-    index_t nb_points = topology_.nb();
-
     for (index_t k=0;k<topology_.nb();k++)
     {
       for (index_t j=0;j<dim0;j++)
@@ -82,9 +80,7 @@ Primitive::extract()
     std::vector<index_t> edges;
     topology_.get_edges( edges );
 
-    index_t nb_points = edges.size();
     std::vector<index_t> point_map0( topology_.points().nb() );
-
     for (index_t k=0;k<edges.size();k++)
     {
       for (index_t j=0;j<dim0;j++)

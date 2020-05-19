@@ -2,6 +2,7 @@
 #define AVRO_SRC_LIBRARY_LIBRARY_H_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 

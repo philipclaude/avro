@@ -19,9 +19,12 @@ set_source_files_properties( ${JSON_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( json )
 
 if (avro_BUILTIN_GLFW)
+	set( CMAKE_C_FLAGS0 ${CMAKE_C_FLAGS} )
+	set( CMAKE_C_FLAGS "" )
 	add_subdirectory( glfw )
 	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
 	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
+	set( CMAKE_C_FLAGS ${CMAKE_C_FLAGS0} )
 endif()
 
 add_source_directories( IMGUI_SOURCES "imgui source" imgui )

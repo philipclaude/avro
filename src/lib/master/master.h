@@ -28,8 +28,8 @@ public:
     number_(number),
     order_(order),
     reference_(number_,order_),
-    basis_(nullptr),
-    parameter_(false)
+    parameter_(false),
+    basis_(nullptr)
   {}
 
   Master( coord_t number , coord_t order , const std::string& name ) :
@@ -37,8 +37,8 @@ public:
     order_(order),
     name_(name),
     reference_(number,order_),
-    basis_(nullptr),
-    parameter_(false)
+    parameter_(false),
+    basis_(nullptr)
   {}
 
   void set_basis( BasisFunctionCategory category );

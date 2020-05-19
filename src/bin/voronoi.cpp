@@ -56,7 +56,7 @@ voronoi( int nb_input , const char** inputs )
   GEO::PCK::initialize();
 
   // options
-  bool found;
+  bool found; UNUSED(found); 
   const char **options = inputs +3;
   int  nb_options = nb_input -3;
 

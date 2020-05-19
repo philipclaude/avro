@@ -111,7 +111,7 @@ Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<P
   std::vector<index_t> simplex_idx;
   if (number_<=1)
   {
-    avro_assert_msg( nv == number_+1 , "nv = %lu , number = %u" , nv , number_ );
+    avro_assert_msg( nv == index_t(number_+1) , "nv = %lu , number = %u" , nv , number_ );
     index_t idx = decomposition.add_simplex( number_ , v , parent );
     simplex_idx.push_back(idx);
     return simplex_idx;

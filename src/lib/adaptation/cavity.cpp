@@ -463,11 +463,10 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
     }
   }
 
-  avro_assert(count == nv);
-
-  coord_t dim  = points.dim();
+  avro_assert(count == nv); 
 
 #if 0
+  coord_t dim  = points.dim();
   for (index_t k=0;k<nv;k++)
   {
     // evaluate the coordinates for the parameters we found

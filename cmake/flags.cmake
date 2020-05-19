@@ -14,7 +14,7 @@ if( CMAKE_COMPILER_IS_GNUCXX )
   message(STATUS "Setting gnu compiler flags")
 
   # warnings
-  set( GNU_WARNING_FLAGS "-Wall -Wextra -Wno-unused-parameter -Wunused-result -Winit-self -Wno-variadic-macros -Wno-vla" )
+  set( GNU_WARNING_FLAGS "-Wall -Wextra -Wno-unused-parameter -Wunused-result -Winit-self -Wno-variadic-macros -Wno-vla -Wno-strict-overflow" )
   set( FULL_WARNINGS ${GNU_WARNING_FLAGS} )
 
   # basic flags

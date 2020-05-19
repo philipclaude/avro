@@ -174,8 +174,8 @@ Simplex::get_vertex( const index_t* v , index_t nv , index_t ivertex ) const
 void
 Simplex::get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const
 {
-  index_t p0;
-  index_t p1;
+  index_t p0 = 0;
+  index_t p1 = 0;
 
   avro_assert( number_>=1 );
   if (iedge==0)

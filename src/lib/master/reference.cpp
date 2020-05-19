@@ -190,7 +190,7 @@ ReferenceElement<Simplex>::precalculate()
   {
     // it doesn't really make sense to have a zero-order lagrange element
     // but we can hack it by setting the coordinates to the centroid
-    for (index_t j=0;j<number_+1;j++)
+    for (index_t j=0;j<index_t(number_+1);j++)
     {
       lref_.push_back( 1 );
       xref_.push_back( 1./(number_+1) );
@@ -231,7 +231,6 @@ ReferenceElement<Simplex>::precalculate()
       interior_.push_back(k);
     }
   }
-  //print_inline(interior_,"interior = " );
 }
 
 } // avro

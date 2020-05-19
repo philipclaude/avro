@@ -93,7 +93,7 @@ BowerWatson::insphere( index_t elem , index_t point )
 void
 BowerWatson::search( index_t point , index_t elem , std::set<index_t>& elems )
 {
-  for (index_t j=0;j<number_+1;j++)
+  for (index_t j=0;j<index_t(number_+1);j++)
   {
     int neighbour = neighbours()(elem,j);
     if (neighbour<0) continue;

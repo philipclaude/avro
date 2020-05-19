@@ -40,12 +40,12 @@ _keyboard_callback(GLFWwindow* window,int key,int scancode,int action,int mods)
 }
 
 GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , const std::string& title ) :
-  manager_(manager),
   title_(title),
+  manager_(manager),
   width_(width),
   height_(height),
-  interface_(nullptr),
   controls_(fov_,width_,height_,0.1f,100.0f),
+  interface_(nullptr),
   updated_(true),
   fps_(60)
 {

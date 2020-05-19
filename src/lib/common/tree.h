@@ -93,8 +93,8 @@ Tree<Node_t>::copy( const Friend_t& tree )
     children0[k]->construct( children1[k] , *derived() );
 
   // assign the children
-  for (index_t i=0;i<A.m();i++)
-  for (index_t j=i+1;j<A.n();j++)
+  for (index_t i=0;i<index_t(A.m());i++)
+  for (index_t j=i+1;j<index_t(A.n());j++)
   {
     if (A(i,j)==0) continue;
     if (i==0)

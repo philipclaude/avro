@@ -254,7 +254,7 @@ UT_TEST_CASE(side3_test)
       const real_t* q1 = v[1];
       const real_t* q2 = v[2];
 
-      GEO::Sign sign;
+      GEO::Sign sign = GEO::ZERO;
       try
       {
         sign = side3_SOS( p[perm[0]],p[perm[1]],p[perm[2]],p[perm[3]],q0,q1,q2,nd );

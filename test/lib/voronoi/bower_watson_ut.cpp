@@ -41,6 +41,8 @@ UT_TEST_CASE( test1 )
     clock_t t0 = clock();
     delaunay.compute();
     clock_t t1 = clock();
+    UNUSED(t0);
+    UNUSED(t1);
 
     //fprintf(fid,"%lu %g\n",nb_points,real_t(t1-t0)/CLOCKS_PER_SEC);
   }

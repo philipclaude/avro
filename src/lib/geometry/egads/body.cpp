@@ -153,7 +153,7 @@ get_tessellation_node( ego body , ego egads_tess , ego node , BodyTessellation& 
 		index = k;
 		break;
 	}
-  avro_assert( index < nb_points );
+  avro_assert( index < index_t(nb_points) );
 
   // add the element
   topology->add( &index , 1 );
@@ -339,7 +339,7 @@ Body::tessellate( BodyTessellation& tess ) const
 
   // add all points to the tessellation
   std::map<ego,Entity_ptr>::const_iterator it;
-  for (index_t k=0;k<nb_points;k++)
+  for (index_t k=0;k<index_t(nb_points);k++)
   {
     int ptype,pindex;
     double coordinate[3];
