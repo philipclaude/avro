@@ -162,9 +162,6 @@ private:
 
   // store all the matrices here
   mat4 mvp_matrix_;
-  mat4 view_matrix_;
-  mat4 proj_matrix_;
-  mat4 model_matrix_;
   mat4 normal_matrix_;
 
   bool update_;
