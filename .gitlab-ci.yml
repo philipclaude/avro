@@ -2,20 +2,6 @@ stages:
   - build
   - test
 
-# the build-linux job
-job-release:
-  stage: build
-  script:
-    - export ESP_DIR=/home/gitlab-runner/Codes/EngSketchPad
-    - export CAS_DIR=/home/gitlab-runner/Codes/OpenCASCADE-7.3.1
-    - mkdir build
-    - mkdir build/release
-    - cd build/release
-    - cmake ../../
-    - make
-  tags:
-    - avro-commit
-
 release_gnu5:
   stage: build
   script:
