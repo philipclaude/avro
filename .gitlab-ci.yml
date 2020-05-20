@@ -43,12 +43,19 @@ coverage_test:
   stage: test
   script:
     - source util/commit.sh coverage_gnu5
+    - cp -r build/coverage_gnu5/avroCoverageHTML coverage_results
+    - cp cmake/coverage-prolog.html coverage_results/index.html
+  only:
+    - merge_requests
+  artifacts:
+    paths:
+      - coverage_results
   tags:
     - avro-commit
 
 # the coverage test job
 job-coverage:
-  stage: test
+  stage: none
   script:
     - export ESP_DIR=/home/gitlab-runner/Codes/EngSketchPad
     - export CAS_DIR=/home/gitlab-runner/Codes/OpenCASCADE-7.3.1
