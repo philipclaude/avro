@@ -30,6 +30,21 @@ release_clang:
   tags:
     - avro-commit
 
+unit_tests:
+  stage: test
+  script:
+    - cd build/release_gnu7
+    - make unit
+  tags:
+    - avro-commit
+
+coverage_test:
+  stage: test
+  script:
+    - source util/commit.sh coverage_gnu5
+  tags:
+    - avro-commit
+
 # the coverage test job
 job-coverage:
   stage: test
