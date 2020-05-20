@@ -21,7 +21,7 @@ class Tree : public TreeBase
 {
 public:
   typedef std::shared_ptr<Node_t> Node_ptr;
-  ~Tree() {}
+  //~Tree() {}
 
   index_t nb_children() const { return child_.size(); }
 

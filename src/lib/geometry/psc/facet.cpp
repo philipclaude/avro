@@ -93,7 +93,7 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   numerics::VectorD<real_t> x0(x.size(),x.data());
   numerics::VectorD<real_t> b0 = numpack::Transpose(V_)*x0;
   numerics::VectorD<real_t> b( number_+2 );
-  for (index_t j=0;j<x.size();j++)
+  for (int j=0;j<b0.m();j++)
     b[j] = b0[j];
   b[number_+1] = 1.0;
 
@@ -107,7 +107,8 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   numerics::VectorD<real_t> z = V_*alpha;
 
   // save the parameter values
-  for (int j=0;j<alpha.size();j++)
+  std::fill( u.begin() , u.end() , 1e20 );
+  for (int j=0;j<number_;j++)
     u[j] = alpha[j];
 
   real_t d = numerics::distance2( z.data() , x.data() , dim_ );

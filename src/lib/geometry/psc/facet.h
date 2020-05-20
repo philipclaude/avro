@@ -15,6 +15,8 @@ public:
   Facet( Body* body , std::vector<std::shared_ptr<Entity>>& facets );
   void build_basis();
 
+  ~Facet() {}
+
   void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
   void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
     { inverse(x,u); }

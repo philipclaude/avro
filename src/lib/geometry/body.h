@@ -17,8 +17,8 @@ class Body
 {
 protected:
   typedef std::shared_ptr<Entity> Entity_ptr;
+
 public:
-  virtual ~Body() {}
 
   coord_t number() const { return number_; }
   void add( Entity_ptr prim );
@@ -37,6 +37,7 @@ public:
 protected:
 
   Body( coord_t number );
+  virtual ~Body() {}
 
   std::vector<Entity_ptr> entity_;
 

@@ -20,6 +20,8 @@ public:
     build();
   }
 
+  ~Tesseract() {}
+
   void build();
 
   void print() const
