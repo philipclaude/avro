@@ -46,12 +46,12 @@ coverage_tests:
     - source util/commit.sh coverage_gnu5
     - cp -r build/coverage_gnu5/avroCoverageHTML coverage_results
     - cp cmake/coverage-prolog.html coverage_results/index.html
-    - python /home/gitlab-runner/util/lcov/lcov_cobertura/lcov_cobertura.py coverage.info -o coverage_results/coverage.xml
+    #- python /home/gitlab-runner/util/lcov/lcov_cobertura/lcov_cobertura.py coverage.info -o coverage_results/coverage.xml
   artifacts:
     paths:
       - coverage_results
-    reports:
-      cobertura: coverage_results/cobertura-coverage.xml
+    #reports:
+    #cobertura: coverage_results/cobertura-coverage.xml
   tags:
     - avro-commit
 
@@ -62,5 +62,3 @@ pages:
   artifacts:
     paths:
     - public
-  only:
-    - master
