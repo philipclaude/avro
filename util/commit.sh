@@ -30,7 +30,7 @@ if [[ $config == *"gnu48"* ]]; then
   CMAKE_ARGS="$CMAKE_ARGS -DUSE_MPI=OFF"
 fi
 
-time source $workspace/util/jenkins/configure.sh $CMAKE_ARGS
+time source $workspace/util/configure.sh $CMAKE_ARGS
 
 # number of processors used in compile
 nproc=1
