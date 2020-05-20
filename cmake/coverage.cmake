@@ -35,8 +35,7 @@ if (BUILD_TYPE AND BUILD_TYPE MATCHES "COVERAGE")
   set( COVERAGE_INFO coverage.info )
   set( HTMLDIR avroCoverageHTML )
   set( LCOV_FLAGS --capture -q --gcov-tool ${GCOV} --no-external --base-directory ${CMAKE_SOURCE_DIR} --directory . --output-file ${COVERAGE_INFO} )
-  set( GENHTML_FLAGS ${COVERAGE_INFO} -q --legend --frames --show-details --demangle-cpp --output-directory ${HTMLDIR} -css-file ${CMAKE_SOURCE_DIR}/cmake/coverage.css --title avro coverage )# --html-prolog ${CMAKE_SOURCE_DIR}/cmake/coverage-prolog.html )
-  set( LCOV_REMOVES \"_ut.*\" \"${CMAKE_BINARY_DIR}*\" \"${CMAKE_SOURCE_DIR}/test/*\" \"${CMAKE_SOURCE_DIR}/src/third_party/*\" \"${CMAKE_SOURCE_DIR}/src/lib/numerics/predicates/side_filters_*\" )
+  set( GENHTML_FLAGS ${COVERAGE_INFO} -q --legend --frames --show-details --demangle-cpp --output-directory ${HTMLDIR} -css-file ${CMAKE_SOURCE_DIR}/cmake/coverage.css )
 
   # branch coverage slows down lcov, especially when looking at predicates
   set( BRANCH_COVERAGE "" )
