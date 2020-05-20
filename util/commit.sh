@@ -51,9 +51,10 @@ if [[ $config == *"coverage"* ]]; then
   time make unit_coverage
 
   time make coverage_info
-  if [[ `hostname` == "wazowski" ]]; then
-    #time python $HOME/util/lcov/lcov_cobertura.py coverage.info -o $WORKSPACE/build/coverage.xml
-  fi
+  #if [[ `hostname` == "wazowski" ]]; then
+  #  time python $HOME/util/lcov/lcov_cobertura.py coverage.info -o $WORKSPACE/build/coverage.xml
+  #fi
+  
   # generate html documents
   #time make genhtml
   # udpdate coverage information on acdl (@marshall do i need to rename this?)
