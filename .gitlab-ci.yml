@@ -54,27 +54,27 @@ coverage_test:
     - avro-commit
 
 # the coverage test job
-job-coverage:
-  stage: none
-  script:
-    - export ESP_DIR=/home/gitlab-runner/Codes/EngSketchPad
-    - export CAS_DIR=/home/gitlab-runner/Codes/OpenCASCADE-7.3.1
-    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CAS_DIR/lib
-    - mkdir build
-    - mkdir build/coverage
-    - cd build/coverage
-    - cmake ../../
-    - make -j12
-    # need these tests to be shorter...
-    #- make unit_coverage
-    #- make coverage_info
-    - cd ../../
-    # - cp -r build/coverage/avroCoverageHTML coverage_results
-    # remove this when it actually works!
-    - mkdir coverage_results
-    - cp cmake/coverage-prolog.html coverage_results/index.html
-  artifacts:
-    paths:
-      - coverage_results
-  tags:
-    - avro-commit
+#job-coverage:
+#  stage: none
+#  script:
+#    - export ESP_DIR=/home/gitlab-runner/Codes/EngSketchPad
+#    - export CAS_DIR=/home/gitlab-runner/Codes/OpenCASCADE-7.3.1
+#    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CAS_DIR/lib
+#    - mkdir build
+#    - mkdir build/coverage
+#    - cd build/coverage
+#    - cmake ../../
+#    - make -j12
+#    # need these tests to be shorter...
+#    #- make unit_coverage
+#    #- make coverage_info
+#    - cd ../../
+#    # - cp -r build/coverage/avroCoverageHTML coverage_results
+#    # remove this when it actually works!
+#    - mkdir coverage_results
+#    - cp cmake/coverage-prolog.html coverage_results/index.html
+#  artifacts:
+#    paths:
+#      - coverage_results
+#  tags:
+#    - avro-commit
