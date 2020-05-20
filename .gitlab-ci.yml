@@ -16,6 +16,26 @@ job-release:
   tags:
     - avro-commit
 
+release_gnu5:
+  stage: build
+  script:
+    - source util/commit.sh release_gnu5
+
+release_gnu6:
+  stage: build
+  script:
+    - source util/commit.sh release_gnu6
+
+release_gnu7:
+  stage: build
+  script:
+    - source util/commit.sh release_gnu7
+
+release_clang:
+  stage: build
+  script:
+    - source util/commit.sh release_clang
+
 # the coverage test job
 job-coverage:
   stage: test
