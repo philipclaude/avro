@@ -155,7 +155,7 @@ public:
       // evaluate the integrand at the quadrature point
       f += w*integrand( k , xref , x.data() )*dj;
 
-      avro_assert( dj > 0.0 );
+      //avro_assert( dj > 0.0 );
     }
   }
 

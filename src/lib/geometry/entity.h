@@ -10,6 +10,7 @@ namespace avro
 {
 
 class Body;
+class BodyTessellation;
 template<typename type> class Topology;
 
 class Entity : public Tree<Entity>
@@ -51,6 +52,8 @@ public:
   virtual void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
   virtual void evaluate( const std::vector<real_t>& u , std::vector<real_t>& p ) const = 0;
 
+  int sign() const { return sign_; }
+
   bool egads() const { return egads_; }
 
   template<typename type> void construct( std::shared_ptr<Topology<type>>& node , Topology<type>& root ) const;
@@ -73,6 +76,8 @@ protected:
   bool tessellatable_;
 
   bool egads_;
+
+  int sign_;
 };
 
 } // avro

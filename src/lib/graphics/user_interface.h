@@ -75,6 +75,8 @@ public:
   void begin_draw();
   void end_draw() const;
 
+  void save_eps(bool& open) const;
+
 private:
   Visualizer& application_;
 

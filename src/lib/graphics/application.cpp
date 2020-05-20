@@ -2,6 +2,7 @@
 #include "graphics/gl.h"
 #include "graphics/window.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
 namespace avro
@@ -75,6 +76,7 @@ Application<GLFW_Interface<API_t>>::run()
   const double spf = 1.0 / fps;
   double last_update_time = 0;  // number of seconds since the last loop
   double last_frame_time = 0;   // number of seconds since the last frame
+  UNUSED(last_update_time);
 
    // start the rendering loop
    bool done = false;

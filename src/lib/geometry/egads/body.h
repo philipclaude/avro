@@ -11,6 +11,9 @@
 namespace avro
 {
 
+class BodyTessellation;
+class TessellationParameters;
+
 namespace EGADS
 {
 
@@ -36,7 +39,6 @@ public:
   const Context& context() const { return context_; }
 
   void build_hierarchy();
-  void tessellate();
 
   Entity_ptr child( index_t k );
   void add_child( ego object , Entity_ptr entity );
@@ -44,6 +46,7 @@ public:
   Entity_ptr lookup( ego object ) const;
 
   void print() const;
+  void tessellate( BodyTessellation& body_tess ) const;
 
   ego* object() { return object_; }
   const ego* object() const { return object_; }

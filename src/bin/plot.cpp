@@ -56,10 +56,10 @@ plot( int nb_input , const char** inputs )
 
   // get the input mesh
   std::string meshname( inputs[0] );
-  std::shared_ptr<Topology<type>> ptopology = nullptr;
-  std::shared_ptr<Mesh> pmesh = library::get_mesh<type>(meshname,ptopology);
+  std::shared_ptr<TopologyBase> ptopology = nullptr;
+  std::shared_ptr<Mesh> pmesh = library::get_mesh(meshname,ptopology);
   Mesh& mesh = *pmesh;
-  Topology<type>& topology = *ptopology.get();
+  Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
   coord_t number = mesh.number();
 
   lib->add_mesh_ptr(pmesh);

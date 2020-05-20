@@ -77,7 +77,7 @@ private:
     {
 
       real_t n[3];
-      real_t v[3];
+      real_t v[3] = {0.,0.,0.};
       real_t t[3];
       real_t x1,y1,z1;
       real_t x2,y2,z2;

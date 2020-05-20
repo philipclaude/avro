@@ -141,9 +141,8 @@ get_geometry( const std::string& name , bool& curved )
   return pmodel;
 }
 
-template<typename type>
 std::shared_ptr<Mesh>
-get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology , coord_t number )
+get_mesh( const std::string& name , std::shared_ptr<TopologyBase>& ptopology , coord_t number )
 {
   // get the file extension
   std::string ext = get_file_ext(name);
@@ -152,13 +151,13 @@ get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology ,
   if (ext=="mesh" || ext=="meshb")
   {
     std::shared_ptr<Mesh> pmesh = std::make_shared<meshb>(name);
-    ptopology = pmesh->retrieve_ptr<type>(0);
+    ptopology = pmesh->retrieve_ptr<Simplex>(0);
     return pmesh;
   }
   if (ext=="json")
   {
     /*
-    std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh<type>>(number,number);
+    std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,number);
     io::readMesh(name,*pmesh);
     ptopology = pmesh->topology_ptr(0);
     return pmesh;
@@ -173,14 +172,14 @@ get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology ,
     {
       unsigned long address = std::stoul(name,0,16);
       Mesh* mesh0 = (Mesh*) address;
-      std::vector<Topology<type>*> topologies;
+      std::vector<const TopologyBase*> topologies;
       mesh0->retrieve(topologies);
-      printf("mesh has %lu topologies\n",topologies.size());
+      avro_assert( topologies.size() > 0 );
       index_t maxnumber = 0;
-      Topology<type>* topology = nullptr;
+      const TopologyBase* topology = nullptr;
       for (index_t k=0;k<topologies.size();k++)
       {
-        printf("topology(%lu) number = %u with %lu elements\n",k,topologies[k]->number(),topologies[k]->nb());
+        //printf("topology(%lu) number = %u with %lu elements\n",k,topologies[k]->number(),topologies[k]->nb());
         if (topologies[k]->number()<=maxnumber) continue;
         maxnumber = topologies[k]->number();
         topology  = topologies[k];
@@ -195,9 +194,9 @@ get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology ,
       ptopology = nullptr;
       for (index_t k=0;k<mesh0->nb_topologies();k++)
       {
-        if ( &mesh0->retrieve<type>(k)==topology)
+        if (mesh0->topology_ptr(k).get()==topology)
         {
-          ptopology = mesh0->retrieve_ptr<type>(k);
+          ptopology = mesh0->topology_ptr(k);
           break;
         }
       }
@@ -210,33 +209,35 @@ get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology ,
   }
 
   // if no file extension, it must be a mesh in the library
-  #if 0
   std::vector<std::string> s = split(name,"-");
-  if (s[0]=="CKF")
+  if (s[0]=="CKF" or s[0]=="CKF-simplex")
   {
     // count how many hyphens there are to read the dimensions
-    index_t nb_hyphen = s.size() -1;
-    number = nb_hyphen;
+    index_t offset = 1;
+    if (s[1]=="simplex") offset = 2;
+    number = s.size() - offset;
 
     std::vector<real_t> lens(number,1.0);
     std::vector<index_t> dims(number,0);
     for (coord_t i=0;i<number;i++)
-      dims[i] = unstringify<index_t>(s[i+1]);
+      dims[i] = unstringify<index_t>(s[i+offset]);
 
     std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,number);
-    ptopology = std::make_shared<CKF_Triangulation>(dims);
-    ptopology->orient(); // make positive volumes
-    ptopology->points().copy( pmesh->points() );
+    std::shared_ptr<Topology<Simplex>> ptopology_ckf = std::make_shared<CKF_Triangulation>(dims);
+    ptopology_ckf->orient(); // make positive volumes
+    ptopology_ckf->points().copy( pmesh->points() );
+    ptopology = ptopology_ckf;
+    pmesh->add(ptopology_ckf);
     return pmesh;
   }
-  #endif
+  if (s[0]=="CKF-cube")
+  {
+    avro_implement;
+  }
   printf("cannot find mesh %s\n",name.c_str());
   avro_assert_not_reached;
   return nullptr;
 }
-
-template std::shared_ptr<Mesh> get_mesh( const std::string& , std::shared_ptr<Topology<Simplex>>& , coord_t );
-template std::shared_ptr<Mesh> get_mesh( const std::string& , std::shared_ptr<Topology<Polytope>>& , coord_t );
 
 } // programs
 

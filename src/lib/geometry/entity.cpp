@@ -46,8 +46,10 @@ Entity::Entity( coord_t number ) :
   name_("unnamed"),
   parent_(nullptr),
   identifier_(0),
+	sense_required_(false),
   tessellatable_(false),
-  egads_(false)
+  egads_(false),
+	sign_(1)
 {}
 
 Entity::Entity( coord_t number , const std::string& name ) :
@@ -55,8 +57,10 @@ Entity::Entity( coord_t number , const std::string& name ) :
   name_(name),
   parent_(nullptr),
   identifier_(0),
+	sense_required_(false),
   tessellatable_(false),
-  egads_(false)
+  egads_(false),
+	sign_(1)
 {}
 
 Entity*
@@ -90,6 +94,18 @@ Entity::intersect( Entity* e1 )
       e = s[k];
     }
   }
+
+	if (e==NULL)
+	{
+		printf("parents 0:\n");
+		for (index_t k=0;k<p0.size();k++)
+			p0[k]->print_header();
+		printf("parents 1:\n");
+		for (index_t k=0;k<p1.size();k++)
+			p1[k]->print_header();
+	}
+
+
   if (e==NULL) return NULL;
   if (!e->tessellatable()) return NULL;
 
@@ -255,7 +271,7 @@ Entity::construct( std::shared_ptr<Topology<type>>& node , Topology<type>& root 
 void
 Entity::print_header() const
 {
-	printf("entity %p: number = %u\n",(void*)this,number_);
+	printf("entity %p: number = %u: %s\n",(void*)this,number_,name_.c_str());
 }
 
 template class Tree<Entity>;

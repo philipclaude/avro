@@ -28,6 +28,7 @@ public:
     number_(number),
     order_(order),
     reference_(number_,order_),
+    parameter_(false),
     basis_(nullptr)
   {}
 
@@ -36,6 +37,7 @@ public:
     order_(order),
     name_(name),
     reference_(number,order_),
+    parameter_(false),
     basis_(nullptr)
   {}
 
@@ -54,6 +56,9 @@ public:
     avro_assert( basis_!=nullptr );
     basis_->evaluate(x,phi);
   }
+
+  void set_parameter( bool x ) { parameter_ = x; }
+  bool parameter() const { return parameter_; }
 
   const ReferenceElement<Shape>& reference() const { return reference_; }
 
@@ -75,6 +80,8 @@ protected:
   std::vector<real_t> wquad_;
 
   ReferenceElement<Shape> reference_;
+
+  bool parameter_;
 
 private:
   std::shared_ptr< Basis<Shape> > basis_;

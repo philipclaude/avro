@@ -43,8 +43,7 @@ void
 objFile::read()
 {
   real_t x[3],u[2],n[3];
-  index_t t[3],ut[3];
-  char lineHeader[128];
+  index_t t[3];
 
   DOF<real_t> normals(3),uv(2);
   DOF<real_t> texture(2);

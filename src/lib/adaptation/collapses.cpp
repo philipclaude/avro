@@ -27,7 +27,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   if (g->interior()) return true;
 
   // extract the geometry cavity
-  this->extractGeometry( g, {p} );
+  this->extract_geometry( g, {p} );
   avro_assert( this->G_.nb()>0 );
 
   // based on the type of face, we may need to flip the sign for the volume calculation
@@ -173,14 +173,14 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
     return false;
   }
 
-  if (!this->philipcondition())
+  if (!this->has_unique_elems())
   {
     // we don't want duplicate elements! can happen with ghosted topologies..
     return false;
   }
 
   // check if all produce elements have a positive determinant of implied metric
-  if (!this->positiveImpliedMetrics())
+  if (!this->positive_implied_metrics())
     return false;
 
   // determine if the receiving point is visible in the parameter space

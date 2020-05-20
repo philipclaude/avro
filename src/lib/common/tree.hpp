@@ -126,7 +126,7 @@ Tree<Node_t>::print( index_t level ) const
   for (index_t i=0;i<level;i++) printf("    ");
   derived()->print_header();
   for (index_t k=0;k<nb_children();k++)
-    child(k).template Tree<Node_t>::print(level+1);
+    child(k).Tree<Node_t>::print(level+1);
 }
 
 template<typename Node_t>

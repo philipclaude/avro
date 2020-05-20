@@ -12,5 +12,6 @@ extern "C" double orient2d(const double*,const double*,const double*);
 
 // provided in tetgen/predicates.cxx
 double insphere(double *pa, double *pb, double *pc, double *pd, double *pe);
+double incircle(double *pa, double *pb, double *pc, double *pd);
 
 #endif

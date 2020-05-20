@@ -8,6 +8,7 @@
 #include <json/json.hpp>
 
 #include <fstream>
+#include <iomanip>
 
 namespace avro
 {

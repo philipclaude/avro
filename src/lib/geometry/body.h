@@ -10,6 +10,8 @@ namespace avro
 {
 
 class Entity;
+class BodyTessellation;
+class TessellationParameters;
 
 class Body
 {
@@ -27,9 +29,10 @@ public:
 
   virtual void print() const = 0;
 
-
   void get_entities( std::vector<Entity*>& entities ) const;
   void get_tessellatable( std::vector<Entity*>& entities ) const;
+
+  virtual void tessellate( BodyTessellation& body_tess ) const = 0;
 
 protected:
 

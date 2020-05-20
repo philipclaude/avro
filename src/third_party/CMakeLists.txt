@@ -22,6 +22,7 @@ if (avro_BUILTIN_GLFW)
 	add_subdirectory( glfw )
 	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
 	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
+	set_target_properties( glfw PROPERTIES COMPILE_FLAGS "-w" )
 endif()
 
 add_source_directories( IMGUI_SOURCES "imgui source" imgui )

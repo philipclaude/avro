@@ -16,7 +16,7 @@ namespace avro
 class Entity;
 
 void
-geometryParams( Entity* e , const Points& points , const index_t* v , const index_t nv , real_t* params );
+geometry_params( Entity* e , const Points& points , const index_t* v , const index_t nv , real_t* params );
 
 template<typename type>
 class Cavity : public Topology<type>
@@ -29,16 +29,16 @@ public:
   // initial cavity provided in C0, initialized be specialized operators
   bool compute( const index_t p , real_t* x , const std::vector<index_t>& C0 );
   bool enlarge( bool verbose=false );
-  bool findGeometry( real_t* x , std::vector<index_t>& C0 );
+  bool find_geometry( real_t* x , std::vector<index_t>& C0 );
   void apply();
 
   // computation of the nodes in the cavity and whether any nodes are
   // removed by the application of the operator
   // TODO refactor naming to "vertices" not "nodes" to be consistent
   // with my terminology (not that of coupez)
-  void computeNodes();
-  void computeRemovedNodes();
-  index_t nb_removedNodes() const { return removedNodes_.size(); }
+  void compute_nodes();
+  void compute_removed_nodes();
+  index_t nb_removed_nodes() const { return removed_nodes_.size(); }
   const std::vector<index_t>& nodes() const { return nodes_; }
   index_t nb_cavity() const { return cavity_.size(); }
   const std::vector<index_t>& cavity() const { return cavity_; }
@@ -46,30 +46,30 @@ public:
   index_t nb_insert() const { return Topology<type>::nb(); }
   index_t nb_nodes() const { return nodes_.size(); }
 
-  bool removesNodes() const { return nb_removedNodes()>0; }
-  index_t removedNode( const index_t k ) const { return removedNodes_[k]; }
+  bool removes_nodes() const { return nb_removed_nodes()>0; }
+  index_t removed_node( const index_t k ) const { return removed_nodes_[k]; }
   index_t cavity( const index_t k ) const { return cavity_[k]; }
   bool contains( const index_t c ) const;
 
   // computation of the cavity boundary and the geometry topology
-  bool computeBoundary();
+  bool compute_boundary();
   Topology<type>& boundary() { return boundary_; }
-  void computeGeometry( Entity* g , Topology<type>& G , std::map<index_t,index_t>& v2u , std::vector<index_t>& u2v );
+  void compute_geometry( Entity* g , Topology<type>& G , std::map<index_t,index_t>& v2u , std::vector<index_t>& u2v );
 
   real_t minvol() const { return minvol_; }
 
   bool& rethrow() { return rethrow_; }
 
-  bool positiveImpliedMetrics();
+  bool positive_implied_metrics();
 
-  bool philipcondition();
+  bool has_unique_elems();
 
   void print() const;
 
   void add( const index_t* v , const index_t nv );
-  void addNode( const index_t node );
-  void addRemovedNode( const index_t node );
-  void addCavity( const index_t elem );
+  void add_node( const index_t node );
+  void add_removed_node( const index_t node );
+  void add_cavity( const index_t elem );
 
   void clear();
 
@@ -77,8 +77,9 @@ public:
   std::vector<index_t>& inserted() { return inserted_; }
   std::vector<bool>& removes() { return removes_; }
 
-  void setEnlarge( bool x ) { enlarge_ = x; }
-  void setIgnore( bool x ) { ignore_ = x; }
+  void set_enlarge( bool x ) { enlarge_ = x; }
+  void set_ignore( bool x ) { ignore_ = x; }
+  void check_visibility( bool x ) { check_visibility_ = x; }
 
   const Topology<type>& topology() const { return topology_; }
 
@@ -86,9 +87,9 @@ public:
 
 protected:
   Topology<type>& topology_;
-  bool nodeRemovalAllowed_;
+  bool node_removal_allowed_;
   bool enlarge_;
-  bool checkVisibility_;
+  bool check_visibility_;
   std::string info_;
 
 private:
@@ -98,7 +99,7 @@ private:
   Topology<type> boundary_; // boundary of the elements
   std::vector<index_t> cavity_;  // elements
   std::vector<index_t> nodes_; // nodes of the cavity elements
-  std::vector<index_t> removedNodes_; // deleted nodes
+  std::vector<index_t> removed_nodes_; // deleted nodes
   std::vector<index_t> idx_; // index of the star for each boundary facet
   std::vector<index_t> inserted_; // index of the insertion in the topology
   std::vector<bool> removes_; // whether the cavity element is actually removed from the topology

@@ -1,8 +1,13 @@
+#include "adaptation/cavity.h"
+
 #include "common/tools.h"
+
+#include "geometry/entity.h"
 
 #include "master/quadrature.h"
 #include "master/simplex.h"
 
+#include "mesh/boundary.h"
 #include "mesh/decomposition.h"
 #include "mesh/points.h"
 #include "mesh/topology.h"
@@ -169,8 +174,8 @@ Simplex::get_vertex( const index_t* v , index_t nv , index_t ivertex ) const
 void
 Simplex::get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const
 {
-  index_t p0;
-  index_t p1;
+  index_t p0 = 0;
+  index_t p1 = 0;
 
   avro_assert( number_>=1 );
   if (iedge==0)
@@ -410,6 +415,31 @@ Simplex::volume( const Points& points , const index_t* v , index_t nv ) const
 {
   avro_assert( index_t(number_+1)==nv );
   std::vector<const real_t*> x(nv);
+
+  if (parameter_)
+  {
+    // retrieve the parametric coordinates along this geometry entity
+    Entity* e = BoundaryUtils::geometryFacet( points , v , nv );
+    if (e==NULL)
+    {
+      for (index_t j=0;j<nv;j++)
+        points.print(v[j],true);
+    }
+    avro_assert( e!=NULL );
+    avro_assert( e->number() == number_ );
+    std::vector<real_t> u( nv*2 );
+    geometry_params( e , points , v , nv , u.data() );
+    std::vector<const real_t*> U(nv);
+    for (index_t j=0;j<nv;j++) U[j] = &u[2*j];
+    real_t vol = simplex_volume(U,2) * e->sign();
+    if (vol<0)
+    {
+      for (index_t j=0;j<nv;j++)
+        printf("u[%lu] = (%g,%g)\n",v[j],U[j][0],U[j][1]);
+    }
+    return vol;
+  }
+
   for (index_t k=0;k<nv;k++)
     x[k] = points[v[k]];
   return simplex_volume(x,points.dim());

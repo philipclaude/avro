@@ -19,4 +19,22 @@ TopologyBase::copy( const TopologyBase& topology1 )
   closed_   = topology1.closed();
 }
 
+void
+TopologyBase::set_points( Points& points )
+{
+  points_ = points;
+  if (type_name()=="simplex")
+    static_cast<Topology<Simplex>*>(this)->set_points(points);
+  else
+    avro_implement;
+}
+
+void
+TopologyBase::offset_by( const index_t offset )
+{
+  // offset the indices
+  for (index_t k=0;k<data_.size();k++)
+    data_[k] += offset;
+}
+
 } // avro

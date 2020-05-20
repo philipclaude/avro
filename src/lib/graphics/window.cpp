@@ -40,12 +40,12 @@ _keyboard_callback(GLFWwindow* window,int key,int scancode,int action,int mods)
 }
 
 GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , const std::string& title ) :
-  manager_(manager),
   title_(title),
+  manager_(manager),
   width_(width),
   height_(height),
-  interface_(nullptr),
   controls_(fov_,width_,height_,0.1f,100.0f),
+  interface_(nullptr),
   updated_(true),
   fps_(60)
 {
@@ -91,13 +91,11 @@ GLFW_Window::save_eps( const std::string& filename )
   TransformFeedbackResult feedback;
   for (index_t k=0;k<scene_.size();k++)
   {
-    printf("capture with transform feedback!!\n");
     manager_.draw(*scene_[k].get(),&feedback);
   }
 
-
   library::epsFile eps;
-  int viewport[4] = {0,0,1024,640};
+  int viewport[4] = {0,0,width_,height_};
   eps.set_viewport(viewport);
   eps.add_triangles( feedback.triangle_points() , feedback.triangle_colors() );
   eps.add_edges( feedback.edge_points() , feedback.edge_colors() );

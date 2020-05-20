@@ -43,6 +43,7 @@ template void EigenValues<4,T>(const MatrixSymS<4,T>& A, VectorS<4,T>& L ); \
 template void EigenVectors<4,T>(const MatrixSymS<4,T>& A, MatrixS<4,4,T>& E ); \
 template void EigenSystem<4,T>(const MatrixSymS<4,T>& A, VectorS<4,T>& L, MatrixS<4,4,T>& E );
 
+
 INSTANTIATE_EIGEN(Real)
 INSTANTIATE_EIGEN(SurrealS<1>)
 INSTANTIATE_EIGEN(SurrealS<10>)

@@ -23,6 +23,8 @@ public:
   virtual void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const = 0;
   virtual void evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const = 0;
 
+  void tessellate( BodyTessellation& body_tess ) const;
+
   void print(bool with_children) const;
   void build_hierarchy();
 

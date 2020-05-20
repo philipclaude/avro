@@ -75,7 +75,7 @@ template<typename T>
 real_t
 FieldBase<T>::min( index_t rank ) const
 {
-  const std::vector<T>& u = data_.template DOF<T>::data();
+  const std::vector<T>& u = data_.DOF<T>::data();
   typename std::vector<T>::const_iterator it = std::min_element( u.begin() , u.end() , __comparator__<T>(rank) );
   return __at_rank__<T>(*it,rank);
 }
@@ -84,7 +84,7 @@ template<typename T>
 real_t
 FieldBase<T>::max( index_t rank ) const
 {
-  const std::vector<T>& u = data_.template DOF<T>::data();
+  const std::vector<T>& u = data_.DOF<T>::data();
   typename std::vector<T>::const_iterator it = std::max_element( u.begin() , u.end() , __comparator__<T>(rank) );
   return __at_rank__<T>(*it,rank);
 }

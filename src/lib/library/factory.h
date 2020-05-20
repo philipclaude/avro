@@ -33,9 +33,8 @@ get_metric( const std::string& name , Points& points , bool& is_analytic ,
 std::shared_ptr<Model>
 get_geometry( const std::string& name , bool& curved );
 
-template<typename type>
 std::shared_ptr<Mesh>
-get_mesh( const std::string& name , std::shared_ptr<Topology<type>>& ptopology , coord_t number=-1 );
+get_mesh( const std::string& name , std::shared_ptr<TopologyBase>& ptopology , coord_t number=-1 );
 
 } // programs
 

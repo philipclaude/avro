@@ -2,6 +2,7 @@
 #define AVRO_SRC_LIBRARY_LIBRARY_H_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -62,7 +63,7 @@ public:
   const std::vector<std::string>& geometries() const { return geometries_; }
 
 private:
-  const std::vector<std::string> meshes0_ = {"Structured"};
+  const std::vector<std::string> meshes0_ = {};
   const std::vector<std::string> metrics0_ = {"Linear-3d","Polar1","Polar2","Linear-4d","Wave-4d"};
   const std::vector<std::string> geometries0_ = {"square","box","tesseract"};
   const std::vector<std::string> points0_ = {"Random"};

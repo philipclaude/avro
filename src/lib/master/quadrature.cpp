@@ -10,8 +10,8 @@ namespace avro
 Quadrature::Quadrature( coord_t dim , const int order) :
   dim_(dim),
   order_(order),
-  defined_(false),
-  nb_quad_(0)
+  nb_quad_(0),	
+  defined_(false)
 {}
 
 const real_t*
@@ -149,7 +149,6 @@ GrundmannMoellerQuadrature::define()
   nb_quad_ = gm_rule_size( rule_ , dim_ );
 
   int m = dim_;
-  int n = nb_quad_;
 
   x_.resize( nb_quad_*dim_ );
   w_.resize( nb_quad_ );

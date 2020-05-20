@@ -59,6 +59,40 @@ Primitive::extract()
   normals0_.clear();
   colors0_.clear();
 
+  if (number==0)
+  {
+    // get the edges from the topology
+    for (index_t k=0;k<topology_.nb();k++)
+    {
+      for (index_t j=0;j<dim0;j++)
+        points0_.push_back( topology_.points()[topology_(k,0)][j] );
+      for (index_t j=dim0;j<3;j++)
+        points0_.push_back( 0.0 );
+
+      points_on_ = true;
+    }
+    return;
+  }
+
+  if (number==1)
+  {
+    // get the edges from the topology
+    std::vector<index_t> edges;
+    topology_.get_edges( edges );
+
+    std::vector<index_t> point_map0( topology_.points().nb() );
+    for (index_t k=0;k<edges.size();k++)
+    {
+      for (index_t j=0;j<dim0;j++)
+        points0_.push_back( topology_.points()[edges[k]][j] );
+      for (index_t j=dim0;j<3;j++)
+        points0_.push_back( 0.0 );
+
+      edges0_.push_back( edges0_.size() );
+    }
+    return;
+  }
+
   // get the triangles from the topology
   std::shared_ptr<SimplicialDecompositionBase> pdecomposition;
   if (topology_.type_name()=="simplex")
@@ -71,6 +105,7 @@ Primitive::extract()
   const Points& points = decomposition.points();
   std::vector<index_t> triangles;
   std::vector<index_t> parents;
+
   decomposition.get_simplices(2,triangles,parents); // setting 2 retrieves triangles
   index_t nb_points = triangles.size(); // duplicated points for cell-based colors
 

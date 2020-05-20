@@ -56,7 +56,7 @@ voronoi( int nb_input , const char** inputs )
   GEO::PCK::initialize();
 
   // options
-  bool found;
+  bool found; UNUSED(found); 
   const char **options = inputs +3;
   int  nb_options = nb_input -3;
 
@@ -69,11 +69,11 @@ voronoi( int nb_input , const char** inputs )
 
   // get the original input mesh
   std::string meshname( inputs[0] );
-  std::shared_ptr<Topology<type>> ptopology = nullptr;
-  std::shared_ptr<Mesh> pmesh = library::get_mesh<type>(meshname,ptopology);
+  std::shared_ptr<TopologyBase> ptopology = nullptr;
+  std::shared_ptr<Mesh> pmesh = library::get_mesh(meshname,ptopology);
 
   // get the topology and add it to the input mesh
-  Topology<type>& topology = *ptopology.get();
+  Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
   topology.orient();
   pmesh->add(ptopology);
 

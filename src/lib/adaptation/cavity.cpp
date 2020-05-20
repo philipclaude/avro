@@ -23,9 +23,9 @@ template<typename type>
 Cavity<type>::Cavity( Topology<type>& _topology ) :
   Topology<type>(_topology.points(),_topology.number()),
   topology_(_topology),
-  nodeRemovalAllowed_(true),
+  node_removal_allowed_(true),
   enlarge_(true),
-  checkVisibility_(true),
+  check_visibility_(true),
   star_(0),
   boundary_( topology_.points() , topology_.number()-1 ),
   minvol_(1e-12),
@@ -46,7 +46,7 @@ Cavity<type>::Cavity( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Cavity<type>::positiveImpliedMetrics()
+Cavity<type>::positive_implied_metrics()
 {
   for (index_t k=0;k<this->nb();k++)
   {
@@ -64,7 +64,7 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
   cavity_.clear();
   boundary_.clear();
   nodes_.clear();
-  removedNodes_.clear();
+  removed_nodes_.clear();
 
   // assign the coordinates and index of the star
   for (coord_t d=0;d<point_.size();d++)
@@ -73,10 +73,10 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
 
   // compute the cavity about p with elements initialized to C0
   for (index_t k=0;k<C0.size();k++)
-    addCavity(C0[k]);
+    add_cavity(C0[k]);
 
   // enlarge the cavity until the point is visible from every face of the boundary
-  if (checkVisibility_)
+  if (check_visibility_)
   {
     bool accept = enlarge();
     if (!accept)
@@ -92,12 +92,12 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
 
   // accumulate the nodes of the cavity elements
   // this is needed to detect if nodes are removed
-  computeNodes();
+  compute_nodes();
 
   // compute the boundary of the cavity elements
   try
   {
-    if (!computeBoundary())
+    if (!compute_boundary())
     {
       avro_assert_not_reached;
       return false;
@@ -118,7 +118,7 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
   // apply the cavity to the candidate (also computes removed nodes)
   apply();
 
-  if (!nodeRemovalAllowed_ && nb_removedNodes()>0)
+  if (!node_removal_allowed_ && nb_removed_nodes()>0)
   {
     printf("node removal not allowed\n");
     return false;
@@ -129,7 +129,7 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
 
 template<typename type>
 bool
-Cavity<type>::computeBoundary()
+Cavity<type>::compute_boundary()
 {
   avro_assert( boundary_.nb()==0 );
   avro_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
@@ -193,7 +193,7 @@ Cavity<type>::computeBoundary()
 
 // retrieves the geometric parameter coordinates given a facet on the entity
 void
-geometryParams( Entity* e0 , const Points& points , const index_t* v , const index_t nv , real_t* params )
+geometry_params( Entity* e0 , const Points& points , const index_t* v , const index_t nv , real_t* params )
 {
   avro_assert( nv>0 );
 
@@ -290,7 +290,14 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
         edge = entities[k];
         t = points.u( v[k] )[0];
       }
+      else
+      {
+        printf("%s\n",EGADS::utilities::object_class_name(entities[k]->object_class()).c_str());
+        entities[k]->print_header();
+        avro_assert_not_reached;
+      }
 
+      avro_assert( edge!=nil );
       if (edge->sense_required())
       {
         // need to sort out which uv should be used later
@@ -456,10 +463,10 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
     }
   }
 
-  avro_assert(count == nv);
+  avro_assert(count == nv); 
 
+#if 0
   coord_t dim  = points.dim();
-
   for (index_t k=0;k<nv;k++)
   {
     // evaluate the coordinates for the parameters we found
@@ -489,11 +496,12 @@ geometryParams( Entity* e0 , const Points& points , const index_t* v , const ind
 
     avro_assert_msg( d <= tol , "d = %1.16e, tol = %1.16e" , d , tol );
   }
+#endif
 }
 
 template<typename type>
 void
-Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std::map<index_t,index_t>& v2u , std::vector<index_t>& u2v )
+Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std::map<index_t,index_t>& v2u , std::vector<index_t>& u2v )
 {
   // this function should be called after the cavity operator has been applied
   // because we need to find ghost cavity elements to compute the boundary.
@@ -582,6 +590,19 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
 
   } // loop over cavity elements
 
+  if (topology_.master().parameter())
+  {
+    // add all elements in the cavity
+    avro_assert(geometry.nb()==0);
+    for (index_t k=0;k<nb_cavity();k++)
+    {
+      f.resize(3);
+      for (index_t j=0;j<3;j++)
+        f[j] = topology_( cavity_[k],j );
+      geometry.add(f.data(),f.size());
+    }
+  }
+
   avro_assert(geometry.nb()>0);
   if (geometry.nb()==0) return;
 
@@ -616,12 +637,14 @@ Cavity<type>::computeGeometry( Entity* entity0 , Topology<type>& geometry , std:
   if (uvcoords)
   {
     coord_t udim = this->points_.udim();
+    if (udim!=geometry.points().dim())
+      geometry.points().print(true);
     avro_assert(udim == geometry.points().dim());
     std::vector<real_t> params;
     for (index_t k=0;k<geometry.nb();k++)
     {
       params.resize(udim*geometry.nv(k));
-      geometryParams( entity , this->points_ , geometry(k) , geometry.nv(k) , params.data() );
+      geometry_params( entity , this->points_ , geometry(k) , geometry.nv(k) , params.data() );
       for (index_t j=0;j<geometry.nv(k);j++)
       {
         //index_t m = v2u[ geometry(k,j) ];
@@ -764,7 +787,7 @@ Cavity<type>::enlarge( bool verbose )
 
   // add the new elements to the cavity
   for (index_t k=0;k<C.size();k++)
-    addCavity( C[k] );
+    add_cavity( C[k] );
 
   uniquify(cavity_);
 
@@ -776,7 +799,7 @@ Cavity<type>::enlarge( bool verbose )
 
 template<typename type>
 bool
-Cavity<type>::findGeometry( real_t* x , std::vector<index_t>& C0 )
+Cavity<type>::find_geometry( real_t* x , std::vector<index_t>& C0 )
 {
 
   const coord_t dim = topology_.points().dim();
@@ -850,20 +873,20 @@ Cavity<type>::findGeometry( real_t* x , std::vector<index_t>& C0 )
   uniquify(C0);
 
   // recursively enlarge
-  if (!findGeometry(x,C0)) return false;
+  if (!find_geometry(x,C0)) return false;
 
   return true;
 }
 
 template<typename type>
 void
-Cavity<type>::computeRemovedNodes()
+Cavity<type>::compute_removed_nodes()
 {
-  removedNodes_.clear();
+  removed_nodes_.clear();
   for (index_t k=0;k<nb_nodes();k++)
   {
     if (this->has(nodes_[k])) continue;
-    addRemovedNode( nodes_[k] );
+    add_removed_node( nodes_[k] );
   }
 }
 
@@ -915,12 +938,12 @@ Cavity<type>::apply()
   std::fill( removes_.begin() , removes_.end() , true ); // default
 
   // determine if any nodes get deleted
-  computeRemovedNodes();
+  compute_removed_nodes();
 }
 
 template<typename type>
 void
-Cavity<type>::computeNodes()
+Cavity<type>::compute_nodes()
 {
   avro_assert(nodes_.size()==0);
 
@@ -928,7 +951,7 @@ Cavity<type>::computeNodes()
   for (index_t k=0;k<nb_cavity();k++)
   {
     for (index_t j=0;j<topology_.nv( cavity_[k] ); j++)
-      addNode( topology_(cavity_[k],j) );
+      add_node( topology_(cavity_[k],j) );
   }
   uniquify(nodes_);
 }
@@ -943,7 +966,7 @@ Cavity<type>::print() const
   for (index_t k=0;k<nb_cavity();k++)
     print_inline( topology_.get(cavity(k)) , "cavity["+stringify(cavity(k))+"]" );
   print_inline( nodes_ , "nodes" );
-  print_inline( removedNodes_ , "removedNodes" );
+  print_inline( removed_nodes_ , "removed_nodes" );
 
   for (index_t k=0;k<nb_insert();k++)
     print_inline( this->get(k) , "insertion["+stringify(k)+"]");
@@ -962,7 +985,7 @@ Cavity<type>::print() const
 
 template<typename type>
 bool
-Cavity<type>::philipcondition()
+Cavity<type>::has_unique_elems()
 {
   // check that any of the insertions are not contained in the ball of the star
   std::vector<index_t> ball;
@@ -993,21 +1016,21 @@ Cavity<type>::add( const index_t* v , const index_t nv )
 
 template<typename type>
 void
-Cavity<type>::addNode( const index_t node )
+Cavity<type>::add_node( const index_t node )
 {
   nodes_.push_back(node);
 }
 
 template<typename type>
 void
-Cavity<type>::addRemovedNode( const index_t node )
+Cavity<type>::add_removed_node( const index_t node )
 {
-  removedNodes_.push_back(node);
+  removed_nodes_.push_back(node);
 }
 
 template<typename type>
 void
-Cavity<type>::addCavity( const index_t elem )
+Cavity<type>::add_cavity( const index_t elem )
 {
   cavity_.push_back(elem);
 }
