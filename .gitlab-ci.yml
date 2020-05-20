@@ -20,21 +20,29 @@ release_gnu5:
   stage: build
   script:
     - source util/commit.sh release_gnu5
+  tags:
+    - avro-commit
 
 release_gnu6:
   stage: build
   script:
     - source util/commit.sh release_gnu6
+  tags:
+    - avro-commit
 
 release_gnu7:
   stage: build
   script:
     - source util/commit.sh release_gnu7
+  tags:
+    - avro-commit
 
 release_clang:
   stage: build
   script:
     - source util/commit.sh release_clang
+  tags:
+    - avro-commit
 
 # the coverage test job
 job-coverage:
