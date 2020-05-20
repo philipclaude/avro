@@ -3,6 +3,7 @@
 
 <img width="60px" src="doc/fig/avro.svg"/>
 
+
 [![build status](https://gitlab.com/philipclaude/avro/badges/master/pipeline.svg)](https://gitlab.com/philipclaude/avro/badges/master/pipeline.svg)
 
 [![coverage](https://gitlab.com/philipclaude/avro/badges/master/coverage.svg)](https://gitlab.com/philipclaude/avro/badges/master/coverage.svg)
