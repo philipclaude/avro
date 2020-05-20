@@ -23,9 +23,9 @@ if [[ `hostname` == *"wazowski"* ]]; then
   export PATH=/usr/bin:$PATH
   export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
 
-  export LAPACK_DIR=/home/gitlab-runner/lapack/lapack-3.6.1/install
-  export ESP_DIR=/home/gitlab-runner/ESP/EngSketchPad
-  export CAS_DIR=/home/gitlab-runner/ESP/OpenCASCADE-7.4.1
+  #export LAPACK_DIR=/home/gitlab-runner/lapack/lapack-3.6.1/install
+  export ESP_DIR=/home/gitlab-runner/EngSketchPad
+  export CAS_DIR=/home/gitlab-runner/OpenCASCADE-7.3.1
   #export PARMETIS_DIR=/home/gitlab-runner/parmetis/parmetis-4.0.3/install
   #export METIS_DIR=/home/gitlab-runner/parmetis/metis-5.1.0/install
   #export PATH=/home/gitlab-runner/lcov/lcov-1.13/bin:$PATH
