@@ -40,8 +40,8 @@ release_tests:
   tags:
     - avro-commit
 
-coverage_test:
-  stage: test
+coverage_tests:
+  stage: build
   script:
     - source util/commit.sh coverage_gnu5
     - cp -r build/coverage_gnu5/avroCoverageHTML coverage_results
@@ -58,10 +58,9 @@ coverage_test:
 pages:
   stage: deploy
   script:
-    - mkdir public
-    - cp index.html public
-    - cp -r css public/css
-    - cp .keywords.json public/.keywords.json
+    - mv coverage_results public
   artifacts:
     paths:
     - public
+  only:
+    - master
