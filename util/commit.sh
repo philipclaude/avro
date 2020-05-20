@@ -1,6 +1,6 @@
 #!/bin/bash
 
-workspace = `pwd`
+workspace=`pwd`
 config=$1
 
 
