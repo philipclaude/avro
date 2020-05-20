@@ -41,6 +41,8 @@ public:
     dim_(dim)
   {}
 
+  ~Body() {}
+
   coord_t dim() const { return dim_; }
 
 private:

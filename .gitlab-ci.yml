@@ -33,6 +33,7 @@ release_clang:
 unit_tests:
   stage: test
   script:
+    - source util/commit.sh release_gnu7
     - cd build/release_gnu7
     - make unit
   tags:
