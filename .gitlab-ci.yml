@@ -1,6 +1,7 @@
 stages:
   - build
   - test
+  - deploy
 
 release_gnu5:
   stage: build
@@ -30,7 +31,7 @@ release_clang:
   tags:
     - avro-commit
 
-unit_tests:
+release_tests:
   stage: test
   script:
     - source util/commit.sh release_gnu7
@@ -45,36 +46,22 @@ coverage_test:
     - source util/commit.sh coverage_gnu5
     - cp -r build/coverage_gnu5/avroCoverageHTML coverage_results
     - cp cmake/coverage-prolog.html coverage_results/index.html
-  only:
-    - merge_requests
+    - python /home/gitlab-runner/util/lcov/lcov_cobertura/lcov_cobertura.py coverage.info -o coverage_results/coverage.xml
   artifacts:
     paths:
       - coverage_results
+    reports:
+      corbertura: coverage_results/cobertura-coverage.xml
   tags:
     - avro-commit
 
-# the coverage test job
-#job-coverage:
-#  stage: none
-#  script:
-#    - export ESP_DIR=/home/gitlab-runner/Codes/EngSketchPad
-#    - export CAS_DIR=/home/gitlab-runner/Codes/OpenCASCADE-7.3.1
-#    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CAS_DIR/lib
-#    - mkdir build
-#    - mkdir build/coverage
-#    - cd build/coverage
-#    - cmake ../../
-#    - make -j12
-#    # need these tests to be shorter...
-#    #- make unit_coverage
-#    #- make coverage_info
-#    - cd ../../
-#    # - cp -r build/coverage/avroCoverageHTML coverage_results
-#    # remove this when it actually works!
-#    - mkdir coverage_results
-#    - cp cmake/coverage-prolog.html coverage_results/index.html
-#  artifacts:
-#    paths:
-#      - coverage_results
-#  tags:
-#    - avro-commit
+pages:
+  stage: deploy
+  script:
+    - mkdir public
+    - cp index.html public
+    - cp -r css public/css
+    - cp .keywords.json public/.keywords.json
+  artifacts:
+    paths:
+    - public
