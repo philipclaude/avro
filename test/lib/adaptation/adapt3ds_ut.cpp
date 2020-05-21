@@ -20,7 +20,7 @@
 
 using namespace avro;
 
-UT_TEST_SUITE( adaptation_adapt3d_surface_suite)
+UT_TEST_SUITE(adapt3d_surface_suite)
 
 UT_TEST_CASE(test1)
 {

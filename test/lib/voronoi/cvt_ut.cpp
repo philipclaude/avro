@@ -54,7 +54,7 @@ UT_TEST_CASE( test1 )
   rvd.parallel() = true;
 
   //rvd.compute(true);
-  rvd.optimise(101);
+  rvd.optimise(5);
 
   graphics::Visualizer vis;
 
@@ -64,7 +64,7 @@ UT_TEST_CASE( test1 )
   //vis.add_topology(topology);
   vis.add_topology(rvd);
 
-  vis.run();
+  //vis.run();
 
 
 }

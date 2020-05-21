@@ -30,6 +30,9 @@ public:
             passed_,asserted_,failed_,exceptions_);
   }
 
+  bool successful() const { return failed_==0; }
+  unsigned long nb_failed() const { return failed_; }
+
   void failed() { failed_++; }
   void passed() { passed_++; }
   void asserted() { asserted_++; }
@@ -80,8 +83,10 @@ public:
 
   std::size_t ntests() const { return cases_.size(); }
 
-  void run( TestResult& __result__ )
+  int run( TestResult& __result__ )
   {
+    unsigned long nb_failed0 = __result__.nb_failed();
+    (void)(nb_failed0); // suppresses the warning of unused nb_failed0
     #ifndef STANDALONE
 
     #ifndef STDOUT_REDIRECT
@@ -137,7 +142,14 @@ public:
     // reset to standard output
     std::cout.rdbuf(coutbuf);
 
+    if (__result__.nb_failed() > nb_failed0)
+      printf("suite %s failed with %lu new errors!\n",
+              name_.c_str(),__result__.nb_failed()-nb_failed0);
+
     #endif
+
+    if (__result__.successful()) return 0;
+    return -1;
   }
 
 private:
@@ -153,19 +165,29 @@ public:
     suites_.push_back(suite);
   }
 
-  void run(TestResult& __result__)
+  int run(TestResult& __result__)
   {
+    int result = 0;
     for (std::size_t i=0;i<suites_.size();i++)
     {
       printf("running suite: %-30s with %3lu tests ... ",
               suites_[i]->name().c_str(),suites_[i]->ntests());
       clock_t t0 = clock();
-      suites_[i]->run(__result__);
+      try
+      {
+        if (suites_[i]->run(__result__) < 0)
+          result = -1;
+      }
+      catch (...)
+      {
+        result = -1;
+      }
       clock_t t1 = clock();
       double s = double(t1-t0)/CLOCKS_PER_SEC;
       double ms = 1000*s -1000*floor(s);
       printf("done [%3d s : %-3d ms]\n",int(floor(s)),int(floor(ms)));
     }
+    return result;
   }
 private:
   std::vector<TestSuite*> suites_;
@@ -237,7 +259,7 @@ void run(TestResult& __result__) {printf("skipping test!\n");} void run_skip(Tes
 
 #ifdef STANDALONE
 #define UT_TEST_SUITE_END(X) } void ut_pre(int,char**); void ut_post(); int main(int argc, char* argv[]) \
-    { ut_pre(argc,argv); TestResult __result__; suite_##X::__suite__.run(__result__); __result__.summary(); ut_post(); return 0; }
+    { ut_pre(argc,argv); TestResult __result__; suite_##X::__suite__.run(__result__); __result__.summary(); ut_post(); if (__result__.nb_failed()!=0) return 1; return 0; }
 #else
 #define UT_TEST_SUITE_END(X) }
 #endif

@@ -36,7 +36,7 @@ UT_TEST_CASE( voronoi_tests )
 
   graphics::Visualizer vis;
   vis.add_topology(rvd);
-  vis.run();
+  //vis.run();
 }
 UT_TEST_CASE_END( voronoi_tests )
 
