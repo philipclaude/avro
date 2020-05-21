@@ -107,13 +107,15 @@ void
 Tree<Node_t>::get_adjacency( numerics::MatrixD<int>& A ) const
 {
   std::vector<const Node_t*> children;
-  children.push_back(derived());
   get_children(children);
+  children.insert( children.begin() , derived() );
+  
   A.resize( children.size() , children.size() );
   A = 0;
   for (index_t i=0;i<children.size();i++)
-  for (index_t j=i+1;j<children.size();j++)
+  for (index_t j=0;j<children.size();j++)
   {
+    if (i==j) continue;
     if (children[i]->has_child(children[j]))
       A(i,j) = 1;
   }

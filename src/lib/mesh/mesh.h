@@ -71,7 +71,7 @@ public:
       topologies.push_back( static_cast<const TopologyBase*>(topology_[k].get()) );
       if (topology_[k]->type_name()=="simplex")
       {
-        static_cast<const Topology<Simplex>&>(*topology_[k]).get_children<TopologyBase>(topologies);
+        static_cast<const Topology<Simplex>&>(*topology_[k]).get_children_typed<TopologyBase>(topologies);
       }
       else
         avro_implement;
