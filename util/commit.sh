@@ -2,6 +2,7 @@
 
 workspace=`pwd`
 config=$1
+nproc=$2
 
 
 #Files might linger if a build was aborted
@@ -32,12 +33,7 @@ fi
 
 time source $workspace/util/configure.sh $CMAKE_ARGS
 
-# number of processors used in compile
-nproc=1
-
 if [[ $config == *"coverage"* ]]; then
-  # just because we have to clean, use more processors for coverage
-  nproc=6
 
   # coverage information always needs to be completely recompiled
   time make coverage_cleaner
@@ -49,17 +45,7 @@ time make -j $nproc
 if [[ $config == *"coverage"* ]]; then
 
   time make unit_coverage
-
   time make coverage_info
-  #if [[ `hostname` == "wazowski" ]]; then
-  #  time python $HOME/util/lcov/lcov_cobertura.py coverage.info -o $WORKSPACE/build/coverage.xml
-  #fi
-
-  # generate html documents
-  #time make genhtml
-  # udpdate coverage information on acdl (@marshall do i need to rename this?)
-  #time rsync -rtuc --delete avroCoverageHTML jenkins@acdl.mit.edu:/var/lib/jenkins/userContent/
-
 fi
 
 # warning if any files were generated.

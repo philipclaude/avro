@@ -6,35 +6,35 @@ stages:
 release_gnu5:
   stage: build
   script:
-    - source util/commit.sh release_gnu5
+    - source util/commit.sh release_gnu5 1
   tags:
     - avro-commit
 
 release_gnu6:
   stage: build
   script:
-    - source util/commit.sh release_gnu6
+    - source util/commit.sh release_gnu6 1
   tags:
     - avro-commit
 
 release_gnu7:
   stage: build
   script:
-    - source util/commit.sh release_gnu7
+    - source util/commit.sh release_gnu7 1
   tags:
     - avro-commit
 
 release_clang:
   stage: build
   script:
-    - source util/commit.sh release_clang
+    - source util/commit.sh release_clang 1
   tags:
     - avro-commit
 
 release_tests:
   stage: test
   script:
-    - source util/commit.sh release_gnu7
+    - source util/commit.sh release_gnu7 4
     - cd build/release_gnu7
     - make unit
   tags:
@@ -43,8 +43,8 @@ release_tests:
 coverage_tests:
   stage: test
   script:
-    - source util/commit.sh coverage_gnu5
-    - cp -r build/coverage_gnu5/avroCoverageHTML coverage_results
+    - source util/commit.sh coverage_gnu5 6
+    - cp -r build/coverage_gnu5/avro_coverage_html coverage_results
   artifacts:
     paths:
       - coverage_results

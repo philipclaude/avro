@@ -42,7 +42,7 @@ UT_TEST_CASE( simplex_tests )
 }
 UT_TEST_CASE_END( simplex_tests )
 
-UT_TEST_CASE( hierarchy_from_geometry )
+UT_TEST_CASE_SKIP( hierarchy_from_geometry )
 {
   EGADS::Context context;
   EGADS::Cube box( &context, {1,1,1} );

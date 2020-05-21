@@ -6,7 +6,7 @@
 
 using namespace avro;
 
-UT_TEST_SUITE( TopologySuite )
+UT_TEST_SUITE( builder_suite )
 
 UT_TEST_CASE( simplex_tests )
 {
@@ -23,4 +23,4 @@ UT_TEST_CASE( simplex_tests )
 }
 UT_TEST_CASE_END( simplex_tests )
 
-UT_TEST_SUITE_END( TopologySuite )
+UT_TEST_SUITE_END( builder_suite )
