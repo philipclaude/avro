@@ -5,9 +5,9 @@
 
 using namespace avro;
 
-UT_TEST_SUITE( MasterSuite )
+UT_TEST_SUITE( master_test_suite )
 
-UT_TEST_CASE( simplex_tests )
+UT_TEST_CASE( simplex_master_tests )
 {
   Simplex master( 2 , 1 );
 
@@ -21,6 +21,6 @@ UT_TEST_CASE( simplex_tests )
   master.eval(x,phi);
 
 }
-UT_TEST_CASE_END( simplex_tests )
+UT_TEST_CASE_END( simplex_master_tests )
 
-UT_TEST_SUITE_END( MasterSuite )
+UT_TEST_SUITE_END( master_test_suite )

@@ -7,7 +7,7 @@
 
 using namespace avro;
 
-UT_TEST_SUITE( QuadratureTestSuite )
+UT_TEST_SUITE( quadrature_test_suite )
 
 template<int dim>
 struct monomial : public Integrand<monomial<dim>>
@@ -373,4 +373,4 @@ UT_TEST_CASE( pentatope_cp_tests )
 }
 UT_TEST_CASE_END( pentatope_cp_tests )
 
-UT_TEST_SUITE_END( QuadratureTestSuite )
+UT_TEST_SUITE_END( quadrature_test_suite )
