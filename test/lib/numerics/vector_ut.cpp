@@ -12,7 +12,7 @@
 using namespace avro;
 using namespace avro::numerics;
 
-UT_TEST_SUITE(VectorSuite)
+UT_TEST_SUITE(vector_suite)
 
 UT_TEST_CASE(test1)
 {
@@ -34,4 +34,4 @@ UT_TEST_CASE(test1)
 }
 UT_TEST_CASE_END(test1)
 
-UT_TEST_SUITE_END(VectorSuite)
+UT_TEST_SUITE_END(vector_suite)

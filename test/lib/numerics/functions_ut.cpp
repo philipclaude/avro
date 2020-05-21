@@ -5,7 +5,7 @@
 using namespace avro;
 using namespace numerics;
 
-UT_TEST_SUITE(FunctionsSuite)
+UT_TEST_SUITE(functions_suite)
 
 UT_TEST_CASE(evaluation)
 {
@@ -46,4 +46,4 @@ UT_TEST_CASE(evaluation)
 }
 UT_TEST_CASE_END(evaluation)
 
-UT_TEST_SUITE_END(FunctionsSuite)
+UT_TEST_SUITE_END(functions_suite)

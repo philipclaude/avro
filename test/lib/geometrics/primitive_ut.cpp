@@ -8,7 +8,7 @@
 
 using namespace avro;
 
-UT_TEST_SUITE(PrimitiveSuite)
+UT_TEST_SUITE( geometry_primitive_suite)
 
 UT_TEST_CASE(test1)
 {
@@ -23,4 +23,4 @@ UT_TEST_CASE(test1)
 }
 UT_TEST_CASE_END(test1)
 
-UT_TEST_SUITE_END(PrimitiveSuite)
+UT_TEST_SUITE_END(geometry_primitive_suite)

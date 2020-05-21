@@ -9,10 +9,10 @@
 
 using namespace avro;
 
-UT_TEST_SUITE(BodySuite)
+UT_TEST_SUITE(body_suite)
 
 UT_TEST_CASE(test1)
-{ 
+{
   typedef EGADS::Object Object_t;
   EGADS::Context context;
   ego obj = nullptr;
@@ -34,4 +34,4 @@ UT_TEST_CASE(test2)
 }
 UT_TEST_CASE_END(test2)
 
-UT_TEST_SUITE_END(BodySuite)
+UT_TEST_SUITE_END(body_suite)

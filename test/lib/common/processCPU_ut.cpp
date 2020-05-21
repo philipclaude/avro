@@ -25,7 +25,7 @@ public:
   }
 };
 
-UT_TEST_SUITE(ParallelCPUSuite)
+UT_TEST_SUITE(parallel_cpu_suite)
 
 UT_TEST_CASE(threadable_test)
 {
@@ -36,4 +36,4 @@ UT_TEST_CASE(threadable_test)
 }
 UT_TEST_CASE_END(threadable_test)
 
-UT_TEST_SUITE_END(ParallelCPUSuite)
+UT_TEST_SUITE_END(parallel_cpu_suite)

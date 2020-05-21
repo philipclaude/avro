@@ -11,7 +11,7 @@
 
 using namespace avro;
 
-UT_TEST_SUITE( Metric_suite )
+UT_TEST_SUITE( metric_suite )
 
 numerics::SymMatrixD<real_t>
 random_tensor( index_t n )
@@ -211,4 +211,4 @@ UT_TEST_CASE( metric_field_tests )
 }
 UT_TEST_CASE_END( metric_field_tests )
 
-UT_TEST_SUITE_END( Metric_suite )
+UT_TEST_SUITE_END( metric_suite )

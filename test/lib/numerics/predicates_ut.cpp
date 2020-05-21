@@ -39,7 +39,7 @@ public:
   }
 };
 
-UT_TEST_SUITE(PredicatesSuite)
+UT_TEST_SUITE(predicates_suite)
 
 UT_TEST_CASE(side1_test)
 {
@@ -520,4 +520,4 @@ UT_TEST_CASE(side5_test)
 }
 UT_TEST_CASE_END(side5_test)
 
-UT_TEST_SUITE_END(PredicatesSuite)
+UT_TEST_SUITE_END(predicates_suite)
