@@ -13,7 +13,7 @@ UT_TEST_CASE(ckf_nd)
 {
   for (coord_t dim=4;dim<=4;dim++)
   {
-    index_t N = 10;
+    index_t N = 6;
     std::vector<index_t> dims(dim,N);
     CKF_Triangulation topology( dims );
 

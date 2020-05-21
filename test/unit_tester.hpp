@@ -32,6 +32,7 @@ public:
 
   bool successful() const { return failed_==0; }
   unsigned long nb_failed() const { return failed_; }
+  unsigned long nb_assert() const { return asserted_; }
 
   void failed() { failed_++; }
   void passed() { passed_++; }
@@ -170,6 +171,7 @@ public:
     int result = 0;
     for (std::size_t i=0;i<suites_.size();i++)
     {
+      int nb_assert0 = __result__.nb_assert();
       printf("running suite: %-30s with %3lu tests ... ",
               suites_[i]->name().c_str(),suites_[i]->ntests());
       clock_t t0 = clock();
@@ -182,6 +184,8 @@ public:
       {
         result = -1;
       }
+      int nb_assert = __result__.nb_assert() -nb_assert0;
+      printf(" %4d assertions ... ",nb_assert);
       clock_t t1 = clock();
       double s = double(t1-t0)/CLOCKS_PER_SEC;
       double ms = 1000*s -1000*floor(s);
@@ -206,7 +210,8 @@ TestSuite::TestSuite( const char* name , TestDriver* driver ) :
     if (X!=Y) \
     { \
       __result__.failed(); \
-      printf("%s::%s: assertion %s == %s failed on line %d of file %s.\n",suite_->name().c_str(),name_.c_str(),#X,#Y,__LINE__,__FILE__); \
+      printf("%s::%s: assertion %s  == %s failed on line %d of file %s.\n",suite_->name().c_str(),name_.c_str(),#X,#Y,__LINE__,__FILE__); \
+      std::cout << "--> expected " << Y << " but received " << X << std::endl; \
     } \
     else \
       __result__.passed(); \

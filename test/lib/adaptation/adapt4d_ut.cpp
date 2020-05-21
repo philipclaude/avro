@@ -19,7 +19,7 @@ using namespace avro;
 
 UT_TEST_SUITE( adaptation_adapt4d_suite)
 
-UT_TEST_CASE(adapt_test)
+UT_TEST_CASE_SKIP(adapt_test)
 {
   // setup the topology
   coord_t number = 4;

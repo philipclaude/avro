@@ -35,7 +35,7 @@ UT_TEST_CASE( test_constant_dims )
 
   for (coord_t dim=2;dim<=4;dim++)
   {
-    for (index_t n=2;n<=12;n+=2)
+    for (index_t n=2;n<=8;n+=2)
     {
       std::vector<index_t> dims(dim,n);
 
@@ -55,7 +55,7 @@ UT_TEST_CASE( test_different_dims )
 
   for (coord_t dim=2;dim<=4;dim++)
   {
-    for (index_t n=2;n<=12;n+=2)
+    for (index_t n=2;n<=8;n+=2)
     {
       std::vector<index_t> dims(dim,n);
 

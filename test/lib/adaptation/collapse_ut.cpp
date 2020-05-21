@@ -24,7 +24,7 @@ UT_TEST_CASE(ckf_3d)
   real_t xc[3] = {0.,0.,0.};
   EGADS::Cube box(&context,{1,1,1},xc);
 
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,6);
   CKF_Triangulation topology( dims );
   topology.points().attach(box);
 

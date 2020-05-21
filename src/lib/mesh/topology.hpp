@@ -21,7 +21,7 @@ template<typename Friend_t>
 void
 Topology<type>::construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<Friend_t>& root ) const
 {
-  node = std::make_shared<Topology<Friend_t>>(root.points(),number_,order_);
+  node = std::make_shared<Topology<Friend_t>>(root.points(),number_,master_.order());
 }
 
 template<typename type>

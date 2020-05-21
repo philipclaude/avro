@@ -14,7 +14,7 @@ UT_TEST_SUITE( insertion_filter_suite )
 UT_TEST_CASE(filter3d)
 {
   const coord_t number = 3;
-  std::vector<index_t> dims( number , 10 );
+  std::vector<index_t> dims( number , 4 );
   CKF_Triangulation cube( dims );
 
   const coord_t dim = cube.points().dim();
