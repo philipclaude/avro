@@ -119,4 +119,4 @@ UT_TEST_CASE(test1)
 }
 UT_TEST_CASE_END(test1)
 
-UT_TEST_SUITE_END(adaptation_adapt3d_surface_suite)
+UT_TEST_SUITE_END(adapt3d_surface_suite)
