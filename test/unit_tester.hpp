@@ -1,6 +1,8 @@
 #ifndef avro_TESTING_FRAMEWORK_H_
 #define avro_TESTING_FRAMEWORK_H_
 
+#include "common/error.h"
+
 #include <exception>
 #include <iostream>
 #include <string>
@@ -14,7 +16,7 @@
 #ifdef MACHII_LIBRARY_LOCATION
 #define BASE_TEST_DIR std::string(MACHII_LIBRARY_LOCATION)
 #else
-#define BASE_TEST_DIR std::string("test/library")
+#define BASE_TEST_DIR std::string("library")
 #endif
 
 class TestSuite;
@@ -130,6 +132,8 @@ public:
       catch( std::exception& E )
       {
         printf("unexpected exception!!\n");
+	std::cout << E.what() << std::endl;
+	avro::call_backtrace();
         __result__.exception();
       }
     }
