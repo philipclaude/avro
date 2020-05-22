@@ -66,7 +66,7 @@ public:
     avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
 
     // set the version
-    #ifdef AVRO_HEADLESS_GRAPHICS
+    #ifdef AVRO_HEADLESS_GRAPHICS // core 3.3 supported by wazowski's drivers
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);
