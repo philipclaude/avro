@@ -86,7 +86,7 @@ SimplicialDecomposition<type>::add_point( coord_t number , const index_t* v , in
   element.dim     = number;
   element.indices = polytope;
   element.sorted  = true;
-  if (centroids_.find(element)==centroids_.end())
+  if (true) //centroids_.find(element)==centroids_.end())
   {
     centroids_.insert( {element,points_.nb()} );
     centroid2dim_.insert( {points_.nb(),number} );
@@ -110,7 +110,7 @@ SimplicialDecomposition<type>::add_point( coord_t number , const index_t* v , in
     }
     reference_coordinates_.add( alpha.data() , alpha.size() );
   }
-  return centroids_.at(element);
+  return points_.nb()-1;//centroids_.at(element);
 }
 
 template<typename type>

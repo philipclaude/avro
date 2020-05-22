@@ -40,6 +40,7 @@ release_tests:
     - Xvfb :5 -screen 0 1280x1280x24 &
     - export DISPLAY=:5
     - make unit
+    - cd ../../
     - mkdir unit_test_output
     - mv build/release_gnu7/unit_tests.out unit_test_output
   tags:

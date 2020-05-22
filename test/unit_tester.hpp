@@ -1,8 +1,6 @@
 #ifndef avro_TESTING_FRAMEWORK_H_
 #define avro_TESTING_FRAMEWORK_H_
 
-#include "common/error.h"
-
 #include <exception>
 #include <iostream>
 #include <string>
@@ -133,7 +131,6 @@ public:
       {
         printf("unexpected exception!!\n");
 	std::cout << E.what() << std::endl;
-	avro::call_backtrace();
         __result__.exception();
       }
     }
