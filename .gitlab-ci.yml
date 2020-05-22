@@ -17,6 +17,7 @@ release_gnu6:
   tags:
     - avro-commit
 
+
 release_gnu7:
   stage: build
   script:
@@ -39,17 +40,27 @@ release_tests:
     - Xvfb :5 -screen 0 1280x1280x24 &
     - export DISPLAY=:5
     - make unit
+    - mkdir unit_test_output
+    - mv unit_tests.out unit_test_output
   tags:
     - avro-commit
+  artifacts:
+    paths:
+      - unit_test_output
 
 coverage_tests:
   stage: test
   script:
+    - Xvfb :5 -screen 0 1280x1280x24 &
+    - export DISPLAY=:5
     - source util/commit.sh coverage_gnu5 6
     - cp -r build/coverage_gnu5/avro_coverage_html coverage_results
+    - mkdir unit_test_output
+    - mv unit_tests.out unit_test_output
   artifacts:
     paths:
       - coverage_results
+      - unit_test_output
   tags:
     - avro-commit
 
