@@ -1,4 +1,5 @@
 #include "common/error.h"
+#include "common/tools.h"
 
 #include "graphics/controls.h"
 #include "graphics/gl.h"
@@ -56,6 +57,7 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
     // the request opengl core profile (e.g. using 4.1 when drivers support 3.3)
     const char* description;
     int code = glfwGetError(&description);
+    UNUSED(code);
 
     if (description)
       printf("GLFW error: %s\n",description);
