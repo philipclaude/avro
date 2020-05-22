@@ -22,7 +22,7 @@ else
   CMAKE_ARGS=""
 fi
 
-CMAKE_ARGS="-DMACHII_LIBRARY_LOCATION=\"/home/gitlab-runner/Codes/library\""
+CMAKE_ARGS="-DMACHII_LIBRARY_LOCATION='/home/gitlab-runner/Codes/library'"
 
 
 if [[ $config == *"memcheck"* ]]; then
