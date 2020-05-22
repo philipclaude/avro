@@ -36,16 +36,18 @@ UT_TEST_CASE( simplex_tests )
 
   Topology<Simplex> topology_copy( vertices , number );
   topology_copy.Tree<Topology<Simplex>>::copy(topology);
+  
+  topology_copy.Tree<Topology<Simplex>>::print();
 
   topology_copy.Tree<Topology<Simplex>>::print();
 
 
   UT_ASSERT_EQUALS( topology_copy.nb_children() , 1 );
-  //UT_ASSERT_EQUALS( topology_copy.child(0).nb_children() , 1 );
+  UT_ASSERT_EQUALS( topology_copy.child(0).nb_children() , 1 );
 }
 UT_TEST_CASE_END( simplex_tests )
 
-UT_TEST_CASE_SKIP( hierarchy_from_geometry )
+UT_TEST_CASE( hierarchy_from_geometry )
 {
   EGADS::Context context;
   EGADS::Cube box( &context, {1,1,1} );

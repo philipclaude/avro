@@ -82,8 +82,8 @@ void
 Tree<Node_t>::copy( const Friend_t& tree )
 {
   std::vector<const Friend_t*> children0;
-  children0.push_back( &tree );
   tree.get_children(children0);
+  children0.insert( children0.begin() , &tree );
 
   numerics::MatrixD<int> A;
   tree.get_adjacency(A);
@@ -96,11 +96,11 @@ Tree<Node_t>::copy( const Friend_t& tree )
 
   // assign the children
   for (index_t i=0;i<index_t(A.m());i++)
-  for (index_t j=i+1;j<index_t(A.n());j++)
+  for (index_t j=0;j<index_t(A.n());j++)
   {
     if (A(i,j)==0) continue;
     if (i==0)
-      add_child( children1[ A(i,j) ] ); // add to root
+      add_child( children1[j] ); // add to root
     else
       children1[i]->add_child( children1[j] ); // add to leaf
   }
