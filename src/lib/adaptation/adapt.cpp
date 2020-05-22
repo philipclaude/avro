@@ -473,6 +473,9 @@ adapt( AdaptationProblem& problem )
   field.set_cells( topology );
   avro_assert( field.check () );
 
+  if (params.limit_metric())
+    field.limit(mesh_topology,2.0);
+
   // create a discrete metric with the input topology
   MetricField<type> metric( topology , field );
 

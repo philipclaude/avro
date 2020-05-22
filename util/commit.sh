@@ -16,12 +16,15 @@ cmakedir=build/$config
 mkdir -p $cmakedir
 cd $cmakedir
 
-
 if [[ $config == *"coverage"* ]]; then
   CMAKE_ARGS=""
 else
   CMAKE_ARGS=""
 fi
+
+CMAKE_ARGS="-DMACHII_LIBRARY_LOCATION=\"/home/gitlab-runner/Codes/library\""
+
+
 if [[ $config == *"memcheck"* ]]; then
   CMAKE_ARGS="$CMAKE_ARGS -DUSE_MPI=OFF"
 fi

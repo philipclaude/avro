@@ -25,7 +25,7 @@ UT_TEST_CASE(test1)
 {
   // geometry
   EGADS::Context context;
-  EGADS::Model model(&context,"data/cube-cylinder.egads");
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   //EGADS::Model model(&context,"data/bunny.stp");
 
   TessellationParameters tess_params;

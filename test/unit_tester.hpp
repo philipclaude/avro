@@ -11,6 +11,12 @@
 #include <cstdio>
 #include <math.h>
 
+#ifdef MACHII_LIBRARY_LOCATION
+#define BASE_TEST_DIR std::string(MACHII_LIBRARY_LOCATION)
+#else
+#define BASE_TEST_DIR std::string("test/library")
+#endif
+
 class TestSuite;
 
 class TestResult
@@ -123,6 +129,7 @@ public:
       }
       catch( std::exception& E )
       {
+        printf("unexpected exception!!\n");
         __result__.exception();
       }
     }

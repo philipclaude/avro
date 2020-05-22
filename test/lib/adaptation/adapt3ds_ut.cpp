@@ -33,7 +33,7 @@ UT_TEST_CASE(test1)
 
   // geometry
   EGADS::Context context;
-  EGADS::Model model(&context,"data/cube-cylinder.egads");
+  EGADS::Model model(&context,BASE_TEST_DIR+"/cube-cylinder.egads");
 
   TessellationParameters tess_params;
   tess_params.standard();

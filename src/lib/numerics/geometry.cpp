@@ -97,7 +97,6 @@ volume( const std::vector<const real_t*>& x , const coord_t dim )
   if (n==2 && dim==2) return fabs(volume2(x));
   if (n==3 && dim==3) return fabs(volume3(x));
   if (n==4 && dim==4) return fabs(volume4(x));
-  avro_assert_not_reached;
   //std::vector<const real_t*> y(x.begin(),x.end()); // use the function below
   return volume_nd( x , dim );
 }

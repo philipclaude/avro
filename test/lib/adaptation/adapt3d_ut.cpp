@@ -37,7 +37,7 @@ UT_TEST_CASE(adapt_test)
   std::vector<real_t> lengths(number,1);
   //EGADS::Cube box(&context,lengths);
 
-  EGADS::Model model(&context,"/Users/pcaplan/Desktop/cube-cylinder.egads");
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& box = model.body(0);
 
   // structured grid
@@ -45,7 +45,7 @@ UT_TEST_CASE(adapt_test)
   std::shared_ptr<Topology<Simplex>> ptopology;
   //ptopology = std::make_shared<CKF_Triangulation>(dims);
 
-  library::meshb mesh("/Users/pcaplan/Desktop/cube-cylinder.mesh");
+  library::meshb mesh(BASE_TEST_DIR+"/meshes/cube-cylinder.mesh");
   ptopology = mesh.retrieve_ptr<Simplex>(0);
 
   // tag the points onto the body
@@ -61,6 +61,7 @@ UT_TEST_CASE(adapt_test)
   params.directory() = "tmp/";
   params.insertion_volume_factor() = -1;
   params.curved() = true;
+  params.limit_metric() = true;
 
   index_t niter = 0;
   for (index_t iter=0;iter<=niter;iter++)
@@ -98,7 +99,7 @@ UT_TEST_CASE(adapt_test)
       //vis.add_topology(topology);
       vis.add_topology(topology_out);
 
-      vis.run();
+      //vis.run();
 
     }
 

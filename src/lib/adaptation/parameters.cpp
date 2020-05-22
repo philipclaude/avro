@@ -32,6 +32,7 @@ AdaptationParameters::standard()
   if (!stringParams_.has("output_redirect")) stringParams_["output_redirect"] = std::string();
   if (!boolParams_.has("has_uv")) boolParams_["has_uv"] = false;
   if (!boolParams_.has("debug")) boolParams_["debug"] = true;
+  if (!boolParams_.has("limit_metric")) boolParams_["limit_metric"] = false;
 }
 
 } // avro

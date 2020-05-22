@@ -298,7 +298,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       index_t n1 = filter.edge( idx , 1 );
 
       real_t lk = metric_.length( topology_.points() , n0 , n1 );
-      printf("calculated length!\n");
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
@@ -432,8 +431,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           continue;
         }
       }
-
-      printf("inserted!!\n");
 
       // apply the insertion into the topology
       topology_.apply(inserter_);

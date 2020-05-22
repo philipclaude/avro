@@ -48,7 +48,7 @@ public:
 UT_TEST_CASE( test1 )
 {
 
-  library::objFile topology0( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
+  library::objFile topology0( BASE_TEST_DIR+"/geometry/obj/spot.obj" );
   CKF_Triangulation topology1( {4,4} );
   CKF_Triangulation topology2( {4,4,4} );
 
@@ -61,7 +61,7 @@ UT_TEST_CASE( test1 )
   vis.add_topology(topology1);
   vis.add_topology(topology2);
 
-  vis.run();
+  //vis.run();
 }
 UT_TEST_CASE_END( test1 )
 

@@ -41,3 +41,7 @@ if(avro_BUILD_DYNAMIC)
 else()
     set(BUILD_SHARED_LIBS FALSE)
 endif()
+
+if (MACHII_LIBRARY_LOCATION)
+  add_definitions(-DMACHII_LIBRARY_LOCATION="${MACHII_LIBRARY_LOCATION}")
+endif()

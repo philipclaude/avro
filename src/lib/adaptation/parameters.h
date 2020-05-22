@@ -52,6 +52,8 @@ public:
   bool& use_smoothing() { return boolParams_["use_smoothing"]; }
   bool& fefloa() { return boolParams_["fefloa"]; }
 
+  bool& limit_metric() { return boolParams_["limit_metric"]; }
+
   std::string& output_redirect() { return stringParams_["output_redirect"]; }
 
   bool& has_uv() { return boolParams_["has_uv"]; }

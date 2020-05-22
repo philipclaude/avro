@@ -22,7 +22,7 @@ UT_TEST_CASE( test1 )
 {
 
   #if 0
-  library::objFile topology( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
+  library::objFile topology( BASE_TEST_DIR+"geometry/obj/spot.obj" );
   #else
   CKF_Triangulation topology( {2,2,2} );
   #endif

@@ -14,12 +14,8 @@ UT_TEST_CASE(test1)
 {
   EGADS::Context context;
   ego obj = nullptr;
-  EGADS::Object prim(context,&obj);
-
-  numerics::Coordinate x(3),u(2);
-  prim.inverse(x,u);
-
-  prim.evaluate(u,x);
+  std::shared_ptr<EGADS::Object> prim;
+  UT_CATCH_EXCEPTION( prim = std::make_shared<EGADS::Object>(context,&obj) );
 }
 UT_TEST_CASE_END(test1)
 

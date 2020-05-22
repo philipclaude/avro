@@ -10,7 +10,7 @@ UT_TEST_SUITE( obj_file_suite )
 UT_TEST_CASE( test1 )
 {
 
-  objFile topology( "/Users/pcaplan/Desktop/suzanne.obj" );
+  objFile topology( BASE_TEST_DIR+"/geometry/obj/suzanne.obj" );
 
 }
 UT_TEST_CASE_END( test1 )

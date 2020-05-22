@@ -10,7 +10,7 @@ UT_TEST_SUITE( geometry_egads_model )
 UT_TEST_CASE( test_io )
 {
   EGADS::Context context;
-  EGADS::Model model(&context,"/Users/pcaplan/Desktop/cube-cylinder.egads" );
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads" );
 
   model.body(0).print();
 
