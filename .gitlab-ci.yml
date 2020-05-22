@@ -37,8 +37,8 @@ release_tests:
   script:
     - source util/commit.sh release_gnu7 4
     - cd build/release_gnu7
-    - Xvfb :5 -screen 0 1280x1280x24 &
-    - export DISPLAY=:5
+    - Xvfb :6 -screen 0 1280x1280x24 &
+    - export DISPLAY=:6
     - make unit
     - cd ../../
     - mkdir unit_test_output
@@ -52,8 +52,8 @@ release_tests:
 coverage_tests:
   stage: test
   script:
-    - Xvfb :5 -screen 0 1280x1280x24 &
-    - export DISPLAY=:5
+    #- Xvfb :5 -screen 0 1280x1280x24 &
+    #- export DISPLAY=:5
     - source util/commit.sh coverage_gnu5 6
     - cp -r build/coverage_gnu5/avro_coverage_html coverage_results
     - mkdir unit_test_output

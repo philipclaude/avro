@@ -47,6 +47,9 @@ time make -j $nproc
 
 if [[ $config == *"coverage"* ]]; then
 
+  Xvfb :5 -screen 0 1280x1280x24 &
+  export DISPLAY=:5
+
   time make unit_coverage
   time make coverage_info
 fi
