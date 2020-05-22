@@ -41,7 +41,7 @@ release_tests:
     - export DISPLAY=:5
     - make unit
     - mkdir unit_test_output
-    - mv unit_tests.out unit_test_output
+    - mv build/release_gnu7/unit_tests.out unit_test_output
   tags:
     - avro-commit
   artifacts:
@@ -56,7 +56,7 @@ coverage_tests:
     - source util/commit.sh coverage_gnu5 6
     - cp -r build/coverage_gnu5/avro_coverage_html coverage_results
     - mkdir unit_test_output
-    - mv unit_tests.out unit_test_output
+    - mv build/coverage_gnu5/unit_tests.out unit_test_output
   artifacts:
     paths:
       - coverage_results
