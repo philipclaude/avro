@@ -50,7 +50,7 @@ UT_TEST_CASE( test1 )
   //vis.add_topology(topology);
   vis.add_topology(rvd);
 
-  //vis.run();
+  vis.run();
 }
 UT_TEST_CASE_END( test1 )
 

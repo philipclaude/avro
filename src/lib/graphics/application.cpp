@@ -114,6 +114,10 @@ Application<GLFW_Interface<API_t>>::run()
        last_frame_time = now;
       }
 
+      #ifdef AVRO_HEADLESS_GRAPHICS
+      break;
+      #endif
+
       // set lastUpdateTime every iteration
       last_update_time = now;
    }
