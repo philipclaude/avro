@@ -36,9 +36,10 @@ public:
             passed_,asserted_,failed_,exceptions_);
   }
 
-  bool successful() const { return failed_==0; }
+  bool successful() const { return (failed_==0 && exceptions_==0); }
   unsigned long nb_failed() const { return failed_; }
   unsigned long nb_assert() const { return asserted_; }
+  unsigned long nb_exceptions() const { return exceptions_; }
 
   void failed() { failed_++; }
   void passed() { passed_++; }
@@ -272,7 +273,7 @@ void run(TestResult& __result__) {printf("skipping test!\n");} void run_skip(Tes
 
 #ifdef STANDALONE
 #define UT_TEST_SUITE_END(X) } void ut_pre(int,char**); void ut_post(); int main(int argc, char* argv[]) \
-    { ut_pre(argc,argv); TestResult __result__; suite_##X::__suite__.run(__result__); __result__.summary(); ut_post(); if (__result__.nb_failed()!=0) return 1; return 0; }
+    { ut_pre(argc,argv); TestResult __result__; suite_##X::__suite__.run(__result__); __result__.summary(); ut_post(); if (__result__.nb_failed()!=0 || __result__.nb_exceptions()!=0) return 1; return 0; }
 #else
 #define UT_TEST_SUITE_END(X) }
 #endif

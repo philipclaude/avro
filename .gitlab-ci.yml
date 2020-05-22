@@ -6,14 +6,14 @@ stages:
 release_gnu5:
   stage: build
   script:
-    - source util/commit.sh release_gnu5 1
+    - source util/commit.sh release_gnu5 6
   tags:
     - avro-commit
 
 release_gnu6:
   stage: build
   script:
-    - source util/commit.sh release_gnu6 1
+    - source util/commit.sh release_gnu6 6
   tags:
     - avro-commit
 
@@ -21,14 +21,14 @@ release_gnu6:
 release_gnu7:
   stage: build
   script:
-    - source util/commit.sh release_gnu7 1
+    - source util/commit.sh release_gnu7 6
   tags:
     - avro-commit
 
 release_clang:
   stage: build
   script:
-    - source util/commit.sh release_clang 1
+    - source util/commit.sh release_clang 6
   tags:
     - avro-commit
 
