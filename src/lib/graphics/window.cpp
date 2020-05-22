@@ -52,6 +52,14 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
   window_ = glfwCreateWindow( width_ , height_ , title_.c_str() , NULL, NULL);
   if (!window_)
   {
+    // a common error is for the graphics drivers to not support
+    // the request opengl core profile (e.g. using 4.1 when drivers support 3.3)
+    const char* description;
+    int code = glfwGetError(&description);
+
+    if (description)
+      printf("GLFW error: %s\n",description);
+
     glfwTerminate();
     avro_assert_not_reached;
   }

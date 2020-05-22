@@ -22,7 +22,7 @@ else
   CMAKE_ARGS=""
 fi
 
-CMAKE_ARGS="-DMACHII_LIBRARY_LOCATION='/home/gitlab-runner/Codes/mach-II/library'"
+CMAKE_ARGS="-DMACHII_LIBRARY_LOCATION='/home/gitlab-runner/Codes/mach-II/library' -DAVRO_HEADLESS_GRAPHICS"
 
 
 if [[ $config == *"memcheck"* ]]; then

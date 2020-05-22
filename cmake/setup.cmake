@@ -45,3 +45,7 @@ endif()
 if (MACHII_LIBRARY_LOCATION)
   add_definitions(-DMACHII_LIBRARY_LOCATION="${MACHII_LIBRARY_LOCATION}")
 endif()
+
+if (AVRO_HEADLESS_GRAPHICS)
+  add_definitions(-DAVRO_HEADLESS_GRAPHICS)
+endif()

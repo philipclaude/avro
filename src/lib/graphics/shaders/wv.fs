@@ -1,4 +1,4 @@
-R"(#version 400
+R"(#version 330
 
 precision mediump float;
 precision mediump int;
