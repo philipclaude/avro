@@ -45,7 +45,11 @@ Interface::initialize()
   ImGui::StyleColorsDark();
   //ImGui::StyleColorsClassic();
 
+#ifdef AVRO_HEADLESS_GRAPHICS
+  const char* glsl_version = "#version 330";
+#else
   const char* glsl_version = "#version 410";
+#endif
 
   // Setup Platform/Renderer bindings
   ImGui_ImplGlfw_InitForOpenGL(window_.window(), true);
