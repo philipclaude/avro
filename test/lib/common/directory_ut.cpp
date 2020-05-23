@@ -22,11 +22,11 @@ UT_TEST_CASE(test1)
   std::vector<json> listing;
   dir.ls( listing );
 
-  UT_ASSERT( contains(listing,"bin"));
+  //UT_ASSERT( contains(listing,"bin"));
   UT_ASSERT( contains(listing,"lib"));
   UT_ASSERT( contains(listing,"library"));
   UT_ASSERT( contains(listing,"regression"));
-  UT_ASSERT( contains(listing,"sandbox"));
+  //UT_ASSERT( contains(listing,"sandbox"));
   UT_ASSERT( contains(listing,"third_party"));
   UT_ASSERT( contains(listing,"tmp"));
 
