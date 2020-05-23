@@ -117,10 +117,8 @@ class RVDFacets
 {
 public:
   RVDFacets( const Topology<Simplex>& topology );
-  RVDFacets( const Topology<Simplex>& topology , const std::vector<index_t>& S );
 
   void create();
-  void create( const std::vector<index_t>& simplices );
   int facet( const std::vector<index_t>& f ) const;
   void print() const;
 

@@ -30,12 +30,6 @@ RVDFacets::RVDFacets( const Topology<Simplex>& topology ) :
   create();
 }
 
-RVDFacets::RVDFacets( const Topology<Simplex>& topology , const std::vector<index_t>& S ) :
-  topology_(topology)
-{
-  create(S);
-}
-
 std::string
 RVDFacets::generate( const std::vector<index_t>& f ) const
 {
@@ -93,34 +87,6 @@ RVDFacets::create()
     }
   }
 }
-
-void
-RVDFacets::create( const std::vector<index_t>& S )
-{
-  int id = 0;
-  std::string s;
-
-  // mesh facets
-  coord_t nf = topology_.number()+1;
-  std::vector<index_t> t,f;
-  for (index_t k=0;k<S.size();k++)
-  {
-    t = topology_.get(S[k]);
-    for (index_t j=0;j<nf;j++)
-    {
-      f = t;
-      f.erase(f.begin()+j);
-      std::sort(f.begin(),f.end());
-      s = generate(f);
-      if (lookup(s,id)<0)
-      {
-        id = -store_.size() -1;
-        store_.insert( std::pair<std::string,int>(s,id) );
-      }
-    }
-  }
-}
-
 
 void
 RVDFacets::print() const
