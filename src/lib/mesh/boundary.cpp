@@ -231,7 +231,7 @@ Boundary<type>::extractall()
           // only true if we want dim-1 facets!
           std::vector<index_t> common;
           topology_.all_with( facet , common );
-          if (common.size()!=1) continue;
+          if (common.size()!=1 && i==topology_.number()-1) continue;
         }
 
         // this is a geometry facet
@@ -239,10 +239,8 @@ Boundary<type>::extractall()
         if (table.contains(facet)) continue;
 
         // add the facet to the topology
-        /*index_t id = entity2child_[e];
-        this->child(id).add( facet.data() , facet.size() );*/
-
-        add( facet.data() , facet.size() , e );
+        index_t id = entity2child_[e];
+        this->child(id).add( facet.data() , facet.size() );
 
       }
     }
