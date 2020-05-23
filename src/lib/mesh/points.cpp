@@ -240,11 +240,11 @@ Points::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 	for (index_t k=0;k<nb();k++)
 	{
 		// look for any vertices up to this one which are too close
-		for (index_t j=0;j<k;j++)
+		for (index_t j=k+1;j<nb();j++)
 		{
 			if (numerics::distance(operator[](k),operator[](j),dim_)<tol)
 			{
-				idx[k] = j;
+				idx[j] = k;
 				break;
 			}
 		}
@@ -255,6 +255,7 @@ void
 Points::duplicates( std::vector<index_t>& idx , const Table<int>& F ) const
 {
 	avro_assert( F.nb() == nb() );
+	idx.resize( nb() );
 
 	// get the symbolic information of every vertex
 	std::unordered_map<std::string,index_t> symbolic;
@@ -284,7 +285,6 @@ Points::duplicates( std::vector<index_t>& idx , const Table<int>& F ) const
 		}
 	}
 	printf("there are %lu unique vertices\n",symbolic.size());
-	avro_implement;
 }
 
 void
