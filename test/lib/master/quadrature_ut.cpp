@@ -373,4 +373,318 @@ UT_TEST_CASE( pentatope_cp_tests )
 }
 UT_TEST_CASE_END( pentatope_cp_tests )
 
+
+UT_TEST_CASE( line_gm_tests )
+{
+  const real_t tol = 1e-12;
+
+  GrundmannMoellerQuadrature quadrature( 1 , -1 );
+
+  monomial<1> func;
+  real_t I = 0.;
+
+  func.E[0] = 1; // linear
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 2;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 3;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 4;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 5;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 6;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 7;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 8;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 9;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 10;
+  I = evaluate<1>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+}
+UT_TEST_CASE_END( line_gm_tests )
+
+UT_TEST_CASE( triangle_gm_tests )
+{
+  const real_t tol = 1e-12;
+
+  GrundmannMoellerQuadrature quadrature( 2 , -1 );
+
+  monomial<2> func;
+  real_t I = 0.;
+
+  func.E[0] = 1;
+  func.E[1] = 0;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 0;
+  func.E[1] = 1;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 1;
+  func.E[1] = 1;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 1;
+  func.E[1] = 2;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 2;
+  func.E[1] = 1;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 2;
+  func.E[1] = 2;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 2;
+  func.E[1] = 3;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 3;
+  func.E[1] = 2;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 3;
+  func.E[1] = 3;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 3;
+  func.E[1] = 4;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 4;
+  func.E[1] = 3;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 4;
+  func.E[1] = 4;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 4;
+  func.E[1] = 5;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 5;
+  func.E[1] = 4;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 5;
+  func.E[1] = 5;
+  I = evaluate<2>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+}
+UT_TEST_CASE_END( triangle_gm_tests )
+
+UT_TEST_CASE( tetrahedron_gm_tests )
+{
+  const real_t tol = 1e-12;
+
+  GrundmannMoellerQuadrature quadrature( 3 , -1 );
+
+  monomial<3> func;
+  real_t I = 0.;
+
+  func.E[0] = 1;
+  func.E[1] = 0;
+  func.E[2] = 0;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 0;
+  func.E[1] = 1;
+  func.E[2] = 0;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 0;
+  func.E[1] = 0;
+  func.E[2] = 1;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 1;
+  func.E[1] = 1;
+  func.E[2] = 0;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 1;
+  func.E[1] = 0;
+  func.E[2] = 1;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 0;
+  func.E[1] = 1;
+  func.E[2] = 1;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 1;
+  func.E[1] = 1;
+  func.E[2] = 1;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 2;
+  func.E[1] = 0;
+  func.E[2] = 0;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 0;
+  func.E[1] = 2;
+  func.E[2] = 0;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 0;
+  func.E[1] = 0;
+  func.E[2] = 2;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 2;
+  func.E[1] = 1;
+  func.E[2] = 0;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 2;
+  func.E[1] = 0;
+  func.E[2] = 1;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 1;
+  func.E[1] = 2;
+  func.E[2] = 0;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  func.E[0] = 0;
+  func.E[1] = 2;
+  func.E[2] = 1;
+  I = evaluate<3>( quadrature , func );
+  printf("I = %g, analytic = %g\n",I,func.analytic());
+  UT_ASSERT_NEAR( I , func.analytic() , tol );
+
+  for (index_t i=0;i<6;i++)
+  for (index_t j=0;j<6;j++)
+  for (index_t k=0;k<6;k++)
+  {
+    if (i==0 && j==0 && k==0) continue;
+    func.E[0] = i;
+    func.E[1] = j;
+    func.E[2] = k;
+    I = evaluate<3>( quadrature , func );
+    //printf("I = %g, analytic = %g\n",I,func.analytic());
+    UT_ASSERT_NEAR( I , func.analytic() , tol );
+  }
+}
+UT_TEST_CASE_END( tetrahedron_gm_tests )
+
+
+
+UT_TEST_CASE( pentatope_gm_tests )
+{
+  const real_t tol = 1e-12;
+
+  GrundmannMoellerQuadrature quadrature( 4 , -1 );
+
+  monomial<4> func;
+  real_t I = 0.;
+
+  for (index_t i=0;i<5;i++)
+  for (index_t j=0;j<5;j++)
+  for (index_t k=0;k<5;k++)
+  for (index_t m=0;m<5;m++)
+  {
+    if (i==0 && j==0 && k==0) continue;
+    func.E[0] = i;
+    func.E[1] = j;
+    func.E[2] = k;
+    func.E[3] = m;
+    I = evaluate<4>( quadrature , func );
+    //printf("I = %g, analytic = %g\n",I,func.analytic());
+    UT_ASSERT_NEAR( I , func.analytic() , tol );
+  }
+
+}
+UT_TEST_CASE_END( pentatope_gm_tests )
+
 UT_TEST_SUITE_END( quadrature_test_suite )
