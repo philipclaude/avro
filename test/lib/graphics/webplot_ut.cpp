@@ -61,7 +61,7 @@ UT_TEST_CASE( test1 )
   vis.add_topology(topology1);
   vis.add_topology(topology2);
 
-  //vis.run();
+  vis.run();
 }
 UT_TEST_CASE_END( test1 )
 

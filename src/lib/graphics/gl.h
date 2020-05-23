@@ -151,6 +151,7 @@ public:
 
   void select_shader( Primitive& primitive , const std::string& name );
   void create_shaders();
+  ShaderLibrary& shaders() { return *shaders_.get(); }
 
 private:
 

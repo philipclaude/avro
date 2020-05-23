@@ -30,6 +30,10 @@ Application<Web_Interface>::run()
   if (wv_startServer( 7681 , NULL , NULL , NULL , 0 , manager_.context() ) == 0)
   {
     printf("waiting for client...\n");
+
+    #if AVRO_HEADLESS_GRAPHICS
+    return;
+    #endif
     while (wv_nClientServer(0)==0) {}
     usleep(500000);
 

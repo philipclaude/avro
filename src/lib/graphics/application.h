@@ -137,6 +137,8 @@ public:
     }
   }
 
+  OpenGL_Manager& manager() { return manager_; }
+
   GLFW_Window& main_window() { return *main_.get(); }
 
   std::shared_ptr<GLFW_Window> main_;

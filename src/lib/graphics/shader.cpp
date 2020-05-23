@@ -162,34 +162,7 @@ ShaderProgram::setUniform( const char *name, int n, float* v)
     if (n > 10) n = 10;
     for (int i=0; i<n;i++)
       vf[i] = v[i];
-    GL_CALL( glUniform1fv(loc,n,vf) );
-  }
-}
-
-void
-ShaderProgram::setUniform( const char *name, int n, int *v)
-{
-  if (!check()) return;
-  int loc = getUniformLocation(name);
-  if (loc >= 0)
-  {
-    glUniform1iv(loc,n,v);
-  }
-}
-
-void
-ShaderProgram::setUniform( const char *name, int n, std::vector<int> v)
-{
-  int vi[10];
-
-  if (!check()) return;
-  int loc = getUniformLocation(name);
-  if (loc >= 0)
-  {
-    if (n > 10) n = 10;
-    for (int i=0; i<n;i++)
-      vi[i] = v[i];
-    GL_CALL( glUniform1iv(loc,n,vi) );
+    GL_CALL( glUniform3fv(loc,n,vf) );
   }
 }
 
