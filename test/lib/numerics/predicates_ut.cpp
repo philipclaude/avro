@@ -370,7 +370,7 @@ UT_TEST_CASE(side4_test)
       const real_t* q2 = v[2];
       const real_t* q3 = v[3];
 
-      GEO::Sign sign;
+      GEO::Sign sign = GEO::ZERO;
       try
       {
         sign = side4_SOS( p[perm[0]],p[perm[1]],p[perm[2]],p[perm[3]],p[perm[4]], q0,q1,q2,q3,nd );
@@ -496,7 +496,7 @@ UT_TEST_CASE(side5_test)
       const real_t* q3 = v[3];
       const real_t* q4 = v[4];
 
-      GEO::Sign sign;
+      GEO::Sign sign = GEO::ZERO;
       try
       {
         sign = side5_SOS( p[perm[0]],p[perm[1]],p[perm[2]],p[perm[3]],p[perm[4]],p[perm[5]],q0,q1,q2,q3,q4,nd );

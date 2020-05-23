@@ -50,7 +50,11 @@ UT_TEST_CASE( test1 )
   //vis.add_topology(topology);
   vis.add_topology(rvd);
 
+  // test the EPS export
   vis.run();
+
+  vis.main_window().save_eps("tmp/test.eps");
+
 }
 UT_TEST_CASE_END( test1 )
 
