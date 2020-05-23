@@ -17,7 +17,7 @@ UT_TEST_SUITE( cvt_test_suite )
 UT_TEST_CASE( test1 )
 {
   coord_t number = 3;
-  index_t N = 6;
+  index_t N = 2;
 
   std::vector<index_t> dims(number,N);
   CKF_Triangulation topology( dims );
@@ -28,7 +28,7 @@ UT_TEST_CASE( test1 )
   #else
 
   // retrieve the number of sites (if random)
-  index_t nb_sites = 100;
+  index_t nb_sites = 10;
 
   std::vector<real_t> xmin( sites.dim() ,  1e20 );
   std::vector<real_t> xmax( sites.dim() , -1e20 );

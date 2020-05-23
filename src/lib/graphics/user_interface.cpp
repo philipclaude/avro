@@ -566,7 +566,9 @@ void
 Toolbar::end_draw() const
 {
   ImGui::Render();
+  #ifndef AVRO_HEADLESS_GRAPHICS
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  #endif
 }
 
 } // graphics
