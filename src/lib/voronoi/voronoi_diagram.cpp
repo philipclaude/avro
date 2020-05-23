@@ -184,47 +184,6 @@ RestrictedVoronoiDiagram::compute( const bool exact )
   accumulate();
 }
 
-void
-RestrictedVoronoiDiagram::compute( const std::vector<index_t>& S , const bool exact )
-{
-  RVDFacets facets( mesh_ , S );
-  simplices_.clear();
-
-  // create all the restricted simplices
-  simplices_.resize( S.size() );
-  for (index_t k=0;k<S.size();k++)
-  {
-    simplices_[k] = std::make_shared<RestrictedVoronoiSimplex>( S[k] , mesh_ ,
-                        facets  , delaunay_ , neighbours_ , exact );
-  }
-
-  // dispatch the computation of all the simplices
-  if (!parallel_)
-  {
-    for (index_t k=0;k<nb_simplices();k++)
-      clip(k);
-  }
-  else
-  {
-    if (!gpu_)
-    {
-      ProcessCPU::parallel_for (
-        parallel_for_member_callback( this , &thisclass::clip ),
-        0,nb_simplices()
-      );
-    }
-    else
-    {
-      // need to define the kernel for this
-      avro_implement;
-    }
-  }
-
-  // accumulate the result
-  accumulate();
-
-}
-
 typedef struct
 {
   std::vector<int> indices;
@@ -478,7 +437,7 @@ void
 RestrictedVoronoiDiagram::extract( Topology<Simplex>& triangulation ) const
 {
   // first make a unique set of points based on the vertex facet matrix
-  const Table<int>& vfm = child(0).master().incidence();
+  const Table<int>& vfm = points_.incidence();
 
   // find unique entries of the vfm
   std::unordered_set<std::string> labels;
@@ -538,7 +497,6 @@ RestrictedVoronoiDiagram::extract( Topology<Simplex>& triangulation ) const
       }
     }
   }
-  printf("RDT contains %lu simplices\n",triangulation.nb());
 }
 
 } // delaunay

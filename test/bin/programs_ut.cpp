@@ -21,6 +21,11 @@ UT_TEST_CASE(test1)
   const char* command2[] = {"CKF-3-3-3","random","none","nb_iter=5"};
   result = programs::voronoi(4,command2);
   UT_ASSERT_EQUALS( result , 0 );
+
+  const char* command3[] = {"CKF-3-3-3","sample","none","nb_iter=5"};
+  result = programs::voronoi(4,command3);
+  UT_ASSERT_EQUALS( result , 0 );
+
 }
 UT_TEST_CASE_END(test1)
 

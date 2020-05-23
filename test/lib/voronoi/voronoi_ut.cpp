@@ -50,7 +50,9 @@ UT_TEST_CASE( test0 )
     T.add( &S[k*(rvd.number()+1)],rvd.number()+1);
   printf("--> volume = %g\n",T.volume());
 
-  //T.Table<index_t>::print();
+  Topology<Simplex> dt( delaunay , number );
+  rvd.extract(dt);
+  printf("delaunay triangulation has %lu simplices\n",dt.nb());
 
   Visualizer vis;
 
@@ -64,13 +66,12 @@ UT_TEST_CASE_END( test0 )
 
 UT_TEST_CASE( test1 )
 {
-  return;
   for (coord_t number=2;number<=4;number++)
   {
     for (index_t N=2;N<=4;N++)
     {
 
-      if (number==4 && N > 3) break; // very slow!
+      if (number==4 && N >= 4) break; // very slow!
 
       std::vector<index_t> dims(number,N);
       CKF_Triangulation topology( dims );
@@ -83,8 +84,7 @@ UT_TEST_CASE( test1 )
       delaunay::RestrictedVoronoiDiagram rvd(topology,delaunay);
       rvd.parallel() = true;
 
-      // test 1: sites at mesh points
-      rvd.compute(true);
+      // test 1: sites at mesh points (no need for exact precision)
       rvd.compute(false);
 
       // test 2: sites offset to test exact precision
@@ -92,8 +92,8 @@ UT_TEST_CASE( test1 )
       for (coord_t d=0;d<number;d++)
         delaunay[k][d] += 0.5;
 
+      // must run with exact precision
       rvd.compute(true);
-      rvd.compute(false);
 
       SimplicialDecomposition<Polytope> simplices(rvd);
       simplices.extract();
@@ -104,6 +104,10 @@ UT_TEST_CASE( test1 )
       for (index_t k=0;k<S.size()/(rvd.number()+1);k++)
         T.add( &S[k*(rvd.number()+1)],rvd.number()+1);
       printf("--> volume = %g\n",T.volume());
+
+      Topology<Simplex> dt( delaunay , number );
+      rvd.extract(dt);
+      printf("delaunay triangulation has %lu simplices\n",dt.nb());
     }
   }
 

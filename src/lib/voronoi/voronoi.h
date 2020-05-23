@@ -215,7 +215,6 @@ public:
   RestrictedVoronoiDiagram( Delaunay& _delaunay );
 
   void compute( const bool exact = true );
-  void compute( const std::vector<index_t>& S , const bool exact = true );
 
   void accumulate();
 
