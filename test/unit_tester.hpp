@@ -241,6 +241,7 @@ TestSuite::TestSuite( const char* name , TestDriver* driver ) :
   do {__result__.asserted(); \
     if ( sqrt((X-Y)*(X-Y))>Z ) \
     { \
+      __result__.failed(); \
       printf("%s::%s: assertion %s (%g) == %s +/- %s failed on line %d of file %s.\n",suite_->name().c_str(),__FUNCTION__,#X,X,#Y,#Z,__LINE__,__FILE__); \
     } \
     else \

@@ -99,4 +99,49 @@ UT_TEST_CASE(test2)
 }
 UT_TEST_CASE_END(test2)
 
+UT_TEST_CASE(test3)
+{
+  EGADS::Context context;
+  real_t xc[3] = {0.,0.,0.};
+
+  bool full = true;
+
+  EGADS::Cube box(&context,{1,1,1},xc);
+
+  CKF_Triangulation topology({3,3,3});
+  topology.points().attach(box);
+
+  topology.points().print(true);
+
+  Boundary<Simplex> boundary(topology);
+  topology.neighbours().compute();
+  if (full)
+    boundary.extractall();
+  else
+    boundary.extract();
+
+  if (full)
+    UT_ASSERT_EQUALS( boundary.nb_children() , 26 );
+  else
+    UT_ASSERT_EQUALS( boundary.nb_children() , 6 );
+
+  // retrieve all the entities so we can look up their associated topologies
+  std::vector<Entity*> entities;
+  box.get_tessellatable(entities);
+  UT_ASSERT_EQUALS( entities.size() , 26 );
+
+  for (index_t k=0;k<entities.size();k++)
+  {
+    if (entities[k]->number()!=2) continue;
+    index_t id = boundary.indexof( entities[k] );
+
+    // calculate the volume
+    real_t vol = boundary.volume( id );
+    //UT_ASSERT_NEAR( vol , 1. , 1e-12 );
+  }
+}
+UT_TEST_CASE_END(test3)
+
+
+
 UT_TEST_SUITE_END(boundary_test_suite)
