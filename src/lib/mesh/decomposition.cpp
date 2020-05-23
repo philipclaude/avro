@@ -86,7 +86,7 @@ SimplicialDecomposition<type>::add_point( coord_t number , const index_t* v , in
   element.dim     = number;
   element.indices = polytope;
   element.sorted  = true;
-  if (true) //centroids_.find(element)==centroids_.end())
+  if (true) //centroids_.find(element)==centroids_.end()) // TODO this caused tests to fail on wazowski but not sure why...
   {
     centroids_.insert( {element,points_.nb()} );
     centroid2dim_.insert( {points_.nb(),number} );
