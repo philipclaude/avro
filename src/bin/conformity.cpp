@@ -18,6 +18,8 @@ typedef avro::real_t REAL;
 
 #include <triangle/predicates.h>
 
+#include <cmath>
+
 namespace avro
 {
 
@@ -108,7 +110,12 @@ conformity(int nb_input, const char** inputs)
   printf("lunit = %g %%, qunit = %g %%, nb_elem = %lu (expected %d)\n",lunit,qunit,nb_elem,nb_expected_elem);
   if (nb_expected_elem < 0) nb_expected_elem = nb_elem; // skip check below
 
-  if (lunit > 90 && fabs(nb_elem-nb_expected_elem)/nb_expected_elem < 0.05 )
+  real_t elem_diff = nb_elem - nb_expected_elem;
+  if (elem_diff<0) elem_diff *= -1;
+
+  printf("%% off elem = %g\n",elem_diff/nb_expected_elem);
+
+  if (lunit > 90 && elem_diff/nb_expected_elem < 0.05 )
     return 0;
   return 1;
 }
