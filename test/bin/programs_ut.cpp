@@ -14,6 +14,8 @@ UT_TEST_CASE(test1)
 {
   int result;
 
+  programs::help();
+
   const char* command1[] = {"CKF-3-3-3","box","Linear-3d","tmp/cl","nb_iter=1"};
   result = programs::adapt(5,command1);
   UT_ASSERT_EQUALS( result , 0 );
@@ -29,6 +31,11 @@ UT_TEST_CASE(test1)
   const char* command4[] = {"CKF-3-3-3","Linear-3d","tmp/output.json","nb_expected=10"};
   result = programs::conformity(4,command4);
   UT_ASSERT_EQUALS( result , 1 );
+
+  const char* command5[] = {"tmp/cl_0.mesh","box"};
+  result = programs::plot(2,command5);
+  UT_ASSERT_EQUALS( result , 0 );
+
 }
 UT_TEST_CASE_END(test1)
 

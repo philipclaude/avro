@@ -193,6 +193,7 @@ UT_TEST_CASE( metric_field_tests )
     {
       std::vector<index_t> sizes(dim,n);
       CKF_Triangulation topology(sizes);
+      topology.orient();
 
       MetricAttachment field(function,topology.points());
       MetricField<Simplex> metric_field(topology,field);
@@ -200,6 +201,7 @@ UT_TEST_CASE( metric_field_tests )
       UT_ASSERT_EQUALS( metric_field.nb_data() , topology.points().nb() );
 
       metric_field.attachment().set_cells( topology );
+      UT_ASSERT( metric_field.check_cells() );
 
       topology.points().remove( 0 );
       metric_field.remove( 0 );
