@@ -65,6 +65,20 @@ coverage_tests:
   tags:
     - avro-commit
 
+regression_tests:
+  only: schedules
+  stage: test
+  script:
+    - source util/commit.sh release_gnu7 6
+    - mkdir -p regression_results
+    - cd regression_results
+    - ../test/regression/benchmark3d.sh ../build/release_gnu7/bin/avro ../test/library/ .
+  artifacts:
+    paths:
+      - regression_results
+  tags:
+    - avro_commit
+
 pages:
   stage: deploy
   script:
