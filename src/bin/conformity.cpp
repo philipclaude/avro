@@ -110,10 +110,8 @@ conformity(int nb_input, const char** inputs)
   printf("lunit = %g %%, qunit = %g %%, nb_elem = %lu (expected %d)\n",lunit,qunit,nb_elem,nb_expected_elem);
   if (nb_expected_elem < 0) nb_expected_elem = nb_elem; // skip check below
 
-  real_t elem_diff = nb_elem - nb_expected_elem;
-  if (elem_diff<0) elem_diff *= -1;
-
-  printf("%% off elem = %g\n",elem_diff/nb_expected_elem);
+  real_t elem_diff = real_t(nb_elem) - real_t(nb_expected_elem);
+  if (elem_diff<0) elem_diff *= -1.0;
 
   if (lunit > 90 && elem_diff/nb_expected_elem < 0.05 )
     return 0;

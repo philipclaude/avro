@@ -545,47 +545,9 @@ MetricField<type>::recompute( index_t p , real_t* x )
 		metrics[j] = Field<type,Metric>::value(topology_(elem,j));
   }
 
-	if (false and problem)
-	{
-		index_t nb_geometry = 0;
-		for (index_t j=0;j<nv;j++)
-			if (topology_.points().entity(j))
-				nb_geometry++;
-		if (nb_geometry==nv) return false;
-
-		// determine how many nonzero barycentric coordinates there are
-		std::vector<const real_t*> X;
-		std::vector<numerics::SymMatrixD<real_t>> minterp;
-		for (index_t j=0;j<alpha.size();j++)
-		{
-			if (alpha[j]<1e-8) continue;
-			X.push_back( xk[j] );
-			minterp.push_back( metrics[j] );
-		}
-
-		if (X.size()<alpha.size())
-		{
-			// compute the barycentric coordinates w.r.t this simplex facet
-			std::vector<real_t> w(X.size());
-			numerics::barycentric( x , X , topology_.points().dim() , w );
-
-			// the barycentric coordinate calculation is sensitive to numerical precision
-			real_t wsum = 0.;
-			for (coord_t j=0;j<w.size();j++)
-				wsum += w[j];
-			if (fabs(wsum-1.)>1e-20) return false; // signal an error
-
-			interp( w , minterp , attachment_[p] );
-			attachment_[p].set_elem(elem);
-			attachment_[p].calculate();
-
-			return true;
-		}
-
-	} // problem
-
   // perform the interpolation
-	interp( alpha , metrics , attachment_[p] );
+	bool interp_result = interp( alpha , metrics , attachment_[p] );
+	if (!interp_result) return false;
 	attachment_[p].set_elem(elem);
 	attachment_[p].calculate();
 

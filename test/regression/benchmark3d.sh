@@ -28,5 +28,6 @@ status_ccp2=$?
 echo "status CCP2 = $status_ccp2"
 
 if [[ $status_cl -eq 1 ]] || [[ $status_ccl -eq 1 ]] || [[ $status_ccp1 -eq 1 ]] || [[ $status_ccp2 -eq 1 ]] ; then
+  echo "regression tests failed :("
   exit 1
 fi

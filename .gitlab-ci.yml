@@ -4,6 +4,8 @@ stages:
   - deploy
 
 release_gnu5:
+  except:
+    - schedules
   stage: build
   script:
     - source util/commit.sh release_gnu5 6
@@ -11,6 +13,8 @@ release_gnu5:
     - avro-commit
 
 release_gnu6:
+  except:
+    - schedules
   stage: build
   script:
     - source util/commit.sh release_gnu6 6
@@ -19,6 +23,8 @@ release_gnu6:
 
 
 release_gnu7:
+  except:
+    - schedules
   stage: build
   script:
     - source util/commit.sh release_gnu7 6
@@ -26,6 +32,8 @@ release_gnu7:
     - avro-commit
 
 release_clang:
+  except:
+    - schedules
   stage: build
   script:
     - source util/commit.sh release_clang 6
@@ -33,6 +41,8 @@ release_clang:
     - avro-commit
 
 release_tests:
+  except:
+    - schedules
   stage: test
   script:
     - source util/commit.sh release_gnu7 4
@@ -81,6 +91,8 @@ regression_tests:
     - avro-commit
 
 pages:
+  except:
+    - schedules
   stage: deploy
   script:
     - mv coverage_results public

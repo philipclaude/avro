@@ -26,6 +26,9 @@ UT_TEST_CASE(test1)
   result = programs::voronoi(4,command3);
   UT_ASSERT_EQUALS( result , 0 );
 
+  const char* command4[] = {"CKF-3-3-3","Linear-3d","tmp/output.json","nb_expected=10"};
+  result = programs::conformity(4,command4);
+  UT_ASSERT_EQUALS( result , 1 );
 }
 UT_TEST_CASE_END(test1)
 
