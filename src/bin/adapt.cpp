@@ -108,6 +108,7 @@ adapt( int nb_input , const char** inputs )
   params.curved() = curved;
   params.directory() = "./";
   params.write_conformity() = false;
+//  params.swapout() = false;
 
   if (number<=3)
   {

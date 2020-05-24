@@ -408,10 +408,14 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
   if (ielem<0)
   {
 		numerics::SymMatrixD<real_t> tensor(number_);
-		#if 0
+		#if 1
 		std::vector<real_t> alpha(2,0.5);
-		tensor.interpolate<LogEuclidean<real_t>>(alpha, {attachment_[n0],attachment_[n1]} );
-    attachment_.add( tensor , attachment_.cell(n0) );
+		std::vector<numerics::SymMatrixD<real_t>> metrics(alpha.size());
+		metrics[0] = attachment_[n0];
+		metrics[1] = attachment_[n1];	
+		bool interp_result = interp(alpha,metrics,tensor);
+		if (!interp_result) return false;
+    		attachment_.add( tensor , attachment_[n0].elem() );
 		#else
 		std::vector<real_t> alpha(number_+1,0.);
 		ielem = searcher_.closest( x , alpha );
@@ -769,7 +773,7 @@ MetricAttachment::assign( index_t p , const numerics::SymMatrixD<real_t>& m0 , i
 	for (index_t j=0;j<number_;j++)
 	for (index_t i=j;i<number_;i++)
 		Array<Metric>::data_[p](i,j) = m0(i,j);
-	Array<Metric>::data_[p].set_elem(elem);
+	Array<Metric>::data_[p].set_elem(elem);	
 	Array<Metric>::data_[p].calculate();
 }
 

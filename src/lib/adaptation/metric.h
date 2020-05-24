@@ -30,7 +30,8 @@ interp( const std::vector<type>& alpha ,
 	}
 	T = numerics::expm(T);
 
-  if (numerics::determinant(T)<0)
+  type d = numerics::determinant(T);
+  if (d<=0 || std::isnan(d))
   {
     for (index_t k=0;k<tensors.size();k++)
     {
@@ -138,7 +139,7 @@ public:
   {
     log_   = numerics::logm(*this);
     real_t d = numerics::determinant(*this);
-    avro_assert( d > 0. );
+    avro_assert_msg( d > 0. , "d = %g\n", d );
     sqdet_ = std::sqrt(d);
   }
 
