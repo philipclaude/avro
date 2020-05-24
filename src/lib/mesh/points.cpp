@@ -388,6 +388,11 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
 		{
     	// check the distance is lower than the tolerance
     	real_t d = numerics::distance2(xk,x.data(),dim_);
+			if (d>=tol)
+			{
+				print();
+				ek->print();
+			}
     	avro_assert_msg( d < tol , "point %lu , d = %1.16e" , k , d );
 		}
   }

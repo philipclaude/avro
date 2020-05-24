@@ -129,15 +129,10 @@ Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   if (x.size()==2) x.push_back(0);
   avro_assert( x.size()==3 );
 
-  //print_inline( u , "u before = " );
-  //print(false);
-
   real_t result[3];
   EGADS_ENSURE_SUCCESS( EG_invEvaluate(*object_,x.data(),u.data(),result) );
   for (coord_t d=0;d<3;d++)
     x[d] = result[d];
-
-  //print_inline( u , "u after = " );
 }
 
 void

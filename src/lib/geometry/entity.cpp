@@ -97,12 +97,12 @@ Entity::intersect( Entity* e1 )
 
 	if (e==NULL)
 	{
-		printf("parents 0:\n");
+		/*printf("parents 0:\n");
 		for (index_t k=0;k<p0.size();k++)
 			p0[k]->print_header();
 		printf("parents 1:\n");
 		for (index_t k=0;k<p1.size();k++)
-			p1[k]->print_header();
+			p1[k]->print_header();*/
 	}
 
 

@@ -397,7 +397,7 @@ MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<
 }
 
 template<typename type>
-void
+bool
 MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 {
   // find the element containing x bordering n0 and n1
@@ -421,10 +421,11 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 		{
 			metrics[j] = Field<type,Metric>::operator()(elem,j);
 		}
-		interp(alpha,metrics,tensor);
+		bool interp_result = interp(alpha,metrics,tensor);
+		if (!interp_result) return false;
 		attachment_.add( tensor , elem );
 		#endif
-		return;
+		return true;
   }
 
   index_t elem = index_t(ielem);
@@ -461,7 +462,8 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 
   // perform the interpolation
 	numerics::SymMatrixD<real_t> tensor(number_);
-	interp(alpha,metrics,tensor);
+	bool interp_result = interp(alpha,metrics,tensor);
+	if (!interp_result) return false;
 
   // add the tensor along with its corresponding element to the field
   attachment_.add(tensor,elem);
@@ -469,6 +471,8 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
   // note: this check will fail if the vertex is intended to be added after
   // its corresponding tensor is computed
   avro_assert( attachment_.check() );
+
+	return true;
 }
 
 template<typename type>

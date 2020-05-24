@@ -16,7 +16,7 @@ namespace avro
 {
 
 template<typename type>
-void
+bool
 interp( const std::vector<type>& alpha ,
              const std::vector<numerics::SymMatrixD<type>>& tensors ,
 						 numerics::SymMatrixD<type>& T )
@@ -29,6 +29,19 @@ interp( const std::vector<type>& alpha ,
 		T = T + numerics::logm(tensors[k])*alpha[k];
 	}
 	T = numerics::expm(T);
+
+  if (numerics::determinant(T)<0)
+  {
+    for (index_t k=0;k<tensors.size();k++)
+    {
+      std::cout << tensors[k] << std::endl;
+      std::cout << numerics::logm(tensors[k]) << std::endl;
+    }
+    print_inline(alpha);
+    std::cout << T << std::endl;
+    return false;
+  }
+  return true;
 }
 
 inline numerics::SymMatrixD<real_t>
@@ -124,7 +137,9 @@ public:
   void calculate()
   {
     log_   = numerics::logm(*this);
-    sqdet_ = std::sqrt( numerics::determinant(*this) );
+    real_t d = numerics::determinant(*this);
+    avro_assert( d > 0. );
+    sqdet_ = std::sqrt(d);
   }
 
 private:
@@ -220,7 +235,7 @@ public:
 	real_t quality( const Topology<type>& topology , index_t k );
   int  find( index_t n0 , index_t n1 , real_t*  x );
   void interpolate( real_t*  x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU=false );
-  void add( index_t n0 , index_t n1 , real_t*  x );
+  bool add( index_t n0 , index_t n1 , real_t*  x );
   bool recompute( index_t p , real_t*  x );
 	index_t element_containing( index_t p )
 		{ return attachment_[p].elem(); }

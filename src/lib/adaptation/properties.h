@@ -81,6 +81,8 @@ public:
 
   real_t qavg() const { return qstats_.avg(); }
 
+  void conformity( real_t& lunit , real_t& qunit , index_t& nb_elem ) const;
+
 private:
   Distribution lstats_;
   std::vector<real_t> length_;

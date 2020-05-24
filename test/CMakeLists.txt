@@ -85,7 +85,7 @@ endforeach()
 # create the full unit executable
 avro_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
 target_link_libraries( unit_exe avro_shared )
-target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests.out" )
+target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
 
 # target for running all unit tests independently
 add_custom_target( check_tests )

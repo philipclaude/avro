@@ -227,6 +227,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
   index_t nb_quality_rejected = 0;
   index_t nb_visiblity_rejected = 0;
   index_t nb_count_rejected = 0;
+  index_t nb_bad_interp = 0;
   real_t lmin1,lmax1;
 
   inserter_.nb_parameter_rejections() = 0;
@@ -262,6 +263,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     nb_quality_rejected = 0;
     nb_visiblity_rejected = 0;
     nb_count_rejected = 0;
+    nb_bad_interp = 0;
 
     done = true;
 
@@ -320,7 +322,15 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // so we need to add the vertex and also add the interpolated metric
       index_t ns = topology_.points().nb();
       topology_.points().create(filter[idx]);
-      metric_.add(n0,n1,filter[idx]);
+      bool interp_result = metric_.add(n0,n1,filter[idx]);
+      if (!interp_result)
+      {
+        // something bad happened in the metric interpolation...
+        // probably because of a curved geometry
+        topology_.points().remove(ns);
+        nb_bad_interp++;
+        continue;
+      }
 
       // notify the inverse topology that we want to store extra data
       topology_.inverse().create(1);
@@ -477,9 +487,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       topology_.inverse().remove(j);
     }
 
-    printf("\t\tinserted %lu, swapped %lu, lrej = %lu, qrej = %lu, vrej = %lu, prej = %lu/%lu, dof_rej = %lu\n",
+    printf("\t\tinserted %lu, swapped %lu, lrej = %lu, qrej = %lu, vrej = %lu, prej = %lu/%lu, dof_rej = %lu, interp_rej = %lu\n",
                 nb_inserted,nb_swaps,nb_length_rejected,nb_quality_rejected,nb_visiblity_rejected,
-                inserter_.nb_parameter_rejections(),inserter_.nb_parameter_tests(),nb_count_rejected);
+                inserter_.nb_parameter_rejections(),inserter_.nb_parameter_tests(),nb_count_rejected,nb_bad_interp);
     nb_inserted_total += nb_inserted;
 
     pass++;
