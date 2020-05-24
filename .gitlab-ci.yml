@@ -78,7 +78,7 @@ regression_tests:
     paths:
       - regression_results
   tags:
-    - avro_commit
+    - avro-commit
 
 pages:
   stage: deploy
