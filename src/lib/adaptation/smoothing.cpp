@@ -374,13 +374,11 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 
   // recompute the metric at the new point
   bool success = metric.recompute( p , x.data() );
-
-  // count this metric interpolation as "outside"
-  if (!success)
-    nb_interpolated_outside_++;
-
   if (!success)
   {
+    // unsuccessful metric interpolation, reset coordinates and previous metric
+    nb_interpolated_outside_++;
+
     for (index_t d=0;d<dim;d++)
       this->topology_.points()[p][d] = x0[d];
 

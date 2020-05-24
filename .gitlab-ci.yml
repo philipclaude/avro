@@ -56,10 +56,13 @@ release_tests:
   tags:
     - avro-commit
   artifacts:
+    when: always
     paths:
       - unit_test_output
 
 coverage_tests:
+  except:
+    - schedules
   stage: test
   script:
     #- Xvfb :5 -screen 0 1280x1280x24 &
@@ -85,6 +88,7 @@ regression_tests:
     - cd regression_results
     - ../test/regression/benchmark3d.sh ../build/release_gnu7/bin/avro ../test/library/ .
   artifacts:
+    when: always
     paths:
       - regression_results
   tags:

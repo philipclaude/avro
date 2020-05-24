@@ -498,7 +498,8 @@ MetricField<type>::recompute( index_t p , real_t* x )
 			for (index_t j=0;j<alpha.size();j++)
 				metrics[j] = Field<type,Metric>::value(topology_(elem,j));
 
-			interp(alpha,metrics,attachment_[p]);
+			bool interp_result = interp(alpha,metrics,attachment_[p]);
+			if (!interp_result) return false;
 			attachment_[p].set_elem(elem);
 			attachment_[p].calculate();
 			return true;
@@ -517,7 +518,6 @@ MetricField<type>::recompute( index_t p , real_t* x )
   // compute the barycentric coordinates
   std::vector<real_t> alpha( nv , 0. );
 	std::vector<numerics::SymMatrixD<real_t>> metrics(nv);
-	bool problem = false;
   for (index_t j=0;j<nv;j++)
   {
     std::vector<const real_t*> xk0(nv);
@@ -528,18 +528,12 @@ MetricField<type>::recompute( index_t p , real_t* x )
     }
     alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
 
-		//if (fabs(alpha[j]-1.0)>0.0 && fabs(alpha[j]-1.0)<1e-12)
-		// 	alpha[j] = 1.0; // round-off due to above multiplication can exceed machine precision
-
     if (alpha[j]<0. || alpha[j]>1.)
     {
 			printf("alpha[%lu] = %1.16e\n",j,alpha[j]);
       printf("element search failed\n");
       avro_assert_not_reached;
     }
-
-		// signal a problem
-		//if (alpha[j]<1e-12) problem = true;
 
     // retrieve the metric at this vertex
 		metrics[j] = Field<type,Metric>::value(topology_(elem,j));
