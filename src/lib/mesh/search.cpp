@@ -218,6 +218,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   #if 1
   for (index_t k=0;k<topology_.points().nb();k++)
   {
+    //if (k <= topology_.points().nb_ghost()) continue;
     real_t d = numerics::distance2( topology_.points()[k] , x , topology_.points().dim() );
     if (d<dmin)
     {
@@ -228,7 +229,13 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   dmin = numerics::distance2(topology_.points()[q] , x , topology_.points().dim() );
   #endif
 
-  avro_assert( q >= topology_.points().nb_ghost() );
+  if (q < topology_.points().nb_ghost() )
+  {
+    topology_.points().print(q,true);
+    std::vector<real_t> X(x,x+topology_.points().dim());
+    print_inline(X);
+  }
+  avro_assert_msg( q >= topology_.points().nb_ghost() , "closest point to %lu is a ghost?" , q );
 
   // get the ball of the vertex
   std::vector<index_t> B;

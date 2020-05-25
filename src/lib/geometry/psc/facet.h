@@ -25,6 +25,7 @@ public:
 private:
   numerics::MatrixD<real_t> V_;
   numerics::MatrixD<real_t> B_;
+  numerics::VectorD<real_t> x0_;
 };
 
 } // PSC
