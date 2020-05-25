@@ -479,9 +479,6 @@ adapt( AdaptationProblem& problem )
   // create a discrete metric with the input topology
   MetricField<type> metric( topology , field );
 
-  // initial volume to compare with later
-  //real_t v0 = mesh_topology.volume();
-
   // call the adaptation!
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );
 
@@ -552,10 +549,6 @@ adapt( AdaptationProblem& problem )
   fld.clear();
   for (index_t k=0;k<field.nb();k++)
     fld.push_back( field[k] );
-
-  // print some information about the volume (for straight-sided geometries)
-  //real_t v1 = mesh_topology.volume();
-  //printf("v0 = %1.16e, v1 = %1.16e\n",v0,v1);
 
   if (!output_redirect.empty())
   {

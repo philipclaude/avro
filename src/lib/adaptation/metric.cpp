@@ -61,6 +61,40 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
     Field<type,Metric>::value(k).set( attachment_[k] );
 		Field<type,Metric>::value(k).calculate();
 	}
+
+	/*
+	// check the metric as perfectly aligned with the incoming attachment
+	for (index_t k=0;k<attachment_.nb();k++)
+	{
+		const Metric& m0 = attachment_[k];
+		const Metric& m1 = Field<type,Metric>::value(k);
+
+		numerics::SymMatrixD<real_t> invsqrt_M0 = numerics::powm(m0,-0.5);
+		numerics::SymMatrixD<real_t> expS = invsqrt_M0*m1*invsqrt_M0;
+		numerics::SymMatrixD<real_t> s = numerics::logm(expS);
+
+		real_t d = numerics::determinant(s);
+
+		avro_assert_msg( d < 1e-12 , "d = %g" , d );
+	}
+
+	for (index_t k=0;k<this->nb();k++)
+	{
+		for (index_t j=0;j<topology.nv(k);j++)
+		{
+			const Metric& m0 = Field<type,Metric>::value( topology_(k,j) );
+			const Metric& m1 = attachment_[ topology_(k,j) ];
+
+			numerics::SymMatrixD<real_t> invsqrt_M0 = numerics::powm(m0,-0.5);
+			numerics::SymMatrixD<real_t> expS = invsqrt_M0*m1*invsqrt_M0;
+			numerics::SymMatrixD<real_t> s = numerics::logm(expS);
+
+			real_t d = numerics::determinant(s);
+
+			avro_assert_msg( d < 1e-20, "d = %g" , d );
+		}
+	}*/
+
 }
 
 template<typename type>
@@ -408,14 +442,14 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
   if (ielem<0)
   {
 		numerics::SymMatrixD<real_t> tensor(number_);
-		#if 1
+		#if 0
 		std::vector<real_t> alpha(2,0.5);
 		std::vector<numerics::SymMatrixD<real_t>> metrics(alpha.size());
 		metrics[0] = attachment_[n0];
-		metrics[1] = attachment_[n1];	
+		metrics[1] = attachment_[n1];
 		bool interp_result = interp(alpha,metrics,tensor);
 		if (!interp_result) return false;
-    		attachment_.add( tensor , attachment_[n0].elem() );
+    attachment_.add( tensor , attachment_[n0].elem() );
 		#else
 		std::vector<real_t> alpha(number_+1,0.);
 		ielem = searcher_.closest( x , alpha );
@@ -773,7 +807,7 @@ MetricAttachment::assign( index_t p , const numerics::SymMatrixD<real_t>& m0 , i
 	for (index_t j=0;j<number_;j++)
 	for (index_t i=j;i<number_;i++)
 		Array<Metric>::data_[p](i,j) = m0(i,j);
-	Array<Metric>::data_[p].set_elem(elem);	
+	Array<Metric>::data_[p].set_elem(elem);
 	Array<Metric>::data_[p].calculate();
 }
 

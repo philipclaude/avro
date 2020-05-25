@@ -109,6 +109,7 @@ adapt( int nb_input , const char** inputs )
   params.directory() = "./";
   params.write_conformity() = false;
 //  params.swapout() = false;
+ // params.use_smoothing() = false;
 
   if (number<=3)
   {
