@@ -278,6 +278,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   // vertex could be the minimizer, pick any element in the ball
   if (ielem==topology_.nb())
   {
+    avro_assert_not_reached;
     index_t k = 0;
     ielem = k;
     std::vector<const real_t*> X(topology_.nv(B[k]));

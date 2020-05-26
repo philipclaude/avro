@@ -14,7 +14,7 @@
 
 using namespace avro;
 
-UT_TEST_SUITE( voronoi_bower_watson_suite )
+UT_TEST_SUITE( voronoi_boywer_watson_suite )
 
 UT_TEST_CASE( test0)
 {
@@ -98,4 +98,4 @@ UT_TEST_CASE( test1 )
 }
 UT_TEST_CASE_END( test1 )
 
-UT_TEST_SUITE_END( voronoi_bower_watson_suite )
+UT_TEST_SUITE_END( voronoi_boywer_watson_suite )
