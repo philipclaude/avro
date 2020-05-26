@@ -98,7 +98,7 @@ pages:
   except:
     - schedules
   stage: deploy
-  script
+  script:
     - mv doc public:
     - mv coverage_results public/coverage_results
   artifacts:
