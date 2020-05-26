@@ -215,7 +215,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   index_t q = boundary_.nearest( x );
   real_t dmin = numerics::distance2(topology_.points()[q] , x , topology_.points().dim() );
 
-  #if 0
+  #if 1
   for (index_t k=0;k<topology_.points().nb();k++)
   {
     //if (k <= topology_.points().nb_ghost()) continue;
