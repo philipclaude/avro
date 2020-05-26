@@ -30,8 +30,8 @@ void MatrixDLUSolver<T, MatrixType>::Solve( const FactorType& Factorized, const 
 {
   const MatrixD<T>& AFac = Factorized.MatrixFac;
 
-  assert( AFac.m() == AFac.n() );
-  assert( AFac.n() == res.m() );
+  SANS_ASSERT( AFac.m() == AFac.n() );
+  SANS_ASSERT( AFac.n() == res.m() );
 
   const int m = AFac.m();
   const int n = res.n();
