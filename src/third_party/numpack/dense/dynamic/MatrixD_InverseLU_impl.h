@@ -19,7 +19,7 @@
 
 //This computes computes a matrix inverse using LU decomposition without pivoting
 
-namespace numpack 
+namespace numpack
 {
 namespace DLA
 {
@@ -30,8 +30,8 @@ void MatrixDLUSolver<T, MatrixType>::Solve( const FactorType& Factorized, const 
 {
   const MatrixD<T>& AFac = Factorized.MatrixFac;
 
-  SANS_ASSERT( AFac.m() == AFac.n() );
-  SANS_ASSERT( AFac.n() == res.m() );
+  assert( AFac.m() == AFac.n() );
+  assert( AFac.n() == res.m() );
 
   const int m = AFac.m();
   const int n = res.n();
@@ -64,4 +64,4 @@ void MatrixDLUSolver<T, MatrixType>::Solve( const FactorType& Factorized, const 
 }
 
 } //namespace DLA
-} //namespace numpack 
+} //namespace numpack

@@ -8,7 +8,8 @@
 #include <numpack/dense/dynamic/MatrixD_Det.h>
 #include <numpack/dense/dynamic/MatrixD_Diag.h>
 #include <numpack/dense/dynamic/Eigen.h>
-#include <numpack/dense/InverseLU.h>
+//#include <numpack/dense/InverseLU.h>
+#include <numpack/dense/InverseLUP.h>
 #include <numpack/Transpose.h>
 
 #include <numpack/types/SurrealD.h>

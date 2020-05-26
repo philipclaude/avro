@@ -300,7 +300,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
 {
   // for the point p, compute the closest barycentric point via least-squares
   // i.e. minimize || x(alpha)-p ||^2 s.t. sum(alpha) = 1 and all(alpha) > 0
-  // the minimizer satisfiers
+  // the minimizer satisfies
   // [V'*V, 1 ; 1' , 0] * [alpha;lambda] = [V'*p;1]
   // where V is the matrix of vertex coordinates and lambda is the
   // lagrange multiplier
@@ -309,21 +309,16 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   //avro_assert( alpha.size()==index_t(number+1) );
 
   // set the matrix of vertex coordinates
-  #if 0
-  avro_implement
-  #else
   numerics::VectorD<real_t> p(x.dim(),p0);
   numerics::MatrixD<real_t> V(x.dim(),nv);
   for (index_t k=0;k<nv;k++)
   for (index_t j=0;j<x.dim();j++)
     V(j,k) = x[ v[k] ][j];
-  //const numerics::densMat<real> Vt = V.transpose();
 
   // set the least-squares portion of the system
-  //numerics::densMat<real> A = Vt*V;
-  //numerics::densMat<real> B(nv+1,nv+1);
   numerics::SymMatrixD<real_t> A = numpack::Transpose(V)*V;
   numerics::MatrixD<real_t> B(nv+1,nv+1);
+  B = 0;
   for (index_t i=0;i<nv;i++)
   for (index_t j=0;j<nv;j++)
     B(i,j) = A(i,j);
@@ -336,20 +331,22 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   }
 
   // set the right-hand side
-  //std::vector<real> b(nv+1,0.);
-  //Vt.multiply( p , b.data() );
   numerics::VectorD<real_t> b0(nv+1);
   b0 = numpack::Transpose(V)*p;
   b0[nv] = 1.0;
 
+  if (numerics::determinant(B)==0.0)
+  {
+    B.dump();
+    avro_assert_not_reached;
+  }
+
   // solve the system
   numerics::VectorD<real_t> b(nv+1);
-  b = numpack::DLA::InverseLU::Solve(B,b0);
-  //B.solve(b.data());
+  b = numpack::DLA::InverseLUP::Solve(B,b0);
 
   // set the barycentric coordinates ignoring the last entry
   // because it holds the lagrange multiplier
-  //std::vector<real> alpha(nv);
   numerics::VectorD<real_t> alpha(nv);
   for (index_t i=0;i<nv;i++)
     alpha(i) = b[i];
@@ -369,7 +366,6 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
     // compute the actual coordinates and return the squared-distance
     numerics::VectorD<real_t> y0(x.dim());
     y0 = V*alpha;
-    //V.multiply(alpha.data(),y.data());
     for (coord_t i=0;i<x.dim();i++)
       y[i] = y0(i);
     return numerics::distance2(y.data(),p0,x.dim());
@@ -397,7 +393,6 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
 
   // no point was found that is both inside the simplex and minimizes the input squared-distance
   return distance2;
-  #endif
 }
 
 static real_t

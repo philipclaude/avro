@@ -110,7 +110,7 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   numerics::VectorD<real_t> b = numpack::Transpose(V_)*( x0 - x0_ );
 
   // solve VtV * alpha = Vt * (x - x0)
-  numerics::VectorD<real_t> alpha = numpack::DLA::InverseLU::Solve(B_,b);
+  numerics::VectorD<real_t> alpha = numpack::DLA::InverseLUP::Solve(B_,b);
   avro_assert( alpha.m() == number_ );
 
   // compute the closest point y = V*alpha + x0
