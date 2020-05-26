@@ -16,6 +16,43 @@ using namespace avro;
 
 UT_TEST_SUITE( voronoi_bower_watson_suite )
 
+UT_TEST_CASE( test0)
+{
+
+  coord_t dim = 2;
+
+  for (index_t i=3;i<4;i++)
+  {
+    index_t nb_points = pow(10,i);
+
+    Points points(dim);
+    for (index_t k=0;k<nb_points;k++)
+    {
+      std::vector<real_t> x(dim);
+      for (coord_t d=0;d<dim;d++)
+        x[d] = random_within( -1.0 , 1.0 );
+      points.create(x.data());
+    }
+
+    BowerWatson delaunay(points);
+    delaunay.compute();
+
+    #if 1
+    graphics::Visualizer vis;
+    vis.add_topology(delaunay);
+
+    std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
+    vis.main_window().interface().add_widget( toolbar );
+
+    vis.run();
+    #endif
+
+  }
+
+}
+UT_TEST_CASE_END( test0 )
+
+
 UT_TEST_CASE( test1 )
 {
 
