@@ -99,7 +99,7 @@ pages:
     - schedules
   stage: deploy
   script:
-    - mv doc public:
+    - mv doc public
     - mv coverage_results public/coverage_results
   artifacts:
     paths:
