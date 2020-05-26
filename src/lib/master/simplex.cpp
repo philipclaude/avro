@@ -337,8 +337,9 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
 
   if (numerics::determinant(B)==0.0)
   {
-    B.dump();
-    avro_assert_not_reached;
+    return 1e20;
+    //B.dump();
+    //avro_assert_not_reached;
   }
 
   // solve the system
