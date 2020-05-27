@@ -55,6 +55,11 @@ adapt( int nb_input , const char** inputs )
   if (nb_input>4)
     found = parse<bool>(lookfor(options,nb_options,"limit"),compute_implied);
 
+  real_t href = 2.0;
+  if (nb_input>4)
+    found = parse<real_t>(lookfor(options,nb_options,"href"),href);
+  printf("limiting metric with href = %g\n",href);
+
   // if the metric is analytic, iterate...
   index_t nb_iter = 20;
   if (nb_input>4)
@@ -132,7 +137,7 @@ adapt( int nb_input , const char** inputs )
 
     // option to do the adaptation from the implied metric
     if (compute_implied)
-      pfld->limit( mesh.retrieve<type>(0) , 2.0 );
+      pfld->limit( mesh.retrieve<type>(0) , href );
 
     // adjust the adaptation parameters
     params.adapt_iter() = iter;

@@ -351,7 +351,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t Lmin = sqrt(0.5);
 
       // if the current length is greater than 4.0, we need to be more flexible
-      if (lk>4.0) Lmin = 0.01;
+      if (lk>4.0) Lmin = 0.0;
 
       // also relax the insertion criterion when we insert on geometry Edges
       Entity* ge = inserter_.geometry(n0,n1);

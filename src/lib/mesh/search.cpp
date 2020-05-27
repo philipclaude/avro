@@ -215,7 +215,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   index_t q = boundary_.nearest( x );
   real_t dmin = numerics::distance2(topology_.points()[q] , x , topology_.points().dim() );
 
-  #if 1
+  #if 0
   for (index_t k=0;k<topology_.points().nb();k++)
   {
     //if (k <= topology_.points().nb_ghost()) continue;
@@ -277,12 +277,16 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   // if no element minimizes the distance, then the original
   // vertex could be the minimizer, pick any element in the ball
   if (ielem==topology_.nb())
-  {
-    avro_assert_not_reached;
-    index_t k = 0;
-    ielem = B[k];
-    std::vector<const real_t*> X(topology_.nv(B[k]));
-    topology_.get_elem( B[k] , X );
+  { 
+    for (index_t k=0;k<B.size();k++)
+    {
+      if (topology_.ghost(B[k])) continue;
+      ielem = B[k];
+      break;
+    }
+    avro_assert( ielem < topology_.nb() );
+    std::vector<const real_t*> X(topology_.nv(ielem));
+    topology_.get_elem( ielem , X );
     numerics::barycentric_signed( topology_.points()[q] , X , topology_.points().dim() , alpha );
   }
 

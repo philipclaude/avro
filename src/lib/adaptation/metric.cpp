@@ -442,7 +442,7 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
   if (ielem<0)
   {
 		numerics::SymMatrixD<real_t> tensor(number_);
-		#if 1
+		#if 0
 		std::vector<real_t> alpha(2,0.5);
 		std::vector<numerics::SymMatrixD<real_t>> metrics(alpha.size());
 		metrics[0] = attachment_[n0];
@@ -457,7 +457,8 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 		std::vector<numerics::SymMatrixD<real_t>> metrics(alpha.size());
 		for (index_t j=0;j<alpha.size();j++)
 		{
-			metrics[j] = Field<type,Metric>::operator()(elem,j);
+			//metrics[j] = Field<type,Metric>::operator()(elem,j);
+			metrics[j] = Field<type,Metric>::value( topology_(elem,j) );
 		}
 		bool interp_result = interp(alpha,metrics,tensor);
 		if (!interp_result) return false;
