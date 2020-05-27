@@ -280,7 +280,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   {
     avro_assert_not_reached;
     index_t k = 0;
-    ielem = k;
+    ielem = B[k];
     std::vector<const real_t*> X(topology_.nv(B[k]));
     topology_.get_elem( B[k] , X );
     numerics::barycentric_signed( topology_.points()[q] , X , topology_.points().dim() , alpha );

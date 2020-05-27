@@ -12,7 +12,7 @@
 namespace avro
 {
 
-BowerWatson::BowerWatson( Points& delaunay ) :
+BowyerWatson::BowyerWatson( Points& delaunay ) :
   Topology<Simplex>( points_ , delaunay.dim() ),
   points_( delaunay.dim() ),
   delaunay_(delaunay),
@@ -20,7 +20,7 @@ BowerWatson::BowerWatson( Points& delaunay ) :
 {}
 
 void
-BowerWatson::initialize()
+BowyerWatson::initialize()
 {
   kdtree_ = initializeKdTree(cloud_);
   kdtree_->build();
@@ -70,7 +70,7 @@ BowerWatson::initialize()
 }
 
 real_t
-BowerWatson::insphere( index_t elem , index_t point )
+BowyerWatson::insphere( index_t elem , index_t point )
 {
   const index_t* t = operator()(elem);
   if (points_.dim()==2)
@@ -91,7 +91,7 @@ BowerWatson::insphere( index_t elem , index_t point )
 }
 
 void
-BowerWatson::search( index_t point , index_t elem , std::set<index_t>& elems )
+BowyerWatson::search( index_t point , index_t elem , std::set<index_t>& elems )
 {
   for (index_t j=0;j<index_t(number_+1);j++)
   {
@@ -109,7 +109,7 @@ BowerWatson::search( index_t point , index_t elem , std::set<index_t>& elems )
 }
 
 void
-BowerWatson::compute()
+BowyerWatson::compute()
 {
   // compute super-triangle
   initialize();

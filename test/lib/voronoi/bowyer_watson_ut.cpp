@@ -34,7 +34,7 @@ UT_TEST_CASE( test0)
       points.create(x.data());
     }
 
-    BowerWatson delaunay(points);
+    BowyerWatson delaunay(points);
     delaunay.compute();
 
     #if 1
@@ -73,7 +73,7 @@ UT_TEST_CASE( test1 )
       points.create(x.data());
     }
 
-    BowerWatson delaunay(points);
+    BowyerWatson delaunay(points);
 
     clock_t t0 = clock();
     delaunay.compute();

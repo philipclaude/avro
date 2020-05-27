@@ -10,10 +10,10 @@
 namespace avro
 {
 
-class BowerWatson : public Topology<Simplex>
+class BowyerWatson : public Topology<Simplex>
 {
 public:
-  BowerWatson( Points& points );
+  BowyerWatson( Points& points );
 
   void compute();
 
