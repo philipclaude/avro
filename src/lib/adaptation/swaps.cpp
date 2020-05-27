@@ -208,8 +208,6 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         // skip candidates that are endpoints of the initial edge
         if (candidates[j]==e0 || candidates[j]==e1) continue;
 
-        continue;
-
         // try the swap
         bool accept = edge_swapper_.apply( candidates[j] , e0 , e1 );
         if (!accept)

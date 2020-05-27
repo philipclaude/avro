@@ -94,7 +94,8 @@ UT_TEST_CASE(element_search_test)
 
       // get a point outside the facet
       numerics::vector( topology.points()[q] , cf.data() , dim , v.data() );
-      numerics::axpb( 1e-3 , v.data() , cf.data() , dim , p.data() );
+      real_t offset = 1e-3;
+      numerics::axpb( offset , v.data() , cf.data() , dim , p.data() );
 
       // make sure the search returns "outside"
       ielem = searcher.find( p.data() , get_guess(topology,k1) );
@@ -107,6 +108,15 @@ UT_TEST_CASE(element_search_test)
       // find the closest point and make sure it's the same simplex
       ielem = searcher.closest( p.data() , alpha );
       UT_ASSERT_EQUALS( ielem , k1 );
+
+      // evaluate the closest coordinates and make sure the distance is less
+      // than the offset used to compute the coordinates of the initial point
+      std::vector<real_t> qp(dim,0.);
+      for (coord_t d=0;d<dim;d++)
+      for (coord_t j=0;j<topology.nv(ielem);j++)
+        qp[d] += topology.points()[topology(ielem,j)][d]*alpha[j];
+      real_t d2 = numerics::distance( qp.data() , p.data() , dim );
+      UT_ASSERT( d2 < offset );
     }
   }
 
