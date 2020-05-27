@@ -106,19 +106,16 @@ public:
 
   index_t add_primitive( const TopologyBase& topology )
   {
+    // create a primitive for the incoming topology
     index_t id = primitive_.size();
     Primitive_ptr primitive = std::make_shared<Primitive>(topology,this);
     primitive_.push_back(primitive);
 
-    //static_cast< const Topology<Simplex>& >(topology).Tree<Topology<Simplex>>::print();
-
+    // create graphics primitives for the topology children too!
     std::vector<const TopologyBase*> children;
     topology.get_topologies(children);
     for (index_t k=0;k<children.size();k++)
-    {
-      //if (children[k]->number()<1) continue;
       primitive->add_child( std::make_shared<Primitive>(*children[k],this) );
-    }
     return id;
   }
 

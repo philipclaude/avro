@@ -121,9 +121,6 @@ meshb::read_elements( int GmfType )
   }
 
   printf("read %lu topologies\n",nb_topologies());
-
-  //static_cast<Topology<type>*>(topology_[0].get())->Tree<Topology<type>>::print();
-
 }
 
 index_t

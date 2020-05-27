@@ -118,8 +118,6 @@ public:
 
   void add_topology( const TopologyBase& topology )
   {
-    //static_cast< const Topology<Simplex>& >(topology).Tree<Topology<Simplex>>::print();
-
     // add the topology to the relevant windows
     index_t id = main_->create_scene();
     scenes_.push_back( &main_->scene(id) );
