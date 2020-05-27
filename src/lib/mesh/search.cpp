@@ -215,10 +215,10 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   index_t q = boundary_.nearest( x );
   real_t dmin = numerics::distance2(topology_.points()[q] , x , topology_.points().dim() );
 
-  #if 1
+  #if 0
   for (index_t k=0;k<topology_.points().nb();k++)
   {
-    //if (k <= topology_.points().nb_ghost()) continue;
+    if (k <= topology_.points().nb_ghost()) continue;
     real_t d = numerics::distance2( topology_.points()[k] , x , topology_.points().dim() );
     if (d<dmin)
     {
@@ -246,7 +246,6 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
 
     // determine the coordinates y closest to x
     real_t distance2 = topology_.master().closest( topology_.points() , topology_(B[k]) , topology_.nv(B[k]) , x , y );
-    //printf("distance = %g\n",distance2);
 
     // compute the barycentric coordinates of y in this simplex
     std::vector<const real_t*> X(topology_.nv(B[k]));

@@ -32,7 +32,7 @@ UT_TEST_CASE(test1)
   result = programs::conformity(4,command4);
   UT_ASSERT_EQUALS( result , 1 );
 
-  const char* command5[] = {"tmp/cl_0.mesh","box"};
+  const char* command5[] = {"CKF-3-3-3","box"};
   result = programs::plot(2,command5);
   UT_ASSERT_EQUALS( result , 0 );
 
