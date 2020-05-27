@@ -110,6 +110,8 @@ public:
     Primitive_ptr primitive = std::make_shared<Primitive>(topology,this);
     primitive_.push_back(primitive);
 
+    //static_cast< const Topology<Simplex>& >(topology).Tree<Topology<Simplex>>::print();
+
     std::vector<const TopologyBase*> children;
     topology.get_topologies(children);
     for (index_t k=0;k<children.size();k++)

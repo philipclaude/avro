@@ -24,7 +24,8 @@ get_line( int fid , int keyword , Args... args )
 meshb::meshb( const std::string& filename , const EGADS::Model* model ) :
   Mesh(0),
   filename_(filename),
-  model_(model)
+  model_(model),
+  main_topology_(nullptr)
 {
   read();
 }
@@ -92,7 +93,10 @@ meshb::read_elements( int GmfType )
       points_.create( dvalues );
       continue; // skip the topology stuff below
     }
+    else
+      avro_implement;
 
+    avro_assert( ref >= 0 );
     avro_assert( status==1 );
 
     for (index_t j=0;j<nv(GmfType);j++)
@@ -108,8 +112,6 @@ meshb::read_elements( int GmfType )
       ref_index_.insert( { ref , nb_topologies() } );
       add( topology );
 
-      if (ref>0) static_cast<Topology<type>*>(topology_[0].get())->add_child(topology);
-
       topology->add(simplex, nv(GmfType) );
     }
     else
@@ -117,6 +119,10 @@ meshb::read_elements( int GmfType )
       retrieve<type>( it->second ).add( simplex , nv(GmfType) );
     }
   }
+
+  printf("read %lu topologies\n",nb_topologies());
+
+  //static_cast<Topology<type>*>(topology_[0].get())->Tree<Topology<type>>::print();
 
 }
 
@@ -159,9 +165,14 @@ meshb::read()
     number = 0;
   }
 
+  set_number(number);
+  printf("number = %u\n",number_);
+
   // first read the points
   avro_assert( GmfGotoKwd( fid_ , GmfVertices ) > 0 );
   read_elements<Simplex>( GmfVertices );
+
+  main_topology_ = std::make_shared<Topology<Simplex>>(points_,number);
 
   if (number>=3)
   {
@@ -468,6 +479,7 @@ void
 meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
 {
 
+  printf("writing mesh to file %s\n",filename.c_str());
   int dim = mesh.points().dim();
   if (dim==4) dim = 3;
   fid_ = GmfOpenMesh(filename.c_str(),GmfWrite,GmfDouble,dim);
@@ -489,6 +501,8 @@ meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
     else
       avro_assert_not_reached;
   }
+
+  printf("retrieving topologies\n");
 
   // get all the topologies
   std::vector<const TopologyBase*> topologies;
