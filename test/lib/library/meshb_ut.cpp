@@ -19,11 +19,20 @@ UT_TEST_CASE( test1 )
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
 
   library::meshb mesh( BASE_TEST_DIR+"/meshes/cube-cylinder.mesh" , &model );
+
+  // the original file does not have VerticesOn[entity] information, so we need to attach
+  mesh.points().attach(model);
   mesh.points().compute_params();
 
-  mesh.write( mesh , "tmp/cc.mesh" , true );
-  library::meshb mesh_in( "tmp/cc.mesh" );
+  mesh.write( mesh , "tmp/cc1.mesh" , true );
+  library::meshb mesh_in( "tmp/cc1.mesh" , &model );
   UT_ASSERT_EQUALS( mesh_in.nb_topologies() , 8 ); // 7 faces + 1 volume
+
+  mesh.write( mesh_in , "tmp/cc2.mesh" , true );
+  library::meshb mesh_in2( "tmp/cc2.mesh" , &model );
+  UT_ASSERT_EQUALS( mesh_in2.nb_topologies() , 8 ); // 7 faces + 1 volume
+
+  mesh.write( mesh_in2 , "tmp/cc3.mesh" , true );
 
   graphics::Visualizer vis;
 
