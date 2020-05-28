@@ -34,6 +34,7 @@ protected:
     Table<index_t>(category,number+1),
     points_(vertices),
     number_(number),
+    dummy_(false),
     fields_(*this),
     type_(type),
     closed_(false)

@@ -423,6 +423,7 @@ meshb::write( const Topology<Simplex>& topology , const std::vector<index_t>& re
 {
   const coord_t num = topology.number();
 
+  printf("writing topology with number %u\n",num);
   if (refs.size()!=1) avro_assert( topology.nb() == refs.size() );
 
   int gmfType;
@@ -510,7 +511,11 @@ meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
   index_t ref = 0;
   for (index_t k=0;k<topologies.size();k++)
   {
-    if (topologies[k]->dummy()) continue;
+    if (topologies[k]->dummy()) 
+    {
+	    printf("dummy?\n");
+	    continue;
+    }
 
     if (topologies[k]->type_name()=="simplex")
       write<Simplex>( *static_cast<const Topology<Simplex>*>(topologies[k]) , {ref++} );
