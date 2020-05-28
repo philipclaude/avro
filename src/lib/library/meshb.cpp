@@ -511,9 +511,8 @@ meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
   index_t ref = 0;
   for (index_t k=0;k<topologies.size();k++)
   {
-    if (topologies[k]->dummy()) 
+    if (topologies[k]->dummy())
     {
-	    printf("dummy?\n");
 	    continue;
     }
 
