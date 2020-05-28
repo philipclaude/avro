@@ -24,16 +24,16 @@ UT_TEST_SUITE(adapt3d_surface_suite)
 
 UT_TEST_CASE(test1)
 {
-  return;
   // setup the topology
   coord_t number = 2;
+  coord_t dim = 3;
 
   // parameters
   library::MetricField_Uniform analytic(2,0.1);
 
   // geometry
   EGADS::Context context;
-  EGADS::Model model(&context,BASE_TEST_DIR+"/cube-cylinder.egads");
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
 
   TessellationParameters tess_params;
   tess_params.standard();
@@ -43,14 +43,14 @@ UT_TEST_CASE(test1)
   ModelTessellation tess(model,tess_params);
 
   // create a mesh and add the topology
-  std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(2,2);
-  pmesh->points().set_parameter_dim(2);
+  std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,dim);
+  pmesh->points().set_parameter_dim(number);
 
   // convert all the points to parameter space
   for (index_t k=0;k<tess.points().nb();k++)
   {
     std::vector<real_t> u = { tess.points().u(k,0) , tess.points().u(k,1) };
-    pmesh->points().create( u.data() );
+    pmesh->points().create( tess.points()[k] );
     pmesh->points().u(k,0) = u[0];
     pmesh->points().u(k,1) = u[1];
     pmesh->points().set_entity(k,tess.points().entity(k));
@@ -64,7 +64,7 @@ UT_TEST_CASE(test1)
   tess.retrieve<Simplex>(0).get_elements( *ptopology );
 
   ptopology->master().set_parameter(true);
-  ptopology->orient();
+  //ptopology->orient();
 
   // define the problem and adapt
   AdaptationParameters params;

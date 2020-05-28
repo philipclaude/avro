@@ -274,96 +274,6 @@ meshb::read()
 #if 0
 template<typename type>
 void
-Gamma<type>::read( const std::string& meshfile , Model& model )
-{
-  // open the mesh file
-  int dim;
-  fid_ = GmfOpenMesh(meshfile.c_str(),GmfRead,&meshVersion_,&dim);
-  avro_assert_msg( fid_ ,
-    "could not open mesh file %s ",meshfile.c_str() );
-
-  index_t nb;
-  int status = 1;
-  Entity* entity;
-
-  // read the VerticesOnGeometricTriangles
-  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricTriangles ) > 0 )
-  {
-    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricTriangles ) );
-    printf("there are %lu points on geometry Triangles!\n",nb);
-    int v,f;
-    real_t u[2],d;
-    for (index_t k=0;k<nb;k++)
-    {
-      status = GmfGetLin( fid_ , GmfVerticesOnGeometricTriangles , &v , &f , u , u+1 , &d );
-      avro_assert(status==1);
-      //printf("vertex %d on Face %d with parameters (%g,%g) (d = %g)\n",v,f,u[0],u[1],d);
-      entity = model.findEntity( index_t(f) , FACE );
-      avro_assert(entity->number()==2);
-      if (entity==NULL) printf("ERROR entity not found :(\n");
-      this->points_.setEntity(v-1,entity);
-    }
-  }
-
-  // read the VerticesOnGeometricEdges
-  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricEdges ) > 0 )
-  {
-    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricEdges ) );
-    printf("there are %lu points on geometry Edges!\n",nb);
-    int v,e;
-    real_t t,d;
-    for (index_t k=0;k<nb;k++)
-    {
-      status = GmfGetLin( fid_ , GmfVerticesOnGeometricEdges , &v , &e , &t , &d );
-      avro_assert(status==1);
-      //printf("vertex %d on Edge %d with parameter %g (d = %g)\n",v,e,t,d);
-      entity = model.findEntity( index_t(e) , EDGE );
-      if (entity==NULL) printf("ERROR entity not found :(\n");
-      avro_assert(entity->number()==1);
-      this->points_.setEntity(v-1,entity);
-    }
-  }
-
-  // read the VerticesOnGeometricVertices
-  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricVertices ) > 0 )
-  {
-    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricVertices ) );
-    printf("there are %lu points on geometry Nodes!\n",nb);
-    for (index_t k=0;k<nb;k++)
-    {
-      // read the vertex and which EGADS node this corresponds to
-      int v,n;
-      status = GmfGetLin( fid_ , GmfVerticesOnGeometricVertices , &v , &n );
-      avro_assert( status==1 );
-      //printf("vertex %d on Node %d\n",v,n);
-      entity = model.findEntity( index_t(n) , NODE );
-      if (entity==NULL) printf("ERROR entity not found :(\n");
-      avro_assert(entity->number()==0);
-      this->points_.setEntity(v-1,entity);
-    }
-  }
-
-  // project the mesh_topology points to the geometry
-  this->points_.setParameterDimension(this->points_.dim()-1);
-  for (index_t k=0;k<this->points_.nb();k++)
-  {
-    if (this->points_.entity(k)==NULL) continue;
-    Entity* e = this->points_.entity(k);
-    real_t* x = this->points_[k];
-    std::vector<real_t> X(x,x+this->points_.dim());
-    std::vector<real_t> u(this->points_.udim());
-    e->project(X,u);
-    for (coord_t d=0;d<this->points_.dim();d++)
-      x[d] = X[d];
-    this->points_.setParam( k , u );
-
-  }
-  GmfCloseMesh(fid_);
-
-}
-
-template<typename type>
-void
 meshb<type>::read_sol( const std::string& filename )
 {
   // open the file
@@ -511,10 +421,8 @@ meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
   index_t ref = 0;
   for (index_t k=0;k<topologies.size();k++)
   {
-    if (topologies[k]->dummy())
-    {
-	    continue;
-    }
+    if (topologies[k]->dummy()) continue;
+    if (topologies[k]->number()!=mesh.number()) continue;
 
     if (topologies[k]->type_name()=="simplex")
       write<Simplex>( *static_cast<const Topology<Simplex>*>(topologies[k]) , {ref++} );

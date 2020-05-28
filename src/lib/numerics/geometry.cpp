@@ -108,6 +108,7 @@ simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
   if (n==2 && dim==2) return volume2(x);
   if (n==3 && dim==3) return volume3(x);
   if (n==4 && dim==4) return volume4(x);
+  printf("requested exact %u-simplex volume with dim = %u",n,dim);
   avro_assert_not_reached;
   return 0.;
 }
