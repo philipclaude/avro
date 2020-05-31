@@ -434,6 +434,12 @@ template<typename type>
 bool
 MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 {
+
+#if 1  // ultra hack for surface meshing
+	attachment_.add( attachment_[n0] , attachment_[n0].elem() );
+	return true;
+#endif
+
   // find the element containing x bordering n0 and n1
   int ielem = find(n0,n1,x);
 

@@ -24,7 +24,8 @@ Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
 {}
 
 Simplex::Simplex( const coord_t number , const coord_t order ) :
-  Master(number,order,"simplex")
+  Master(number,order,"simplex"),
+  entity_(nullptr)
 {
   precalculate();
 }
@@ -400,6 +401,7 @@ simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
   if (x.size()==3 && dim==2) return numerics::volume2(x);
   if (x.size()==4 && dim==3) return numerics::volume3(x);
   if (x.size()==5 && dim==4) return numerics::volume4(x);
+  printf("requested volume of %u-simplex in dim = %u\n",x.size()-1,dim);
   avro_assert_not_reached;
   return numerics::volume_nd(x,dim);
 }

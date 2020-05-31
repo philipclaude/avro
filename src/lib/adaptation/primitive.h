@@ -43,6 +43,8 @@ public:
     // do not allow the geometry cavity to enlarge
     gcavity_.set_enlarge(false);
     gcavity_.set_ignore(true);
+    gcavity_.master().set_parameter( _topology.master().parameter() );
+    G_.master().set_parameter( _topology.master().parameter() );
   }
 
   bool invalidatesTopology() const
@@ -82,6 +84,11 @@ public:
       printf("error [%lu]: %s\n",k,errors_[k].c_str());
     }
   }
+
+  Cavity<type>& gcavity() { return gcavity_; }
+  Topology<type>& geometry() { return G_; }
+  Points& u() { return u_; }
+  const std::vector<index_t>& S() const { return S_; }
 
 protected:
   std::vector<index_t> C_; // saved cavity

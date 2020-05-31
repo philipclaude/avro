@@ -22,6 +22,8 @@ add_source_directories(SOURCES "Source Files\\voronoi" lib/voronoi)
 add_source_directories(SOURCES "Source Files\\bin" bin)
 list(REMOVE_ITEM SOURCES bin/avro.cpp )
 
+#add_source_directories(SOURCES "Source Files\\api/python" api/python)
+
 # create an object library for all the sources
 add_library( avro_src OBJECT ${SOURCES} )
 

@@ -85,6 +85,9 @@ public:
 
   real_t& sign() { return sign_; }
 
+  void set_entity( Entity* entity ) { entity_ = entity; }
+  Entity* entity() { return entity_; }
+
 protected:
   Topology<type>& topology_;
   bool node_removal_allowed_;
@@ -116,6 +119,8 @@ private:
   ElementImpliedMetric<type> mk_;
 
   bool ignore_;
+
+  Entity* entity_;
 
 };
 

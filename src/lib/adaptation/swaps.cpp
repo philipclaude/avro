@@ -439,6 +439,8 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     if (this->topology_.ghost(this->C_[j]))
       nb_ghost0++;
 
+  this->set_entity( this->geometry(e0,e1) );
+
   // apply the operator, checking visibility
   this->enlarge_ = false;
   bool accept = this->compute( p , this->topology_.points()[p] , this->C_ );

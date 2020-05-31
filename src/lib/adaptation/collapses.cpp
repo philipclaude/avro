@@ -157,6 +157,8 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
       nb_ghost0++;
   }
 
+  this->set_entity( this->geometry(p,q) );
+
   // turn off enlarging
   this->enlarge_ = false;
   bool accept = this->compute( q , this->topology_.points()[q] , this->C_ );

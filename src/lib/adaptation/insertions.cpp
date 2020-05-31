@@ -47,12 +47,19 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
   this->u_.create( params );
   this->u2v_.push_back( this->points_.nb()-1 );
 
+  #if 1 // philip may 28
+  this->gcavity_.set_entity( ep0 );
+  for (index_t j=0;j<this->u_.nb();j++)
+    this->u_.set_entity( j , this->points_.entity( this->u2v_[j] ) );
+  #endif
+
   // the insertion should be visible in parameter space
   bool accept = this->gcavity_.compute( this->u_.nb()-1 , params , this->S_ );
+  if (!accept) this->print();
   avro_assert(accept);
 
   #if 1 // philip april 23
-  if (this->topology_.master().parameter()) return true;
+  //if (this->topology_.master().parameter()) return true;
   #endif
 
   // check the orientation of the facets
@@ -77,6 +84,9 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   this->enlarge_ = false;
   this->check_visibility_ = true;
   enlarged_ = false; // no enlargement (for geometry) yet
+
+  if (this->topology_.master().parameter())
+    this->check_visibility_ = false;
 
   // determine the cavity elements if none were provided
   if (shell.size()==0)
@@ -130,6 +140,12 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     }
   }
 
+  #if 1 // philip may 28
+  this->set_entity( entitys );
+  this->topology_.points().set_entity( ns , entitys );
+  this->topology_.points().set_param( ns , u );
+  #endif
+
   if (entitys!=NULL)
   {
     // enlarge the cavity for boundary insertions
@@ -170,6 +186,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   {
     // check if the insertion is visible to the boundary of the geometry
     // cavity in the parameter space of the geometry entity
+    // TODO check visibility on all faces of this is an edge entity
     accept = visibleParameterSpace( x , u , entitys );
     if (!accept)
     {
