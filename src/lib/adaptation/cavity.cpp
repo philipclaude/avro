@@ -744,6 +744,26 @@ void
 Cavity<type>::clear()
 {
   Topology<type>::clear();
+  cavity_.clear();
+  nodes_.clear();
+  boundary_.clear();
+}
+
+template<typename type>
+void
+Cavity<type>::copy( const Cavity<type>& cavity )
+{
+  for (index_t k=0;k<cavity.nb();k++)
+    this->add( cavity(k) , cavity.nv(k) );
+
+  for (index_t k=0;k<cavity.nb_cavity();k++)
+    this->add_cavity( cavity.cavity(k) );
+
+  //print_inline(cavity_ , "CAVITY" );
+
+  for (index_t k=0;k<cavity.nodes().size();k++)
+    add_node( cavity.nodes()[k] );
+  inserted_.resize( nb_insert() );
 }
 
 template class Cavity<Simplex>;

@@ -51,6 +51,8 @@ public:
   index_t cavity( const index_t k ) const { return cavity_[k]; }
   bool contains( const index_t c ) const;
 
+  void copy( const Cavity<type>& cavity );
+
   // computation of the cavity boundary and the geometry topology
   bool compute_boundary();
   Topology<type>& boundary() { return boundary_; }
@@ -120,6 +122,7 @@ private:
 
   bool ignore_;
 
+protected:
   Entity* entity_;
 
 };

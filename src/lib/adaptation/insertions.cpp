@@ -15,7 +15,8 @@ namespace avro
 
 template<typename type>
 Insert<type>::Insert( Topology<type>& _topology ) :
-  Primitive<type>(_topology)
+  Primitive<type>(_topology),
+  surface_(_topology)
 {
   this->setName("inserter");
 }
@@ -77,16 +78,12 @@ template<typename type>
 bool
 Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell )
 {
-  //std::vector<index_t> elems;
   elems_.clear();
 
   // insertions should not enlarge the initial set of cavity elements
   this->enlarge_ = false;
   this->check_visibility_ = true;
   enlarged_ = false; // no enlargement (for geometry) yet
-
-  if (this->topology_.master().parameter())
-    this->check_visibility_ = false;
 
   // determine the cavity elements if none were provided
   if (shell.size()==0)
@@ -140,10 +137,11 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     }
   }
 
-  #if 1 // philip may 28
+  #if 1 // philip may 28 (moved up from below)
   this->set_entity( entitys );
   this->topology_.points().set_entity( ns , entitys );
   this->topology_.points().set_param( ns , u );
+  this->topology_.points().body(ns) = bodys;
   #endif
 
   if (entitys!=NULL)
@@ -163,8 +161,59 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     }
   }
 
+  bool accept;
+  if (this->topology_.master().parameter())
+  {
+    avro_assert( entitys!=nullptr );
+
+    if (entitys->number()!=2) return false; // requires development
+    avro_assert( elems_.size()==2 );
+
+    surface_.Cavity<type>::clear();
+
+    surface_.extract( elems_ , entitys );
+
+    // check if the point is visible
+    surface_.SurfaceCavity<type>::set_entity(entitys);
+    accept = surface_.visible( ns );
+    if (!accept)
+    {
+      surface_.compute_nodes();
+      surface_.compute_coordinates();
+      this->topology_.remove_point(ns);
+      return false;
+    }
+
+    accept = surface_.check_normals();
+    if (!accept)
+    {
+      surface_.compute_coordinates();
+      this->topology_.remove_point(ns);
+      return false;
+    }
+
+    // apply the operator to the topology if the caller did not request a delay
+    if (!this->delay_)
+    {
+      this->topology_.apply(surface_);
+    }
+    else
+    {
+      this->Cavity<type>::clear();
+      this->copy( surface_ );
+      avro_assert( surface_.nb_cavity()==2 );
+      avro_assert( this->nb_cavity()==2 );
+    }
+
+    surface_.compute_coordinates();
+    for (coord_t d=0;d<3;d++)
+      this->topology_.points()[ns][d] = x[d];
+
+    return true;
+  }
+
   // attempt the operator
-  bool accept = this->compute( ns , x , elems_ );
+  accept = this->compute( ns , x , elems_ );
   if (!accept)
   {
     // the cavity requested enlargment which is possible because of a
@@ -268,7 +317,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
   {
     // anything beyond 20 passes is borderline ridiculous
     // the metric is probably way off from the current mesh
-    if (pass>20)
+    if (pass>3)
     {
       printf("warning: too many insertions, metric too far from current mesh.\n");
       break;

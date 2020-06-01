@@ -270,7 +270,8 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
 template<typename type>
 EdgeSwap<type>::EdgeSwap( Topology<type>& _topology ) :
-  Primitive<type>(_topology)
+  Primitive<type>(_topology),
+  surface_(_topology)
 {
   this->setName("edge swapper");
   nb_geometry_rejections_.resize( _topology.number() );
@@ -439,7 +440,49 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     if (this->topology_.ghost(this->C_[j]))
       nb_ghost0++;
 
-  this->set_entity( this->geometry(e0,e1) );
+  Entity* ge = this->geometry(e0,e1);
+  this->set_entity(ge);
+
+  if (this->topology_.master().parameter())
+  {
+    avro_assert( ge!=nullptr );
+    avro_assert( ge->number()==2 ); // otherwise this shoudl have been caught by 'valid'
+    avro_assert( this->C_.size()==2 );
+
+    surface_.extract( this->C_ , ge );
+    this->set_entity( ge );
+
+    // check if the point is visible
+    surface_.SurfaceCavity<type>::set_entity(ge);
+    bool accept = surface_.visible(p);
+    if (!accept)
+    {
+      surface_.compute_nodes();
+      surface_.compute_coordinates();
+      return false;
+    }
+
+    accept = surface_.check_normals();
+    if (!accept)
+    {
+      surface_.compute_coordinates();
+      return false;
+    }
+
+    // apply the operator if no delay was requested
+    if (false and !this->delay_)
+    {
+      this->topology_.apply(surface_);
+    }
+    else
+    {
+      this->Cavity<type>::clear();
+      this->copy(surface_);
+    }
+    surface_.compute_coordinates();
+
+    return true;
+  }
 
   // apply the operator, checking visibility
   this->enlarge_ = false;
@@ -451,7 +494,6 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     return false;
 
   // check visibility in the parametric space
-  Entity* ge = this->geometry(e0,e1);
   if (ge!=NULL && ge->number()==2)
   {
     if (!visibleParameterSpace(p,e0,e1,ge))

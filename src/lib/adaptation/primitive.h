@@ -2,6 +2,7 @@
 #define avro_LIB_ADAPTATION_PRIMITIVE_H_
 
 #include "adaptation/cavity.h"
+#include "adaptation/geometry.h"
 
 #include "common/types.h"
 
@@ -107,7 +108,67 @@ protected:
 
   // string of error messages for debugging
   std::vector<std::string> errors_;
+};
 
+template<typename type>
+class SurfaceCavity : public Primitive<type>
+{
+public:
+  SurfaceCavity( Topology<type>& topology ) :
+    Primitive<type>(topology),
+    params_(2),
+    geometry_(nullptr),
+    U_(2),
+    X_(3)
+  {}
+
+  void extract( const std::vector<index_t>& C , Entity* entity )
+  {
+
+    u2v_.clear();
+    params_.clear();
+    cavity_.clear();
+    params0_.clear();
+    S_.clear();
+
+    geometry_ = entity;
+    this->set_entity(geometry_);
+
+    cavity_ = C;
+
+    for (index_t k=0;k<C.size();k++)
+      this->add_cavity(C[k]);
+  }
+
+  bool visible( index_t p );
+
+  bool cavity_visible( index_t p )
+  {
+    // check the inserted point
+    this->gcavity().set_entity( geometry_ );
+    S_.resize( this->geometry().nb() , 0 );
+    for (index_t k=0;k<S_.size();k++)
+      S_[k] = k;
+    this->gcavity().sign() = geometry_->sign(); // not actually necessary because master.parameter() will trigger the sign to be used in get_volume
+
+    bool accept = this->gcavity().compute( p , topology_.points()[p] , S_ );
+    return accept;
+  }
+
+  void compute_coordinates();
+
+  bool check_normals();
+
+private:
+  Points params_;
+  Entity* geometry_;
+  std::vector<real_t> params0_;
+  std::vector<index_t> cavity_;
+
+  using Primitive<type>::topology_;
+  using Primitive<type>::u2v_;
+  using Primitive<type>::S_;
+  std::vector<real_t> U_,X_;
 };
 
 template<typename type>
@@ -142,6 +203,8 @@ private:
   index_t nb_rej_vis_Edge_;
   index_t nb_rej_sgn_Edge_;
   index_t nb_rej_geo_Edge_;
+
+  SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -172,6 +235,8 @@ private:
   std::vector<index_t> disabled_;
 
   std::vector<index_t> elems_;
+
+  SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -196,6 +261,8 @@ private:
   index_t nb_interior_;
   std::vector<index_t> nb_geometry_rejections_;
   index_t nb_invalid_geometry_;
+
+  SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -259,6 +326,8 @@ private:
   index_t Ntot_; // average no. points attached to vertex used in smoothing computation
   index_t nb_zero_valency_;
   index_t nb_interpolated_outside_;
+
+  SurfaceCavity<type> surface_;
 };
 
 #define CROSS(a,b,c)      a[0] = (b[1]*c[2]) - (b[2]*c[1]);\

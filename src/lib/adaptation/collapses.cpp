@@ -10,7 +10,8 @@ namespace avro
 
 template<typename type>
 Collapse<type>::Collapse( Topology<type>& _topology ) :
-  Primitive<type>(_topology)
+  Primitive<type>(_topology),
+  surface_(_topology)
 {
   this->setName("collapser");
   nb_accepted_.resize(_topology.number()+1);
@@ -157,11 +158,50 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
       nb_ghost0++;
   }
 
-  this->set_entity( this->geometry(p,q) );
+  bool accept;
+  Entity* g = this->geometry(p,q);
+  this->set_entity(g);
+
+  if (this->topology_.master().parameter())
+  {
+    avro_assert( g!=nullptr );
+
+    if (g->number()!=2) return false; // requires development
+
+    surface_.extract( this->C_ , g );
+    this->set_entity( g );
+
+    // check if the point is visible
+    surface_.SurfaceCavity<type>::set_entity(g);
+    accept = surface_.visible(q);
+    if (!accept)
+    {
+      surface_.compute_nodes();
+      surface_.compute_coordinates();
+      return false;
+    }
+
+    accept = surface_.check_normals();
+    if (!accept)
+    {
+      return false;
+    }
+
+    // apply the operator if no delay was requested
+    if (!delay)
+      this->topology_.apply(surface_);
+    else
+    {
+      this->Cavity<type>::clear();
+      this->copy( surface_ );
+    }
+
+    return true;
+  }
 
   // turn off enlarging
   this->enlarge_ = false;
-  bool accept = this->compute( q , this->topology_.points()[q] , this->C_ );
+  accept = this->compute( q , this->topology_.points()[q] , this->C_ );
   if (!accept)
   {
     // the point is not visible
@@ -186,7 +226,6 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
     return false;
 
   // determine if the receiving point is visible in the parameter space
-  Entity* g = this->geometry(p,q);
   if (g!=NULL && g->number()==2 && !visibleParameterSpace(p,q,g))
   {
     nb_rejected_[g->number()]++;
@@ -401,7 +440,6 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
       }
 
       // make sure the quality does not globally degrade
-      //collapser_.evaluate(metric);
       real_t qwc = worst_quality( collapser_ , metric_ );
       if (qwc<Q0)
       {

@@ -29,7 +29,7 @@ UT_TEST_CASE(test1)
   coord_t dim = 3;
 
   // parameters
-  library::MetricField_Uniform analytic(2,0.1);
+  library::MetricField_Uniform analytic(2,0.9);
 
   // geometry
   EGADS::Context context;
@@ -73,6 +73,7 @@ UT_TEST_CASE(test1)
   params.curved() = true;
   params.has_uv() = true;
   params.use_smoothing() = false;
+  params.swapout() = false;
 
   index_t niter = 0;
   for (index_t iter=0;iter<=niter;iter++)
