@@ -161,7 +161,9 @@ UT_TEST_CASE(test1)
       primitive.geometry().points().set_entity( k , topology.points().entity( primitive.u2v()[k] ) );
     }
     idx = primitive.geometry().points().nb();
-    primitive.geometry().points().create( us.data() );
+    std::vector<real_t> xs(3);
+    entity->evaluate(us,xs);
+    primitive.geometry().points().create( xs.data() );
     primitive.geometry().points().set_entity( idx , entity );
 
     // check the inserted point
