@@ -89,6 +89,7 @@ public:
   Topology<type>& geometry() { return G_; }
   Points& u() { return u_; }
   const std::vector<index_t>& S() const { return S_; }
+  const std::vector<index_t>& u2v() const { return u2v_; }
 
 protected:
   std::vector<index_t> C_; // saved cavity
@@ -283,7 +284,7 @@ public:
     avro_assert( u_.dim()==v_.dim()-1 );
     avro_assert( v_.dim()==3 );
     #endif
-    avro_assert( u2v_.size()==u_.nb() );
+    avro_assert_msg( u2v_.size()==u_.nb() , "|u2v| = %lu, |u| = %lu", u2v_.size(),u_.nb() );
 
     // compute the normal to every vertex
     std::vector<real_t> N(v_.dim());
@@ -302,7 +303,7 @@ public:
 
   template<typename type> int signof( Topology<type>& topology , bool verbose=false )
   {
-    avro_assert( topology.number()==u_.dim() );
+    avro_assert_msg( topology.number()==u_.dim() , "topology number = %u, u_.dim = %u" , topology.number() , u_.dim() );
 
     std::vector<int> sign( topology.nb() );
 
