@@ -24,6 +24,7 @@ get_volume( const Topology<type>& topology , Entity* entity , index_t elem , ind
 {
   index_t nf = topology.number()+1;
   std::vector<const real_t*> xk(nf);
+  std::vector<real_t> u(2*topology.nv(elem) );
   real_t sign = 1.0;
 
   coord_t dim = topology.points().dim();
@@ -39,7 +40,6 @@ get_volume( const Topology<type>& topology , Entity* entity , index_t elem , ind
     avro_assert( entity!=nullptr );
 
     // get the parameter coordinates along the geometry entity
-    std::vector<real_t> u(2*topology.nv(elem) );
     geometry_params( entity , topology.points() , topology(elem) , topology.nv(elem) , u.data() );
 
     // set these coordinates into the actual coordinates
