@@ -154,8 +154,7 @@ public:
     scenes_.push_back( &scene_ );
   }
 
-  template<typename type>
-  void add_topology( Topology<type>& topology )
+  void add_topology( TopologyBase& topology )
   {
     // create a new root in the scene graph
     scene_.add_primitive(topology);

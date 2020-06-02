@@ -115,7 +115,9 @@ public:
     std::vector<const TopologyBase*> children;
     topology.get_topologies(children);
     for (index_t k=0;k<children.size();k++)
+    {
       primitive->add_child( std::make_shared<Primitive>(*children[k],this) );
+    }
     return id;
   }
 

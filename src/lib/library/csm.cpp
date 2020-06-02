@@ -1,0 +1,44 @@
+#include "library/csm.h"
+
+#include "geometry/egads/body.h"
+
+namespace avro
+{
+
+OpenCSM_Model::OpenCSM_Model( const std::string& filename0 ) :
+  EGADS::Model(2)
+{
+  std::vector<char> filename(filename0.begin(),filename0.end());
+  filename.push_back('\0');
+  ocsmLoad( &*filename.begin() , (void**)&modl_ );
+  import();
+}
+
+void
+OpenCSM_Model::import()
+{
+  int build_to = 0; // execute all branches
+  int built_to;
+  int nbody;
+  int status;
+
+  ocsmCheck(modl_);
+  status = ocsmBuild(modl_,build_to,&built_to,&nbody,NULL);
+
+  printf("model has %d bodies\n",modl_->nbody);
+  for (int ibody=1;ibody<=modl_->nbody;ibody++)
+  {
+    if (modl_->body[ibody].onstack!=1) continue;
+
+    // retrieve the egads body
+    std::shared_ptr<EGADS::Body> pbody = std::make_shared<EGADS::Body>(&modl_->body[ibody].ebody,this);
+
+    pbody->build_hierarchy();
+    body_.push_back(pbody);
+  }
+  printf("found %lu bodies on stack\n",body_.size());
+  determine_number();
+
+}
+
+} // avro

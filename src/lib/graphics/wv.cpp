@@ -42,6 +42,8 @@ WV_Manager::WV_Manager()
 void
 WV_Manager::write( Primitive& primitive )
 {
+  if (primitive.points().size()==0) return;
+
   int status = 0;
   wvData items[5];
   float color[3] = {0,0,0}; // black
@@ -50,6 +52,7 @@ WV_Manager::write( Primitive& primitive )
   sprintf(label,"%p",(void*)&primitive);
 
   // send the vertex coordinates (everyone needs to do this)
+  printf("primitive poitns = %lu\n",primitive.points().size());
   status = wv_setData( WV_REAL64 , primitive.points().size() , (void*)primitive.points().data() , WV_VERTICES , &items[0] );
   WV_CHECK_STATUS( status );
 
