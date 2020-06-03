@@ -219,6 +219,7 @@ Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std
   index_t elem;
   for (index_t k=0;k<nb_cavity();k++)
   {
+    if (topology_.master().parameter()) break;
     elem = cavity_[k];
     if (!topology_.ghost(elem)) continue;
 
@@ -328,6 +329,8 @@ Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std
     {
       // we were requested to create the topology in the physical space
       geometry.points().create( this->points_[N[k]] );
+      geometry.points().set_param(k , topology_.points().u(N[k]) );
+      geometry.points().set_entity(k , topology_.points().entity(N[k]) );
     }
   }
 
@@ -344,7 +347,6 @@ Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std
       geometry_params( entity , this->points_ , geometry(k) , geometry.nv(k) , params.data() );
       for (index_t j=0;j<geometry.nv(k);j++)
       {
-        //index_t m = v2u[ geometry(k,j) ];
         if (v2u.find(geometry(k,j))==v2u.end()) avro_assert(false);
         index_t m = v2u.at( geometry(k,j) );
         for (index_t i=0;i<udim;i++)

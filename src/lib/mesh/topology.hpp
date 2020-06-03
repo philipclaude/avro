@@ -353,7 +353,12 @@ Topology<type>::get_volumes( std::vector<real_t>& volumes ) const
     volumes.resize( nb() );
 
   for (index_t k=0;k<nb();k++)
-    volumes[k] = master_.volume( points_ , (*this)(k) , nv(k) );
+  {
+    if (ghost(k))
+      volumes[k] = 0.0;
+    else
+      volumes[k] = master_.volume( points_ , (*this)(k) , nv(k) );
+  }
 }
 
 template<typename type>

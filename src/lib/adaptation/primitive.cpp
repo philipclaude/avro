@@ -75,6 +75,7 @@ Primitive<type>::extract_geometry( Entity* e , const std::vector<index_t>& f )
     // requested a vertex v, look up the u value
     index_t u = v2u_.at(f[0]);
     G_.inverse().ball(u,S_);
+    //print_inline(S_,"S: ");
   }
   else if (f.size()==2)
   {
@@ -95,13 +96,24 @@ template<typename type>
 bool
 SurfaceCavity<type>::visible( index_t p )
 {
+  #if 1
   geometry_params( geometry_ , topology_.points() , &p , 1 , topology_.points()[p] );
   return this->compute( p , topology_.points()[p] , cavity_ );
+  #else
+  this->gcavity().set_entity(geometry_);
+  avro_assert( this->v2u_.find(p)!=this->v2u_.end() );
+  index_t m = this->v2u_.at(p);
+  printf("p = %lu, m = %lu\n",p,m);
+  print_inline(this->S_,"S = ");
+  this->gcavity().sign() = geometry_->sign();
+  geometry_params( geometry_ , topology_.points() , &p , 1 , topology_.points()[p] );
+  return this->gcavity().compute( m , topology_.points()[p] , this->S_ );
+  #endif
 }
 
 template<typename type>
 bool
-SurfaceCavity<type>::check_normals()
+SurfaceCavity<type>::check_normals(int p)
 {
   params_.clear();
 
@@ -130,17 +142,30 @@ SurfaceCavity<type>::check_normals()
     if (u2v_[k]>=topology_.points().nb())
     {
       // skip ghosts
-      avro_assert( k < this->geometry().points().nb_ghost());
+      //avro_assert( k < this->geometry().points().nb_ghost());
       continue;
     }
     this->geometry().points().set_entity( k , topology_.points().entity( u2v_[k] ) );
   }
 
-  this->extract_geometry(geometry_);
+  if (p>=0)
+    this->extract_geometry(geometry_,{index_t(p)});
+  else
+    this->extract_geometry(geometry_);
 
   GeometryOrientationChecker checker( topology_.points() , params_ , u2v_ , geometry_  );
   int s = checker.signof( this->geometry() );
-  return s > 0;
+  if (s<0) return false;
+
+  bool bad_geometry = checker.createsBadGeometry(this->geometry());
+  if (bad_geometry)
+  {
+    printf("bad geometry!\n");
+    avro_implement;
+    return false;
+  }
+
+  return true;
 }
 
 template<typename type>

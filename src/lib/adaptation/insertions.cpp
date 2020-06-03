@@ -166,14 +166,14 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
 
     if (entitys->number()!=2)
     {
+      // we are along a geometry Edge, save the single paramater (t)
       avro_assert(entitys->number()==1);
-      #if 0
-      this->topology_.remove_point(ns);
-      return false; // requires development
-      #else
       real_t u0 = u[0];
+
+      // loop through both triangles attached to this edge
       for (index_t k=0;k<elems_.size();k++)
       {
+        // determine the geometry Face this triangle is on
         Entity* entityp = BoundaryUtils::geometryFacet( this->topology_.points() , this->topology_(elems_[k]) , this->topology_.nv(elems_[k]) );
         avro_assert( entityp!=nullptr );
         avro_assert( entityp->number()==2 );
@@ -221,7 +221,6 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
         this->topology_.points().set_entity(ns,entitys);
 
       }
-      #endif
     }
     else
     {

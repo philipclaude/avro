@@ -122,14 +122,15 @@ public:
     X_(3)
   {}
 
-  void extract( const std::vector<index_t>& C , Entity* entity )
+  void extract( const std::vector<index_t>& C , Entity* entity , int p=-1 )
   {
-
+#if 1
     u2v_.clear();
     params_.clear();
     cavity_.clear();
     params0_.clear();
     S_.clear();
+#endif
 
     geometry_ = entity;
     this->set_entity(geometry_);
@@ -138,6 +139,15 @@ public:
 
     for (index_t k=0;k<C.size();k++)
       this->add_cavity(C[k]);
+
+    #if 1
+    if (p>=0)
+      this->extract_geometry( entity , {index_t(p)} );
+    else
+      this->extract_geometry( entity );
+    #else
+    this->extract_geometry( entity );
+    #endif
   }
 
   bool visible( index_t p );
@@ -157,7 +167,7 @@ public:
 
   void compute_coordinates();
 
-  bool check_normals();
+  bool check_normals(int p=-1);
 
 private:
   Points params_;
@@ -372,7 +382,7 @@ public:
 
   template<typename type> int signof( Topology<type>& topology , bool verbose=false )
   {
-    avro_assert_msg( topology.number()==u_.dim() , "topology number = %u, u_.dim = %u" , topology.number() , u_.dim() );
+    //avro_assert_msg( topology.number()==u_.dim() , "topology number = %u, u_.dim = %u" , topology.number() , u_.dim() );
 
     std::vector<int> sign( topology.nb() );
 
@@ -455,7 +465,11 @@ public:
       if (e0==NULL || e1==NULL || e2==NULL) continue;
 
       Entity* face = e0->intersect(e1,e2,true); // only check, don't error!
-      if (face==NULL) return true;
+      if (face==NULL)
+      {
+        print_inline(topology.get(k));
+        return true;
+      }
     }
     return false;
   }

@@ -5,6 +5,12 @@
 #include "geometry/entity.h"
 #include "geometry/egads/object.h"
 
+#include "graphics/application.h"
+#include "graphics/user_interface.h"
+#include "graphics/window.h"
+
+#include "library/meshb.h"
+
 namespace avro
 {
 
@@ -27,6 +33,9 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   if (!this->curved_) return true;
   if (g->interior()) return true;
 
+  this->set_entity(g0);
+  this->gcavity_.set_entity(g0);
+
   // extract the geometry cavity
   this->extract_geometry( g, {p} );
   avro_assert( this->G_.nb()>0 );
@@ -40,15 +49,55 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   else
     this->gcavity_.sign() = 1;
 
+  if (this->topology_.master().parameter())
+  {
+    // convert the parameter coordinates
+    for (index_t k=0;k<this->gcavity_.points().nb();k++)
+    {
+      if (k < this->gcavity_.points().nb_ghost()) continue;
+      geometry_params( g , this->gcavity_.points() , &k , 1 , this->gcavity_.points()[k] );
+    }
+    this->gcavity_.sign() = 1;
+  }
+
+
   // compute the cavity about the original configuration
-  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , g );
   bool accept = this->gcavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
   avro_assert( accept );
 
+  if (this->topology_.master().parameter())
+  {
+    // convert the parameter coordinates
+    for (index_t k=0;k<this->gcavity_.points().nb();k++)
+    {
+      if (k < this->gcavity_.points().nb_ghost()) continue;
+      index_t m = this->u2v_.at(k);
+      std::vector<real_t> U( this->points_.u(m) , this->points_.u(m)+2 );
+      std::vector<real_t> X(3);
+      this->points_.entity(m)->evaluate(U,X);
+      for (coord_t d=0;d<3;d++)
+        this->points_[m][d] = X[d];
+    }
+  }
+
   // ensure the normals are originally in the right direction
-  int s = checker.signof( this->gcavity_ );
+  printf("=== checking orientation: === \n");
+  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , g );
+  int s = checker.signof( this->gcavity_ , true  );
+  if (s < 0) this->gcavity_.points().print(true);
   avro_assert( s > 0 );
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+
+  if (this->topology_.master().parameter())
+  {
+    // convert the parameter coordinates
+    for (index_t k=0;k<this->gcavity_.points().nb();k++)
+    {
+      if (k < this->gcavity_.points().nb_ghost()) continue;
+      geometry_params( g , this->gcavity_.points() , &k , 1 , this->gcavity_.points()[k] );
+    }
+    this->gcavity_.sign() = 1;
+  }
 
   // check visibility in the new configuration
   nb_parameter_tests_++;
@@ -59,6 +108,22 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
     nb_parameter_rejections_++;
     return false;
   }
+
+
+    if (this->topology_.master().parameter())
+    {
+      // convert the parameter coordinates
+      for (index_t k=0;k<this->gcavity_.points().nb();k++)
+      {
+        if (k < this->gcavity_.points().nb_ghost()) continue;
+        index_t m = this->u2v_.at(k);
+        std::vector<real_t> U( this->points_.u(m) , this->points_.u(m)+2 );
+        std::vector<real_t> X(3);
+        this->points_.entity(m)->evaluate(U,X);
+        for (coord_t d=0;d<3;d++)
+          this->points_[m][d] = X[d];
+      }
+    }
 
   // check the normal orientations
   s = checker.signof( this->gcavity_ );
@@ -77,7 +142,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // ensure we have all positive volumes
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   return true;
 }
@@ -142,6 +207,8 @@ template<typename type>
 bool
 Collapse<type>::apply( const index_t p , const index_t q , bool delay )
 {
+  surface_.check_visibility(true);
+  this->check_visibility(true);
 
   // attempt to collapse p onto q
   // assign the cavity
@@ -166,25 +233,173 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
   {
     avro_assert( g!=nullptr );
 
-    if (g->number()!=2) return false; // requires development
-
-    surface_.extract( this->C_ , g );
-    this->set_entity( g );
-
-    // check if the point is visible
-    surface_.SurfaceCavity<type>::set_entity(g);
-    accept = surface_.visible(q);
-    if (!accept)
+    if (g->number()!=2)
     {
-      surface_.compute_nodes();
-      surface_.compute_coordinates();
+      #if 0
       return false;
+      #elif 1
+
+      // loop through the parents of this geometry Edge
+      for (index_t k=0;k<g->nb_parents();k++)
+      {
+        if (g->parents(k)->number()!=2 || !g->parents(k)->tessellatable())
+          continue;
+
+        // determine all elements on this parent Face
+        this->Cavity<type>::clear();
+        for (index_t j=0;j<this->C_.size();j++)
+        {
+          Entity* entityp = BoundaryUtils::geometryFacet( this->topology_.points() , this->topology_(this->C_[j]) , this->topology_.nv(this->C_[j]) );
+          avro_assert( entityp!=nullptr );
+          avro_assert( entityp->number()==2 );
+          if (entityp != g->parents(k)) continue;
+          this->add_cavity( this->C_[j] );
+        }
+
+        Entity* parent = g->parents(k);
+        if (!visibleParameterSpace(p,q,parent,true)) // flag this is an edge for the counters
+        {
+          nb_rejected_[g->number()]++;
+          return false;
+        }
+      }
+
+      // we need to insert the correct topology
+      // so recompute the cavity (visibility check off) for all
+      // original cavity elements
+      this->check_visibility(false);
+      bool accept = this->compute(q,this->topology_.points()[q],this->C_);
+      avro_assert(accept);
+
+      // apply the operator if no delay was requested
+      if (!delay)
+        this->topology_.apply(*this);
+
+      return true;
+
+
+      #else
+
+      avro_assert(g->number()==1);
+
+      // loop through both triangles attached to this edge
+      for (index_t k=0;k<g->nb_parents();k++)
+      {
+        if (g->parents(k)->number()!=2 || !g->parents(k)->tessellatable())
+          continue;
+
+        // determine all elements on this parent Face
+        std::vector<index_t> elems_g;
+        for (index_t j=0;j<this->C_.size();j++)
+        {
+          Entity* entityp;
+          try
+          {
+          entityp = BoundaryUtils::geometryFacet( this->topology_.points() , this->topology_(this->C_[j]) , this->topology_.nv(this->C_[j]) );
+          }
+          catch(...)
+          {
+            print_inline( this->topology_.get(this->C_[j]) );
+            this->topology_.points().print(true);
+            graphics::Visualizer vis;
+            std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
+            vis.main_window().interface().add_widget( toolbar );
+            vis.add_topology(this->topology_);
+            vis.add_topology(surface_);
+
+            vis.run();
+          }
+          avro_assert( entityp!=nullptr );
+          avro_assert( entityp->number()==2 );
+          if (entityp == g->parents(k)) elems_g.push_back(this->C_[j]);
+        }
+
+        surface_.check_visibility(true);
+        Entity* entityp = g->parents(k);
+        this->set_entity( entityp );
+        surface_.Cavity<type>::clear();
+        surface_.extract( elems_g , entityp , p ); // pass in the triangles on the parent Face
+
+        // the removed point should initially be visible
+        accept = surface_.visible(p);
+        if (!accept)
+        {
+          printf("%s\n",this->info_.c_str());
+          surface_.compute_nodes();
+          surface_.print();
+          surface_.gcavity().compute_nodes();
+          surface_.gcavity().print();
+          avro_implement;
+        }
+        accept = surface_.check_normals();
+        avro_assert(accept);
+
+        // check if the receiving point is visible
+        //surface_.SurfaceCavity<type>::set_entity(entityp);
+        accept = surface_.visible(q);
+        if (!accept)
+        {
+          surface_.compute_nodes();
+          surface_.compute_coordinates();
+          surface_.print();
+          printf("%s\n",this->info_.c_str());
+          printf("not visible!\n");
+          return false;
+        }
+
+        try{
+        accept = surface_.check_normals(q);
+        }
+        catch(...)
+        {
+          graphics::Visualizer vis;
+          std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
+          vis.main_window().interface().add_widget( toolbar );
+          vis.add_topology(this->topology_);
+          vis.add_topology(surface_);
+
+          printf("%s\n",this->info_.c_str());
+          surface_.print();
+
+          vis.run();
+        }
+        if (!accept)
+        {
+          printf("bad normals!\n");
+          surface_.compute_coordinates();
+          return false;
+        }
+
+      }
+      //avro_implement;
+      // we need to insert the correct topology
+      // so recompute the cavity (visibility check off) for all
+      // original cavity elements
+      surface_.compute( q , this->topology_.points()[q] , this->C_ );
+      #endif
+
     }
-
-    accept = surface_.check_normals();
-    if (!accept)
+    else
     {
-      return false;
+      surface_.Cavity<type>::clear();
+      surface_.extract( this->C_ , g );
+      this->set_entity( g );
+
+      // check if the point is visible
+      surface_.SurfaceCavity<type>::set_entity(g);
+      accept = surface_.visible(q);
+      if (!accept)
+      {
+        surface_.compute_nodes();
+        surface_.compute_coordinates();
+        return false;
+      }
+
+      accept = surface_.check_normals();
+      if (!accept)
+      {
+        return false;
+      }
     }
 
     // apply the operator if no delay was requested

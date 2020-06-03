@@ -29,11 +29,11 @@ UT_TEST_CASE(test1)
   coord_t dim = 3;
 
   // parameters
-  library::MetricField_Uniform analytic(2,0.1);
+  library::MetricField_Uniform analytic(2,0.5);
 
   // geometry
   EGADS::Context context;
-  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/tire.egads");
 
   TessellationParameters tess_params;
   tess_params.standard();
@@ -72,8 +72,9 @@ UT_TEST_CASE(test1)
   params.has_uv() = true;
   params.use_smoothing() = false;
   params.swapout() = false;
+  //params.limit_metric() = true; // required a little implementation first
 
-  index_t niter = 0;
+  index_t niter = 2;
   for (index_t iter=0;iter<=niter;iter++)
   {
 
@@ -101,6 +102,7 @@ UT_TEST_CASE(test1)
     for (index_t k=0;k<topology_out.nb();k++)
       ptopology->add(topology_out(k),topology_out.nv(k));
     pmesh->add(ptopology);
+    ptopology->master().set_parameter(true);
 
     if (iter==niter)
     {

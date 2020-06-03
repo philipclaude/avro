@@ -156,12 +156,15 @@ Entity::intersect( Entity* e1 , Entity* e2 , bool only_check )
         // print some debug information
         face->print();
 
+				print();
         printf("parents 0:\n");
         for (it0=p0.begin();it0!=p0.end();it0++)
           (*it0)->print();
+				e1->print();
         printf("parents 1:\n");
         for (it0=p1.begin();it0!=p1.end();it0++)
           (*it0)->print();
+				e2->print();
         printf("parents 2:\n");
         for (it0=p2.begin();it0!=p2.end();it0++)
           (*it0)->print();
