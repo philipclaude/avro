@@ -29,11 +29,11 @@ UT_TEST_CASE(test1)
   coord_t dim = 3;
 
   // parameters
-  library::MetricField_Uniform analytic(2,0.5);
+  library::MetricField_Uniform analytic(2,0.1);
 
   // geometry
   EGADS::Context context;
-  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/tire.egads");
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
 
   TessellationParameters tess_params;
   tess_params.standard();

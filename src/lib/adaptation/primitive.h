@@ -48,6 +48,9 @@ public:
     G_.master().set_parameter( _topology.master().parameter() );
   }
 
+  void convert_to_parameter( Entity* entity );
+  void convert_to_physical();
+
   bool invalidatesTopology() const
   {
     //avro_implement; // is validBodies even needed???
@@ -122,7 +125,7 @@ public:
     X_(3)
   {}
 
-  void extract( const std::vector<index_t>& C , Entity* entity , int p=-1 )
+  void extract( const std::vector<index_t>& C , Entity* entity )
   {
 #if 1
     u2v_.clear();
@@ -140,14 +143,7 @@ public:
     for (index_t k=0;k<C.size();k++)
       this->add_cavity(C[k]);
 
-    #if 1
-    if (p>=0)
-      this->extract_geometry( entity , {index_t(p)} );
-    else
-      this->extract_geometry( entity );
-    #else
     this->extract_geometry( entity );
-    #endif
   }
 
   bool visible( index_t p );
@@ -167,7 +163,7 @@ public:
 
   void compute_coordinates();
 
-  bool check_normals(int p=-1);
+  bool check_normals();
 
 private:
   Points params_;

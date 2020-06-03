@@ -93,6 +93,35 @@ Primitive<type>::extract_geometry( Entity* e , const std::vector<index_t>& f )
 }
 
 template<typename type>
+void
+Primitive<type>::convert_to_parameter( Entity* entity )
+{
+  // convert the parameter coordinates
+  avro_assert( this->topology_.master().parameter() );
+  for (index_t k=0;k<this->gcavity_.points().nb();k++)
+  {
+    if (k < this->gcavity_.points().nb_ghost()) continue;
+    geometry_params( entity , this->gcavity_.points() , &k , 1 , this->gcavity_.points()[k] );
+  }
+}
+
+template<typename type>
+void
+Primitive<type>::convert_to_physical()
+{
+  for (index_t k=0;k<gcavity_.points().nb();k++)
+  {
+    if (k < gcavity_.points().nb_ghost()) continue;
+    index_t m = this->u2v_.at(k);
+    std::vector<real_t> U( this->points_.u(m) , this->points_.u(m)+2 );
+    std::vector<real_t> X(3);
+    this->points_.entity(m)->evaluate(U,X);
+    for (coord_t d=0;d<3;d++)
+      this->points_[m][d] = X[d];
+  }
+}
+
+template<typename type>
 bool
 SurfaceCavity<type>::visible( index_t p )
 {
@@ -113,7 +142,7 @@ SurfaceCavity<type>::visible( index_t p )
 
 template<typename type>
 bool
-SurfaceCavity<type>::check_normals(int p)
+SurfaceCavity<type>::check_normals()
 {
   params_.clear();
 
@@ -148,10 +177,7 @@ SurfaceCavity<type>::check_normals(int p)
     this->geometry().points().set_entity( k , topology_.points().entity( u2v_[k] ) );
   }
 
-  if (p>=0)
-    this->extract_geometry(geometry_,{index_t(p)});
-  else
-    this->extract_geometry(geometry_);
+  this->extract_geometry(geometry_);
 
   GeometryOrientationChecker checker( topology_.points() , params_ , u2v_ , geometry_  );
   int s = checker.signof( this->geometry() );
