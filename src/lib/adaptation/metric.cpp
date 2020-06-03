@@ -29,7 +29,8 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	topology_(topology),
 	number_(topology_.number()),
 	attachment_(fld),
-	searcher_(topology_)
+	searcher_(topology_),
+	evaluator_(nullptr)
 {
 	avro_assert( attachment_.nb()==topology_.points().nb() );
 	avro_assert( attachment_.nb()>0 );
@@ -61,39 +62,6 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
     Field<type,Metric>::value(k).set( attachment_[k] );
 		Field<type,Metric>::value(k).calculate();
 	}
-
-	/*
-	// check the metric as perfectly aligned with the incoming attachment
-	for (index_t k=0;k<attachment_.nb();k++)
-	{
-		const Metric& m0 = attachment_[k];
-		const Metric& m1 = Field<type,Metric>::value(k);
-
-		numerics::SymMatrixD<real_t> invsqrt_M0 = numerics::powm(m0,-0.5);
-		numerics::SymMatrixD<real_t> expS = invsqrt_M0*m1*invsqrt_M0;
-		numerics::SymMatrixD<real_t> s = numerics::logm(expS);
-
-		real_t d = numerics::determinant(s);
-
-		avro_assert_msg( d < 1e-12 , "d = %g" , d );
-	}
-
-	for (index_t k=0;k<this->nb();k++)
-	{
-		for (index_t j=0;j<topology.nv(k);j++)
-		{
-			const Metric& m0 = Field<type,Metric>::value( topology_(k,j) );
-			const Metric& m1 = attachment_[ topology_(k,j) ];
-
-			numerics::SymMatrixD<real_t> invsqrt_M0 = numerics::powm(m0,-0.5);
-			numerics::SymMatrixD<real_t> expS = invsqrt_M0*m1*invsqrt_M0;
-			numerics::SymMatrixD<real_t> s = numerics::logm(expS);
-
-			real_t d = numerics::determinant(s);
-
-			avro_assert_msg( d < 1e-20, "d = %g" , d );
-		}
-	}*/
 
 }
 
@@ -161,39 +129,32 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
                   "n0 = %lu, attachment_.nb() = %lu" , n0, attachment_.nb() );
   avro_assert_msg( n1 < attachment_.nb() ,
                   "n1 = %lu, attachment_.nb() = %lu" , n1, attachment_.nb() );
-	std::vector<real_t> edge0( topology_.points().dim() );
 
+	// get the vector associated with this edge
+	Entity* entity = nullptr;
 	if (topology_.master().parameter())
 	{
-		// retrieve appropriate parametric coordinates!
 		index_t e[2] = {n0,n1};
-		Entity* entity = BoundaryUtils::geometryFacet( attachment_.points() , e , 2 );
-		if (entity==NULL)
+		entity = BoundaryUtils::geometryFacet( attachment_.points() , e , 2 );
+		if (entity->number()==1)
 		{
-			attachment_.points().print(n0,true);
-			attachment_.points().print(n1,true);
+			// find a parent
+			for (index_t k=0;k<entity->nb_parents();k++)
+			{
+				if (entity->parents(k)->number()==2 and entity->parents(k)->tessellatable())
+				{
+					entity = entity->parents(k);
+					break;
+				}
+			}
 		}
-		avro_assert( entity!=NULL );
-		real_t u[4];
-		geometry_params( entity , attachment_.points() , e , 2 , u );
-		edge0[0] = u[2] - u[0];
-		edge0[1] = u[3] = u[1];
-
-		if (fabs(edge0[0])>1e10) edge0[0] = 0;
-		if (fabs(edge0[1])>1e10) edge0[1] = 0;
-
-		if (fabs(edge0[1])>1e10 || fabs(edge0[0])>1e10)
-		{
-			attachment_.points().print(true);
-			printf("n0 = %lu, n1 = %lu\n",n0,n1);
-			entity->print_header();
-		}
-
-		avro_assert( fabs(edge0[0]) < 1e10 );
-		avro_assert( fabs(edge0[1]) < 1e10 );
+		avro_assert( entity->number()!=1 );
 	}
-	else
-		numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
+	std::vector<real_t> edge0( topology_.points().dim() );
+	topology_.master().edge_vector( attachment_.points() , n0 , n1 , edge0.data() , entity );
+/*
+	numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
+*/
 	numerics::VectorD<real_t> edge(topology_.points().dim(),edge0.data());
   return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
 }
@@ -291,6 +252,13 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	// tensor with maximum determinant
 	const numerics::SymMatrixD<real_t>& M = attachment_[ V[idxM] ];
 
+	Entity* entity = nullptr;
+	if (topology_.master().parameter())
+	{
+		entity = BoundaryUtils::geometryFacet( attachment_.points() , V , NV );
+		avro_assert( entity!=nullptr );
+	}
+
 	// compute the edge lengths under m
   real_t l = 0.,lj;
 	numerics::VectorD<real_t> e(dim);
@@ -299,20 +267,11 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
     index_t p0 = master.edge(j,0);
     index_t p1 = master.edge(j,1);
 
-		if (topology.master().parameter())
-		{
-			// retrieve appropriate parametric coordinates!
-			index_t edge[2] = {V[p0],V[p1]};
-			Entity* entity = BoundaryUtils::geometryFacet( points , edge , 2 );
-			avro_assert( entity!=NULL );
-			if (entity->number()==1) return 0;
-			real_t u[4];
-			geometry_params( entity , points , edge , 2 , u );
-			e(0) = u[2] - u[0];
-			e(1) = u[3] = u[1];
-		}
-		else
-			numerics::vector( points[V[p0]] , points[V[p1]] , dim , e.data() );
+		#if 1
+		topology_.master().edge_vector( attachment_.points() , V[p0] , V[p1] , e.data() , entity );
+		#else
+		numerics::vector( points[V[p0]] , points[V[p1]] , dim , e.data() );
+		#endif
 		lj = numpack::Transpose(e)*M*e;
     l  += lj;
   }
@@ -388,6 +347,7 @@ MetricField<type>::find( index_t n0 , index_t n1 , real_t* x )
   return elem;
 }
 
+/*
 template<typename type>
 void
 MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU )
@@ -429,6 +389,7 @@ MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<
   // perform the interpolation
 	interp(alpha,metrics,tensor);
 }
+*/
 
 template<typename type>
 bool
@@ -437,6 +398,7 @@ MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 
 #if 1  // ultra hack for surface meshing
 	attachment_.add( attachment_[n0] , attachment_[n0].elem() );
+	avro_assert( attachment_.check() );
 	return true;
 #endif
 

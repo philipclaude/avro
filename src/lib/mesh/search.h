@@ -28,7 +28,7 @@ public:
   void insert( const real_t* x );
 
   // obtain the N closest points to x and store their indices in "points"
-  void closestPoints( real_t* x , std::vector<index_t>& points ) const;
+  void closestPoints( const real_t* x , std::vector<index_t>& points ) const;
 
 private:
   Points& points_;
@@ -43,7 +43,7 @@ class BoundarySearch
 public:
   BoundarySearch( const Points& points );
 
-  index_t nearest( real_t* p ) const;
+  index_t nearest( const real_t* p ) const;
 
   const Points& points() const { return points_; }
 
@@ -58,11 +58,11 @@ class ElementSearch
 public:
     ElementSearch( const Topology<type>& _topology );
 
-    int find( real_t* x , const index_t start );
-    int step( real_t* x , const index_t start );
-    int brute( real_t* x );
+    int find( const real_t* x , const index_t start );
+    int step( const real_t* x , const index_t start );
+    int brute( const real_t* x );
 
-    index_t closest( real_t* x , std::vector<real_t>& alpha ) const;
+    index_t closest( const real_t* x , std::vector<real_t>& alpha ) const;
 
     void print() const;
 

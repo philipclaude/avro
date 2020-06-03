@@ -85,7 +85,7 @@ UT_TEST_CASE(test1)
     UT_ASSERT( entity!=nullptr );
 
     // skip edges along geometry Edges
-    if (entity->number()==1) continue;
+    //if (entity->number()==1) continue;
 
     bool accept;
 

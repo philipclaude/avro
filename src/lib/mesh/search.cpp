@@ -22,7 +22,7 @@ BoundarySearch::BoundarySearch( const Points& points ) :
 {}
 
 index_t
-BoundarySearch::nearest( real_t* x ) const
+BoundarySearch::nearest( const real_t* x ) const
 {
   std::vector<index_t> pts(1);
   searcher_.closestPoints(x,pts);
@@ -42,7 +42,7 @@ ElementSearch<type>::ElementSearch( const Topology<type>& _topology ) :
 
 template<typename type>
 int
-ElementSearch<type>::find( real_t* x , const index_t guess )
+ElementSearch<type>::find( const real_t* x , const index_t guess )
 {
   nb_search_++;
 
@@ -71,7 +71,7 @@ ElementSearch<type>::find( real_t* x , const index_t guess )
 
 template<typename type>
 int
-ElementSearch<type>::step( real_t* x , const index_t start )
+ElementSearch<type>::step( const real_t* x , const index_t start )
 {
   depth_++;
   nb_steps_++;
@@ -164,7 +164,7 @@ ElementSearch<type>::step( real_t* x , const index_t start )
 
 template<typename type>
 int
-ElementSearch<type>::brute( real_t* x )
+ElementSearch<type>::brute( const real_t* x )
 {
   nb_brute_force_++;
 
@@ -209,7 +209,7 @@ ElementSearch<type>::brute( real_t* x )
 
 template<typename type>
 index_t
-ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
+ElementSearch<type>::closest( const real_t* x , std::vector<real_t>& alpha ) const
 {
   // find the closest vertex on the boundary
   index_t q = boundary_.nearest( x );
@@ -276,7 +276,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   // if no element minimizes the distance, then the original
   // vertex could be the minimizer, pick any element in the ball
   if (ielem==topology_.nb())
-  { 
+  {
     for (index_t k=0;k<B.size();k++)
     {
       if (topology_.ghost(B[k])) continue;
@@ -312,7 +312,7 @@ PointSearch::PointSearch( Points& _points ) :
 }
 
 void
-PointSearch::closestPoints( real_t* x , std::vector<index_t>& pts ) const
+PointSearch::closestPoints( const real_t* x , std::vector<index_t>& pts ) const
 {
   index_t N = pts.size();
   std::vector<real_t> dist2(N);

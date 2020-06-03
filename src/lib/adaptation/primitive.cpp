@@ -126,7 +126,15 @@ SurfaceCavity<type>::check_normals()
   }
 
   for (index_t k=0;k<this->geometry().points().nb();k++)
+  {
+    if (u2v_[k]>=topology_.points().nb())
+    {
+      // skip ghosts
+      avro_assert( k < this->geometry().points().nb_ghost());
+      continue;
+    }
     this->geometry().points().set_entity( k , topology_.points().entity( u2v_[k] ) );
+  }
 
   this->extract_geometry(geometry_);
 

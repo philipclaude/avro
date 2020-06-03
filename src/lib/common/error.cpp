@@ -33,8 +33,7 @@ Exception::Exception(const char *file, int line,const char *fmt, ...) {
   message += std::string(info);
   message += std::string(buffer);
   printf("%s\n\n=== Backtrace ===\n",message.c_str());
-  call_backtrace(2);
-  //raise(SIGABRT);
+  call_backtrace(1);
 }
 
 inline void

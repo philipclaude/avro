@@ -47,7 +47,7 @@ public:
   // n.b. that good compilers these days will probably optimize the vtable
   // lookup of the virtual method, meaning it won't be too expensive
   virtual void build() = 0;
-  virtual void getNearestNeighbours( real_t* q, std::vector<index_t>& idx ,
+  virtual void getNearestNeighbours( const real_t* q, std::vector<index_t>& idx ,
                                      std::vector<real_t>& dist2 ,
                                      index_t& nu ) = 0;
 
@@ -63,7 +63,7 @@ class KdTree : public KdTreeNd
 public:
   KdTree( PointCloud& _cloud );
   void build();
-  void getNearestNeighbours( real_t* q, std::vector<index_t>& idx ,
+  void getNearestNeighbours( const real_t* q, std::vector<index_t>& idx ,
                              std::vector<real_t>& dist2 , index_t& nu );
 
 private:

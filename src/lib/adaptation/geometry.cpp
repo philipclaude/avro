@@ -106,6 +106,7 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
       }
       else
       {
+        e->print_header();
         printf("could not find parameter coordinates along entity for vertex (%lu) %lu\n",k,v[k]);
         points.print(v[k],true);
         printf("%s\n",EGADS::utilities::object_class_name(entities[k]->object_class()).c_str());

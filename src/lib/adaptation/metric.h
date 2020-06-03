@@ -15,6 +15,8 @@
 namespace avro
 {
 
+template<typename type> class MetricEvaluator;
+
 template<typename type>
 bool
 interp( const std::vector<type>& alpha ,
@@ -235,7 +237,7 @@ public:
 
 	real_t quality( const Topology<type>& topology , index_t k );
   int  find( index_t n0 , index_t n1 , real_t*  x );
-  void interpolate( real_t*  x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU=false );
+  //void interpolate( real_t*  x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU=false );
   bool add( index_t n0 , index_t n1 , real_t*  x );
   bool recompute( index_t p , real_t*  x );
 	index_t element_containing( index_t p )
@@ -251,6 +253,8 @@ public:
   bool check_cells();
   bool check( Topology<type>& topology );
 
+  void set_evaluator( MetricEvaluator<type>* evaluator );
+
 private:
 
   // static data
@@ -263,6 +267,8 @@ private:
   ElementSearch<type> searcher_;
 
   real_t normalization_;
+
+  MetricEvaluator<type>* evaluator_;
 };
 
 template<typename type>

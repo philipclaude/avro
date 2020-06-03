@@ -59,10 +59,6 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
   if (!accept) this->print();
   avro_assert(accept);
 
-  #if 1 // philip april 23
-  //if (this->topology_.master().parameter()) return true;
-  #endif
-
   // check the orientation of the facets
   GeometryOrientationChecker checker(this->points_,this->u_,this->u2v_,ep);
   int s = checker.signof( this->gcavity_ );
@@ -84,6 +80,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   this->enlarge_ = false;
   this->check_visibility_ = true;
   enlarged_ = false; // no enlargement (for geometry) yet
+  surface_.check_visibility(true);
 
   // determine the cavity elements if none were provided
   if (shell.size()==0)
@@ -144,7 +141,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   this->topology_.points().body(ns) = bodys;
   #endif
 
-  if (entitys!=NULL)
+  if (entitys!=NULL && !this->topology_.master().parameter())
   {
     // enlarge the cavity for boundary insertions
     // if the shell was given, then this should have been precomputed
@@ -165,31 +162,90 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   if (this->topology_.master().parameter())
   {
     avro_assert( entitys!=nullptr );
-
-    if (entitys->number()!=2) return false; // requires development
     avro_assert( elems_.size()==2 );
 
-    surface_.Cavity<type>::clear();
-
-    surface_.extract( elems_ , entitys );
-
-    // check if the point is visible
-    surface_.SurfaceCavity<type>::set_entity(entitys);
-    accept = surface_.visible( ns );
-    if (!accept)
+    if (entitys->number()!=2)
     {
-      surface_.compute_nodes();
-      surface_.compute_coordinates();
+      avro_assert(entitys->number()==1);
+      #if 0
       this->topology_.remove_point(ns);
-      return false;
+      return false; // requires development
+      #else
+      real_t u0 = u[0];
+      for (index_t k=0;k<elems_.size();k++)
+      {
+        Entity* entityp = BoundaryUtils::geometryFacet( this->topology_.points() , this->topology_(elems_[k]) , this->topology_.nv(elems_[k]) );
+        avro_assert( entityp!=nullptr );
+        avro_assert( entityp->number()==2 );
+        surface_.check_visibility(false);
+
+        real_t U[2];
+        geometry_params( entityp , this->topology_.points() , &ns , 1 , U );
+        this->topology_.points().u(ns)[0] = U[0];
+        this->topology_.points().u(ns)[1] = U[1];
+        this->topology_.points().set_entity(ns,entityp);
+
+        this->set_entity( entityp );
+        surface_.Cavity<type>::clear();
+        surface_.extract( {elems_[k]} , entityp ); // pass in a single triangle
+
+        // check if the point is visible
+        surface_.SurfaceCavity<type>::set_entity(entityp);
+        accept = surface_.visible( ns );
+
+        if (!accept)
+        {
+          surface_.compute_nodes();
+          surface_.compute_coordinates();
+          this->topology_.remove_point(ns);
+          avro_assert_not_reached;
+          return false;
+        }
+
+        accept = surface_.check_normals();
+        if (!accept)
+        {
+          printf("bad normals?\n");
+          surface_.compute_coordinates();
+          this->topology_.remove_point(ns);
+          return false;
+        }
+
+        // we need to insert the correct topology
+        // so recompute the cavity (visibility check off) for all
+        // original cavity elements
+        surface_.compute( ns , this->topology_.points()[ns] , elems_ );
+
+        this->topology_.points().u(ns)[0] = u0;
+        this->topology_.points().u(ns)[1] = 1e20;
+        this->topology_.points().set_entity(ns,entitys);
+
+      }
+      #endif
     }
-
-    accept = surface_.check_normals();
-    if (!accept)
+    else
     {
-      surface_.compute_coordinates();
-      this->topology_.remove_point(ns);
-      return false;
+      surface_.Cavity<type>::clear();
+      surface_.extract( elems_ , entitys );
+
+      // check if the point is visible
+      surface_.SurfaceCavity<type>::set_entity(entitys);
+      accept = surface_.visible( ns );
+      if (!accept)
+      {
+        surface_.compute_nodes();
+        surface_.compute_coordinates();
+        this->topology_.remove_point(ns);
+        return false;
+      }
+
+      accept = surface_.check_normals();
+      if (!accept)
+      {
+        surface_.compute_coordinates();
+        this->topology_.remove_point(ns);
+        return false;
+      }
     }
 
     // apply the operator to the topology if the caller did not request a delay
@@ -283,7 +339,6 @@ void
 AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 {
   avro_assert( metric_.check(topology_) );
-  //return;
 
   real_t dof_factor = params_.insertion_volume_factor();
 
@@ -317,7 +372,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
   {
     // anything beyond 20 passes is borderline ridiculous
     // the metric is probably way off from the current mesh
-    if (pass>3)
+    if (pass>20)
     {
       printf("warning: too many insertions, metric too far from current mesh.\n");
       break;
@@ -477,6 +532,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         nb_visiblity_rejected++;
         continue;
       }
+
 
       // if the inserter was enlarged, don't be too restrictive with quality
       //inserter_.evaluate( metric );

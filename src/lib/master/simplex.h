@@ -41,6 +41,7 @@ public:
   void convert( const Simplex& master_from , const std::vector<dof_t>& A , std::vector<dof_t>& B ) const;
 
   real_t volume( const Points& points , const index_t* v , index_t nv ) const;
+  void edge_vector( const Points& points , index_t n0 , index_t n1 , real_t* edge , Entity* entity=nullptr ) const;
 
   index_t nb_facets( coord_t dim ) const
   {

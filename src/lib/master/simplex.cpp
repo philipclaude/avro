@@ -441,6 +441,41 @@ Simplex::volume( const Points& points , const index_t* v , index_t nv ) const
   return simplex_volume(x,points.dim());
 }
 
+void
+Simplex::edge_vector( const Points& points , index_t n0 , index_t n1 , real_t* edge , Entity* entity ) const
+{
+  if (parameter_)
+  {
+    // get the entity this edge is on
+    index_t e[2] = {n0,n1};
+    if (entity==nullptr)
+      entity = BoundaryUtils::geometryFacet( points, e , 2 );
+    avro_assert( entity!=NULL );
+
+    // retrieve the parameter coordinates along the entity
+    if (entity->number()==2)
+    {
+      real_t u[4];
+      geometry_params( entity , points , e , 2 , u );
+      edge[0] = u[2] - u[0];
+      edge[1] = u[3] - u[1];
+    }
+    else if (entity->number()==1)
+    {
+      avro_assert_not_reached;
+      avro_assert( points.entity(n0) == points.entity(n1) );
+      edge[0] = points.u(n1)[0] - points.u(n0)[0];
+      edge[1] = 0.0;
+    }
+    else
+      avro_assert_not_reached;
+  }
+  else
+  {
+    numerics::vector( points[n0] , points[n1] , points.dim() , edge );
+  }
+}
+
 index_t
 Simplex::edge( index_t k , index_t i ) const
 {

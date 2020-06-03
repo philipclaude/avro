@@ -29,7 +29,7 @@ UT_TEST_CASE(test1)
   coord_t dim = 3;
 
   // parameters
-  library::MetricField_Uniform analytic(2,0.9);
+  library::MetricField_Uniform analytic(2,0.1);
 
   // geometry
   EGADS::Context context;
@@ -62,9 +62,7 @@ UT_TEST_CASE(test1)
   ptopology = std::make_shared<Topology<Simplex>>(pmesh->points(),2);
   pmesh->add(ptopology);
   tess.retrieve<Simplex>(0).get_elements( *ptopology );
-
   ptopology->master().set_parameter(true);
-  //ptopology->orient();
 
   // define the problem and adapt
   AdaptationParameters params;

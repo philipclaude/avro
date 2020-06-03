@@ -43,7 +43,7 @@ KdTree<dim>::build()
 
 template<coord_t dim>
 void
-KdTree<dim>::getNearestNeighbours( real_t* q, std::vector<index_t>& idx ,
+KdTree<dim>::getNearestNeighbours( const real_t* q, std::vector<index_t>& idx ,
                                    std::vector<real_t>& dist2 , index_t& nu )
 {
   avro_assert( idx.size()==dist2.size() );
