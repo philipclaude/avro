@@ -285,9 +285,11 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
 
   // check if the edge swap is valid in the parameter space
   // 2d swaps area already checks, 4d is limited to linear geometries for now
-  if (this->topology_.number()!=3) return true;
+  //if (this->topology_.number()!=3) return true;
   if (!this->curved_) return true;
   if (face->interior()) return true;
+  
+  this->gcavity_.set_entity(face);
 
   // based on the type of face, we may need to flip the sign for the volume calculation
   int oclass,mtype;
@@ -309,21 +311,48 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   if (this->G_.closed())
     avro_assert( this->G_.nb_real()==2 );
 
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_parameter(face);
+    this->gcavity_.sign() = 1;
+  }
+
   // ensure the e0 is visible to the cavity boundary
   bool accept = this->gcavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
   avro_assert( accept );
 
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_physical();
+  }
+
   GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , face );
   int s = checker.signof( this->gcavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_parameter(face);
+  }
 
   // ensure e1 is visible to the cavity boundary
   accept = this->gcavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
   avro_assert( accept );
+
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_physical();
+  }
+
   s = checker.signof( this->gcavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_parameter(face);
+  }
 
   // check for visibility of p
   nb_parameter_tests_++;
@@ -331,27 +360,29 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   avro_assert( this->gcavity_.nb_real()==2 );
   if (!accept)
   {
-    //printf("swap not visible in parameter space!\n");
     nb_parameter_rejections_++;
     return false;
+  }
+
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_physical();
   }
 
   s = checker.signof( this->gcavity_ );
   if (s<0)
   {
-    //printf("swap creates negative normals!\n");
     return false;
   }
 
   if (checker.createsBadGeometry(this->gcavity_))
   {
-    //printf("swap creates bad geometry!\n");
     nb_invalid_geometry_++;
     return false;
   }
 
   // the geometry cavity should have positive volumes
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   return true;
 }
@@ -449,6 +480,7 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     avro_assert( ge->number()==2 ); // otherwise this shoudl have been caught by 'valid'
     avro_assert( this->C_.size()==2 );
 
+    #if 0
     surface_.extract( this->C_ , ge );
     this->set_entity( ge );
 
@@ -480,8 +512,34 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
       this->copy(surface_);
     }
     surface_.compute_coordinates();
+    return true;
+    #else
+
+    avro_assert( ge!=nullptr );
+    avro_assert( ge->number()==2);
+
+    bool accept;
+
+    this->Cavity<type>::clear();
+    for (index_t j=0;j<this->C_.size();j++)
+    {
+      this->add_cavity( this->C_[j] );
+    }
+
+    if (!visibleParameterSpace(p,e0,e1,ge))
+    {
+      return false;
+    }
+
+    this->check_visibility(false);
+    accept = this->compute( p ,this->topology_.points()[p],this->C_);
+    avro_assert(accept);
+    this->check_visibility(true);
 
     return true;
+
+    #endif
+
   }
 
   // apply the operator, checking visibility

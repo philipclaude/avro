@@ -29,7 +29,7 @@ UT_TEST_CASE(test1)
   coord_t dim = 3;
 
   // parameters
-  library::MetricField_Uniform analytic(2,0.1);
+  library::MetricField_Uniform analytic(2,10);
 
   // geometry
   EGADS::Context context;

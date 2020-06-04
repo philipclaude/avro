@@ -31,6 +31,8 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
   if (!this->curved_) return true;
   if (ep->interior()) return true;
 
+  this->gcavity_.set_entity(ep);
+
   // based on the type of face, we may need to flip the sign for the volume calculation
   int oclass,mtype;
   ego ref,prev,next;
@@ -45,26 +47,49 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
   avro_assert(this->G_.nb()>0);
 
   // add the parameter coordinates for the inserted point along with the mapped index
-  this->u_.create( params );
+  if (this->topology_.master().parameter())
+  {
+    std::vector<real_t> xu(this->u_.dim());
+    this->u_.create( xu.data() );
+    this->u_.set_param( this->u_.nb()-1 , params );
+  }
+  else
+    this->u_.create( params );
   this->u2v_.push_back( this->points_.nb()-1 );
 
   #if 1 // philip may 28
-  this->gcavity_.set_entity( ep0 );
   for (index_t j=0;j<this->u_.nb();j++)
+  {
+    if (j < this->u_.nb_ghost()) continue;
     this->u_.set_entity( j , this->points_.entity( this->u2v_[j] ) );
+  }
   #endif
+
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_parameter(ep);
+    this->gcavity_.sign() = 1;
+  }
 
   // the insertion should be visible in parameter space
   bool accept = this->gcavity_.compute( this->u_.nb()-1 , params , this->S_ );
   if (!accept) this->print();
   avro_assert(accept);
 
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_physical();
+  }
+
   // check the orientation of the facets
   GeometryOrientationChecker checker(this->points_,this->u_,this->u2v_,ep);
   int s = checker.signof( this->gcavity_ );
-  if (s<0) return false;
+  if (s<0)
+  {
+    return false;
+  }
 
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype) );
+  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype) );
 
   return true;
 }
@@ -163,6 +188,8 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   {
     avro_assert( entitys!=nullptr );
     avro_assert( elems_.size()==2 );
+
+    #if 0
 
     if (entitys->number()!=2)
     {
@@ -265,6 +292,38 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
       this->topology_.points()[ns][d] = x[d];
 
     return true;
+  #else
+  if (entitys->number()==2)
+  {
+    // check if the insertion is visible to the boundary of the geometry
+    // cavity in the parameter space of the geometry entity
+    this->Cavity<type>::clear();
+    for (index_t k=0;k<elems_.size();k++)
+      this->add_cavity(elems_[k]);
+    accept = visibleParameterSpace( x , u , entitys );
+    if (!accept)
+    {
+      this->topology_.remove_point(ns);
+      return false;
+    }
+
+    this->check_visibility(false);
+    accept = this->compute( ns , x , elems_ );
+    avro_assert(accept);
+    this->check_visibility(true);
+  }
+  else
+  {
+    // TODO check visibility on all faces of this is an edge entity
+    this->check_visibility(false);
+    accept = this->compute( ns , x , elems_ );
+    avro_assert(accept);
+    this->check_visibility(true);
+  }
+
+  return true;
+
+  #endif
   }
 
   // attempt the operator

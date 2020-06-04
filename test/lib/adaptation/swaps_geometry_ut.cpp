@@ -118,8 +118,9 @@ UT_TEST_CASE(test1)
     accept = swapper.valid( e0 , p , q );
     UT_ASSERT_EQUALS( accept , true );
 
+    /*swapper.set_cavity(elems);
     accept = swapper.apply( e0 , p , q );
-    UT_ASSERT_EQUALS( accept , true );
+    UT_ASSERT_EQUALS( accept , true );*/
 
     // try the other swap
     accept = swapper.valid( q , e0 , e1 );
@@ -139,8 +140,6 @@ UT_TEST_CASE(test1)
     topology.apply(swapper);
 
   }
-
-  topology.points().print(true);
 
   graphics::Visualizer vis;
   vis.add_topology(topology);

@@ -75,7 +75,6 @@ Primitive<type>::extract_geometry( Entity* e , const std::vector<index_t>& f )
     // requested a vertex v, look up the u value
     index_t u = v2u_.at(f[0]);
     G_.inverse().ball(u,S_);
-    //print_inline(S_,"S: ");
   }
   else if (f.size()==2)
   {

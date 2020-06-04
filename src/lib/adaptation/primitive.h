@@ -463,7 +463,6 @@ public:
       Entity* face = e0->intersect(e1,e2,true); // only check, don't error!
       if (face==NULL)
       {
-        print_inline(topology.get(k));
         return true;
       }
     }

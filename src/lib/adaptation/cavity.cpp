@@ -337,8 +337,6 @@ Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std
   if (uvcoords)
   {
     coord_t udim = this->points_.udim();
-    if (udim!=geometry.points().dim())
-      geometry.points().print(true);
     avro_assert(udim == geometry.points().dim());
     std::vector<real_t> params;
     for (index_t k=0;k<geometry.nb();k++)
