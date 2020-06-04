@@ -73,7 +73,11 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
 
   // the insertion should be visible in parameter space
   bool accept = this->gcavity_.compute( this->u_.nb()-1 , params , this->S_ );
-  if (!accept) this->print();
+  if (!accept)
+  {
+    avro_assert( this->topology_.master().parameter());
+    return false;
+  }
   avro_assert(accept);
 
   if (this->topology_.master().parameter())

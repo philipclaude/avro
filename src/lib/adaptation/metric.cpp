@@ -151,7 +151,7 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
 		avro_assert( entity->number()!=1 );
 	}
 	coord_t dim = topology_.points().dim();
-	//if (topology_.master().parameter()) dim = topology_.points().udim();
+	if (topology_.master().parameter()) dim = topology_.points().udim();
 	std::vector<real_t> edge0( dim );
 	topology_.master().edge_vector( attachment_.points() , n0 , n1 , edge0.data() , entity );
 /*
