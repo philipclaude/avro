@@ -24,7 +24,7 @@ namespace avro
 {
 
 template<typename type>
-MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld ) :
+MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld , FieldInterpolation<type,Metric>* interpolation ) :
 	Field<type,Metric>(topology,1,CONTINUOUS),
 	topology_(topology),
 	number_(topology_.number()),
@@ -62,6 +62,13 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
     Field<type,Metric>::value(k).set( attachment_[k] );
 		Field<type,Metric>::value(k).calculate();
 	}
+
+	this->master().set_basis( BasisFunctionCategory_Lagrange );
+	if (interpolation==nullptr)
+		interpolation_ = std::make_shared< FieldInterpolation<type,Metric> >(*this);
+	else
+		interpolation_.reset(interpolation);
+
 
 }
 
@@ -349,54 +356,20 @@ MetricField<type>::find( index_t n0 , index_t n1 , real_t* x )
   return elem;
 }
 
-/*
-template<typename type>
-void
-MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU )
-{
-  const coord_t nv = topology_.nv(elem);
-	std::vector<numerics::SymMatrixD<real_t>> metrics(nv);
-
-  // get the points of the element
-  std::vector<const real_t*> xk(nv,0);
-  for (index_t j=0;j<nv;j++)
-    xk[j] = topology_.points()[ topology_(elem,j) ];
-  real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
-
-  // compute the barycentric coordinates
-  std::vector<real_t> alpha( nv , 0. );
-  for (index_t j=0;j<nv;j++)
-  {
-    std::vector<const real_t*> xk0(nv);
-    for (index_t i=0;i<nv;i++)
-    {
-      if (i==j) xk0[i] = x;
-      else xk0[i] = xk[i];
-    }
-    alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
-
-    if (alpha[j]<0. || alpha[j]>1.)
-    {
-      if (!STFU)
-      {
-        printf("element search failed!, alpha[%lu] = %g\n",j,alpha[j]);
-        avro_assert_not_reached;
-      }
-    }
-
-    // save the metric at this vertex
-		metrics[j] = Field<type,Metric>::operator()(elem,j);
-  }
-
-  // perform the interpolation
-	interp(alpha,metrics,tensor);
-}
-*/
-
 template<typename type>
 bool
 MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
 {
+
+	Metric mp(number_);
+	index_t ns = attachment_.points().nb()-1; // hack because edge split
+	index_t g0 = attachment_[n0].elem();
+	index_t g1 = attachment_[n1].elem();
+	int ielem1 = interpolation_->eval( attachment_.points() , ns , {g0,g1} , mp );
+	if (ielem1<0) return false;
+	attachment_.add( mp , index_t(ielem1) );
+	return true;
+
 
 #if 1  // ultra hack for surface meshing
 	attachment_.add( attachment_[n0] , attachment_[n0].elem() );
@@ -489,6 +462,13 @@ bool
 MetricField<type>::recompute( index_t p , real_t* x )
 {
 	avro_assert( p >= attachment_.points().nb_ghost() );
+
+	Metric mp(number_);
+	int ielem1 = interpolation_->eval( attachment_.points() , p , {attachment_[p].elem()} , mp );
+	if (ielem1<0) return false;
+	attachment_[p].set_elem( index_t(ielem1) );
+	attachment_[p].calculate();
+	return true;
 
 	// look for the element in the background topology with the searcher
   index_t guess = attachment_[p].elem();

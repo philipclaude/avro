@@ -106,6 +106,7 @@ public:
   void set_entity( Entity* entity );
   Entity* entity() { return entity_; }
 
+  void physical_to_reference( const Points& points , const index_t* v , index_t nv , const real_t* x , real_t* x0 ) const;
 
   real_t jacobian( const std::vector<const real_t*>& x , coord_t dim ) const;
   void   jacobian( const std::vector<const real_t*>& xk , numerics::MatrixD<real_t>& J ) const;

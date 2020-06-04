@@ -533,4 +533,27 @@ Simplex::jacobian( const index_t* v , index_t nv , const Points& points , numeri
     J(d,j) = points[v[j+1]][d] -points[v[0]][d];
 }
 
+void
+Simplex::physical_to_reference( const Points& points , const index_t* v , index_t nv , const real_t* xp , real_t* x0 ) const
+{
+  // we'll need fancier optimization-based methods if the element is curved
+  // for linear simplices, we can compute the barycentric coordinates
+  avro_assert( order_==1 );
+  avro_assert( nv == nb_basis() );
+
+  real_t v0 = volume( points , v , nv );
+  v0 = 1./v0;
+
+  std::vector<const real_t*> xk(nv);
+  for (index_t j=0;j<nv;j++)
+  {
+    for (index_t i=0;i<nv;i++)
+    {
+      if (i==j) xk[i] = xp;
+      else xk[i] = points[ v[i] ];
+    }
+    x0[j] = v0 * numerics::simplex_volume( xk , points.dim() );
+  }
+}
+
 } // avro

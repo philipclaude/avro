@@ -6,6 +6,7 @@
 #include "common/types.h"
 
 #include "mesh/field.h"
+#include "mesh/interpolation.h"
 #include "mesh/points.h"
 #include "mesh/search.h"
 
@@ -223,8 +224,7 @@ template<typename type>
 class MetricField : public Field<type,Metric>
 {
 public:
-  MetricField( Topology<type>& topology , MetricAttachment& fld );
-
+  MetricField( Topology<type>& topology , MetricAttachment& fld , FieldInterpolation<type,Metric>* interpolation=nullptr );
 	numerics::SymMatrixD<real_t>& operator() ( const Points& x , index_t v );
 
 	real_t length( index_t n0 , index_t n1 ) const;
@@ -269,6 +269,8 @@ private:
   real_t normalization_;
 
   MetricEvaluator<type>* evaluator_;
+
+  std::shared_ptr<FieldInterpolation<type,Metric>> interpolation_;
 };
 
 template<typename type>

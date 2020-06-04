@@ -74,6 +74,7 @@ public:
   index_t nb_data() const { return data_.nb(); }
 
   T& value( index_t k ) { return *data_[k]; }
+  const T& value( index_t k ) const { return *data_[k]; }
 
   const DOF<T>& dof() const { return data_; }
 

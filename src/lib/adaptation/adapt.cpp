@@ -479,6 +479,9 @@ adapt( AdaptationProblem& problem )
   // create a discrete metric with the input topology
   MetricField<type> metric( topology , field );
 
+  topology.master().set_basis( BasisFunctionCategory_Lagrange );
+  mesh_topology.master().set_basis( BasisFunctionCategory_Lagrange );
+
   // call the adaptation!
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );
 

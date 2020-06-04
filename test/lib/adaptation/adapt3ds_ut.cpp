@@ -63,6 +63,7 @@ UT_TEST_CASE(test1)
   pmesh->add(ptopology);
   tess.retrieve<Simplex>(0).get_elements( *ptopology );
   ptopology->master().set_parameter(true);
+  ptopology->master().set_basis( BasisFunctionCategory_Lagrange );
 
   // define the problem and adapt
   AdaptationParameters params;
