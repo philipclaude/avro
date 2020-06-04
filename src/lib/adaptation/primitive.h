@@ -49,7 +49,7 @@ public:
   }
 
   void convert_to_parameter( Entity* entity );
-  void convert_to_physical();
+  void convert_to_physical( const std::vector<index_t>& N = std::vector<index_t>() );
 
   bool invalidatesTopology() const
   {

@@ -16,7 +16,7 @@ UT_TEST_SUITE( csm_test_suite )
 UT_TEST_CASE(test1)
 {
 
-  OpenCSM_Model model("/Users/pcaplan/Codes/EngSketchPad/data/bottle.csm");
+  OpenCSM_Model model(BASE_TEST_DIR+"/geometry/bottle.csm");
 
   TessellationParameters params;
   params.standard();
@@ -25,8 +25,6 @@ UT_TEST_CASE(test1)
   params.min_angle() = 20;
 
   ModelTessellation tess(model,params);
-
-  //tess.points().print(true);
 
   for (index_t k=0;k<tess.points().nb();k++)
   {

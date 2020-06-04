@@ -150,12 +150,14 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
 		}
 		avro_assert( entity->number()!=1 );
 	}
-	std::vector<real_t> edge0( topology_.points().dim() );
+	coord_t dim = topology_.points().dim();
+	//if (topology_.master().parameter()) dim = topology_.points().udim();
+	std::vector<real_t> edge0( dim );
 	topology_.master().edge_vector( attachment_.points() , n0 , n1 , edge0.data() , entity );
 /*
 	numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
 */
-	numerics::VectorD<real_t> edge(topology_.points().dim(),edge0.data());
+	numerics::VectorD<real_t> edge(dim,edge0.data());
   return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
 }
 

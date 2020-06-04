@@ -462,7 +462,7 @@ Simplex::edge_vector( const Points& points , index_t n0 , index_t n1 , real_t* e
     }
     else if (entity->number()==1)
     {
-      avro_assert_not_reached;
+      avro_implement; // this should not be needed right now, and remains untested
       avro_assert( points.entity(n0) == points.entity(n1) );
       edge[0] = points.u(n1)[0] - points.u(n0)[0];
       edge[1] = 0.0;

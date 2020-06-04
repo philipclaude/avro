@@ -1,6 +1,10 @@
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
 
+#include "graphics/application.h"
+#include "graphics/user_interface.h"
+#include "graphics/window.h"
+
 #include "mesh/topology.h"
 
 #include <set>
@@ -89,6 +93,7 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
     this->gcavity_.sign() = 1;
 
   // extract the geometry cavity
+  this->gcavity_.set_entity(ep);
   this->extract_geometry( ep , {p} );
   avro_assert( this->G_.nb()>0 );
   //avro_assert_msg( this->G_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->G_.nb_real() , this->nb_ghost() );
@@ -103,7 +108,11 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
                       "|G| = %lu, |smooth ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
   }
 
-  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , ep );
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_parameter(ep);
+    this->gcavity_.sign() = 1;
+  }
 
   // check for visibility of the new coordinates
   nb_parameter_tests_++;
@@ -114,12 +123,21 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
     return false;
   }
 
+  if (this->topology_.master().parameter())
+  {
+    this->convert_to_physical();
+  }
+
   // check the orientation of facets produced w.r.t. the geometry
+  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , ep );
   int s = checker.signof( this->gcavity_ );
-  if (s<0) return false;
+  if (s<0)
+  {
+    return false;
+  }
 
   // check the produced volumes are positive
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
 
   return true;
 }
@@ -147,6 +165,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   index_t q;
   Entity* ep = this->topology_.points().entity(p);
   if (ep!=NULL && ep->number()==0) return false; // don't move points on Nodes!
+  if (this->topology_.master().parameter() && ep!=NULL && ep->number()!=2) return false;
   Entity* eq;
   for (index_t k=0;k<this->C_.size();k++)
   {
@@ -202,8 +221,12 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     lens0.push_back(len);
 
     // physical vector from the vertex to the neighbour
+    #if 0
     numerics::vector( this->topology_.points()[p] ,
                         this->topology_.points()[N[k]] , dim , u.data() );
+    #else
+    this->topology_.master().edge_vector( this->topology_.points() , p , N[k] , u.data() , ep );
+    #endif
 
     // compute the force on the vertex
     f = std::pow(len,4);
@@ -229,9 +252,77 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   if (delta_p<delta_min_) delta_min_ = delta_p;
   if (delta_p>delta_max_) delta_max_ = delta_p;
 
-  this->enlarge_ = true;
+  if (this->topology_.master().parameter())
+  {
+    // skip smoothing along geometry Edges for now
+    avro_assert( ep->number()==2 );
+
+    // assign the cavity elements so we can extract the surface cavity
+    this->Cavity<type>::clear();
+    this->set_entity(ep);
+    for (index_t j=0;j<this->C_.size();j++)
+      this->add_cavity( this->C_[j] );
+
+    // assert the original point is visible
+    if (!visibleParameterSpace( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
+    {
+      printf("error smoothing vertex %lu\n",p);
+      print_inline(x0);
+      this->print();
+      this->check_visibility(false);
+      this->compute(p,this->topology_.points()[p] , this->C_ );
+      this->check_visibility(true);
+
+      this->u_.print(true);
+      this->gcavity_.points().print(true);
+
+      graphics::Visualizer vis;
+      vis.add_topology(this->topology_);
+      vis.add_topology(*this);
+
+      printf("points:\n");
+      for (index_t k=0;k<N.size();k++)
+        this->topology_.points().print(N[k],true);
+      print_inline(this->u2v_);
+
+      std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
+      vis.main_window().interface().add_widget( toolbar );
+
+      vis.run();
+
+      avro_implement;
+    }
+
+    // save the original parameter coordinates
+    for (index_t d=0;d<udim;d++)
+      params0[d] = this->topology_.points().u(p,d);
+
+    // update the parameter space and physical coordinates
+    for (coord_t d=0;d<udim;d++)
+      this->topology_.points().u(p)[d] += omega*F[d];
+    this->convert_to_physical({p});
+
+    if (!visibleParameterSpace( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
+    {
+      // revert the physical coordinates
+      for (index_t d=0;d<dim;d++)
+        this->topology_.points()[p][d] = x0[d];
+
+      // revert the parameter space coordinates
+      for (coord_t d=0;d<udim;d++)
+        this->topology_.points().u(p,d) = params0[d];
+
+      // signal the smoothing was not applied
+      return false;
+    }
+
+    //printf("accepted smooth!\n");
+    return true;
+  }
+
 
   // check if the cavity needs to be enlarged
+  this->enlarge_ = true;
   if (ep!=NULL)
   {
     for (index_t d=0;d<udim;d++)

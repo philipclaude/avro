@@ -10,7 +10,8 @@ OpenCSM_Model::OpenCSM_Model( const std::string& filename0 ) :
 {
   std::vector<char> filename(filename0.begin(),filename0.end());
   filename.push_back('\0');
-  ocsmLoad( &*filename.begin() , (void**)&modl_ );
+  int status = ocsmLoad( &*filename.begin() , (void**)&modl_ );
+  avro_assert(status==0);
   import();
 }
 

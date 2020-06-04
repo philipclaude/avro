@@ -106,17 +106,32 @@ Primitive<type>::convert_to_parameter( Entity* entity )
 
 template<typename type>
 void
-Primitive<type>::convert_to_physical()
+Primitive<type>::convert_to_physical( const std::vector<index_t>& N )
 {
-  for (index_t k=0;k<gcavity_.points().nb();k++)
+  if (N.size()==0)
   {
-    if (k < gcavity_.points().nb_ghost()) continue;
-    index_t m = this->u2v_.at(k);
-    std::vector<real_t> U( this->points_.u(m) , this->points_.u(m)+2 );
-    std::vector<real_t> X(3);
-    this->points_.entity(m)->evaluate(U,X);
-    for (coord_t d=0;d<3;d++)
-      this->points_[m][d] = X[d];
+    for (index_t k=0;k<gcavity_.points().nb();k++)
+    {
+      if (k < gcavity_.points().nb_ghost()) continue;
+      index_t m = this->u2v_.at(k);
+      std::vector<real_t> U( this->points_.u(m) , this->points_.u(m)+2 );
+      std::vector<real_t> X(3);
+      this->points_.entity(m)->evaluate(U,X);
+      for (coord_t d=0;d<3;d++)
+        this->points_[m][d] = X[d];
+    }
+  }
+  else
+  {
+    for (index_t k=0;k<N.size();k++)
+    {
+      avro_assert( N[k] >= this->topology_.points().nb_ghost() );
+      std::vector<real_t> U( this->points_.u(N[k]) , this->points_.u(N[k])+2 );
+      std::vector<real_t> X(3);
+      this->points_.entity(N[k])->evaluate(U,X);
+      for (coord_t d=0;d<3;d++)
+        this->points_[N[k]][d] = X[d];
+    }
   }
 }
 

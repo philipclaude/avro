@@ -29,7 +29,7 @@ UT_TEST_CASE(test1)
   coord_t dim = 3;
 
   // parameters
-  library::MetricField_Uniform analytic(2,10);
+  library::MetricField_Uniform analytic(2,0.05);
 
   // geometry
   EGADS::Context context;
@@ -70,7 +70,7 @@ UT_TEST_CASE(test1)
   params.insertion_volume_factor() = -1;
   params.curved() = true;
   params.has_uv() = true;
-  params.use_smoothing() = false;
+  params.use_smoothing() = true;
   params.swapout() = false;
   //params.limit_metric() = true; // required a little implementation first
 
