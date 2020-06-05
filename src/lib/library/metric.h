@@ -1,6 +1,7 @@
 #ifndef avro_LIB_LIBRARY_METRIC_H_
 #define avro_LIB_LIBRARY_METRIC_H_
 
+#include "common/error.h"
 #include "common/types.h"
 
 #include "mesh/interpolation.h"
@@ -287,17 +288,20 @@ template<typename type>
 class MetricField_UniformGeometry : public MetricField_Analytic, public FieldInterpolation<type,Metric>
 {
 public:
-  MetricField_UniformGeometry( real_t h , const Field<type,Metric>& field );
+  MetricField_UniformGeometry( coord_t dim , real_t hfactor );
 
   int eval( const Points& points , index_t p , const std::vector<index_t>& guesses , Metric& mp ) override;
 
   numerics::SymMatrixD<real_t> operator()( const real_t* x ) const override
   {
-    return uniform_(x);
+    avro_assert_not_reached;
   }
 
+  numerics::SymMatrixD<real_t> operator()( const Points& points , index_t p );
+
 private:
-  MetricField_Uniform uniform_;
+  using FieldInterpolation<type,Metric>::analytic_;
+  real_t hfactor_;
 };
 
 } // library

@@ -72,7 +72,6 @@ UT_TEST_CASE(test1)
 
   collapser.delay() = false;
 
-  index_t nb_collapse_total = 0;
   index_t pass = 0;
   while (true)
   {

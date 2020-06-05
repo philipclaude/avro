@@ -270,7 +270,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
 template<typename type>
 EdgeSwap<type>::EdgeSwap( Topology<type>& _topology ) :
-  Primitive<type>(_topology)//, surface_(_topology)
+  Primitive<type>(_topology)
 {
   this->setName("edge swapper");
   nb_geometry_rejections_.resize( _topology.number() );
@@ -288,36 +288,36 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   if (!this->curved_) return true;
   if (face->interior()) return true;
 
-  this->gcavity_.set_entity(face);
+  this->geometry_cavity_.set_entity(face);
 
   // based on the type of face, we may need to flip the sign for the volume calculation
   int oclass,mtype;
   ego ref,prev,next;
   EGADS_ENSURE_SUCCESS( EG_getInfo(*face->object(), &oclass, &mtype,&ref, &prev, &next) );
   if (mtype==SREVERSE)
-    this->gcavity_.sign() = -1;
+    this->geometry_cavity_.sign() = -1;
   else
-    this->gcavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1;
 
   // extract the geometry cavity
   this->extract_geometry( face, {e0,e1} );
-  avro_assert( this->G_.nb()>0 );
+  avro_assert( this->geometry_topology_.nb()>0 );
 
-  if (!this->G_.closed())
-    avro_assert_msg( this->G_.nb()==2 ,
-                    "|G| = %lu, |swap ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
+  if (!this->geometry_topology_.closed())
+    avro_assert_msg( this->geometry_topology_.nb()==2 ,
+                    "|G| = %lu, |swap ghosts| = %lu" , this->geometry_topology_.nb() , this->nb_ghost() );
 
-  if (this->G_.closed())
-    avro_assert( this->G_.nb_real()==2 );
+  if (this->geometry_topology_.closed())
+    avro_assert( this->geometry_topology_.nb_real()==2 );
 
   if (this->topology_.master().parameter())
   {
     this->convert_to_parameter(face);
-    this->gcavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1;
   }
 
   // ensure the e0 is visible to the cavity boundary
-  bool accept = this->gcavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
+  bool accept = this->geometry_cavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
   avro_assert( accept );
 
   if (this->topology_.master().parameter())
@@ -326,9 +326,9 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   }
 
   GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , face );
-  int s = checker.signof( this->gcavity_ );
+  int s = checker.signof( this->geometry_cavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
-  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
 
   if (this->topology_.master().parameter())
   {
@@ -336,7 +336,7 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   }
 
   // ensure e1 is visible to the cavity boundary
-  accept = this->gcavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
+  accept = this->geometry_cavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
   avro_assert( accept );
 
   if (this->topology_.master().parameter())
@@ -344,9 +344,9 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
     this->convert_to_physical();
   }
 
-  s = checker.signof( this->gcavity_ );
+  s = checker.signof( this->geometry_cavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
-  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
 
   if (this->topology_.master().parameter())
   {
@@ -355,8 +355,8 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
 
   // check for visibility of p
   nb_parameter_tests_++;
-  accept = this->gcavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
-  avro_assert( this->gcavity_.nb_real()==2 );
+  accept = this->geometry_cavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
+  avro_assert( this->geometry_cavity_.nb_real()==2 );
   if (!accept)
   {
     nb_parameter_rejections_++;
@@ -368,20 +368,20 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
     this->convert_to_physical();
   }
 
-  s = checker.signof( this->gcavity_ );
+  s = checker.signof( this->geometry_cavity_ );
   if (s<0)
   {
     return false;
   }
 
-  if (checker.createsBadGeometry(this->gcavity_))
+  if (checker.createsBadGeometry(this->geometry_cavity_))
   {
     nb_invalid_geometry_++;
     return false;
   }
 
   // the geometry cavity should have positive volumes
-  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
 
   return true;
 }
@@ -479,44 +479,6 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     avro_assert( ge->number()==2 ); // otherwise this shoudl have been caught by 'valid'
     avro_assert( this->C_.size()==2 );
 
-    #if 0
-    surface_.extract( this->C_ , ge );
-    this->set_entity( ge );
-
-    // check if the point is visible
-    surface_.SurfaceCavity<type>::set_entity(ge);
-    bool accept = surface_.visible(p);
-    if (!accept)
-    {
-      surface_.compute_nodes();
-      surface_.compute_coordinates();
-      return false;
-    }
-
-    accept = surface_.check_normals();
-    if (!accept)
-    {
-      surface_.compute_coordinates();
-      return false;
-    }
-
-    // apply the operator if no delay was requested
-    if (false and !this->delay_)
-    {
-      this->topology_.apply(surface_);
-    }
-    else
-    {
-      this->Cavity<type>::clear();
-      this->copy(surface_);
-    }
-    surface_.compute_coordinates();
-    return true;
-    #else
-
-    avro_assert( ge!=nullptr );
-    avro_assert( ge->number()==2);
-
     bool accept;
 
     this->Cavity<type>::clear();
@@ -536,9 +498,6 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     this->check_visibility(true);
 
     return true;
-
-    #endif
-
   }
 
   // apply the operator, checking visibility

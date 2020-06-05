@@ -61,7 +61,7 @@ UT_TEST_CASE( test1 )
 
   std::shared_ptr< FieldInterpolation<Simplex,real_t> > interpolation;
 
-  interpolation = std::make_shared< FieldInterpolation<Simplex,real_t> >(u);
+  interpolation = std::make_shared< FieldInterpolation<Simplex,real_t> >(&u);
 
   Points points( topology.points().dim() );
   std::vector<real_t> x = {-0.1,0.4};

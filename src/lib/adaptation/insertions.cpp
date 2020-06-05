@@ -15,7 +15,7 @@ namespace avro
 
 template<typename type>
 Insert<type>::Insert( Topology<type>& _topology ) :
-  Primitive<type>(_topology)//, surface_(_topology)
+  Primitive<type>(_topology)
 {
   this->setName("inserter");
 }
@@ -30,20 +30,20 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
   if (!this->curved_) return true;
   if (ep->interior()) return true;
 
-  this->gcavity_.set_entity(ep);
+  this->geometry_cavity_.set_entity(ep);
 
   // based on the type of face, we may need to flip the sign for the volume calculation
   int oclass,mtype;
   ego ref,prev,next;
   EGADS_ENSURE_SUCCESS( EG_getInfo(*ep->object(), &oclass, &mtype,&ref, &prev, &next) );
   if (mtype==SREVERSE)
-    this->gcavity_.sign() = -1;
+    this->geometry_cavity_.sign() = -1;
   else
-    this->gcavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1;
 
   // extract the geometry cavity
   this->extract_geometry( ep ); // no facet information, will assign the cavity to non-ghosts
-  avro_assert(this->G_.nb()>0);
+  avro_assert(this->geometry_topology_.nb()>0);
 
   // add the parameter coordinates for the inserted point along with the mapped index
   if (this->topology_.master().parameter())
@@ -67,11 +67,11 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
   if (this->topology_.master().parameter())
   {
     this->convert_to_parameter(ep);
-    this->gcavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1;
   }
 
   // the insertion should be visible in parameter space
-  bool accept = this->gcavity_.compute( this->u_.nb()-1 , params , this->S_ );
+  bool accept = this->geometry_cavity_.compute( this->u_.nb()-1 , params , this->S_ );
   if (!accept)
   {
     avro_assert( this->topology_.master().parameter());
@@ -86,13 +86,13 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
 
   // check the orientation of the facets
   GeometryOrientationChecker checker(this->points_,this->u_,this->u2v_,ep);
-  int s = checker.signof( this->gcavity_ );
+  int s = checker.signof( this->geometry_cavity_ );
   if (s<0)
   {
     return false;
   }
 
-  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype) );
+  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype) );
 
   return true;
 }
@@ -108,7 +108,6 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   this->enlarge_ = false;
   this->check_visibility_ = true;
   enlarged_ = false; // no enlargement (for geometry) yet
-  //surface_.check_visibility(true);
 
   // determine the cavity elements if none were provided
   if (shell.size()==0)
@@ -192,141 +191,35 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     avro_assert( entitys!=nullptr );
     avro_assert( elems_.size()==2 );
 
-    #if 0
-
-    if (entitys->number()!=2)
+    if (entitys->number()==2)
     {
-      // we are along a geometry Edge, save the single paramater (t)
-      avro_assert(entitys->number()==1);
-      real_t u0 = u[0];
-
-      // loop through both triangles attached to this edge
-      for (index_t k=0;k<elems_.size();k++)
-      {
-        // determine the geometry Face this triangle is on
-        Entity* entityp = BoundaryUtils::geometryFacet( this->topology_.points() , this->topology_(elems_[k]) , this->topology_.nv(elems_[k]) );
-        avro_assert( entityp!=nullptr );
-        avro_assert( entityp->number()==2 );
-        surface_.check_visibility(false);
-
-        real_t U[2];
-        geometry_params( entityp , this->topology_.points() , &ns , 1 , U );
-        this->topology_.points().u(ns)[0] = U[0];
-        this->topology_.points().u(ns)[1] = U[1];
-        this->topology_.points().set_entity(ns,entityp);
-
-        this->set_entity( entityp );
-        surface_.Cavity<type>::clear();
-        surface_.extract( {elems_[k]} , entityp ); // pass in a single triangle
-
-        // check if the point is visible
-        surface_.SurfaceCavity<type>::set_entity(entityp);
-        accept = surface_.visible( ns );
-
-        if (!accept)
-        {
-          surface_.compute_nodes();
-          surface_.compute_coordinates();
-          this->topology_.remove_point(ns);
-          avro_assert_not_reached;
-          return false;
-        }
-
-        accept = surface_.check_normals();
-        if (!accept)
-        {
-          printf("bad normals?\n");
-          surface_.compute_coordinates();
-          this->topology_.remove_point(ns);
-          return false;
-        }
-
-        // we need to insert the correct topology
-        // so recompute the cavity (visibility check off) for all
-        // original cavity elements
-        surface_.compute( ns , this->topology_.points()[ns] , elems_ );
-
-        this->topology_.points().u(ns)[0] = u0;
-        this->topology_.points().u(ns)[1] = 1e20;
-        this->topology_.points().set_entity(ns,entitys);
-
-      }
-    }
-    else
-    {
-      surface_.Cavity<type>::clear();
-      surface_.extract( elems_ , entitys );
-
-      // check if the point is visible
-      surface_.SurfaceCavity<type>::set_entity(entitys);
-      accept = surface_.visible( ns );
-      if (!accept)
-      {
-        surface_.compute_nodes();
-        surface_.compute_coordinates();
-        this->topology_.remove_point(ns);
-        return false;
-      }
-
-      accept = surface_.check_normals();
-      if (!accept)
-      {
-        surface_.compute_coordinates();
-        this->topology_.remove_point(ns);
-        return false;
-      }
-    }
-
-    // apply the operator to the topology if the caller did not request a delay
-    if (!this->delay_)
-    {
-      this->topology_.apply(surface_);
-    }
-    else
-    {
+      // check if the insertion is visible to the boundary of the geometry
+      // cavity in the parameter space of the geometry entity
       this->Cavity<type>::clear();
-      this->copy( surface_ );
-      avro_assert( surface_.nb_cavity()==2 );
-      avro_assert( this->nb_cavity()==2 );
-    }
+      for (index_t k=0;k<elems_.size();k++)
+        this->add_cavity(elems_[k]);
+      accept = visibleParameterSpace( x , u , entitys );
+      if (!accept)
+      {
+        this->topology_.remove_point(ns);
+        return false;
+      }
 
-    surface_.compute_coordinates();
-    for (coord_t d=0;d<3;d++)
-      this->topology_.points()[ns][d] = x[d];
+      this->check_visibility(false);
+      accept = this->compute( ns , x , elems_ );
+      avro_assert(accept);
+      this->check_visibility(true);
+    }
+    else
+    {
+      // TODO check visibility on all faces of this is an edge entity
+      this->check_visibility(false);
+      accept = this->compute( ns , x , elems_ );
+      avro_assert(accept);
+      this->check_visibility(true);
+    }
 
     return true;
-  #else
-  if (entitys->number()==2)
-  {
-    // check if the insertion is visible to the boundary of the geometry
-    // cavity in the parameter space of the geometry entity
-    this->Cavity<type>::clear();
-    for (index_t k=0;k<elems_.size();k++)
-      this->add_cavity(elems_[k]);
-    accept = visibleParameterSpace( x , u , entitys );
-    if (!accept)
-    {
-      this->topology_.remove_point(ns);
-      return false;
-    }
-
-    this->check_visibility(false);
-    accept = this->compute( ns , x , elems_ );
-    avro_assert(accept);
-    this->check_visibility(true);
-  }
-  else
-  {
-    // TODO check visibility on all faces of this is an edge entity
-    this->check_visibility(false);
-    accept = this->compute( ns , x , elems_ );
-    avro_assert(accept);
-    this->check_visibility(true);
-  }
-
-  return true;
-
-  #endif
   }
 
   // attempt the operator
@@ -369,7 +262,6 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
       if (this->ghost(k))
         nb_ghost++;
     }
-    PRIMITIVE_CHECK( nb_ghost==4 );
     if (nb_ghost!=4)
     {
       this->topology_.remove_point(ns);
@@ -505,7 +397,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       index_t ns = topology_.points().nb();
       topology_.points().create(filter[idx]);
       topology_.points().set_entity(ns, inserter_.geometry(n0,n1) );
-      bool interp_result = metric_.add(n0,n1,filter[idx]);
+      topology_.points().set_param( ns , filter.u(idx) );
+      bool interp_result = metric_.add(n0,n1,ns,filter[idx]);
       if (!interp_result)
       {
         // something bad happened in the metric interpolation...

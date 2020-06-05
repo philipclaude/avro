@@ -224,7 +224,7 @@ template<typename type>
 class MetricField : public Field<type,Metric>
 {
 public:
-  MetricField( Topology<type>& topology , MetricAttachment& fld , FieldInterpolation<type,Metric>* interpolation=nullptr );
+  MetricField( Topology<type>& topology , MetricAttachment& fld );
 	numerics::SymMatrixD<real_t>& operator() ( const Points& x , index_t v );
 
 	real_t length( index_t n0 , index_t n1 ) const;
@@ -237,8 +237,7 @@ public:
 
 	real_t quality( const Topology<type>& topology , index_t k );
   int  find( index_t n0 , index_t n1 , real_t*  x );
-  //void interpolate( real_t*  x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU=false );
-  bool add( index_t n0 , index_t n1 , real_t*  x );
+  bool add( index_t n0 , index_t n1 , index_t ns , real_t*  x );
   bool recompute( index_t p , real_t*  x );
 	index_t element_containing( index_t p )
 		{ return attachment_[p].elem(); }
@@ -253,7 +252,8 @@ public:
   bool check_cells();
   bool check( Topology<type>& topology );
 
-  void set_evaluator( MetricEvaluator<type>* evaluator );
+  void set_interpolation( FieldInterpolation<type,Metric>* interpolation )
+    { interpolation_ = interpolation; }
 
 private:
 
@@ -268,9 +268,7 @@ private:
 
   real_t normalization_;
 
-  MetricEvaluator<type>* evaluator_;
-
-  std::shared_ptr<FieldInterpolation<type,Metric>> interpolation_;
+  FieldInterpolation<type,Metric>* interpolation_;
 };
 
 template<typename type>

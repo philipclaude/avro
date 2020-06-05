@@ -86,6 +86,7 @@ UT_TEST_CASE(test1)
     Entity* entity = topology.points().entity(k);
     if (entity->number()!=2) continue;
     bool accept = smoother.apply( k , metric , -1 );
+    UNUSED(accept);
   }
 
   graphics::Visualizer vis;

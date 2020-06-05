@@ -15,8 +15,6 @@
 
 #define ALL_WITH_EDGE 1
 
-#define PRIMITIVE_CHECK(X) if(!(X)) { this->log_error( (#X) ); }
-
 namespace avro
 {
 
@@ -32,20 +30,18 @@ class Primitive : public Cavity<type>
 public:
   Primitive( Topology<type>& _topology ) :
     Cavity<type>(_topology),
-    //u_(_topology.points().dim()-1),
     u_(_topology.master().parameter()?(_topology.points().dim()):(_topology.points().dim()-1)),
-    //G_( u_ , _topology.number()-1 ),
-    G_(u_,_topology.master().parameter()?(_topology.number()):(_topology.number()-1)),
-    gcavity_( G_ ),
+    geometry_topology_(u_,_topology.master().parameter()?(_topology.number()):(_topology.number()-1)),
+    geometry_cavity_( geometry_topology_ ),
     delay_(false),
     curved_(true),
     debug_(true)
   {
     // do not allow the geometry cavity to enlarge
-    gcavity_.set_enlarge(false);
-    gcavity_.set_ignore(true);
-    gcavity_.master().set_parameter( _topology.master().parameter() );
-    G_.master().set_parameter( _topology.master().parameter() );
+    geometry_cavity_.set_enlarge(false);
+    geometry_cavity_.set_ignore(true);
+    geometry_cavity_.master().set_parameter( _topology.master().parameter() );
+    geometry_topology_.master().set_parameter( _topology.master().parameter() );
   }
 
   void convert_to_parameter( Entity* entity );
@@ -73,24 +69,8 @@ public:
 
   bool& debug() { return debug_; }
 
-  index_t nb_error() const { return errors_.size(); }
-  void log_error( const std::string& s )
-  {
-    errors_.push_back(s);
-  }
-
-  void print_errors() const
-  {
-    if (nb_error()==0) return;
-    printf("%s:\n",this->name_.c_str());
-    for (index_t k=0;k<nb_error();k++)
-    {
-      printf("error [%lu]: %s\n",k,errors_[k].c_str());
-    }
-  }
-
-  Cavity<type>& gcavity() { return gcavity_; }
-  Topology<type>& geometry() { return G_; }
+  Cavity<type>& geometry_cavity() { return geometry_cavity_; } // formerly gcavity_
+  Topology<type>& geometry_topology() { return geometry_topology_; } // formerly G_
   Points& u() { return u_; }
   const std::vector<index_t>& S() const { return S_; }
   const std::vector<index_t>& u2v() const { return u2v_; }
@@ -99,85 +79,16 @@ protected:
   std::vector<index_t> C_; // saved cavity
 
   // data used for geometry checks
-  Points u_;                       // points in parameter space
-  Topology<type> G_;               // geometry cavity topology
-  Cavity<type> gcavity_;           // geometry cavity (for visibility check)
-  std::map<index_t,index_t> v2u_;  // map from mesh points to u_
-  std::vector<index_t> u2v_;       // map from u_ to mesh points
-  std::vector<index_t> S_;         // list of elements in G_ (0 to G_.nb()-1)
-  bool delay_;                     // delay the application of the primitive operator to the topology
-  bool curved_;                    // if the problem is curved so that we check visiblity in parameter space
-  bool debug_;                     // whether we should debug
-
-  // string of error messages for debugging
-  std::vector<std::string> errors_;
+  Points u_;                         // points in parameter space
+  Topology<type> geometry_topology_; // local geometry topology
+  Cavity<type> geometry_cavity_;     // geometry cavity (for visibility check)
+  std::map<index_t,index_t> v2u_;    // map from mesh points to u_
+  std::vector<index_t> u2v_;         // map from u_ to mesh points
+  std::vector<index_t> S_;           // list of elements in local_topology_ forming the geometry_cavity_
+  bool delay_;                       // delay the application of the primitive operator to the topology
+  bool curved_;                      // if the problem is curved so that we check visiblity in parameter space
+  bool debug_;                       // whether we should debug
 };
-
-#if 0
-template<typename type>
-class SurfaceCavity : public Primitive<type>
-{
-public:
-  SurfaceCavity( Topology<type>& topology ) :
-    Primitive<type>(topology),
-    params_(2),
-    geometry_(nullptr),
-    U_(2),
-    X_(3)
-  {}
-
-  void extract( const std::vector<index_t>& C , Entity* entity )
-  {
-#if 1
-    u2v_.clear();
-    params_.clear();
-    cavity_.clear();
-    params0_.clear();
-    S_.clear();
-#endif
-
-    geometry_ = entity;
-    this->set_entity(geometry_);
-
-    cavity_ = C;
-
-    for (index_t k=0;k<C.size();k++)
-      this->add_cavity(C[k]);
-
-    this->extract_geometry( entity );
-  }
-
-  bool visible( index_t p );
-
-  bool cavity_visible( index_t p )
-  {
-    // check the inserted point
-    this->gcavity().set_entity( geometry_ );
-    S_.resize( this->geometry().nb() , 0 );
-    for (index_t k=0;k<S_.size();k++)
-      S_[k] = k;
-    this->gcavity().sign() = geometry_->sign(); // not actually necessary because master.parameter() will trigger the sign to be used in get_volume
-
-    bool accept = this->gcavity().compute( p , topology_.points()[p] , S_ );
-    return accept;
-  }
-
-  void compute_coordinates();
-
-  bool check_normals();
-
-private:
-  Points params_;
-  Entity* geometry_;
-  std::vector<real_t> params0_;
-  std::vector<index_t> cavity_;
-
-  using Primitive<type>::topology_;
-  using Primitive<type>::u2v_;
-  using Primitive<type>::S_;
-  std::vector<real_t> U_,X_;
-};
-#endif
 
 template<typename type>
 class Collapse : public Primitive<type>
@@ -211,8 +122,6 @@ private:
   index_t nb_rej_vis_Edge_;
   index_t nb_rej_sgn_Edge_;
   index_t nb_rej_geo_Edge_;
-
-  //SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -243,8 +152,6 @@ private:
   std::vector<index_t> disabled_;
 
   std::vector<index_t> elems_;
-
-  //SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -269,8 +176,6 @@ private:
   index_t nb_interior_;
   std::vector<index_t> nb_geometry_rejections_;
   index_t nb_invalid_geometry_;
-
-  //SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -334,8 +239,6 @@ private:
   index_t Ntot_; // average no. points attached to vertex used in smoothing computation
   index_t nb_zero_valency_;
   index_t nb_interpolated_outside_;
-
-  //SurfaceCavity<type> surface_;
 };
 
 #define CROSS(a,b,c)      a[0] = (b[1]*c[2]) - (b[2]*c[1]);\

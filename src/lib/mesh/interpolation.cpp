@@ -1,15 +1,19 @@
 #include "adaptation/metric.h"
 
 #include "mesh/interpolation.h"
+#include "mesh/search.h"
 
 namespace avro
 {
 
 template<typename type,typename T>
-FieldInterpolation<type,T>::FieldInterpolation( const Field<type,T>& fld ) :
-  field_(fld),
-  searcher_(field_.topology())
-{}
+FieldInterpolation<type,T>::FieldInterpolation( const Field<type,T>* fld ) :
+  analytic_(false),
+  pfield_(fld)
+{
+  if (fld!=nullptr)
+    searcher_ = std::make_shared<ElementSearch<type>>(pfield_->topology());
+}
 
 template<typename type,typename T>
 int
@@ -17,6 +21,8 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
 {
   avro_assert( p < points.nb() );
   avro_assert( p >= points.nb_ghost() );
+  avro_assert( pfield_!=nullptr );
+  const Field<type,T>& field_ = *pfield_;
   const Topology<type>& topology = field_.topology();
   std::vector<real_t> phi( field_.master().nb_basis() , 0. );
   std::vector<real_t> xref( topology.master().number() + 1 );
@@ -25,16 +31,16 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
   int ielem = -1;
   for (index_t iguess=0;iguess<guesses.size();iguess++)
   {
-    ielem = searcher_.find( points[p] , guesses[iguess] );
+    ielem = searcher_->find( points[p] , guesses[iguess] );
     if (ielem<0)
     {
       // point is probably outside domain
   		// let's make sure by first brute forcing the check
-      ielem = searcher_.brute( points[p] );
+      ielem = searcher_->brute( points[p] );
       if (ielem<0)
       {
         // get the reference coordinates of the closest element
-  			ielem = searcher_.closest( points[p] , xref );
+  			ielem = searcher_->closest( points[p] , xref );
         topology.master().basis().evaluate( xref.data() , phi.data() );
 
         // perform the interpolation and return the element containing the point
@@ -56,21 +62,7 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
   return -1; // indicate there was a problem interpolating
 }
 
-template<typename type>
-GeometryMetric<type>::GeometryMetric( const Field<type,real_t>& fld ) :
-  FieldInterpolation<type,real_t>(fld)
-{}
-
-template<typename type>
-int
-GeometryMetric<type>::eval( const Points& points ,  index_t p , const std::vector<index_t>& guesses , real_t& mp )
-{
-  printf("evaluating analytically!\n");
-  return -1;
-}
-
 template class FieldInterpolation<Simplex,real_t>;
 template class FieldInterpolation<Simplex,Metric>;
-template class GeometryMetric<Simplex>;
 
 } // avro

@@ -29,7 +29,8 @@ UT_TEST_CASE(test1)
   coord_t dim = 3;
 
   // parameters
-  library::MetricField_Uniform analytic(2,0.04);
+  std::shared_ptr<library::MetricField_UniformGeometry<Simplex>> metric;
+  metric = std::make_shared<library::MetricField_UniformGeometry<Simplex>>(2,0.25);
 
   // geometry
   EGADS::Context context;
@@ -84,13 +85,13 @@ UT_TEST_CASE(test1)
     // create the metric field
     std::vector<numerics::SymMatrixD<real_t>> fld;
     for (index_t k=0;k<pmesh->points().nb();k++)
-      fld.push_back( analytic( pmesh->points()[k] ) );
+      fld.push_back( (*metric.get())( pmesh->points() , k ) );
 
     // create the mesh we will write to
     std::shared_ptr<Mesh> pmesh_out = std::make_shared<Mesh>(number,number);
 
     // define the problem and adapt
-    AdaptationProblem problem = {*pmesh,fld,params,*pmesh_out};
+    AdaptationProblem problem = {*pmesh,fld,params,*pmesh_out , metric.get() };
     adapt<Simplex>( problem );
 
     // create the mesh for the next adaptation
@@ -108,10 +109,7 @@ UT_TEST_CASE(test1)
     if (iter==niter)
     {
       graphics::Visualizer vis;
-
-      //vis.add_topology(topology);
       vis.add_topology(topology_out);
-
       vis.run();
 
     }

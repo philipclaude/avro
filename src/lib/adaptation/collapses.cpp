@@ -16,7 +16,7 @@ namespace avro
 
 template<typename type>
 Collapse<type>::Collapse( Topology<type>& _topology ) :
-  Primitive<type>(_topology)//, surface_(_topology)
+  Primitive<type>(_topology)
 {
   this->setName("collapser");
   nb_accepted_.resize(_topology.number()+1);
@@ -33,11 +33,11 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   if (g->interior()) return true;
 
   this->set_entity(g0);
-  this->gcavity_.set_entity(g0);
+  this->geometry_cavity_.set_entity(g0);
 
   // extract the geometry cavity
   this->extract_geometry( g, {p} );
-  avro_assert( this->G_.nb()>0 );
+  avro_assert( this->geometry_topology_.nb()>0 );
 
   // based on the type of face, we may need to flip the sign for the volume calculation
   #if 0
@@ -45,12 +45,12 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   ego ref,prev,next;
   EGADS_ENSURE_SUCCESS( EG_getInfo(*g->object(), &oclass, &mtype,&ref, &prev, &next) );
   if (mtype==SREVERSE)
-    this->gcavity_.sign() = -1;
+    this->geometry_cavity_.sign() = -1;
   else
-    this->gcavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1;
   #else
-  this->gcavity_.sign() = g->sign();
-  if (this->topology_.master().parameter()) this->gcavity_.sign() = 1;
+  this->geometry_cavity_.sign() = g->sign();
+  if (this->topology_.master().parameter()) this->geometry_cavity_.sign() = 1;
   #endif
 
   if (this->topology_.master().parameter())
@@ -59,7 +59,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // compute the cavity about the original configuration
-  bool accept = this->gcavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
+  bool accept = this->geometry_cavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
   avro_assert( accept );
 
   if (this->topology_.master().parameter())
@@ -69,9 +69,9 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
 
   // ensure the normals are originally in the right direction
   GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , g );
-  int s = checker.signof( this->gcavity_ );
+  int s = checker.signof( this->geometry_cavity_ );
   avro_assert( s > 0 );
-  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
 
   if (this->topology_.master().parameter())
   {
@@ -80,7 +80,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
 
   // check visibility in the new configuration
   nb_parameter_tests_++;
-  accept = this->gcavity_.compute( this->v2u_[q] , this->u_[this->v2u_[q]] , this->S_ );
+  accept = this->geometry_cavity_.compute( this->v2u_[q] , this->u_[this->v2u_[q]] , this->S_ );
   if (!accept)
   {
     if (edge) nb_rej_vis_Edge_++;
@@ -94,7 +94,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // check the normal orientations
-  s = checker.signof( this->gcavity_ );
+  s = checker.signof( this->geometry_cavity_ );
   if (s<0)
   {
     if (edge) nb_rej_sgn_Edge_++;
@@ -102,7 +102,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // check the geometry topology can be extracted correctly
-  if (checker.createsBadGeometry(this->gcavity_) || checker.createsBadGeometry(this->boundary()))
+  if (checker.createsBadGeometry(this->geometry_cavity_) || checker.createsBadGeometry(this->boundary()))
   {
     if (edge) nb_rej_geo_Edge_++;
     nb_invalid_geometry_++;
@@ -110,7 +110,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // ensure we have all positive volumes
-  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
 
   return true;
 }
@@ -175,7 +175,6 @@ template<typename type>
 bool
 Collapse<type>::apply( const index_t p , const index_t q , bool delay )
 {
-  //surface_.check_visibility(true);
   this->check_visibility(true);
 
   // attempt to collapse p onto q
@@ -203,10 +202,6 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
 
     if (g->number()!=2)
     {
-      #if 0
-      return false;
-      #elif 1
-
       avro_assert(g->number()==1);
 
       // loop through the parents of this geometry Edge
@@ -246,13 +241,9 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
         this->topology_.apply(*this);
 
       return true;
-
-      #endif
-
     }
     else
     {
-      #if 1
       this->Cavity<type>::clear();
       for (index_t j=0;j<this->C_.size();j++)
         this->add_cavity( this->C_[j] );
@@ -274,37 +265,6 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
         this->topology_.apply(*this);
 
       return true;
-
-      #else
-      surface_.Cavity<type>::clear();
-      surface_.extract( this->C_ , g );
-      this->set_entity( g );
-
-      // check if the point is visible
-      surface_.SurfaceCavity<type>::set_entity(g);
-      accept = surface_.visible(q);
-      if (!accept)
-      {
-        surface_.compute_nodes();
-        surface_.compute_coordinates();
-        return false;
-      }
-
-      accept = surface_.check_normals();
-      if (!accept)
-      {
-        return false;
-      }
-
-      // apply the operator if no delay was requested
-      if (!delay)
-        this->topology_.apply(surface_);
-      else
-      {
-        this->Cavity<type>::clear();
-        this->copy( surface_ );
-      }
-      #endif
     }
 
     return true;

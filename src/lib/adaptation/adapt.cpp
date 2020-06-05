@@ -477,7 +477,17 @@ adapt( AdaptationProblem& problem )
     field.limit(mesh_topology,2.0);
 
   // create a discrete metric with the input topology
+  // and pass in the interpolator (null if not provided)
   MetricField<type> metric( topology , field );
+
+  std::shared_ptr< FieldInterpolation<type,Metric> > interpolation = nullptr;
+  if (problem.interpolation==nullptr)
+  {
+		interpolation = std::make_shared< FieldInterpolation<type,Metric> >(&metric);
+    metric.set_interpolation(interpolation.get());
+  }
+	else
+		metric.set_interpolation( problem.interpolation );
 
   topology.master().set_basis( BasisFunctionCategory_Lagrange );
   mesh_topology.master().set_basis( BasisFunctionCategory_Lagrange );

@@ -1,40 +1,35 @@
 #ifndef avro_LIB_MESH_FIELD_INTERPOLATION_H_
 #define avro_LIB_MESH_FIELD_INTERPOLATION_H_
 
-#include "mesh/search.h"
+#include "common/types.h"
+
+#include <vector>
 
 namespace avro
 {
 
 class Points;
 template<typename type,typename T> class Field;
+template<typename type> class ElementSearch;
 
 template<typename type,typename T>
 class FieldInterpolation
 {
 
 public:
-  FieldInterpolation( const Field<type,T>& field );
+  FieldInterpolation( const Field<type,T>* field=nullptr );
   virtual ~FieldInterpolation() {}
 
   virtual int eval( const Points& points , index_t p , const std::vector<index_t>& guesses , T& tp );
 
-private:
-  const Field<type,T>& field_;
-  ElementSearch<type> searcher_;
-};
+  bool analytic() const { return analytic_; }
 
-template<typename type>
-class GeometryMetric : public FieldInterpolation<type,real_t>
-{
-
-public:
-  GeometryMetric( const Field<type,real_t>& fld );
-
-  int eval( const Points& points , index_t p , const std::vector<index_t>& guesses , real_t& mp ) override;
+protected:
+  bool analytic_;
 
 private:
-
+  const Field<type,T>* pfield_;
+  std::shared_ptr<ElementSearch<type>> searcher_;
 };
 
 } // avro

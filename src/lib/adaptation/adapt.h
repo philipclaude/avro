@@ -13,13 +13,26 @@ class Mesh;
 
 class AdaptationParameters;
 class MetricAttachment;
+template<typename type,typename T> class FieldInterpolation;
 
 struct AdaptationProblem
 {
+  AdaptationProblem( Mesh& _mesh_in ,
+    std::vector<numerics::SymMatrixD<real_t>>& _fld,
+    AdaptationParameters& _params ,
+    Mesh& _mesh_out ,
+    FieldInterpolation<Simplex,Metric>* _interpolation=nullptr ) :
+      mesh_in(_mesh_in),
+      fld(_fld),
+      params(_params),
+      mesh_out(_mesh_out),
+      interpolation(_interpolation)
+  {}
   Mesh& mesh_in; // also modified
   std::vector<numerics::SymMatrixD<real_t>>& fld;
   AdaptationParameters& params;
   Mesh& mesh_out;
+  FieldInterpolation<Simplex,Metric>* interpolation;
 };
 template<typename type> int adapt( AdaptationProblem& problem );
 

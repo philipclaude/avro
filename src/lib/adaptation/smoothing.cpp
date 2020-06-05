@@ -65,7 +65,7 @@ Smooth<type>::Smooth( Topology<type>& _topology ) :
   delta_(0.0),
   delta_min_(1e20),
   delta_max_(-1),
-  M0_(_topology.number())//, surface_(_topology)
+  M0_(_topology.number())
 {
   this->setName("smoother");
   resetRejections();
@@ -87,35 +87,35 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
   ego ref,prev,next;
   EGADS_ENSURE_SUCCESS( EG_getInfo(*ep->object(), &oclass, &mtype,&ref, &prev, &next) );
   if (mtype==SREVERSE)
-    this->gcavity_.sign() = -1;
+    this->geometry_cavity_.sign() = -1;
   else
-    this->gcavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1;
 
   // extract the geometry cavity
-  this->gcavity_.set_entity(ep);
+  this->geometry_cavity_.set_entity(ep);
   this->extract_geometry( ep , {p} );
-  avro_assert( this->G_.nb()>0 );
-  //avro_assert_msg( this->G_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->G_.nb_real() , this->nb_ghost() );
+  avro_assert( this->geometry_topology_.nb()>0 );
+  //avro_assert_msg( this->geometry_topology_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->geometry_topology_.nb_real() , this->nb_ghost() );
 
   for (coord_t d=0;d<2;d++)
     this->u_[this->v2u_[p]][d] = params[d];
 
   // the following assertion won't hold when p is on an Edge
-  if (this->topology_.points().entity(p)->number()==2 && !this->G_.closed())
+  if (this->topology_.points().entity(p)->number()==2 && !this->geometry_topology_.closed())
   {
-    avro_assert_msg( this->G_.nb()==this->nb_ghost() ,
-                      "|G| = %lu, |smooth ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
+    avro_assert_msg( this->geometry_topology_.nb()==this->nb_ghost() ,
+                      "|G| = %lu, |smooth ghosts| = %lu" , this->geometry_topology_.nb() , this->nb_ghost() );
   }
 
   if (this->topology_.master().parameter())
   {
     this->convert_to_parameter(ep);
-    this->gcavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1;
   }
 
   // check for visibility of the new coordinates
   nb_parameter_tests_++;
-  bool accept = this->gcavity_.compute( this->v2u_[p] , params , this->S_ );
+  bool accept = this->geometry_cavity_.compute( this->v2u_[p] , params , this->S_ );
   if (!accept)
   {
     nb_parameter_rejections_++;
@@ -129,14 +129,14 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
 
   // check the orientation of facets produced w.r.t. the geometry
   GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , ep );
-  int s = checker.signof( this->gcavity_ );
+  int s = checker.signof( this->geometry_cavity_ );
   if (s<0)
   {
     return false;
   }
 
   // check the produced volumes are positive
-  //avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
 
   return true;
 }
@@ -273,7 +273,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
       this->check_visibility(true);
 
       this->u_.print(true);
-      this->gcavity_.points().print(true);
+      this->geometry_cavity_.points().print(true);
 
       graphics::Visualizer vis;
       vis.add_topology(this->topology_);
