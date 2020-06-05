@@ -103,6 +103,20 @@ ElementImpliedMetric<type>::compute( const std::vector<const real_t*>& xk )
 
 template<typename type>
 void
+ElementImpliedMetric<type>::compute( const Points& points , const index_t* v , index_t nv )
+{
+  master_.jacobian( v , nv , points , J0_ );
+  J_ = J0_*Jeq_;
+  numerics::SymMatrixD<real_t> JJt = J_*numpack::Transpose(J_);
+  M_ = numerics::inverse( JJt );
+  for (index_t i=0;i<master_.number();i++)
+  for (index_t j=i;j<master_.number();j++)
+    this->operator()(i,j) = M_(i,j);
+}
+
+
+template<typename type>
+void
 ElementImpliedMetric<type>::inverse( const Points& points , const index_t *v , index_t nv )
 {
   master_.jacobian( v , nv , points , J0_ );
@@ -187,7 +201,8 @@ MeshImpliedMetric<type>::initialize()
     }
     topology_.get_elem( k , xj );
     ElementImpliedMetric<type> mk( topology_.master() );
-    mk.compute( xj );
+    //mk.compute( xj );
+    mk.compute( topology_.points() , topology_(k) , topology_.nv(k) );
     metrics[k] = mk;
   }
 
@@ -228,6 +243,7 @@ MeshImpliedMetric<type>::initialize()
     {
       print_inline(alpha);
       printf("v0 = %g\n",v0);
+      avro_implement;
     }
 
     nodalMetricSqrt_[k]    = numerics::sqrtm(this->data_[k]);
@@ -378,10 +394,13 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
     numerics::vector( topology_.points()[p] , topology_.points()[q] ,
                       topology_.points().dim() , dx.data() );
 
+    Entity* entity = BoundaryUtils::geometryFacet( topology_.points() , edges_.data()+2*k , 2 );
+    topology_.master().edge_vector( topology_.points() , p , q , dx.data() , entity );
+
     // get the edge length squared
     numerics::VectorD<real_t> e( DIM , dx.data() );
-    SurrealClassVertex lni = numpack::Transpose(e)*nodalMetric[p]*e;
-    SurrealClassVertex lnj = numpack::Transpose(e)*nodalMetric[q]*e;
+    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);//numpack::Transpose(e)*nodalMetric[p]*e;
+    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);//numpack::Transpose(e)*nodalMetric[q]*e;
     lni = sqrt(lni);
     lnj = sqrt(lnj);
 

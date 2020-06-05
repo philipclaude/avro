@@ -47,7 +47,7 @@ UT_TEST_CASE(test1)
 
   TessellationParameters tess_params;
   tess_params.standard();
-  tess_params.min_size() = 0.5;
+  tess_params.min_size() = 0.1;
   tess_params.min_angle() = 20;
 
   ModelTessellation tess(model,tess_params);
@@ -65,7 +65,6 @@ UT_TEST_CASE(test1)
     pmesh->points().u(k,1) = u[1];
     pmesh->points().set_entity(k,tess.points().entity(k));
   }
-  pmesh->points().print(true);
 
   // retrieve all the triangles
   std::shared_ptr<Topology<Simplex>> ptopology;
@@ -83,7 +82,7 @@ UT_TEST_CASE(test1)
   params.has_uv() = true;
   params.use_smoothing() = true;
   params.swapout() = false;
-  //params.limit_metric() = true; // required a little implementation first
+  //params.limit_metric() = true; // requires a little implementation first
 
   index_t niter = 2;
   for (index_t iter=0;iter<=niter;iter++)

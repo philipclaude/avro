@@ -214,9 +214,36 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     }
     else
     {
-      // TODO check visibility on all faces of this is an edge entity
+      // loop through the parents of this geometry Edge
+      for (index_t k=0;k<entitys->nb_parents();k++)
+      {
+        if (entitys->parents(k)->number()!=2 || !entitys->parents(k)->tessellatable())
+          continue;
+
+        // determine all elements on this parent Face
+        this->Cavity<type>::clear();
+        for (index_t j=0;j<elems_.size();j++)
+        {
+          Entity* entityp = BoundaryUtils::geometryFacet( this->topology_.points() , this->topology_(elems_[j]) , this->topology_.nv(elems_[j]) );
+          avro_assert( entityp!=nullptr );
+          avro_assert( entityp->number()==2 );
+          if (entityp != entitys->parents(k)) continue;
+          this->add_cavity( elems_[j] );
+        }
+
+        Entity* parent = entitys->parents(k);
+        if (!visible_geometry( x , u , parent))
+        {
+          this->topology_.remove_point(ns);
+          return false;
+        }
+      }
+
+      // we need to insert the correct topology
+      // so recompute the cavity (visibility check off) for all
+      // original cavity elements
       this->check_visibility(false);
-      accept = this->compute( ns , x , elems_ );
+      bool accept = this->compute( ns , x , elems_ );
       avro_assert(accept);
       this->check_visibility(true);
     }

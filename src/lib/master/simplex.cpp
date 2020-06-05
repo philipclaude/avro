@@ -410,7 +410,7 @@ simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
   if (x.size()==3 && dim==2) return numerics::volume2(x);
   if (x.size()==4 && dim==3) return numerics::volume3(x);
   if (x.size()==5 && dim==4) return numerics::volume4(x);
-  printf("requested volume of %u-simplex in dim = %u\n",x.size()-1,dim);
+  printf("requested volume of %lu-simplex in dim = %u\n",x.size()-1,dim);
   avro_assert_not_reached;
   return numerics::volume_nd(x,dim);
 }
@@ -471,10 +471,22 @@ Simplex::edge_vector( const Points& points , index_t n0 , index_t n1 , real_t* e
     }
     else if (entity->number()==1)
     {
-      avro_implement; // this should not be needed right now, and remains untested
-      avro_assert( points.entity(n0) == points.entity(n1) );
-      edge[0] = points.u(n1)[0] - points.u(n0)[0];
-      edge[1] = 0.0;
+      Entity *face = nullptr;
+      for (index_t j=0;j<entity->nb_parents();j++)
+      {
+        face = entity->parents(j);
+        if (face->number()==2 && face->tessellatable())
+        {
+          break;
+        }
+        face = nullptr;
+      }
+      avro_assert(face!=nullptr);
+
+      real_t u[4];
+      geometry_params( face, points , e , 2 , u );
+      edge[0] = u[2] - u[0];
+      edge[1] = u[3] - u[1];
     }
     else
       avro_assert_not_reached;
@@ -526,9 +538,16 @@ Simplex::jacobian( const std::vector<const real_t*>& xk , numerics::MatrixD<real
   avro_assert( J.m()==number_ );
   avro_assert( J.n()==number_ );
   avro_assert( order_==1 );
-  for (index_t j=0;j<number_;j++)
-  for (index_t d=0;d<number_;d++)
-    J(d,j) = xk[j+1][d] -xk[0][d];
+  if (!parameter_)
+  {
+    for (index_t j=0;j<number_;j++)
+    for (index_t d=0;d<number_;d++)
+      J(d,j) = xk[j+1][d] -xk[0][d];
+  }
+  else
+  {
+    avro_implement;
+  }
 }
 
 void
@@ -537,9 +556,24 @@ Simplex::jacobian( const index_t* v , index_t nv , const Points& points , numeri
   avro_assert( J.m()==number_ );
   avro_assert( J.n()==number_ );
   avro_assert( order_==1 );
-  for (index_t j=0;j<number_;j++)
-  for (index_t d=0;d<points.dim();d++)
-    J(d,j) = points[v[j+1]][d] -points[v[0]][d];
+
+  if (!parameter_)
+  {
+    for (index_t j=0;j<number_;j++)
+    for (index_t d=0;d<points.dim();d++)
+      J(d,j) = points[v[j+1]][d] -points[v[0]][d];
+  }
+  else
+  {
+    Entity* entity = BoundaryUtils::geometryFacet( points , v , nv );
+    avro_assert( entity!=nullptr );
+    avro_assert( entity->number()==2 );
+    std::vector<real_t> u(2*nv);
+    geometry_params( entity , points , v , nv , u.data() );
+    for (index_t j=0;j<number_;j++)
+    for (index_t d=0;d<points.udim();d++)
+      J(d,j) = u[2*(j+1)+d] -u[d];
+  }
 }
 
 void

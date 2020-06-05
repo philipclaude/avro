@@ -379,3 +379,40 @@
    ...
    fun:_dyld_start
 }
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:mma_minimize
+   fun:nlopt_optimize
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:dual_func
+   fun:nlopt_optimize
+   fun:nlopt_optimize_limited
+   fun:mma_minimize
+   fun:nlopt_optimize
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:nlopt_stop_ftol
+   fun:mma_minimize
+   fun:nlopt_optimize
+   ...
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:nlopt_stop_x
+   fun:mma_minimize
+   fun:nlopt_optimize
+   ...
+}

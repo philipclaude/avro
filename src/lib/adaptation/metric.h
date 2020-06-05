@@ -57,6 +57,36 @@ interp( const std::vector<type>& alpha ,
   return true;
 }
 
+template<typename type>
+static type
+quadratic_form( const numerics::SymMatrixD<type>& M , const numerics::VectorD<real_t>& e )
+{
+	if (M.n()==2)
+	{
+		type mu = M(0,0)*e(0) + M(0,1)*e(1);
+		type mv = M(1,0)*e(0) + M(1,1)*e(1);
+		return mu*e(0) + mv*e(1);
+	}
+	else if (M.n()==3)
+	{
+		type mu = M(0,0)*e(0) + M(0,1)*e(1) + M(0,2)*e(2);
+		type mv = M(1,0)*e(0) + M(1,1)*e(1) + M(1,2)*e(2);
+		type mw = M(2,0)*e(0) + M(2,1)*e(1) + M(2,2)*e(2);
+		return mu*e(0) + mv*e(1) + mw*e(2);
+	}
+	else if (M.n()==4)
+	{
+		type mu = M(0,0)*e(0) + M(0,1)*e(1) + M(0,2)*e(2) + M(0,3)*e(3);
+		type mv = M(1,0)*e(0) + M(1,1)*e(1) + M(1,2)*e(2) + M(1,3)*e(3);
+		type mw = M(2,0)*e(0) + M(2,1)*e(1) + M(2,2)*e(2) + M(2,3)*e(3);
+		type mt = M(3,0)*e(0) + M(3,1)*e(1) + M(3,2)*e(2) + M(3,3)*e(3);
+		return mu*e(0) + mv*e(1) + mw*e(2) + mt*e(3);
+	}
+	else
+		avro_implement;
+	return -1.;
+}
+
 inline numerics::SymMatrixD<real_t>
 intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<real_t>& y )
 {

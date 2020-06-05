@@ -97,8 +97,8 @@ geometric_interpolation( const numerics::SymMatrixD<real_t>& m0,
 	                       const numerics::SymMatrixD<real_t>& m1,
 											   const numerics::VectorD<real_t>& edge )
 {
-	real_t l0_sqr = numpack::Transpose(edge)*m0*edge;
-	real_t l1_sqr = numpack::Transpose(edge)*m1*edge;
+	real_t l0_sqr = quadratic_form(m0,edge);//numpack::Transpose(edge)*m0*edge;
+	real_t l1_sqr = quadratic_form(m1,edge);//numpack::Transpose(edge)*m1*edge;
 	real_t l0 = std::sqrt( l0_sqr );
 	real_t l1 = std::sqrt( l1_sqr );
 	real_t lm,r;
@@ -279,7 +279,8 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 
 		// get the edge vector and compute the length using the metric with maximum determinant
 		topology_.master().edge_vector( attachment_.points() , V[p0] , V[p1] , e.data() , entity );
-		lj = numpack::Transpose(e)*M*e;
+		//lj = numpack::Transpose(e)*M*e;
+		lj = quadratic_form( M , e );
 
 		// add the contribution to the denominator
     l  += lj;
@@ -449,15 +450,6 @@ MetricField<type>::remove( index_t k )
   attachment_.remove(k);
 }
 
-void
-edge_vector( const index_t i , const index_t j , const Points& v ,
-              std::vector<real_t>& X )
-{
-  avro_assert( X.size()==v.dim() );
-  for (coord_t d=0;d<v.dim();d++)
-    X[d] = v[j][d] -v[i][d];
-}
-
 MetricAttachment::MetricAttachment( Points& points ) :
 	number_(points.dim()),
 	points_(points)
@@ -531,7 +523,8 @@ void
 MetricAttachment::limit( const Topology<type>& topology , real_t href )
 {
 	const coord_t dim = topology.number();
-	avro_assert_msg( topology.points().dim() == dim , "dim = %u , num = %u" , topology.points().dim() , dim );
+	if (!topology.master().parameter())
+		avro_assert_msg( topology.points().dim() == dim , "dim = %u , num = %u" , topology.points().dim() , dim );
 
 	// the points should be associated with each other
 	avro_assert_msg( topology.points().nb() == points_.nb() , "topology nb_points = %lu, points_.nb() = %lu" ,
@@ -541,6 +534,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 	MeshImpliedMetric<type> implied( topology );
 	implied.initialize();
 	implied.optimize();
+
 
 	// go through the entries of the current field and limit them using the step
 	index_t nb_limited = 0;

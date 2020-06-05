@@ -30,6 +30,7 @@ public:
   ElementImpliedMetric( const type& master );
 
   void compute( const std::vector<const real_t*>& xk );
+  void compute( const Points& points , const index_t* v , index_t nv );
   void inverse( const Points& points , const index_t* v , index_t nv  );
   real_t determinant( const std::vector<const real_t*>& xk );
   real_t determinant( const Points& points , const index_t* v , const index_t nv );

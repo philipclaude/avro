@@ -164,7 +164,7 @@ Collapse<type>::valid( const index_t p , const index_t q )
       }
     }
     Entity* g = this->geometry(p,q);
-    if (!contains && !g->interior()) return false;
+    if (!contains && !g->interior() && !this->topology().master().parameter()) return false;
   }
 
   return true;
