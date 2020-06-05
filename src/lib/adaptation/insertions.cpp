@@ -12,6 +12,8 @@
 #include "adaptation/metric.h"
 #include "adaptation/parameters.h"
 
+#include "geometry/entity.h"
+
 #include "mesh/topology.h"
 
 #include "common/tools.h"
@@ -31,10 +33,8 @@ Insert<type>::Insert( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
+Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep )
 {
-  EGADS::Object* ep = (EGADS::Object*) ep0;
-
   avro_assert( ep->number()==2 );
   if (!this->curved_) return true;
   if (ep->interior()) return true;
@@ -42,13 +42,7 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
   this->geometry_cavity_.set_entity(ep);
 
   // based on the type of face, we may need to flip the sign for the volume calculation
-  int oclass,mtype;
-  ego ref,prev,next;
-  EGADS_ENSURE_SUCCESS( EG_getInfo(*ep->object(), &oclass, &mtype,&ref, &prev, &next) );
-  if (mtype==SREVERSE)
-    this->geometry_cavity_.sign() = -1;
-  else
-    this->geometry_cavity_.sign() = 1;
+  this->geometry_cavity_.sign() = ep->sign();
 
   // extract the geometry cavity
   this->extract_geometry( ep ); // no facet information, will assign the cavity to non-ghosts
@@ -93,15 +87,15 @@ Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
     this->convert_to_physical();
   }
 
-  // check the orientation of the facets
-  GeometryOrientationChecker checker(this->points_,this->u_,this->u2v_,ep);
-  int s = checker.signof( this->geometry_cavity_ );
+  // reset the geometry checker to this face (which also computes the normals at the vertices of the geometry topology)
+  this->geometry_inspector_.reset(ep);
+  int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   if (s<0)
   {
     return false;
   }
 
-  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype) );
+  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype) );
 
   return true;
 }
@@ -207,7 +201,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
       this->Cavity<type>::clear();
       for (index_t k=0;k<elems_.size();k++)
         this->add_cavity(elems_[k]);
-      accept = visibleParameterSpace( x , u , entitys );
+      accept = visible_geometry( x , u , entitys );
       if (!accept)
       {
         this->topology_.remove_point(ns);
@@ -255,7 +249,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     // check if the insertion is visible to the boundary of the geometry
     // cavity in the parameter space of the geometry entity
     // TODO check visibility on all faces of this is an edge entity
-    accept = visibleParameterSpace( x , u , entitys );
+    accept = visible_geometry( x , u , entitys );
     if (!accept)
     {
       this->topology_.remove_point(ns);

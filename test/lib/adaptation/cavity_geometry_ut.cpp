@@ -161,7 +161,7 @@ UT_TEST_CASE(test1)
     primitive.extract_geometry(entity);
     UT_ASSERT_EQUALS( primitive.geometry_topology().nb() , 6 ); // two real triangles + 4 ghosts (one for every edge)
 
-    GeometryOrientationChecker checker( topology.points() , params , primitive.u2v() , entity  );
+    GeometryInspector<Simplex> checker( topology.points() , params , primitive.u2v() , entity  );
     int s = checker.signof( primitive.geometry_topology() );
     UT_ASSERT( s>0 );
 
@@ -245,7 +245,7 @@ UT_TEST_CASE(test1)
         topology.points()[ primitive.nodes()[k] ][d] = X[d];
     }
 
-    GeometryOrientationChecker checker( topology.points() , params , primitive.u2v() , entity  );
+    GeometryInspector<Simplex> checker( topology.points() , params , primitive.u2v() , entity  );
     int s = checker.signof( primitive.geometry_topology() );
     UT_ASSERT( s>0 );
 

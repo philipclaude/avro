@@ -21,11 +21,11 @@ echo "status CCL = $status_ccl"
 
 # ccp1 is the hardest case, and not a good indication of how well avro is working
 # the returned status is ignored below
-$avro -conformity $3/ccp1_19.mesh Polar1 $3/ccp1_conformity.json nb_expected=25000
+$avro -conformity $3/ccp1_19.mesh Polar1 $3/ccp1_conformity.json nb_expected=23000
 status_ccp1=$?
 echo "status CCP1 = $status_ccp1"
 
-$avro -conformity $3/ccp2_19.mesh Polar2  $3/ccp2_conformity.json nb_expected=36400
+$avro -conformity $3/ccp2_19.mesh Polar2  $3/ccp2_conformity.json nb_expected=35000
 status_ccp2=$?
 echo "status CCP2 = $status_ccp2"
 

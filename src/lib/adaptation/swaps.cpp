@@ -8,6 +8,7 @@
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
 #include "adaptation/adapt.h"
+#include "adaptation/geometry.h"
 #include "adaptation/metric.h"
 
 #include "mesh/topology.h"
@@ -287,10 +288,8 @@ EdgeSwap<type>::EdgeSwap( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Entity* face0 )
+EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* face )
 {
-  EGADS::Object* face = (EGADS::Object*) face0;
-
   // check if the edge swap is valid in the parameter space
   // 2d swaps area already checks, 4d is limited to linear geometries for now
   //if (this->topology_.number()!=3) return true;
@@ -300,13 +299,7 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   this->geometry_cavity_.set_entity(face);
 
   // based on the type of face, we may need to flip the sign for the volume calculation
-  int oclass,mtype;
-  ego ref,prev,next;
-  EGADS_ENSURE_SUCCESS( EG_getInfo(*face->object(), &oclass, &mtype,&ref, &prev, &next) );
-  if (mtype==SREVERSE)
-    this->geometry_cavity_.sign() = -1;
-  else
-    this->geometry_cavity_.sign() = 1;
+  this->geometry_cavity_.sign() = face->sign();
 
   // extract the geometry cavity
   this->extract_geometry( face, {e0,e1} );
@@ -334,10 +327,11 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
     this->convert_to_physical();
   }
 
-  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , face );
-  int s = checker.signof( this->geometry_cavity_ );
+  // reset the geometry checker to this face (which also computes the normals at the vertices of the geometry topology)
+  this->geometry_inspector_.reset(face);
+  int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
-  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
+  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
 
   if (this->topology_.master().parameter())
   {
@@ -353,9 +347,9 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
     this->convert_to_physical();
   }
 
-  s = checker.signof( this->geometry_cavity_ );
+  s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
-  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
+  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
 
   if (this->topology_.master().parameter())
   {
@@ -377,20 +371,20 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
     this->convert_to_physical();
   }
 
-  s = checker.signof( this->geometry_cavity_ );
+  s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   if (s<0)
   {
     return false;
   }
 
-  if (checker.createsBadGeometry(this->geometry_cavity_))
+  if (this->geometry_inspector_.invalidates_geometry(this->geometry_cavity_))
   {
     nb_invalid_geometry_++;
     return false;
   }
 
   // the geometry cavity should have positive volumes
-  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
+  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
 
   return true;
 }
@@ -496,7 +490,7 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
       this->add_cavity( this->C_[j] );
     }
 
-    if (!visibleParameterSpace(p,e0,e1,ge))
+    if (!visible_geometry(p,e0,e1,ge))
     {
       return false;
     }
@@ -521,7 +515,7 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
   // check visibility in the parametric space
   if (ge!=NULL && ge->number()==2)
   {
-    if (!visibleParameterSpace(p,e0,e1,ge))
+    if (!visible_geometry(p,e0,e1,ge))
     {
       //printf("swap not visible in parameter space!\n");
       return false;

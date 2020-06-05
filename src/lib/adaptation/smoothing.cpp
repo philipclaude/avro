@@ -8,6 +8,7 @@
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
 #include "adaptation/adapt.h"
+#include "adaptation/geometry.h"
 #include "adaptation/metric.h"
 
 #include "graphics/application.h"
@@ -83,22 +84,23 @@ Smooth<type>::Smooth( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , Entity* ep0 )
+Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity* ep )
 {
-  EGADS::Object* ep = (EGADS::Object*) ep0;
-
   avro_assert( ep->number()==2 );
   if (!this->curved_) return true;
   if (ep->interior()) return true;
 
   // based on the type of face, we may need to flip the sign for the volume calculation
+  this->geometry_cavity_.sign() = ep->sign();
+
+  /*
   int oclass,mtype;
   ego ref,prev,next;
   EGADS_ENSURE_SUCCESS( EG_getInfo(*ep->object(), &oclass, &mtype,&ref, &prev, &next) );
   if (mtype==SREVERSE)
     this->geometry_cavity_.sign() = -1;
   else
-    this->geometry_cavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1;*/
 
   // extract the geometry cavity
   this->geometry_cavity_.set_entity(ep);
@@ -119,7 +121,7 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
   if (this->topology_.master().parameter())
   {
     this->convert_to_parameter(ep);
-    this->geometry_cavity_.sign() = 1;
+    this->geometry_cavity_.sign() = 1; // volume calculation is already adjusted for the sign
   }
 
   // check for visibility of the new coordinates
@@ -136,16 +138,16 @@ Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , En
     this->convert_to_physical();
   }
 
-  // check the orientation of facets produced w.r.t. the geometry
-  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , ep );
-  int s = checker.signof( this->geometry_cavity_ );
+  // reset the geometry checker to this face (which also computes the normals at the vertices of the geometry topology)
+  this->geometry_inspector_.reset( ep );
+  int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   if (s<0)
   {
     return false;
   }
 
   // check the produced volumes are positive
-  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
+  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
 
   return true;
 }
@@ -272,7 +274,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
       this->add_cavity( this->C_[j] );
 
     // assert the original point is visible
-    if (!visibleParameterSpace( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
+    if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
     {
       printf("error smoothing vertex %lu\n",p);
       print_inline(x0);
@@ -310,7 +312,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
       this->topology_.points().u(p)[d] += omega*F[d];
     this->convert_to_physical({p});
 
-    if (!visibleParameterSpace( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
+    if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
     {
       // revert the physical coordinates
       for (index_t d=0;d<dim;d++)
@@ -425,7 +427,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   // check if the point is visible on the cavity boundary
   if (ep!=NULL && ep->number()==2 && this->curved_)
   {
-    if (!visibleParameterSpace( p , x.data(), params.data() , ep ))
+    if (!visible_geometry( p , x.data(), params.data() , ep ))
     {
       // revert the physical coordinates
       for (index_t d=0;d<dim;d++)
@@ -448,7 +450,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
       Entity* parent = ep->parents(k);
       if (parent->number()!=2 || !parent->tessellatable())
         continue;
-      if (!visibleParameterSpace(p, x.data() , params.data() ,parent))
+      if (!visible_geometry(p, x.data() , params.data() ,parent))
       {
         // revert the physical coordinates
         for (index_t d=0;d<dim;d++)

@@ -12,6 +12,9 @@
 #include "adaptation/parameters.h"
 #include "adaptation/properties.h"
 
+#include "geometry/entity.h"
+#include "geometry/egads/object.h"
+
 #include "library/meshb.h"
 
 #include "mesh/boundary.h"

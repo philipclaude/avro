@@ -11,6 +11,8 @@
 #include "adaptation/metric.h"
 #include "adaptation/primitive.h"
 
+#include "geometry/entity.h"
+
 #include "mesh/topology.h"
 
 #include "common/kdtree.h"

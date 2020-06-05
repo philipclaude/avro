@@ -34,33 +34,22 @@ Collapse<type>::Collapse( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool edge )
+Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge )
 {
-  EGADS::Object* g = (EGADS::Object*) g0;
   avro_assert( g->number()==2 );
   if (!this->curved_) return true;
   if (g->interior()) return true;
 
-  this->set_entity(g0);
-  this->geometry_cavity_.set_entity(g0);
+  this->set_entity(g);
+  this->geometry_cavity_.set_entity(g);
 
   // extract the geometry cavity
   this->extract_geometry( g, {p} );
   avro_assert( this->geometry_topology_.nb()>0 );
 
   // based on the type of face, we may need to flip the sign for the volume calculation
-  #if 0
-  int oclass,mtype;
-  ego ref,prev,next;
-  EGADS_ENSURE_SUCCESS( EG_getInfo(*g->object(), &oclass, &mtype,&ref, &prev, &next) );
-  if (mtype==SREVERSE)
-    this->geometry_cavity_.sign() = -1;
-  else
-    this->geometry_cavity_.sign() = 1;
-  #else
   this->geometry_cavity_.sign() = g->sign();
   if (this->topology_.master().parameter()) this->geometry_cavity_.sign() = 1;
-  #endif
 
   if (this->topology_.master().parameter())
   {
@@ -76,11 +65,11 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
     this->convert_to_physical();
   }
 
-  // ensure the normals are originally in the right direction
-  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , g );
-  int s = checker.signof( this->geometry_cavity_ );
+  // reset the geometry checker to this face (which also computes the normals at the vertices of the geometry topology)
+  this->geometry_inspector_.reset(g);
+  int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   avro_assert( s > 0 );
-  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
+  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
 
   if (this->topology_.master().parameter())
   {
@@ -103,7 +92,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // check the normal orientations
-  s = checker.signof( this->geometry_cavity_ );
+  s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   if (s<0)
   {
     if (edge) nb_rej_sgn_Edge_++;
@@ -111,7 +100,8 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // check the geometry topology can be extracted correctly
-  if (checker.createsBadGeometry(this->geometry_cavity_) || checker.createsBadGeometry(this->boundary()))
+  if (this->geometry_inspector_.invalidates_geometry(this->geometry_cavity_) ||
+      this->geometry_inspector_.invalidates_geometry(this->boundary()))
   {
     if (edge) nb_rej_geo_Edge_++;
     nb_invalid_geometry_++;
@@ -119,7 +109,7 @@ Collapse<type>::visibleParameterSpace( index_t p , index_t q , Entity* g0 , bool
   }
 
   // ensure we have all positive volumes
-  //avro_assert( checker.hasPositiveVolumes(this->geometry_cavity_,mtype));
+  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
 
   return true;
 }
@@ -231,7 +221,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
         }
 
         Entity* parent = g->parents(k);
-        if (!visibleParameterSpace(p,q,parent,true)) // flag this is an edge for the counters
+        if (!visible_geometry(p,q,parent,true)) // flag this is an edge for the counters
         {
           nb_rejected_[g->number()]++;
           return false;
@@ -256,7 +246,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
       this->Cavity<type>::clear();
       for (index_t j=0;j<this->C_.size();j++)
         this->add_cavity( this->C_[j] );
-      if (!visibleParameterSpace(p,q,g,false))
+      if (!visible_geometry(p,q,g,false))
       {
         nb_rejected_[g->number()]++;
         return false;
@@ -288,13 +278,6 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
     return false;
   }
 
-  if (this->invalidatesTopology())
-  {
-    // the collapse invalidates the topology in the sense that
-    // closed bodies (with number n) do not have n+1 points (i.e. disappear)
-    return false;
-  }
-
   if (!this->has_unique_elems())
   {
     // we don't want duplicate elements! can happen with ghosted topologies..
@@ -306,7 +289,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
     return false;
 
   // determine if the receiving point is visible in the parameter space
-  if (g!=NULL && g->number()==2 && !visibleParameterSpace(p,q,g))
+  if (g!=NULL && g->number()==2 && !visible_geometry(p,q,g))
   {
     nb_rejected_[g->number()]++;
     return false;
@@ -323,7 +306,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
       {
         continue;
       }
-      if (!visibleParameterSpace(p,q,parent,true)) // flag this is an edge for the counters
+      if (!visible_geometry(p,q,parent,true)) // flag this is an edge for the counters
       {
         nb_rejected_[g->number()]++;
         return false;
