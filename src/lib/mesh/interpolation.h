@@ -3,6 +3,7 @@
 
 #include "common/types.h"
 
+#include <memory>
 #include <vector>
 
 namespace avro
