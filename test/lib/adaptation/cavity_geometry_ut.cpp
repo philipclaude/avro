@@ -260,7 +260,7 @@ UT_TEST_CASE(test1)
 }
 UT_TEST_CASE_END(test1)
 
-
+#if 0
 UT_TEST_CASE(test2)
 {
   // setup the topology
@@ -417,6 +417,7 @@ UT_TEST_CASE(test2)
 
 }
 UT_TEST_CASE_END(test2)
+#endif
 
 
 UT_TEST_SUITE_END(cavity_geometry_suite)

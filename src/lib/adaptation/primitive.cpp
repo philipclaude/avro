@@ -135,6 +135,7 @@ Primitive<type>::convert_to_physical( const std::vector<index_t>& N )
   }
 }
 
+#if 0
 template<typename type>
 bool
 SurfaceCavity<type>::visible( index_t p )
@@ -224,8 +225,9 @@ SurfaceCavity<type>::compute_coordinates()
       topology_.points()[ this->nodes()[k] ][d] = X[d];
   }
 }
+#endif
 
 template class Primitive<Simplex>;
-template class SurfaceCavity<Simplex>;
+//template class SurfaceCavity<Simplex>;
 
 } // avro

@@ -15,8 +15,7 @@ namespace avro
 
 template<typename type>
 Insert<type>::Insert( Topology<type>& _topology ) :
-  Primitive<type>(_topology),
-  surface_(_topology)
+  Primitive<type>(_topology)//, surface_(_topology)
 {
   this->setName("inserter");
 }
@@ -109,7 +108,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   this->enlarge_ = false;
   this->check_visibility_ = true;
   enlarged_ = false; // no enlargement (for geometry) yet
-  surface_.check_visibility(true);
+  //surface_.check_visibility(true);
 
   // determine the cavity elements if none were provided
   if (shell.size()==0)
@@ -505,6 +504,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // so we need to add the vertex and also add the interpolated metric
       index_t ns = topology_.points().nb();
       topology_.points().create(filter[idx]);
+      topology_.points().set_entity(ns, inserter_.geometry(n0,n1) );
       bool interp_result = metric_.add(n0,n1,filter[idx]);
       if (!interp_result)
       {

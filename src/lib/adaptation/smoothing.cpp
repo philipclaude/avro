@@ -65,8 +65,7 @@ Smooth<type>::Smooth( Topology<type>& _topology ) :
   delta_(0.0),
   delta_min_(1e20),
   delta_max_(-1),
-  M0_(_topology.number()),
-  surface_(_topology)
+  M0_(_topology.number())//, surface_(_topology)
 {
   this->setName("smoother");
   resetRejections();

@@ -113,6 +113,7 @@ protected:
   std::vector<std::string> errors_;
 };
 
+#if 0
 template<typename type>
 class SurfaceCavity : public Primitive<type>
 {
@@ -176,6 +177,7 @@ private:
   using Primitive<type>::S_;
   std::vector<real_t> U_,X_;
 };
+#endif
 
 template<typename type>
 class Collapse : public Primitive<type>
@@ -210,7 +212,7 @@ private:
   index_t nb_rej_sgn_Edge_;
   index_t nb_rej_geo_Edge_;
 
-  SurfaceCavity<type> surface_;
+  //SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -242,7 +244,7 @@ private:
 
   std::vector<index_t> elems_;
 
-  SurfaceCavity<type> surface_;
+  //SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -268,7 +270,7 @@ private:
   std::vector<index_t> nb_geometry_rejections_;
   index_t nb_invalid_geometry_;
 
-  SurfaceCavity<type> surface_;
+  //SurfaceCavity<type> surface_;
 };
 
 template<typename type>
@@ -333,7 +335,7 @@ private:
   index_t nb_zero_valency_;
   index_t nb_interpolated_outside_;
 
-  SurfaceCavity<type> surface_;
+  //SurfaceCavity<type> surface_;
 };
 
 #define CROSS(a,b,c)      a[0] = (b[1]*c[2]) - (b[2]*c[1]);\

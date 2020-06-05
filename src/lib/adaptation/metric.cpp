@@ -70,6 +70,9 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 		interpolation_.reset(interpolation);
 
 
+	if (topology_.master().parameter())
+		interpolation_ = std::make_shared< library::MetricField_UniformGeometry<type> >(0.04,*this);
+
 }
 
 template<typename type>

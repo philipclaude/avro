@@ -270,8 +270,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
 template<typename type>
 EdgeSwap<type>::EdgeSwap( Topology<type>& _topology ) :
-  Primitive<type>(_topology),
-  surface_(_topology)
+  Primitive<type>(_topology)//, surface_(_topology)
 {
   this->setName("edge swapper");
   nb_geometry_rejections_.resize( _topology.number() );
@@ -288,7 +287,7 @@ EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Ent
   //if (this->topology_.number()!=3) return true;
   if (!this->curved_) return true;
   if (face->interior()) return true;
-  
+
   this->gcavity_.set_entity(face);
 
   // based on the type of face, we may need to flip the sign for the volume calculation

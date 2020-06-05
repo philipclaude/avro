@@ -16,8 +16,7 @@ namespace avro
 
 template<typename type>
 Collapse<type>::Collapse( Topology<type>& _topology ) :
-  Primitive<type>(_topology),
-  surface_(_topology)
+  Primitive<type>(_topology)//, surface_(_topology)
 {
   this->setName("collapser");
   nb_accepted_.resize(_topology.number()+1);
@@ -176,7 +175,7 @@ template<typename type>
 bool
 Collapse<type>::apply( const index_t p , const index_t q , bool delay )
 {
-  surface_.check_visibility(true);
+  //surface_.check_visibility(true);
   this->check_visibility(true);
 
   // attempt to collapse p onto q

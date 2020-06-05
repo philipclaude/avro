@@ -3,10 +3,14 @@
 
 #include "common/types.h"
 
+#include "mesh/interpolation.h"
+
 #include "numerics/matrix.h"
 
 namespace avro
 {
+
+class Metric;
 
 namespace library
 {
@@ -277,6 +281,23 @@ public:
 
   	return Q*numpack::DLA::diag(L)*numpack::Transpose(Q);
   }
+};
+
+template<typename type>
+class MetricField_UniformGeometry : public MetricField_Analytic, public FieldInterpolation<type,Metric>
+{
+public:
+  MetricField_UniformGeometry( real_t h , const Field<type,Metric>& field );
+
+  int eval( const Points& points , index_t p , const std::vector<index_t>& guesses , Metric& mp ) override;
+
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const override
+  {
+    return uniform_(x);
+  }
+
+private:
+  MetricField_Uniform uniform_;
 };
 
 } // library
