@@ -162,6 +162,7 @@ UT_TEST_CASE(test1)
     UT_ASSERT_EQUALS( primitive.geometry_topology().nb() , 6 ); // two real triangles + 4 ghosts (one for every edge)
 
     GeometryInspector<Simplex> checker( topology.points() , params , primitive.u2v() , entity  );
+    checker.reset(entity);
     int s = checker.signof( primitive.geometry_topology() );
     UT_ASSERT( s>0 );
 
@@ -246,6 +247,7 @@ UT_TEST_CASE(test1)
     }
 
     GeometryInspector<Simplex> checker( topology.points() , params , primitive.u2v() , entity  );
+    checker.reset(entity);
     int s = checker.signof( primitive.geometry_topology() );
     UT_ASSERT( s>0 );
 

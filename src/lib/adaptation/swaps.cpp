@@ -331,7 +331,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
   this->geometry_inspector_.reset(face);
   int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
-  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
   if (this->topology_.master().parameter())
   {
@@ -349,7 +349,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
 
   s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
-  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
   if (this->topology_.master().parameter())
   {
@@ -384,7 +384,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
   }
 
   // the geometry cavity should have positive volumes
-  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
   return true;
 }

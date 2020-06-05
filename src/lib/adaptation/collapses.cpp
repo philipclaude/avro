@@ -69,7 +69,7 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
   this->geometry_inspector_.reset(g);
   int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   avro_assert( s > 0 );
-  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
   if (this->topology_.master().parameter())
   {
@@ -109,7 +109,7 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
   }
 
   // ensure we have all positive volumes
-  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
   return true;
 }

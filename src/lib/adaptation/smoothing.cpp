@@ -93,15 +93,6 @@ Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity*
   // based on the type of face, we may need to flip the sign for the volume calculation
   this->geometry_cavity_.sign() = ep->sign();
 
-  /*
-  int oclass,mtype;
-  ego ref,prev,next;
-  EGADS_ENSURE_SUCCESS( EG_getInfo(*ep->object(), &oclass, &mtype,&ref, &prev, &next) );
-  if (mtype==SREVERSE)
-    this->geometry_cavity_.sign() = -1;
-  else
-    this->geometry_cavity_.sign() = 1;*/
-
   // extract the geometry cavity
   this->geometry_cavity_.set_entity(ep);
   this->extract_geometry( ep , {p} );
@@ -147,7 +138,7 @@ Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity*
   }
 
   // check the produced volumes are positive
-  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
   return true;
 }

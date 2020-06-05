@@ -59,13 +59,12 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep )
     this->u_.create( params );
   this->u2v_.push_back( this->points_.nb()-1 );
 
-  #if 1 // philip may 28
+  // assign the geometry entities (in case this hasn't already been done)
   for (index_t j=0;j<this->u_.nb();j++)
   {
     if (j < this->u_.nb_ghost()) continue;
     this->u_.set_entity( j , this->points_.entity( this->u2v_[j] ) );
   }
-  #endif
 
   if (this->topology_.master().parameter())
   {
@@ -95,7 +94,7 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep )
     return false;
   }
 
-  //avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,mtype) );
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()) );
 
   return true;
 }
