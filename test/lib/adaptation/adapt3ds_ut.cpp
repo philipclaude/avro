@@ -39,7 +39,7 @@ UT_TEST_CASE(test1)
 
   // parameters
   std::shared_ptr<library::MetricField_UniformGeometry<Simplex>> metric;
-  metric = std::make_shared<library::MetricField_UniformGeometry<Simplex>>(2,0.25);
+  metric = std::make_shared<library::MetricField_UniformGeometry<Simplex>>(2,0.1);
 
   // geometry
   EGADS::Context context;
@@ -47,7 +47,7 @@ UT_TEST_CASE(test1)
 
   TessellationParameters tess_params;
   tess_params.standard();
-  tess_params.min_size() = 0.1;
+  tess_params.min_size() = 0.05;
   tess_params.min_angle() = 20;
 
   ModelTessellation tess(model,tess_params);

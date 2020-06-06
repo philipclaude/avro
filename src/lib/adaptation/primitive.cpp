@@ -133,10 +133,12 @@ Primitive<type>::convert_to_parameter( Entity* entity )
 {
   // convert the parameter coordinates
   avro_assert( this->topology_.master().parameter() );
-  for (index_t k=0;k<this->geometry_cavity_.points().nb();k++)
+  for (index_t k=0;k<geometry_cavity_.points().nb();k++)
   {
-    if (k < this->geometry_cavity_.points().nb_ghost()) continue;
-    geometry_params( entity , this->geometry_cavity_.points() , &k , 1 , this->geometry_cavity_.points()[k] );
+    if (k < geometry_cavity_.points().nb_ghost()) continue;
+    geometry_params( entity , geometry_cavity_.points() , &k , 1 , geometry_cavity_.points()[k] );
+    for (index_t d=geometry_cavity_.points().udim();d<geometry_cavity_.points().dim();d++)
+      geometry_cavity_.points()[k][d] = 1e20; // black out the remaining dimensions
   }
 }
 

@@ -33,7 +33,7 @@ Insert<type>::Insert( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep )
+Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const std::vector<index_t>& edge )
 {
   avro_assert( ep->number()==2 );
   if (!this->curved_) return true;
@@ -45,7 +45,10 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep )
   this->geometry_cavity_.sign() = ep->sign();
 
   // extract the geometry cavity
-  this->extract_geometry( ep ); // no facet information, will assign the cavity to non-ghosts
+  if (edge.size()==2)
+    this->extract_geometry( ep , edge ); // extract shell
+  else
+    this->extract_geometry( ep ); // no facet information, will assign the cavity to non-ghosts
   avro_assert(this->geometry_topology_.nb()>0);
 
   // add the parameter coordinates for the inserted point along with the mapped index
@@ -73,7 +76,8 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep )
   }
 
   // the insertion should be visible in parameter space
-  bool accept = this->geometry_cavity_.compute( this->u_.nb()-1 , params , this->S_ );
+  index_t ns = this->u_.nb()-1;
+  bool accept = this->geometry_cavity_.compute( ns , this->u_[ns] , this->S_ );
   if (!accept)
   {
     avro_assert( this->topology_.master().parameter());
@@ -232,7 +236,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
         }
 
         Entity* parent = entitys->parents(k);
-        if (!visible_geometry( x , u , parent))
+        if (!visible_geometry( x , u , parent , {e0,e1} ))
         {
           this->topology_.remove_point(ns);
           return false;

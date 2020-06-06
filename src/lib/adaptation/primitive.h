@@ -146,7 +146,7 @@ public:
 
   // check if the insertion x is visible to the cavity boundary in
   // the parameter space
-  bool visible_geometry( real_t* x , real_t* u , Entity* e );
+  bool visible_geometry( real_t* x , real_t* u , Entity* e , const std::vector<index_t>& edge=std::vector<index_t>() );
 
   bool enlarged() const { return enlarged_; }
 
