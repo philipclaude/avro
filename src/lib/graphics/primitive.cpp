@@ -68,15 +68,18 @@ Primitive::extract()
   normals0_.clear();
   colors0_.clear();
 
+  const real_t* center = scene_->focus();
+  const real_t scale = 1./center[3];
+
   if (number==0)
   {
     // get the edges from the topology
     for (index_t k=0;k<topology_.nb();k++)
     {
       for (index_t j=0;j<dim0;j++)
-        points0_.push_back( topology_.points()[topology_(k,0)][j] );
+        points0_.push_back( scale*( topology_.points()[topology_(k,0)][j] -center[j]) );
       for (index_t j=dim0;j<3;j++)
-        points0_.push_back( 0.0 );
+        points0_.push_back( scale*( 0.0 - center[j] ) );
 
       points_on_ = true;
     }
@@ -93,9 +96,9 @@ Primitive::extract()
     for (index_t k=0;k<edges.size();k++)
     {
       for (index_t j=0;j<dim0;j++)
-        points0_.push_back( topology_.points()[edges[k]][j] );
+        points0_.push_back( scale*( topology_.points()[edges[k]][j]  - center[j]) );
       for (index_t j=dim0;j<3;j++)
-        points0_.push_back( 0.0 );
+        points0_.push_back( scale*( 0.0 - center[j]) );
 
       edges0_.push_back( edges0_.size() );
     }
@@ -127,9 +130,9 @@ Primitive::extract()
   for (index_t k=0;k<triangles.size();k++)
   {
     for (index_t j=0;j<dim0;j++)
-      points0_.push_back( points[triangles[k]][j] );
+      points0_.push_back( scale*(points[triangles[k]][j] - center[j]) );
     for (index_t j=dim0;j<3;j++)
-      points0_.push_back( 0.0 );
+      points0_.push_back( scale*(0.0                     - center[j]) );
 
     point_map0[ triangles[k] ] = triangles0_.size();
     point_map1.push_back( triangles[k] );

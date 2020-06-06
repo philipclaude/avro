@@ -34,6 +34,7 @@ Application<Web_Interface>::connect_client()
 void
 Application<Web_Interface>::run()
 {
+  focus_scenes();
   write();
 
   if (wv_startServer( 7681 , NULL , NULL , NULL , 0 , manager_.context() ) == 0)

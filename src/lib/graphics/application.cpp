@@ -14,6 +14,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
+#include <limits>
+
 namespace avro
 {
 
@@ -33,6 +35,43 @@ void
 ApplicationBase::receive( const std::string& text ) const
 {
   printf("received text %s\n",text.c_str());
+}
+
+void
+ApplicationBase::focus_scenes()
+{
+  // initialize the bounding box to something really far away
+  bounding_box_[0] = bounding_box_[1] = bounding_box_[2] = std::numeric_limits<real_t>::max();
+  bounding_box_[3] = bounding_box_[4] = bounding_box_[5] = std::numeric_limits<real_t>::min();
+
+  for (index_t k=0;k<scenes_.size();k++)
+  {
+    // update the bounding box based on the points in each scene topology
+    scenes_[k]->get_bounding_box(bounding_box_);
+  }
+
+  printf("--> bounding box: x = (%g,%g), y = (%g,%g), z = (%g,%g)\n",
+              bounding_box_[0],bounding_box_[3],
+              bounding_box_[1],bounding_box_[4],
+              bounding_box_[2],bounding_box_[5]);
+
+
+  // calculate the focus
+  focus_[0] = 0.5*( bounding_box_[0] + bounding_box_[3] );
+  focus_[1] = 0.5*( bounding_box_[1] + bounding_box_[4] );
+  focus_[2] = 0.5*( bounding_box_[2] + bounding_box_[5] );
+  focus_[3] = std::sqrt( (bounding_box_[3] - bounding_box_[0])*(bounding_box_[3] - bounding_box_[0])
+                        +(bounding_box_[4] - bounding_box_[1])*(bounding_box_[4] - bounding_box_[1])
+                        +(bounding_box_[5] - bounding_box_[2])*(bounding_box_[5] - bounding_box_[2]) );
+
+  printf("--> focus: center = (%g,%g,%g), scale = %g\n",focus_[0],focus_[1],focus_[2],focus_[3]);
+
+  // focus all the scenes
+  for (index_t k=0;k<scenes_.size();k++)
+  {
+    // update the bounding box based on the points in each scene topology
+    scenes_[k]->set_focus(focus_);
+  }
 }
 
 void
@@ -73,6 +112,7 @@ Application<GLFW_Interface<API_t>>::run()
 
   restart_ = false;
 
+  focus_scenes();
   write();
 
   for (index_t k=0;k<window_.size();k++)

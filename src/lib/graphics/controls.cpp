@@ -32,9 +32,6 @@ Controls::Controls( float fov , int width , int height , float znear , float zfa
   model_view_ = glm::mat4(1.0);
   ui_matrix_  = model_view_;
 
-  std::cout << glm::to_string(perspective_) << std::endl;
-  std::cout << glm::to_string(model_view_) << std::endl;
-
   startx_ = -1;
   starty_ = -1;
   cursorx_ = -1;

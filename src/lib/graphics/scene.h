@@ -98,49 +98,14 @@ private:
 public:
   typedef std::shared_ptr<Primitive> Primitive_ptr;
 
-  SceneGraph() :
-    update_(true)
-  {
-    menu_["primitives"] = {};
-  }
+  SceneGraph();
 
-  index_t add_primitive( const TopologyBase& topology )
-  {
-    // create a primitive for the incoming topology
-    index_t id = primitive_.size();
-    Primitive_ptr primitive = std::make_shared<Primitive>(topology,this);
-    primitive_.push_back(primitive);
-
-    // create graphics primitives for the topology children too!
-    std::vector<const TopologyBase*> children;
-    topology.get_topologies(children);
-    for (index_t k=0;k<children.size();k++)
-    {
-      primitive->add_child( std::make_shared<Primitive>(*children[k],this) );
-    }
-    return id;
-  }
+  index_t add_primitive( const TopologyBase& topology );
+  void remove( index_t k );
 
   const json& menu() const { return menu_; }
 
-  void write( GraphicsManager& manager )
-  {
-    for (index_t k=0;k<primitive_.size();k++)
-      primitive_[k]->write(manager);
-
-    std::vector<std::string> primitives;
-    for (index_t k=0;k<primitive_.size();k++)
-    {
-      MenuEntry entry(*primitive_[k].get());
-      primitives.push_back( entry.dump() );
-    }
-    menu_["primitives"] = primitives;
-  }
-
-  void remove( index_t k )
-  {
-    primitive_.erase( primitive_.begin()+k );
-  }
+  void write( GraphicsManager& manager );
 
   bool update() const { return update_; }
   void set_update( bool x ) { update_ = x; }
@@ -157,6 +122,11 @@ public:
 
   Primitive& primitive( index_t k ) { return *primitive_[k].get(); }
 
+  void get_bounding_box( real_t* box ) const;
+  void set_focus( real_t* focus );
+
+  const real_t* focus() const { return focus_; }
+
 private:
   std::vector<Primitive_ptr> primitive_; // roots of the scene graph
   json menu_;
@@ -166,6 +136,8 @@ private:
   mat4 normal_matrix_;
 
   bool update_;
+
+  real_t focus_[4];
 };
 
 } // graphics

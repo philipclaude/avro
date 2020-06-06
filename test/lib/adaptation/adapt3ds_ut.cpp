@@ -21,6 +21,7 @@
 #include "graphics/application.h"
 
 #include "library/ckf.h"
+#include "library/csm.h"
 #include "library/egads.h"
 #include "library/meshb.h"
 #include "library/metric.h"
@@ -42,12 +43,16 @@ UT_TEST_CASE(test1)
   metric = std::make_shared<library::MetricField_UniformGeometry<Simplex>>(2,0.1);
 
   // geometry
+  #if 1
   EGADS::Context context;
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  #else
+  OpenCSM_Model model("/Users/pcaplan/Codes/EngSketchPad/data/bottle.csm");
+  #endif
 
   TessellationParameters tess_params;
   tess_params.standard();
-  tess_params.min_size() = 0.05;
+  tess_params.min_size() = 0.1;
   tess_params.min_angle() = 20;
 
   ModelTessellation tess(model,tess_params);

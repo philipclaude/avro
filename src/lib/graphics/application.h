@@ -51,11 +51,15 @@ protected:
 
   virtual void run() = 0;
 
+  void focus_scenes();
+
 protected:
   std::vector<SceneGraph*> scenes_;
 
 private:
   GraphicsManager& manager_;
+  real_t bounding_box_[6]; // (xmin,ymin,zmin,xmax,ymax,zmax)
+  real_t focus_[4]; // (xcenter,ycenter,zcenter,scale)
 };
 
 template<typename type> class Application;

@@ -59,7 +59,8 @@ UT_TEST_CASE(test1)
   topology.Tree<Topology<Simplex>>::print();
   tess.topology(0).Table<index_t>::print();
 
-  vis.add_topology( topology.child(0) );
+  for (index_t k=0;k<15;k++)//topology.nb_children();k++)
+    vis.add_topology( topology.child(k) );
 
 #endif
 
