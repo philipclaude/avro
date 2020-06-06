@@ -14,10 +14,10 @@ add_test_files( TEST_FILES "ut" lib/numerics )
 add_test_files( TEST_FILES "ut" lib/voronoi )
 add_test_files( TEST_FILES "ut" bin )
 
-add_test_files( SBX_FILES "sbx" sandbox )
-add_test_files( SBX_FILES "sbx" sandbox/philip )
-add_test_files( SBX_FILES "sbx" sandbox/hannah )
-add_test_files( SBX_FILES "sbx" sandbox/paul )
+# sandbox files should have _toy.cpp
+add_test_files( SBX_FILES "toy" sandbox/philip )
+add_test_files( SBX_FILES "toy" sandbox/hannah )
+add_test_files( SBX_FILES "toy" sandbox/paul )
 
 set( unit_skip mesh/delaunay/vertex_ut.cpp )
 
