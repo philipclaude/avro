@@ -3,7 +3,7 @@ add_subdirectory(third_party)
 # add the unit tests in the subdirectories
 add_test_files( TEST_FILES "ut" lib/adaptation )
 add_test_files( TEST_FILES "ut" lib/common )
-add_test_files( TEST_FILES "ut" lib/geometrics )
+add_test_files( TEST_FILES "ut" lib/geometry )
 add_test_files( TEST_FILES "ut" lib/graphics )
 add_test_files( TEST_FILES "ut" lib/library )
 add_test_files( TEST_FILES "ut" lib/master )
@@ -15,9 +15,9 @@ add_test_files( TEST_FILES "ut" lib/voronoi )
 add_test_files( TEST_FILES "ut" bin )
 
 add_test_files( SBX_FILES "sbx" sandbox )
-add_test_files( SBX_FILES "sbx" sandbox/papers/imr27 )
-add_test_files( SBX_FILES "sbx" sandbox/papers/cfdsc18 )
-add_test_files( SBX_FILES "sbx" sandbox/xfield )
+add_test_files( SBX_FILES "sbx" sandbox/philip )
+add_test_files( SBX_FILES "sbx" sandbox/hannah )
+add_test_files( SBX_FILES "sbx" sandbox/paul )
 
 set( unit_skip mesh/delaunay/vertex_ut.cpp )
 
