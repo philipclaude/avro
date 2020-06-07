@@ -25,6 +25,7 @@ NearestNeighbours::NearestNeighbours( Points& _points , const index_t _knear ) :
   neighbours_(TableLayout_Rectangular)
 {
   if (_knear==0) knear_ = points_.nb();
+  if (knear_>=points_.nb()) knear_ = points_.nb();
   neighbours_.set_rank(knear_);
   compute();
 }
@@ -35,9 +36,9 @@ NearestNeighbours::compute()
   neighbours_.clear();
 
   index_t nv = points_.nb();
-  coord_t nd = points_.dim();
 
-  #if 1
+  #if 0
+  coord_t nd = points_.dim();
 
   for (index_t k=0;k<nv;k++)
   {
@@ -59,22 +60,18 @@ NearestNeighbours::compute()
 
   #else
 
-  printf("computing nearest neighbours...\n");
-
   PointCloud cloud( points_ );
   std::shared_ptr<KdTreeNd> kdtree = initializeKdTree( cloud );
   kdtree->build();
 
   for (index_t k=0;k<nv;k++)
   {
-    std::vector<real_t> d( nv , 0. );
-    std::vector<index_t> nn( nv );
+    std::vector<real_t> d( knear_ , 0. );
+    std::vector<index_t> nn( knear_ );
 
-    kdtree->getNearestNeighbours( points_[k] , nn , d , nv );
+    kdtree->getNearestNeighbours( points_[k] , nn , d , knear_ );
     neighbours_.add( nn.data() , nn.size() );
   }
-
-  printf("done\n");
 
   #endif
 }

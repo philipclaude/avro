@@ -112,7 +112,7 @@ RestrictedVoronoiDiagram::RestrictedVoronoiDiagram( const Topology<Simplex>& _me
   Topology<Polytope>( vertices_ , _mesh.number() ),
   vertices_( _delaunay.dim() ),
   mesh_(_mesh) , delaunay_(_delaunay),
-  neighbours_( delaunay_ ),
+  neighbours_( delaunay_ , 100 ),
   parallel_(false), gpu_(false),
   outdir_("."),
   entity_(entity)
