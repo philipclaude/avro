@@ -12,6 +12,13 @@
 namespace avro
 {
 
+// there's a certain section down below in which the edge parameter
+// value is flipped depending on whether the edge is periodic
+//  i'm really not sure if this is correct and have not tested on complicated
+// enough geometries to know...i need to talk to bob
+// for now turn it off (0)
+#define FLIP_PERIODIC 0
+
 // retrieves the geometric parameter coordinates given a facet on the entity
 void
 geometry_params( Entity* e0 , const Points& points , const index_t* v , const index_t nv , real_t* params )
@@ -83,14 +90,11 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
             double trange[2];
             EGADS_ENSURE_SUCCESS( EG_getRange(*edge->object(), trange, &periodic) );
 
-            #if 0
+            #if FLIP_PERIODIC // see comments above
             if (periodic==1)
             {
-              t = trange[0]; // TODO: Is this right?!?!?
-
-              // @marshall: changed to the same logic as non-periodic
-              if (edge->egchild(0) == *node->object()) t = trange[0];
-              if (edge->egchild(1) == *node->object()) t = trange[1];
+              if (edge->egchild(0) == *node->object()) t = trange[1];
+              if (edge->egchild(1) == *node->object()) t = trange[0];
             }
             else
             {
@@ -257,14 +261,11 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
         int periodic;
         double trange[2];
         EGADS_ENSURE_SUCCESS( EG_getRange(*edge->object(), trange, &periodic) );
-        #if 0
+        #if FLIP_PERIODIC // see comments above
         if (periodic==1)
         {
-          t = trange[0]; // TODO: Is this right?!?!?
-
-          // @marshall: changed to the same logic as non-periodic
-          if (edge->egchild(0) == *node->object()) t = trange[0];
-          if (edge->egchild(1) == *node->object()) t = trange[1];
+          if (edge->egchild(0) == *node->object()) t = trange[1];
+          if (edge->egchild(1) == *node->object()) t = trange[0];
         }
         else
         {
