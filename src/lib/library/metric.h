@@ -21,6 +21,7 @@ namespace avro
 {
 
 class Metric;
+class Entity;
 
 namespace library
 {

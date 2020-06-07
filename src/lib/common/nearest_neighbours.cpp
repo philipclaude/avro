@@ -7,6 +7,7 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
+#include "common/kdtree.h"
 #include "common/nearest_neighbours.h"
 #include "common/tools.h"
 
@@ -36,6 +37,8 @@ NearestNeighbours::compute()
   index_t nv = points_.nb();
   coord_t nd = points_.dim();
 
+  #if 1
+
   for (index_t k=0;k<nv;k++)
   {
     // compute all the distances
@@ -53,6 +56,27 @@ NearestNeighbours::compute()
     // add the result
     neighbours_.add( nn.data() , knear_ );
   }
+
+  #else
+
+  printf("computing nearest neighbours...\n");
+
+  PointCloud cloud( points_ );
+  std::shared_ptr<KdTreeNd> kdtree = initializeKdTree( cloud );
+  kdtree->build();
+
+  for (index_t k=0;k<nv;k++)
+  {
+    std::vector<real_t> d( nv , 0. );
+    std::vector<index_t> nn( nv );
+
+    kdtree->getNearestNeighbours( points_[k] , nn , d , nv );
+    neighbours_.add( nn.data() , nn.size() );
+  }
+
+  printf("done\n");
+
+  #endif
 }
 
 void
