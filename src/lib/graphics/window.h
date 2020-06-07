@@ -164,6 +164,7 @@ public:
 private:
   std::string title_;
   GLFWwindow* window_;
+  GLFWimage images_[2];
   GraphicsManager& manager_;
 
   int width_;

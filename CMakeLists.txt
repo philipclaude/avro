@@ -97,6 +97,7 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 
 add_definitions( -DGLIBCXX_USE_CXX11_ABI=0 )
+add_definitions( -DAVRO_SOURCE_DIR="${CMAKE_SOURCE_DIR}" )
 
 add_subdirectory(src/third_party)
 add_subdirectory(src)

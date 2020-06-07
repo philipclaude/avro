@@ -19,11 +19,96 @@
 
 #include "library/eps.h"
 
+#include <fstream>
+
 namespace avro
 {
 
 namespace graphics
 {
+
+bool
+load_ppm( const std::string& filename , GLFWimage& image )
+{
+  unsigned int height;
+  unsigned int width;
+  unsigned int max_col_value;
+  unsigned int size;
+
+  std::ifstream file(filename.c_str(), std::ios::in | std::ios::binary);
+  if (!file.is_open())
+  {
+    printf("could not open file %s\n",filename.c_str());
+    return false;
+  }
+
+  // make sure we are reading a P6 ppm image
+  std::string line;
+  std::getline(file,line);
+  if (line != "P6")
+  {
+    printf("unrecognized file format: %s (expected P6)\n",line.c_str());
+    return false;
+  }
+
+  // skip any line that start with #
+  std::getline(file,line);
+  while (line[0] == '#')
+    std::getline(file,line);
+
+  // get the dimensions of the image
+  std::stringstream dimensions(line);
+  try
+  {
+    dimensions >> width;
+    dimensions >> height;
+  }
+  catch (std::exception &e)
+  {
+    printf("header format error: %s\n",e.what());
+    return false;
+  }
+
+  // get the maximum color value (usually 255)
+  std::getline(file,line);
+  std::stringstream max_val(line);
+  try
+  {
+    max_val >> max_col_value;
+  }
+  catch (std::exception &e)
+  {
+    printf("header format error: %s\n",e.what());
+    return false;
+  }
+
+  // allocate the pixels
+  size = width*height;
+  image.pixels = new unsigned char[3*size];
+  image.width  = width;
+  image.height = height;
+
+  // save the pixels
+  char aux;
+  unsigned char r,g,b;
+  for (index_t i = 0; i < size; i++)
+  {
+    file.read(&aux, 1);
+    r = (unsigned char) aux;
+    file.read(&aux, 1);
+    g = (unsigned char) aux;
+    file.read(&aux, 1);
+    b = (unsigned char) aux;
+
+    image.pixels[3*i  ] = r;
+    image.pixels[3*i+1] = g;
+    image.pixels[3*i+2] = b;
+  }
+
+  file.close();
+
+  return true;
+}
 
 static void
 _mouse_button_callback(GLFWwindow* window ,int button,int action,int mods)
@@ -85,12 +170,13 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
   glfwSetScrollCallback(window_,&_mouse_scroll_callback);
   glfwSetKeyCallback( window_ , &_keyboard_callback );
 
-  /*
-  GLFWimage images[1];
-  images[0] = load_icon( "avro.png" );
-  glfwSetWindowIcon(window_,1,images);
-  glfwSetWindowIcon(window_,0,NULL);
-  */
+  // this doesn't work on mac because you have to bundle things :(
+  if (load_ppm( std::string(AVRO_SOURCE_DIR)+"/doc/fig/avro.ppm", images_[0] ))
+  {
+    printf("--> loaded %u x %u icon\n",images_[0].width,images_[0].height);
+    glfwSetWindowIcon(window_,1,images_);
+    delete [] images_[0].pixels; // free up the memory used by the pixels
+  }
 }
 
 void

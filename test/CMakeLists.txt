@@ -128,10 +128,10 @@ endforeach()
 
 # target for compiling all sandbox tests
 add_custom_target( sandbox )
-#add_dependencies( sandbox ${SBX_COMPILE} )
+add_dependencies( sandbox ${SBX_COMPILE} )
 
 # add a target for the regression tests
-add_custom_target( check_benchmarks ${CMAKE_SOURCE_DIR}/test/bin/benchmark3d.sh WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+add_custom_target( check_benchmarks ${CMAKE_SOURCE_DIR}/test/regression/benchmark3d.sh WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
 
 # reset the directory for the executables
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
