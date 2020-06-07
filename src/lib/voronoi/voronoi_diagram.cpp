@@ -108,13 +108,14 @@ RVDFacets::print() const
   }
 }
 
-RestrictedVoronoiDiagram::RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay ) :
+RestrictedVoronoiDiagram::RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay , Entity* entity ) :
   Topology<Polytope>( vertices_ , _mesh.number() ),
   vertices_( _delaunay.dim() ),
   mesh_(_mesh) , delaunay_(_delaunay),
   neighbours_( delaunay_ ),
   parallel_(false), gpu_(false),
-  outdir_(".")
+  outdir_("."),
+  entity_(entity)
 {
   neighbours_.compute();
 }
@@ -131,6 +132,7 @@ RestrictedVoronoiDiagram::compute( const bool exact )
   {
     simplices_[k] = std::make_shared<RestrictedVoronoiSimplex>( k , mesh_ ,
                         facets  , delaunay_ , neighbours_ , exact );
+    simplices_[k]->set_entity(entity_);
   }
 
   // dispatch the computation of all the simplices
@@ -425,9 +427,14 @@ RestrictedVoronoiDiagram::extract( Topology<Simplex>& triangulation ) const
     bool meshfacet = false;
     for (index_t j=0;j<bisectors.size();j++)
     {
+      // bisectors with a negative identifer are on facets of the original mesh
       if (bisectors[j]<0) meshfacet = true;
     }
-    if (meshfacet) continue;
+    if (meshfacet)
+    {
+      // voronoi vertices on a mesh facet do not create delaunay simplices
+      continue;
+    }
 
     std::sort(bisectors.begin(),bisectors.end());
 

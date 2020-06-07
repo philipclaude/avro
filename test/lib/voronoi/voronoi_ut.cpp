@@ -23,9 +23,82 @@ using namespace avro::graphics;
 
 UT_TEST_SUITE( voronoi_test_suite )
 
+UT_TEST_CASE( line_test )
+{
+  coord_t number = 1;
+
+  index_t nx = 5;
+  Points points(2);
+  real_t x[2] = { 0. , 0. };
+  index_t e[2] = {0,0};
+  Topology<Simplex> topology(points,1);
+  for (index_t k=0;k<nx;k++)
+  {
+    x[1] = real_t(k)/real_t(nx-1.0);
+    points.create(x);
+
+    if (k<nx-1)
+    {
+      e[0] = k;
+      e[1] = k+1;
+      topology.add( e , 2 );
+    }
+  }
+  points.print(true);
+
+  Delaunay delaunay(points.dim());
+  #if 0
+  index_t np = 4;
+  x[0] = 0.0;
+  delaunay.create(x);
+  for (index_t k=0;k<np;k++)
+  {
+    x[0] = random_within(0.1,0.9);
+    delaunay.create(x);
+  }
+  x[0] = 1.0;
+  delaunay.create(x);
+  #else
+  topology.points().copy(delaunay);
+  #endif
+  delaunay.print(true);
+
+  printf("running rvd test for %u-simplex mesh with %lu elements and %lu delaunay vertices\n",number,topology.nb(),delaunay.nb());
+
+  delaunay::RestrictedVoronoiDiagram rvd(topology,delaunay);
+  rvd.parallel() = true;
+
+  rvd.compute(true);
+
+  printf("rvd points:\n");
+  rvd.points().print();
+
+  printf("rvd:\n");
+  rvd.Table<index_t>::print();
+  printf("vfm:\n");
+  rvd.points().incidence().print();
+
+  Topology<Simplex> dt( delaunay , number );
+  printf("extracting dt:\n");
+  rvd.extract(dt);
+  printf("delaunay triangulation has %lu simplices\n",dt.nb());
+
+  Visualizer vis;
+  std::shared_ptr<Widget> toolbar = std::make_shared<Toolbar>(vis.main_window(),vis);
+  vis.main_window().interface().add_widget( toolbar );
+
+  //vis.add_topology(topology);
+  vis.add_topology(rvd);
+  vis.add_topology(dt);
+  //vis.add_topology(T);
+
+  vis.run();
+}
+UT_TEST_CASE_END( line_test )
+
 UT_TEST_CASE( test0 )
 {
-  coord_t number = 3;
+  coord_t number = 2;
   index_t N = 2;
   std::vector<index_t> dims(number,N);
   CKF_Triangulation topology( dims );

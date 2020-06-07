@@ -348,7 +348,7 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
 
 
   // draw the points
-  if (primitive.points_on())
+  if (primitive.points_on()) //|| primitive.number()<=1)
   {
     GL_CALL( glBindVertexArray(vao_points_.at(&primitive) ) );
     GL_CALL( glPointSize(10.0f) );

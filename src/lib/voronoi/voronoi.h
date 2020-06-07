@@ -26,6 +26,7 @@ namespace avro
 
 class Delaunay;
 class RestrictedVoronoiSimplex;
+class Entity;
 
 namespace delaunay
 {
@@ -145,6 +146,8 @@ public:
     const index_t k , const Topology<Simplex>& mesh , RVDFacets& facets ,
     Delaunay& _delaunay , NearestNeighbours& _neighbours , bool _exact );
 
+  void set_entity( Entity* entity );
+
   void reset();
 
   // clip the simplex by the entire Voronoi diagram defined by delaunay_
@@ -174,7 +177,6 @@ public:
   index_t seed( const index_t k ) const { return seed_[k]; }
 
   Topology<Polytope>& topology() { return topology_; }
-  //using Mesh<ConvexPolytope>::topology; // silences clang warning
 
 private:
   index_t site_;
@@ -203,6 +205,7 @@ private:
 
   Points points_;
 
+  Entity* entity_;
 };
 
 class VoronoiSites;
@@ -213,7 +216,7 @@ public:
 
   typedef RestrictedVoronoiDiagram thisclass;
 
-  RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay );
+  RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay , Entity* entity=nullptr );
   RestrictedVoronoiDiagram( Delaunay& _delaunay );
 
   void compute( const bool exact = true );
@@ -262,6 +265,8 @@ private:
   std::string outdir_;
 
   std::shared_ptr<VoronoiSites> sites_;
+
+  Entity* entity_;
 
 };
 

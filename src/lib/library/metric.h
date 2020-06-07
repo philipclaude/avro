@@ -300,6 +300,7 @@ public:
   MetricField_UniformGeometry( coord_t dim , real_t hfactor );
 
   int eval( const Points& points , index_t p , const std::vector<index_t>& guesses , Metric& mp ) override;
+  int eval_face( const Points& points , index_t p , Entity* entity , Metric& mp );
 
   numerics::SymMatrixD<real_t> operator()( const real_t* x ) const override
   {

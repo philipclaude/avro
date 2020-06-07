@@ -320,6 +320,7 @@ Boundary<type>::extract( bool interior )
     for (index_t j=0;j<e->nb_parents();j++)
     {
       Entity* parent = e->parents(j);
+      if (parent==nullptr) continue;
       if (!parent->tessellatable())
         continue;
       E0.push_back( e->parents(j) );

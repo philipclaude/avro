@@ -35,6 +35,7 @@ class Object : public Entity
 public:
   Object( const Context& context , ego* object );
   Object( ego* object , EGADS::Body* body );
+  Object( const Context& context );
 
   void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
   void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const;
@@ -43,6 +44,7 @@ public:
   void project( std::vector<real_t>& x , std::vector<real_t>& u ) const;
 
   void set_object( ego* object );
+  void construct( ego* object );
 
   void build_hierarchy();
 
@@ -57,7 +59,7 @@ public:
 
   void print(bool with_children=true) const;
 
-private:
+protected:
   EGADS::Body* body_;
   const Context& context_;
   ego* object_;

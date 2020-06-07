@@ -60,6 +60,35 @@ Object::Object( ego* object , EGADS::Body* body ) :
   name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
 }
 
+Object::Object( const Context& context ) :
+  Entity(0),
+  body_(nullptr),
+  context_(context),
+  object_(nullptr)
+{}
+
+void
+Object::construct( ego* object )
+{
+  set_object(object);
+  EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
+                                    &data_.reference , &data_.previous , &data_.next ) );
+  number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
+  tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
+  interior_ = false;
+  sense_required_ = false;
+  egads_ = true;
+  identifier_ = 0;
+  if (data_.member_type == SREVERSE) sign_ = -1;
+  name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
+}
+
+void
+Object::set_object( ego* object )
+{
+  object_ = object;
+}
+
 ego*
 Object::object()
 {
