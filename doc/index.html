@@ -37,7 +37,7 @@
       </div>
       <div class="list-group list-group-flush">
         <a href="#about" class="list-group-item list-group-item-action bg-light">about</a>
-        <a href="#building" class="list-group-item list-group-item-action bg-light">building</a>
+        <a href="#quickstart" class="list-group-item list-group-item-action bg-light">quickstart</a>
         <a href="#usage" class="list-group-item list-group-item-action bg-light">usage</a>
         <a href="#developing" class="list-group-item list-group-item-action bg-light">developing</a>
         <a href="#testing" class="list-group-item list-group-item-action bg-light">testing</a>
@@ -71,24 +71,348 @@
 
       <div class="container-fluid">
         <h3 class="mt-4" id="about">about</h3>
-        documentation is in progress!
+        <code>avro</code> (adaptive Voronoi remesher) is a mesh adaptation tool with the following capabilities:
+        <ol>
+          <li>dimension-independent mesh adaptation using local cavity operators (with exact geometric predicates for 2d, 3d and 4d).</li>
+          <li>visualization of meshes with solution fields using either OpenGL (and GLFW) or WebGL (through a websocket connection).</li>
+          <li>dimension-independent calculation of Voronoi diagrams (with exact geoemtric predicates up to 4d).</li>
+        </ol>
+        note: this is the <code>avro-2.0</code> version, which is a rewrite of the <a href="https://philipclaude.gitlab.io/avro/">original version</a> written by Philip for his PhD.
+
         <hr>
 
-        <h3 class="mt-4" id="building">building</h3>
+        <h3 class="mt-4" id="quickstart">quickstart</h3>
+        <p>
+          These steps will guide you through downloading a fresh copy of <code>avro</code>, installing dependencies, and compiling the source code.
+        </p>
+        <p>
+          At the very least, <code>avro</code> depends on having the following on your computer:
+          <ul>
+            <li> <code>git</code></li>
+            <li><code>CMake</code> (2.8.8) for generating Makefiles and targets when compiling</li>
+            <li><code>C++</code> compiler (with <code>C++11</code> capability), such as <code>g++</code> 4.8.3+, <code>clang</code> 3.5+, <code>icpc</code> 14+</li>
+            <li><code>EngineeringSketchPad</code> 1.09+ (mostly just for <code>EGADS</code>) for interfacing to geometry models</li>
+            <li><code>nlopt</code> 2.4.2+ for solving optimization problems</li>
+            <li><code>OpenGL 3+</code> and <code>glm</code></li>
+            <li><code>LAPACK</code> for linear algebra</code></li>
+          </ul>
+        </p>
+        Most of these dependencies can be installed with a package manager.
+        On Linux, you can use <code>apt</code> (the Advanced Package Tool).
+        On OS X, either <code>homebrew</code> or <code>MacPorts</code> will work (I use <a href="http://brew.sh">homebrew</a>).
+        <code>avro</code> is not currently supported on Windows.
 
-        <h4 class="m4-4">dependencies</h4>
+        <h4 class="mt-4">dependencies on OS X</h4>
+        Install the <code>clang</code> compiler:
+        <pre class="prettyprint lang-bsh" style="color: black">
 
-        <h4 class="m4-4">compiling</h4>
+          $ xcode-select --install
+        </pre>
+        Install dependencies:
+        <pre class="prettyprint lang-bsh" style="color: black">
 
-        <hr>
+          $ brew install git cmake nlopt glm lapack
+        </pre>
+
+        <h4 class="mt-4">dependencies on Linux</h4>
+        Install dependencies:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ sudo apt-get install git cmake cmake-curses-gui libnlopt-dev libblas-dev liblapack-dev libglm xorg-dev
+        </pre>
+
+        <h4 class="mt-4"><code>EngineeringSketchPad</code> (both Linux and OS X)</h4>
+        Download the latest version of ESP (<a href="https://acdl.mit.edu/ESP/ESP.tgz">source code</a>) and pre-built OpenCASCADE libraries (<a href="https://acdl.mit.edu/ESP/OCC731lin64.tgz">Linux</a>, <a href="https://acdl.mit.edu/ESP/OCC731osx64.tgz">OS X</a>).
+        Then extract the contents to some appropriate location where you keep your codes.
+        For example, <code>~/Codes/EngSketchPad</code> and <code>~/Codes/OpenCASCADE-7.3.1</code>.
+        Then append your <code>~/.bashrc</code> (on Linux) or <code>~/.bash_profile</code> (on OS X) file with the following lines:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          export CASROOT='/Users/pcaplan/Codes/OpenCASCADE-7.3.1'
+          export CAS_DIR=$CASROOT
+          export ESP_DIR='/Users/pcaplan/Codes/EngSketchPad'
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CAS_DIR/lib
+        </pre>
+        Then navigate to the <code>EngSketchPad/config</code> directory and run the configuration file:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ cd ~/Codes/EngSketchPad/config
+          $ ./makeEnv
+        </pre>
+        This generates two files <code>ESPenv.sh</code> and <code>ESPenv.csh</code> in the root <code>EngSketchPad</code> directory.
+        Source whichever one you like, and then navigate to the <code>src</code> directory and compile:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ cd ~/Codes/EngSketchPad
+          $ source ESPenv.sh
+          $ cd src
+          $ make
+        </pre>
+        note: use <code> make -j 4</code> (or higher) if you want to use 4 threads to make compiling faster.
+
+        <h4 class="mt-4">building <code>avro</code> (both Linux and OS X)</h4>
+        Now you're ready to download and build <code>avro</code>!
+        Navigate to wherever you want to store <code>avro</code>, such as <code>~/Codes</code>, and clone the repository:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ cd ~/Codes
+          $ git clone https://gitlab.com/mach-II/avro.git
+        </pre>
+        ... and enter your GitLab username and password.
+
+        <p>
+        Navigate to the main <code>avro</code> directory, and create your <code>build</code> directory:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ cd avro
+          $ mkdir build
+          $ mkdir build/release
+        </pre>
+        This is where <code>avro</code> will be compiled (anything in the <code>build</code> directory is ignored by <code>git</code> -- see the <code>.gitignore</code> in the root <code>avro</code> directory).
+        In the last step, you could have also created a directory <code>build/debug</code> if you want compile with debugging symbols (useful if you're hunting a segfault).
+        The name of the directory (release, debug, coverage) tells <code>CMake</code> what kind of build we want.
+        The <code>release</code> version will tell the compiler to do some optimizations so <code>avro</code> will run faster.
+        <p>
+        Navigate to your build directory and run <code>CMake</code>
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ cd build/release
+          $ cmake ../../
+        </pre>
+        If the <code>CMake</code> configuration was successful, you can now compile <code>avro</code>:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ make avro -j 4
+        </pre>
+        This will compile the main <code>avro</code> executable (<code>build/release/bin/avro</code>).
+        Here are some extra targets that you may want to build:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ make avro_lib       # only compiles the library (no unit tests or main executable)
+          $ make                # compiles all unit tests (without running)
+          $ make unit           # compiles and runs all unit tests
+        </pre>
 
         <h3 class="mt-4" id="usage">usage</h3>
+        <h4 class="mt-4">using the <code>avro</code> executable</h4>
+        The main <code>avro</code> executable provides an interface to various "programs," which are specified by executing:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ bin/avro -[program name] [required arguments] [optional arguments specified with = signs]
+        </pre>
+        The "program name" can be one of "adapt", "plot" or "voronoi", which each take a different list of required arguments, and provides a various set of optional arguments.
+        <ul>
+          <li><code>adapt</code>: runs mesh adaptation on some input <code>mesh</code> with <code>geometry</code> and <code>metric</code> to some <code>output_prefix</code>.</li>
+          <li><code>plot</code>: plots some input <code>mesh</code>.</li>
+          <li><code>voronoi</code>: computes a restricted Voronoi diagram of some input <code>mesh</code> with <code>points</code> (the Delaunay vertices).</li>
+        </ul>
+        You can learn more about required and optional arguments by running <code>avro</code> with no arguments, which will display some information about each program.
+
+        <h4 class="mt-4">runnning unit tests</h4>
+        The <code>CMake</code> configuration provides targets for all unit tests found in the <code>test</code> directory in which the name of the file ends with <code>*_ut.cpp</code>
+        All subdirectories in these targets are separated by underscores.
+        For example, you can <b>build</b> and <b>run</b> the unit test found in <code>test/lib/mesh/topology_ut.cpp</code> by executing:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ make lib_mesh_topology_ut
+        </pre>
+        You should then see a summary of the results for the test.
         <hr>
 
         <h3 class="mt-4" id="developing">developing</h3>
+
+        <h4 class="mt-4">conventions</h4>
+
+        <ol>
+          <li>enclose everything within the <code>avro</code> namespace (sub-namespaces may include <code>numerics</code>, <code>graphics</code>, <code>EGADS</code>, <code>PSC</code>).</li>
+          <li>use <code>snake_case</code> for variable and method names (there might be some lingering <code>drinkingCamelCase</code> from version 1.0 - these will be renamed in the future).</li>
+          <li>use <code>CamelCase</code> (not <code>drinkingCamelCase</code>) for class names.</li>
+          <li>use <code>const</code>-correctness whenever possible.</li>
+          <li>class <code>variables_</code> should have an underscore ("_") at the end of the <code>variable_name_</code> (this helps distinguish between <code>class_variables_</code> and <code>local_variables</code>)</li>
+          <li>include headers in alphabetical order (by directory, then header file name)</li>
+          <li>avoid including headers within headers - try to use forward declarations when possible</li>
+          <li>use smart pointers (i.e. <code>std::shared_ptr</code> and <code>std::make_shared</code> from the <code>memory</code> header in <code>C++</code>) - do not use <code>new</code> to allocate memory.</li>
+        </ol>
+
+        <h4 class="mt-4">directory structure</h4>
+        Here are the most important directories in <code>avro</code> you should be familiar with:
+        <ul>
+          <li><code>src</code>: the main directory in which all the source code for the library, executables and third-party libraries are stored:
+            <ul>
+              <li><code>bin</code>: contains the code used for the main <code>avro</code> executable.
+              <li><code>lib</code>: contains the main <code>avro</code> source code:
+                <ul>
+                  <li><code>adaptation</code>: contains functions and classes for anisotropic mesh adaptation.</li>
+                  <li><code>common</code>: contains common utilities for various data structures.</li>
+                  <li><code>geometry</code>: contains definitions for entities, bodies ad models, which are specialized in <code>egads</code> and <code>psc</code> directories.</li>
+                  <li><code>graphics</code>: contains source for visualizing meshes and solutions, using both <code>OpenGL</code> and <code>WebGL</code>.</li>
+                  <li><code>library</code>: contains an internal library of meshes, metric, geometries and plots used in unit tests and the <code>avro</code> interface.</li>
+                  <li><code>master</code>: contains various "master" element utilities, such as the definition of the master simplex or polytope, along with functions for doing numerical quadrature with the master element.</li>
+                  <li><code>mesh</code>: contains the core definition of a <code>Topology</code> and <code>Points</code> along with data structures useful when manipulating meshes, such as the inverse, neighbours and facets.</li>
+                  <li><code>numerics</code>: contains definitions of vectors, matrices and important linear algebra functions, as well as the implementation of exact geometric predicates.</li>
+                  <li><code>voronoi</code>: contains the code to calculate the restricted Voronoi diagram.</li>
+                </ul>
+              </li>
+              <li><code>third_party</code>: contains the code for open-source third-party libraries.
+                One of the most important ones is <code>numpack</code> which is used for all linear algebra calculations.
+                This library originated in <code>SANS</code> at MIT.
+            </ul>
+            <li><code>test</code>: the main directory in which all tests are stored</li>
+              <ul>
+                <li><code>bin</code>: contains unit tests for the <code>avro</code> API.
+                <li><code>lib</code>: contains unit tests for the <code>avro</code> library.
+                  This directory directly parallels the structure of the <code>src/lib</code> directory.</li>
+                </li>
+                <li><code>library</code>: should only contain a few mesh and geometry files for simple testing.
+                  In general, meshes and geometries should be stored in our <a href="https://mach-ii.gitlab.io/mach-ii/#library">library</a>.</li>
+                <li><code>regression</code>: contains nightly regression tests (currently the <a href="https://github.com/UGAWG">UGAWG</a> benchmark cases).</li>
+                <li><code>sandbox</code>: is a place where you can play with <code>avro</code>!</li>
+                <li><code>third_party</code>: contains unit tests for some of the third-party libraries, notably for <code>numpack</code>.</li>
+                <li><code>tmp</code>: a dump for unit test output files - anything stored in here will be ignored by <code>git</code>.</li>
+              </ul>
+            </li>
+
+          </li>
+
+        </ul>
+
+        <h4 class="mt-4">types</h4>
+        <h5 class="mt-4">Numbers</h5>
+        In <code>src/common/types.h</code>, you will find various type definitions which should be used throughout the code.
+        Do not use <code>int</code>, <code>unsigned long</code> or <code>double</code> directly unless you are calling a function in another library (e.g. you need to pass a <code>float</code> to <code>OpenGL</code> or an <code>int</code> to <code>EGADS</code>).
+        <ul>
+          <li><code>index_t</code>: refers to "indices," such as those in a mesh topology, which is an <code>unsigned long</code>.</li>
+          <li><code>coord_t</code>: refers to "coordinate", such as the dimension of points, which is an <code>unsigned short</code>.</li>
+          <li><code>real_t</code>: refers to a "real" type, such as the coordinates of a mesh vertex, which can be <code>double</code> or <code>float</code>, depending on the desired precision.</li>
+          <li><code>nb</code>: refers to the "number" of elements in any kind of container in <code>avro</code>, such as a list/array/table/topology/points, etc.
+            For example, the number of vertices in the mesh can be accessed through <code>points.nb()</code> whereas the number of elements (triangles, tetrahedra, pentatopes, polygons, polytopes) can be accessed through <code>topology.nb()</code>.</li>
+          <li><code>number</code>: refers to the <i>topological</i> number of some object.
+            For example, a <code>topology</code> which stores triangles will have <code>topology.number()</code> equal to 2.
+            Similarly, a geometric <code>entity</code> describing a Line will have <code>entity.number()</code> equal to 1.</li>
+          <li><code>dim</code>: refers to the ambient dimension, such as the dimension of vertex coordinates.
+            For example, <code>points</code> in 5d space will have <code>points.dim()</code> equal to 5.</li>
+        </ul>
+
+        <h5 class="mt-4">Points</h5>
+        <code>Points</code> (see <code>src/lib/mesh/points.h</code> are the main container for vertices, which store physical coordinates, parameter space coordinates, geometric entities, as well as some other metadata.
+        Here are some useful functions if you have a <code>Points</code> object called <code>points</code>:
+        <ul>
+          <li> <code>points.dim()</code>: returns the ambient dimension of the points.</li>
+          <li> <code>points.udim()</code>: returns the maximum dimension of the parameter space coordinates (often <code>dim -1 </code>).
+          <li> <code>points[k]</code>: retrieves the pointer to the coordinates of vertex k.</li>
+          <li> <code>points[k][d]</code>: retrieves the value of the coordinate of vertex k at dimension d.</li>
+          <li> <code>points.entity(k)</code>: retrieves the pointer to geometric entity on which vertex k lies; this pointer should be non-null for boundary vertices, and null for interior vertices.</li>
+          <li> <code>points.u(k)</code>: retrieves the pointer to the parameter coordinate of vertex k.
+            An entity <code>ek</code> with topological number <code>N</code> will only require <code>N</code> parameter coordinates to be stored at vertex k.
+            All remaining parameter values (up to <code>udim_</code>) will be set to something very big (1e20), so that a bug will cause some calculation to blow up.</li>
+        </ul>
+
+        <h5 class="mt-4">Topology</h5>
+        The <code>Topology</code> (see <code>src/lib/mesh/topology.h</code>) stores the mesh topology and can be used to manipulate (add or remove) elements in the mesh.
+        Very imoortantly, it is <b>templated by the master element type</b>, since most computations on meshes are independent of the type of the mesh, but invoke the master element for specialized calculations (such as edge/facet extraction, volumes, etc.).
+        Here are some useful functions if you have a <code>Topology&lt;type&gt;</code> object called <code>topology</code>:
+          <ul>
+            <li> <code>topology.number()</code>: returns the topological number of the mesh.</li>
+            <li> <code>topology.points()</code>: returns a reference to the points in the mesh. Note that a topology stores a <i>reference</i> to mesh points (instead of its own object), since points can be shared between multiple topologies.</li>
+            <li> <code>topology(k)</code>: retrieves the pointer to the first index of element k.</li>
+            <li> <code>topology(k)[j]</code>: retrieves the global index of element k in local index j.</li>
+            <li> <code>topology.nv(k)</code>: returns the number of vertices in element k.
+              For example, this should be equal to <code>number_+1</code> for a straight-sided simplicial mesh.</li>
+          </ul>
+
+        <h5 class="mt-4">Entity</h5>
+        Integration with the geometry is critical for mesh generation and adaptation algorithms.
+        As such, <code>avro</code> provides a generic interface through the <code>Entity</code> class (see <code>src/lib/geometry/entity.</code>), which provides a hierarchical representation (as a tree - see <code>src/lib/common/tree.h</code>) of the geometry.
+        In other words, a square Face will have 4 children (one for each Edge), where each of these child Edges will have 2 children itself (one for each Node).
+        Note that capital letters are used to distinguish geometry terms from mesh terms (i.e. mesh edge versus geometry Edge).
+        Here are some useful functions if you have a pointer to a geometry entity (it is often the case to have a pointer to this if you are retrieving the entity from <code>points.entity(k)</code>).
+        <ul>
+          <li> <code>entity->number()</code>: returns the topological number of the entity.</li>
+          <li> <code>entity->evaluate(u,x)</code>: evaluates the parameter coordinates in <code>u</code> and stores the result in the physical coordinates <code>x</code>.</li>
+          <li> <code>entity->inverse(x,u)</code>: looks up the parameter coordinate for the closest point to <code>x</code> and saves the result in <code>u</code> (this function should be used sparingly).</li>
+          <li> <code>entity->above(e)</code>: returns <code>true</code> or <code>false</code> depending on whether the <code>entity</code> is "above" some other entity <code>e</code> in the geometry hierarchy.</li>
+          <li> <code>entity->intersect(e)</code>: returns a point to the common entity between <code>entity</code> and <code>e</code> - the entity with the lowest topological number is returned.</li>
+          <li> <code>entity->child(k)</code>: returns the k'th child of the <code>entity</code>.
+          For example if <code>entity</code> is a Face, then <code>entity->child(0)</code> will return the entity associated with the first Edge child.</li>
+        </ul>
+
         <hr>
 
         <h3 class="mt-4" id="testing">testing</h3>
+        <h4 class="mt-4">writing unit tests</h4>
+        <code>avro</code> uses its own unit testing framework with the single header file in <code>test/unit_tester.hpp</code>.
+        When writing a unit test, the most important things you need to remember are to (1) create a testing suite and (2) create the actual test cases.
+        For example, if we want to write tests for <code>src/lib/mesh/something_cool.cpp</code> (defined in header <code>src/lib/mesh/something_cool.h</code>), you would first create a new file in <code>test/lib/mesh/something_cool_ut.cpp</code> (remember to end the filename with <code>_ut.cpp</code> so <code>CMake</code> know to create a target for it).
+        The contents of the file would then be:
+
+        <pre class="prettyprint lang-cpp" style="color: black">
+
+          #include "unit_tester.hpp"
+
+          #include "mesh/something_cool.h"
+
+          UT_TEST_SUITE( something_cool_test_suite )
+
+          UT_TEST_CASE( cool_test1 )
+          {
+            // write your test body here!
+          }
+          UT_TEST_CASE_END( cool_test1 )
+
+          UT_TEST_CASE( cool_test2 )
+          {
+            // write your test body here!
+          }
+          UT_TEST_CASE_END( cool_test2 )
+
+          UT_TEST_SUITE_END( something_cool_test_suite )
+        </pre>
+        Of course, you can name your "suite" and "test" to whatever you like (make sure the initial declaration matches the closing section).
+        Here are some useful macros which will help you assert whether your code is working correctly (use these within your test bodies):
+
+        <pre class="prettyprint lang-cpp" style="color: black">
+
+          UT_ASSERT( something_to_assert_is_true )
+          UT_ASSERT_EQUALS( value , expected_value )
+          UT_ASSERT_NEAR( value , expected_value , tolerance )
+          UT_CATCH_EXCEPTION( command_which_should_throw_an_exception )
+        </pre>
+        Then re-run <code>CMake</code> and run your test:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ cmake .
+          $ make lib_mesh_something_cool_ut
+        </pre>
+        which should display
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          ==== Test suite: mesh_something_cool_suite ====
+
+          running 2 tests...
+
+          --> running case cool_test1:
+
+          --> running case cool_test2:
+
+           ==== Total time = X.YZ seconds. ====
+          Summary:
+          N assertions passed out of N with 0 failures and 0 exceptions.
+          [100%] Built target lib_mesh_something_cool_ut
+        </pre>
+        This unit test will automatically be added to the complete list of test for the <code>unit</code> target (run when changes are pushed).
+
+        <h4 class="mt-4">pushing changes</h4>
+        Any time you want to push changes to <code>avro</code>, this will trigger a "pipeline" on GitLab.
+        There are three phases to this pipeline: <b>build</b>, <b>test</b> and <b>deploy</b>.
+        <ul>
+          <li><b>build</b>: builds avro using a variety of compilers.</li>
+          <li><b>test</b>: runs all unit tests and generate code coverage information.</li>
+          <li><b>deploy</b>: makes the coverage information and this documentation page available.</li>
+        </ul>
+        After pushing your changes, you can then request (on GitLab) to merge (a.k.a. "pull" in GitHub terminology) with the <b>master</b> branch.
+        Philip will then review any pipelines associated with the changes proposed in your merge request; if they pass, then your changes will be marged and your code will be available to the rest of the group (upon doing a <code>git pull</code>).
+        Keep an eye on the "builds" channel in slack for succesful pipelines.
+        If you see one, it's proboably a good idea to do a <code>git pull</code>!
         <hr>
       </div>
     </div>
