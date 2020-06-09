@@ -172,8 +172,11 @@
 
           $ cd ~/Codes
           $ git clone https://gitlab.com/mach-II/avro.git
+          $ git checkout [your branch name]
         </pre>
         ... and enter your GitLab username and password.
+        Note that in the last step, you need to provide the name of your branch (such as <code>philip</code>, <code>pruffolo</code> or <code>hbrady</code>).
+        This will switch you over to your branch - note that pushing to the master branch is not allowed.
 
         <p>
         Navigate to the main <code>avro</code> directory, and create your <code>build</code> directory:
@@ -434,6 +437,39 @@
         <p>
         This unit test will automatically be added to the complete list of tests for the <code>unit</code> target (run when changes are pushed).
         </p>
+
+        <h4 class="mt-4">debugging</h4>
+        Bugs happen and can be frustrating to hunt down.
+        In the event you are hunting a segmentation fault (or some other unexpected signal), you should use a "debug" version (see above) so that you can run some debugging tools.
+        Specifically, <code>avro</code>'s <code>CMake</code> configuration provides two targets that can be useful when debugging: (1) with <a href="http://www.gnu.org/software/gdb/">gdb</a> (<a href="http://lldb.llvm.org/">ldb</a> on OS X) and (2) with <a href="https://www.valgrind.org/docs/manual/mc-manual.html">valgrind's memcheck tool</a>.
+        Suppose your new unit test <code>something_fun_ut</code> produces a segmentation fault.
+        You can run <code>gdb</code> on your test by making the target <code>something_fun_ut_gdb</code>:
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ make something_fun_ut_gdb
+        </pre>
+        <p>
+          You will then enter into the <code>gdb</code> console.
+          Some useful commands for debugging are:
+        </p>
+        <ul>
+          <li> <code>bt</code>: print the "backtrace" from the point of the segfault, which shows each frame (functions called with line numbers - super helpful!)</li>
+          <li> <code>f [frame number]</code>: go to a specific frame indexed by "frame number" in the backtrace.</li>
+          <li> <code>p [some variable]</code>: print the value of some variable</li>
+          <li> <code>call [some function]</code>: call some function (can be used on objects too).</li>
+        </ul>
+        <p>
+          <code>gdb</code> will most likely provide everything you need when debugging, but for really special bugs, <code>valgrind</code>'s <code>memcheck</code> tool can be useful for finding bad memory accesses, such as using uninitialized data.
+          On Linux, you can install <code>valgrind</code> through your package manager, but for recent versions of OS X, you need to manually install it (so I don't recommend doing this).
+          If you do have <code>valgrind</code> installed on your computer, you can make the target:
+          <pre class="prettyprint lang-bsh" style="color: black">
+
+            $ make something_fun_ut_memcheck
+          </pre>
+          <p>
+            You will notice that your test runs significantly slower with <code>memcheck</code>.
+            In the future, a pipeline will be added (see below) that will also run all unit tests under memcheck (probably once per week).
+          </p>
         <h4 class="mt-4">pushing changes</h4>
         <p>
           Any time you want to push changes to <code>avro</code>, this will trigger a "pipeline" on GitLab.
@@ -447,6 +483,8 @@
         <p>
         After pushing your changes, you can then request (on GitLab) to merge (a.k.a. "pull" in GitHub terminology) with the <b>master</b> branch.
         Philip will then review any pipelines associated with the changes proposed in your merge request; if they pass, then your changes will be merged and your code will be available to the rest of the group (upon doing a <code>git pull</code>).
+        Note that there is also a nightly pipeline (run at midnight every night) that runs our regression tests (see the <code>test/regression</code> directory).
+        These regression tests should also pass before merging your changes into the master branch.
         Keep an eye on the "builds" channel in slack for succesful pipelines.
         If you see one, it's probably a good idea to do a <code>git pull</code>!
         </p>

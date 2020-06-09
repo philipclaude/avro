@@ -26,8 +26,8 @@ namespace graphics
 void
 ApplicationBase::write()
 {
+  printf("writing..\n");
   // write all the data present in the scene graph
-  printf("nb_scenes = %lu\n",scenes_.size());
   for (index_t k=0;k<scenes_.size();k++)
     scenes_[k]->write(manager_);
 }
@@ -114,6 +114,7 @@ Application<GLFW_Interface<API_t>>::run()
   restart_ = false;
 
   focus_scenes();
+  write();
   write();
 
   for (index_t k=0;k<window_.size();k++)

@@ -145,7 +145,6 @@ private:
         dp = (t[0] - x1)*n[0] + (t[1] - y1)*n[1] + (t[2] -z1)*n[2];
         if (fabs(dp)<1e-6)
         {
-          printf("coplanar!!\n");
           return true;
         }
       }

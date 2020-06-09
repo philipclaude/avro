@@ -30,6 +30,7 @@
 #endif
 
 #include <map>
+#include <set>
 #include <vector>
 
 #include "graphics/manager.h"
@@ -166,6 +167,19 @@ private:
 
   void set_matrices( SceneGraph& scene );
   void draw( Primitive& primitive , TransformFeedbackResult* feedback=nullptr );
+
+  // map from primitive to vbo
+  std::set<Primitive*> primitive_;
+
+  std::map<Primitive*,index_t> vbo_points_;
+  std::map<Primitive*,index_t> vbo_edges_;
+  std::map<Primitive*,index_t> vbo_triangles_;
+  std::map<Primitive*,index_t> vbo_colors_;
+  std::map<Primitive*,index_t> vbo_normals_;
+
+  std::map<Primitive*,index_t> vbo_feedback_points_;
+  std::map<Primitive*,index_t> vbo_feedback_edges_;
+  std::map<Primitive*,index_t> vbo_feedback_triangles_;
 
   // map from primitive to vao
   std::map<Primitive*,index_t> vao_points_;

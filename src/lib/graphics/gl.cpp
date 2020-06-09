@@ -112,21 +112,72 @@ void
 OpenGL_Manager::write( Primitive& primitive )
 {
 
-  if (vao_edges_.find(&primitive)!=vao_edges_.end()) return;
+  //if (vao_edges_.find(&primitive)!=vao_edges_.end()) return;
 
-  // allocate the buffers
-  std::vector<GLuint> vbo(9);
-  GL_CALL( glGenBuffers( vbo.size() , vbo.data() ) );
-  GLuint& vbo_position  = vbo[0];
-  GLuint& vbo_colour    = vbo[1];
-  GLuint& vbo_normal    = vbo[2];
-  GLuint& vbo_triangles = vbo[3];
-  GLuint& vbo_edges     = vbo[4];
-  GLuint& vbo_points    = vbo[5]; UNUSED(vbo_points);
+  GLuint vbo_position;
+  GLuint vbo_colour;
+  GLuint vbo_normal;
+  GLuint vbo_triangles;
+  GLuint vbo_edges;
 
-  GLuint& vbo_feedback_points    = vbo[6];
-  GLuint& vbo_feedback_edges     = vbo[7];
-  GLuint& vbo_feedback_triangles = vbo[8];
+  GLuint vbo_feedback_points;
+  GLuint vbo_feedback_edges;
+  GLuint vbo_feedback_triangles;
+
+  if (primitive_.find(&primitive)==primitive_.end())
+  {
+    printf("generating new buffers..\n");
+
+    // generate new buffers
+    std::vector<GLuint> vbo(9);
+    GL_CALL( glGenBuffers( vbo.size() , vbo.data() ) );
+
+    vbo_position  = vbo[0];
+    vbo_colour    = vbo[1];
+    vbo_normal    = vbo[2];
+    vbo_triangles = vbo[3];
+    vbo_edges     = vbo[4];
+
+    vbo_feedback_points    = vbo[6];
+    vbo_feedback_edges     = vbo[7];
+    vbo_feedback_triangles = vbo[8];
+
+    // keep track of the vbo's in case we need to update them
+    vbo_points_.insert( {&primitive,vbo_position} );
+    vbo_edges_.insert( {&primitive,vbo_edges} );
+    vbo_triangles_.insert( {&primitive,vbo_triangles} );
+    vbo_normals_.insert( {&primitive,vbo_normal} );
+    vbo_colors_.insert( {&primitive,vbo_colour} );
+
+    vbo_feedback_points_.insert( {&primitive,vbo_feedback_points} );
+    vbo_feedback_edges_.insert( {&primitive,vbo_feedback_edges} );
+    vbo_feedback_triangles_.insert( {&primitive,vbo_feedback_triangles} );
+
+    primitive_.insert( &primitive );
+  }
+  else
+  {
+    // retrieve the buffer indices, so we can overwrite them
+    avro_assert( vbo_points_.find(&primitive) != vbo_points_.end() );
+    avro_assert( vbo_edges_.find(&primitive) != vbo_edges_.end() );
+    avro_assert( vbo_triangles_.find(&primitive) != vbo_triangles_.end() );
+    avro_assert( vbo_normals_.find(&primitive) != vbo_normals_.end() );
+    avro_assert( vbo_colors_.find(&primitive) != vbo_colors_.end() );
+    avro_assert( vbo_feedback_points_.find(&primitive) != vbo_feedback_points_.end() );
+    avro_assert( vbo_feedback_edges_.find(&primitive) != vbo_feedback_edges_.end() );
+    avro_assert( vbo_feedback_triangles_.find(&primitive) != vbo_feedback_triangles_.end() );
+
+    vbo_position  = vbo_points_[&primitive];
+    vbo_edges     = vbo_edges_[&primitive];
+    vbo_triangles = vbo_triangles_[&primitive];
+    vbo_normal    = vbo_normals_[&primitive];
+    vbo_colour    = vbo_colors_[&primitive];
+
+    vbo_feedback_points    = vbo_feedback_points_[&primitive];
+    vbo_feedback_edges     = vbo_feedback_edges_[&primitive];
+    vbo_feedback_triangles = vbo_feedback_triangles_[&primitive];
+  }
+
 
   if (primitive.number()>=2)
   {

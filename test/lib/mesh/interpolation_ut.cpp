@@ -78,13 +78,7 @@ UT_TEST_CASE( test1 )
   //vis.add_topology(topology);
   vis.add_topology(topology);
 
-  // test the EPS export
   vis.run();
-/*
-  interpolation = std::make_shared< GeometryMetric<Simplex> >(u);
-  interpolation->eval( topology.points() , 0 , {0} , tp );
-*/
-
 }
 UT_TEST_CASE_END( test1 )
 
