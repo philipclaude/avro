@@ -13,8 +13,6 @@
 #include "geometry/tessellation.h"
 
 #include "graphics/application.h"
-#include "graphics/user_interface.h"
-#include "graphics/window.h"
 
 #include "library/csm.h"
 
@@ -45,9 +43,6 @@ UT_TEST_CASE(test1)
 
 #if 1
   graphics::Visualizer vis;
-
-  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
   vis.add_topology( tess.topology(0) );
 
 #else

@@ -13,6 +13,8 @@
 #include "graphics/controls.h"
 #include "graphics/gl.h"
 #include "graphics/primitive.h"
+#include "graphics/scene.h"
+#include "graphics/user_interface.h"
 #include "graphics/window.h"
 
 #include "graphics/user_interface.h"
@@ -180,6 +182,112 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
 }
 
 void
+GLFW_Window::mouse_button_callback(int button,int action,int mods)
+{
+  if (action == GLFW_PRESS)
+  {
+    double xpos,ypos;
+    glfwGetCursorPos(window_,&xpos,&ypos);
+    controls_.mouse_down(button,action,mods,(int)xpos,(int)ypos);
+  }
+  if (action == GLFW_RELEASE)
+  {
+    controls_.mouse_up();
+  }
+}
+
+void
+GLFW_Window::mouse_move_callback(double xpos, double ypos)
+{
+  controls_.mouse_move((int)xpos,(int)ypos);
+}
+
+void
+GLFW_Window::mouse_scroll_callback(double xpos, double ypos)
+{
+  controls_.mouse_wheel(xpos,ypos);
+}
+
+void
+GLFW_Window::key_callback(int key, int scancode, int action, int mods)
+{
+  controls_.key_down(key);
+}
+
+void
+GLFW_Window::make_current()
+{
+  glfwMakeContextCurrent(window_);
+}
+
+void
+GLFW_Window::create_interface()
+{
+  interface_ = std::make_shared<Interface>(*this,manager_.listener());
+}
+
+bool
+GLFW_Window::should_close()
+{
+  return glfwWindowShouldClose(window_) || (glfwGetKey(window_, GLFW_KEY_ESCAPE ) == GLFW_PRESS);
+}
+
+void
+GLFW_Window::setup()
+{
+  // ensure we can capture the escape key being pressed below
+  glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
+
+  // hide the mouse and enable unlimited mouvement
+  //glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+  glfwPollEvents();
+  glfwSetCursorPos(window_, width_/2, height_/2);
+
+  glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+
+  // enable depth test
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
+
+  // option to cull triangles which normal is not towards the camera
+  glDisable(GL_CULL_FACE);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1.5);
+}
+
+void
+GLFW_Window::begin_draw()
+{
+  make_current();
+
+  glfwPollEvents();
+
+  glClearColor (1.0, 1.0, 1.0, 0.0); // white
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  if (interface_!=nullptr)
+    interface_->begin_draw();
+}
+
+void
+GLFW_Window::end_draw()
+{
+  if (interface_!=nullptr)
+    interface_->end_draw();
+  glfwSwapBuffers(window_);
+
+  updated_ = controls_.update();
+}
+
+void
 GLFW_Window::update_view()
 {
   controls_.calculate_view();
@@ -205,6 +313,14 @@ GLFW_Window::save_eps( const std::string& filename )
   eps.add_triangles( feedback.triangle_points() , feedback.triangle_colors() );
   eps.add_edges( feedback.edge_points() , feedback.edge_colors() );
   eps.write( filename );
+}
+
+index_t
+GLFW_Window::create_scene()
+{
+  index_t id = scene_.size();
+  scene_.push_back(std::make_shared<SceneGraph>());
+  return id;
 }
 
 } // graphics

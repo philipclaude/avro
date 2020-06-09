@@ -16,8 +16,6 @@
 #include "geometry/egads/object.h"
 
 #include "graphics/application.h"
-#include "graphics/user_interface.h"
-#include "graphics/window.h"
 
 #include "library/ckf.h"
 #include "library/egads.h"
@@ -81,9 +79,7 @@ UT_TEST_CASE( test_2d )
   library::Plot<Simplex> point_plot(delaunay);
 
   Visualizer vis;
-  std::shared_ptr<Widget> toolbar = std::make_shared<Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
-
+  
   vis.add_topology(geometry_rvd);
   vis.add_topology(geometry_rvd.triangulation());
   vis.add_topology(point_plot);

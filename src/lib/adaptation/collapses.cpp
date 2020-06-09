@@ -14,10 +14,6 @@
 #include "geometry/entity.h"
 #include "geometry/egads/object.h"
 
-#include "graphics/application.h"
-#include "graphics/user_interface.h"
-#include "graphics/window.h"
-
 #include "library/meshb.h"
 
 namespace avro

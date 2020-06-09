@@ -16,8 +16,6 @@
 #include "geometry/egads/model.h"
 
 #include "graphics/application.h"
-#include "graphics/user_interface.h"
-#include "graphics/window.h"
 
 using namespace avro;
 
@@ -48,9 +46,6 @@ UT_TEST_CASE(test1)
   }
 
   graphics::Visualizer vis;
-
-  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
 
   vis.add_topology( tess.topology(0) );
 

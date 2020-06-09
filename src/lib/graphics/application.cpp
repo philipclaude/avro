@@ -9,6 +9,7 @@
 //
 #include "graphics/application.h"
 #include "graphics/gl.h"
+#include "graphics/user_interface.h"
 #include "graphics/window.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -183,6 +184,9 @@ Visualizer::Visualizer()
   initialize();
 
   main_->create_interface();
+
+  toolbar_ = std::make_shared<Toolbar>(*main_.get(),*this);
+  main_->interface().add_widget( toolbar_ );
 
 }
 

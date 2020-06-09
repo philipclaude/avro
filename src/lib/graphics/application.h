@@ -35,6 +35,8 @@ class TopologyBase;
 namespace graphics
 {
 
+class Widget;
+
 class ApplicationBase
 {
 public:
@@ -156,6 +158,8 @@ public:
 
   std::shared_ptr<GLFW_Window> main_;
   //GLFW_Window side_;
+private:
+  std::shared_ptr<Widget> toolbar_;
 };
 
 class WebVisualizer : public Application<Web_Interface>

@@ -11,10 +11,6 @@
 #include "adaptation/geometry.h"
 #include "adaptation/metric.h"
 
-#include "graphics/application.h"
-#include "graphics/user_interface.h"
-#include "graphics/window.h"
-
 #include "mesh/topology.h"
 
 #include <set>
@@ -267,31 +263,8 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     // assert the original point is visible
     if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
     {
-      printf("error smoothing vertex %lu\n",p);
-      print_inline(x0);
-      this->print();
-      this->check_visibility(false);
-      this->compute(p,this->topology_.points()[p] , this->C_ );
-      this->check_visibility(true);
-
-      this->u_.print(true);
-      this->geometry_cavity_.points().print(true);
-
-      graphics::Visualizer vis;
-      vis.add_topology(this->topology_);
-      vis.add_topology(*this);
-
-      printf("points:\n");
-      for (index_t k=0;k<N.size();k++)
-        this->topology_.points().print(N[k],true);
-      print_inline(this->u2v_);
-
-      std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-      vis.main_window().interface().add_widget( toolbar );
-
-      vis.run();
-
-      avro_implement;
+      printf("original vertex %lu not visible!\n",p);
+      avro_assert_not_reached;
     }
 
     // save the original parameter coordinates

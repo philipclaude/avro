@@ -83,8 +83,6 @@ plot( int nb_input , const char** inputs )
   }
 
   graphics::Visualizer vis;
-  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
 
   // option to plot the boundary
   Boundary<type> boundary(topology);

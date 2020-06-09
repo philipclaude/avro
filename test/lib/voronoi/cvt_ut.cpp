@@ -10,8 +10,6 @@
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
-#include "graphics/user_interface.h"
-#include "graphics/window.h"
 
 #include "library/ckf.h"
 
@@ -66,9 +64,6 @@ UT_TEST_CASE( test1 )
   rvd.optimise(5);
 
   graphics::Visualizer vis;
-
-  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
 
   //vis.add_topology(topology);
   vis.add_topology(rvd);

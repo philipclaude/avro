@@ -9,6 +9,7 @@
 //
 #include "common/error.h"
 
+#include "graphics/scene.h"
 #include "graphics/shader.h"
 #include "graphics/window.h"
 

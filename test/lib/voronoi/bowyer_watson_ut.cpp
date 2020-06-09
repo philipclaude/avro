@@ -12,8 +12,6 @@
 #include "common/tools.h"
 
 #include "graphics/application.h"
-#include "graphics/user_interface.h"
-#include "graphics/window.h"
 
 #include "library/ckf.h"
 
@@ -49,9 +47,6 @@ UT_TEST_CASE( test0)
     #if 1
     graphics::Visualizer vis;
     vis.add_topology(delaunay);
-
-    std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-    vis.main_window().interface().add_widget( toolbar );
 
     vis.run();
     #endif
@@ -97,9 +92,6 @@ UT_TEST_CASE( test1 )
   #if 0
   graphics::Visualizer vis;
   vis.add_topology(delaunay);
-
-  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
 
   vis.run();
   #endif

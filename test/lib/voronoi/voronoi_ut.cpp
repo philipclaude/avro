@@ -84,8 +84,6 @@ UT_TEST_CASE( line_test )
   printf("delaunay triangulation has %lu simplices\n",dt.nb());
 
   Visualizer vis;
-  std::shared_ptr<Widget> toolbar = std::make_shared<Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
 
   //vis.add_topology(topology);
   vis.add_topology(rvd);
