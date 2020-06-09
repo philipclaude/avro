@@ -25,21 +25,13 @@ using namespace avro;
 class SomeFunction
 {
 public:
-  SomeFunction( coord_t dim ) :
-    dim_(dim)
+  SomeFunction()
   {}
 
   real_t operator() ( const real_t* x ) const
   {
     return 1 + x[0]*x[0] + x[1];
-    //real_t result = 1;
-    //for (coord_t d=0;d<dim_;d++)
-    //  result *= std::exp(x[d])*sin(x[d]);
-    //return result;
   }
-
-private:
-  coord_t dim_;
 };
 
 UT_TEST_SUITE( interpolation_test_suite )
@@ -62,7 +54,7 @@ UT_TEST_CASE( test1 )
   u.master().set_basis( BasisFunctionCategory_Lagrange );
   u.master().load_quadrature(quadrature);
 
-  SomeFunction fcn(2);
+  SomeFunction fcn;
   u.evaluate(fcn);
 
   //u.print();
