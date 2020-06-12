@@ -24,15 +24,13 @@ Controls::Controls( float fov , int width , int height , float znear , float zfa
   offleft_(0),
   offtop_(0),
   scale_(1.0),
-  enabled_(true),
-  zoom_on_(true)
+  enabled_(true)
 {
   perspective_ = glm::perspective(fov,(float)width_/(float)height_,znear,zfar);
   perspective_ = perspective_ * glm::lookAt( eye_ , center_ , up_ );
 
   model_view_ = glm::mat4(1.0);
   ui_matrix_  = model_view_;
-  transformation_ = mat4(1.0);
 
   startx_ = -1;
   starty_ = -1;
@@ -52,6 +50,9 @@ Controls::update()
   bool updated = false;
   if (!enabled_) return updated;
 
+  rotation_ = mat4(1.0f);
+  translation_ = mat4(1.0f);
+
   // mouse-movement
   if ( dragging )
   {
@@ -66,7 +67,7 @@ Controls::update()
         model_view_ = glm::rotate( model_view_ , angley , {0,1,0} );
         updated = true;
 
-        transformation_ = model_view_*transformation_;
+        rotation_ = model_view_;
       }
     }
     else if (modifier==3) // alt-shift is down (rotate)
@@ -80,7 +81,7 @@ Controls::update()
         model_view_ = glm::rotate( model_view_ , angley , {0,1,0} );
         updated = true;
 
-        transformation_ = model_view_*transformation_;
+        rotation_ = model_view_;
       }
     }
     else if (modifier==2) // alt is down (spin)
@@ -103,7 +104,7 @@ Controls::update()
             model_view_  = glm::rotate( model_view_ , anglez , {0,0,1} );
             updated = true;
 
-            transformation_ = model_view_*transformation_;
+            rotation_ = model_view_;
           }
         }
 
@@ -111,15 +112,12 @@ Controls::update()
     }
     else if (modifier==1) // shift is down (zoom)
     {
-      if (zoom_on_)
       if (cursory_!=starty_)
       {
         float scale = std::exp( (cursory_ - starty_)/512.0 );
         model_view_ = glm::scale( model_view_ , {scale,scale,scale} );
-        //scale_ *= scale;
+        scale_ *= scale;
         updated = true;
-
-        transformation_ = model_view_*transformation_;
       }
 
     }
@@ -131,9 +129,7 @@ Controls::update()
       {
         model_view_ = glm::translate( model_view_ , {transx,transy,0} );
         updated = true;
-
-        transformation_ = model_view_*transformation_;
-
+        translation_ = model_view_;
       }
     }
 
@@ -201,20 +197,15 @@ Controls::key_down(int key)
 void
 Controls::mouse_wheel(double deltax ,double deltay)
 {
-  return;
-  if (!zoom_on_) return;
   if (deltay > 0)
   {
     model_view_ = glm::scale( model_view_ , {1.1,1.1,1.1} );
     scale_ *= 1.1;
-    //transformation_ = model_view_*transformation_;
-
   }
   else if (deltay < 0)
   {
     model_view_ = glm::scale( model_view_ , {0.9,0.9,0.9} );
     scale_ *= 0.9;
-    //transformation_ = model_view_*transformation_;
   }
 }
 
@@ -223,7 +214,6 @@ Controls::reset()
 {
   model_view_ = mat4(1.0);
   ui_matrix_  = mat4(1.0);
-  transformation_ = mat4(1.0);
   scale_ = 1.0;
 
   startx_ = -1;

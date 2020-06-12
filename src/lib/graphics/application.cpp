@@ -70,7 +70,7 @@ ApplicationBase::focus_scenes()
   for (index_t k=0;k<scenes_.size();k++)
   {
     // update the bounding box based on the points in each scene topology
-    //scenes_[k]->set_focus(focus_);
+    scenes_[k]->set_focus(focus_);
   }
 }
 
@@ -118,7 +118,6 @@ Application<GLFW_Interface<API_t>>::run()
   for (index_t k=0;k<window_.size();k++)
   {
     window_[k]->write_axes();
-    window_[k]->write_plane();
     window_[k]->update_view();
   }
 
@@ -147,19 +146,12 @@ Application<GLFW_Interface<API_t>>::run()
        {
          window_[k]->begin_draw();
 
-         if (window_[k]->pause())
-         {
-           //window_[k]->pause() = false;
-           //window_[k]->end_draw();
-           //continue;
-         }
-
          if (!restart_)
          for (index_t j=0;j<window_[k]->nb_scene();j++)
            manager_.draw(window_[k]->scene(j));
 
          window_[k]->draw_axes();
-         window_[k]->draw_plane();
+         window_[k]->draw_plane(focus_);
 
          window_[k]->update_view();
          window_[k]->end_draw();

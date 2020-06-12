@@ -574,7 +574,6 @@ Toolbar::begin_draw()
       {
         window_.modify_clipping_plane() = mod;
         printf("update mod clip plane!!\n");
-        window_.pause() = true;
       }
 
       ImGui::SameLine();

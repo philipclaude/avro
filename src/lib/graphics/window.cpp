@@ -150,7 +150,6 @@ GLFW_Window::GLFW_Window( GraphicsManager& manager , int width , int height , co
   clip_plane_(3,2.5),
   interface_(nullptr),
   updated_(true),
-  pause_(false),
   fps_(60)
 {
   window_ = glfwCreateWindow( width_ , height_ , title_.c_str() , NULL, NULL);
@@ -373,80 +372,20 @@ GLFW_Window::draw_axes()
 }
 
 void
-GLFW_Window::write_plane()
-{
-  real_t L = 2.5;
-
-  int sign = clip_plane_.sign();
-
-  std::vector<real_t> points(12);
-  points[0 ] = -L/2; points[1 ] = -L/2; points[2 ] = 0.0;
-  points[3 ] =  L/2; points[4 ] = -L/2; points[5 ] = 0.0;
-  points[6 ] =  L/2; points[7 ] =  L/2; points[8 ] = 0.0;
-  points[9 ] = -L/2; points[10] =  L/2; points[11] = 0.0;
-
-  std::vector<index_t> edges(8);
-  edges[0] = 0; edges[1] = 1;
-  edges[2] = 1; edges[3] = 2;
-  edges[4] = 2; edges[5] = 3;
-  edges[6] = 3; edges[7] = 0;
-
-  std::vector<index_t> triangles(6);
-  triangles[0] = 0; triangles[1] = 1; triangles[2] = 2;
-  triangles[3] = 0; triangles[4] = 2; triangles[5] = 3;
-
-  std::vector<real_t> color(12);
-  for (index_t k=0;k<4;k++)
-  {
-    color[3*k  ] = 255;
-    color[3*k+1] = 255;
-    color[3*k+2] = 0;
-  }
-
-  real_t s = 0.25;
-  real_t h = 0.01;
-  points.push_back( -h ); points.push_back( 0.0 ); points.push_back( 0.0 );
-  points.push_back(  h ); points.push_back( 0.0 ); points.push_back( 0.0 );
-  points.push_back(  h ); points.push_back( 0.0 ); points.push_back(   sign*s );
-  points.push_back( -h ); points.push_back( 0.0 ); points.push_back(   sign*s );
-
-  points.push_back( -1.5*h ); points.push_back( 0.0 ); points.push_back(   sign*s );
-  points.push_back(  1.5*h ); points.push_back( 0.0 ); points.push_back(   sign*s );
-  points.push_back(  0.0   ); points.push_back( 0.0 ); points.push_back(   sign*(s+3*h) );
-
-  triangles.push_back( 4 ); triangles.push_back( 5 ); triangles.push_back( 6 );
-  triangles.push_back( 4 ); triangles.push_back( 6 ); triangles.push_back( 7 );
-  triangles.push_back( 8 ); triangles.push_back( 9 ); triangles.push_back( 10 );
-
-  for (index_t k=0;k<7;k++)
-  {
-    color.push_back(255.);
-    color.push_back(0.);
-    color.push_back(0.);
-  }
-
-  manager_.write( "clipping-plane" , 2 , points , edges , triangles , color );
-  manager_.select_shader( "clipping-plane" , "wv" );
-}
-
-void
-GLFW_Window::draw_plane()
+GLFW_Window::draw_plane(const real_t* focus)
 {
   if (!show_clip_plane_) return;
 
   DrawingParameters params;
   params.transparency = 0.25;
   params.mvp = clip_controls_.model_view_projection();
-  manager_.draw( "clipping-plane" , 2 , params );
-
-  clip_plane_.plot( manager_,controls_.model_view_projection() );
+  clip_plane_.plot( manager_,focus,controls_.model_view_projection() );
 }
 
 void
 GLFW_Window::flip_clipping_normal()
 {
   clip_plane_.flip_normal();
-  write_plane();
 }
 
 void
@@ -456,12 +395,12 @@ GLFW_Window::end_draw()
     interface_->end_draw();
   glfwSwapBuffers(window_);
 
-  bool clip_updated = false;
-  clip_updated = clip_controls_.update();
+  bool clip_updated = clip_controls_.update();
   if (modify_clip_plane_ && clip_updated)
   {
-    //clip_plane_.append_transformation( clip_controls_.model_view() );
-    clip_plane_.update( clip_controls_.transformation() );
+    // append the rigid-body transformation set by the clip-controls to the clipping plane
+    clip_plane_.append_transformation( clip_controls_.rotation() , clip_controls_.translation() );
+    clip_plane_.update();
   }
   updated_ = controls_.update();
 }
@@ -476,7 +415,6 @@ GLFW_Window::clip()
 bool&
 GLFW_Window::modify_clipping_plane()
 {
-  pause_ = true;
   return modify_clip_plane_;
 }
 

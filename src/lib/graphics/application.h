@@ -60,6 +60,8 @@ protected:
 
 private:
   GraphicsManager& manager_;
+
+protected:
   real_t bounding_box_[6]; // (xmin,ymin,zmin,xmax,ymax,zmax)
   real_t focus_[4]; // (xcenter,ycenter,zcenter,scale)
 };

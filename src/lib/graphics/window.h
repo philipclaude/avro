@@ -51,9 +51,8 @@ public:
   void begin_draw();
   void draw_interface() const;
   void write_axes();
-  void write_plane();
   void draw_axes();
-  void draw_plane();
+  void draw_plane(const real_t* focus);
   void end_draw();
 
   index_t nb_scene() const { return scene_.size(); }
@@ -87,8 +86,6 @@ public:
   void clip();
   void reset_clip();
 
-  bool& pause() { return pause_; }
-
 private:
   std::string title_;
   GLFWwindow* window_;
@@ -117,7 +114,6 @@ private:
   std::shared_ptr<Interface> interface_;
 
   bool updated_;
-  bool pause_;
 
   index_t fps_;
 };

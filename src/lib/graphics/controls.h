@@ -41,7 +41,7 @@ public:
   const glm::mat4& ui_matrix() const { return ui_matrix_; }
   const glm::mat4& normal() const { return normal_; }
 
-  const glm::mat4& transformation() const { return transformation_; }
+  //const glm::mat4& transformation() const { return transformation_; }
 
   void set_ui_matrix( const glm::mat4& m ) { ui_matrix_ = m; }
   void set_mv_matrix( const glm::mat4& m ) { model_view_ = m; }
@@ -54,8 +54,6 @@ public:
   void disable() { enabled_ = false; }
   void enable() { enabled_ = true; }
 
-  bool& zoom_on() { return zoom_on_; }
-
   const glm::mat4& rotation() const { return rotation_; }
   const glm::mat4& translation() const { return translation_; }
 
@@ -66,7 +64,7 @@ private:
   glm::mat4 normal_;
   glm::mat4 ui_matrix_;
 
-  glm::mat4 transformation_;
+  //glm::mat4 transformation_;
 
   int width_;
   int height_;
@@ -87,8 +85,8 @@ private:
   const glm::vec3 up_ = {0,1,0};
 
   bool enabled_;
-  bool zoom_on_;
 
+  // rigid-body transformations (useful for defining clipping plane manipulations)
   glm::mat4 rotation_;
   glm::mat4 translation_;
 };
