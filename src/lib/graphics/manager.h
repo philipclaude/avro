@@ -14,6 +14,7 @@
 #include "common/types.h"
 
 #include "graphics/listener.h"
+#include "graphics/math.h"
 
 namespace avro
 {
@@ -25,14 +26,24 @@ class Primitive;
 class SceneGraph;
 class TransformFeedbackResult;
 
+typedef struct
+{
+  float transparency;
+  mat4  mvp;
+} DrawingParameters;
+
 class GraphicsManager
 {
 public:
   virtual ~GraphicsManager() {}
   virtual void write( Primitive& primitive ) = 0;
+  virtual void write( const std::string& name , coord_t number , const std::vector<real_t>& points , const std::vector<index_t>& edges , const std::vector<index_t>& triangles , const std::vector<real_t>& colors ) = 0;
   virtual void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr ) = 0;
+  virtual void draw( const std::string& name , coord_t number , const DrawingParameters& params ) = 0 ;
 
   Listener& listener() { return listener_; }
+
+  virtual void select_shader( const std::string& name , const std::string& shader_name ) = 0;
 
 private:
   Listener listener_;
@@ -46,10 +57,18 @@ private:
   Vulkan_Manager() {}
 
   void write( Primitive& primitive ) { avro_implement; }
+  void write( const std::string& name , coord_t number , const std::vector<real_t>& points , const std::vector<index_t>& edges , const std::vector<index_t>& triangles , const std::vector<real_t>& colors )
+  { avro_assert_not_reached; }
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
   { avro_implement; }
 
+  void draw( const std::string& name , coord_t number , const DrawingParameters& params )
+  { avro_implement; }
+
   void create_shaders()
+  { avro_implement; }
+
+  void select_shader( const std::string& name , const std::string& shader_name )
   { avro_implement; }
 
 };

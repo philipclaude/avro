@@ -33,7 +33,7 @@ UT_TEST_CASE( test1 )
   #if 0
   library::objFile topology( BASE_TEST_DIR+"geometry/obj/spot.obj" );
   #else
-  CKF_Triangulation topology( {2,2,2} );
+  CKF_Triangulation topology( {5,5,5} );
   #endif
 
   Delaunay delaunay(topology.points().dim());
@@ -45,16 +45,12 @@ UT_TEST_CASE( test1 )
     z[k][d] = random_within( 0.0 , 1.0 );
 
   delaunay::RestrictedVoronoiDiagram rvd(topology,z);
-  rvd.compute(true);
-
-  rvd.compute(true);
-
-  rvd.compute(true);
+  //rvd.compute(true);
 
   Visualizer vis;
 
   //vis.add_topology(topology);
-  vis.add_topology(rvd);
+  vis.add_topology(topology);
 
   // test the EPS export
   vis.run();

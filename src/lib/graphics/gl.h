@@ -156,10 +156,13 @@ private:
 
 public:
   void write( Primitive& primitive );
+  void write( const std::string& name , coord_t number , const std::vector<real_t>& points , const std::vector<index_t>& edges , const std::vector<index_t>& triangles , const std::vector<real_t>& colors );
 
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr );
+  void draw( const std::string& name , coord_t number , const DrawingParameters& params );
 
   void select_shader( Primitive& primitive , const std::string& name );
+  void select_shader( const std::string& name , const std::string& shader_name );
   void create_shaders();
   ShaderLibrary& shaders() { return *shaders_.get(); }
 
@@ -192,6 +195,12 @@ private:
 
   std::map<Primitive*,ShaderProgram*> shader_;
   std::shared_ptr<ShaderLibrary> shaders_;
+
+  // extra vao's to draw
+  std::map<std::string,GLuint> aux_vao_;
+  std::map<std::string,coord_t> aux_vao_number_;
+  std::map<std::string,index_t> aux_vao_size_;
+  std::map<std::string,ShaderProgram*> aux_vao_shader_;
 };
 
 

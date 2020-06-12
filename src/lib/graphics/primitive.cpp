@@ -53,7 +53,7 @@ Primitive::topology() const
 }
 
 void
-Primitive::extract()
+Primitive::extract( const ClippingPlane* plane )
 {
   index_t nb_triangles = 0;
   coord_t dim0 = topology_.points().dim();
@@ -90,7 +90,7 @@ Primitive::extract()
   {
     // get the edges from the topology
     std::vector<index_t> edges;
-    topology_.get_edges( edges );
+    topology_.get_edges( edges , plane );
 
     std::vector<index_t> point_map0( topology_.points().nb() );
     for (index_t k=0;k<edges.size();k++)
@@ -111,13 +111,14 @@ Primitive::extract()
     pdecomposition = std::make_shared<SimplicialDecomposition<Simplex>>(*dynamic_cast<const Topology<Simplex>*>(&topology_));
   else
     pdecomposition = std::make_shared<SimplicialDecomposition<Polytope>>(*dynamic_cast<const Topology<Polytope>*>(&topology_));
-  pdecomposition->extract();
+  pdecomposition->extract(plane);
   const SimplicialDecompositionBase& decomposition = *pdecomposition.get();
 
   const Points& points = decomposition.points();
+
+  // TODO only account for triangles that are visible to the clipping plane
   std::vector<index_t> triangles;
   std::vector<index_t> parents;
-
   decomposition.get_simplices(2,triangles,parents); // setting 2 retrieves triangles
   index_t nb_points = triangles.size(); // duplicated points for cell-based colors
 
@@ -146,7 +147,7 @@ Primitive::extract()
   {
     // get the edges from the topology
     std::vector<index_t> edges;
-    topology_.get_edges( edges );
+    topology_.get_edges( edges , plane );
     for (index_t k=0;k<edges.size();k++)
       edges0_.push_back( point_map0[ edges[k] ] );
   }
@@ -297,13 +298,13 @@ Primitive::show()
 }
 
 void
-Primitive::write( GraphicsManager& manager )
+Primitive::write( GraphicsManager& manager , const ClippingPlane* plane )
 {
-  extract();
+  extract(plane);
   manager.write( *this );
 
   for (index_t k=0;k<nb_children();k++)
-    child(k).write(manager);
+    child(k).write(manager,plane);
 }
 
 } // graphics

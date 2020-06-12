@@ -54,10 +54,10 @@ SceneGraph::remove( index_t k )
 }
 
 void
-SceneGraph::write( GraphicsManager& manager )
+SceneGraph::write( GraphicsManager& manager , const ClippingPlane* plane  )
 {
   for (index_t k=0;k<primitive_.size();k++)
-    primitive_[k]->write(manager);
+    primitive_[k]->write(manager,plane);
 
   std::vector<std::string> primitives;
   for (index_t k=0;k<primitive_.size();k++)

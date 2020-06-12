@@ -7,6 +7,9 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
+
+#include "graphics/clipping.h"
+
 #include "master/master.h"
 #include "master/polytope.h"
 #include "master/simplex.h"
@@ -146,7 +149,7 @@ SimplicialDecomposition<type>::get_simplices( coord_t number , std::vector<index
 
 template<>
 void
-SimplicialDecomposition<Simplex>::extract()
+SimplicialDecomposition<Simplex>::extract( const graphics::ClippingPlane* plane )
 {
   std::vector<index_t> tk;
   std::set<std::string> MAP;
@@ -157,6 +160,11 @@ SimplicialDecomposition<Simplex>::extract()
   for (index_t k=0;k<topology_.nb();k++)
   {
     if (topology_.ghost(k)) continue;
+
+    if (plane!=nullptr)
+    {
+      if (!plane->visible( topology_.points(),topology_(k),topology_.nv(k))) continue;
+    }
 
     // get the edges of this cell
     topology_.master().get_triangles( topology_(k) , topology_.nv(k) , tk );
@@ -191,12 +199,17 @@ SimplicialDecomposition<Simplex>::extract()
 
 template<>
 void
-SimplicialDecomposition<Polytope>::extract()
+SimplicialDecomposition<Polytope>::extract( const graphics::ClippingPlane* plane )
 {
   // loop through the cells
   for (index_t k=0;k<topology_.nb();k++)
   {
     if (topology_.ghost(k)) continue;
+
+    if (plane!=nullptr)
+    {
+      if (!plane->visible( topology_.points(),topology_(k),topology_.nv(k))) continue;
+    }
 
     // ask the master to triangulate, points will be added to points stored
     // in the SimplicialDecomposition object upon decomposition by the master

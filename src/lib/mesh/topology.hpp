@@ -9,6 +9,7 @@
 //
 #include "common/tools.h"
 
+#include "graphics/clipping.h"
 #include "graphics/primitive.h"
 
 #include "mesh/topology.h"
@@ -42,7 +43,7 @@ Topology<type>::construct( std::shared_ptr<graphics::Primitive>& node , graphics
 
 template<typename type>
 void
-Topology<type>::get_edges( std::vector<index_t>& edges ) const
+Topology<type>::get_edges( std::vector<index_t>& edges , const graphics::ClippingPlane* plane ) const
 {
   std::vector<index_t> ek;
 
@@ -52,7 +53,14 @@ Topology<type>::get_edges( std::vector<index_t>& edges ) const
   {
     if (ghost(k)) continue;
 
+
     const index_t* v0 = operator()(k);
+
+    if (plane!=nullptr)
+    {
+      if (!plane->visible(points_,v0,nv(k))) continue;
+    }
+
 
     // get the edges of this cell
     master_.get_edges( v0 , nv(k) , ek );

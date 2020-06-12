@@ -29,6 +29,7 @@ class ShaderProgram;
 class Plotter;
 class GraphicsManager;
 class SceneGraph;
+class ClippingPlane;
 
 class Primitive : public Tree<Primitive>
 {
@@ -36,11 +37,11 @@ public:
   Primitive( const TopologyBase& topology , SceneGraph* scene );
   virtual ~Primitive() {}
 
-  void write( GraphicsManager& manager );
+  void write( GraphicsManager& manager , const ClippingPlane* plane );
   virtual void write() {};
   virtual void draw() {};
 
-  void extract();
+  void extract(const ClippingPlane* plane=nullptr);
 
   void draw(ShaderProgram&);
 

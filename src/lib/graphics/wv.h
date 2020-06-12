@@ -41,7 +41,14 @@ private:
   WV_Manager();
 
   void write( Primitive& primitive );
+  void write( const std::string& name , coord_t number , const std::vector<real_t>& points , const std::vector<index_t>& edges , const std::vector<index_t>& triangles , const std::vector<real_t>& colors )
+  { avro_assert_not_reached; }
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
+  { avro_assert_not_reached; }
+  void draw( const std::string& name , coord_t number , const DrawingParameters& params )
+  { avro_assert_not_reached; }
+
+  void select_shader( const std::string& name , const std::string& shader_name )
   { avro_assert_not_reached; }
 
   wvContext* context() { return context_; }

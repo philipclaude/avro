@@ -25,6 +25,7 @@ namespace graphics
 
 class Primitive;
 class Controls;
+class ClippingPlane;
 
 class SceneGraph
 {
@@ -105,7 +106,7 @@ public:
 
   const json& menu() const { return menu_; }
 
-  void write( GraphicsManager& manager );
+  void write( GraphicsManager& manager , const ClippingPlane* plane=nullptr );
 
   bool update() const { return update_; }
   void set_update( bool x ) { update_ = x; }

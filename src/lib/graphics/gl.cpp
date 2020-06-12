@@ -102,6 +102,13 @@ OpenGL_Manager::select_shader( Primitive& primitive , const std::string& name )
 {
   shader_[&primitive] = &(*shaders_)[name];
 }
+
+void
+OpenGL_Manager::select_shader( const std::string& name , const std::string& shader_name )
+{
+  aux_vao_shader_[name] = &(*shaders_)[shader_name];
+}
+
 void
 OpenGL_Manager::create_shaders()
 {
@@ -126,8 +133,6 @@ OpenGL_Manager::write( Primitive& primitive )
 
   if (primitive_.find(&primitive)==primitive_.end())
   {
-    printf("generating new buffers..\n");
-
     // generate new buffers
     std::vector<GLuint> vbo(9);
     GL_CALL( glGenBuffers( vbo.size() , vbo.data() ) );
@@ -295,6 +300,119 @@ OpenGL_Manager::write( Primitive& primitive )
 }
 
 void
+OpenGL_Manager::write( const std::string& name , coord_t number , const std::vector<real_t>& points0 , const std::vector<index_t>& edges0 , const std::vector<index_t>& triangles0 , const std::vector<real_t>& colors0 )
+{
+  GLuint vbo_points;
+  GLuint vbo_color;
+  GLuint vbo_triangles;
+  GLuint vbo_edges;
+
+  // generate new buffers
+  std::vector<GLuint> vbo(4);
+  GL_CALL( glGenBuffers( vbo.size() , vbo.data() ) );
+
+  vbo_points    = vbo[0];
+  vbo_color     = vbo[1];
+  vbo_triangles = vbo[2];
+  vbo_edges     = vbo[3];
+
+  // write the points
+  std::vector<GLfloat> points( points0.begin() , points0.end() );
+  GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_points) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(GLfloat), points.data() , GL_STATIC_DRAW) );
+
+  // write to the triangles buffer
+  if (number>=2)
+  {
+    // write the triangle data
+    std::vector<GLuint> triangles( triangles0.begin() , triangles0.end() );
+    GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_triangles) );
+    GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(GLuint), triangles.data() , GL_STATIC_DRAW) );
+
+    // write the color data
+    std::vector<GLfloat> colors( colors0.begin() , colors0.end() );
+    GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vbo_color) );
+    GL_CALL( glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat), colors.data() , GL_STATIC_DRAW) );
+
+    // bind the triangle data
+    GLuint id_vao_triangles;
+    GL_CALL( glGenVertexArrays( 1, &id_vao_triangles ) );
+    GL_CALL( glBindVertexArray(id_vao_triangles) );
+
+    GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo_triangles ) );
+
+    GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_points ) );
+    GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+    GL_CALL( glEnableVertexAttribArray(0) );
+
+    GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_color ) );
+    GL_CALL( glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+    GL_CALL( glEnableVertexAttribArray(1) );
+
+    std::string id_name = name + "-triangles";
+    if (aux_vao_.find(id_name)==aux_vao_.end())
+    {
+      aux_vao_.insert( {id_name,id_vao_triangles} );
+      aux_vao_size_.insert( {id_name,triangles.size() } );
+    }
+    else
+    {
+      aux_vao_[id_name] = id_vao_triangles;
+      aux_vao_size_[id_name] = triangles.size();
+    }
+  }
+
+  // write to the edges buffer
+  if (number>=1)
+  {
+    GLuint id_vao_edges;
+    GL_CALL( glGenVertexArrays( 1, &id_vao_edges ) );
+    GL_CALL( glBindVertexArray(id_vao_edges) );
+
+    std::vector<GLuint> edges( edges0.begin() , edges0.end() );
+    GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo_edges ) );
+    GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, edges.size() * sizeof(GLuint), edges.data() , GL_STATIC_DRAW) );
+
+    GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_points ) );
+    GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+    GL_CALL( glEnableVertexAttribArray(0) );
+
+    // bind the points
+    GLuint id_vao_points;
+    GL_CALL( glGenVertexArrays( 1, &id_vao_points ) );
+    GL_CALL( glBindVertexArray(id_vao_points) );
+
+    GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_points ) );
+    GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+    GL_CALL( glEnableVertexAttribArray(0) );
+
+    if (number>=1)
+    {
+      std::string id_name = name + "-edges";
+      if (aux_vao_.find(id_name)==aux_vao_.end())
+      {
+        aux_vao_.insert( {id_name,id_vao_edges} );
+        aux_vao_size_.insert( {id_name,edges.size() } );
+      }
+      else
+      {
+        aux_vao_[id_name] = id_vao_edges;
+        aux_vao_size_[id_name] = edges.size();
+      }
+    }
+  }
+
+  // write to the points buffer
+  GLuint id_vao_points;
+  GL_CALL( glGenVertexArrays( 1, &id_vao_points ) );
+  GL_CALL( glBindVertexArray(id_vao_points) );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_points ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
+  GL_CALL( glEnableVertexAttribArray(0) );
+
+}
+
+void
 OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
 {
   // indicate to the gl that we want to use the shader
@@ -342,7 +460,6 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
     GLuint nb_primitives = 0;
     GL_CALL( glEndQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ) );
     GL_CALL( glGetQueryObjectuiv( query , GL_QUERY_RESULT , &nb_primitives ) );
-    printf("triangles written = %u\n",nb_primitives);
 
     // there are 4 coordinates for every output and 3 vertices per prim (color + coord)
     index_t nb_data_per_prim = 4*3*2;
@@ -384,7 +501,6 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
     GLuint nb_primitives = 0;
     GL_CALL( glEndQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ) );
     GL_CALL( glGetQueryObjectuiv( query , GL_QUERY_RESULT , &nb_primitives ) );
-    printf("edges written = %u\n",nb_primitives);
 
     // there are 4 coordinates for every output and 3 vertices per prim (color + coord)
     index_t nb_data_per_prim = 4*2*2;
@@ -399,7 +515,7 @@ OpenGL_Manager::draw( Primitive& primitive , TransformFeedbackResult* feedback )
 
 
   // draw the points
-  if (primitive.points_on()) //|| primitive.number()<=1)
+  if (primitive.points_on())
   {
     GL_CALL( glBindVertexArray(vao_points_.at(&primitive) ) );
     GL_CALL( glPointSize(10.0f) );
@@ -421,12 +537,53 @@ OpenGL_Manager::draw( SceneGraph& scene , TransformFeedbackResult* feedback )
   if (scene.update())
     shaders_->set_matrices(scene);
 
+  // draw the primitives
   for (index_t k=0;k<scene.nb_primitives();k++)
   {
     draw( scene.primitive(k) , feedback );
   }
 
   scene.set_update(false);
+}
+
+void
+OpenGL_Manager::draw( const std::string& name , coord_t number , const DrawingParameters& params )
+{
+
+  std::string id_triangles = name + "-triangles";
+  std::string id_edges = name + "-edges";
+
+  ShaderProgram* shader = aux_vao_shader_[name];
+  shader->use();
+  shader->setUniform( "xpar" , params.transparency );
+  shader->setUniform( "MVP" , params.mvp );
+
+  if (number>=1)
+  {
+    std::map<std::string,GLuint>::iterator it;
+    it = aux_vao_.find(id_edges);
+    avro_assert_msg( it!=aux_vao_.end() , "could not find vao associated with %s" , id_edges.c_str() );
+
+    GLuint vao = it->second;
+    index_t size = aux_vao_size_[id_edges];
+
+    GL_CALL( glBindVertexArray( vao ) );
+    GL_CALL( glDrawElements( GL_LINES ,size , GL_UNSIGNED_INT , 0 ) );
+  }
+  if (number==2)
+  {
+    std::map<std::string,GLuint>::iterator it;
+    it = aux_vao_.find(id_triangles);
+    avro_assert_msg( it!=aux_vao_.end() , "could not find vao associated with %s" , id_triangles.c_str() );
+
+    GLuint vao = it->second;
+    index_t size = aux_vao_size_[id_triangles];
+
+    GL_CALL( glBindVertexArray( vao ) );
+    GL_CALL( glDrawElements( GL_TRIANGLES ,size , GL_UNSIGNED_INT , 0 ) );
+  }
+
+  GL_CALL( glBindVertexArray(0) );
 }
 
 } // graphics

@@ -213,7 +213,7 @@ ShaderProgram::setUniform( const char *name, mat3& m)
 }
 
 void
-ShaderProgram::setUniform( const char *name, mat4& m)
+ShaderProgram::setUniform( const char *name, const mat4& m)
 {
   if (!check()) return;
   int loc = getUniformLocation(name);

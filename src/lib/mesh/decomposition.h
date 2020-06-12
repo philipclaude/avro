@@ -23,6 +23,11 @@
 namespace avro
 {
 
+namespace graphics
+{
+class ClippingPlane;
+}
+
 class SimplicialDecompositionBase : public Topology<Simplex>
 {
 public:
@@ -31,7 +36,7 @@ public:
     points_(dim)
   {}
 
-  virtual void extract() = 0;
+  virtual void extract( const graphics::ClippingPlane* plane=nullptr ) = 0;
   virtual void get_simplices( coord_t number , std::vector<index_t>& simplices , std::vector<index_t>& parents ) const = 0;
 
   const Table<real_t>& reference_coordinates() const { return reference_coordinates_; }
@@ -53,7 +58,7 @@ class SimplicialDecomposition : public SimplicialDecompositionBase
 public:
   SimplicialDecomposition( const Topology<type>& topology );
 
-  void extract();
+  void extract(const graphics::ClippingPlane* plane=nullptr );
 
   index_t add_simplex( index_t number , const index_t* v , index_t parent );
 

@@ -34,6 +34,7 @@ template<typename type> class Cavity;
 namespace graphics
 {
 class Primitive;
+class ClippingPlane;
 }
 
 class TopologyBase : public Table<index_t>
@@ -66,7 +67,7 @@ public:
   void offset_by( index_t offset );
 
   virtual void get_points( std::vector<index_t>& p ) const = 0;
-  virtual void get_edges( std::vector<index_t>& e ) const = 0;
+  virtual void get_edges( std::vector<index_t>& e , const graphics::ClippingPlane* plane=nullptr ) const = 0;
   virtual void get_topologies( std::vector<const TopologyBase*>& c ) const = 0;
 
   const std::string& name() const { return name_; }
@@ -141,7 +142,7 @@ public:
   index_t nb_ghost() const;
 
   void get_points( std::vector<index_t>& p ) const {}
-  void get_edges( std::vector<index_t>& e ) const;
+  void get_edges( std::vector<index_t>& e , const graphics::ClippingPlane* plane=nullptr) const;
 
   void get_elem( index_t k , std::vector<real_t*>& X ) const;
   void get_elem( index_t k , std::vector<const real_t*>& X ) const;

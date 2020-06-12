@@ -10,6 +10,7 @@
 #ifndef avro_LIB_GRAPHICS_WINDOW_H_
 #define avro_LIB_GRAPHICS_WINDOW_H_
 
+#include "graphics/clipping.h"
 #include "graphics/controls.h"
 #include "graphics/gl.h"
 #include "graphics/math.h"
@@ -49,6 +50,10 @@ public:
 
   void begin_draw();
   void draw_interface() const;
+  void write_axes();
+  void write_plane();
+  void draw_axes();
+  void draw_plane();
   void end_draw();
 
   index_t nb_scene() const { return scene_.size(); }
@@ -61,6 +66,7 @@ public:
   const Interface& interface() const { return *interface_.get(); }
 
   Controls& controls() { return controls_; }
+  Controls& clip_controls() { return clip_controls_; }
 
   GLFWwindow* window() { return window_; }
   const GLFWwindow* window() const { return window_; }
@@ -70,6 +76,18 @@ public:
 
   index_t fps() const { return fps_; }
   void set_fps( index_t fps ) { fps_ = fps; }
+
+  bool& modify_clipping_plane();
+  bool& show_clipping_plane() { return show_clip_plane_; }
+  void flip_clipping_normal();
+
+  bool& show_axes() { return show_axes_; }
+  bool& center_axes() { return center_axes_; }
+
+  void clip();
+  void reset_clip();
+
+  bool& pause() { return pause_; }
 
 private:
   std::string title_;
@@ -86,10 +104,20 @@ private:
 
   std::vector<std::shared_ptr<SceneGraph>> scene_;
   Controls controls_;
+  Controls clip_controls_;
+
+  bool modify_clip_plane_;
+  bool show_clip_plane_;
+
+  bool show_axes_;
+  bool center_axes_;
+
+  ClippingPlane clip_plane_;
 
   std::shared_ptr<Interface> interface_;
 
   bool updated_;
+  bool pause_;
 
   index_t fps_;
 };
