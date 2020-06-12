@@ -20,6 +20,8 @@ class ClippingPlane
 public:
   ClippingPlane( coord_t dim , real_t length=1.0 );
 
+  void set_coordinates( const real_t* bounding_box=nullptr );
+
   void initialize();
 
   void reset();

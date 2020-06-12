@@ -66,6 +66,7 @@ public:
 
   Controls& controls() { return controls_; }
   Controls& clip_controls() { return clip_controls_; }
+  ClippingPlane& clip_plane() { return clip_plane_; }
 
   GLFWwindow* window() { return window_; }
   const GLFWwindow* window() const { return window_; }

@@ -118,6 +118,7 @@ Application<GLFW_Interface<API_t>>::run()
   for (index_t k=0;k<window_.size();k++)
   {
     window_[k]->write_axes();
+    window_[k]->clip_plane().set_coordinates( bounding_box_ );
     window_[k]->update_view();
   }
 

@@ -20,15 +20,6 @@ ClippingPlane::ClippingPlane( coord_t dim , real_t length ) :
   length_(length),
   sign_(1)
 {
-  initialize();
-}
-
-void
-ClippingPlane::initialize()
-{
-  points_.clear(),
-  transformed_points_.clear();
-  transformation_ = mat4(1.0f);
 
   // the plane has topological dimension dim_-1
   index_t np = (index_t) std::pow( 2 , points_.dim()-1 );
@@ -46,11 +37,43 @@ ClippingPlane::initialize()
     std::vector<real_t> x( topology.points()[k] , topology.points()[k] + topology.points().dim() );
     x.push_back(0.0);
     points_.create( x.data() );
-    for (coord_t d=0;d<points_.dim()-1;d++)
-      points_[k][d] = length_*( points_[k][d] - 0.5 ); // ckf triangulation centered on 0.5, we want 0
-
-    transformed_points_.create( points_[k] );
   }
+
+  initialize();
+}
+
+void
+ClippingPlane::set_coordinates( const real_t* bounding_box )
+{
+  if (bounding_box==nullptr) return;
+
+  // set the z-coordinate of the clipping plane to the middle of the bounding box
+  real_t zm = 0.5*( bounding_box[5] + bounding_box[2] );
+
+  // find the maximum length
+  real_t lx = bounding_box[3] - bounding_box[0];
+  real_t ly = bounding_box[4] - bounding_box[1];
+
+  real_t lmax = lx;
+  if (ly > lx) lmax = ly;
+
+  for (index_t k=0;k<points_.nb();k++)
+  {
+    for (coord_t d=0;d<2;d++)
+      points_[k][d] = (points_[k][d] -0.5)*lmax*2 -  bounding_box[d];
+    points_[k][2] = zm;
+  }
+  initialize();
+}
+
+void
+ClippingPlane::initialize()
+{
+  transformed_points_.clear();
+  transformation_ = mat4(1.0f);
+
+  for (index_t k=0;k<points_.nb();k++)
+    transformed_points_.create( points_[k] );
 
   update();
 }

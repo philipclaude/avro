@@ -569,12 +569,8 @@ Toolbar::begin_draw()
       std::string label = "modify";
       static bool mod = false;
       ImGui::Checkbox(label.c_str(), &mod );
-      //ImGui::Checkbox(label.c_str(), &window_.modify_clipping_plane() );
       if (mod!=window_.modify_clipping_plane())
-      {
         window_.modify_clipping_plane() = mod;
-        printf("update mod clip plane!!\n");
-      }
 
       ImGui::SameLine();
       label = "show";
