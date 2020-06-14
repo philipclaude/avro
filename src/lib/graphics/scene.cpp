@@ -99,6 +99,27 @@ SceneGraph::get_bounding_box( real_t* box ) const
 }
 
 void
+SceneGraph::get_color_limits( real_t* clim ) const
+{
+  printf("nb prims  = %lu\n",primitive_.size());
+  for (index_t k=0;k<primitive_.size();k++)
+  {
+    printf("processing primitive %lu\n",k);
+    std::vector<const Primitive*> children;
+    primitive_[k]->get_children(children);
+    for (index_t j=0;j<children.size();j++)
+    {
+      printf("getting children %lu\n",j);
+      const std::vector<real_t>& color = primitive_[j]->colors();
+      if (color.size()==0) continue;
+      clim[0] = std::min( clim[0] , *std::min(color.begin(),color.end()) );
+      clim[1] = std::max( clim[1] , *std::max(color.begin(),color.end()) );
+    }
+  }
+
+}
+
+void
 SceneGraph::set_focus( real_t* focus )
 {
   for (coord_t d=0;d<4;d++)

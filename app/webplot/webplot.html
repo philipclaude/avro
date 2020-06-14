@@ -18,33 +18,34 @@
 
     <link rel="shortcut icon" href="favicon.ico">
 
-    <script type="text/javascript" src="../WebViewer/webgl-utils.js"> </script>
-    <script type="text/javascript" src="../WebViewer/webgl-debug.js"> </script>
-    <script type="text/javascript" src="../WebViewer/J3DIMath.js">    </script>
+    <script type="text/javascript" src="../wv/webgl-utils.js"> </script>
+    <script type="text/javascript" src="../wv/webgl-debug.js"> </script>
+    <script type="text/javascript" src="../wv/J3DIMath.js">    </script>
 
     <script>
       var   wv   = {};            // object to store "globals"
       var   listener = {};
       var   elemsizes = {};
     </script>
-    <script type="text/javascript" src="../WebViewer/wv-draw.js">     </script>
-    <script type="text/javascript" src="../WebViewer/wv-render.js">   </script>
-    <script type="text/javascript" src="../WebViewer/wv-gPrim.js">    </script>
-    <script type="text/javascript" src="../WebViewer/wv-sGraph.js">   </script>
-    <script type="text/javascript" src="../WebViewer/wv-socket.js">   </script>
-    <script type="text/javascript" src="../WebViewer/wv-cbManage.js"> </script>
+    <script type="text/javascript" src="../wv/draw.js">     </script>
+    <script type="text/javascript" src="../wv/render.js">   </script>
+    <script type="text/javascript" src="../wv/primitive.js">    </script>
+    <script type="text/javascript" src="../wv/scene.js">   </script>
+    <script type="text/javascript" src="../wv/socket.js">   </script>
+    <script type="text/javascript" src="../wv/callbacks.js"> </script>
 
     <script type="text/javascript" src="avro.js"> </script>
-    <script type="text/javascript" src="viewer.js"> </script>
+    <script type="text/javascript" src="interface.js"> </script>
     <script type="text/javascript" src="tree.js"> </script>
     <script type="text/javascript" src="terminal.js"> </script>
     <script type="text/javascript" src="listener.js"> </script>
 
     <script type="text/javascript">
+
       getSocketsURL = function(url)
       {
         // set our callback functions
-        var url = prompt("Enter hostname:port", "ws://hypersonic.mit.edu:7681");
+        var url = prompt("Enter hostname:port", "ws://wazowski.middlebury.edu:7681");
         wv.getSockets(url);
         wv.setCallback("InitUI",        wvInitUI);
         wv.setCallback("UpdateUI",      wvUpdateUI);
@@ -52,7 +53,7 @@
         wv.setCallback("UpdateCanvas",  wvUpdateCanvas);
         wv.setCallback("OnOpen",wvClientConnected);
         wv.Start();
-        postMessage("connected to "+url+"!","green");
+        print_message("connected to "+url+"!","green");
         wv.url = url;
       }
       reconnectSocketsURL = function()
@@ -92,110 +93,64 @@
 
     </script>
 
-    <!-- save file function -->
-    <script type="text/javascript">
-      saveFile = function(e)
-      {
-        postMessage("saving file");
-        var canvas = document.getElementById("WebViewer");
-        var image = canvas.toDataURL("image/png",1);
-        console.log(image);
-        var dlLink = document.createElement('a');
-        dlLink.download = "avro.png";
-        dlLink.href = image;
-        dlLink.dataset.dowloadurl = ["image/png",dlLink.download,dlLink.href].join(':');
-        document.body.appendChild(dlLink);
-        dlLink.click();
-        document.body.removeChild(dlLink);
-      }
-    </script>
-
     <!-- toggle canvas darkness function -->
     <script type="text/javascript">
-      toggleDarkness = function(e)
+
+      toggle_darkness = function(e)
       {
-        var cbox = document.getElementById("cboxDark");
+        var cbox = document.getElementById("background-checkbox");
         var canvas = document.getElementById("WebViewer");
         if (cbox.checked)
-          canvas.style.background = 'black';
-        else
           canvas.style.background = '#585C5C';
+        else
+          canvas.style.background = '#ffffff';
       }
 
-      changeColormap = function()
+      change_colormap = function()
       {
-        var value = document.getElementById('colormapSelect').value;
-        postMessage("change colormap to "+value+" !","blue");
+        var value = document.getElementById('colormap-select').value;
+        print_message("change colormap to "+value+" !","blue");
         wv.socketUt.send("colormap|"+value);
         if (wv.colorbar!=undefined)
-          wv.socketUt.send("getcolorbar|10");
+          wv.socketUt.send("colorbar|10");
       }
 
-      toggleColorbar = function()
+      toggle_colorbar = function()
       {
-        var box = document.getElementById('showcolorbar');
+        var box = document.getElementById('colorbar-checkbox');
         if (box.checked)
-          wv.socketUt.send("getcolorbar|10"); // ask for 10 values
+          wv.socketUt.send("colorbar|10"); // ask for 10 values
         else
           wv.colorbar = undefined;
       }
 
-      loadTree = function()
+      load_tree = function()
       {
         wv.socketUt.send("getTree|");
       }
 
-      sliceRequest = function()
+      slice_request = function()
       {
         // get the values in the 4d controls boxes
         var d = Number(document.getElementById('control4d-distance').value);
-        var plane = document.getElementById('hyperplaneSelect').value;
+        var plane = document.getElementById('hyperplane-select').value;
 
-        /*
-        var axy = Number(document.getElementById('control4d-angleXY').value);
-        var axz = Number(document.getElementById('control4d-angleXZ').value);
-        var axt = Number(document.getElementById('control4d-angleXT').value);
-        var ayz = Number(document.getElementById('control4d-angleYZ').value);
-        var ayt = Number(document.getElementById('control4d-angleYT').value);
-        var azt = Number(document.getElementById('control4d-angleZT').value);
-
-        // send the message to the server
-        var reply = "slice4d|{ \"values\": "
-                      +JSON.stringify([axy,axz,axt,ayz,ayt,azt,d]);
-        if (document.getElementById('experimental-4d').checked)
-        {
-          reply += "}";
-          postMessage("sorry experimental rotations disabled until editGPrim with more stripes is implemented!");
-        }
-        */
         var reply = "slice4d|"+plane+"|"+d.toString();
-        clearPlots();
+        clear_plots();
         wv.socketUt.send(reply);
         alert('please wait for the server to finish\nand re-load the plot tree!');
       }
 
-      resetSlice = function()
-      {
-        document.getElementById('control4d-distance').value = 0;
-        document.getElementById('control4d-angleXY').value = 0;
-        document.getElementById('control4d-angleXZ').value = 0;
-        document.getElementById('control4d-angleXT').value = 0;
-        document.getElementById('control4d-angleYZ').value = 0;
-        document.getElementById('control4d-angleYT').value = 0;
-        document.getElementById('control4d-angleZT').value = 0;
-        sliceRequest();
-      }
     </script>
 
-    <link rel="stylesheet" type="text/css" href="avro.css" />
+    <link rel="stylesheet" type="text/css" href="avro.css"/>
 
   </head>
-    <body onload=wv.Start();resizeFrames();listener.initialize();>
+
+    <body onload=wv.Start();resize_frames();listener.initialize();>
+
       <div id="tlframe" oncontextmenu="return false;">
-        <div id="butnfrm" oncontextmenu="return false;">
-          <h6 align="center">
-          avro webplot
-        </h6>
+        <hr>
           <!-- viewer control buttons -->
           <p align="center">
             <button title="Home (front) view"      type="button" id="homeButton"  onclick="cmdHome()">H          </button>
@@ -208,32 +163,22 @@
             <button title="Connect WebSocket"      type="button" id="getSocketsURL"   onclick="getSocketsURL()" >WS         </button>
             <button title="Reconnect"      type="button" id="reconnectSocketsURL"   onclick="reconnectSocketsURL()" >&#8634;         </button>
           </p>
+        <hr>
 
         <div class="panel-group" id="accordion">
-         <div class="panel panel-default">
-           <div class="panel-heading">
-               <a data-toggle="collapse" data-parent="#accordion" href="#collapse1">
-               File</a>
-           </div>
-           <div id="collapse1" class="panel-collapse collapse">
-             <div class="panel-body">
-                 <button title="dirUp" type="button" id="dirUpLevel" onclick="rollbackDirectory()">&#x21D0;</button>
-                 <select name="Files" id="directory" onchange="addPlot()"></select>
-                 <button title="save" type="button" id="save" onclick="saveFile()">PNG</button>
-            </div>
-           </div>
-         </div>
 
-         <!-- colours -->
+          <!-- plots -->
          <div class="panel panel-default">
            <div class="panel-heading">
-               <a data-toggle="collapse" data-parent="#accordion" href="#collapse2">
-               Colours</a>
+               <a data-toggle="collapse" data-parent="#accordion" href="#plot_collapse">
+                 Plots
+               </a>
            </div>
-           <div id="collapse2" class="panel-collapse collapse">
-             <div class="panel-body">
-               colormap:
-               <select name="colormap" id="colormapSelect" value="viridis" onchange="changeColormap()">
+           <div class="panel-collapse collapse" id="plot_collapse">
+             <br>
+             <p align="right">
+               <b>colormap:</b>&nbsp;
+               <select name="colormap" id="colormap-select" value="viridis" onchange="change_colormap()">
                  <option value="viridis" selected="selected">viridis</option>
                  <option value="parula">parula</option>
                  <option value="hsv">hsv</option>
@@ -243,122 +188,98 @@
                  <option value="hot">hot</option>
                  <option value="giraffe">giraffe</option>
                </select>
-               <p>
-               <input type="checkbox" id="cboxDark" onclick=toggleDarkness() checked="false" title="toggle darkness">
-               dark background
-               <input title="option to show the colorbar" onclick=toggleColorbar() type="checkbox" id="showcolorbar" checked="false">show colorbar</input>
+               &nbsp;&nbsp;
+               &nbsp;&nbsp;
+               <button title="Update" type="button" id="load-tree-button" onclick="load_tree()">load</button>
+               <button title="Clear" type="button" id="clear-plots-button" onclick="clear_plots()">clear</button>
+               &nbsp;&nbsp;
              </p>
+
+             <p align="right">
+             <input type="checkbox" id="background-checkbox" onclick=toggle_darkness() title="toggle darkness">
+             <b>dark background</b>
+             &nbsp;&nbsp;
+             <input title="option to show the colorbar" onclick=toggle_colorbar() type="checkbox" id="colorbar-checkbox">&nbsp;<b>colorbar</b></input>
+             &nbsp;&nbsp;
+            </p>
+             <hr>
+            <div id="treefrm" oncontextmenu="return false;">
             </div>
            </div>
-         </div> <!-- colours -->
+         </div> <!-- plots -->
 
-         <!-- clipping -->
+         <!-- tools -->
          <div class="panel panel-default">
            <div class="panel-heading">
                <a data-toggle="collapse" data-parent="#accordion" href="#collapse3">
-               Clipping</a>
+                 Tools
+               </a>
            </div>
            <div id="collapse3" class="panel-collapse collapse">
              <div class="panel-body">
-               <input title="show clipping plane" type="checkbox" id="plotclip" onclick="plotClip()" checked>show</input>
-               <input title="flip clipping side" type="checkbox" id="flipclip" checked="false">flip</input>
-               <input title="check for real-time clipping" type="checkbox" id="realtime" checked="false">real-time</input>
+               <p>
+                 <b>clipping plane:</b>
+               </p>
+               <input title="show clipping plane" type="checkbox" id="plot-clip" onclick="plot_clip()" checked>&nbsp;show</input>
+               <input title="flip clipping side" type="checkbox" id="flip-clip" checked="false">&nbsp;flip</input>
+               <input title="check for real-time clipping" type="checkbox" id="real-time" checked="false">&nbsp;real-time</input>
                <div style="white-space:nowrap">
              </div>
              <div style="white-space:nowrap">
-               <input style="width:150px; display: inline-block" align="left" type="range" oninput="plotClip()" id="clipalpha" name="alpha" , min="-90" max="90", step="1" value="0">
-               <input style="width:150px; display: inline-block" align="right" type="range" oninput="plotClip()" id="clipbeta" name="beta" , min="-90" max="90", step="1" value="0">
+               &theta;&nbsp;<input style="width:150px; display: inline-block" align="left" type="range" oninput="plot_clip()" id="clip-alpha" name="alpha" , min="-90" max="90", step="1" value="0">
+               &phi;&nbsp;<input style="width:150px; display: inline-block" align="right" type="range" oninput="plot_clip()" id="clip-beta" name="beta" , min="-90" max="90", step="1" value="0">
              </div>
-                <div style="width:100px; display: inline-block" align="left">
+                <div style="width:20%; display: inline-block" align="left">
                   offset
-                  <input type="number" oninput="plotClip()" id="clipd" name="x" min="-10000" max="10000" step=".1" VALUE="0" SIZE="1" style="width:60%">
+                  <input type="number" oninput="plot_clip()" id="clip-offset" name="x" min="-10000" max="10000" step=".1" VALUE="0" SIZE="1" style="width:100%">
                 </div>
-                <div style="width:200px; display: inline-block" align="right">
-                  <button title="reset" type="button" id="resetclip" onclick="resetClip()">reset</button>
-                  <button title="clip" type="button" id="clipbutton" onclick="clipRequest()">clip</button>
+                <div style="width:75%; display: inline-block" align="right">
+                  <button title="reset" type="button" id="reset-clip" onclick="reset_clip()">reset</button>
+                  <button title="clip" type="button" id="request-clip" onclick="request_clip()">clip</button>
                 </div>
+                <hr>
+                <div position="relative" style="width:100%; display: inline-block;">
+                  <p>
+                    <b>extract 4d mesh:</b>
+                  </p>
+                  &nbsp;&nbsp;offset: &nbsp;
+                  <input id="control4d-distance" type="number"min="-10000" max="10000" step=".1" VALUE="0" SIZE="1" style="width:20%">
+                  &nbsp;&nbsp; plane: &nbsp;
+                  <select name="hyperplane4d" id="hyperplane-select" value="T" style="width:50px; display:inline-block;">
+                    <option value="X">X</option>
+                    <option value="Y">Y</option>
+                    <option value="Z">Z</option>
+                    <option value="T" selected="selected">T</option>
+                  </select>
+                  &nbsp;&nbsp;
+                  <button onclick="slice_request()" style="display: inline-block;">apply</button>
+
+               </div>
              </div>
            </div>
-         </div> <!-- clipping -->
 
-         <!-- 4d controls -->
-         <div class="panel panel-default">
-           <div class="panel-heading">
-               <a data-toggle="collapse" data-parent="#accordion" href="#collapse4">
-               4d controls</a>
-           </div>
-           <div id="collapse4" class="panel-collapse collapse">
-             <!--
-              <div class="panel-body">
-              <div>
-                &nbsp; &nbsp;
-                XY &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                XZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                XT &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                YZ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                YT &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                ZT
-              </div>
-              <input id="control4d-angleXY" type="number" min="-90" max="90" step="1" value="0">
-              <input id="control4d-angleXZ" type="number" min="-90" max="90" step="1" value="0">
-              <input id="control4d-angleXT" type="number" min="-90" max="90" step="1" value="0">
-              <input id="control4d-angleYZ" type="number" min="-90" max="90" step="1" value="0">
-              <input id="control4d-angleYT" type="number" min="-90" max="90" step="1" value="0">
-              <input id="control4d-angleZT" type="number" min="-90" max="90" step="1" value="0">
-             </div>            -->
-             <div>
-               <div position="relative" style="width:220px; display: inline-block;">
-                 &nbsp;&nbsp;offset <input id="control4d-distance" type="number"min="-10000" max="10000" step=".1" VALUE="0" SIZE="1" style="width:30%">
-                 &nbsp;&nbsp; plane <select name="hyperplane4d" id="hyperplaneSelect" value="T" style="width:50px; display:inline-block;">
-                   <option value="X">X</option>
-                   <option value="Y">Y</option>
-                   <option value="Z">Z</option>
-                   <option value="T" selected="selected">T</option>
-                 </select>
-              </div>
-               <div align="right" position="relative" style="width:100px; display: inline-block;">
-                 <!--<input title="check for experimental rotations" type="checkbox" id="experimental-4d" checked="false"></input>-->
-                <!--<button onclick="resetSlice()">reset</button>-->
-                <button onclick="sliceRequest()">apply</button>
-              </div>
-            </div>
-           </div>
-         </div> <!-- 4d controls -->
-       </div>
+         </div> <!-- tools -->
 
-     </div> <!-- accordian -->
+       </div>  <!-- accordian -->
 
-     <p>
-    </p>
+     </div> <!--tlfrm -->
 
-        <!-- tree controlling plot visibilities -->
-        <div id="treefrm" oncontextmenu="return false;">
-          <p align="right">
-          <button title="Update" type="button" id="update-tree-button" onclick="loadTree()">load</button>
-          <button title="Clear" type="button" id="clearPlots" onclick="clearPlots()">clear</button>
-          </p>
-        </div>
-
-      </div>
 
       <!-- frame holding the webgl canvas -->
       <div id="trframe", oncontextmenu="return false;">
         <canvas id="WebViewer">
           If you are seeing this, your web browser does not support the &lt;canvas&gt; element.
         </canvas>
-        <div id="colorbartext_lo" class="over"></div>
-        <div id="colorbartext_hi" class="over"></div>
+        <div id="colorbar-text-lo" class="over"></div>
+        <div id="colorbar-text-hi" class="over"></div>
       </div>
-
-      <div>
-    </div>
 
     <script type="text/javascript">
       terminal = InitTerminal();
       var term = document.getElementById("brframe");
-      term.setCommandListener(listener);
-      window.addEventListener("resize", resizeFrames );
-      resizeFrames();
+      term.set_listener(listener);
+      window.addEventListener("resize", resize_frames );
+      resize_frames();
     </script>
 
   </body>

@@ -1,7 +1,7 @@
 listener["initialize"] = function()
 {
-  listener.availableCommands = ["startserver","help","ls","clear"];
-  listener.helpCommands = ["start the websocket server", "what this did","unsupported...","clear the terminal"];
+  listener.available_commands = ["startserver","help","ls","clear"];
+  listener.help_commands = ["start the websocket server", "what this did","unsupported...","clear the terminal"];
 }
 
 isfile = function(text)
@@ -12,7 +12,7 @@ isfile = function(text)
   return false;
 }
 
-listener["parseCommand"] = function(msg)
+listener["parse_command"] = function(msg)
 {
   var out = {text: [], color: ""};
 
@@ -28,10 +28,11 @@ listener["parseCommand"] = function(msg)
   }
   else if (msg=="startserver")
   {
+    startserver();
   }
   else if (msg=="killserver")
   {
-    socket_killserver();
+    killserver();
   }
   else if (msg=="help")
   {
@@ -43,11 +44,13 @@ listener["parseCommand"] = function(msg)
 
     // the server will send a response back to wv and we can get the values of the directory
     var terminal = document.getElementById("brframe");
-    terminal.listener.printDirectory();
+    terminal.listener.print_directory();
   }
   else if (msg=="cd")
   {
-    if (isfile(data[1]))
+    if (data.length==1)
+    {}
+    else if (isfile(data[1]))
       alert("cannot cd into this!");
     else
       wv.socketUt.send("cd|"+data[1]);
@@ -55,7 +58,7 @@ listener["parseCommand"] = function(msg)
   else if (msg=="plot")
   {
     // need to do a lot of work to parse the rest of the command
-    parsePlot(data);
+    parse_plot(data);
   }
   else
   {
@@ -64,41 +67,34 @@ listener["parseCommand"] = function(msg)
   return out;
 }
 
-parsePlot = function(command)
+parse_plot = function(command)
 {
-  postMessage(command,"yellow",false,false);
+  print_message(command,"yellow",false,false);
   wv.socketUt.send("plot|"+command[1]); // for now...
 }
 
-listener["printDirectory"] = function()
+listener["print_directory"] = function()
 {
-  var drop = document.getElementById("directory");
-
-  var text = "";
-  for (var i=0;i<drop.options.length;i++)
-    text = text +" "+drop.options[i].text;
-  postMessage( text, "white" , false , false );
-
+  text = "implement!";
+  print_message( text, "white" , false , false );
 }
 
-socket_sendmessage = function(msg)
+
+startserver = function()
 {
+  print_message( "implement!" );
 }
 
-socket_startserver = function()
+killserver = function()
 {
-
-}
-
-socket_killserver = function()
-{
+  print_message( "implement!" );
 }
 
 print_help = function(out)
 {
-  for (i=0;i<listener.availableCommands.length;i++)
+  for (i=0;i<listener.available_commands.length;i++)
   {
-    out.text[i] = listener.availableCommands[i]+": "+listener.helpCommands[i];
+    out.text[i] = listener.available_commands[i]+": "+listener.help_commands[i];
   }
   out.color = "yellow";
   return out;

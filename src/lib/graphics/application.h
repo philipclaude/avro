@@ -40,7 +40,6 @@ class Widget;
 class ApplicationBase
 {
 public:
-  void receive( const std::string& text ) const;
 
   void write();
 
@@ -115,14 +114,20 @@ class Application<Web_Interface> : public ApplicationBase
 public:
   Application() :
     ApplicationBase(manager_)
-  {}
+  {
+    scene_ = std::make_shared<SceneGraph>();
+    scenes_.push_back(scene_.get());
+  }
 
   void run();
   void save_eps();
 
+  void receive( const std::string& text ) const;
+  void send( const std::string& text ) const;
+
 protected:
   WV_Manager manager_;
-  SceneGraph scene_;
+  std::shared_ptr<SceneGraph> scene_;
 
 private:
   void connect_client();
@@ -168,19 +173,14 @@ class WebVisualizer : public Application<Web_Interface>
 {
 public:
 
-  WebVisualizer()
-  {
-    scenes_.push_back( &scene_ );
-  }
+  WebVisualizer();
 
   void add_topology( TopologyBase& topology )
   {
     // create a new root in the scene graph
-    scene_.add_primitive(topology);
+    scene_->add_primitive(topology);
   }
 
-private:
-  //SceneGraph scene_;
 };
 
 } // graphics

@@ -1,7 +1,7 @@
 "use strict";
 
 //
-// callback when the user interface is to be initialized (called by wv-render.js)
+// callback when the user interface is to be initialized (called by wv/render.js)
 //
 function wvInitUI()
 {
@@ -9,9 +9,7 @@ function wvInitUI()
     wv.terminalON = false;
 
     // zero out the buttons
-    initControls();
-
-    deletePlots();
+    init_controls();
 
     // set up extra storage for matrix-matrix multiplies
     wv.uiMatrix   = new J3DIMatrix4();
@@ -51,65 +49,11 @@ function wvInitUI()
     document.addEventListener('keyup',    getKeyUp,        false);
 
     var canvas = document.getElementById(wv.canvasID);
-    canvas.addEventListener('mousedown',  getMouseDown0,    false);
-    canvas.addEventListener('mousemove',  getMouseMove0,    false);
-    canvas.addEventListener('mouseup',    getMouseUp0,      false);
-    canvas.addEventListener("wheel",      getMouseRoll0,    false);
-    canvas.addEventListener('mouseout',   mouseLeftCanvas0, false);
-
-    //var keycan = document.getElementById(wv.canvasKY);
-    //keycan.addEventListener('mouseup',    setKeyLimits,    false);
-
-}
-
-function initControls()
-{
-  document.getElementById('clipd').value = 0.;
-  document.getElementById('clipalpha').value = 0.;
-  document.getElementById('clipbeta').value = 0.;
-  document.getElementById('flipclip').checked = false;
-  document.getElementById('plotclip').checked = false;
-  document.getElementById('realtime').checked = false;
-}
-
-function resetClip()
-{
-  document.getElementById('clipd').value = 0.;
-  document.getElementById('clipalpha').value = 0.;
-  document.getElementById('clipbeta').value = 0.;
-  var state;
-  if (document.getElementById('plotclip').checked)
-    state = "on";
-  else
-    state = "off";
-  wv.socketUt.send("resetclip|"+state);
-}
-
-function addTreePlot(iparent,gprim,name)
-{
-  var graphic = wv.sceneGraph[gprim];
-  if (graphic==undefined)
-  {
-    console.log(wv.sceneGraph);
-    console.log("unknown gprim "+gprim+" with name "+name);
-    return;
-  }
-  if (graphic.GPtype==2)
-  {
-    // triangles
-    myTree.addNode(iparent,name, "",gprim,null,"","Viz","on",toggleViz,"Grd","on",toggleGrd,"Trn","off",toggleTrn);
-  }
-  else if (graphic.GPtype==1)
-  {
-    // lines
-    myTree.addNode(iparent,name, "",gprim,null,"","Viz","on",toggleViz,"Grd","on",toggleGrd,"Trn","off",toggleTrn);
-  }
-  else if (graphic.GPtype==0)
-  {
-    // points
-    myTree.addNode(iparent,name, "",gprim,null,"","Viz","on",toggleViz);
-  }
-  myTree.build();
+    canvas.addEventListener('mousedown',  getMouseDown,    false);
+    canvas.addEventListener('mousemove',  getMouseMove,    false);
+    canvas.addEventListener('mouseup',    getMouseUp,      false);
+    canvas.addEventListener("wheel",      getMouseRoll,    false);
+    canvas.addEventListener('mouseout',   mouseLeftCanvas, false);
 }
 
 function wvClientConnected(text)
@@ -118,68 +62,101 @@ function wvClientConnected(text)
   wv.socketUt.send("getdir");
 }
 
-function clearOptions(select)
+//
+// callback when a (text) message is received from the server (called by wv/socket.js)
+//
+function wvServerMessage(text)
 {
-  var n = select.options.length;
-  for (var i=0;i<n;i++)
+  // convert the server message to JSON
+  var msg = JSON.parse(text.substring(0,text.length-1));
+
+  // figure out what to do
+  var commands = msg["commands"];
+
+  for (var i=0;i<commands.length;i++)
   {
-    // remove 0'th item because once we do, the next one is the 0th
-    select.remove(0);
+    var data = msg[commands[i]+"-data"];
+
+    if (commands[i]=="make_tree")
+    {
+      make_tree(data["primitives"]);
+    }
+    else if (commands[i]=="ls")
+    {
+      wv.dir = data;
+    }
+    else if (commands[i]=="colorbar")
+    {
+      var clo = document.getElementById('colorbar-text-lo');
+      var chi = document.getElementById('colorbar-text-hi');
+
+      clo.innerHTML = data[0];
+      chi.innerHTML = data[1];
+    }
   }
 }
 
-function clippingPlaneMessage()
+function init_controls()
 {
-  var d = document.getElementById('clipd').value;
-  var alpha = document.getElementById('clipalpha').value;
-  var beta = document.getElementById('clipbeta').value;
+  document.getElementById('clip-offset').value = 0.;
+  document.getElementById('clip-alpha').value = 0.;
+  document.getElementById('clip-beta').value = 0.;
+  document.getElementById('flip-clip').checked = false;
+  document.getElementById('plot-clip').checked = false;
+  document.getElementById('real-time').checked = false;
+}
+
+function reset_clip()
+{
+  document.getElementById('clip-offset').value = 0.;
+  document.getElementById('clip-alpha').value = 0.;
+  document.getElementById('clip-beta').value = 0.;
+  var state;
+  if (document.getElementById('plot-clip').checked)
+    state = "on";
+  else
+    state = "off";
+  wv.socketUt.send("resetclip|"+state);
+}
+
+
+function get_clip_message()
+{
+  var d = document.getElementById('clip-offset').value;
+  var alpha = document.getElementById('clip-alpha').value;
+  var beta = document.getElementById('clip-beta').value;
   return String(d)+","+String(alpha)+","+String(beta);
 }
 
-function clippedPlots()
-{
-  var msg="";
-  for (var k=0;k<wv.clipped.length;k++)
-  {
-    if (wv.clipped[k].checked)
-    {
-      msg += String(k) +",";
-    }
-  }
-  if (document.getElementById('flipclip').checked) msg += "R";
-  else msg += "L";
-  msg += "|";
-  return msg;
-}
-
-function clipRequest()
+function request_clip()
 {
   // get all the plot indexes which are to be clipped
   var msg = "clip|";
-  msg += clippedPlots();
 
-  // send the clipping plane information
-  msg += clippingPlaneMessage();
+  // append the clipping plane information
+  msg += get_clip_message();
+
+  // send the message to the server
   wv.socketUt.send(msg);
 }
 
-function plotClip()
+function plot_clip()
 {
-  if (document.getElementById('realtime').checked)
+  if (document.getElementById('real-time').checked)
   {
     // also inform the plotter to do the clipping
-    clipRequest();
+    request_clip();
     return;
   }
 
-  if (document.getElementById('plotclip').checked)
+  if (document.getElementById('plot-clip').checked)
   {
     var dir;
-    if (document.getElementById('flipclip').checked)
+    if (document.getElementById('flip-clip').checked)
       dir = "R";
     else dir = "L";
     var msg = "plotclip|"+String(dir)+"|";
-    msg += clippingPlaneMessage();
+    msg += get_clip_message();
 
     wv.socketUt.send(msg);
   }
@@ -194,103 +171,8 @@ function toggle_field(e,select,gprim,iplot)
   var rank = select.selectedIndex -1; // -1 to account for 'none' option
 
   // ask the server to modify the graphics primitives
-  postMessage("toggle field!!")
+  print_message("toggle field!!")
   wv.socketUt.send("modgprim|"+iplot+"|"+rank);
-}
-
-function makeClipbox( iplot , inode )
-{
-  // get the html element corresponding to this table row
-  var elem = document.getElementById("node"+inode);
-
-  // append a select to the end of this row
-  var input = document.createElement("input");
-  input.type = "checkbox";
-  input.id = "clip"+iplot;
-  input.name = "clip";
-  input.value = true;
-  input.title = "whether this plot is clipped by the clipping plane";
-
-  wv.clipped.push( input );
-
-  elem.appendChild(input);
-
-}
-
-
-
-function addPlot()
-{
-  var option = document.getElementById("directory");
-  if (option.selectedIndex==0) return;
-  name = option.options[option.selectedIndex].text;
-
-  postMessage("sending request for "+name);
-
-  // we made it here, so the server should send back a mesh
-  wv.socketUt.send("cd|"+name);
-
-}
-
-function makePlots(info)
-{
-  var ptr    = info["ptr"];
-  var parent = info["parent"];
-  var name   = info["name"];
-
-  // number of table entries
-  var nt = ptr.length;
-
-  for (var i=0;i<nt;i++)
-    addTreePlot( parent[i] , ptr[i] , name[i] );
-
-  wvUpdateUI();
-
-  // add the dropdowns after the UI has been updated because otherwise the tree drawing overwrites the dropdown
-  var iplot = 0;
-  for (var i=0;i<nt;i++)
-  {
-    // we need to add a drop down for the fields if this is made in the root node (i.e. a plot)
-    if (parent[i]==0)
-    {
-      // make a select button for the field on this plot
-      makeSelect(iplot,i+2,ptr[i],info); // remember html table is offset by 2
-
-      // make a clip checkbox for this plot
-      makeClipbox(iplot,i+2,ptr[i],info);
-
-      iplot++;
-    }
-  }
-}
-
-function addOption(select,text,value)
-{
-  var opt = document.createElement("option");
-  opt.text = text;
-  opt.value = value;
-  select.options.add(opt);
-}
-
-function updateDirectoryList(info)
-{
-  var entries = info["entries"];
-  var drop = document.getElementById("directory");
-  clearOptions(drop);
-  for (var i=0;i<entries.length;i++)
-    addOption(drop,entries[i],"");
-}
-
-function addPlotDropdown(info)
-{
-  var entries = info["entries"];
-
-  // the first entry is the plot number, the second is the name
-  var iplot = entries[0];
-  var name = entries[1];
-  var select = document.getElementById("select"+iplot);
-  addOption(select,name,"");
-  select.selectedIndex = select.options.length -1;
 }
 
 function make_fields( node , fields )
@@ -330,7 +212,7 @@ function make_fields( node , fields )
 
 function make_tree(primitives)
 {
-  var node  = 2; // offset by two because of tree header
+  var node  = 1;
   var count = 0;
   var plots = [];
   for (var i=0;i<primitives.length;i++)
@@ -341,54 +223,54 @@ function make_tree(primitives)
     plots.push(root);
 
     // create a root node
-    myTree.addNode( 0 , "mesh"+i , "",dummy,null,"","Viz","on",toggleViz,"Grd","on",toggleGrd,"Trn","off",toggleTrn );
+    myTree.addNode( 0 , "Plot "+i , "",dummy,null,"","viz","on",toggle_viz,"edg","on",toggle_edges,"alpha","off",toggle_transparency );
     node++;
 
     // add the volumes
     var vol_node = node;
-    myTree.addNode( root , "Volumes" , "",dummy,null,"","Viz","on",toggleViz,"Grd","on",toggleGrd,"Trn","off",toggleTrn );
+    myTree.addNode( root , "Volumes" , "",dummy,null,"","viz","on",toggle_viz,"edg","on",toggle_edges,"alpha","off",toggle_transparency );
     node++;
     var volumes = JSON.parse(primitives[i])["Volumes"];
     for (var j=0;j<volumes.length;j++)
     {
       var gprim = volumes[j];
-      myTree.addNode( vol_node , gprim , "" , gprim , null,"", "Viz","on",toggleViz,"Grd","on",toggleGrd,"Trn","off",toggleTrn);
+      myTree.addNode( vol_node , "Volume " + j.toString() , "" , gprim , null,"", "viz","on",toggle_viz,"edg","on",toggle_edges,"alpha","off",toggle_transparency);
       node++;
     }
 
     // add the faces
     var face_node = node;
-    myTree.addNode( root , "Faces" , "",dummy,null,"","Viz","on",toggleViz,"Grd","on",toggleGrd,"Trn","off",toggleTrn );
+    myTree.addNode( root , "Faces" , "",dummy,null,"","viz","on",toggle_viz,"edg","on",toggle_edges,"alpha","off",toggle_transparency );
     node++;
     var faces = JSON.parse(primitives[i])["Faces"];
     for (var j=0;j<faces.length;j++)
     {
       var gprim = faces[j];
-      myTree.addNode( face_node , gprim , "" , gprim , null,"", "Viz","on",toggleViz,"Grd","on",toggleGrd,"Trn","off",toggleTrn);
+      myTree.addNode( face_node , "Face " + j.toString() , "" , gprim , null,"", "viz","on",toggle_viz,"edg","on",toggle_edges,"alpha","off",toggle_transparency);
       node++;
     }
 
     // add the edges
     var edge_node = node;
-    myTree.addNode( root , "Edges" , "",dummy,null,"","Viz","on",toggleViz,"Grd","on",toggleGrd );
+    myTree.addNode( root , "Edges" , "",dummy,null,"","viz","on",toggle_viz,"edg","on",toggle_edges );
     node++;
     var edges = JSON.parse(primitives[i])["Edges"];
     for (var j=0;j<edges.length;j++)
     {
       var gprim = edges[j];
-      myTree.addNode( edge_node , gprim , "" , gprim , null,"", "Viz","on",toggleViz,"Grd","on" );
+      myTree.addNode( edge_node , "Edge " + j.toString() , "" , gprim , null,"", "Viz","on",toggle_viz,"Grd","on" );
       node++;
     }
 
     // add the nodes
     var node_node = node;
-    myTree.addNode( root , "Nodes" , "",dummy,null,"","Viz","on",toggleViz );
+    myTree.addNode( root , "Nodes" , "",dummy,null,"","Viz","on",toggle_viz );
     node++;
     var nodes = JSON.parse(primitives[i])["Nodes"];
     for (var j=0;j<nodes.length;j++)
     {
       var gprim = nodes[j];
-      myTree.addNode( node_node , gprim , "" , gprim , null,"", "Viz","on",toggleViz );
+      myTree.addNode( node_node , "Node " +j.toString() , "" , gprim , null,"", "Viz","on",toggle_viz );
       node++;
     }
 
@@ -404,46 +286,192 @@ function make_tree(primitives)
   }
 }
 
-//
-// callback when a (text) message is received from the server (called by wv-socket.js)
-//
-function wvServerMessage(text)
-{
-  // convert the server message to JSON
-  var msg = JSON.parse(text.substring(0,text.length-1));
-
-  // figure out what to do
-  var commands = msg["commands"];
-
-  for (var i=0;i<commands.length;i++)
-  {
-    postMessage(commands[i]);
-    var data = msg[commands[i]+"-data"];
-
-    if (commands[i]=="make_tree")
-    {
-      make_tree(data["primitives"]);
-    }
-  }
-
-  return;
-}
-
-function deletePlots()
+function delete_plots()
 {
   myTree.clear();
-  myTree.addNode(0, "Plots", "show plots", "", null, "*"); // offsets by 2
   myTree.build();
 }
 
-function clearPlots()
+function clear_plots()
 {
   wv.socketUt.send("clear");
   //wv.sceneGraph = {};
   wvInitUI();
 }
 
-function rollbackDirectory()
+//
+// callback to toggle Viz property
+//
+function toggle_viz(e)
 {
-  wv.socketUt.send("cd|"+"..");
+    if (wv.curMode != 0)
+    {
+      alert("Command disabled.  Press 'Cancel' or 'OK' first");
+      return;
+    }
+
+    // get the Tree Node
+    var inode = e["target"].id.substring(4);
+    inode     = inode.substring(0,inode.length-4);
+    inode     = Number(inode);
+
+    // toggle the Viz property
+    if (myTree.valu1[inode] == "off")
+    {
+      myTree.prop(inode, 1, "on");
+    }
+    else if (myTree.valu1[inode] == "on")
+    {
+      myTree.prop(inode, 1, "off");
+    }
+    else
+    {
+      alert("Illegal Viz property:"+myTree.valu1[inode]);
+      return;
+    }
+}
+
+
+//
+// callback to toggle Grd property
+//
+function toggle_edges(e)
+{
+    if (wv.curMode != 0)
+    {
+      alert("Command disabled.  Press 'Cancel' or 'OK' first");
+      return;
+    }
+
+    // get the Tree Node
+    var inode = e["target"].id.substring(4);
+    inode     = inode.substring(0,inode.length-4);
+    inode     = Number(inode);
+
+    // toggle the edges property
+    if (myTree.valu2[inode] == "off")
+    {
+      myTree.prop(inode, 2, "on");
+    }
+    else if (myTree.valu2[inode] == "on")
+    {
+      myTree.prop(inode, 2, "off");
+    }
+    else
+    {
+      alert("Illegal Grd property:"+myTree.valu2[inode]);
+      return;
+    }
+}
+
+
+//
+// callback to toggle Trn property
+//
+function toggle_transparency(e)
+{
+    if (wv.curMode != 0)
+    {
+        alert("Command disabled.  Press 'Cancel' or 'OK' first");
+        return;
+    }
+
+    // get the Tree Node
+    var inode = e["target"].id.substring(4);
+    inode     = inode.substring(0,inode.length-4);
+    inode     = Number(inode);
+
+    // toggle the Trn property
+    if (myTree.valu3[inode] == "off")
+    {
+      myTree.prop(inode, 3, "on");
+    }
+    else if (myTree.valu3[inode] == "on")
+    {
+      myTree.prop(inode, 3, "off");
+    }
+    else
+    {
+      alert("Illegal Trn property:"+myTree.valu3[inode]);
+      return;
+    }
+}
+
+
+//
+// callback when "onresize" event occurs
+//
+// resize the frames (with special handling to width of tlframe and height of brframe)
+//
+function resize_frames()
+{
+    var scrollSize = 24;
+
+    // get the size of the client (minus amount to account for scrollbars)
+    var body = document.getElementById("mainBody");
+    var bodyWidth  = body.clientWidth  - scrollSize;
+    var bodyHeight = body.clientHeight - scrollSize;
+
+    // get the elements associated with the frames and the canvas
+    var topleft = document.getElementById("tlframe");
+    var butnfrm = document.getElementById("butnfrm");
+    var treefrm = document.getElementById("treefrm");
+    var toprite = document.getElementById("trframe");
+    var botrite = document.getElementById("brframe");
+    var canvas  = document.getElementById(wv.canvasID);
+    var plot_collapse = document.getElementById("plot_collapse");
+    //plot_collapse.style.height = "600px";
+
+    // compute and set the widths of the frames
+    //    (do not make tlframe larger than 250px)
+    var leftWidth = Math.round(0.2 * bodyWidth);
+    if (leftWidth<350) leftWidth = 350;
+    var riteWidth = bodyWidth - leftWidth;
+    var canvWidth = riteWidth - scrollSize;
+
+    topleft.style.width = leftWidth+"px";
+    treefrm.style.width = "100%";//leftWidth-scrollSize+"px";
+    toprite.style.width = riteWidth+"px";
+    botrite.style.width = bodyWidth+"px";//riteWidth+"px";
+    canvas.style.width  = canvWidth+"px";
+    canvas.width        = canvWidth;
+
+    // compute and set the heights of the frames
+    var botmHeight = Math.round(0.20 * bodyHeight);
+    var  topHeight = bodyHeight - botmHeight;
+    var canvHeight =  topHeight -scrollSize;/* - scrollSize - 5;*/
+
+    topleft.style.height =  topHeight+"px";
+    treefrm.style.height = "100%";//plot_collapse.style.height;
+    toprite.style.height =  topHeight+"px";
+    botrite.style.height = botmHeight+"px";
+    canvas.style.height  = canvHeight+"px";
+    canvas.height        = canvHeight;
+}
+
+//
+// post a message into the brframe
+//
+function print_message(mesg,col,newline,brackets)
+{
+    if (col==undefined) col = "yellow";
+    var term = document.getElementById("brframe");
+
+    var pre;
+    var end;
+
+    if (newline==undefined) newline = true;
+
+    if (brackets || brackets==undefined)
+    {
+      pre = "<< ";
+      end = " >>";
+    }
+    else
+    {
+      pre = "";
+      end = "";
+    }
+
+    term.print_message(pre+mesg+end,col,newline);
 }

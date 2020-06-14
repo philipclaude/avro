@@ -60,9 +60,10 @@ WV_Manager::write( Primitive& primitive )
   char label[256];
   sprintf(label,"%p",(void*)&primitive);
 
+  index_t nb_points = primitive.points().size()/3;
+
   // send the vertex coordinates (everyone needs to do this)
-  printf("primitive poitns = %lu\n",primitive.points().size());
-  status = wv_setData( WV_REAL64 , primitive.points().size() , (void*)primitive.points().data() , WV_VERTICES , &items[0] );
+  status = wv_setData( WV_REAL64 , nb_points , (void*)primitive.points().data() , WV_VERTICES , &items[0] );
   WV_CHECK_STATUS( status );
 
   //wv_adjustVerts( items[0] , focus ); // TODO retrieve focus...but from where??
@@ -131,7 +132,7 @@ WV_Manager::write( Primitive& primitive )
 
     // add the triangle colors
     std::vector<float> colors( primitive.colors().begin() , primitive.colors().end() );
-    status = wv_setData( WV_REAL32 , primitive.points().size(), (void*)colors.data() , WV_COLORS , &items[2] );
+    status = wv_setData( WV_REAL32 , nb_points , (void*)colors.data() , WV_COLORS , &items[2] );
     WV_CHECK_STATUS( status );
 
     // add the  edges
@@ -140,7 +141,7 @@ WV_Manager::write( Primitive& primitive )
     WV_CHECK_STATUS( status );
 
     std::vector<float> normals(primitive.normals().begin(),primitive.normals().end());
-    status = wv_setData( WV_REAL32 , primitive.points().size() , (void*)normals.data() , WV_NORMALS , &items[4] );
+    status = wv_setData( WV_REAL32 , nb_points , (void*)normals.data() , WV_NORMALS , &items[4] );
     WV_CHECK_STATUS( status );
 
     if (index_.find(&primitive)!=index_.end())

@@ -124,6 +124,7 @@ public:
   Primitive& primitive( index_t k ) { return *primitive_[k].get(); }
 
   void get_bounding_box( real_t* box ) const;
+  void get_color_limits( real_t* clim ) const;
   void set_focus( real_t* focus );
 
   const real_t* focus() const { return focus_; }

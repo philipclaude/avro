@@ -27,6 +27,9 @@ void browserMessage( void* wsi , char* text , /*@unused@*/ int lena );
 }
 #endif
 
+extern wvContext* __context__;
+extern void* __web_server__;
+
 namespace avro
 {
 

@@ -174,10 +174,10 @@ Primitive::extract( const ClippingPlane* plane )
     // constant color
     umin = 0.0;
     umax = 1.0;
-    U.resize( decomposition.points().nb() , 0.5 );
-    color[0] = 0.7;
-    color[1] = 0.7;
-    color[2] = 0.7;
+    U.resize( decomposition.points().nb() , 1.0 );
+    color[0] = 0.5;
+    color[1] = 0.5;
+    color[2] = 0.5;
     constant_color = true;
   }
   float lims[2] = {float(umin),float(umax)};

@@ -17,7 +17,7 @@ endif()
 
 
 find_path( ESP_INCLUDE_DIR wsserver.h egads.h HINTS $ENV{ESP_DIR}/include REQUIRED )
-find_path( ESP_WV_DIR wv-render.js HINTS $ENV{ESP_DIR}/wvClient/WebViewer REQUIRED )
+#find_path( ESP_WV_DIR wv-render.js HINTS $ENV{ESP_DIR}/wvClient/WebViewer REQUIRED )
 
 get_filename_component( ESP_LIBRARY_PATH ${ESP_LIBRARY} PATH )
 get_filename_component( OCC_LIBRARY_PATH ${OCC_LIBRARY} PATH )

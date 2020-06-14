@@ -47,6 +47,8 @@ main( int argc , const char** argv )
     result = programs::adapt(nb_inputs,inputs);
   else if (program=="plot")
     result = programs::plot(nb_inputs,inputs);
+  else if (program=="webplot")
+    result = programs::plot(nb_inputs,inputs,true);
   else if (program=="voronoi")
     result = programs::voronoi(nb_inputs,inputs);
   else if (program=="conformity")

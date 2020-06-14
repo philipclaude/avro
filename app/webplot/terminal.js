@@ -6,7 +6,7 @@ if( !String.prototype.trim ) {
 }
 
 /* parsing callback */
-var parseCommand = function(text) {
+var parse_command = function(text) {
 	text = text.trim();
   term = document.getElementById("brframe");
 
@@ -17,11 +17,11 @@ var parseCommand = function(text) {
     return;
   }
 
-  out = term.listener.parseCommand(text);
+  out = term.listener.parse_command(text);
   if (out.text!="")
   {
     for (i=0;i<out.text.length;i++)
-      term.postMessage(out.text[i],out.color,false);
+      term.print_message(out.text[i],out.color,false);
   }
 }
 
@@ -29,12 +29,12 @@ var parseCommand = function(text) {
 var InitTerminal = function() {
   t = new Terminal();
   document.body.appendChild(t.html)
-  createNewLine();
+  create_line();
   return t;
 }
 
 /* create new terminal line */
-var createNewLine = function() {
+var create_line = function() {
 
   var term = document.getElementById("brframe");
 
@@ -104,14 +104,14 @@ var createNewLine = function() {
 
   	  e.preventDefault();
   	  command_.readOnly = true;
-  	  parseCommand(command_.value);
-  	  createNewLine();
+  	  parse_command(command_.value);
+  	  create_line();
   	  setTimeout(command_.focus(),0);
   	}
   }
 
   // post message function
-  term.postMessage = function( msg , col , newline )
+  term.print_message = function( msg , col , newline )
   {
 
     msg = msg.split('\n');
@@ -141,10 +141,10 @@ var createNewLine = function() {
     }
 
     if (newline)
-      createNewLine();
+      create_line();
   }
 
-  term.setCommandListener = function( _listener )
+  term.set_listener = function( _listener )
   {
     this.listener = _listener;
   }

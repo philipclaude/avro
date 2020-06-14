@@ -15,6 +15,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
+#include <wsserver.h>
+
 #include <limits>
 
 namespace avro
@@ -29,12 +31,6 @@ ApplicationBase::write()
   // write all the data present in the scene graph
   for (index_t k=0;k<scenes_.size();k++)
     scenes_[k]->write(manager_);
-}
-
-void
-ApplicationBase::receive( const std::string& text ) const
-{
-  printf("received text %s\n",text.c_str());
 }
 
 void
@@ -75,13 +71,19 @@ ApplicationBase::focus_scenes()
 }
 
 void
+Application<Web_Interface>::send( const std::string& response ) const
+{
+  wv_broadcastText( const_cast<char*>(response.c_str()) );
+}
+
+void
 Application<Web_Interface>::save_eps()
 {
   // first set the transformation to the scene
   OpenGL_Manager manager_gl;
-  scene_.write(manager_gl);
+  scene_->write(manager_gl);
   TransformFeedbackResult feedback;
-  manager_gl.draw(scene_,&feedback);
+  manager_gl.draw(*scene_.get(),&feedback);
 }
 
 template<typename API_t>

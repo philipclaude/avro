@@ -10,6 +10,7 @@
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
+#include "graphics/wv.h"
 
 #include "library/ckf.h"
 #include "library/obj.h"
