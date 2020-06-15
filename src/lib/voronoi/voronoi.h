@@ -282,7 +282,7 @@ public:
     //Field<real_t>::add(z+1);
   }
 
-  index_t rank() const { return 1; }
+  index_t nb_rank() const { return 1; }
 
   std::vector<std::string> ranknames() const
    {std::vector<std::string> result; result.push_back("sites"); return result;}

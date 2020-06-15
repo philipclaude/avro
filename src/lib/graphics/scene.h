@@ -20,6 +20,8 @@
 namespace avro
 {
 
+class Colormap;
+
 namespace graphics
 {
 
@@ -47,8 +49,10 @@ private:
       this->operator[]("Nodes") = nodes_;
 
       std::vector<std::string> field_names;
-      primitive.topology().fields().get_names(field_names);
+      std::vector<std::string> field_ids;
+      primitive.topology().fields().get_names(field_names,field_ids);
       this->operator[]("fields") = field_names;
+      this->operator[]("fields_id") = field_ids;
     }
 
     void add( const Primitive& primitive )
@@ -128,6 +132,9 @@ public:
   void set_focus( real_t* focus );
 
   const real_t* focus() const { return focus_; }
+  void set_colormap( Colormap* colormap ) { colormap_ = colormap; }
+  Colormap& colormap() { return *colormap_; }
+  const Colormap& colormap() const { return *colormap_; }
 
 private:
   std::vector<Primitive_ptr> primitive_; // roots of the scene graph
@@ -140,6 +147,7 @@ private:
   bool update_;
 
   real_t focus_[4];
+  Colormap* colormap_;
 };
 
 } // graphics

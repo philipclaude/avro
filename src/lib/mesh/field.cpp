@@ -27,19 +27,48 @@ namespace avro
 {
 
 void
-Fields::get_names( std::vector<std::string>& names ) const
+Fields::get_names( std::vector<std::string>& names , std::vector<std::string>& ids ) const
 {
-
   // get a json describing all the field names with ranks
   std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
   for (it=fields_.begin();it!=fields_.end();it++)
   {
     index_t rank = it->second->nb_rank();
-    printf("rank = %lu\n",rank);
     for (index_t j=0;j<rank;j++)
-      names.push_back( it->second->get_name(j) );
-
+    {
+      names.push_back( it->first + "-" + it->second->get_name(j) );
+      ids.push_back( identifiers_.at(it->first) + "-" + std::to_string(j) );
+    }
   }
+}
+
+void
+Fields::print() const
+{
+  printf("nb_fields = %lu\n",fields_.size());
+  std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
+  for (it=fields_.begin();it!=fields_.end();it++)
+  {
+    index_t rank = it->second->nb_rank();
+    for (index_t j=0;j<rank;j++)
+    {
+      printf("field[%s] at rank %lu (%s) with id %s\n",it->first.c_str(),j,it->second->get_name(j).c_str(),identifiers_.at(it->first).c_str() );
+    }
+  }
+}
+
+std::string
+Fields::id2name( const std::string& id ) const
+{
+  std::map<std::string,std::string>::const_iterator it;
+  for (it=identifiers_.begin();it!=identifiers_.end();it++)
+  {
+    if (it->second==id)
+      return it->first;
+  }
+  printf("could not find field name associated with id %s\n",id.c_str());
+  avro_assert_not_reached;
+  return "no-name";
 }
 
 template<typename T>

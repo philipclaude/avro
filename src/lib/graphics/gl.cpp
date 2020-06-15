@@ -410,6 +410,8 @@ OpenGL_Manager::write( const std::string& name , coord_t number , const std::vec
   GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
   GL_CALL( glEnableVertexAttribArray(0) );
 
+  select_shader(name , "wv" );
+
 }
 
 void

@@ -161,6 +161,8 @@ public:
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr );
   void draw( const std::string& name , coord_t number , const DrawingParameters& params );
 
+  void remove( const std::string& ) { avro_assert_not_reached; }
+
   void select_shader( Primitive& primitive , const std::string& name );
   void select_shader( const std::string& name , const std::string& shader_name );
   void create_shaders();

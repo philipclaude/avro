@@ -5,6 +5,7 @@
 #include "library/ckf.h"
 
 #include "numerics/geometry.h"
+#include "numerics/quaternion.h"
 
 namespace avro
 {
@@ -18,7 +19,10 @@ ClippingPlane::ClippingPlane( coord_t dim , real_t length ) :
   points_(dim),
   transformed_points_(dim),
   length_(length),
-  sign_(1)
+  sign_(1),
+  distance_(0),
+  u_(dim),
+  v_(dim)
 {
 
   // the plane has topological dimension dim_-1
@@ -75,6 +79,17 @@ ClippingPlane::initialize()
   for (index_t k=0;k<points_.nb();k++)
     transformed_points_.create( points_[k] );
 
+  distance_ = 0.0;
+  angles_[0] = 0.0;
+  angles_[1] = 0.0;
+  u_[0] = 0.;
+  u_[1] = 1.;
+  u_[2] = 0.;
+
+  v_[0] = 0.;
+  v_[1] = 0.;
+  v_[2] = 1.;
+
   update();
 }
 
@@ -113,7 +128,11 @@ ClippingPlane::update()
 
   numerics::normalize( normal_.data() , normal_.size() );
 
-  //printf("--> clipping plane: normal = (%g,%g,%g) with center (%g,%g,%g)\n",normal_[0],normal_[1],normal_[2],center_[0],center_[1],center_[2]);
+  for (coord_t d=0;d<3;d++)
+  {
+    u_[d] = u[d];
+    v_[d] = v[d];
+  }
 }
 
 bool
@@ -135,9 +154,9 @@ ClippingPlane::visible( const Points& points , const index_t* v , index_t nv ) c
 }
 
 void
-ClippingPlane::plot( GraphicsManager& manager0 , const real_t* focus , const mat4& transformation )
+ClippingPlane::plot( GraphicsManager& manager , const real_t* focus , const mat4& transformation )
 {
-  OpenGL_Manager* manager = dynamic_cast<OpenGL_Manager*>(&manager0);
+  //OpenGL_Manager* manager = dynamic_cast<OpenGL_Manager*>(&manager0);
 
   real_t scale = 1./focus[3];
   for (index_t k=0;k<transformed_points_.nb();k++)
@@ -150,12 +169,115 @@ ClippingPlane::plot( GraphicsManager& manager0 , const real_t* focus , const mat
   plot_triangles_[0] = 0; plot_triangles_[1] = 1; plot_triangles_[2] = 2;
   plot_triangles_[3] = 1; plot_triangles_[4] = 2; plot_triangles_[5] = 3;
 
-  manager->write( "clip-plane" , 2 , plot_points_ , {} , plot_triangles_ , plot_colors_ );
-  manager->select_shader( "clip-plane" , "wv" );
+  manager.write( "clip-plane" , 2 , plot_points_ , {} , plot_triangles_ , plot_colors_ );
   DrawingParameters params;
   params.mvp = transformation;
   params.transparency = 0.25;
-  manager->draw("clip-plane",2,params);
+  manager.draw("clip-plane",2,params);
+}
+
+void
+ClippingPlane::update( real_t distance , real_t* angles , int dir )
+{
+  sign_ = dir;
+  initialize();
+
+  // transform the points
+  for (index_t k=0;k<4;k++)
+  {
+    for (coord_t d=0;d<3;d++)
+      transformed_points_[k][d] -= normal_[d]*distance_;
+  }
+
+  mat4 M = mat4(1.0);
+  mat4 T = mat4(1.0);
+
+  // compound the rotation into M by first translating to the initial point
+  for (coord_t d=0;d<3;d++)
+    T[d][3] = -normal_[d]*distance_;
+  mat4 M0 = T*M;
+
+  // save the new distance
+  distance_ = distance;
+
+  // get the angles in radians
+  angles[0] = angles[0]*M_PI/180.;
+  angles[1] = angles[1]*M_PI/180.;
+
+  mat4 Mr1 = mat4(0);
+  mat4 Mr2 = mat4(0);
+  Mr1[3][3] = 1;
+  Mr2[3][3] = 1;
+
+  // rotation about the first axis
+  Quaternion q1(angles[0]-angles_[0],u_.data());
+  mat3 R = q1.rotation_matrix();
+  for (coord_t i=0;i<3;i++)
+  for (coord_t j=0;j<3;j++)
+    Mr1[i][j] = R[i][j];
+
+  M = Mr1*M0;
+  M0 = M;
+
+  vec3 v0 = {v_[0],v_[1],v_[2]};
+  vec3 v = R*v0;
+  for (coord_t d=0;d<3;d++)
+    v_[d] = v[d];
+
+  // rotation about the second axis
+  Quaternion q2(angles[1]-angles_[1],v_.data());
+  R = q2.rotation_matrix();
+  for (coord_t i=0;i<3;i++)
+  for (coord_t j=0;j<3;j++)
+    Mr2[i][j] = R[i][j];
+  M = Mr2*M0;
+
+  // also rotate the first axis
+  vec3 u0 = {u_[0],u_[1],u_[2]};
+  vec3 u = R*u0;
+  for (coord_t d=0;d<3;d++)
+    u_[d] = u[d];
+
+  // save the angles
+  angles_[0] = angles[0];
+  angles_[1] = angles[1];
+
+  // then translating back
+  for (coord_t d=0;d<3;d++)
+    T[d][3] = normal_[d]*distance_;
+  M0 = T*M;
+
+  // compute the normal as the cross product of the two axis vectors
+  normal_[0] = u_[1]*v_[2] -u_[2]*v_[1];
+  normal_[1] = u_[2]*v_[0] -u_[0]*v_[2];
+  normal_[2] = v_[1]*u_[0] -v_[0]*u_[1];
+  numerics::normalize(normal_.data(),normal_.size());
+
+  // transform the points
+  std::fill( center_.begin() , center_.end() , 0.0 );
+  for (index_t k=0;k<4;k++)
+  {
+    vec4 p;
+    for (coord_t d=0;d<3;d++)
+      p[d] = transformed_points_[k][d];
+    p[3] = 1.;
+    vec4 x = M0*p;
+    for (coord_t d=0;d<3;d++)
+    {
+      transformed_points_[k][d] = x[d] +normal_[d]*distance_;
+      center_[d] += transformed_points_[k][d];
+    }
+  }
+
+  for (coord_t d=0;d<3;d++)
+    center_[d] /= transformed_points_.nb();
+
+}
+
+void
+ClippingPlane::hide( GraphicsManager& manager )
+{
+  manager.remove("clip-plane");
 }
 
 void

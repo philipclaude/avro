@@ -530,7 +530,7 @@ function draw_colorbar(gl)
   var xlim_hi = [x+1.1*w,y+h,z];
 
   var xlims = [xlim_lo,xlim_hi];
-  var divs = ["colorbartext_lo","colorbartext_hi"];
+  var divs = ["colorbar-text-lo","colorbar-text-hi"];
 
   var M = wv.mvpMatrix.getAsArray();
 
@@ -558,7 +558,7 @@ function draw_colorbar(gl)
     textDiv.style.left = px +"px";
     textDiv.style.top  = py +"px";
     textDiv.style.fontSize = fs.toString()+"px";
-    if (document.getElementById("cboxDark").checked)
+    if (document.getElementById("background-checkbox").checked)
       textDiv.style.color = "white";
     else
       textDiv.style.color = "black";

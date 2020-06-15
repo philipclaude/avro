@@ -109,17 +109,21 @@
       change_colormap = function()
       {
         var value = document.getElementById('colormap-select').value;
-        print_message("change colormap to "+value+" !","blue");
         wv.socketUt.send("colormap|"+value);
         if (wv.colorbar!=undefined)
-          wv.socketUt.send("colorbar|10");
+          wv.socketUt.send("colorbar|10|-1");
       }
 
-      toggle_colorbar = function()
+      toggle_colorbar = function(iplot)
       {
-        var box = document.getElementById('colorbar-checkbox');
+        /*var box = document.getElementById('colorbar-checkbox');
         if (box.checked)
-          wv.socketUt.send("colorbar|10"); // ask for 10 values
+          wv.socketUt.send("colorbar|10|"+iplot.toString()); // ask for 10 values
+        else
+          wv.colorbar = undefined;*/
+        var box = document.getElementById('colorbar-checkbox-'+iplot.toString());
+        if (box.checked)
+          wv.socketUt.send("colorbar|10|"+iplot.toString()); // ask for 10 values
         else
           wv.colorbar = undefined;
       }
@@ -138,7 +142,8 @@
         var reply = "slice4d|"+plane+"|"+d.toString();
         clear_plots();
         wv.socketUt.send(reply);
-        alert('please wait for the server to finish\nand re-load the plot tree!');
+        alert('4d slicing is currently disabled!');
+        //alert('please wait for the server to finish\nand re-load the plot tree!');
       }
 
     </script>
@@ -178,15 +183,15 @@
              <br>
              <p align="right">
                <b>colormap:</b>&nbsp;
-               <select name="colormap" id="colormap-select" value="viridis" onchange="change_colormap()">
-                 <option value="viridis" selected="selected">viridis</option>
+               <select name="colormap" id="colormap-select" value="giraffe" onchange="change_colormap()">
+                 <option value="viridis">viridis</option>
                  <option value="parula">parula</option>
                  <option value="hsv">hsv</option>
                  <option value="jet">jet</option>
                  <option value="bwr">bwr</option>
                  <option value="bgr">bgr</option>
                  <option value="hot">hot</option>
-                 <option value="giraffe">giraffe</option>
+                 <option value="giraffe" selected="selected">giraffe</option>
                </select>
                &nbsp;&nbsp;
                &nbsp;&nbsp;
@@ -198,9 +203,6 @@
              <p align="right">
              <input type="checkbox" id="background-checkbox" onclick=toggle_darkness() title="toggle darkness">
              <b>dark background</b>
-             &nbsp;&nbsp;
-             <input title="option to show the colorbar" onclick=toggle_colorbar() type="checkbox" id="colorbar-checkbox">&nbsp;<b>colorbar</b></input>
-             &nbsp;&nbsp;
             </p>
              <hr>
             <div id="treefrm" oncontextmenu="return false;">
@@ -223,8 +225,7 @@
                <input title="show clipping plane" type="checkbox" id="plot-clip" onclick="plot_clip()" checked>&nbsp;show</input>
                <input title="flip clipping side" type="checkbox" id="flip-clip" checked="false">&nbsp;flip</input>
                <input title="check for real-time clipping" type="checkbox" id="real-time" checked="false">&nbsp;real-time</input>
-               <div style="white-space:nowrap">
-             </div>
+               <div style="white-space:nowrap"></div>
              <div style="white-space:nowrap">
                &theta;&nbsp;<input style="width:150px; display: inline-block" align="left" type="range" oninput="plot_clip()" id="clip-alpha" name="alpha" , min="-90" max="90", step="1" value="0">
                &phi;&nbsp;<input style="width:150px; display: inline-block" align="right" type="range" oninput="plot_clip()" id="clip-beta" name="beta" , min="-90" max="90", step="1" value="0">

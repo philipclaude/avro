@@ -67,6 +67,27 @@ Field<Simplex,T>::evaluate( const Function& function )
 
 template<typename T>
 void
+Field<Simplex,T>::evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
+{
+  avro_assert( parents.size() == alpha.nb() );
+  std::vector<real_t> phi( master_.nb_basis() );
+
+  result.resize( parents.size() );
+  for (index_t k=0;k<parents.size();k++)
+  {
+    // evaluate the basis functions for this reference coordinate
+    master_.basis().evaluate( alpha(k) , phi.data() );
+
+    // evaluate the field
+    result[k] = 0.0;
+    for (index_t j=0;j<phi.size();j++)
+      result[k] += __at_rank__( (*this)(parents[k],j) , rank )*phi[j];
+  }
+
+}
+
+template<typename T>
+void
 Field<Polytope,T>::evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
 {
   avro_assert( master_.order() == 0 );

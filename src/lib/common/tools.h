@@ -28,6 +28,15 @@ namespace avro
 real_t random_within( const real_t lo , const real_t hi );
 int random_within( const int lo , const int hi );
 
+template<typename T>
+inline std::string
+pointer_string( const T* x )
+{
+  std::stringstream s;
+  s << x;
+  return s.str();
+}
+
 template <typename T>
 inline std::string
 stringify( const T& x )

@@ -12,7 +12,6 @@
 #include "graphics/application.h"
 #include "graphics/colormap.h"
 #include "graphics/primitive.h"
-#include "graphics/shader.h"
 
 #include "mesh/decomposition.h"
 #include "mesh/field.h"
@@ -30,7 +29,6 @@ Primitive::Primitive( const TopologyBase& topology , SceneGraph* scene ) :
   topology_(topology),
   rank_(0),
   active_(""),
-  shader_(NULL),
   scene_(scene),
   visible_(true),
   triangles_on_(true),
@@ -39,12 +37,6 @@ Primitive::Primitive( const TopologyBase& topology , SceneGraph* scene ) :
   transparency_(1.0),
   hidden_(false)
 {}
-
-ShaderProgram&
-Primitive::shader()
-{
-  return *shader_;
-}
 
 const TopologyBase&
 Primitive::topology() const
@@ -59,14 +51,11 @@ Primitive::extract( const ClippingPlane* plane )
   coord_t dim0 = topology_.points().dim();
   coord_t number = topology_.number();
 
-  if (topology_.fields().has("sites"))
-    active_ = "sites";
-
-  points0_.clear();
-  edges0_.clear();
-  triangles0_.clear();
-  normals0_.clear();
-  colors0_.clear();
+  points_.clear();
+  edges_.clear();
+  triangles_.clear();
+  normals_.clear();
+  colors_.clear();
 
   const real_t* center = scene_->focus();
   const real_t scale = 1./center[3];
@@ -77,9 +66,9 @@ Primitive::extract( const ClippingPlane* plane )
     for (index_t k=0;k<topology_.nb();k++)
     {
       for (index_t j=0;j<dim0;j++)
-        points0_.push_back( scale*( topology_.points()[topology_(k,0)][j] -center[j]) );
+        points_.push_back( scale*( topology_.points()[topology_(k,0)][j] -center[j]) );
       for (index_t j=dim0;j<3;j++)
-        points0_.push_back( scale*( 0.0 - center[j] ) );
+        points_.push_back( scale*( 0.0 - center[j] ) );
 
       points_on_ = true;
     }
@@ -96,11 +85,11 @@ Primitive::extract( const ClippingPlane* plane )
     for (index_t k=0;k<edges.size();k++)
     {
       for (index_t j=0;j<dim0;j++)
-        points0_.push_back( scale*( topology_.points()[edges[k]][j]  - center[j]) );
+        points_.push_back( scale*( topology_.points()[edges[k]][j]  - center[j]) );
       for (index_t j=dim0;j<3;j++)
-        points0_.push_back( scale*( 0.0 - center[j]) );
+        points_.push_back( scale*( 0.0 - center[j]) );
 
-      edges0_.push_back( edges0_.size() );
+      edges_.push_back( edges_.size() );
     }
     return;
   }
@@ -123,25 +112,25 @@ Primitive::extract( const ClippingPlane* plane )
   index_t nb_points = triangles.size(); // duplicated points for cell-based colors
 
   // allocate the vertex data
-  colors0_.resize( 3*nb_points, 0 );
-  normals0_.resize( 3*nb_points, 0 );
+  colors_.resize( 3*nb_points, 0 );
+  normals_.resize( 3*nb_points, 0 );
 
   std::vector<index_t> point_map0( points.nb() );
   std::vector<index_t> point_map1;
   for (index_t k=0;k<triangles.size();k++)
   {
     for (index_t j=0;j<dim0;j++)
-      points0_.push_back( scale*(points[triangles[k]][j] - center[j]) );
+      points_.push_back( scale*(points[triangles[k]][j] - center[j]) );
     for (index_t j=dim0;j<3;j++)
-      points0_.push_back( scale*(0.0                     - center[j]) );
+      points_.push_back( scale*(0.0                     - center[j]) );
 
-    point_map0[ triangles[k] ] = triangles0_.size();
+    point_map0[ triangles[k] ] = triangles_.size();
     point_map1.push_back( triangles[k] );
 
     if (number>=2)
-      triangles0_.push_back( triangles0_.size() );
+      triangles_.push_back( triangles_.size() );
   }
-  nb_triangles = triangles0_.size()/3;
+  nb_triangles = triangles_.size()/3;
 
   if (number>=1)
   {
@@ -149,7 +138,7 @@ Primitive::extract( const ClippingPlane* plane )
     std::vector<index_t> edges;
     topology_.get_edges( edges , plane );
     for (index_t k=0;k<edges.size();k++)
-      edges0_.push_back( point_map0[ edges[k] ] );
+      edges_.push_back( point_map0[ edges[k] ] );
   }
 
   std::vector<real_t> U;
@@ -181,9 +170,11 @@ Primitive::extract( const ClippingPlane* plane )
     constant_color = true;
   }
   float lims[2] = {float(umin),float(umax)};
+  ulim_[0] = umin;
+  ulim_[1] = umax;
 
   // compute the color of the (unduplicated) triangulation points
-  Colormap colormap;
+  Colormap& colormap = scene_->colormap();
   colormap.set_limits(lims);
   std::vector<index_t> color0( points.nb()*3 );
   for (index_t k=0;k<triangles.size()/3;k++)
@@ -206,7 +197,7 @@ Primitive::extract( const ClippingPlane* plane )
   for (index_t k=0;k<nb_points;k++)
   {
     for (index_t j=0;j<3;j++)
-      colors0_[3*k+j] = color0[3*point_map1[k]+j];
+      colors_[3*k+j] = color0[3*point_map1[k]+j];
   }
 
   // compute the normals
@@ -218,15 +209,15 @@ Primitive::extract( const ClippingPlane* plane )
     std::vector<index_t> count( nb_points, 0 );
     for (index_t k=0;k<nb_triangles;k++)
     {
-      x1 = points0_[ 3*triangles0_[3*k  ] + 0 ];
-      y1 = points0_[ 3*triangles0_[3*k  ] + 1 ];
-      z1 = points0_[ 3*triangles0_[3*k  ] + 2 ];
-      x2 = points0_[ 3*triangles0_[3*k+1] + 0 ];
-      y2 = points0_[ 3*triangles0_[3*k+1] + 1 ];
-      z2 = points0_[ 3*triangles0_[3*k+1] + 2 ];
-      x3 = points0_[ 3*triangles0_[3*k+2] + 0 ];
-      y3 = points0_[ 3*triangles0_[3*k+2] + 1 ];
-      z3 = points0_[ 3*triangles0_[3*k+2] + 2 ];
+      x1 = points_[ 3*triangles_[3*k  ] + 0 ];
+      y1 = points_[ 3*triangles_[3*k  ] + 1 ];
+      z1 = points_[ 3*triangles_[3*k  ] + 2 ];
+      x2 = points_[ 3*triangles_[3*k+1] + 0 ];
+      y2 = points_[ 3*triangles_[3*k+1] + 1 ];
+      z2 = points_[ 3*triangles_[3*k+1] + 2 ];
+      x3 = points_[ 3*triangles_[3*k+2] + 0 ];
+      y3 = points_[ 3*triangles_[3*k+2] + 1 ];
+      z3 = points_[ 3*triangles_[3*k+2] + 2 ];
 
       xnor = (y3-y1)*(z2-z1)-(y2-y1)*(z3-z1);
       ynor = (z3-z1)*(x2-x1)-(x3-x1)*(z2-z1);
@@ -236,19 +227,19 @@ Primitive::extract( const ClippingPlane* plane )
 
       if (dis != 0.0f)
       {
-        normals0_[ 3*triangles0_[3*k  ] + 0 ] += xnor/dis;
-        normals0_[ 3*triangles0_[3*k  ] + 1 ] += ynor/dis;
-        normals0_[ 3*triangles0_[3*k  ] + 2 ] += znor/dis;
-        normals0_[ 3*triangles0_[3*k+1] + 0 ] += xnor/dis;
-        normals0_[ 3*triangles0_[3*k+1] + 1 ] += ynor/dis;
-        normals0_[ 3*triangles0_[3*k+1] + 2 ] += znor/dis;
-        normals0_[ 3*triangles0_[3*k+2] + 0 ] += xnor/dis;
-        normals0_[ 3*triangles0_[3*k+2] + 1 ] += ynor/dis;
-        normals0_[ 3*triangles0_[3*k+2] + 2 ] += znor/dis;
+        normals_[ 3*triangles_[3*k  ] + 0 ] += xnor/dis;
+        normals_[ 3*triangles_[3*k  ] + 1 ] += ynor/dis;
+        normals_[ 3*triangles_[3*k  ] + 2 ] += znor/dis;
+        normals_[ 3*triangles_[3*k+1] + 0 ] += xnor/dis;
+        normals_[ 3*triangles_[3*k+1] + 1 ] += ynor/dis;
+        normals_[ 3*triangles_[3*k+1] + 2 ] += znor/dis;
+        normals_[ 3*triangles_[3*k+2] + 0 ] += xnor/dis;
+        normals_[ 3*triangles_[3*k+2] + 1 ] += ynor/dis;
+        normals_[ 3*triangles_[3*k+2] + 2 ] += znor/dis;
 
-        count[ triangles0_[3*k  ] ]++;
-        count[ triangles0_[3*k+1] ]++;
-        count[ triangles0_[3*k+2] ]++;
+        count[ triangles_[3*k  ] ]++;
+        count[ triangles_[3*k+1] ]++;
+        count[ triangles_[3*k+2] ]++;
       }
     }
 
@@ -257,19 +248,19 @@ Primitive::extract( const ClippingPlane* plane )
     {
       if (count[k] <= 1) continue;
       dis  = count[k];
-      xnor = normals0_[3*k  ] / dis;
-      ynor = normals0_[3*k+1] / dis;
-      znor = normals0_[3*k+2] / dis;
+      xnor = normals_[3*k  ] / dis;
+      ynor = normals_[3*k+1] / dis;
+      znor = normals_[3*k+2] / dis;
       dis  = sqrtf(xnor*xnor + ynor*ynor + znor*znor);
-      normals0_[3*k  ] = xnor/dis;
-      normals0_[3*k+1] = ynor/dis;
-      normals0_[3*k+2] = znor/dis;
+      normals_[3*k  ] = xnor/dis;
+      normals_[3*k+1] = ynor/dis;
+      normals_[3*k+2] = znor/dis;
     }
   }
   else if (topology_.number()==1)
   {
     printf("setting color for lines!!\n");
-    colors0_.resize( 3*nb_points, 255.0f );
+    colors_.resize( 3*nb_points, 255.0f );
   }
 }
 
@@ -306,6 +297,25 @@ Primitive::write( GraphicsManager& manager , const ClippingPlane* plane )
   for (index_t k=0;k<nb_children();k++)
     child(k).write(manager,plane);
 }
+
+void
+Primitive::set_active( const std::string& x , index_t rank )
+{
+  active_ = x;
+  rank_   = rank;
+  for (index_t k=0;k<nb_children();k++)
+    child(k).set_active(x,rank);
+}
+
+void
+Primitive::get_field_limits( real_t* lims ) const
+{
+  lims[0] = std::min( lims[0] , ulim_[0] );
+  lims[1] = std::max( lims[1] , ulim_[1] );
+  for (index_t k=0;k<nb_children();k++)
+    child(k).get_field_limits( lims );
+}
+
 
 } // graphics
 

@@ -39,6 +39,8 @@ public:
       std::vector<real_t> X(topology.points()[k],topology.points()[k]+topology.points().dim());
       this->value(k) = X;
     }
+
+    this->master().set_basis( BasisFunctionCategory_Lagrange );
   }
 
 
@@ -61,6 +63,11 @@ UT_TEST_CASE( test1 )
   library::objFile topology0( BASE_TEST_DIR+"/geometry/obj/spot.obj" );
   CKF_Triangulation topology1( {4,4} );
   CKF_Triangulation topology2( {4,4,4} );
+  Delaunay z(topology0.points());
+  delaunay::RestrictedVoronoiDiagram rvd( topology0 , z );
+  rvd.compute();
+
+  rvd.fields().print();
 
   std::shared_ptr<CoordinateField<Simplex>> fld = std::make_shared<CoordinateField<Simplex>>(topology0);
   topology0.fields().make( "coordinates" , fld );
@@ -68,8 +75,9 @@ UT_TEST_CASE( test1 )
   WebVisualizer vis;
 
   vis.add_topology(topology0);
-  vis.add_topology(topology1);
-  vis.add_topology(topology2);
+  vis.add_topology(rvd);
+  //vis.add_topology(topology1);
+  //vis.add_topology(topology2);
 
   vis.run();
 }

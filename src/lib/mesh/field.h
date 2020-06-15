@@ -117,8 +117,7 @@ public:
 
   const Topology<Simplex>& topology() const { return topology_; }
 
-  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
-  { avro_implement; }
+  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const;
 
 private:
   const Topology<Simplex>& topology_;
@@ -187,6 +186,7 @@ public:
     void make( const std::string& name , std::shared_ptr<type>& f )
     {
       fields_.insert( { name , std::make_shared< FieldClass<type> >(name,*f.get()) } );
+      identifiers_.insert( {name,pointer_string(f.get())} );
     }
 
     template<typename type>
@@ -214,15 +214,21 @@ public:
     void remove( const std::string& name )
     {
       fields_.erase(name);
+      identifiers_.erase(name);
     }
 
     index_t nb() const { return fields_.size(); }
 
     void from_json( const json& J );
-    void get_names( std::vector<std::string>& names ) const;
+    void get_names( std::vector<std::string>& names , std::vector<std::string>& ids ) const;
+
+    std::string id2name( const std::string& id ) const;
+
+    void print() const;
 
 private:
   std::map<std::string,std::shared_ptr<FieldHolder>> fields_;
+  std::map<std::string,std::string> identifiers_;
 
   const TopologyBase& topology_;
 };

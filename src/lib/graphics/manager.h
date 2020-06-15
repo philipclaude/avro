@@ -39,7 +39,8 @@ public:
   virtual void write( Primitive& primitive ) = 0;
   virtual void write( const std::string& name , coord_t number , const std::vector<real_t>& points , const std::vector<index_t>& edges , const std::vector<index_t>& triangles , const std::vector<real_t>& colors ) = 0;
   virtual void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr ) = 0;
-  virtual void draw( const std::string& name , coord_t number , const DrawingParameters& params ) = 0 ;
+  virtual void draw( const std::string& name , coord_t number , const DrawingParameters& params ) = 0;
+  virtual void remove( const std::string& name ) = 0;
 
   Listener& listener() { return listener_; }
 
@@ -64,6 +65,8 @@ private:
 
   void draw( const std::string& name , coord_t number , const DrawingParameters& params )
   { avro_implement; }
+
+  void remove( const std::string& ) { avro_assert_not_reached; }
 
   void create_shaders()
   { avro_implement; }

@@ -92,6 +92,12 @@ function wvServerMessage(text)
 
       clo.innerHTML = data[0];
       chi.innerHTML = data[1];
+
+      wv.colorbar = data["values"];
+      wv.colorbarlims = data["limits"];
+
+      for (var j=0;j<wv.colorbar.length;j++)
+        wv.colorbar[j] *= 256.0;
     }
   }
 }
@@ -111,12 +117,7 @@ function reset_clip()
   document.getElementById('clip-offset').value = 0.;
   document.getElementById('clip-alpha').value = 0.;
   document.getElementById('clip-beta').value = 0.;
-  var state;
-  if (document.getElementById('plot-clip').checked)
-    state = "on";
-  else
-    state = "off";
-  wv.socketUt.send("resetclip|"+state);
+  plot_clip();
 }
 
 
@@ -161,21 +162,24 @@ function plot_clip()
     wv.socketUt.send(msg);
   }
   else
-    wv.socketUt.send("hideclip|");
-
+    wv.socketUt.send("plotclip|H|0,0,0");
 }
 
 function toggle_field(e,select,gprim,iplot)
 {
-  // get the rank of the field we need to plot
-  var rank = select.selectedIndex -1; // -1 to account for 'none' option
+  // get the name and id of the field to color
+  var name = select.options[select.selectedIndex].innerHTML;
+  var id = select.options[select.selectedIndex].id;
 
   // ask the server to modify the graphics primitives
-  print_message("toggle field!!")
-  wv.socketUt.send("modgprim|"+iplot+"|"+rank);
+  wv.socketUt.send("select-field|"+iplot+"|"+name+"|"+id);
+
+  var colorbar_checkbox = document.getElementById("colorbar-checkbox-"+iplot.toString());
+  if (id!="0x0")
+    colorbar_checkbox.checked = true;
 }
 
-function make_fields( node , fields )
+function make_fields( node , iplot , fields , fields_id )
 {
   // get the html element corresponding to this table row
   var elem = document.getElementById("node"+node);
@@ -188,6 +192,7 @@ function make_fields( node , fields )
   var option0 = document.createElement("option");
   option0.text = "none";
   option0.value = "";
+  option0.id = "0x0";
   select.options.add(option0);
 
   // add the remaining field options
@@ -197,17 +202,22 @@ function make_fields( node , fields )
     var option1 = document.createElement("option");
     option1.text = fields[i];
     option1.value = "";
+    option1.id = fields_id[i];
 
     select.options.add(option1);
   }
 
-  if (select.options.length==1)
-    select.selectedIndex = 0;
-  else
-    select.selectedIndex = 1; // the server will colour the field in the first rank
+  // set the index to the first one (no coloring)
+  select.selectedIndex = 0;
 
-  select.onchange = function(e) { toggle_field(e,select,node); };
+  select.onchange = function(e) { toggle_field(e,select,node,iplot); };
   elem.appendChild(select);
+
+  var colorbar_check = document.createElement("input");
+  colorbar_check.type = "checkbox";
+  colorbar_check.id = "colorbar-checkbox-"+iplot.toString();
+  colorbar_check.onclick = function(e) { toggle_colorbar(iplot); };
+  elem.appendChild(colorbar_check);
 }
 
 function make_tree(primitives)
@@ -282,7 +292,8 @@ function make_tree(primitives)
   for (var i=0;i<plots.length;i++)
   {
     var fields = JSON.parse(primitives[i])["fields"];
-    make_fields( plots[i] , fields );
+    var fields_id = JSON.parse(primitives[i])["fields_id"];
+    make_fields( plots[i] , i , fields , fields_id );
   }
 }
 
@@ -326,7 +337,7 @@ function toggle_viz(e)
     }
     else
     {
-      alert("Illegal Viz property:"+myTree.valu1[inode]);
+      alert("Illegal visibility property:"+myTree.valu1[inode]);
       return;
     }
 }
@@ -359,7 +370,7 @@ function toggle_edges(e)
     }
     else
     {
-      alert("Illegal Grd property:"+myTree.valu2[inode]);
+      alert("Illegal edges property:"+myTree.valu2[inode]);
       return;
     }
 }
@@ -392,7 +403,7 @@ function toggle_transparency(e)
     }
     else
     {
-      alert("Illegal Trn property:"+myTree.valu3[inode]);
+      alert("Illegal transparency property:"+myTree.valu3[inode]);
       return;
     }
 }
@@ -419,11 +430,9 @@ function resize_frames()
     var toprite = document.getElementById("trframe");
     var botrite = document.getElementById("brframe");
     var canvas  = document.getElementById(wv.canvasID);
-    var plot_collapse = document.getElementById("plot_collapse");
-    //plot_collapse.style.height = "600px";
 
     // compute and set the widths of the frames
-    //    (do not make tlframe larger than 250px)
+    //    (do not make tlframe larger than 350px)
     var leftWidth = Math.round(0.2 * bodyWidth);
     if (leftWidth<350) leftWidth = 350;
     var riteWidth = bodyWidth - leftWidth;
@@ -442,7 +451,7 @@ function resize_frames()
     var canvHeight =  topHeight -scrollSize;/* - scrollSize - 5;*/
 
     topleft.style.height =  topHeight+"px";
-    treefrm.style.height = "100%";//plot_collapse.style.height;
+    treefrm.style.height = "100%";
     toprite.style.height =  topHeight+"px";
     botrite.style.height = botmHeight+"px";
     canvas.style.height  = canvHeight+"px";
@@ -450,7 +459,7 @@ function resize_frames()
 }
 
 //
-// post a message into the brframe
+// print a message into the brframe
 //
 function print_message(mesg,col,newline,brackets)
 {
@@ -472,6 +481,5 @@ function print_message(mesg,col,newline,brackets)
       pre = "";
       end = "";
     }
-
     term.print_message(pre+mesg+end,col,newline);
 }

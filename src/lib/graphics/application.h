@@ -14,6 +14,8 @@
 #include "common/tools.h"
 #include "common/types.h"
 
+#include "graphics/clipping.h"
+#include "graphics/colormap.h"
 #include "graphics/gl.h"
 #include "graphics/manager.h"
 #include "graphics/scene.h"
@@ -56,6 +58,7 @@ protected:
 
 protected:
   std::vector<SceneGraph*> scenes_;
+  Colormap colormap_;
 
 private:
   GraphicsManager& manager_;
@@ -113,21 +116,24 @@ class Application<Web_Interface> : public ApplicationBase
 {
 public:
   Application() :
-    ApplicationBase(manager_)
+    ApplicationBase(manager_),
+    clip_plane_(3)
   {
     scene_ = std::make_shared<SceneGraph>();
     scenes_.push_back(scene_.get());
+    scene_->set_colormap( &colormap_ );
   }
 
   void run();
   void save_eps();
 
-  void receive( const std::string& text ) const;
+  void receive( const std::string& text );
   void send( const std::string& text ) const;
 
 protected:
   WV_Manager manager_;
   std::shared_ptr<SceneGraph> scene_;
+  ClippingPlane clip_plane_;
 
 private:
   void connect_client();
@@ -145,7 +151,7 @@ public:
     scenes_.push_back( &main_->scene(id) );
     index_t prim_id = main_->scene(id).add_primitive(topology); // create a new root in the scene graph
     manager_.select_shader( main_->scene(id).primitive(prim_id) , "wv" );
-
+    main_->scene(id).set_colormap(&colormap_);
     for (index_t j=0;j<main_->scene(id).primitive(prim_id).nb_children();j++)
       manager_.select_shader( main_->scene(id).primitive(prim_id).child(j) , "wv" );
   }
@@ -180,6 +186,7 @@ public:
     // create a new root in the scene graph
     scene_->add_primitive(topology);
   }
+private:
 
 };
 

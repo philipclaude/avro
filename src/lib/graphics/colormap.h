@@ -20,12 +20,7 @@ namespace avro
 class Colormap
 {
 public:
-  Colormap()
-  {
-    style_ = "viridis";
-    change_style("viridis");
-    lims_[0]  = lims_[1] = 0.;
-  }
+  Colormap();
 
   void set_limits( const float* lims )
   {
@@ -33,9 +28,9 @@ public:
     lims_[1] = lims[1];
   }
   void change_style( const std::string& style);
-  void map( float scalar , float* color );
+  void map( float scalar , float* color ) const;
 
-  void generate( index_t ncol , std::vector<float>& values )
+  void generate( index_t ncol , std::vector<float>& values ) const
   {
     values.resize(3*ncol);
     float ds = (lims_[1]-lims_[0])/float(ncol);
