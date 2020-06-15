@@ -156,7 +156,7 @@ objFile::read()
 
   return;
 
-  // build the field with this connectivity and the same linear master element
+  // build the field with this connectivity and the same linear  element
   normal_fld->build();
   uv_fld->build();
 

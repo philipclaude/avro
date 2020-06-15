@@ -1,7 +1,7 @@
 #ifndef avro_LIB_VORONOI_GEOMETRY_H_
 #define avro_LIB_VORONOI_GEOMETRY_H_
 
-#include "master/polytope.h"
+#include "shape/polytope.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"

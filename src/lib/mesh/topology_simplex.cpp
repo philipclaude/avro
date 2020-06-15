@@ -24,18 +24,18 @@ namespace avro
 template<>
 Topology<Simplex>::Topology( Points& vertices , coord_t number , coord_t order ) :
   TopologyBase(vertices,number,TableLayout_Rectangular,"simplex"),
-  master_( number , order ),
+  shape_( number , order ),
   neighbours_(*this),
   inverse_(*this)
 {
-  set_rank( master_.nb_basis() );
+  set_rank( shape_.nb_basis() );
 }
 
 template<>
 Topology<Simplex>::Topology( Points& points , const Topology<Simplex>& linear , coord_t order ) :
  Topology(points,linear.number(),order)
 {
-  Builder<Simplex> builder(linear,master_.order(),BasisFunctionCategory_Lagrange);
+  Builder<Simplex> builder(linear,shape_.order(),BasisFunctionCategory_Lagrange);
   builder.transfer(*this);
 }
 
@@ -64,7 +64,7 @@ Topology<Simplex>::orient( index_t* v , const index_t nv , real_t* q )
     for (coord_t j=0;j<nv;j++)
       idx[j] = v[p[j]];
 
-    if (master_.volume(points_,idx.data(),nv)>0.) break;
+    if (shape_.volume(points_,idx.data(),nv)>0.) break;
     //if (numerics::simplex_volume(x,points_.dim())>0.)
     //  break;
 

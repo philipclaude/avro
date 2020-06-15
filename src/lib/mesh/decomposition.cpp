@@ -10,9 +10,9 @@
 
 #include "graphics/clipping.h"
 
-#include "master/master.h"
-#include "master/polytope.h"
-#include "master/simplex.h"
+#include "shape/shape.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/points.h"
 #include "mesh/decomposition.h"
@@ -167,7 +167,7 @@ SimplicialDecomposition<Simplex>::extract( const graphics::ClippingPlane* plane 
     }
 
     // get the edges of this cell
-    topology_.master().get_triangles( topology_(k) , topology_.nv(k) , tk );
+    topology_.shape().get_triangles( topology_(k) , topology_.nv(k) , tk );
 
     // add the edges
     for (index_t j=0;j<tk.size()/3;j++)
@@ -211,10 +211,10 @@ SimplicialDecomposition<Polytope>::extract( const graphics::ClippingPlane* plane
       if (!plane->visible( topology_.points(),topology_(k),topology_.nv(k))) continue;
     }
 
-    // ask the master to triangulate, points will be added to points stored
-    // in the SimplicialDecomposition object upon decomposition by the master
+    // ask the  to triangulate, points will be added to points stored
+    // in the SimplicialDecomposition object upon decomposition by the 
     std::set<int> h;
-    topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this , k , h );
+    topology_.shape().triangulate( topology_(k) , topology_.nv(k) , *this , k , h );
     avro_assert( h.size()==0 );
   }
   if (number_==topology_.points().dim())

@@ -12,8 +12,8 @@
 
 #include "common/table.h"
 
-#include "master/master.h"
-#include "master/simplex.h"
+#include "shape/shape.h"
+#include "shape/simplex.h"
 
 #include <set>
 
@@ -23,7 +23,7 @@ namespace avro
 template<typename type> class Topology;
 template<typename type> class SimplicialDecomposition;
 
-class Polytope : public Master<Polytope>
+class Polytope : public Shape<Polytope>
 {
 
 public:
@@ -65,7 +65,7 @@ private:
   Simplex simplex_;
   const Table<int>& incidence_;
 
-  bool fullmesh_; // whether the master polytope is responsible for a full mesh
+  bool fullmesh_; // whether the  polytope is responsible for a full mesh
 };
 
 } // avro

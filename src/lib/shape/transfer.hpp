@@ -14,26 +14,26 @@ namespace avro
 
 template<typename T>
 void
-Simplex::transfer( const Simplex& master , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
+Simplex::transfer( const Simplex& shape , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
   avro_assert( Y.size()==nb_basis() );
-  avro_assert( X.size()==master.nb_basis() );
+  avro_assert( X.size()==shape.nb_basis() );
 
-  std::vector<real_t> phi( master.nb_basis() , 0. );
+  std::vector<real_t> phi( shape.nb_basis() , 0. );
   for (index_t k=0;k<Y.size();k++)
   {
     // get the reference coordinate for Y
     const real_t* y = reference_.get_reference_coordinate(k);
 
-    // evaluate the basis function of the original master at this coordinate
-    master.basis().evaluate( y , phi.data() );
+    // evaluate the basis function of the original  at this coordinate
+    shape.basis().evaluate( y , phi.data() );
 
-    // evaluate the basis functions in the original master element
+    // evaluate the basis functions in the original  element
     for (coord_t d=0;d<dim;d++)
     {
       Y[k][d] = 0;
-      for (index_t j=0;j<master.nb_basis();j++)
+      for (index_t j=0;j<shape.nb_basis();j++)
         Y[k][d] += phi[j]*X[j][d];
     }
   }
@@ -41,23 +41,23 @@ Simplex::transfer( const Simplex& master , const std::vector<const T*>& X , std:
 
 template<typename T>
 void
-Simplex::transfer( const Simplex& master , const std::vector<const T>& X , std::vector<T>& Y ) const
+Simplex::transfer( const Simplex& shape , const std::vector<const T>& X , std::vector<T>& Y ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
   avro_assert( Y.size()==nb_basis() );
-  avro_assert( X.size()==master.nb_basis() );
+  avro_assert( X.size()==shape.nb_basis() );
 
-  std::vector<real_t> phi( master.nb_basis() , 0. );
+  std::vector<real_t> phi( shape.nb_basis() , 0. );
   for (index_t k=0;k<Y.size();k++)
   {
     // get the reference coordinate for Y
     const real_t* y = reference_.get_reference_coordinate(k);
 
-    // evaluate the basis function of the original master at this coordinate
-    master.basis().evaluate( y , phi.data() );
+    // evaluate the basis function of the original  at this coordinate
+    shape.basis().evaluate( y , phi.data() );
 
-    // evaluate the basis functions in the original master element
-    for (index_t j=0;j<master.nb_basis();j++)
+    // evaluate the basis functions in the original  element
+    for (index_t j=0;j<shape.nb_basis();j++)
       Y[k] += phi[j]*X[j];
   }
 }
@@ -65,23 +65,23 @@ Simplex::transfer( const Simplex& master , const std::vector<const T>& X , std::
 #if 0
 template<typename BasisFrom_t,typename T>
 void
-Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
+Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& shape , const std::vector<const T*>& X , std::vector<T*>& Y , coord_t dim ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
   avro_assert( Y.size()==nb_basis() );
-  avro_assert( X.size()==master.nb_basis() );
+  avro_assert( X.size()==shape.nb_basis() );
 
-  std::vector<real_t> phi( master.nb_basis() , 0. );
+  std::vector<real_t> phi( shape.nb_basis() , 0. );
   for (index_t k=0;k<Y.size();k++)
   {
     // evaluate all basis functions associated with this point
     avro_implement;
 
-    // evaluate the basis functions in the original master element
+    // evaluate the basis functions in the original  element
     for (coord_t d=0;d<dim;d++)
     {
       Y[k][d] = 0;
-      for (index_t j=0;j<master.nb_basis();j++)
+      for (index_t j=0;j<shape.nb_basis();j++)
         Y[k][d] += phi[j]*X[j][d];
     }
   }
@@ -89,20 +89,20 @@ Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& master , const std::vecto
 
 template<typename BasisFrom_t,typename T>
 void
-Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>& master , const std::vector<const T>& X , std::vector<T>& Y ) const
+Simplex<Bezier>::transfer( const Simplex<BasisFrom_t>&  , const std::vector<const T>& X , std::vector<T>& Y ) const
 {
   // assume the coordinates in Y have correspond to the local coordinates
   avro_assert( Y.size()==nb_basis() );
-  avro_assert( X.size()==master.nb_basis() );
+  avro_assert( X.size()==.nb_basis() );
 
-  std::vector<real_t> phi( master.nb_basis() , 0. );
+  std::vector<real_t> phi( .nb_basis() , 0. );
   for (index_t k=0;k<Y.size();k++)
   {
     // evaluate all basis functions associated with this point
     avro_implement;
 
-    // evaluate the basis functions in the original master element
-    for (index_t j=0;j<master.nb_basis();j++)
+    // evaluate the basis functions in the original  element
+    for (index_t j=0;j<.nb_basis();j++)
       Y[k] += phi[j]*X[j];
   }
 }

@@ -40,7 +40,7 @@ public:
       this->value(k) = X;
     }
 
-    this->master().set_basis( BasisFunctionCategory_Lagrange );
+    this->shape().set_basis( BasisFunctionCategory_Lagrange );
   }
 
 

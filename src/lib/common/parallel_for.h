@@ -104,18 +104,18 @@ namespace ProcessMPI
 
 template<class Func>
 inline void
-master_begin( const Func& func )
+shape_begin( const Func& func )
 {
   Thread_var task = std::make_shared<Task<Func>>(func);
-  master_begin(*task);
+  shape_begin(*task);
 }
 
 template<class Func>
 inline void
-master_end( const Func& func )
+shape_end( const Func& func )
 {
   Thread_var task = std::make_shared<Task<Func>>(func);
-  master_end(*task);
+  shape_end(*task);
 }
 
 template<class Func>

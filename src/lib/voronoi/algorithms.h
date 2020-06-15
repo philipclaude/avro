@@ -12,7 +12,7 @@
 
 #include "common/kdtree.h"
 
-#include "master/simplex.h"
+#include "shape/simplex.h"
 
 #include "mesh/topology.h"
 

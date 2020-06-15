@@ -86,9 +86,9 @@ namespace ProcessMPI
 
   void barrier();
 
-  // master functions
-  void master_begin( Thread& task );
-  void master_end( Thread& task );
+  //  functions
+  void shape_begin( Thread& task );
+  void shape_end( Thread& task );
 
   // worker functions
   void worker_do( Thread& task );

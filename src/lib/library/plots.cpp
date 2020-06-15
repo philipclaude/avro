@@ -1,6 +1,6 @@
 #include "library/plots.h"
 
-#include "master/simplex.h"
+#include "shape/simplex.h"
 
 #include "mesh/points.h"
 

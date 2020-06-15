@@ -12,7 +12,7 @@
 
 #include "geometry/entity.h"
 
-#include "master/quadrature.h"
+#include "shape/quadrature.h"
 
 #include "mesh/decomposition.h"
 
@@ -218,7 +218,7 @@ RestrictedVoronoiDiagram::accumulate()
       points_.create( simplices_[k]->points()[j] );
 
     // add the vertex-to-facet information
-    const Table<int>& vf = simplices_[k]->topology().master().incidence();
+    const Table<int>& vf = simplices_[k]->topology().shape().incidence();
     for (index_t j=0;j<vf.nb();j++)
     {
       std::vector<int> f = vf.get(j);
@@ -303,7 +303,7 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
   // retrieve the site information
   Topology<Polytope>& rvd = (*this);
 
-  // copy the points so the master can triangulate
+  // copy the points so the  can triangulate
   Points points0( rvd.points().dim() );
   rvd.points().copy( points0 );
 
@@ -328,12 +328,12 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
 
   Topology<Simplex> simplex_topology( decomposition.points() , rvd.number() );
 
-  const Simplex& master = decomposition.master();
+  const Simplex& shape = decomposition.shape();
   for (index_t k=0;k<nb_simplices;k++)
   {
     simplex_topology.add( &simplices[k*(number+1)] , number+1 );
 
-    real_t vk = master.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
+    real_t vk = shape.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
 
     index_t s = sites_->value( parents[k] );
     avro_assert( s < V.size() );
@@ -361,9 +361,9 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
 
   // compute the CVT energy
   ConicalProductQuadrature quadrature(rvd.number(),3);
-  simplex_topology.master().set_basis( BasisFunctionCategory_Lagrange );
+  simplex_topology.shape().set_basis( BasisFunctionCategory_Lagrange );
   quadrature.define();
-  simplex_topology.master().load_quadrature(quadrature);
+  simplex_topology.shape().load_quadrature(quadrature);
 
   typedef Integrand_CVT_Energy<real_t> Integrand_t;
   Integrand_t integrand(delaunay_,*sites_.get(),parents);

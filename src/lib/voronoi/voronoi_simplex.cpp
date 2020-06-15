@@ -269,13 +269,13 @@ RestrictedVoronoiSimplex::clipPolytope( index_t j )
   // initialize the clipped polytope
   std::vector<index_t> q;
 
-  // retrieve the edges using the master
+  // retrieve the edges using the 
   for (index_t ii=0;ii<polytope_.size();ii++)
   for (index_t jj=ii+1;jj<polytope_.size();jj++)
   {
     index_t e0 = polytope_[ii];
     index_t e1 = polytope_[jj];
-    if (topology_.master().is_edge( vertex_[e0].bisectors() ,
+    if (topology_.shape().is_edge( vertex_[e0].bisectors() ,
                         vertex_[e1].bisectors() ) )
     {
       // clip the edge and save the result into q

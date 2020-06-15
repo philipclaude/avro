@@ -10,7 +10,7 @@
 #include "adaptation/metric.h"
 #include "adaptation/properties.h"
 
-#include "master/simplex.h"
+#include "shape/simplex.h"
 
 #include "mesh/topology.h"
 

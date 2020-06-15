@@ -176,7 +176,7 @@
         </pre>
         ... and enter your GitLab username and password.
         Note that in the last step, you need to provide the name of your branch (such as <code>philip</code>, <code>pruffolo</code> or <code>hbrady</code>).
-        This will switch you over to your branch - note that pushing to the master branch is not allowed.
+        This will switch you over to your branch - note that pushing to the main branch is not allowed.
 
         <p>
         Navigate to the main <code>avro</code> directory, and create your <code>build</code> directory:
@@ -277,7 +277,7 @@
                   <li><code>geometry</code>: contains definitions for entities, bodies ad models, which are specialized in <code>egads</code> and <code>psc</code> directories.</li>
                   <li><code>graphics</code>: contains source for visualizing meshes and solutions, using both <code>OpenGL</code> and <code>WebGL</code>.</li>
                   <li><code>library</code>: contains an internal library of meshes, metric, geometries and plots used in unit tests and the <code>avro</code> interface.</li>
-                  <li><code>master</code>: contains various "master" element utilities, such as the definition of the master simplex or polytope, along with functions for doing numerical quadrature with the master element.</li>
+                  <li><code>shape</code>: contains various reference element utilities, such as the definition of the reference simplex or polytope, along with functions for doing numerical quadrature with the reference element.</li>
                   <li><code>mesh</code>: contains the core definition of a <code>Topology</code> and <code>Points</code> along with data structures useful when manipulating meshes, such as the inverse, neighbours and facets.
                     Also contains code for defining <code>Fields</code> that can be attached to topologies.</li>
                   <li><code>numerics</code>: contains definitions of vectors, matrices and important linear algebra functions, as well as the implementation of exact geometric predicates.</li>
@@ -340,7 +340,7 @@
 
         <h5 class="mt-4">Topology</h5>
         The <code>Topology</code> (see <code>src/lib/mesh/topology.h</code>) stores the mesh topology and can be used to manipulate (add or remove) elements in the mesh.
-        Very importantly, it is <b>templated by the master element type</b>, since most computations on meshes are independent of the type of the mesh, but invoke the master element for specialized calculations (such as edge/facet extraction, volumes, etc.).
+        Very importantly, it is <b>templated by the reference element (shape) type</b>, since most computations on meshes are independent of the type of the mesh, but invoke the reference element for specialized calculations (such as edge/facet extraction, volumes, etc.).
         Here are some useful functions if you have a <code>Topology&lt;type&gt;</code> object called <code>topology</code>:
           <ul>
             <li> <code>topology.number()</code>: returns the topological number of the mesh.</li>
@@ -481,10 +481,10 @@
           <li><b>deploy</b>: makes the coverage information and this documentation page available.</li>
         </ul>
         <p>
-        After pushing your changes, you can then request (on GitLab) to merge (a.k.a. "pull" in GitHub terminology) with the <b>master</b> branch.
+        After pushing your changes, you can then request (on GitLab) to merge (a.k.a. "pull" in GitHub terminology) with the <b>main</b> branch.
         Philip will then review any pipelines associated with the changes proposed in your merge request; if they pass, then your changes will be merged and your code will be available to the rest of the group (upon doing a <code>git pull</code>).
         Note that there is also a nightly pipeline (run at midnight every night) that runs our regression tests (see the <code>test/regression</code> directory).
-        These regression tests should also pass before merging your changes into the master branch.
+        These regression tests should also pass before merging your changes into the main branch.
         Keep an eye on the "builds" channel in slack for succesful pipelines.
         If you see one, it's probably a good idea to do a <code>git pull</code>!
         </p>

@@ -12,7 +12,7 @@
 
 #include "geometry/entity.h"
 
-#include "master/simplex.h"
+#include "shape/simplex.h"
 
 #include "mesh/topology.h"
 
@@ -277,7 +277,7 @@ template<typename type>
 void
 Entity::construct( std::shared_ptr<Topology<type>>& node , Topology<type>& root ) const
 {
-	node = std::make_shared<Topology<type>>(root.points(),number_,root.master().order());
+	node = std::make_shared<Topology<type>>(root.points(),number_,root.shape().order());
 }
 
 void

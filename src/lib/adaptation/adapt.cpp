@@ -129,7 +129,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
       }
 
       // skip this check if we are operating purely in parameter space
-      if (!mesh_topology.master().parameter())
+      if (!mesh_topology.shape().parameter())
       {
         // evaluate the coordinates for the parameters we found
         std::vector<real_t> x_eval(3);
@@ -389,7 +389,7 @@ adapt( AdaptationProblem& problem )
   mesh.points().copy( points );
   Topology<type> mesh_topology( points , number );
   mesh_topology.TopologyBase::copy( topology );
-  mesh_topology.master().set_parameter( topology.master().parameter() );
+  mesh_topology.shape().set_parameter( topology.shape().parameter() );
 
   if (!params.prepared())
   {
@@ -415,7 +415,7 @@ adapt( AdaptationProblem& problem )
     // copy the data into the background topology used by the discrete metric
     points.copy( topology.points() );
     topology.TopologyBase::copy( mesh_topology );
-    topology.master().set_parameter( mesh_topology.master().parameter() );
+    topology.shape().set_parameter( mesh_topology.shape().parameter() );
     mesh_topology.neighbours().copy( topology.neighbours() );
 
     topology.inverse().build();
@@ -501,8 +501,8 @@ adapt( AdaptationProblem& problem )
 	else
 		metric.set_interpolation( problem.interpolation );
 
-  topology.master().set_basis( BasisFunctionCategory_Lagrange );
-  mesh_topology.master().set_basis( BasisFunctionCategory_Lagrange );
+  topology.shape().set_basis( BasisFunctionCategory_Lagrange );
+  mesh_topology.shape().set_basis( BasisFunctionCategory_Lagrange );
 
   // call the adaptation!
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );

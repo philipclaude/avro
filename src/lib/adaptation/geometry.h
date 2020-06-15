@@ -37,7 +37,7 @@ get_volume( const Topology<type>& topology , Entity* entity , index_t elem , ind
   real_t sign = 1.0;
 
   coord_t dim = topology.points().dim();
-  if (!topology.master().parameter())
+  if (!topology.shape().parameter())
   {
     // neighbour is not in cavity which means we hit a boundary facet
     // set the coordinates

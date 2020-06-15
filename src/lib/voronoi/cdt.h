@@ -10,7 +10,7 @@
 #ifndef avro_LIB_VORONOI_CDT_H_
 #define avro_LIB_VORONOI_CDT_H_
 
-#include "master/simplex.h"
+#include "shape/simplex.h"
 
 #include "mesh/topology.h"
 

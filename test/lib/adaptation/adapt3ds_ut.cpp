@@ -76,8 +76,8 @@ UT_TEST_CASE(test1)
   ptopology = std::make_shared<Topology<Simplex>>(pmesh->points(),2);
   pmesh->add(ptopology);
   tess.retrieve<Simplex>(0).get_elements( *ptopology );
-  ptopology->master().set_parameter(true);
-  ptopology->master().set_basis( BasisFunctionCategory_Lagrange );
+  ptopology->shape().set_parameter(true);
+  ptopology->shape().set_basis( BasisFunctionCategory_Lagrange );
 
   // define the problem and adapt
   AdaptationParameters params;
@@ -117,7 +117,7 @@ UT_TEST_CASE(test1)
     for (index_t k=0;k<topology_out.nb();k++)
       ptopology->add(topology_out(k),topology_out.nv(k));
     pmesh->add(ptopology);
-    ptopology->master().set_parameter(true);
+    ptopology->shape().set_parameter(true);
 
     if (iter==niter)
     {

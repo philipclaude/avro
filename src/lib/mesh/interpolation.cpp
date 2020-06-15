@@ -33,8 +33,8 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
   avro_assert( pfield_!=nullptr );
   const Field<type,T>& field_ = *pfield_;
   const Topology<type>& topology = field_.topology();
-  std::vector<real_t> phi( field_.master().nb_basis() , 0. );
-  std::vector<real_t> xref( topology.master().number() + 1 );
+  std::vector<real_t> phi( field_.shape().nb_basis() , 0. );
+  std::vector<real_t> xref( topology.shape().number() + 1 );
   bool success;
 
   int ielem = -1;
@@ -50,7 +50,7 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
       {
         // get the reference coordinates of the closest element
   			ielem = searcher_->closest( points[p] , xref );
-        topology.master().basis().evaluate( xref.data() , phi.data() );
+        topology.shape().basis().evaluate( xref.data() , phi.data() );
 
         // perform the interpolation and return the element containing the point
   			index_t elem = index_t(ielem);
@@ -61,8 +61,8 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
 
     // get the reference coordinates of the element and evaluate the basis functions for interpolation
     index_t elem = index_t(ielem);
-    topology.master().physical_to_reference( topology.points() , topology(elem) , topology.nv(elem) , points[p] , xref.data() );
-    topology.master().basis().evaluate( xref.data() , phi.data() );
+    topology.shape().physical_to_reference( topology.points() , topology(elem) , topology.nv(elem) , points[p] , xref.data() );
+    topology.shape().basis().evaluate( xref.data() , phi.data() );
 
     // perform the interpolation and return the element containing the point
     success = field_.dof().interpolate( field_[elem] , field_.nv(elem) , phi , &tp );

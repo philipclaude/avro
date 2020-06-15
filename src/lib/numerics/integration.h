@@ -63,30 +63,30 @@ public:
 
   T operator()( index_t k , const real_t* xref , const real_t* x ) const
   {
-    std::vector<real_t> phi( field_.master().nb_basis(), 0 );
+    std::vector<real_t> phi( field_.shape().nb_basis(), 0 );
     std::vector<real_t> phix,phixx;
 
     std::vector<T> u(field_.dof().rank());
     std::vector<T> ux,uxx;
 
-    //printf("integrand field in elem %lu with nb_basis = %lu\n",k,field_.master().nb_basis());
+    //printf("integrand field in elem %lu with nb_basis = %lu\n",k,field_.shape().nb_basis());
 
     if (functor_.needs_solution())
     {
       //printf("evaluating basis\n");
-      field_.master().basis().evaluate( xref , phi.data() );
+      field_.shape().basis().evaluate( xref , phi.data() );
       //printf("interpolating dof\n");
       field_.dof().interpolate( field_[k] , field_.nv(k) , phi , u.data() );
       //printf("done\n");
     }
     if (functor_.needs_gradient())
     {
-      field_.master().basis().evaluate( xref , phix.data() );
+      field_.shape().basis().evaluate( xref , phix.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phix , ux.data() );
     }
     if (functor_.needs_hessian())
     {
-      field_.master().basis().evaluate( xref , phixx.data() );
+      field_.shape().basis().evaluate( xref , phixx.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phixx , uxx.data() );
     }
 
@@ -104,16 +104,16 @@ class ElementIntegral
 {
 public:
   ElementIntegral( const Topology<type>& topology , const DOF<T>& dof,
-           const Table<index_t>& field , const type& master ) :
+           const Table<index_t>& field , const type& shape ) :
     topology_(topology),
     field_(field),
-    master_(master),
+    shape_(shape),
     dof_(dof)
   {
     if (topology_.layout()==TableLayout_Rectangular )
     {
       avro_assert( field.layout()==TableLayout_Rectangular );
-      avro_assert( master_.nb_basis()==field_.rank() );
+      avro_assert( shape_.nb_basis()==field_.rank() );
       x_.resize( topology_.rank() );
       f_.resize( field_.rank() );
     }
@@ -145,21 +145,21 @@ public:
 
     f = 0;
     std::vector<real_t> x(topology_.points().dim());
-    std::vector<real_t> phi( topology_.master().nb_basis() );
-    for (index_t i=0;i<master_.nb_quad();i++)
+    std::vector<real_t> phi( topology_.shape().nb_basis() );
+    for (index_t i=0;i<shape_.nb_quad();i++)
     {
       // retrieve the quadrature point and weight
-      real_t w = master_.quad_weight(i);
-      const real_t* xref = master_.quad_point(i);
+      real_t w = shape_.quad_weight(i);
+      const real_t* xref = shape_.quad_point(i);
 
       // evaluate the basis functions at the quadrature point
-      topology_.master().basis().evaluate( xref , phi.data() );
+      topology_.shape().basis().evaluate( xref , phi.data() );
 
       // evaluate the physical coordinates
       topology_.points().interpolate( x_ , phi , x.data() );
 
       // evaluate the jacobian at the reference point (for now assume constant)
-      real_t dj = topology_.master().jacobian(x_,topology_.points().dim());
+      real_t dj = topology_.shape().jacobian(x_,topology_.points().dim());
 
       // evaluate the integrand at the quadrature point
       f += w*integrand( k , xref , x.data() )*dj;
@@ -171,7 +171,7 @@ public:
 private:
   const Topology<type>& topology_;
   const Table<index_t>& field_;
-  const type& master_;
+  const type& shape_;
   const DOF<T>& dof_;
 
   std::vector<const real_t*> x_;
@@ -195,7 +195,7 @@ public:
   void
   integrate( const Topology<type>& topology )
   {
-    ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.master() );
+    ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.shape() );
     for (index_t k=0;k<topology.nb();k++)
     {
       T df = 0;
@@ -211,7 +211,7 @@ public:
     const Topology<type>& topology = field.topology();
     avro_assert( topology.nb() == field.nb() );
 
-    ElementIntegral<type,T> elem( topology , field.dof() , field , field.master() );
+    ElementIntegral<type,T> elem( topology , field.dof() , field , field.shape() );
     for (index_t k=0;k<field.nb();k++)
     {
       T df = 0;

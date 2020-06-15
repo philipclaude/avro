@@ -12,10 +12,10 @@ add_source_directories(SOURCES "Source Files\\geometry-psc" lib/geometry/psc)
 add_source_directories(SOURCES "Source Files\\graphics" lib/graphics)
 add_source_directories(SOURCES "Source Files\\graphics/backends" lib/graphics/backends)
 add_source_directories(SOURCES "Source Files\\library" lib/library)
-add_source_directories(SOURCES "Source Files\\mesh" lib/master)
 add_source_directories(SOURCES "Source Files\\mesh" lib/mesh)
 add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
+add_source_directories(SOURCES "Source Files\\mesh" lib/shape)
 add_source_directories(SOURCES "Source Files\\voronoi" lib/voronoi)
 
 # add the bin sources but remove the avro.cpp (main) executable source

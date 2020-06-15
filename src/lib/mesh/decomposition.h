@@ -12,8 +12,8 @@
 
 #include "common/types.h"
 
-#include "master/master.h"
-#include "master/simplex.h"
+#include "shape/shape.h"
+#include "shape/simplex.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"

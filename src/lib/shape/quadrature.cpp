@@ -7,11 +7,11 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
-#include "master/quadrature.h"
+#include "shape/quadrature.h"
 
 #include <stdio.h>
 
-#include "master/quadrature_cp.h"
+#include "shape/quadrature_cp.h"
 
 namespace avro
 {

@@ -10,7 +10,7 @@
 #include "common/error.h"
 #include "common/tools.h"
 
-#include "master/reference.h"
+#include "shape/reference.h"
 
 #include "numerics/functions.h"
 #include "numerics/matrix.h"

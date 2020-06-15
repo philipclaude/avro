@@ -254,7 +254,7 @@ ElementSearch<type>::closest( const real_t* x , std::vector<real_t>& alpha ) con
     if (topology_.ghost(B[k])) continue;
 
     // determine the coordinates y closest to x
-    real_t distance2 = topology_.master().closest( topology_.points() , topology_(B[k]) , topology_.nv(B[k]) , x , y );
+    real_t distance2 = topology_.shape().closest( topology_.points() , topology_(B[k]) , topology_.nv(B[k]) , x , y );
 
     // compute the barycentric coordinates of y in this simplex
     std::vector<const real_t*> X(topology_.nv(B[k]));

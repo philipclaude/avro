@@ -22,7 +22,7 @@ UT_TEST_CASE( simplex_tests )
   library::TwoTriangles topology;
   Points vertices( topology.points().dim() );
 
-  topology.master().set_basis( BasisFunctionCategory_Lagrange );
+  topology.shape().set_basis( BasisFunctionCategory_Lagrange );
 
   Topology<Simplex> topology_curved( vertices , topology , 2 );
 

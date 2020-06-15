@@ -31,7 +31,7 @@ template<typename Friend_t>
 void
 Topology<type>::construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<Friend_t>& root ) const
 {
-  node = std::make_shared<Topology<Friend_t>>(root.points(),number_,master_.order());
+  node = std::make_shared<Topology<Friend_t>>(root.points(),number_,shape_.order());
 }
 
 template<typename type>
@@ -63,7 +63,7 @@ Topology<type>::get_edges( std::vector<index_t>& edges , const graphics::Clippin
 
 
     // get the edges of this cell
-    master_.get_edges( v0 , nv(k) , ek );
+    shape_.get_edges( v0 , nv(k) , ek );
 
     // add the edges
     for (index_t j=0;j<ek.size()/2;j++)
@@ -122,9 +122,9 @@ Topology<type>::triangulate( Topology<Simplex>& triangulation ) const
     index_t np0 = triangulation.points().nb();
     index_t nt0 = triangulation.nb();
 
-    // ask the master to triangulate -- it needs these vertices to compute the
+    // ask the  to triangulate -- it needs these vertices to compute the
     // geometry of the vertices it creates
-    master_.triangulate( triangulation , (*this)(k) , nv(k) );
+    shape_.triangulate( triangulation , (*this)(k) , nv(k) );
 
     // loop through the created simplices
     for (index_t j=nt0;j<triangulation.nb();j++)
@@ -163,7 +163,7 @@ void
 Topology<type>::facet( const index_t k , const index_t j ,
                        std::vector<index_t>& f ) const
 {
-  master_.facet( operator()(k) , j , f );
+  shape_.facet( operator()(k) , j , f );
 }
 
 template<typename type>
@@ -357,7 +357,7 @@ Topology<type>::volume() const
   for (index_t k=0;k<nb();k++)
   {
     if (ghost(k)) continue;
-    v += master_.volume( points_ , operator()(k) , nv(k) );
+    v += shape_.volume( points_ , operator()(k) , nv(k) );
   }
   return v;
 }
@@ -374,7 +374,7 @@ Topology<type>::get_volumes( std::vector<real_t>& volumes ) const
     if (ghost(k))
       volumes[k] = 0.0;
     else
-      volumes[k] = master_.volume( points_ , (*this)(k) , nv(k) );
+      volumes[k] = shape_.volume( points_ , (*this)(k) , nv(k) );
   }
 }
 
@@ -493,7 +493,7 @@ template<typename type>
 void
 Topology<type>::print_header() const
 {
-  printf("topology %p: order = %u, number = %u\n",(void*)this,master_.order(),master_.number());
+  printf("topology %p: order = %u, number = %u\n",(void*)this,shape_.order(),shape_.number());
 }
 
 } // avro

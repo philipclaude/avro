@@ -17,8 +17,8 @@
 #include "library/egads.h"
 #include "library/tesseract.h"
 
-#include "master/master.h"
-#include "master/quadrature.h"
+#include "shape/shape.h"
+#include "shape/quadrature.h"
 
 #include "mesh/topology.h"
 #include "mesh/points.h"

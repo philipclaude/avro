@@ -70,14 +70,14 @@ UT_TEST_CASE(test1)
   // retrieve all the triangles
   Topology<Simplex> topology(pmesh->points(),2);
   tess.retrieve<Simplex>(0).get_elements( topology );
-  topology.master().set_parameter(true);
+  topology.shape().set_parameter(true);
 
   topology.close();
   topology.neighbours().compute();
   topology.inverse().build();
 
   Primitive<Simplex> primitive(topology);
-  UT_ASSERT( primitive.master().parameter() );
+  UT_ASSERT( primitive.shape().parameter() );
 
   // loop through every edge, extract the cavity and ensure every edge end point is visible
   std::vector<index_t> edges;
@@ -182,7 +182,7 @@ UT_TEST_CASE(test1)
     for (index_t k=0;k<primitive.geometry_topology().nb();k++)
       S[k] = k;
 
-    primitive.geometry_cavity().sign() = entity->sign(); // not actually necessary because master.parameter() will trigger the sign to be used in get_volume
+    primitive.geometry_cavity().sign() = entity->sign(); // not actually necessary because .parameter() will trigger the sign to be used in get_volume
     accept = primitive.geometry_cavity().compute( idx , us.data() , S );
     UT_ASSERT(accept);
 
@@ -262,7 +262,7 @@ UT_TEST_CASE(test1)
     for (index_t k=0;k<primitive.geometry_topology().nb();k++)
       S[k] = k;
 
-    primitive.geometry_cavity().sign() = entity->sign(); // not actually necessary because master.parameter() will trigger the sign to be used in get_volume
+    primitive.geometry_cavity().sign() = entity->sign(); // not actually necessary because .parameter() will trigger the sign to be used in get_volume
     accept = primitive.geometry_cavity().compute( idx , topology.points().u(k) , S );
     UT_ASSERT(accept);
   }

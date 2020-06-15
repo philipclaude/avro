@@ -11,8 +11,8 @@
 
 #include "geometry/entity.h"
 
-#include "master/polytope.h"
-#include "master/simplex.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/builder.h"
 #include "mesh/builder.hpp"
@@ -82,16 +82,16 @@ template<typename T>
 Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type,TableLayout_Rectangular),
   topology_(topology),
-  master_(topology.number(),order)
+  shape_(topology.number(),order)
 {
-  Table<index_t>::set_rank( master_.nb_basis() );
+  Table<index_t>::set_rank( shape_.nb_basis() );
 }
 
 template<typename T>
 Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type),
   topology_(topology),
-  master_(topology,order,topology.points().incidence())
+  shape_(topology,order,topology.points().incidence())
 {}
 
 template<typename T>
@@ -100,7 +100,7 @@ Field<Simplex,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
-    if (topology_.master().order() == master_.order() )
+    if (topology_.shape().order() == shape_.order() )
     {
       // a simpler way to build the field
       // copy the connectivity over from the topology
@@ -122,17 +122,17 @@ Field<Simplex,T>::build()
       // a more complicated way to build the field
       // get the number of unique entries in the field
       // using the number of elements and nb_poly, for now assume p = 1
-      Builder<Simplex> builder(topology_,master_.order(),BasisFunctionCategory_None);
+      Builder<Simplex> builder(topology_,shape_.order(),BasisFunctionCategory_None);
       builder.template transfer<T>(*this);
     }
   }
   else if (this->type()==DISCONTINUOUS)
   {
     index_t n = 0;
-    std::vector<index_t> dof( master_.nb_basis() );
+    std::vector<index_t> dof( shape_.nb_basis() );
     for (index_t k=0;k<topology_.nb();k++)
     {
-      for (index_t j=0;j<master_.nb_basis();j++)
+      for (index_t j=0;j<shape_.nb_basis();j++)
         dof[j] = n++;
       Table<index_t>::add( dof.data() , dof.size() );
       const std::vector<index_t>& idx = Table<index_t>::data();
@@ -150,7 +150,7 @@ Field<Polytope,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
-    avro_assert( master_.order()==1 );
+    avro_assert( shape_.order()==1 );
 
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -167,7 +167,7 @@ Field<Polytope,T>::build()
   }
   else if (this->type()==DISCONTINUOUS)
   {
-    avro_assert( master_.order()==0 );
+    avro_assert( shape_.order()==0 );
     T x0(0);
     for (index_t k=0;k<topology_.nb();k++)
     {

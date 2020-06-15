@@ -42,7 +42,7 @@ Cavity<type>::Cavity( Topology<type>& _topology ) :
   sign_(1.0),
   nb_error_(0),
   rethrow_(false),
-  mk_(topology_.master()),
+  mk_(topology_.shape()),
   ignore_(false),
   entity_(nullptr)
 {
@@ -55,7 +55,7 @@ Cavity<type>::Cavity( Topology<type>& _topology ) :
   boundary_.set_sorted(false);
   this->set_sorted(false);
 
-  this->master().set_parameter( topology_.master().parameter() );
+  this->shape().set_parameter( topology_.shape().parameter() );
 }
 
 template<typename type>
@@ -228,7 +228,7 @@ Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std
   index_t elem;
   for (index_t k=0;k<nb_cavity();k++)
   {
-    if (topology_.master().parameter()) break;
+    if (topology_.shape().parameter()) break;
     elem = cavity_[k];
     if (!topology_.ghost(elem)) continue;
 
@@ -297,7 +297,7 @@ Cavity<type>::compute_geometry( Entity* entity0 , Topology<type>& geometry , std
 
   } // loop over cavity elements
 
-  if (topology_.master().parameter())
+  if (topology_.shape().parameter())
   {
     // add all elements in the cavity
     avro_assert(geometry.nb()==0);
@@ -512,7 +512,7 @@ template<typename type>
 bool
 Cavity<type>::find_geometry( real_t* x , std::vector<index_t>& C0 )
 {
-  if (topology_.master().parameter()) return true;
+  if (topology_.shape().parameter()) return true;
 
   const coord_t dim = topology_.points().dim();
   index_t nf = this->number_+1;

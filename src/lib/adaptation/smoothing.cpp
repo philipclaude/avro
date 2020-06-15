@@ -105,7 +105,7 @@ Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity*
                       "|G| = %lu, |smooth ghosts| = %lu" , this->geometry_topology_.nb() , this->nb_ghost() );
   }
 
-  if (this->topology_.master().parameter())
+  if (this->topology_.shape().parameter())
   {
     this->convert_to_parameter(ep);
     this->geometry_cavity_.sign() = 1; // volume calculation is already adjusted for the sign
@@ -120,7 +120,7 @@ Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity*
     return false;
   }
 
-  if (this->topology_.master().parameter())
+  if (this->topology_.shape().parameter())
   {
     this->convert_to_physical();
   }
@@ -162,7 +162,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   index_t q;
   Entity* ep = this->topology_.points().entity(p);
   if (ep!=NULL && ep->number()==0) return false; // don't move points on Nodes!
-  if (this->topology_.master().parameter() && ep!=NULL && ep->number()!=2) return false;
+  if (this->topology_.shape().parameter() && ep!=NULL && ep->number()!=2) return false;
   Entity* eq;
   for (index_t k=0;k<this->C_.size();k++)
   {
@@ -222,7 +222,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     numerics::vector( this->topology_.points()[p] ,
                         this->topology_.points()[N[k]] , dim , u.data() );
     #else
-    this->topology_.master().edge_vector( this->topology_.points() , p , N[k] , u.data() , ep );
+    this->topology_.shape().edge_vector( this->topology_.points() , p , N[k] , u.data() , ep );
     #endif
 
     // compute the force on the vertex
@@ -249,7 +249,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   if (delta_p<delta_min_) delta_min_ = delta_p;
   if (delta_p>delta_max_) delta_max_ = delta_p;
 
-  if (this->topology_.master().parameter())
+  if (this->topology_.shape().parameter())
   {
     // skip smoothing along geometry Edges for now
     avro_assert( ep->number()==2 );

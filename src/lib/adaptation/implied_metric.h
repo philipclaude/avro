@@ -27,7 +27,7 @@ template<typename type>
 class ElementImpliedMetric : public numerics::SymMatrixD<real_t>
 {
 public:
-  ElementImpliedMetric( const type& master );
+  ElementImpliedMetric( const type&  );
 
   void compute( const std::vector<const real_t*>& xk );
   void compute( const Points& points , const index_t* v , index_t nv );
@@ -36,7 +36,7 @@ public:
   real_t determinant( const Points& points , const index_t* v , const index_t nv );
 
 private:
-  const type& master_;
+  const type& shape_;
   numerics::MatrixD<real_t> J_;   // jacobian from physical elem to equilateral
   numerics::MatrixD<real_t> J0_;  // jacobian from physical elem to right-angled
   numerics::MatrixD<real_t> Jeq_; // jacobian from right-angled elem to equilateral

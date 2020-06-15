@@ -204,10 +204,10 @@ Boundary<type>::extractall()
       std::vector<index_t>& facet = elem.indices;
 
       elem.dim = i;
-      for (index_t j=0;j<topology_.master().nb_facets(i);j++)
+      for (index_t j=0;j<topology_.shape().nb_facets(i);j++)
       {
         // get the indices of this facet
-        topology_.master().get_facet_vertices( topology_(k) , topology_.nv(k) , j , elem );
+        topology_.shape().get_facet_vertices( topology_(k) , topology_.nv(k) , j , elem );
 
         // get the geometry this facet is on and lookup which topology this is
         Entity* e = BoundaryUtils::geometryFacet( topology_.points() ,facet.data() , facet.size() );

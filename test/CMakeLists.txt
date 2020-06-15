@@ -6,11 +6,11 @@ add_test_files( TEST_FILES "ut" lib/common )
 add_test_files( TEST_FILES "ut" lib/geometry )
 add_test_files( TEST_FILES "ut" lib/graphics )
 add_test_files( TEST_FILES "ut" lib/library )
-add_test_files( TEST_FILES "ut" lib/master )
 add_test_files( TEST_FILES "ut" lib/mesh )
 add_test_files( TEST_FILES "ut" lib/mesh/delaunay )
 add_test_files( TEST_FILES "ut" lib/mesh/frontal )
 add_test_files( TEST_FILES "ut" lib/numerics )
+add_test_files( TEST_FILES "ut" lib/shape )
 add_test_files( TEST_FILES "ut" lib/voronoi )
 add_test_files( TEST_FILES "ut" bin )
 
@@ -21,7 +21,7 @@ add_test_files( SBX_FILES "toy" sandbox/paul )
 
 set( unit_skip mesh/delaunay/vertex_ut.cpp )
 
-# the master unit test file
+# the main unit test file
 set( MASTER_UNIT ut_driver.cpp )
 set( COMMON_UNIT ut_common.cpp )
 

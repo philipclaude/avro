@@ -13,8 +13,8 @@
 
 #include "geometry/entity.h"
 
-#include "master/quadrature.h"
-#include "master/simplex.h"
+#include "shape/quadrature.h"
+#include "shape/simplex.h"
 
 #include "mesh/boundary.h"
 #include "mesh/decomposition.h"
@@ -33,7 +33,7 @@ Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
 {}
 
 Simplex::Simplex( const coord_t number , const coord_t order ) :
-  Master(number,order,"simplex"),
+  Shape(number,order,"simplex"),
   entity_(nullptr)
 {
   precalculate();

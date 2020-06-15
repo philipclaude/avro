@@ -15,7 +15,7 @@
 
 #include "library/tesseract.h"
 
-#include "master/polytope.h"
+#include "shape/polytope.h"
 
 namespace avro
 {
@@ -155,15 +155,15 @@ Tesseract::build()
   std::vector<index_t> T = linspace(16);
 
   // retrieve the bounding cubes
-  Polytope masterTess(4,1,vfm);
+  Polytope refTess(4,1,vfm);
   std::vector<int> facets3;
-  masterTess.hrep(T.data(),16,facets3);
+  refTess.hrep(T.data(),16,facets3);
   avro_assert_msg( facets3.size()==8 ,
     "nb_cubes = %lu but should = %d",facets3.size(),8 );
 
   // get the edges
   std::vector<index_t> edges;
-  masterTess.edges( T.data() , T.size() , edges );
+  refTess.edges( T.data() , T.size() , edges );
   avro_assert( edges.size()==64 ); // 32 edges
 
   // create the edges from the nodes
@@ -179,11 +179,11 @@ Tesseract::build()
   Table<index_t> squares(TableLayout_Jagged);
   for (index_t k=0;k<bisector.size();k++)
   {
-    Polytope masterCube(3,1,vfm);
+    Polytope refCube(3,1,vfm);
 
     // first construct the cube
     std::vector<index_t> cube;
-    masterCube.vrep( T.data() , T.size() , bisector[k] , cube );
+    refCube.vrep( T.data() , T.size() , bisector[k] , cube );
 
     cubes.add( cube.data() , cube.size() );
 
@@ -191,7 +191,7 @@ Tesseract::build()
 
     // get the squares bounding each cube
     std::vector<int> facets;
-    masterCube.hrep( cube.data() , cube.size() , facets );
+    refCube.hrep( cube.data() , cube.size() , facets );
 
     // we should get 7 facets (the expected 6 plus the 3-facet we are on)
     avro_assert( facets.size()==7 );
@@ -201,10 +201,10 @@ Tesseract::build()
       // skip the redundant bisector
       if (facets[j]==bisector[k]) continue;
 
-      // ask the master square for the vrep along this facet
-      Polytope masterSquare(2,1,vfm);
+      // ask the ref square for the vrep along this facet
+      Polytope refSquare(2,1,vfm);
       std::vector<index_t> square;
-      masterSquare.vrep( cube.data() , cube.size() , facets[j] , square );
+      refSquare.vrep( cube.data() , cube.size() , facets[j] , square );
 
       avro_assert( square.size()==4 );
 
@@ -222,7 +222,7 @@ Tesseract::build()
 
         // get the facets of this square (edges)
         std::vector<int> squareFacets;
-        masterSquare.hrep( square.data() , square.size() , squareFacets );
+        refSquare.hrep( square.data() , square.size() , squareFacets );
 
         // we should get 4 edges + two redundant ones from the cube and square
         avro_assert( squareFacets.size()==6 );
@@ -236,7 +236,7 @@ Tesseract::build()
 
           // retrieve the edge of the square
           std::vector<index_t> ve;
-          masterSquare.vrep( square.data() , square.size() , squareFacets[i] , ve );
+          refSquare.vrep( square.data() , square.size() , squareFacets[i] , ve );
           avro_assert( ve.size()==2 );
 
 

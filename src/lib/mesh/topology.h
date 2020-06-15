@@ -15,8 +15,8 @@
 #include "common/tree.h"
 #include "common/types.h"
 
-#include "master/polytope.h"
-#include "master/simplex.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/field.h"
 #include "mesh/inverse.h"
@@ -130,11 +130,11 @@ public:
 
   Topology_t& topology( index_t k ) { return Tree<Topology_t>::child(k); }
 
-  type& master() { return master_; }
-  const type& master() const { return master_; }
+  type& shape() { return shape_; }
+  const type& shape() const { return shape_; }
 
-  coord_t number() const { return master_.number(); }
-  coord_t order() const { return master_.order(); }
+  coord_t number() const { return shape_.number(); }
+  coord_t order() const { return shape_.order(); }
 
   bool ghost( index_t k ) const;
   bool ghost( const index_t* v , index_t nv ) const;
@@ -189,7 +189,7 @@ public:
   void set_points( Points& points );
 
 private:
-  type master_;
+  type shape_;
 
   Neighbours<type>      neighbours_;
   InverseTopology<type> inverse_;

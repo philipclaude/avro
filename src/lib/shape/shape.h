@@ -7,14 +7,14 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
-#ifndef avro_LIB_MASTER_MASTER_H_
-#define avro_LIB_MASTER_MASTER_H_
+#ifndef avro_LIB_SHAPE_SHAPE_H_
+#define avro_LIB_SHAPE_SHAPE_H_
 
 #include "common/types.h"
 
-#include "master/basis.h"
-#include "master/master.h"
-#include "master/reference.h"
+#include "shape/basis.h"
+#include "shape/shape.h"
+#include "shape/reference.h"
 
 #include "numerics/matrix.h"
 
@@ -28,12 +28,12 @@ namespace avro
 class Quadrature;
 template<typename Shape> class Basis;
 
-template<typename Shape>
-class Master
+template<typename type>
+class Shape
 {
 public:
 
-  Master( coord_t number , coord_t order ) :
+  Shape( coord_t number , coord_t order ) :
     number_(number),
     order_(order),
     reference_(number_,order_),
@@ -41,7 +41,7 @@ public:
     basis_(nullptr)
   {}
 
-  Master( coord_t number , coord_t order , const std::string& name ) :
+  Shape( coord_t number , coord_t order , const std::string& name ) :
     number_(number),
     order_(order),
     name_(name),
@@ -69,13 +69,13 @@ public:
   void set_parameter( bool x ) { parameter_ = x; }
   bool parameter() const { return parameter_; }
 
-  const ReferenceElement<Shape>& reference() const { return reference_; }
+  const ReferenceElement<type>& reference() const { return reference_; }
 
   real_t quad_weight(index_t k) const { return wquad_[k]; }
   const real_t* quad_point(index_t k) const { return &xquad_[number_*k]; }
 
-  const Basis<Shape>& basis() const { avro_assert(basis_!=nullptr); return *basis_.get(); }
-  Basis<Shape>& basis() { avro_assert(basis_!=nullptr); return *basis_.get(); }
+  const Basis<type>& basis() const { avro_assert(basis_!=nullptr); return *basis_.get(); }
+  Basis<type>& basis() { avro_assert(basis_!=nullptr); return *basis_.get(); }
 
 protected:
   coord_t number_;
@@ -88,12 +88,12 @@ protected:
   std::vector<real_t> xquad_;
   std::vector<real_t> wquad_;
 
-  ReferenceElement<Shape> reference_;
+  ReferenceElement<type> reference_;
 
   bool parameter_;
 
 private:
-  std::shared_ptr< Basis<Shape> > basis_;
+  std::shared_ptr< Basis<type> > basis_;
 
 };
 

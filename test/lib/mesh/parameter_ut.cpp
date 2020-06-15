@@ -73,9 +73,9 @@ UT_TEST_CASE(test1)
   printf("volume = %g\n",vol);
   UT_ASSERT( vol > 1e10 );
 
-  // now tell the master that it is in parameter space, so
+  // now tell the  that it is in parameter space, so
   // it knows that it should retrieve appropriate geometry coordinates
-  topology.master().set_parameter(true);
+  topology.shape().set_parameter(true);
   topology.orient();
 
   std::vector<real_t> volumes( topology.nb() );

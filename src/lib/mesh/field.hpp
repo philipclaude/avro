@@ -7,8 +7,8 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
-#include "master/polytope.h"
-#include "master/simplex.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/field.h"
 #include "mesh/points.h"
@@ -41,7 +41,7 @@ Field<Simplex,T>::evaluate( const Function& function )
 {
   std::vector<real_t> x( topology_.points().dim() );
   std::vector<const real_t*> xk;
-  std::vector<real_t> phi( topology_.master().nb_basis() );
+  std::vector<real_t> phi( topology_.shape().nb_basis() );
 
   for (index_t k=0;k<topology_.nb();k++)
   {
@@ -49,13 +49,13 @@ Field<Simplex,T>::evaluate( const Function& function )
     for (index_t j=0;j<topology_.nv(k);j++)
       xk[j] = topology_.points()[topology_(k,j)];
 
-    // loop through the reference points of the master simplex
-    for (index_t j=0;j<master_.nb_basis();j++)
+    // loop through the reference points of the  simplex
+    for (index_t j=0;j<shape_.nb_basis();j++)
     {
-      const real_t* xref = master_.reference().get_reference_coordinate(j);
+      const real_t* xref = shape_.reference().get_reference_coordinate(j);
 
       // evaluate the basis functions at the quadrature point
-      topology_.master().basis().evaluate( xref , phi.data() );
+      topology_.shape().basis().evaluate( xref , phi.data() );
 
       // evaluate the physical coordinates
       topology_.points().interpolate( xk , phi , x.data() );
@@ -70,13 +70,13 @@ void
 Field<Simplex,T>::evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
 {
   avro_assert( parents.size() == alpha.nb() );
-  std::vector<real_t> phi( master_.nb_basis() );
+  std::vector<real_t> phi( shape_.nb_basis() );
 
   result.resize( parents.size() );
   for (index_t k=0;k<parents.size();k++)
   {
     // evaluate the basis functions for this reference coordinate
-    master_.basis().evaluate( alpha(k) , phi.data() );
+    shape_.basis().evaluate( alpha(k) , phi.data() );
 
     // evaluate the field
     result[k] = 0.0;
@@ -90,7 +90,7 @@ template<typename T>
 void
 Field<Polytope,T>::evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
 {
-  avro_assert( master_.order() == 0 );
+  avro_assert( shape_.order() == 0 );
   avro_assert( this->type() == DISCONTINUOUS );
 
   result.resize( parents.size() );

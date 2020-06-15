@@ -70,7 +70,7 @@ UT_TEST_CASE(test1)
   // retrieve all the triangles
   Topology<Simplex> topology(pmesh->points(),2);
   tess.retrieve<Simplex>(0).get_elements( topology );
-  topology.master().set_parameter(true);
+  topology.shape().set_parameter(true);
 
   topology.close();
   topology.neighbours().compute();
@@ -85,7 +85,7 @@ UT_TEST_CASE(test1)
   MetricField<Simplex> metric(topology,attachment);
 
   Smooth<Simplex> smoother(topology);
-  UT_ASSERT( smoother.master().parameter() );
+  UT_ASSERT( smoother.shape().parameter() );
 
   // loop through every edge, extract the cavity and ensure every edge end point is visible
   for (index_t iter=0;iter<10;iter++)

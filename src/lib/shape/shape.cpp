@@ -9,8 +9,8 @@
 //
 #include "common/error.h"
 
-#include "master/master.h"
-#include "master/quadrature.h"
+#include "shape/shape.h"
+#include "shape/quadrature.h"
 
 namespace avro
 {
@@ -41,20 +41,20 @@ operator<( const Element& f , const Element& g )
                                       g.indices.begin(), g.indices.end());
 }
 
-template<typename Shape>
+template<typename type>
 void
-Master<Shape>::load_quadrature( Quadrature& quadrature )
+Shape<type>::load_quadrature( Quadrature& quadrature )
 {
   quadrature.retrieve(xquad_,wquad_);
 }
 
-template<typename Shape>
+template<typename type>
 void
-Master<Shape>::set_basis( BasisFunctionCategory category )
+Shape<type>::set_basis( BasisFunctionCategory category )
 {
-  basis_ = std::make_shared<Basis<Shape>>(reference_,category);
+  basis_ = std::make_shared<Basis<type>>(reference_,category);
 }
 
-template class Master<Simplex>;
+template class Shape<Simplex>;
 
 } // avro

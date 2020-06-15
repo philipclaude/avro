@@ -13,8 +13,8 @@
 #include "common/error.h"
 #include "common/table.h"
 
-#include "master/basis.h"
-#include "master/master.h"
+#include "shape/basis.h"
+#include "shape/shape.h"
 
 #include "numerics/functions.h"
 #include "numerics/matrix.h"
@@ -31,7 +31,7 @@ template<typename type> class SimplicialDecomposition;
 class Points;
 class Entity;
 
-class Simplex : public Master<Simplex>
+class Simplex : public Shape<Simplex>
 {
 public:
   Simplex( const coord_t number , const coord_t order );
@@ -43,11 +43,11 @@ public:
 
   void precalculate();
 
-  template<typename dof_t> void transfer( const Simplex& master , const std::vector<const dof_t*>& dof0 , std::vector<dof_t*>& dof1 , coord_t dim ) const;
-  template<typename dof_t> void transfer( const Simplex& master , const std::vector<const dof_t>& dof0 , std::vector<dof_t>& dof1 ) const;
+  template<typename dof_t> void transfer( const Simplex&  , const std::vector<const dof_t*>& dof0 , std::vector<dof_t*>& dof1 , coord_t dim ) const;
+  template<typename dof_t> void transfer( const Simplex&  , const std::vector<const dof_t>& dof0 , std::vector<dof_t>& dof1 ) const;
 
   template<typename dof_t>
-  void convert( const Simplex& master_from , const std::vector<dof_t>& A , std::vector<dof_t>& B ) const;
+  void convert( const Simplex& shape_from , const std::vector<dof_t>& A , std::vector<dof_t>& B ) const;
 
   real_t volume( const Points& points , const index_t* v , index_t nv ) const;
   void edge_vector( const Points& points , index_t n0 , index_t n1 , real_t* edge , Entity* entity=nullptr ) const;

@@ -36,8 +36,8 @@ namespace avro
 template<typename type>
 Primitive<type>::Primitive( Topology<type>& _topology ) :
   Cavity<type>(_topology),
-  u_(_topology.master().parameter()?(_topology.points().dim()):(_topology.points().dim()-1)),
-  geometry_topology_(u_,_topology.master().parameter()?(_topology.number()):(_topology.number()-1)),
+  u_(_topology.shape().parameter()?(_topology.points().dim()):(_topology.points().dim()-1)),
+  geometry_topology_(u_,_topology.shape().parameter()?(_topology.number()):(_topology.number()-1)),
   geometry_cavity_( geometry_topology_ ),
   geometry_inspector_( _topology.points() , u_ , u2v_ , nullptr ),
   delay_(false),
@@ -47,8 +47,8 @@ Primitive<type>::Primitive( Topology<type>& _topology ) :
   // do not allow the geometry cavity to enlarge
   geometry_cavity_.set_enlarge(false);
   geometry_cavity_.set_ignore(true);
-  geometry_cavity_.master().set_parameter( _topology.master().parameter() );
-  geometry_topology_.master().set_parameter( _topology.master().parameter() );
+  geometry_cavity_.shape().set_parameter( _topology.shape().parameter() );
+  geometry_topology_.shape().set_parameter( _topology.shape().parameter() );
 }
 
 template<typename type>
@@ -64,7 +64,7 @@ Primitive<type>::geometry( index_t p0 , index_t p1 )
 
   if (g->interior()) return g; // skip the ghost check
 
-  if (this->topology_.master().parameter()) return g;
+  if (this->topology_.shape().parameter()) return g;
 
   // we need to make sure the edge is attached to some ghosts
   std::vector<index_t> shell;
@@ -132,7 +132,7 @@ void
 Primitive<type>::convert_to_parameter( Entity* entity )
 {
   // convert the parameter coordinates
-  avro_assert( this->topology_.master().parameter() );
+  avro_assert( this->topology_.shape().parameter() );
   for (index_t k=0;k<geometry_cavity_.points().nb();k++)
   {
     if (k < geometry_cavity_.points().nb_ghost()) continue;

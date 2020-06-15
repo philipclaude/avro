@@ -69,14 +69,14 @@ UT_TEST_CASE(test1)
   // retrieve all the triangles
   Topology<Simplex> topology(pmesh->points(),2);
   tess.retrieve<Simplex>(0).get_elements( topology );
-  topology.master().set_parameter(true);
+  topology.shape().set_parameter(true);
 
   topology.close();
   topology.neighbours().compute();
   topology.inverse().build();
 
   EdgeSwap<Simplex> swapper(topology);
-  UT_ASSERT( swapper.master().parameter() );
+  UT_ASSERT( swapper.shape().parameter() );
 
   swapper.delay() = false;
 
