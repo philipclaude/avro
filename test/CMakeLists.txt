@@ -3,25 +3,25 @@ add_subdirectory(third_party)
 # add the unit tests in the subdirectories
 add_test_files( TEST_FILES "ut" lib/adaptation )
 add_test_files( TEST_FILES "ut" lib/common )
-add_test_files( TEST_FILES "ut" lib/geometrics )
+add_test_files( TEST_FILES "ut" lib/geometry )
 add_test_files( TEST_FILES "ut" lib/graphics )
 add_test_files( TEST_FILES "ut" lib/library )
-add_test_files( TEST_FILES "ut" lib/master )
 add_test_files( TEST_FILES "ut" lib/mesh )
 add_test_files( TEST_FILES "ut" lib/mesh/delaunay )
 add_test_files( TEST_FILES "ut" lib/mesh/frontal )
 add_test_files( TEST_FILES "ut" lib/numerics )
+add_test_files( TEST_FILES "ut" lib/shape )
 add_test_files( TEST_FILES "ut" lib/voronoi )
 add_test_files( TEST_FILES "ut" bin )
 
-add_test_files( SBX_FILES "sbx" sandbox )
-add_test_files( SBX_FILES "sbx" sandbox/papers/imr27 )
-add_test_files( SBX_FILES "sbx" sandbox/papers/cfdsc18 )
-add_test_files( SBX_FILES "sbx" sandbox/xfield )
+# sandbox files should have _toy.cpp
+add_test_files( SBX_FILES "toy" sandbox/philip )
+add_test_files( SBX_FILES "toy" sandbox/hannah )
+add_test_files( SBX_FILES "toy" sandbox/paul )
 
 set( unit_skip mesh/delaunay/vertex_ut.cpp )
 
-# the master unit test file
+# the main unit test file
 set( MASTER_UNIT ut_driver.cpp )
 set( COMMON_UNIT ut_common.cpp )
 
@@ -31,6 +31,7 @@ target_link_libraries( ut_common_lib avro_shared )
 # needed for the directory class definitions
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src/third_party)
+include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/numpack )
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
 
@@ -85,7 +86,7 @@ endforeach()
 # create the full unit executable
 avro_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
 target_link_libraries( unit_exe avro_shared )
-target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests.out" )
+target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
 
 # target for running all unit tests independently
 add_custom_target( check_tests )
@@ -127,10 +128,10 @@ endforeach()
 
 # target for compiling all sandbox tests
 add_custom_target( sandbox )
-#add_dependencies( sandbox ${SBX_COMPILE} )
+add_dependencies( sandbox ${SBX_COMPILE} )
 
 # add a target for the regression tests
-add_custom_target( check_benchmarks ${CMAKE_SOURCE_DIR}/test/bin/benchmark3d.sh WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+add_custom_target( check_benchmarks ${CMAKE_SOURCE_DIR}/test/regression/benchmark3d.sh WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
 
 # reset the directory for the executables
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )

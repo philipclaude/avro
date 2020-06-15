@@ -1,6 +1,16 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
+#include "graphics/wv.h"
 
 #include "library/ckf.h"
 #include "library/obj.h"
@@ -29,6 +39,8 @@ public:
       std::vector<real_t> X(topology.points()[k],topology.points()[k]+topology.points().dim());
       this->value(k) = X;
     }
+
+    this->shape().set_basis( BasisFunctionCategory_Lagrange );
   }
 
 
@@ -48,9 +60,14 @@ public:
 UT_TEST_CASE( test1 )
 {
 
-  library::objFile topology0( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
+  library::objFile topology0( BASE_TEST_DIR+"/geometry/obj/spot.obj" );
   CKF_Triangulation topology1( {4,4} );
   CKF_Triangulation topology2( {4,4,4} );
+  Delaunay z(topology0.points());
+  delaunay::RestrictedVoronoiDiagram rvd( topology0 , z );
+  rvd.compute();
+
+  rvd.fields().print();
 
   std::shared_ptr<CoordinateField<Simplex>> fld = std::make_shared<CoordinateField<Simplex>>(topology0);
   topology0.fields().make( "coordinates" , fld );
@@ -58,8 +75,9 @@ UT_TEST_CASE( test1 )
   WebVisualizer vis;
 
   vis.add_topology(topology0);
-  vis.add_topology(topology1);
-  vis.add_topology(topology2);
+  vis.add_topology(rvd);
+  //vis.add_topology(topology1);
+  //vis.add_topology(topology2);
 
   vis.run();
 }

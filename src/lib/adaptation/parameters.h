@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_ADAPTATION_PARAMETERS_H_
 #define avro_LIB_ADAPTATION_PARAMETERS_H_
 
@@ -51,6 +60,8 @@ public:
   real_t& lt_max() { return realParams_["lt_max"]; }
   bool& use_smoothing() { return boolParams_["use_smoothing"]; }
   bool& fefloa() { return boolParams_["fefloa"]; }
+
+  bool& limit_metric() { return boolParams_["limit_metric"]; }
 
   std::string& output_redirect() { return stringParams_["output_redirect"]; }
 

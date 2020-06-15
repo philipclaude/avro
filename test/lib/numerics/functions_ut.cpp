@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "numerics/functions.h"
@@ -5,7 +14,7 @@
 using namespace avro;
 using namespace numerics;
 
-UT_TEST_SUITE(FunctionsSuite)
+UT_TEST_SUITE(functions_suite)
 
 UT_TEST_CASE(evaluation)
 {
@@ -46,4 +55,4 @@ UT_TEST_CASE(evaluation)
 }
 UT_TEST_CASE_END(evaluation)
 
-UT_TEST_SUITE_END(FunctionsSuite)
+UT_TEST_SUITE_END(functions_suite)

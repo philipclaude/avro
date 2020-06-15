@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "common/error.h"
@@ -25,8 +34,8 @@ UT_TEST_CASE(test1)
 {
   // geometry
   EGADS::Context context;
-  //EGADS::Model model(&context,"data/cube-cylinder.egads");
-  EGADS::Model model(&context,"data/bunny.stp");
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  //EGADS::Model model(&context,"data/bunny.stp");
 
   TessellationParameters tess_params;
   tess_params.standard();
@@ -64,9 +73,9 @@ UT_TEST_CASE(test1)
   printf("volume = %g\n",vol);
   UT_ASSERT( vol > 1e10 );
 
-  // now tell the master that it is in parameter space, so
+  // now tell the  that it is in parameter space, so
   // it knows that it should retrieve appropriate geometry coordinates
-  topology.master().set_parameter(true);
+  topology.shape().set_parameter(true);
   topology.orient();
 
   std::vector<real_t> volumes( topology.nb() );

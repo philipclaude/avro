@@ -1,7 +1,19 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
 #include "adaptation/parameters.h"
 #include "adaptation/properties.h"
+
+#include "geometry/entity.h"
+#include "geometry/egads/object.h"
 
 #include "library/meshb.h"
 
@@ -117,7 +129,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
       }
 
       // skip this check if we are operating purely in parameter space
-      if (!mesh_topology.master().parameter())
+      if (!mesh_topology.shape().parameter())
       {
         // evaluate the coordinates for the parameters we found
         std::vector<real_t> x_eval(3);
@@ -377,7 +389,7 @@ adapt( AdaptationProblem& problem )
   mesh.points().copy( points );
   Topology<type> mesh_topology( points , number );
   mesh_topology.TopologyBase::copy( topology );
-  mesh_topology.master().set_parameter( topology.master().parameter() );
+  mesh_topology.shape().set_parameter( topology.shape().parameter() );
 
   if (!params.prepared())
   {
@@ -403,7 +415,7 @@ adapt( AdaptationProblem& problem )
     // copy the data into the background topology used by the discrete metric
     points.copy( topology.points() );
     topology.TopologyBase::copy( mesh_topology );
-    topology.master().set_parameter( mesh_topology.master().parameter() );
+    topology.shape().set_parameter( mesh_topology.shape().parameter() );
     mesh_topology.neighbours().copy( topology.neighbours() );
 
     topology.inverse().build();
@@ -473,11 +485,24 @@ adapt( AdaptationProblem& problem )
   field.set_cells( topology );
   avro_assert( field.check () );
 
+  if (params.limit_metric())
+    field.limit(mesh_topology,2.0);
+
   // create a discrete metric with the input topology
+  // and pass in the interpolator (null if not provided)
   MetricField<type> metric( topology , field );
 
-  // initial volume to compare with later
-  //real_t v0 = mesh_topology.volume();
+  std::shared_ptr< FieldInterpolation<type,Metric> > interpolation = nullptr;
+  if (problem.interpolation==nullptr)
+  {
+		interpolation = std::make_shared< FieldInterpolation<type,Metric> >(&metric);
+    metric.set_interpolation(interpolation.get());
+  }
+	else
+		metric.set_interpolation( problem.interpolation );
+
+  topology.shape().set_basis( BasisFunctionCategory_Lagrange );
+  mesh_topology.shape().set_basis( BasisFunctionCategory_Lagrange );
 
   // call the adaptation!
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );
@@ -549,10 +574,6 @@ adapt( AdaptationProblem& problem )
   fld.clear();
   for (index_t k=0;k<field.nb();k++)
     fld.push_back( field[k] );
-
-  // print some information about the volume (for straight-sided geometries)
-  //real_t v1 = mesh_topology.volume();
-  //printf("v0 = %1.16e, v1 = %1.16e\n",v0,v1);
 
   if (!output_redirect.empty())
   {

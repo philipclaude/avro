@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "programs.h"
 
 #include <string>
@@ -38,8 +47,12 @@ main( int argc , const char** argv )
     result = programs::adapt(nb_inputs,inputs);
   else if (program=="plot")
     result = programs::plot(nb_inputs,inputs);
+  else if (program=="webplot")
+    result = programs::plot(nb_inputs,inputs,true);
   else if (program=="voronoi")
     result = programs::voronoi(nb_inputs,inputs);
+  else if (program=="conformity")
+    result = programs::conformity(nb_inputs,inputs);
   else
   {
     printf("unknown program :(\n");

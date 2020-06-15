@@ -1,10 +1,16 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
-
+//
 #include "common/array.h"
 #include "common/nearest_neighbours.h"
+
+#include "geometry/entity.h"
 
 #include "voronoi/voronoi.h"
 #include "voronoi/delaunay.h"
@@ -16,6 +22,8 @@ namespace avro
 
 namespace delaunay
 {
+
+#define IGNORE_GEOMETRY 0
 
 RestrictedVoronoiSimplex::RestrictedVoronoiSimplex(
    const index_t k , const Topology<Simplex>& topology , RVDFacets& facets ,
@@ -65,14 +73,37 @@ RestrictedVoronoiSimplex::RestrictedVoronoiSimplex(
   }
 }
 
+void
+RestrictedVoronoiSimplex::set_entity( Entity* entity )
+{
+  entity_ = entity;
+}
+
 index_t
 RestrictedVoronoiSimplex::nb_sites() const
 {
   index_t count = 0;
   for (index_t k=0;k<sites_.size();k++)
   {
+    #if IGNORE_GEOMETRY
     if (!clipped_[sites_[k]])
       count++;
+    #else
+    // skip sites that are alraedy clipped
+    if (clipped_[sites_[k]]) continue;
+
+    // skip sites that are on the wrong entity
+    Entity* ek = delaunay_.entity(sites_[k]);
+    if (entity_!=nullptr)
+    {
+      if (ek!=nullptr)
+      {
+        if (ek==entity_) count++;
+        if (entity_->above(ek)) count++;
+      }
+    }
+    else count++;
+    #endif
   }
   return count;
 }
@@ -83,8 +114,29 @@ RestrictedVoronoiSimplex::nextSite()
   index_t k;
   for (k=0;k<sites_.size();k++)
   {
+    // skip sites that are alraedy clipped
     if (clipped_[sites_[k]]) continue;
-      break;
+
+    // skip sites that are on the wrong entity
+    #if IGNORE_GEOMETRY
+    break; // found one!
+    #else
+    Entity* ek = delaunay_.entity(sites_[k]);
+    if (entity_!=nullptr)
+    {
+      if (ek!=nullptr)
+      {
+        if (ek==entity_) break;
+        if (entity_->above(ek)) break;
+      }
+    }
+    else break;
+    #endif
+  }
+  if (k==sites_.size())
+  {
+    entity_->print_header();
+    avro_implement;
   }
   clipped_[sites_[k]] = true;
   site_ = sites_[k];
@@ -173,11 +225,37 @@ void
 RestrictedVoronoiSimplex::clipPolytope( index_t j )
 {
 
+  if (j==neighbours_.nb(site_)-1) return;
   if (polytope_.size()==0) return;
 
   // get the next neighbour
   index_t zj;
   if (neighbours_(site_,j)==site_) j++;
+
+  #if IGNORE_GEOMETRY
+  #else
+
+  index_t nj = neighbours_(site_,j);
+  Entity* ej = delaunay_.entity(nj);
+
+  // if the entity is a boundary entity, only clip with
+  // bisectors that are lower in the geometry hierarchy
+  if (entity_!=nullptr)
+  {
+    if (entity_!=ej)
+    {
+      while (!entity_->above(ej))
+      {
+        j++;
+        if (j==neighbours_.nb(site_)-1) return;
+        nj = neighbours_(site_,j);
+        ej = delaunay_.entity(nj);
+      }
+    }
+  }
+
+  #endif
+
   zj = neighbours_(site_,j);
 
   // TODO save the region zi-zj
@@ -191,13 +269,13 @@ RestrictedVoronoiSimplex::clipPolytope( index_t j )
   // initialize the clipped polytope
   std::vector<index_t> q;
 
-  // retrieve the edges using the master
+  // retrieve the edges using the 
   for (index_t ii=0;ii<polytope_.size();ii++)
   for (index_t jj=ii+1;jj<polytope_.size();jj++)
   {
     index_t e0 = polytope_[ii];
     index_t e1 = polytope_[jj];
-    if (topology_.master().is_edge( vertex_[e0].bisectors() ,
+    if (topology_.shape().is_edge( vertex_[e0].bisectors() ,
                         vertex_[e1].bisectors() ) )
     {
       // clip the edge and save the result into q

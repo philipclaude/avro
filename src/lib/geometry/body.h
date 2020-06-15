@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_GEOMETRY_BODY_H_
 #define avro_LIB_GEOMETRY_BODY_H_
 
@@ -17,8 +26,8 @@ class Body
 {
 protected:
   typedef std::shared_ptr<Entity> Entity_ptr;
+
 public:
-  virtual ~Body() {}
 
   coord_t number() const { return number_; }
   void add( Entity_ptr prim );
@@ -37,6 +46,7 @@ public:
 protected:
 
   Body( coord_t number );
+  virtual ~Body() {}
 
   std::vector<Entity_ptr> entity_;
 

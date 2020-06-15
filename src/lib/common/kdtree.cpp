@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/kdtree.h"
 
 #include "mesh/points.h"
@@ -43,7 +52,7 @@ KdTree<dim>::build()
 
 template<coord_t dim>
 void
-KdTree<dim>::getNearestNeighbours( real_t* q, std::vector<index_t>& idx ,
+KdTree<dim>::getNearestNeighbours( const real_t* q, std::vector<index_t>& idx ,
                                    std::vector<real_t>& dist2 , index_t& nu )
 {
   avro_assert( idx.size()==dist2.size() );

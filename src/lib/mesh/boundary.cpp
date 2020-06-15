@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/tools.h"
 
 #include "geometry/entity.h"
@@ -188,61 +197,61 @@ Boundary<type>::extractall()
     if (BoundaryUtils::geometryFacet(topology_.points(),topology_(k),topology_.nv(k),true)==NULL)
       continue;
 
-    index_t nf = topology_.master().nb_facets();
-    std::vector<index_t> facet;
-
     // loop through all lower-dimensional facets of this simplex
-    for (index_t j=0;j<nf;j++)
+    for (coord_t i=0;i<topology_.number();i++)
     {
-      // get the indices of this facet
-      // TODO implement this!!!
-      avro_implement;
-      //topology_.master().unwindFacet( j , topology_(k) , facet );
+      Element elem;
+      std::vector<index_t>& facet = elem.indices;
 
-      // get the geometry this facet is on and lookup which topology this is
-      Entity* e = BoundaryUtils::geometryFacet( topology_.points() ,facet.data() , facet.size() );
-      if (e==NULL) continue;
-
-      // the entity number must match the facet number
-      if (facet.size()-1!=e->number())
-        continue;
-
-      // check if all facets share a ghost element
-      if (topology_.closed())
+      elem.dim = i;
+      for (index_t j=0;j<topology_.shape().nb_facets(i);j++)
       {
-        // get all elements in common
-        std::vector<index_t> common;
-        topology_.all_with( facet , common );
-        bool hasghost = false;
-        for (index_t i=0;i<common.size();i++)
+        // get the indices of this facet
+        topology_.shape().get_facet_vertices( topology_(k) , topology_.nv(k) , j , elem );
+
+        // get the geometry this facet is on and lookup which topology this is
+        Entity* e = BoundaryUtils::geometryFacet( topology_.points() ,facet.data() , facet.size() );
+        if (e==NULL) continue;
+
+        // the entity number must match the facet number
+        if (facet.size()-1!=e->number())
+          continue;
+
+        // check if all facets share a ghost element
+        if (topology_.closed())
         {
-          if (topology_.ghost(common[i]))
+          // get all elements in common
+          std::vector<index_t> common;
+          topology_.all_with( facet , common );
+          bool hasghost = false;
+          for (index_t i=0;i<common.size();i++)
           {
-            hasghost = true;
-            break;
+            if (topology_.ghost(common[i]))
+            {
+              hasghost = true;
+              break;
+            }
           }
+          if (!hasghost) continue;
         }
-        if (!hasghost) continue;
+        else
+        {
+          // we can only ensure the facet is counted once in the topology
+          // only true if we want dim-1 facets!
+          std::vector<index_t> common;
+          topology_.all_with( facet , common );
+          if (common.size()!=1 && i==topology_.number()-1) continue;
+        }
+
+        // this is a geometry facet
+        // check if the table contains it
+        if (table.contains(facet)) continue;
+
+        // add the facet to the topology
+        index_t id = entity2child_[e];
+        this->child(id).add( facet.data() , facet.size() );
+
       }
-      else
-      {
-        // we can only ensure the facet is counted once in the topology
-        // only true if we want dim-1 facets!
-        std::vector<index_t> common;
-        topology_.all_with( facet , common );
-        if (common.size()!=1) continue;
-      }
-
-      // this is a geometry facet
-      // check if the table contains it
-      if (table.contains(facet)) continue;
-
-      // add the facet to the topology
-      /*index_t id = entity2child_[e];
-      this->child(id).add( facet.data() , facet.size() );
-      */
-      add( facet.data() , facet.size() , e );
-
     }
   }
 }
@@ -311,6 +320,7 @@ Boundary<type>::extract( bool interior )
     for (index_t j=0;j<e->nb_parents();j++)
     {
       Entity* parent = e->parents(j);
+      if (parent==nullptr) continue;
       if (!parent->tessellatable())
         continue;
       E0.push_back( e->parents(j) );
@@ -384,10 +394,6 @@ Boundary<type>::extract( bool interior )
         for (index_t ii=0;ii<ent->nb_parents();ii++)
           ent->parents()[ii]->print();
       }
-
-      //Gamma<type> gamma;
-      //library::Plottable<type> plot(bnd);
-      //gamma.writeMesh(plot,"bnd_debug.mesh");
     }
     avro_assert(e!=NULL);
 
@@ -449,7 +455,6 @@ Boundary<type>::extract( bool interior )
       facets.retrieve(k,F);
 
       // determine if this is a geometry facet
-
       Entity* e = NULL;
       try
       {

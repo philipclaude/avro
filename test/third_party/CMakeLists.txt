@@ -12,6 +12,7 @@ target_link_libraries( ut_third_party_common_lib avro_shared )
 
 # needed for the directory class definitions
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/numpack )
 
 # set the directory for the executables
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test/bin )

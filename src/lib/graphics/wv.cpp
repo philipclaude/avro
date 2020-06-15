@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "graphics/application.h"
 #include "graphics/wv.h"
 
@@ -12,7 +21,6 @@ void* __web_server__;
 void
 browserMessage( void* wsi , char* text , /*@unused*/ int )
 {
-  printf("browser message!\n");
   avro::graphics::Application<avro::graphics::Web_Interface> *app
     = (avro::graphics::Application<avro::graphics::Web_Interface>*)(__web_server__);
   app->receive(text);
@@ -42,6 +50,8 @@ WV_Manager::WV_Manager()
 void
 WV_Manager::write( Primitive& primitive )
 {
+  if (primitive.points().size()==0) return;
+
   int status = 0;
   wvData items[5];
   float color[3] = {0,0,0}; // black
@@ -49,11 +59,12 @@ WV_Manager::write( Primitive& primitive )
   char label[256];
   sprintf(label,"%p",(void*)&primitive);
 
-  // send the vertex coordinates (everyone needs to do this)
-  status = wv_setData( WV_REAL64 , primitive.points().size() , (void*)primitive.points().data() , WV_VERTICES , &items[0] );
-  WV_CHECK_STATUS( status );
+  index_t nb_points = primitive.points().size()/3;
 
-  //wv_adjustVerts( items[0] , focus ); // TODO retrieve focus...but from where??
+  // send the vertex coordinates
+  // no need to ask wv to focus them (with wv_adjustVerts) since we've already normalized the data
+  status = wv_setData( WV_REAL64 , nb_points , (void*)primitive.points().data() , WV_VERTICES , &items[0] );
+  WV_CHECK_STATUS( status );
 
   if (primitive.number()==0)
   {
@@ -119,7 +130,9 @@ WV_Manager::write( Primitive& primitive )
 
     // add the triangle colors
     std::vector<float> colors( primitive.colors().begin() , primitive.colors().end() );
-    status = wv_setData( WV_REAL32 , primitive.points().size(), (void*)colors.data() , WV_COLORS , &items[2] );
+    for (index_t k=0;k<colors.size();k++)
+      colors[k] /= 256.0;
+    status = wv_setData( WV_REAL32 , nb_points , (void*)colors.data() , WV_COLORS , &items[2] );
     WV_CHECK_STATUS( status );
 
     // add the  edges
@@ -128,7 +141,7 @@ WV_Manager::write( Primitive& primitive )
     WV_CHECK_STATUS( status );
 
     std::vector<float> normals(primitive.normals().begin(),primitive.normals().end());
-    status = wv_setData( WV_REAL32 , primitive.points().size() , (void*)normals.data() , WV_NORMALS , &items[4] );
+    status = wv_setData( WV_REAL32 , nb_points , (void*)normals.data() , WV_NORMALS , &items[4] );
     WV_CHECK_STATUS( status );
 
     if (index_.find(&primitive)!=index_.end())
@@ -149,6 +162,71 @@ WV_Manager::write( Primitive& primitive )
       WV_CHECK_STATUS( idx );
     }
   }
+}
+
+void
+WV_Manager::write( const std::string& name , coord_t number , const std::vector<real_t>& points0 , const std::vector<index_t>& edges0 , const std::vector<index_t>& triangles0 , const std::vector<real_t>& colors0 )
+{
+  int status = 0;
+  wvData items[4];
+
+  index_t nb_points = points0.size()/3;
+
+  // send the vertex coordinates
+  // no need to ask wv to focus them (with wv_adjustVerts) since we've already normalized the data
+  std::vector<real_t> points(points0.begin(),points0.end());
+  status = wv_setData( WV_REAL64 , nb_points , (void*)points.data() , WV_VERTICES , &items[0] );
+  WV_CHECK_STATUS( status );
+
+  if (number>=2)
+  {
+    // add the triangle connectivity
+    std::vector<int> triangles( triangles0.begin() , triangles0.end() );
+    status = wv_setData( WV_INT32 , triangles.size() , (void*)triangles.data() , WV_INDICES , &items[1] );
+    WV_CHECK_STATUS( status );
+
+    // add the triangle colors
+    std::vector<float> colors( colors0.begin() , colors0.end() );
+    //for (index_t k=0;k<colors.size();k++)
+    //  colors[k] /= 256.0;
+    status = wv_setData( WV_REAL32 , nb_points , (void*)colors.data() , WV_COLORS , &items[2] );
+    WV_CHECK_STATUS( status );
+
+    // add the  edges
+    if (edges0.size()>0)
+    {
+      std::vector<int> edges( edges0.begin() , edges0.end() );
+      status = wv_setData( WV_INT32 , edges.size() , (void*)edges.data() , WV_LINDICES , &items[3] );
+      WV_CHECK_STATUS( status );
+    }
+
+    if (aux_index_.find(name)!=aux_index_.end())
+    {
+      status = wv_modGPrim( context_ , int(aux_index_[name]) , 4 , items );
+      WV_CHECK_STATUS( status );
+      aux_index_[name] = status;
+    }
+    else
+    {
+      // create the gprim, but first check it really doesn't exist
+      int idx = wv_indexGPrim(context_, const_cast<char*>(name.c_str()) );
+      if (idx<0)
+      {
+        idx = wv_addGPrim(context_, const_cast<char*>(name.c_str()) , WV_TRIANGLE, WV_ON|WV_SHADING|WV_TRANSPARENT , 4 , items );
+        aux_index_.insert( {name,idx} );
+      }
+      WV_CHECK_STATUS( idx );
+    }
+  }
+}
+
+void
+WV_Manager::remove( const std::string& name )
+{
+  avro_assert( aux_index_.find(name)!=aux_index_.end() );
+  index_t idx = aux_index_[name];
+  aux_index_.erase(name);
+  wv_removeGPrim(context_, int(idx) );
 }
 
 } // graphics

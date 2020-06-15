@@ -1,9 +1,18 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/parallel_for.h"
 #include "common/tools.h"
 
 #include "geometry/entity.h"
 
-#include "master/quadrature.h"
+#include "shape/quadrature.h"
 
 #include "mesh/decomposition.h"
 
@@ -28,12 +37,6 @@ RVDFacets::RVDFacets( const Topology<Simplex>& topology ) :
   topology_(topology)
 {
   create();
-}
-
-RVDFacets::RVDFacets( const Topology<Simplex>& topology , const std::vector<index_t>& S ) :
-  topology_(topology)
-{
-  create(S);
 }
 
 std::string
@@ -95,34 +98,6 @@ RVDFacets::create()
 }
 
 void
-RVDFacets::create( const std::vector<index_t>& S )
-{
-  int id = 0;
-  std::string s;
-
-  // mesh facets
-  coord_t nf = topology_.number()+1;
-  std::vector<index_t> t,f;
-  for (index_t k=0;k<S.size();k++)
-  {
-    t = topology_.get(S[k]);
-    for (index_t j=0;j<nf;j++)
-    {
-      f = t;
-      f.erase(f.begin()+j);
-      std::sort(f.begin(),f.end());
-      s = generate(f);
-      if (lookup(s,id)<0)
-      {
-        id = -store_.size() -1;
-        store_.insert( std::pair<std::string,int>(s,id) );
-      }
-    }
-  }
-}
-
-
-void
 RVDFacets::print() const
 {
   std::map<std::string,int>::const_iterator it;
@@ -133,13 +108,14 @@ RVDFacets::print() const
   }
 }
 
-RestrictedVoronoiDiagram::RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay ) :
+RestrictedVoronoiDiagram::RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay , Entity* entity ) :
   Topology<Polytope>( vertices_ , _mesh.number() ),
   vertices_( _delaunay.dim() ),
   mesh_(_mesh) , delaunay_(_delaunay),
-  neighbours_( delaunay_ ),
+  neighbours_( delaunay_ , 100 ),
   parallel_(false), gpu_(false),
-  outdir_(".")
+  outdir_("."),
+  entity_(entity)
 {
   neighbours_.compute();
 }
@@ -156,6 +132,7 @@ RestrictedVoronoiDiagram::compute( const bool exact )
   {
     simplices_[k] = std::make_shared<RestrictedVoronoiSimplex>( k , mesh_ ,
                         facets  , delaunay_ , neighbours_ , exact );
+    simplices_[k]->set_entity(entity_);
   }
 
   // dispatch the computation of all the simplices
@@ -182,47 +159,6 @@ RestrictedVoronoiDiagram::compute( const bool exact )
 
   // accumulate the result
   accumulate();
-}
-
-void
-RestrictedVoronoiDiagram::compute( const std::vector<index_t>& S , const bool exact )
-{
-  RVDFacets facets( mesh_ , S );
-  simplices_.clear();
-
-  // create all the restricted simplices
-  simplices_.resize( S.size() );
-  for (index_t k=0;k<S.size();k++)
-  {
-    simplices_[k] = std::make_shared<RestrictedVoronoiSimplex>( S[k] , mesh_ ,
-                        facets  , delaunay_ , neighbours_ , exact );
-  }
-
-  // dispatch the computation of all the simplices
-  if (!parallel_)
-  {
-    for (index_t k=0;k<nb_simplices();k++)
-      clip(k);
-  }
-  else
-  {
-    if (!gpu_)
-    {
-      ProcessCPU::parallel_for (
-        parallel_for_member_callback( this , &thisclass::clip ),
-        0,nb_simplices()
-      );
-    }
-    else
-    {
-      // need to define the kernel for this
-      avro_implement;
-    }
-  }
-
-  // accumulate the result
-  accumulate();
-
 }
 
 typedef struct
@@ -282,7 +218,7 @@ RestrictedVoronoiDiagram::accumulate()
       points_.create( simplices_[k]->points()[j] );
 
     // add the vertex-to-facet information
-    const Table<int>& vf = simplices_[k]->topology().master().incidence();
+    const Table<int>& vf = simplices_[k]->topology().shape().incidence();
     for (index_t j=0;j<vf.nb();j++)
     {
       std::vector<int> f = vf.get(j);
@@ -367,7 +303,7 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
   // retrieve the site information
   Topology<Polytope>& rvd = (*this);
 
-  // copy the points so the master can triangulate
+  // copy the points so the  can triangulate
   Points points0( rvd.points().dim() );
   rvd.points().copy( points0 );
 
@@ -392,12 +328,12 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
 
   Topology<Simplex> simplex_topology( decomposition.points() , rvd.number() );
 
-  const Simplex& master = decomposition.master();
+  const Simplex& shape = decomposition.shape();
   for (index_t k=0;k<nb_simplices;k++)
   {
     simplex_topology.add( &simplices[k*(number+1)] , number+1 );
 
-    real_t vk = master.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
+    real_t vk = shape.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
 
     index_t s = sites_->value( parents[k] );
     avro_assert( s < V.size() );
@@ -425,9 +361,9 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
 
   // compute the CVT energy
   ConicalProductQuadrature quadrature(rvd.number(),3);
-  simplex_topology.master().set_basis( BasisFunctionCategory_Lagrange );
+  simplex_topology.shape().set_basis( BasisFunctionCategory_Lagrange );
   quadrature.define();
-  simplex_topology.master().load_quadrature(quadrature);
+  simplex_topology.shape().load_quadrature(quadrature);
 
   typedef Integrand_CVT_Energy<real_t> Integrand_t;
   Integrand_t integrand(delaunay_,*sites_.get(),parents);
@@ -478,7 +414,7 @@ void
 RestrictedVoronoiDiagram::extract( Topology<Simplex>& triangulation ) const
 {
   // first make a unique set of points based on the vertex facet matrix
-  const Table<int>& vfm = child(0).master().incidence();
+  const Table<int>& vfm = points_.incidence();
 
   // find unique entries of the vfm
   std::unordered_set<std::string> labels;
@@ -491,9 +427,14 @@ RestrictedVoronoiDiagram::extract( Topology<Simplex>& triangulation ) const
     bool meshfacet = false;
     for (index_t j=0;j<bisectors.size();j++)
     {
+      // bisectors with a negative identifer are on facets of the original mesh
       if (bisectors[j]<0) meshfacet = true;
     }
-    if (meshfacet) continue;
+    if (meshfacet)
+    {
+      // voronoi vertices on a mesh facet do not create delaunay simplices
+      continue;
+    }
 
     std::sort(bisectors.begin(),bisectors.end());
 
@@ -538,7 +479,6 @@ RestrictedVoronoiDiagram::extract( Topology<Simplex>& triangulation ) const
       }
     }
   }
-  printf("RDT contains %lu simplices\n",triangulation.nb());
 }
 
 } // delaunay

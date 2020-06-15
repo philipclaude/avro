@@ -1,8 +1,12 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
-
+//
 #ifndef avro_COMMON_PARALLEL_FOR_H_
 #define avro_COMMON_PARALLEL_FOR_H_
 
@@ -100,18 +104,18 @@ namespace ProcessMPI
 
 template<class Func>
 inline void
-master_begin( const Func& func )
+shape_begin( const Func& func )
 {
   Thread_var task = std::make_shared<Task<Func>>(func);
-  master_begin(*task);
+  shape_begin(*task);
 }
 
 template<class Func>
 inline void
-master_end( const Func& func )
+shape_end( const Func& func )
 {
   Thread_var task = std::make_shared<Task<Func>>(func);
-  master_end(*task);
+  shape_end(*task);
 }
 
 template<class Func>

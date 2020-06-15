@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/tools.h"
 
 #include "geometry/body.h"
@@ -240,11 +249,11 @@ Points::duplicates( std::vector<index_t>& idx ,real_t tol ) const
 	for (index_t k=0;k<nb();k++)
 	{
 		// look for any vertices up to this one which are too close
-		for (index_t j=0;j<k;j++)
+		for (index_t j=k+1;j<nb();j++)
 		{
 			if (numerics::distance(operator[](k),operator[](j),dim_)<tol)
 			{
-				idx[k] = j;
+				idx[j] = k;
 				break;
 			}
 		}
@@ -255,6 +264,7 @@ void
 Points::duplicates( std::vector<index_t>& idx , const Table<int>& F ) const
 {
 	avro_assert( F.nb() == nb() );
+	idx.resize( nb() );
 
 	// get the symbolic information of every vertex
 	std::unordered_map<std::string,index_t> symbolic;
@@ -284,7 +294,6 @@ Points::duplicates( std::vector<index_t>& idx , const Table<int>& F ) const
 		}
 	}
 	printf("there are %lu unique vertices\n",symbolic.size());
-	avro_implement;
 }
 
 void
@@ -388,6 +397,11 @@ Points::attach( const Body& body , index_t ibody ,real_t tol )
 		{
     	// check the distance is lower than the tolerance
     	real_t d = numerics::distance2(xk,x.data(),dim_);
+			if (d>=tol)
+			{
+				print();
+				ek->print();
+			}
     	avro_assert_msg( d < tol , "point %lu , d = %1.16e" , k , d );
 		}
   }

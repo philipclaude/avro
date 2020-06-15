@@ -1,9 +1,18 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/tools.h"
 #include "common/tree.hpp"
 
 #include "geometry/entity.h"
 
-#include "master/simplex.h"
+#include "shape/simplex.h"
 
 #include "mesh/topology.h"
 
@@ -97,12 +106,12 @@ Entity::intersect( Entity* e1 )
 
 	if (e==NULL)
 	{
-		printf("parents 0:\n");
+		/*printf("parents 0:\n");
 		for (index_t k=0;k<p0.size();k++)
 			p0[k]->print_header();
 		printf("parents 1:\n");
 		for (index_t k=0;k<p1.size();k++)
-			p1[k]->print_header();
+			p1[k]->print_header();*/
 	}
 
 
@@ -156,12 +165,15 @@ Entity::intersect( Entity* e1 , Entity* e2 , bool only_check )
         // print some debug information
         face->print();
 
+				print();
         printf("parents 0:\n");
         for (it0=p0.begin();it0!=p0.end();it0++)
           (*it0)->print();
+				e1->print();
         printf("parents 1:\n");
         for (it0=p1.begin();it0!=p1.end();it0++)
           (*it0)->print();
+				e2->print();
         printf("parents 2:\n");
         for (it0=p2.begin();it0!=p2.end();it0++)
           (*it0)->print();
@@ -265,7 +277,7 @@ template<typename type>
 void
 Entity::construct( std::shared_ptr<Topology<type>>& node , Topology<type>& root ) const
 {
-	node = std::make_shared<Topology<type>>(root.points(),number_,root.master().order());
+	node = std::make_shared<Topology<type>>(root.points(),number_,root.shape().order());
 }
 
 void

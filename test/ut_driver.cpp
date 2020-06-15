@@ -43,5 +43,6 @@ main()
   __driver__->run(result);
   result.summary();
   delete __driver__;
+  if (!result.successful()) return 1;  
   return 0;
 }

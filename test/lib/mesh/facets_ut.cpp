@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "library/ckf.h"
@@ -13,7 +22,7 @@ UT_TEST_CASE(ckf_nd)
 {
   for (coord_t dim=4;dim<=4;dim++)
   {
-    index_t N = 10;
+    index_t N = 6;
     std::vector<index_t> dims(dim,N);
     CKF_Triangulation topology( dims );
 

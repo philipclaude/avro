@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/kdtree.h"
 
 #include "mesh/neighbours.h"
@@ -22,7 +31,7 @@ BoundarySearch::BoundarySearch( const Points& points ) :
 {}
 
 index_t
-BoundarySearch::nearest( real_t* x ) const
+BoundarySearch::nearest( const real_t* x ) const
 {
   std::vector<index_t> pts(1);
   searcher_.closestPoints(x,pts);
@@ -42,7 +51,7 @@ ElementSearch<type>::ElementSearch( const Topology<type>& _topology ) :
 
 template<typename type>
 int
-ElementSearch<type>::find( real_t* x , const index_t guess )
+ElementSearch<type>::find( const real_t* x , const index_t guess )
 {
   nb_search_++;
 
@@ -71,7 +80,7 @@ ElementSearch<type>::find( real_t* x , const index_t guess )
 
 template<typename type>
 int
-ElementSearch<type>::step( real_t* x , const index_t start )
+ElementSearch<type>::step( const real_t* x , const index_t start )
 {
   depth_++;
   nb_steps_++;
@@ -164,7 +173,7 @@ ElementSearch<type>::step( real_t* x , const index_t start )
 
 template<typename type>
 int
-ElementSearch<type>::brute( real_t* x )
+ElementSearch<type>::brute( const real_t* x )
 {
   nb_brute_force_++;
 
@@ -209,7 +218,7 @@ ElementSearch<type>::brute( real_t* x )
 
 template<typename type>
 index_t
-ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
+ElementSearch<type>::closest( const real_t* x , std::vector<real_t>& alpha ) const
 {
   // find the closest vertex on the boundary
   index_t q = boundary_.nearest( x );
@@ -218,6 +227,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   #if 0
   for (index_t k=0;k<topology_.points().nb();k++)
   {
+    if (k <= topology_.points().nb_ghost()) continue;
     real_t d = numerics::distance2( topology_.points()[k] , x , topology_.points().dim() );
     if (d<dmin)
     {
@@ -227,8 +237,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   }
   dmin = numerics::distance2(topology_.points()[q] , x , topology_.points().dim() );
   #endif
-
-  avro_assert( q >= topology_.points().nb_ghost() );
+  avro_assert_msg( q >= topology_.points().nb_ghost() , "closest point to %lu is a ghost?" , q );
 
   // get the ball of the vertex
   std::vector<index_t> B;
@@ -245,7 +254,7 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
     if (topology_.ghost(B[k])) continue;
 
     // determine the coordinates y closest to x
-    real_t distance2 = topology_.master().closest( topology_.points() , topology_(B[k]) , topology_.nv(B[k]) , x , y );
+    real_t distance2 = topology_.shape().closest( topology_.points() , topology_(B[k]) , topology_.nv(B[k]) , x , y );
 
     // compute the barycentric coordinates of y in this simplex
     std::vector<const real_t*> X(topology_.nv(B[k]));
@@ -277,10 +286,15 @@ ElementSearch<type>::closest( real_t* x , std::vector<real_t>& alpha ) const
   // vertex could be the minimizer, pick any element in the ball
   if (ielem==topology_.nb())
   {
-    index_t k = 0;
-    ielem = k;
-    std::vector<const real_t*> X(topology_.nv(B[k]));
-    topology_.get_elem( B[k] , X );
+    for (index_t k=0;k<B.size();k++)
+    {
+      if (topology_.ghost(B[k])) continue;
+      ielem = B[k];
+      break;
+    }
+    avro_assert( ielem < topology_.nb() );
+    std::vector<const real_t*> X(topology_.nv(ielem));
+    topology_.get_elem( ielem , X );
     numerics::barycentric_signed( topology_.points()[q] , X , topology_.points().dim() , alpha );
   }
 
@@ -307,7 +321,7 @@ PointSearch::PointSearch( Points& _points ) :
 }
 
 void
-PointSearch::closestPoints( real_t* x , std::vector<index_t>& pts ) const
+PointSearch::closestPoints( const real_t* x , std::vector<index_t>& pts ) const
 {
   index_t N = pts.size();
   std::vector<real_t> dist2(N);

@@ -1,15 +1,19 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
-
+//
 #ifndef AVRO_MESH_DELAUNAY_VORONOI_H_
 #define AVRO_MESH_DELAUNAY_VORONOI_H_
 
 #include "common/nearest_neighbours.h"
 
-#include "master/polytope.h"
-#include "master/simplex.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/field.hpp"
 #include "mesh/mesh.h"
@@ -22,6 +26,7 @@ namespace avro
 
 class Delaunay;
 class RestrictedVoronoiSimplex;
+class Entity;
 
 namespace delaunay
 {
@@ -117,10 +122,8 @@ class RVDFacets
 {
 public:
   RVDFacets( const Topology<Simplex>& topology );
-  RVDFacets( const Topology<Simplex>& topology , const std::vector<index_t>& S );
 
   void create();
-  void create( const std::vector<index_t>& simplices );
   int facet( const std::vector<index_t>& f ) const;
   void print() const;
 
@@ -142,6 +145,8 @@ public:
   RestrictedVoronoiSimplex(
     const index_t k , const Topology<Simplex>& mesh , RVDFacets& facets ,
     Delaunay& _delaunay , NearestNeighbours& _neighbours , bool _exact );
+
+  void set_entity( Entity* entity );
 
   void reset();
 
@@ -172,7 +177,6 @@ public:
   index_t seed( const index_t k ) const { return seed_[k]; }
 
   Topology<Polytope>& topology() { return topology_; }
-  //using Mesh<ConvexPolytope>::topology; // silences clang warning
 
 private:
   index_t site_;
@@ -201,6 +205,7 @@ private:
 
   Points points_;
 
+  Entity* entity_;
 };
 
 class VoronoiSites;
@@ -211,11 +216,10 @@ public:
 
   typedef RestrictedVoronoiDiagram thisclass;
 
-  RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay );
+  RestrictedVoronoiDiagram( const Topology<Simplex>& _mesh , Delaunay& _delaunay , Entity* entity=nullptr );
   RestrictedVoronoiDiagram( Delaunay& _delaunay );
 
   void compute( const bool exact = true );
-  void compute( const std::vector<index_t>& S , const bool exact = true );
 
   void accumulate();
 
@@ -262,6 +266,8 @@ private:
 
   std::shared_ptr<VoronoiSites> sites_;
 
+  Entity* entity_;
+
 };
 
 class VoronoiSites : public Field<Polytope,real_t>
@@ -276,7 +282,7 @@ public:
     //Field<real_t>::add(z+1);
   }
 
-  index_t rank() const { return 1; }
+  index_t nb_rank() const { return 1; }
 
   std::vector<std::string> ranknames() const
    {std::vector<std::string> result; result.push_back("sites"); return result;}

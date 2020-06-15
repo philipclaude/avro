@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "adaptation/metric.h"
 
 #include "common/directory.h"
@@ -152,6 +161,13 @@ get_mesh( const std::string& name , std::shared_ptr<TopologyBase>& ptopology , c
   {
     std::shared_ptr<Mesh> pmesh = std::make_shared<meshb>(name);
     ptopology = pmesh->retrieve_ptr<Simplex>(0);
+    printf("mesh has %lu topologies\n",pmesh->nb_topologies());
+    if (pmesh->nb_topologies()>1)
+    {
+      // if there is more than one topology in the meshb file, add them as children to the first one
+      for (index_t k=1;k<pmesh->nb_topologies();k++)
+        static_cast<Topology<Simplex>*>(ptopology.get())->add_child( pmesh->retrieve_ptr<Simplex>(k) );
+    }
     return pmesh;
   }
   if (ext=="json")

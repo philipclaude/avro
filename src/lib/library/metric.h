@@ -1,12 +1,27 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_LIBRARY_METRIC_H_
 #define avro_LIB_LIBRARY_METRIC_H_
 
+#include "common/error.h"
 #include "common/types.h"
+
+#include "mesh/interpolation.h"
 
 #include "numerics/matrix.h"
 
 namespace avro
 {
+
+class Metric;
+class Entity;
 
 namespace library
 {
@@ -277,6 +292,27 @@ public:
 
   	return Q*numpack::DLA::diag(L)*numpack::Transpose(Q);
   }
+};
+
+template<typename type>
+class MetricField_UniformGeometry : public MetricField_Analytic, public FieldInterpolation<type,Metric>
+{
+public:
+  MetricField_UniformGeometry( coord_t dim , real_t hfactor );
+
+  int eval( const Points& points , index_t p , const std::vector<index_t>& guesses , Metric& mp ) override;
+  int eval_face( const Points& points , index_t p , Entity* entity , Metric& mp );
+
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const override
+  {
+    avro_assert_not_reached;
+  }
+
+  numerics::SymMatrixD<real_t> operator()( const Points& points , index_t p );
+
+private:
+  using FieldInterpolation<type,Metric>::analytic_;
+  real_t hfactor_;
 };
 
 } // library

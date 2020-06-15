@@ -23,14 +23,14 @@ namespace programs
 {
 
 int
-plot( int nb_input , const char** inputs )
+plot( int nb_input , const char** inputs , bool webplot )
 {
   // so far only simplex adaptation is supported
   typedef Simplex type;
 
   if (nb_input<1 || nb_input==-1)
   {
-    printf("\t\tplot [mesh] [optional]\n");
+    printf("\t\tplot/webplot [mesh] [optional]\n");
     printf("\t\t--> optional can be:\n");
     printf("\t\t\tgeometry=(string, EGADS filename or library geometry)\n");
     // TODO printf("\t\t\tfield=(string, .sol/solb file)\n");
@@ -82,10 +82,6 @@ plot( int nb_input , const char** inputs )
     mesh.points().attach(*pmodel);
   }
 
-  graphics::Visualizer vis;
-  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
-
   // option to plot the boundary
   Boundary<type> boundary(topology);
   if (pmodel!=nullptr && number<4)
@@ -97,9 +93,19 @@ plot( int nb_input , const char** inputs )
     //bplot = std::make_shared<library::BoundaryPlot<type>>(boundary);
   }
 
-  vis.add_topology( topology );
-  vis.run();
-
+  std::shared_ptr<graphics::ApplicationBase> app;
+  if (webplot)
+  {
+    graphics::WebVisualizer vis;
+    vis.add_topology(topology);
+    vis.run();
+  }
+  else
+  {
+    graphics::Visualizer vis;
+    vis.add_topology(topology);
+    vis.run();
+  }
   return 0;
 }
 

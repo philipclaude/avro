@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_GRAPHICS_SHADER_H_
 #define avro_LIB_GRAPHICS_SHADER_H_
 
@@ -52,7 +61,7 @@ public:
   void setUniform( const char *name, const vec3& v);
   void setUniform( const char *name, const vec4& v);
   void setUniform( const char *name, mat3& m);
-  void setUniform( const char *name, mat4& m);
+  void setUniform( const char *name, const mat4& m);
 
   void setUniform( const char *name, float val );
   void setUniform( const char *name, int val );

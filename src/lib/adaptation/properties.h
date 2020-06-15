@@ -1,8 +1,12 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
-
+//
 #ifndef AVRO_MESH_LOCAL_PROPERTIES_H_
 #define AVRO_MESH_LOCAL_PROPERTIES_H_
 
@@ -80,6 +84,8 @@ public:
   void dump( const std::string& filename ) const;
 
   real_t qavg() const { return qstats_.avg(); }
+
+  void conformity( real_t& lunit , real_t& qunit , index_t& nb_elem ) const;
 
 private:
   Distribution lstats_;

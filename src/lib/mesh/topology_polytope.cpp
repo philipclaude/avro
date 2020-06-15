@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/tree.hpp"
 
 #include "mesh/builder.h"
@@ -10,7 +19,7 @@ namespace avro
 template<>
 Topology<Polytope>::Topology( Points& points , coord_t number , coord_t order ) :
   TopologyBase(points,number,TableLayout_Jagged,"polytope"),
-  master_( number , order , points.incidence() ),
+  shape_( number , order , points.incidence() ),
   neighbours_(*this),
   inverse_(*this)
 {}

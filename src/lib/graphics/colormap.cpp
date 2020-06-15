@@ -1,8 +1,24 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "graphics/colormap.h"
 #include "common/error.h"
 
 namespace avro
 {
+
+Colormap::Colormap()
+{
+  style_ = "giraffe";
+  change_style(style_);
+  lims_[0]  = lims_[1] = 0.;
+}
 
 void
 Colormap::change_style( const std::string& style )
@@ -25,7 +41,7 @@ Colormap::change_style( const std::string& style )
 }
 
 void
-Colormap::map(float  scalar, float* color)
+Colormap::map(float  scalar, float* color) const
 {
     int   indx;
     float frac;

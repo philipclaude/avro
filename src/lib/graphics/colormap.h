@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef AVRO_LIB_GRAPHICS_COLORMAP_H_
 #define AVRO_LIB_GRAPHICS_COLORMAP_H_
 
@@ -11,12 +20,7 @@ namespace avro
 class Colormap
 {
 public:
-  Colormap()
-  {
-    style_ = "viridis";
-    change_style("viridis");
-    lims_[0]  = lims_[1] = 0.;
-  }
+  Colormap();
 
   void set_limits( const float* lims )
   {
@@ -24,9 +28,9 @@ public:
     lims_[1] = lims[1];
   }
   void change_style( const std::string& style);
-  void map( float scalar , float* color );
+  void map( float scalar , float* color ) const;
 
-  void generate( index_t ncol , std::vector<float>& values )
+  void generate( index_t ncol , std::vector<float>& values ) const
   {
     values.resize(3*ncol);
     float ds = (lims_[1]-lims_[0])/float(ncol);

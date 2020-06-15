@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_GRAPHICS_GL_H_
 #define avro_LIB_GRAPHICS_GL_H_
 
@@ -21,6 +30,7 @@
 #endif
 
 #include <map>
+#include <set>
 #include <vector>
 
 #include "graphics/manager.h"
@@ -146,16 +156,35 @@ private:
 
 public:
   void write( Primitive& primitive );
+  void write( const std::string& name , coord_t number , const std::vector<real_t>& points , const std::vector<index_t>& edges , const std::vector<index_t>& triangles , const std::vector<real_t>& colors );
 
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr );
+  void draw( const std::string& name , coord_t number , const DrawingParameters& params );
+
+  void remove( const std::string& ) { avro_assert_not_reached; }
 
   void select_shader( Primitive& primitive , const std::string& name );
+  void select_shader( const std::string& name , const std::string& shader_name );
   void create_shaders();
+  ShaderLibrary& shaders() { return *shaders_.get(); }
 
 private:
 
   void set_matrices( SceneGraph& scene );
   void draw( Primitive& primitive , TransformFeedbackResult* feedback=nullptr );
+
+  // map from primitive to vbo
+  std::set<Primitive*> primitive_;
+
+  std::map<Primitive*,index_t> vbo_points_;
+  std::map<Primitive*,index_t> vbo_edges_;
+  std::map<Primitive*,index_t> vbo_triangles_;
+  std::map<Primitive*,index_t> vbo_colors_;
+  std::map<Primitive*,index_t> vbo_normals_;
+
+  std::map<Primitive*,index_t> vbo_feedback_points_;
+  std::map<Primitive*,index_t> vbo_feedback_edges_;
+  std::map<Primitive*,index_t> vbo_feedback_triangles_;
 
   // map from primitive to vao
   std::map<Primitive*,index_t> vao_points_;
@@ -168,6 +197,12 @@ private:
 
   std::map<Primitive*,ShaderProgram*> shader_;
   std::shared_ptr<ShaderLibrary> shaders_;
+
+  // extra vao's to draw
+  std::map<std::string,GLuint> aux_vao_;
+  std::map<std::string,coord_t> aux_vao_number_;
+  std::map<std::string,index_t> aux_vao_size_;
+  std::map<std::string,ShaderProgram*> aux_vao_shader_;
 };
 
 

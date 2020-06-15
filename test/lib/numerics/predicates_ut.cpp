@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "numerics/linear_algebra.h"
@@ -39,7 +48,7 @@ public:
   }
 };
 
-UT_TEST_SUITE(PredicatesSuite)
+UT_TEST_SUITE(predicates_suite)
 
 UT_TEST_CASE(side1_test)
 {
@@ -370,7 +379,7 @@ UT_TEST_CASE(side4_test)
       const real_t* q2 = v[2];
       const real_t* q3 = v[3];
 
-      GEO::Sign sign;
+      GEO::Sign sign = GEO::ZERO;
       try
       {
         sign = side4_SOS( p[perm[0]],p[perm[1]],p[perm[2]],p[perm[3]],p[perm[4]], q0,q1,q2,q3,nd );
@@ -496,7 +505,7 @@ UT_TEST_CASE(side5_test)
       const real_t* q3 = v[3];
       const real_t* q4 = v[4];
 
-      GEO::Sign sign;
+      GEO::Sign sign = GEO::ZERO;
       try
       {
         sign = side5_SOS( p[perm[0]],p[perm[1]],p[perm[2]],p[perm[3]],p[perm[4]],p[perm[5]],q0,q1,q2,q3,q4,nd );
@@ -520,4 +529,4 @@ UT_TEST_CASE(side5_test)
 }
 UT_TEST_CASE_END(side5_test)
 
-UT_TEST_SUITE_END(PredicatesSuite)
+UT_TEST_SUITE_END(predicates_suite)

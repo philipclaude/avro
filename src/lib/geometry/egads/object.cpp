@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/tools.h"
 
 #include "geometry/egads/object.h"
@@ -49,6 +58,35 @@ Object::Object( ego* object , EGADS::Body* body ) :
   if (data_.member_type == SREVERSE) sign_ = -1;
 
   name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
+}
+
+Object::Object( const Context& context ) :
+  Entity(0),
+  body_(nullptr),
+  context_(context),
+  object_(nullptr)
+{}
+
+void
+Object::construct( ego* object )
+{
+  set_object(object);
+  EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
+                                    &data_.reference , &data_.previous , &data_.next ) );
+  number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
+  tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
+  interior_ = false;
+  sense_required_ = false;
+  egads_ = true;
+  identifier_ = 0;
+  if (data_.member_type == SREVERSE) sign_ = -1;
+  name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
+}
+
+void
+Object::set_object( ego* object )
+{
+  object_ = object;
 }
 
 ego*
@@ -129,15 +167,10 @@ Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   if (x.size()==2) x.push_back(0);
   avro_assert( x.size()==3 );
 
-  //print_inline( u , "u before = " );
-  //print(false);
-
   real_t result[3];
   EGADS_ENSURE_SUCCESS( EG_invEvaluate(*object_,x.data(),u.data(),result) );
   for (coord_t d=0;d<3;d++)
     x[d] = result[d];
-
-  //print_inline( u , "u after = " );
 }
 
 void

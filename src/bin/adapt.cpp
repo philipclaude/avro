@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "programs.h"
 
 #include "adaptation/adapt.h"
@@ -55,6 +64,11 @@ adapt( int nb_input , const char** inputs )
   if (nb_input>4)
     found = parse<bool>(lookfor(options,nb_options,"limit"),compute_implied);
 
+  real_t href = 2.0;
+  if (nb_input>4)
+    found = parse<real_t>(lookfor(options,nb_options,"href"),href);
+  printf("limiting metric with href = %g\n",href);
+
   // if the metric is analytic, iterate...
   index_t nb_iter = 20;
   if (nb_input>4)
@@ -108,6 +122,8 @@ adapt( int nb_input , const char** inputs )
   params.curved() = curved;
   params.directory() = "./";
   params.write_conformity() = false;
+//  params.swapout() = false;
+ // params.use_smoothing() = false;
 
   if (number<=3)
   {
@@ -130,7 +146,7 @@ adapt( int nb_input , const char** inputs )
 
     // option to do the adaptation from the implied metric
     if (compute_implied)
-      pfld->limit( mesh.retrieve<type>(0) , 2.0 );
+      pfld->limit( mesh.retrieve<type>(0) , href );
 
     // adjust the adaptation parameters
     params.adapt_iter() = iter;

@@ -1,10 +1,19 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_MESH_SimplicialDecomposition_H_
 #define avro_LIB_MESH_SimplicialDecomposition_H_
 
 #include "common/types.h"
 
-#include "master/master.h"
-#include "master/simplex.h"
+#include "shape/shape.h"
+#include "shape/simplex.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"
@@ -14,6 +23,11 @@
 namespace avro
 {
 
+namespace graphics
+{
+class ClippingPlane;
+}
+
 class SimplicialDecompositionBase : public Topology<Simplex>
 {
 public:
@@ -22,7 +36,7 @@ public:
     points_(dim)
   {}
 
-  virtual void extract() = 0;
+  virtual void extract( const graphics::ClippingPlane* plane=nullptr ) = 0;
   virtual void get_simplices( coord_t number , std::vector<index_t>& simplices , std::vector<index_t>& parents ) const = 0;
 
   const Table<real_t>& reference_coordinates() const { return reference_coordinates_; }
@@ -44,7 +58,7 @@ class SimplicialDecomposition : public SimplicialDecompositionBase
 public:
   SimplicialDecomposition( const Topology<type>& topology );
 
-  void extract();
+  void extract(const graphics::ClippingPlane* plane=nullptr );
 
   index_t add_simplex( index_t number , const index_t* v , index_t parent );
 

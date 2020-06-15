@@ -1,9 +1,23 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "graphics/application.h"
 #include "graphics/gl.h"
+#include "graphics/user_interface.h"
 #include "graphics/window.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+
+#include <wsserver.h>
+
+#include <limits>
 
 namespace avro
 {
@@ -15,15 +29,51 @@ void
 ApplicationBase::write()
 {
   // write all the data present in the scene graph
-  printf("nb_scenes = %lu\n",scenes_.size());
   for (index_t k=0;k<scenes_.size();k++)
     scenes_[k]->write(manager_);
 }
 
 void
-ApplicationBase::receive( const std::string& text ) const
+ApplicationBase::focus_scenes()
 {
-  printf("received text %s\n",text.c_str());
+  // initialize the bounding box to something really far away
+  bounding_box_[0] = bounding_box_[1] = bounding_box_[2] = std::numeric_limits<real_t>::max();
+  bounding_box_[3] = bounding_box_[4] = bounding_box_[5] = std::numeric_limits<real_t>::min();
+
+  for (index_t k=0;k<scenes_.size();k++)
+  {
+    // update the bounding box based on the points in each scene topology
+    scenes_[k]->get_bounding_box(bounding_box_);
+  }
+
+  printf("--> bounding box: x = (%g,%g), y = (%g,%g), z = (%g,%g)\n",
+              bounding_box_[0],bounding_box_[3],
+              bounding_box_[1],bounding_box_[4],
+              bounding_box_[2],bounding_box_[5]);
+
+
+  // calculate the focus
+  focus_[0] = 0.5*( bounding_box_[0] + bounding_box_[3] );
+  focus_[1] = 0.5*( bounding_box_[1] + bounding_box_[4] );
+  focus_[2] = 0.5*( bounding_box_[2] + bounding_box_[5] );
+  focus_[3] = std::sqrt( (bounding_box_[3] - bounding_box_[0])*(bounding_box_[3] - bounding_box_[0])
+                        +(bounding_box_[4] - bounding_box_[1])*(bounding_box_[4] - bounding_box_[1])
+                        +(bounding_box_[5] - bounding_box_[2])*(bounding_box_[5] - bounding_box_[2]) );
+
+  printf("--> focus: center = (%g,%g,%g), scale = %g\n",focus_[0],focus_[1],focus_[2],focus_[3]);
+
+  // focus all the scenes
+  for (index_t k=0;k<scenes_.size();k++)
+  {
+    // update the bounding box based on the points in each scene topology
+    scenes_[k]->set_focus(focus_);
+  }
+}
+
+void
+Application<Web_Interface>::send( const std::string& response ) const
+{
+  wv_broadcastText( const_cast<char*>(response.c_str()) );
 }
 
 void
@@ -31,9 +81,9 @@ Application<Web_Interface>::save_eps()
 {
   // first set the transformation to the scene
   OpenGL_Manager manager_gl;
-  scene_.write(manager_gl);
+  scene_->write(manager_gl);
   TransformFeedbackResult feedback;
-  manager_gl.draw(scene_,&feedback);
+  manager_gl.draw(*scene_.get(),&feedback);
 }
 
 template<typename API_t>
@@ -64,10 +114,16 @@ Application<GLFW_Interface<API_t>>::run()
 
   restart_ = false;
 
+  focus_scenes();
   write();
 
   for (index_t k=0;k<window_.size();k++)
+  {
+    window_[k]->write_axes();
+    window_[k]->clip_plane().set_coordinates( bounding_box_ );
     window_[k]->update_view();
+  }
+
 
   index_t fps = 120;
   for (index_t k=0;k<window_.size();k++)
@@ -92,12 +148,15 @@ Application<GLFW_Interface<API_t>>::run()
        for (index_t k=0;k<window_.size();k++)
        {
          window_[k]->begin_draw();
-         window_[k]->update_view();
 
          if (!restart_)
          for (index_t j=0;j<window_[k]->nb_scene();j++)
            manager_.draw(window_[k]->scene(j));
 
+         window_[k]->draw_axes();
+         window_[k]->draw_plane(focus_);
+
+         window_[k]->update_view();
          window_[k]->end_draw();
 
          if (window_[k]->should_close())
@@ -113,6 +172,10 @@ Application<GLFW_Interface<API_t>>::run()
        // only set lastFrameTime when you actually draw something
        last_frame_time = now;
       }
+
+      #ifdef AVRO_HEADLESS_GRAPHICS
+      break;
+      #endif
 
       // set lastUpdateTime every iteration
       last_update_time = now;
@@ -130,6 +193,9 @@ Visualizer::Visualizer()
   initialize();
 
   main_->create_interface();
+
+  toolbar_ = std::make_shared<Toolbar>(*main_.get(),*this);
+  main_->interface().add_widget( toolbar_ );
 
 }
 

@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_GRAPHICS_WV_H_
 #define avro_LIB_GRAPHICS_WV_H_
 
@@ -18,6 +27,9 @@ void browserMessage( void* wsi , char* text , /*@unused@*/ int lena );
 }
 #endif
 
+extern wvContext* __context__;
+extern void* __web_server__;
+
 namespace avro
 {
 
@@ -32,10 +44,18 @@ private:
   WV_Manager();
 
   void write( Primitive& primitive );
+  void write( const std::string& name , coord_t number , const std::vector<real_t>& points , const std::vector<index_t>& edges , const std::vector<index_t>& triangles , const std::vector<real_t>& colors );
   void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr )
+  { avro_assert_not_reached; }
+  void draw( const std::string& name , coord_t number , const DrawingParameters& params )
+  {}
+
+  void select_shader( const std::string& name , const std::string& shader_name )
   { avro_assert_not_reached; }
 
   wvContext* context() { return context_; }
+
+  void remove( const std::string& name );
 
 private:
 
@@ -43,6 +63,7 @@ private:
 
   // map from primitive to wv gprim index
   std::map<Primitive*,index_t> index_;
+  std::map<std::string,index_t> aux_index_;
 
   int bias_;
   float fov_,znear_,zfar_;

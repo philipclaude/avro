@@ -1,8 +1,15 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
-#include "graphics/user_interface.h"
-#include "graphics/window.h"
 
 #include "library/ckf.h"
 
@@ -17,7 +24,7 @@ UT_TEST_SUITE( cvt_test_suite )
 UT_TEST_CASE( test1 )
 {
   coord_t number = 3;
-  index_t N = 6;
+  index_t N = 2;
 
   std::vector<index_t> dims(number,N);
   CKF_Triangulation topology( dims );
@@ -28,7 +35,7 @@ UT_TEST_CASE( test1 )
   #else
 
   // retrieve the number of sites (if random)
-  index_t nb_sites = 100;
+  index_t nb_sites = 10;
 
   std::vector<real_t> xmin( sites.dim() ,  1e20 );
   std::vector<real_t> xmax( sites.dim() , -1e20 );
@@ -54,19 +61,14 @@ UT_TEST_CASE( test1 )
   rvd.parallel() = true;
 
   //rvd.compute(true);
-  rvd.optimise(101);
+  rvd.optimise(5);
 
   graphics::Visualizer vis;
-
-  std::shared_ptr<graphics::Widget> toolbar = std::make_shared<graphics::Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
 
   //vis.add_topology(topology);
   vis.add_topology(rvd);
 
   vis.run();
-
-
 }
 UT_TEST_CASE_END( test1 )
 

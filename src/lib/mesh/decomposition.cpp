@@ -1,6 +1,18 @@
-#include "master/master.h"
-#include "master/polytope.h"
-#include "master/simplex.h"
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
+
+#include "graphics/clipping.h"
+
+#include "shape/shape.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/points.h"
 #include "mesh/decomposition.h"
@@ -86,7 +98,7 @@ SimplicialDecomposition<type>::add_point( coord_t number , const index_t* v , in
   element.dim     = number;
   element.indices = polytope;
   element.sorted  = true;
-  if (centroids_.find(element)==centroids_.end())
+  if (true) //centroids_.find(element)==centroids_.end()) // TODO this caused tests to fail (with map.at) on wazowski but not sure why...
   {
     centroids_.insert( {element,points_.nb()} );
     centroid2dim_.insert( {points_.nb(),number} );
@@ -110,7 +122,7 @@ SimplicialDecomposition<type>::add_point( coord_t number , const index_t* v , in
     }
     reference_coordinates_.add( alpha.data() , alpha.size() );
   }
-  return centroids_.at(element);
+  return points_.nb()-1;//centroids_.at(element);
 }
 
 template<typename type>
@@ -137,7 +149,7 @@ SimplicialDecomposition<type>::get_simplices( coord_t number , std::vector<index
 
 template<>
 void
-SimplicialDecomposition<Simplex>::extract()
+SimplicialDecomposition<Simplex>::extract( const graphics::ClippingPlane* plane )
 {
   std::vector<index_t> tk;
   std::set<std::string> MAP;
@@ -149,8 +161,13 @@ SimplicialDecomposition<Simplex>::extract()
   {
     if (topology_.ghost(k)) continue;
 
+    if (plane!=nullptr)
+    {
+      if (!plane->visible( topology_.points(),topology_(k),topology_.nv(k))) continue;
+    }
+
     // get the edges of this cell
-    topology_.master().get_triangles( topology_(k) , topology_.nv(k) , tk );
+    topology_.shape().get_triangles( topology_(k) , topology_.nv(k) , tk );
 
     // add the edges
     for (index_t j=0;j<tk.size()/3;j++)
@@ -182,17 +199,22 @@ SimplicialDecomposition<Simplex>::extract()
 
 template<>
 void
-SimplicialDecomposition<Polytope>::extract()
+SimplicialDecomposition<Polytope>::extract( const graphics::ClippingPlane* plane )
 {
   // loop through the cells
   for (index_t k=0;k<topology_.nb();k++)
   {
     if (topology_.ghost(k)) continue;
 
-    // ask the master to triangulate, points will be added to points stored
-    // in the SimplicialDecomposition object upon decomposition by the master
+    if (plane!=nullptr)
+    {
+      if (!plane->visible( topology_.points(),topology_(k),topology_.nv(k))) continue;
+    }
+
+    // ask the  to triangulate, points will be added to points stored
+    // in the SimplicialDecomposition object upon decomposition by the 
     std::set<int> h;
-    topology_.master().triangulate( topology_(k) , topology_.nv(k) , *this , k , h );
+    topology_.shape().triangulate( topology_(k) , topology_.nv(k) , *this , k , h );
     avro_assert( h.size()==0 );
   }
   if (number_==topology_.points().dim())

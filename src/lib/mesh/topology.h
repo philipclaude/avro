@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_MESH_TOPOLOGY_H_
 #define avro_MESH_TOPOLOGY_H_
 
@@ -6,8 +15,8 @@
 #include "common/tree.h"
 #include "common/types.h"
 
-#include "master/polytope.h"
-#include "master/simplex.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/field.h"
 #include "mesh/inverse.h"
@@ -25,6 +34,7 @@ template<typename type> class Cavity;
 namespace graphics
 {
 class Primitive;
+class ClippingPlane;
 }
 
 class TopologyBase : public Table<index_t>
@@ -34,6 +44,7 @@ protected:
     Table<index_t>(category,number+1),
     points_(vertices),
     number_(number),
+    dummy_(false),
     fields_(*this),
     type_(type),
     closed_(false)
@@ -56,7 +67,7 @@ public:
   void offset_by( index_t offset );
 
   virtual void get_points( std::vector<index_t>& p ) const = 0;
-  virtual void get_edges( std::vector<index_t>& e ) const = 0;
+  virtual void get_edges( std::vector<index_t>& e , const graphics::ClippingPlane* plane=nullptr ) const = 0;
   virtual void get_topologies( std::vector<const TopologyBase*>& c ) const = 0;
 
   const std::string& name() const { return name_; }
@@ -119,11 +130,11 @@ public:
 
   Topology_t& topology( index_t k ) { return Tree<Topology_t>::child(k); }
 
-  type& master() { return master_; }
-  const type& master() const { return master_; }
+  type& shape() { return shape_; }
+  const type& shape() const { return shape_; }
 
-  coord_t number() const { return master_.number(); }
-  coord_t order() const { return master_.order(); }
+  coord_t number() const { return shape_.number(); }
+  coord_t order() const { return shape_.order(); }
 
   bool ghost( index_t k ) const;
   bool ghost( const index_t* v , index_t nv ) const;
@@ -131,7 +142,7 @@ public:
   index_t nb_ghost() const;
 
   void get_points( std::vector<index_t>& p ) const {}
-  void get_edges( std::vector<index_t>& e ) const;
+  void get_edges( std::vector<index_t>& e , const graphics::ClippingPlane* plane=nullptr) const;
 
   void get_elem( index_t k , std::vector<real_t*>& X ) const;
   void get_elem( index_t k , std::vector<const real_t*>& X ) const;
@@ -178,7 +189,7 @@ public:
   void set_points( Points& points );
 
 private:
-  type master_;
+  type shape_;
 
   Neighbours<type>      neighbours_;
   InverseTopology<type> inverse_;

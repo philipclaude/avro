@@ -23,7 +23,7 @@
 
 //Matrix utility functions that take advantage of BLAS routines if they are available
 
-namespace numpack 
+namespace numpack
 {
 namespace DLA
 {
@@ -144,6 +144,6 @@ struct MatrixUtil<double, double> : public MatrixUtil_BLAS<double> {};
 #endif
 
 } //namespace DLA
-} //namespace numpack 
+} //namespace numpack
 
 #endif //MATRIXD_UTIL_H

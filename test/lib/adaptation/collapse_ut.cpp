@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "adaptation/primitive.h"
@@ -24,7 +33,7 @@ UT_TEST_CASE(ckf_3d)
   real_t xc[3] = {0.,0.,0.};
   EGADS::Cube box(&context,{1,1,1},xc);
 
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,6);
   CKF_Triangulation topology( dims );
   topology.points().attach(box);
 

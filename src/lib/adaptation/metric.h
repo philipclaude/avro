@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_ADAPTATION_METRIC_H_
 #define avro_LIB_ADAPTATION_METRIC_H_
 
@@ -6,6 +15,7 @@
 #include "common/types.h"
 
 #include "mesh/field.h"
+#include "mesh/interpolation.h"
 #include "mesh/points.h"
 #include "mesh/search.h"
 
@@ -15,8 +25,10 @@
 namespace avro
 {
 
+template<typename type> class MetricEvaluator;
+
 template<typename type>
-void
+bool
 interp( const std::vector<type>& alpha ,
              const std::vector<numerics::SymMatrixD<type>>& tensors ,
 						 numerics::SymMatrixD<type>& T )
@@ -29,6 +41,50 @@ interp( const std::vector<type>& alpha ,
 		T = T + numerics::logm(tensors[k])*alpha[k];
 	}
 	T = numerics::expm(T);
+
+  type d = numerics::determinant(T);
+  if (d<=0 || std::isnan(d))
+  {
+    for (index_t k=0;k<tensors.size();k++)
+    {
+      std::cout << tensors[k] << std::endl;
+      std::cout << numerics::logm(tensors[k]) << std::endl;
+    }
+    print_inline(alpha);
+    std::cout << T << std::endl;
+    return false;
+  }
+  return true;
+}
+
+template<typename type>
+static type
+quadratic_form( const numerics::SymMatrixD<type>& M , const numerics::VectorD<real_t>& e )
+{
+	if (M.n()==2)
+	{
+		type mu = M(0,0)*e(0) + M(0,1)*e(1);
+		type mv = M(1,0)*e(0) + M(1,1)*e(1);
+		return mu*e(0) + mv*e(1);
+	}
+	else if (M.n()==3)
+	{
+		type mu = M(0,0)*e(0) + M(0,1)*e(1) + M(0,2)*e(2);
+		type mv = M(1,0)*e(0) + M(1,1)*e(1) + M(1,2)*e(2);
+		type mw = M(2,0)*e(0) + M(2,1)*e(1) + M(2,2)*e(2);
+		return mu*e(0) + mv*e(1) + mw*e(2);
+	}
+	else if (M.n()==4)
+	{
+		type mu = M(0,0)*e(0) + M(0,1)*e(1) + M(0,2)*e(2) + M(0,3)*e(3);
+		type mv = M(1,0)*e(0) + M(1,1)*e(1) + M(1,2)*e(2) + M(1,3)*e(3);
+		type mw = M(2,0)*e(0) + M(2,1)*e(1) + M(2,2)*e(2) + M(2,3)*e(3);
+		type mt = M(3,0)*e(0) + M(3,1)*e(1) + M(3,2)*e(2) + M(3,3)*e(3);
+		return mu*e(0) + mv*e(1) + mw*e(2) + mt*e(3);
+	}
+	else
+		avro_implement;
+	return -1.;
 }
 
 inline numerics::SymMatrixD<real_t>
@@ -124,7 +180,9 @@ public:
   void calculate()
   {
     log_   = numerics::logm(*this);
-    sqdet_ = std::sqrt( numerics::determinant(*this) );
+    real_t d = numerics::determinant(*this);
+    avro_assert_msg( d > 0. , "d = %g\n", d );
+    sqdet_ = std::sqrt(d);
   }
 
 private:
@@ -206,7 +264,6 @@ class MetricField : public Field<type,Metric>
 {
 public:
   MetricField( Topology<type>& topology , MetricAttachment& fld );
-
 	numerics::SymMatrixD<real_t>& operator() ( const Points& x , index_t v );
 
 	real_t length( index_t n0 , index_t n1 ) const;
@@ -219,8 +276,7 @@ public:
 
 	real_t quality( const Topology<type>& topology , index_t k );
   int  find( index_t n0 , index_t n1 , real_t*  x );
-  void interpolate( real_t*  x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU=false );
-  void add( index_t n0 , index_t n1 , real_t*  x );
+  bool add( index_t n0 , index_t n1 , index_t ns , real_t*  x );
   bool recompute( index_t p , real_t*  x );
 	index_t element_containing( index_t p )
 		{ return attachment_[p].elem(); }
@@ -235,6 +291,9 @@ public:
   bool check_cells();
   bool check( Topology<type>& topology );
 
+  void set_interpolation( FieldInterpolation<type,Metric>* interpolation )
+    { interpolation_ = interpolation; }
+
 private:
 
   // static data
@@ -247,6 +306,8 @@ private:
   ElementSearch<type> searcher_;
 
   real_t normalization_;
+
+  FieldInterpolation<type,Metric>* interpolation_;
 };
 
 template<typename type>

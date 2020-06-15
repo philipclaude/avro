@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "adaptation/cavity.h"
 #include "adaptation/implied_metric.h"
 #include "adaptation/metric.h"
@@ -29,7 +38,8 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	topology_(topology),
 	number_(topology_.number()),
 	attachment_(fld),
-	searcher_(topology_)
+	searcher_(topology_),
+	interpolation_(nullptr)
 {
 	avro_assert( attachment_.nb()==topology_.points().nb() );
 	avro_assert( attachment_.nb()>0 );
@@ -44,7 +54,7 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	}
 	else if (number_==4)
 	{
-		normalization_ = 10./std::pow( topology_.master().reference().vunit() ,
+		normalization_ = 10./std::pow( topology_.shape().reference().vunit() ,
 																	 2./topology_.number() );
 	}
 	else
@@ -61,6 +71,8 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
     Field<type,Metric>::value(k).set( attachment_[k] );
 		Field<type,Metric>::value(k).calculate();
 	}
+
+	this->shape().set_basis( BasisFunctionCategory_Lagrange );
 }
 
 template<typename type>
@@ -85,8 +97,8 @@ geometric_interpolation( const numerics::SymMatrixD<real_t>& m0,
 	                       const numerics::SymMatrixD<real_t>& m1,
 											   const numerics::VectorD<real_t>& edge )
 {
-	real_t l0_sqr = numpack::Transpose(edge)*m0*edge;
-	real_t l1_sqr = numpack::Transpose(edge)*m1*edge;
+	real_t l0_sqr = quadratic_form(m0,edge);//numpack::Transpose(edge)*m0*edge;
+	real_t l1_sqr = quadratic_form(m1,edge);//numpack::Transpose(edge)*m1*edge;
 	real_t l0 = std::sqrt( l0_sqr );
 	real_t l1 = std::sqrt( l1_sqr );
 	real_t lm,r;
@@ -127,40 +139,32 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
                   "n0 = %lu, attachment_.nb() = %lu" , n0, attachment_.nb() );
   avro_assert_msg( n1 < attachment_.nb() ,
                   "n1 = %lu, attachment_.nb() = %lu" , n1, attachment_.nb() );
-	std::vector<real_t> edge0( topology_.points().dim() );
 
-	if (topology_.master().parameter())
+	// get the vector associated with this edge
+	Entity* entity = nullptr;
+	if (topology_.shape().parameter())
 	{
-		// retrieve appropriate parametric coordinates!
 		index_t e[2] = {n0,n1};
-		Entity* entity = BoundaryUtils::geometryFacet( attachment_.points() , e , 2 );
-		if (entity==NULL)
+		entity = BoundaryUtils::geometryFacet( attachment_.points() , e , 2 );
+		if (entity->number()==1)
 		{
-			attachment_.points().print(n0,true);
-			attachment_.points().print(n1,true);
+			// find a parent
+			for (index_t k=0;k<entity->nb_parents();k++)
+			{
+				if (entity->parents(k)->number()==2 and entity->parents(k)->tessellatable())
+				{
+					entity = entity->parents(k);
+					break;
+				}
+			}
 		}
-		avro_assert( entity!=NULL );
-		real_t u[4];
-		geometry_params( entity , attachment_.points() , e , 2 , u );
-		edge0[0] = u[2] - u[0];
-		edge0[1] = u[3] = u[1];
-
-		if (fabs(edge0[0])>1e10) edge0[0] = 0;
-		if (fabs(edge0[1])>1e10) edge0[1] = 0;
-
-		if (fabs(edge0[1])>1e10 || fabs(edge0[0])>1e10)
-		{
-			attachment_.points().print(true);
-			printf("n0 = %lu, n1 = %lu\n",n0,n1);
-			entity->print_header();
-		}
-
-		avro_assert( fabs(edge0[0]) < 1e10 );
-		avro_assert( fabs(edge0[1]) < 1e10 );
+		avro_assert( entity->number()!=1 );
 	}
-	else
-		numerics::vector( attachment_.points()[n0] , attachment_.points()[n1] , topology_.points().dim() , edge0.data() );
-	numerics::VectorD<real_t> edge(topology_.points().dim(),edge0.data());
+	coord_t dim = topology_.points().dim();
+	if (topology_.shape().parameter()) dim = topology_.points().udim();
+	std::vector<real_t> edge0( dim );
+	topology_.shape().edge_vector( attachment_.points() , n0 , n1 , edge0.data() , entity );
+	numerics::VectorD<real_t> edge(dim,edge0.data());
   return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
 }
 
@@ -181,7 +185,7 @@ MetricField<type>::volume( const Topology<type>& topology , const index_t k )
 {
 	const index_t *V = topology(k);
 	const index_t NV = topology.nv(k);
-	const type& master = topology.master();
+	const type& shape = topology.shape();
 
 	if (topology.ghost(k)) return 0.0;
 
@@ -200,7 +204,7 @@ MetricField<type>::volume( const Topology<type>& topology , const index_t k )
 	}
 
 	real_t sqrtdetM = dmax;
-	real_t v = sqrtdetM*master.volume(topology.points(),V,NV);
+	real_t v = sqrtdetM*shape.volume(topology.points(),V,NV);
 	return v;
 }
 
@@ -226,7 +230,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	const Points& points = topology.points();
 	const coord_t dim = points.dim();
 	const coord_t num = topology.number();
-	const type& master = topology.master();
+	const type& shape = topology.shape();
 
 	if (topology.ghost(k)) return -1.;
 
@@ -257,40 +261,39 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	// tensor with maximum determinant
 	const numerics::SymMatrixD<real_t>& M = attachment_[ V[idxM] ];
 
+	Entity* entity = nullptr;
+	if (topology_.shape().parameter())
+	{
+		entity = BoundaryUtils::geometryFacet( attachment_.points() , V , NV );
+		avro_assert( entity!=nullptr );
+	}
+
 	// compute the edge lengths under m
   real_t l = 0.,lj;
 	numerics::VectorD<real_t> e(dim);
-  for (index_t j=0;j<master.nb_edges();j++)
+  for (index_t j=0;j<shape.nb_edges();j++)
   {
-    index_t p0 = master.edge(j,0);
-    index_t p1 = master.edge(j,1);
+		// retrieve the local edge indices
+    index_t p0 = shape.edge(j,0);
+    index_t p1 = shape.edge(j,1);
 
-		if (topology.master().parameter())
-		{
-			// retrieve appropriate parametric coordinates!
-			index_t edge[2] = {V[p0],V[p1]};
-			Entity* entity = BoundaryUtils::geometryFacet( points , edge , 2 );
-			avro_assert( entity!=NULL );
-			if (entity->number()==1) return 0;
-			real_t u[4];
-			geometry_params( entity , points , edge , 2 , u );
-			e(0) = u[2] - u[0];
-			e(1) = u[3] = u[1];
-		}
-		else
-			numerics::vector( points[V[p0]] , points[V[p1]] , dim , e.data() );
-		lj = numpack::Transpose(e)*M*e;
+		// get the edge vector and compute the length using the metric with maximum determinant
+		topology_.shape().edge_vector( attachment_.points() , V[p0] , V[p1] , e.data() , entity );
+		//lj = numpack::Transpose(e)*M*e;
+		lj = quadratic_form( M , e );
+
+		// add the contribution to the denominator
     l  += lj;
   }
 
 	// compute the volume under m
-	real_t v = sqrtdetM*master.volume(topology.points(),V,NV);
+	real_t v = sqrtdetM*shape.volume(topology.points(),V,NV);
 	if (v<0)
 	{
 		for (index_t j=0;j<NV;j++)
 			topology.points().print(V[j],true);
 	}
-	avro_assert_msg( v>=0. , "v = %g, sqrtDetM = %g, v_e = %g" , v , sqrtdetM , master.volume(topology.points(),V,NV) );
+	avro_assert_msg( v>=0. , "v = %g, sqrtDetM = %g, v_e = %g" , v , sqrtdetM , shape.volume(topology.points(),V,NV) );
 	v = std::pow( v , 2./num );
 
 	// normalize to be within [0,1]
@@ -355,120 +358,21 @@ MetricField<type>::find( index_t n0 , index_t n1 , real_t* x )
 }
 
 template<typename type>
-void
-MetricField<type>::interpolate( real_t* x , index_t elem , numerics::SymMatrixD<real_t>& tensor , bool STFU )
+bool
+MetricField<type>::add( index_t n0 , index_t n1 , index_t ns , real_t* x )
 {
-  const coord_t nv = topology_.nv(elem);
-	std::vector<numerics::SymMatrixD<real_t>> metrics(nv);
+	Metric mp(number_);
+	index_t g0 = attachment_[n0].elem();
+	index_t g1 = attachment_[n1].elem();
+	int ielem = interpolation_->eval( attachment_.points() , ns , {g0,g1} , mp );
+	if (ielem<0) return false;
+	attachment_.add( mp , index_t(ielem) );
 
-  // get the points of the element
-  std::vector<const real_t*> xk(nv,0);
-  for (index_t j=0;j<nv;j++)
-    xk[j] = topology_.points()[ topology_(elem,j) ];
-  real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
-
-  // compute the barycentric coordinates
-  std::vector<real_t> alpha( nv , 0. );
-  for (index_t j=0;j<nv;j++)
-  {
-    std::vector<const real_t*> xk0(nv);
-    for (index_t i=0;i<nv;i++)
-    {
-      if (i==j) xk0[i] = x;
-      else xk0[i] = xk[i];
-    }
-    alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
-
-    if (alpha[j]<0. || alpha[j]>1.)
-    {
-      if (!STFU)
-      {
-        printf("element search failed!, alpha[%lu] = %g\n",j,alpha[j]);
-        avro_assert_not_reached;
-      }
-    }
-
-    // save the metric at this vertex
-		metrics[j] = Field<type,Metric>::operator()(elem,j);
-  }
-
-  // perform the interpolation
-	interp(alpha,metrics,tensor);
-}
-
-template<typename type>
-void
-MetricField<type>::add( index_t n0 , index_t n1 , real_t* x )
-{
-  // find the element containing x bordering n0 and n1
-  int ielem = find(n0,n1,x);
-
-  // check if the containing element was not found (point outside domain)
-  // this can only happen with curved geometries
-  if (ielem<0)
-  {
-		numerics::SymMatrixD<real_t> tensor(number_);
-		#if 0
-		std::vector<real_t> alpha(2,0.5);
-		tensor.interpolate<LogEuclidean<real_t>>(alpha, {attachment_[n0],attachment_[n1]} );
-    attachment_.add( tensor , attachment_.cell(n0) );
-		#else
-		std::vector<real_t> alpha(number_+1,0.);
-		ielem = searcher_.closest( x , alpha );
-		index_t elem = index_t(ielem);
-		std::vector<numerics::SymMatrixD<real_t>> metrics(alpha.size());
-		for (index_t j=0;j<alpha.size();j++)
-		{
-			metrics[j] = Field<type,Metric>::operator()(elem,j);
-		}
-		interp(alpha,metrics,tensor);
-		attachment_.add( tensor , elem );
-		#endif
-		return;
-  }
-
-  index_t elem = index_t(ielem);
-  const coord_t nv = topology_.nv(elem);
-
-  // get the points of the element
-  std::vector<const real_t*> xk(nv,0);
-  for (index_t j=0;j<nv;j++)
-    xk[j] = topology_.points()[ topology_(elem,j) ];
-  real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
-
-  // compute the barycentric coordinates
-  std::vector<real_t> alpha( nv , 0. );
-	std::vector<numerics::SymMatrixD<real_t>> metrics(nv);
-  for (index_t j=0;j<nv;j++)
-  {
-    std::vector<const real_t*> xk0(nv);
-    for (index_t i=0;i<nv;i++)
-    {
-      if (i==j) xk0[i] = x;
-      else xk0[i] = xk[i];
-    }
-    alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
-
-    if (alpha[j]<0. || alpha[j]>1.)
-    {
-      printf("element search failed\n");
-      avro_assert_not_reached;
-    }
-
-    // save the metric at this vertex
-		metrics[j] = Field<type,Metric>::operator()(elem,j);
-  }
-
-  // perform the interpolation
-	numerics::SymMatrixD<real_t> tensor(number_);
-	interp(alpha,metrics,tensor);
-
-  // add the tensor along with its corresponding element to the field
-  attachment_.add(tensor,elem);
-
-  // note: this check will fail if the vertex is intended to be added after
+	// note: this check will fail if the vertex is intended to be added after
   // its corresponding tensor is computed
   avro_assert( attachment_.check() );
+
+	return true;
 }
 
 template<typename type>
@@ -477,114 +381,11 @@ MetricField<type>::recompute( index_t p , real_t* x )
 {
 	avro_assert( p >= attachment_.points().nb_ghost() );
 
-	// look for the element in the background topology with the searcher
-  index_t guess = attachment_[p].elem();
-  int ielem = searcher_.find( x , guess );
-  if (ielem<0)
-  {
-    // point is probably outside domain
-		// let's make sure by first brute forcing the check
-    ielem = searcher_.brute(x);
-    if (ielem<0)
-    {
-			std::vector<real_t> alpha(number_+1,0.);
-			std::vector<numerics::SymMatrixD<real_t>> metrics(alpha.size());
-			ielem = searcher_.closest( x , alpha );
-			index_t elem = index_t(ielem);
-			for (index_t j=0;j<alpha.size();j++)
-				metrics[j] = Field<type,Metric>::value(topology_(elem,j));
-
-			interp(alpha,metrics,attachment_[p]);
-			attachment_[p].set_elem(elem);
-			attachment_[p].calculate();
-			return true;
-    }
-  }
-
-  index_t elem = index_t(ielem);
-  const coord_t nv = topology_.nv(elem);
-
-  // get the points of the element
-  std::vector<const real_t*> xk(nv,0);
-  for (index_t j=0;j<nv;j++)
-    xk[j] = topology_.points()[ topology_(elem,j) ];
-  real_t V = 1./numerics::simplex_volume(xk,topology_.points().dim());
-
-  // compute the barycentric coordinates
-  std::vector<real_t> alpha( nv , 0. );
-	std::vector<numerics::SymMatrixD<real_t>> metrics(nv);
-	bool problem = false;
-  for (index_t j=0;j<nv;j++)
-  {
-    std::vector<const real_t*> xk0(nv);
-    for (index_t i=0;i<nv;i++)
-    {
-      if (i==j) xk0[i] = x;
-      else xk0[i] = xk[i];
-    }
-    alpha[j] = V*numerics::simplex_volume(xk0,topology_.points().dim());
-
-		//if (fabs(alpha[j]-1.0)>0.0 && fabs(alpha[j]-1.0)<1e-12)
-		// 	alpha[j] = 1.0; // round-off due to above multiplication can exceed machine precision
-
-    if (alpha[j]<0. || alpha[j]>1.)
-    {
-			printf("alpha[%lu] = %1.16e\n",j,alpha[j]);
-      printf("element search failed\n");
-      avro_assert_not_reached;
-    }
-
-		// signal a problem
-		//if (alpha[j]<1e-12) problem = true;
-
-    // retrieve the metric at this vertex
-		metrics[j] = Field<type,Metric>::value(topology_(elem,j));
-  }
-
-	if (false and problem)
-	{
-		index_t nb_geometry = 0;
-		for (index_t j=0;j<nv;j++)
-			if (topology_.points().entity(j))
-				nb_geometry++;
-		if (nb_geometry==nv) return false;
-
-		// determine how many nonzero barycentric coordinates there are
-		std::vector<const real_t*> X;
-		std::vector<numerics::SymMatrixD<real_t>> minterp;
-		for (index_t j=0;j<alpha.size();j++)
-		{
-			if (alpha[j]<1e-8) continue;
-			X.push_back( xk[j] );
-			minterp.push_back( metrics[j] );
-		}
-
-		if (X.size()<alpha.size())
-		{
-			// compute the barycentric coordinates w.r.t this simplex facet
-			std::vector<real_t> w(X.size());
-			numerics::barycentric( x , X , topology_.points().dim() , w );
-
-			// the barycentric coordinate calculation is sensitive to numerical precision
-			real_t wsum = 0.;
-			for (coord_t j=0;j<w.size();j++)
-				wsum += w[j];
-			if (fabs(wsum-1.)>1e-20) return false; // signal an error
-
-			interp( w , minterp , attachment_[p] );
-			attachment_[p].set_elem(elem);
-			attachment_[p].calculate();
-
-			return true;
-		}
-
-	} // problem
-
-  // perform the interpolation
-	interp( alpha , metrics , attachment_[p] );
-	attachment_[p].set_elem(elem);
+	Metric mp(number_);
+	int ielem = interpolation_->eval( attachment_.points() , p , {attachment_[p].elem()} , mp );
+	if (ielem<0) return false;
+	attachment_[p].set_elem( index_t(ielem) );
 	attachment_[p].calculate();
-
 	return true;
 }
 
@@ -647,15 +448,6 @@ MetricField<type>::remove( index_t k )
 {
 	// removes the metric stored at vertex k
   attachment_.remove(k);
-}
-
-void
-edge_vector( const index_t i , const index_t j , const Points& v ,
-              std::vector<real_t>& X )
-{
-  avro_assert( X.size()==v.dim() );
-  for (coord_t d=0;d<v.dim();d++)
-    X[d] = v[j][d] -v[i][d];
 }
 
 MetricAttachment::MetricAttachment( Points& points ) :
@@ -731,7 +523,8 @@ void
 MetricAttachment::limit( const Topology<type>& topology , real_t href )
 {
 	const coord_t dim = topology.number();
-	avro_assert_msg( topology.points().dim() == dim , "dim = %u , num = %u" , topology.points().dim() , dim );
+	if (!topology.shape().parameter())
+		avro_assert_msg( topology.points().dim() == dim , "dim = %u , num = %u" , topology.points().dim() , dim );
 
 	// the points should be associated with each other
 	avro_assert_msg( topology.points().nb() == points_.nb() , "topology nb_points = %lu, points_.nb() = %lu" ,
@@ -741,6 +534,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 	MeshImpliedMetric<type> implied( topology );
 	implied.initialize();
 	implied.optimize();
+
 
 	// go through the entries of the current field and limit them using the step
 	index_t nb_limited = 0;

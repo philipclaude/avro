@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "geometry/egads/object.h"
 #include "geometry/egads/model.h"
 
@@ -24,7 +33,8 @@ get_line( int fid , int keyword , Args... args )
 meshb::meshb( const std::string& filename , const EGADS::Model* model ) :
   Mesh(0),
   filename_(filename),
-  model_(model)
+  model_(model),
+  main_topology_(nullptr)
 {
   read();
 }
@@ -92,7 +102,10 @@ meshb::read_elements( int GmfType )
       points_.create( dvalues );
       continue; // skip the topology stuff below
     }
+    else
+      avro_implement;
 
+    avro_assert( ref >= 0 );
     avro_assert( status==1 );
 
     for (index_t j=0;j<nv(GmfType);j++)
@@ -108,8 +121,6 @@ meshb::read_elements( int GmfType )
       ref_index_.insert( { ref , nb_topologies() } );
       add( topology );
 
-      if (ref>0) static_cast<Topology<type>*>(topology_[0].get())->add_child(topology);
-
       topology->add(simplex, nv(GmfType) );
     }
     else
@@ -118,6 +129,7 @@ meshb::read_elements( int GmfType )
     }
   }
 
+  printf("read %lu topologies\n",nb_topologies());
 }
 
 index_t
@@ -159,9 +171,14 @@ meshb::read()
     number = 0;
   }
 
+  set_number(number);
+  printf("number = %u\n",number_);
+
   // first read the points
   avro_assert( GmfGotoKwd( fid_ , GmfVertices ) > 0 );
   read_elements<Simplex>( GmfVertices );
+
+  main_topology_ = std::make_shared<Topology<Simplex>>(points_,number);
 
   if (number>=3)
   {
@@ -266,96 +283,6 @@ meshb::read()
 #if 0
 template<typename type>
 void
-Gamma<type>::read( const std::string& meshfile , Model& model )
-{
-  // open the mesh file
-  int dim;
-  fid_ = GmfOpenMesh(meshfile.c_str(),GmfRead,&meshVersion_,&dim);
-  avro_assert_msg( fid_ ,
-    "could not open mesh file %s ",meshfile.c_str() );
-
-  index_t nb;
-  int status = 1;
-  Entity* entity;
-
-  // read the VerticesOnGeometricTriangles
-  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricTriangles ) > 0 )
-  {
-    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricTriangles ) );
-    printf("there are %lu points on geometry Triangles!\n",nb);
-    int v,f;
-    real_t u[2],d;
-    for (index_t k=0;k<nb;k++)
-    {
-      status = GmfGetLin( fid_ , GmfVerticesOnGeometricTriangles , &v , &f , u , u+1 , &d );
-      avro_assert(status==1);
-      //printf("vertex %d on Face %d with parameters (%g,%g) (d = %g)\n",v,f,u[0],u[1],d);
-      entity = model.findEntity( index_t(f) , FACE );
-      avro_assert(entity->number()==2);
-      if (entity==NULL) printf("ERROR entity not found :(\n");
-      this->points_.setEntity(v-1,entity);
-    }
-  }
-
-  // read the VerticesOnGeometricEdges
-  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricEdges ) > 0 )
-  {
-    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricEdges ) );
-    printf("there are %lu points on geometry Edges!\n",nb);
-    int v,e;
-    real_t t,d;
-    for (index_t k=0;k<nb;k++)
-    {
-      status = GmfGetLin( fid_ , GmfVerticesOnGeometricEdges , &v , &e , &t , &d );
-      avro_assert(status==1);
-      //printf("vertex %d on Edge %d with parameter %g (d = %g)\n",v,e,t,d);
-      entity = model.findEntity( index_t(e) , EDGE );
-      if (entity==NULL) printf("ERROR entity not found :(\n");
-      avro_assert(entity->number()==1);
-      this->points_.setEntity(v-1,entity);
-    }
-  }
-
-  // read the VerticesOnGeometricVertices
-  if ( GmfGotoKwd( fid_ , GmfVerticesOnGeometricVertices ) > 0 )
-  {
-    nb = index_t( GmfStatKwd( fid_ , GmfVerticesOnGeometricVertices ) );
-    printf("there are %lu points on geometry Nodes!\n",nb);
-    for (index_t k=0;k<nb;k++)
-    {
-      // read the vertex and which EGADS node this corresponds to
-      int v,n;
-      status = GmfGetLin( fid_ , GmfVerticesOnGeometricVertices , &v , &n );
-      avro_assert( status==1 );
-      //printf("vertex %d on Node %d\n",v,n);
-      entity = model.findEntity( index_t(n) , NODE );
-      if (entity==NULL) printf("ERROR entity not found :(\n");
-      avro_assert(entity->number()==0);
-      this->points_.setEntity(v-1,entity);
-    }
-  }
-
-  // project the mesh_topology points to the geometry
-  this->points_.setParameterDimension(this->points_.dim()-1);
-  for (index_t k=0;k<this->points_.nb();k++)
-  {
-    if (this->points_.entity(k)==NULL) continue;
-    Entity* e = this->points_.entity(k);
-    real_t* x = this->points_[k];
-    std::vector<real_t> X(x,x+this->points_.dim());
-    std::vector<real_t> u(this->points_.udim());
-    e->project(X,u);
-    for (coord_t d=0;d<this->points_.dim();d++)
-      x[d] = X[d];
-    this->points_.setParam( k , u );
-
-  }
-  GmfCloseMesh(fid_);
-
-}
-
-template<typename type>
-void
 meshb<type>::read_sol( const std::string& filename )
 {
   // open the file
@@ -415,6 +342,7 @@ meshb::write( const Topology<Simplex>& topology , const std::vector<index_t>& re
 {
   const coord_t num = topology.number();
 
+  printf("writing topology with number %u\n",num);
   if (refs.size()!=1) avro_assert( topology.nb() == refs.size() );
 
   int gmfType;
@@ -468,6 +396,7 @@ void
 meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
 {
 
+  printf("writing mesh to file %s\n",filename.c_str());
   int dim = mesh.points().dim();
   if (dim==4) dim = 3;
   fid_ = GmfOpenMesh(filename.c_str(),GmfWrite,GmfDouble,dim);
@@ -490,6 +419,8 @@ meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
       avro_assert_not_reached;
   }
 
+  printf("retrieving topologies\n");
+
   // get all the topologies
   std::vector<const TopologyBase*> topologies;
   mesh.retrieve(topologies);
@@ -500,6 +431,7 @@ meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
   for (index_t k=0;k<topologies.size();k++)
   {
     if (topologies[k]->dummy()) continue;
+    if (topologies[k]->number()!=mesh.number()) continue;
 
     if (topologies[k]->type_name()=="simplex")
       write<Simplex>( *static_cast<const Topology<Simplex>*>(topologies[k]) , {ref++} );

@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_ADAPTATION_CAVITY_H_
 #define avro_LIB_ADAPTATION_CAVITY_H_
 
@@ -51,6 +60,8 @@ public:
   index_t cavity( const index_t k ) const { return cavity_[k]; }
   bool contains( const index_t c ) const;
 
+  void copy( const Cavity<type>& cavity );
+
   // computation of the cavity boundary and the geometry topology
   bool compute_boundary();
   Topology<type>& boundary() { return boundary_; }
@@ -85,6 +96,9 @@ public:
 
   real_t& sign() { return sign_; }
 
+  void set_entity( Entity* entity ) { entity_ = entity; }
+  Entity* entity() { return entity_; }
+
 protected:
   Topology<type>& topology_;
   bool node_removal_allowed_;
@@ -116,6 +130,9 @@ private:
   ElementImpliedMetric<type> mk_;
 
   bool ignore_;
+
+protected:
+  Entity* entity_;
 
 };
 

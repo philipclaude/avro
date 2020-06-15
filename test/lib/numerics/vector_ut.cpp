@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 // avro: unstrucutred adaptation library
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -12,7 +21,7 @@
 using namespace avro;
 using namespace avro::numerics;
 
-UT_TEST_SUITE(VectorSuite)
+UT_TEST_SUITE(vector_suite)
 
 UT_TEST_CASE(test1)
 {
@@ -34,4 +43,4 @@ UT_TEST_CASE(test1)
 }
 UT_TEST_CASE_END(test1)
 
-UT_TEST_SUITE_END(VectorSuite)
+UT_TEST_SUITE_END(vector_suite)

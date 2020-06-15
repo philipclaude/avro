@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_LIBRARY_MESHB_H_
 #define avro_LIB_LIBRARY_MESHB_H_
 
@@ -39,6 +48,8 @@ private:
   int version_;
 
   const EGADS::Model* model_;
+
+  std::shared_ptr<TopologyBase> main_topology_;
 
   std::map<int,index_t> ref_index_; // map from reference index to topology index
 };

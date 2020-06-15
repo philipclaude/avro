@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_COMMON_TREE_H_
 #define avro_LIB_COMMON_TREE_H_
 
@@ -21,7 +30,7 @@ class Tree : public TreeBase
 {
 public:
   typedef std::shared_ptr<Node_t> Node_ptr;
-  ~Tree() {}
+  //~Tree() {}
 
   index_t nb_children() const { return child_.size(); }
 
@@ -56,7 +65,7 @@ public:
   void get_children( std::vector<Node_t*>& children );
   void get_children( std::vector<const Node_t*>& children ) const;
   void get_adjacency( numerics::MatrixD<int>& A ) const;
-  template <typename T> void get_children( std::vector<const T*>& children ) const
+  template <typename T> void get_children_typed( std::vector<const T*>& children ) const
   {
     static_assert( std::is_base_of<T,Node_t>::value , "bad types" );
     std::vector<const Node_t*> children0;
@@ -82,11 +91,13 @@ void
 Tree<Node_t>::copy( const Friend_t& tree )
 {
   std::vector<const Friend_t*> children0;
-  children0.push_back( &tree );
   tree.get_children(children0);
+  children0.insert( children0.begin() , &tree );
 
   numerics::MatrixD<int> A;
   tree.get_adjacency(A);
+
+  A.dump();
 
   std::vector<std::shared_ptr<Node_t>> children1( children0.size() );
   for (index_t k=0;k<children0.size();k++)
@@ -94,11 +105,11 @@ Tree<Node_t>::copy( const Friend_t& tree )
 
   // assign the children
   for (index_t i=0;i<index_t(A.m());i++)
-  for (index_t j=i+1;j<index_t(A.n());j++)
+  for (index_t j=0;j<index_t(A.n());j++)
   {
     if (A(i,j)==0) continue;
     if (i==0)
-      add_child( children1[ A(i,j) ] ); // add to root
+      add_child( children1[j] ); // add to root
     else
       children1[i]->add_child( children1[j] ); // add to leaf
   }

@@ -1,7 +1,12 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/error.h"
 
 #if !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(_MSC_VER)
@@ -33,8 +38,7 @@ Exception::Exception(const char *file, int line,const char *fmt, ...) {
   message += std::string(info);
   message += std::string(buffer);
   printf("%s\n\n=== Backtrace ===\n",message.c_str());
-  call_backtrace(2);
-  //raise(SIGABRT);
+  call_backtrace(1);
 }
 
 inline void

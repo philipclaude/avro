@@ -167,6 +167,11 @@ function TreeBuild()
     newTable.setAttribute("id", this.treeId);
     doc.getElementById("treefrm").appendChild(newTable);
 
+    newTable.style.borderColor = "white";
+    newTable.style.width = doc.getElementById("treefrm").style.width;
+    newTable.style.borderRight = "0px";
+    doc.getElementById("treefrm").style.borderRight = "0px";
+
     // traverse the Nodes using depth-first search
     var inode = 1;
     while (inode > 0) {
@@ -175,6 +180,7 @@ function TreeBuild()
         var newTR = doc.createElement("TR");
         newTR.setAttribute("id", "node"+inode);
         newTable.appendChild(newTR);
+        newTable.borderColor = "white";
 
         // table data "node"+inode+"col1"
         var newTDcol1 = doc.createElement("TD");
@@ -269,6 +275,7 @@ function TreeBuild()
     }
 
     this.update();
+    resize_frames();
 }
 
 
@@ -473,17 +480,17 @@ function TreeUpdate()
             var myElem = doc.getElementById("node"+inode+"col3");
             myElem.onclick = this.cbck1[inode];
 
-            if (this.prop1[inode] == "Viz") {
+            if (this.prop1[inode] == "viz") {
                 if (this.valu1[inode] == "off") {
                     myElem.setAttribute("class",   "fakelinkoff");
-                    myElem.title = "Toggle Viz on";
+                    myElem.title = "Toggle visibility";
                     if (this.gprim[inode] != "") {
                         wv.sceneGraph[this.gprim[inode]].attrs &= ~wv.plotAttrs.ON;
                         wv.sceneUpd = 1;
                     }
                 } else {
                     myElem.setAttribute("class",   "fakelinkon");
-                    myElem.title = "Toggle Viz off";
+                    myElem.title = "Toggle visibility";
                     if (this.gprim[inode] != "") {
                         //this.gprim[inode] = "tess";
 
@@ -498,10 +505,10 @@ function TreeUpdate()
             var myElem = doc.getElementById("node"+inode+"col4");
             myElem.onclick = this.cbck2[inode];
 
-            if (this.prop2[inode] == "Grd") {
+            if (this.prop2[inode] == "edg") {
                 if (this.valu2[ inode] == "off") {
                     myElem.setAttribute("class",   "fakelinkoff");
-                    myElem.title = "Toggle Grd on";
+                    myElem.title = "Toggle edges";
 
                     if (this.gprim[inode] != "") {
                         wv.sceneGraph[this.gprim[inode]].attrs &= ~wv.plotAttrs.LINES;
@@ -510,7 +517,7 @@ function TreeUpdate()
                     }
                 } else {
                     myElem.setAttribute("class",   "fakelinkon");
-                    myElem.title = "Toggle Grd off";
+                    myElem.title = "Toggle edges";
 
                     if (this.gprim[inode] != "") {
                         wv.sceneGraph[this.gprim[inode]].attrs |=  wv.plotAttrs.LINES;
@@ -525,10 +532,10 @@ function TreeUpdate()
             var myElem = doc.getElementById("node"+inode+"col5");
             myElem.onclick = this.cbck3[inode];
 
-            if (this.prop3[inode] == "Trn") {
+            if (this.prop3[inode] == "alpha") {
                 if (this.valu3[ inode] == "off") {
                     myElem.setAttribute("class",   "fakelinkoff");
-                    myElem.title = "Toggle Trn on";
+                    myElem.title = "Toggle transparency";
 
                     if (this.gprim[inode] != "") {
                         wv.sceneGraph[this.gprim[inode]].attrs &= ~wv.plotAttrs.TRANSPARENT;
@@ -536,28 +543,10 @@ function TreeUpdate()
                     }
                 } else {
                     myElem.setAttribute("class",   "fakelinkon");
-                    myElem.title = "Toggle Trn off";
+                    myElem.title = "Toggle transparency";
 
                     if (this.gprim[inode] != "") {
                         wv.sceneGraph[this.gprim[inode]].attrs |=  wv.plotAttrs.TRANSPARENT;
-                        wv.sceneUpd = 1;
-                    }
-                }
-            } else if (this.prop3[inode] == "Ori") {
-                if (this.valu3[ inode] == "off") {
-                    myElem.setAttribute("class",   "fakelinkoff");
-                    myElem.title = "Toggle Ori on";
-
-                    if (this.gprim[inode] != "") {
-                        wv.sceneGraph[this.gprim[inode]].attrs &= ~wv.plotAttrs.ORIENTATION;
-                        wv.sceneUpd = 1;
-                    }
-                } else {
-                    myElem.setAttribute("class",   "fakelinkon");
-                    myElem.title = "Toggle Ori off";
-
-                    if (this.gprim[inode] != "") {
-                        wv.sceneGraph[this.gprim[inode]].attrs |=  wv.plotAttrs.ORIENTATION;
                         wv.sceneUpd = 1;
                     }
                 }

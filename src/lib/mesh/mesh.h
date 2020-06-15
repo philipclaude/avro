@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_MESH_H_
 #define avro_LIB_MESH_H_
 
@@ -71,7 +80,7 @@ public:
       topologies.push_back( static_cast<const TopologyBase*>(topology_[k].get()) );
       if (topology_[k]->type_name()=="simplex")
       {
-        static_cast<const Topology<Simplex>&>(*topology_[k]).get_children<TopologyBase>(topologies);
+        static_cast<const Topology<Simplex>&>(*topology_[k]).get_children_typed<TopologyBase>(topologies);
       }
       else
         avro_implement;

@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_COMMON_TOOLS_H_
 #define avro_COMMON_TOOLS_H_
 
@@ -18,6 +27,15 @@ namespace avro
 
 real_t random_within( const real_t lo , const real_t hi );
 int random_within( const int lo , const int hi );
+
+template<typename T>
+inline std::string
+pointer_string( const T* x )
+{
+  std::stringstream s;
+  s << x;
+  return s.str();
+}
 
 template <typename T>
 inline std::string

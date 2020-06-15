@@ -8,9 +8,7 @@ endif()
 # setup libraries and build type
 include(cmake/setup.cmake)
 include(cmake/compiler.cmake)
-project(avro VERSION 1.0)
-
-
+project(avro VERSION 2.0)
 
 if (POLICY CMP0077)
     cmake_policy(SET CMP0077 NEW)
@@ -77,7 +75,7 @@ set( avro_EXTERNAL_LIBRARIES )
 include(cmake/debug.cmake)
 include(cmake/coverage.cmake)
 
-set(avro_VERSION_MAJOR 1)
+set(avro_VERSION_MAJOR 2)
 set(avro_VERSION_MINOR 0)
 set(avro_VERSION_PATCH 0)
 set(avro_VERSION ${avro_VERSION_MAJOR}.${avro_VERSION_MINOR}.${avro_VERSION_PATCH})
@@ -99,6 +97,7 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 
 add_definitions( -DGLIBCXX_USE_CXX11_ABI=0 )
+add_definitions( -DAVRO_SOURCE_DIR="${CMAKE_SOURCE_DIR}" )
 
 add_subdirectory(src/third_party)
 add_subdirectory(src)

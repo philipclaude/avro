@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "adaptation/metric.h"
@@ -11,7 +20,7 @@
 
 using namespace avro;
 
-UT_TEST_SUITE( Metric_suite )
+UT_TEST_SUITE( metric_suite )
 
 numerics::SymMatrixD<real_t>
 random_tensor( index_t n )
@@ -193,6 +202,7 @@ UT_TEST_CASE( metric_field_tests )
     {
       std::vector<index_t> sizes(dim,n);
       CKF_Triangulation topology(sizes);
+      topology.orient();
 
       MetricAttachment field(function,topology.points());
       MetricField<Simplex> metric_field(topology,field);
@@ -200,6 +210,7 @@ UT_TEST_CASE( metric_field_tests )
       UT_ASSERT_EQUALS( metric_field.nb_data() , topology.points().nb() );
 
       metric_field.attachment().set_cells( topology );
+      UT_ASSERT( metric_field.check_cells() );
 
       topology.points().remove( 0 );
       metric_field.remove( 0 );
@@ -211,4 +222,4 @@ UT_TEST_CASE( metric_field_tests )
 }
 UT_TEST_CASE_END( metric_field_tests )
 
-UT_TEST_SUITE_END( Metric_suite )
+UT_TEST_SUITE_END( metric_suite )

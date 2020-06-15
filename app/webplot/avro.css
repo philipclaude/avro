@@ -1,27 +1,24 @@
 @font-face {
-	font-family: 'Ubuntu-R';/*'inconsolata'; */
-	src: url('Ubuntu-R.ttf');
 	font-weight: normal;
 	font-style: normal;
 }
 
 body {
 	color: #555;
-	font-family: 'Ubuntu-R' !important;/*'inconsolata'; */
-	src: url('Ubuntu-R.ttf');
 	font-size: 12px;
 	line-height: 18px;
 	tab-size: 4;
 	overflow: auto;
+	background: #ffffff;
 }
 
 /* background for table data entries (light-yellow) */
 td {
-    padding-left:               5px;
-    padding-right:              5px;
+    padding-left:               10px;
+    padding-right:              10px;
     padding-top:                0px;
     padding-bottom:             0px;
-    background-color:       #FFFFF0;
+    background-color:       #f7f7f7f7;/*#FFFFF0;*/
 }
 
 /* background for error table data entries (light-red) */
@@ -113,26 +110,17 @@ td {
     height:                   600px; /*600px; */
     float:                     left;
     font-size:                  9pt;
-    background:             #F7F7F7;
-}
-
-/* frame on top left that contains menus, trees, etc */
-#butnfrm {
-    width:                    20%;
-    height:                    300px;
-    float:                     left;
-    font-size:                  9pt;
-    background:             #F7F7F7;
+    background:             #ffffff;
 }
 
 /* frame on top left that contains menus, trees, etc */
 #treefrm {
     width:                    20%;
     height:                   290px;
-    float:                     left;
-    overflow:                scroll;
+    float:                     center;
+    /*overflow:                scroll;*/
     font-size:                  9pt;
-    background:             #F7F7F7;
+    background:             #ffffff;/*#F7F7F7;*/
 }
 
 /* frame on top right that contains the viewer */
@@ -162,9 +150,14 @@ td {
 		background: #000000;
 }
 
+table {
+	border-top-color: #ffffff;
+	border-right-color: #ffffff;
+}
+
 /* canvas that holds WebGL image */
 canvas {
-    width:                    230px;/*230px;*/
+    width:                    230px;
     height:                   600px;
     border-width:               0px;
 		background: #ffffff;/*#585C5C;*/

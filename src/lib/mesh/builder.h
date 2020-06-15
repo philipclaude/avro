@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_MESH_BUILDER_H_
 #define avro_LIB_MESH_BUILDER_H_
 
@@ -24,7 +33,7 @@ public:
 
 private:
   const Topology<type>& topology_;
-   type master_;
+   type shape_;
 };
 
 }

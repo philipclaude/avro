@@ -1,7 +1,16 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/set.h"
 
-#include "master/simplex.h"
-#include "master/polytope.h"
+#include "shape/simplex.h"
+#include "shape/polytope.h"
 
 #include "mesh/points.h"
 

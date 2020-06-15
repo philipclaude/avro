@@ -1,7 +1,16 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "adaptation/metric.h"
 #include "adaptation/properties.h"
 
-#include "master/simplex.h"
+#include "shape/simplex.h"
 
 #include "mesh/topology.h"
 
@@ -138,6 +147,14 @@ Properties::dump( const std::string& filename ) const
 
   std::ofstream file(filename);
   file << std::setw(2) << jfile << std::endl;
+}
+
+void
+Properties::conformity( real_t& lunit , real_t& qunit , index_t& nb_elem ) const
+{
+  lunit   = 100.*lstats_.count( sqrt(2.)/2. , sqrt(2.) )/length_.size();
+  qunit   = 100.*lstats_.count( 0.8 , 1.0 + 1e-12 )/quality_.size(); // little higher than 1 in case of precision issues
+  nb_elem = quality_.size();
 }
 
 

@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "../bin/programs.h"
 
 #include "common/error.h"
@@ -45,7 +54,11 @@ Interface::initialize()
   ImGui::StyleColorsDark();
   //ImGui::StyleColorsClassic();
 
+#ifdef AVRO_HEADLESS_GRAPHICS
+  const char* glsl_version = "#version 330";
+#else
   const char* glsl_version = "#version 410";
+#endif
 
   // Setup Platform/Renderer bindings
   ImGui_ImplGlfw_InitForOpenGL(window_.window(), true);
@@ -138,9 +151,15 @@ Toolbar::begin_draw()
   // determine if imgui wants the mouse or if we should send it to the trackball
   bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
   if (capture_mouse)
+  {
     window_.controls().disable();
+    window_.clip_controls().disable();
+  }
   else
+  {
     window_.controls().enable();
+    window_.clip_controls().enable();
+  }
 
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_NoCollapse;
@@ -538,20 +557,65 @@ Toolbar::begin_draw()
       }
     }
 
+    if (ImGui::CollapsingHeader("Tools"))
+    {
+      ImGui::Text("Clipping:\n");
+
+      ImGui::SetNextItemWidth(100);
+
+      static float time = 0;
+      ImGui::SliderFloat("time",&time,0,1,"%1.3f");
+
+      std::string label = "modify";
+      static bool mod = false;
+      ImGui::Checkbox(label.c_str(), &mod );
+      if (mod!=window_.modify_clipping_plane())
+        window_.modify_clipping_plane() = mod;
+
+      ImGui::SameLine();
+      label = "show";
+      ImGui::Checkbox(label.c_str(), &window_.show_clipping_plane() );
+
+      ImGui::SameLine();
+      if (ImGui::Button("flip normal"))
+      {
+        window_.flip_clipping_normal();
+      }
+
+      ImGui::SameLine();
+      if (ImGui::Button("Clip"))
+      {
+        window_.clip();
+      }
+      if (ImGui::Button("Reset"))
+      {
+        window_.reset_clip();
+      }
+
+      ImGui::Separator();
+      ImGui::Text("Axes:\n");
+      label = "show axes";
+      ImGui::Checkbox(label.c_str(), &window_.show_axes() );
+      ImGui::SameLine();
+      label = "center axes";
+      ImGui::Checkbox(label.c_str(), &window_.center_axes() );
+
+
+      ImGui::Separator();
+      ImGui::Text("Rendering:\n");
+      static int fps = 60;
+      ImGui::SetNextItemWidth(100);
+      ImGui::SliderInt("fps",&fps,5,120,"%3d");
+      window_.set_fps( fps );
+    }
+
     if (ImGui::CollapsingHeader("Help"))
     {
-      ImGui::Text("avro (c) Philip Caplan 2019-2020\nMiddlebury College, pcaplan@middlebury.edu\n");
+      ImGui::Text("avro (c) Philip Caplan 2017-2020\nMiddlebury College, pcaplan@middlebury.edu\n");
       ImGui::Text("\n!!! warning !!!\nthis is a pre-alpha release so the interface is very rough!\n\n");
       ImGui::BulletText("rotate: hold ctrl (cmd) and click/move mouse");
       ImGui::BulletText("zoom: hold shift key and click/move mouse or scroll");
       ImGui::BulletText("pan: click/move mouse");
-      ImGui::Separator();
-
-      ImGui::SetNextItemWidth(100);
-
-      static int fps = 60;
-      ImGui::SliderInt("fps",&fps,5,120,"%3d");
-      window_.set_fps( fps );
     }
   }
 
@@ -562,7 +626,9 @@ void
 Toolbar::end_draw() const
 {
   ImGui::Render();
+  #ifndef AVRO_HEADLESS_GRAPHICS
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  #endif
 }
 
 } // graphics

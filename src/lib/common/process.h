@@ -1,8 +1,12 @@
-// avro: Adaptive Voronoi Remesher
-// Copyright 2017-2019, Massachusetts Institute of Technology
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
-
+//
 #ifndef avro_COMMON_PROCESS_H_
 #define avro_COMMON_PROCESS_H_
 
@@ -82,9 +86,9 @@ namespace ProcessMPI
 
   void barrier();
 
-  // master functions
-  void master_begin( Thread& task );
-  void master_end( Thread& task );
+  //  functions
+  void shape_begin( Thread& task );
+  void shape_end( Thread& task );
 
   // worker functions
   void worker_do( Thread& task );

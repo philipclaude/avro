@@ -1,5 +1,15 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/error.h"
 
+#include "graphics/scene.h"
 #include "graphics/shader.h"
 #include "graphics/window.h"
 
@@ -162,34 +172,7 @@ ShaderProgram::setUniform( const char *name, int n, float* v)
     if (n > 10) n = 10;
     for (int i=0; i<n;i++)
       vf[i] = v[i];
-    GL_CALL( glUniform1fv(loc,n,vf) );
-  }
-}
-
-void
-ShaderProgram::setUniform( const char *name, int n, int *v)
-{
-  if (!check()) return;
-  int loc = getUniformLocation(name);
-  if (loc >= 0)
-  {
-    glUniform1iv(loc,n,v);
-  }
-}
-
-void
-ShaderProgram::setUniform( const char *name, int n, std::vector<int> v)
-{
-  int vi[10];
-
-  if (!check()) return;
-  int loc = getUniformLocation(name);
-  if (loc >= 0)
-  {
-    if (n > 10) n = 10;
-    for (int i=0; i<n;i++)
-      vi[i] = v[i];
-    GL_CALL( glUniform1iv(loc,n,vi) );
+    GL_CALL( glUniform3fv(loc,n,vf) );
   }
 }
 
@@ -230,7 +213,7 @@ ShaderProgram::setUniform( const char *name, mat3& m)
 }
 
 void
-ShaderProgram::setUniform( const char *name, mat4& m)
+ShaderProgram::setUniform( const char *name, const mat4& m)
 {
   if (!check()) return;
   int loc = getUniformLocation(name);

@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_COMMON_KDTREE_H_
 #define avro_LIB_COMMON_KDTREE_H_
 
@@ -47,7 +56,7 @@ public:
   // n.b. that good compilers these days will probably optimize the vtable
   // lookup of the virtual method, meaning it won't be too expensive
   virtual void build() = 0;
-  virtual void getNearestNeighbours( real_t* q, std::vector<index_t>& idx ,
+  virtual void getNearestNeighbours( const real_t* q, std::vector<index_t>& idx ,
                                      std::vector<real_t>& dist2 ,
                                      index_t& nu ) = 0;
 
@@ -63,7 +72,7 @@ class KdTree : public KdTreeNd
 public:
   KdTree( PointCloud& _cloud );
   void build();
-  void getNearestNeighbours( real_t* q, std::vector<index_t>& idx ,
+  void getNearestNeighbours( const real_t* q, std::vector<index_t>& idx ,
                              std::vector<real_t>& dist2 , index_t& nu );
 
 private:

@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "graphics/controls.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -23,9 +32,6 @@ Controls::Controls( float fov , int width , int height , float znear , float zfa
   model_view_ = glm::mat4(1.0);
   ui_matrix_  = model_view_;
 
-  std::cout << glm::to_string(perspective_) << std::endl;
-  std::cout << glm::to_string(model_view_) << std::endl;
-
   startx_ = -1;
   starty_ = -1;
   cursorx_ = -1;
@@ -44,19 +50,24 @@ Controls::update()
   bool updated = false;
   if (!enabled_) return updated;
 
+  rotation_ = mat4(1.0f);
+  translation_ = mat4(1.0f);
+
   // mouse-movement
   if ( dragging )
   {
     if (modifier==4) // control is down (rotate)
     {
-      float anglex =  (starty_ -cursory_)/10.0;
-      float angley = -(startx_ -cursorx_)/10.0;
+      float anglex =  (starty_ -cursory_)/100.0;
+      float angley = -(startx_ -cursorx_)/100.0;
 
       if (anglex!=0.0f || angley!=0.0f)
       {
         model_view_ = glm::rotate( model_view_ , anglex , {1,0,0} );
         model_view_ = glm::rotate( model_view_ , angley , {0,1,0} );
         updated = true;
+
+        rotation_ = model_view_;
       }
     }
     else if (modifier==3) // alt-shift is down (rotate)
@@ -69,9 +80,11 @@ Controls::update()
         model_view_ = glm::rotate( model_view_ , anglex , {1,0,0} );
         model_view_ = glm::rotate( model_view_ , angley , {0,1,0} );
         updated = true;
+
+        rotation_ = model_view_;
       }
     }
-    else if (modifier==2) // alt is down (splin)
+    else if (modifier==2) // alt is down (spin)
     {
       float xf = 1.0f*startx_ - width_*1.0f/2.0;
       float yf = 1.0f*starty_ - height_*1.0f/2.0;
@@ -90,6 +103,8 @@ Controls::update()
             float anglez = 128*dtheta/3.141592654;
             model_view_  = glm::rotate( model_view_ , anglez , {0,0,1} );
             updated = true;
+
+            rotation_ = model_view_;
           }
         }
 
@@ -114,6 +129,7 @@ Controls::update()
       {
         model_view_ = glm::translate( model_view_ , {transx,transy,0} );
         updated = true;
+        translation_ = model_view_;
       }
     }
 
@@ -127,6 +143,7 @@ Controls::update()
 void
 Controls::calculate_view()
 {
+  // accumulate the complete transformation
   model_view_ = model_view_*ui_matrix_;
 
   // construct normal matrix from model-view
@@ -135,7 +152,6 @@ Controls::calculate_view()
 
   // construct model-view-projection from original perspective and model-view
   model_view_projection_ = glm::scale( perspective_ , {1.,1.,1./scale_} ) * model_view_;
-  //std::cout << glm::to_string(model_view_projection_) << std::endl;
 }
 
 void
@@ -191,6 +207,24 @@ Controls::mouse_wheel(double deltax ,double deltay)
     model_view_ = glm::scale( model_view_ , {0.9,0.9,0.9} );
     scale_ *= 0.9;
   }
+}
+
+void
+Controls::reset()
+{
+  model_view_ = mat4(1.0);
+  ui_matrix_  = mat4(1.0);
+  scale_ = 1.0;
+
+  startx_ = -1;
+  starty_ = -1;
+  cursorx_ = -1;
+  cursory_ = -1;
+
+  modifier = 0;
+  dragging = false;
+
+  calculate_view();
 }
 
 

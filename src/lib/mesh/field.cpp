@@ -1,9 +1,18 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "adaptation/metric.h"
 
 #include "geometry/entity.h"
 
-#include "master/polytope.h"
-#include "master/simplex.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/builder.h"
 #include "mesh/builder.hpp"
@@ -18,19 +27,48 @@ namespace avro
 {
 
 void
-Fields::get_names( std::vector<std::string>& names ) const
+Fields::get_names( std::vector<std::string>& names , std::vector<std::string>& ids ) const
 {
-
   // get a json describing all the field names with ranks
   std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
   for (it=fields_.begin();it!=fields_.end();it++)
   {
     index_t rank = it->second->nb_rank();
-    printf("rank = %lu\n",rank);
     for (index_t j=0;j<rank;j++)
-      names.push_back( it->second->get_name(j) );
-
+    {
+      names.push_back( it->first + "-" + it->second->get_name(j) );
+      ids.push_back( identifiers_.at(it->first) + "-" + std::to_string(j) );
+    }
   }
+}
+
+void
+Fields::print() const
+{
+  printf("nb_fields = %lu\n",fields_.size());
+  std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
+  for (it=fields_.begin();it!=fields_.end();it++)
+  {
+    index_t rank = it->second->nb_rank();
+    for (index_t j=0;j<rank;j++)
+    {
+      printf("field[%s] at rank %lu (%s) with id %s\n",it->first.c_str(),j,it->second->get_name(j).c_str(),identifiers_.at(it->first).c_str() );
+    }
+  }
+}
+
+std::string
+Fields::id2name( const std::string& id ) const
+{
+  std::map<std::string,std::string>::const_iterator it;
+  for (it=identifiers_.begin();it!=identifiers_.end();it++)
+  {
+    if (it->second==id)
+      return it->first;
+  }
+  printf("could not find field name associated with id %s\n",id.c_str());
+  avro_assert_not_reached;
+  return "no-name";
 }
 
 template<typename T>
@@ -44,16 +82,16 @@ template<typename T>
 Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type,TableLayout_Rectangular),
   topology_(topology),
-  master_(topology.number(),order)
+  shape_(topology.number(),order)
 {
-  Table<index_t>::set_rank( master_.nb_basis() );
+  Table<index_t>::set_rank( shape_.nb_basis() );
 }
 
 template<typename T>
 Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
   FieldBase<T>(type),
   topology_(topology),
-  master_(topology,order,topology.points().incidence())
+  shape_(topology,order,topology.points().incidence())
 {}
 
 template<typename T>
@@ -62,18 +100,39 @@ Field<Simplex,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
-    // get the number of unique entries in the field
-    // using the number of elements and nb_poly, for now assume p = 1
-    Builder<Simplex> builder(topology_,master_.order(),BasisFunctionCategory_None);
-    builder.template transfer<T>(*this);
+    if (topology_.shape().order() == shape_.order() )
+    {
+      // a simpler way to build the field
+      // copy the connectivity over from the topology
+      for (index_t k=0;k<topology_.nb();k++)
+      {
+        const index_t* v = topology_(k);
+        const index_t nv = topology_.nv(k);
+        Table<index_t>::add( v , nv );
+      }
+
+      T x0(0);
+      for (index_t k=0;k<topology_.points().nb();k++)
+      {
+        this->data_.add( &x0 , 1 );
+      }
+    }
+    else
+    {
+      // a more complicated way to build the field
+      // get the number of unique entries in the field
+      // using the number of elements and nb_poly, for now assume p = 1
+      Builder<Simplex> builder(topology_,shape_.order(),BasisFunctionCategory_None);
+      builder.template transfer<T>(*this);
+    }
   }
   else if (this->type()==DISCONTINUOUS)
   {
     index_t n = 0;
-    std::vector<index_t> dof( master_.nb_basis() );
+    std::vector<index_t> dof( shape_.nb_basis() );
     for (index_t k=0;k<topology_.nb();k++)
     {
-      for (index_t j=0;j<master_.nb_basis();j++)
+      for (index_t j=0;j<shape_.nb_basis();j++)
         dof[j] = n++;
       Table<index_t>::add( dof.data() , dof.size() );
       const std::vector<index_t>& idx = Table<index_t>::data();
@@ -91,7 +150,7 @@ Field<Polytope,T>::build()
 {
   if (this->type()==CONTINUOUS)
   {
-    avro_assert( master_.order()==1 );
+    avro_assert( shape_.order()==1 );
 
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -108,7 +167,7 @@ Field<Polytope,T>::build()
   }
   else if (this->type()==DISCONTINUOUS)
   {
-    avro_assert( master_.order()==0 );
+    avro_assert( shape_.order()==0 );
     T x0(0);
     for (index_t k=0;k<topology_.nb();k++)
     {

@@ -1,4 +1,14 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "adaptation/adapt.h"
+#include "adaptation/geometry.h"
 #include "adaptation/metric.h"
 
 #include "mesh/topology.h"
@@ -70,55 +80,61 @@ Smooth<type>::Smooth( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Smooth<type>::visibleParameterSpace( index_t p , real_t* x , real_t* params , Entity* ep0 )
+Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity* ep )
 {
-  EGADS::Object* ep = (EGADS::Object*) ep0;
-
   avro_assert( ep->number()==2 );
   if (!this->curved_) return true;
   if (ep->interior()) return true;
 
   // based on the type of face, we may need to flip the sign for the volume calculation
-  int oclass,mtype;
-  ego ref,prev,next;
-  EGADS_ENSURE_SUCCESS( EG_getInfo(*ep->object(), &oclass, &mtype,&ref, &prev, &next) );
-  if (mtype==SREVERSE)
-    this->gcavity_.sign() = -1;
-  else
-    this->gcavity_.sign() = 1;
+  this->geometry_cavity_.sign() = ep->sign();
 
   // extract the geometry cavity
+  this->geometry_cavity_.set_entity(ep);
   this->extract_geometry( ep , {p} );
-  avro_assert( this->G_.nb()>0 );
-  //avro_assert_msg( this->G_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->G_.nb_real() , this->nb_ghost() );
+  avro_assert( this->geometry_topology_.nb()>0 );
+  //avro_assert_msg( this->geometry_topology_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->geometry_topology_.nb_real() , this->nb_ghost() );
 
   for (coord_t d=0;d<2;d++)
     this->u_[this->v2u_[p]][d] = params[d];
 
   // the following assertion won't hold when p is on an Edge
-  if (this->topology_.points().entity(p)->number()==2 && !this->G_.closed())
+  if (this->topology_.points().entity(p)->number()==2 && !this->geometry_topology_.closed())
   {
-    avro_assert_msg( this->G_.nb()==this->nb_ghost() ,
-                      "|G| = %lu, |smooth ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
+    avro_assert_msg( this->geometry_topology_.nb()==this->nb_ghost() ,
+                      "|G| = %lu, |smooth ghosts| = %lu" , this->geometry_topology_.nb() , this->nb_ghost() );
   }
 
-  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , ep );
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_parameter(ep);
+    this->geometry_cavity_.sign() = 1; // volume calculation is already adjusted for the sign
+  }
 
   // check for visibility of the new coordinates
   nb_parameter_tests_++;
-  bool accept = this->gcavity_.compute( this->v2u_[p] , params , this->S_ );
+  bool accept = this->geometry_cavity_.compute( this->v2u_[p] , params , this->S_ );
   if (!accept)
   {
     nb_parameter_rejections_++;
     return false;
   }
 
-  // check the orientation of facets produced w.r.t. the geometry
-  int s = checker.signof( this->gcavity_ );
-  if (s<0) return false;
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_physical();
+  }
+
+  // reset the geometry checker to this face (which also computes the normals at the vertices of the geometry topology)
+  this->geometry_inspector_.reset( ep );
+  int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
+  if (s<0)
+  {
+    return false;
+  }
 
   // check the produced volumes are positive
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
   return true;
 }
@@ -146,6 +162,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   index_t q;
   Entity* ep = this->topology_.points().entity(p);
   if (ep!=NULL && ep->number()==0) return false; // don't move points on Nodes!
+  if (this->topology_.shape().parameter() && ep!=NULL && ep->number()!=2) return false;
   Entity* eq;
   for (index_t k=0;k<this->C_.size();k++)
   {
@@ -201,8 +218,12 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     lens0.push_back(len);
 
     // physical vector from the vertex to the neighbour
+    #if 0
     numerics::vector( this->topology_.points()[p] ,
                         this->topology_.points()[N[k]] , dim , u.data() );
+    #else
+    this->topology_.shape().edge_vector( this->topology_.points() , p , N[k] , u.data() , ep );
+    #endif
 
     // compute the force on the vertex
     f = std::pow(len,4);
@@ -228,9 +249,54 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   if (delta_p<delta_min_) delta_min_ = delta_p;
   if (delta_p>delta_max_) delta_max_ = delta_p;
 
-  this->enlarge_ = true;
+  if (this->topology_.shape().parameter())
+  {
+    // skip smoothing along geometry Edges for now
+    avro_assert( ep->number()==2 );
+
+    // assign the cavity elements so we can extract the surface cavity
+    this->Cavity<type>::clear();
+    this->set_entity(ep);
+    for (index_t j=0;j<this->C_.size();j++)
+      this->add_cavity( this->C_[j] );
+
+    // assert the original point is visible
+    if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
+    {
+      printf("original vertex %lu not visible!\n",p);
+      avro_assert_not_reached;
+    }
+
+    // save the original parameter coordinates
+    for (index_t d=0;d<udim;d++)
+      params0[d] = this->topology_.points().u(p,d);
+
+    // update the parameter space and physical coordinates
+    for (coord_t d=0;d<udim;d++)
+      this->topology_.points().u(p)[d] += omega*F[d];
+    this->convert_to_physical({p});
+
+    if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
+    {
+      // revert the physical coordinates
+      for (index_t d=0;d<dim;d++)
+        this->topology_.points()[p][d] = x0[d];
+
+      // revert the parameter space coordinates
+      for (coord_t d=0;d<udim;d++)
+        this->topology_.points().u(p,d) = params0[d];
+
+      // signal the smoothing was not applied
+      return false;
+    }
+
+    //printf("accepted smooth!\n");
+    return true;
+  }
+
 
   // check if the cavity needs to be enlarged
+  this->enlarge_ = true;
   if (ep!=NULL)
   {
     for (index_t d=0;d<udim;d++)
@@ -325,7 +391,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   // check if the point is visible on the cavity boundary
   if (ep!=NULL && ep->number()==2 && this->curved_)
   {
-    if (!visibleParameterSpace( p , x.data(), params.data() , ep ))
+    if (!visible_geometry( p , x.data(), params.data() , ep ))
     {
       // revert the physical coordinates
       for (index_t d=0;d<dim;d++)
@@ -348,7 +414,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
       Entity* parent = ep->parents(k);
       if (parent->number()!=2 || !parent->tessellatable())
         continue;
-      if (!visibleParameterSpace(p, x.data() , params.data() ,parent))
+      if (!visible_geometry(p, x.data() , params.data() ,parent))
       {
         // revert the physical coordinates
         for (index_t d=0;d<dim;d++)
@@ -373,14 +439,13 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   index_t elem0 = metric.attachment()[p].elem();
 
   // recompute the metric at the new point
-  bool success = metric.recompute( p , x.data() );
-
-  // count this metric interpolation as "outside"
-  if (!success)
-    nb_interpolated_outside_++;
-
+  bool success;
+  success = metric.recompute( p , x.data() );
   if (!success)
   {
+    // unsuccessful metric interpolation, reset coordinates and previous metric
+    nb_interpolated_outside_++;
+
     for (index_t d=0;d<dim;d++)
       this->topology_.points()[p][d] = x0[d];
 

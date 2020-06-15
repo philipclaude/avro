@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_MESH_FIELD_H_
 #define avro_LIB_MESH_FIELD_H_
 
@@ -5,9 +14,9 @@
 #include "common/json.h"
 #include "common/types.h"
 
-#include "master/master.h"
-#include "master/polytope.h"
-#include "master/simplex.h"
+#include "shape/shape.h"
+#include "shape/polytope.h"
+#include "shape/simplex.h"
 
 #include "mesh/dof.h"
 
@@ -74,6 +83,7 @@ public:
   index_t nb_data() const { return data_.nb(); }
 
   T& value( index_t k ) { return *data_[k]; }
+  const T& value( index_t k ) const { return *data_[k]; }
 
   const DOF<T>& dof() const { return data_; }
 
@@ -99,20 +109,19 @@ public:
   Field( const Topology<Simplex>& topology , coord_t order , FieldType type );
   void build();
 
-  const Simplex& master() const { return master_; }
-  Simplex& master() { return master_; }
+  const Simplex& shape() const { return shape_; }
+  Simplex& shape() { return shape_; }
 
   template<typename Function>
   void evaluate( const Function& function );
 
   const Topology<Simplex>& topology() const { return topology_; }
 
-  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const
-  { avro_implement; }
+  void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const;
 
 private:
   const Topology<Simplex>& topology_;
-  Simplex master_;
+  Simplex shape_;
 };
 
 template<typename T>
@@ -126,7 +135,7 @@ public:
 
 private:
   const Topology<Polytope>& topology_;
-  const Polytope master_;
+  const Polytope shape_;
 };
 
 class TopologyBase;
@@ -177,6 +186,7 @@ public:
     void make( const std::string& name , std::shared_ptr<type>& f )
     {
       fields_.insert( { name , std::make_shared< FieldClass<type> >(name,*f.get()) } );
+      identifiers_.insert( {name,pointer_string(f.get())} );
     }
 
     template<typename type>
@@ -204,15 +214,21 @@ public:
     void remove( const std::string& name )
     {
       fields_.erase(name);
+      identifiers_.erase(name);
     }
 
     index_t nb() const { return fields_.size(); }
 
     void from_json( const json& J );
-    void get_names( std::vector<std::string>& names ) const;
+    void get_names( std::vector<std::string>& names , std::vector<std::string>& ids ) const;
+
+    std::string id2name( const std::string& id ) const;
+
+    void print() const;
 
 private:
   std::map<std::string,std::shared_ptr<FieldHolder>> fields_;
+  std::map<std::string,std::string> identifiers_;
 
   const TopologyBase& topology_;
 };

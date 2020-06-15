@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
@@ -22,9 +31,9 @@ UT_TEST_CASE( test1 )
 {
 
   #if 0
-  library::objFile topology( "/Users/pcaplan/Google Drive/library/models/obj/spot.obj" );
+  library::objFile topology( BASE_TEST_DIR+"geometry/obj/spot.obj" );
   #else
-  CKF_Triangulation topology( {4,4,4} );
+  CKF_Triangulation topology( {5,5,5} );
   #endif
 
   Delaunay delaunay(topology.points().dim());
@@ -36,21 +45,18 @@ UT_TEST_CASE( test1 )
     z[k][d] = random_within( 0.0 , 1.0 );
 
   delaunay::RestrictedVoronoiDiagram rvd(topology,z);
-  rvd.compute(true);
-
-  rvd.compute(true);
-
-  rvd.compute(true);
+  //rvd.compute(true);
 
   Visualizer vis;
 
-  std::shared_ptr<Widget> toolbar = std::make_shared<Toolbar>(vis.main_window(),vis);
-  vis.main_window().interface().add_widget( toolbar );
-
   //vis.add_topology(topology);
-  vis.add_topology(rvd);
+  vis.add_topology(topology);
 
+  // test the EPS export
   vis.run();
+
+  vis.main_window().save_eps("tmp/test.eps");
+
 }
 UT_TEST_CASE_END( test1 )
 

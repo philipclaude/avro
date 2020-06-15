@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_LIBRARY_EPS_H_
 #define avro_LIB_LIBRARY_EPS_H_
 
@@ -136,7 +145,6 @@ private:
         dp = (t[0] - x1)*n[0] + (t[1] - y1)*n[1] + (t[2] -z1)*n[2];
         if (fabs(dp)<1e-6)
         {
-          printf("coplanar!!\n");
           return true;
         }
       }

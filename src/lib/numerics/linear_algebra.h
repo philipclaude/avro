@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef avro_LIB_LINEAR_ALGEBRA_H_
 #define avro_LIB_LINEAR_ALGEBRA_H_
 
@@ -8,7 +17,8 @@
 #include <numpack/dense/dynamic/MatrixD_Det.h>
 #include <numpack/dense/dynamic/MatrixD_Diag.h>
 #include <numpack/dense/dynamic/Eigen.h>
-#include <numpack/dense/InverseLU.h>
+//#include <numpack/dense/InverseLU.h>
+#include <numpack/dense/InverseLUP.h>
 #include <numpack/Transpose.h>
 
 #include <numpack/types/SurrealD.h>

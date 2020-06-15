@@ -11,6 +11,12 @@
 #include <cstdio>
 #include <math.h>
 
+#ifdef MACHII_LIBRARY_LOCATION
+#define BASE_TEST_DIR std::string(MACHII_LIBRARY_LOCATION)
+#else
+#define BASE_TEST_DIR std::string("library")
+#endif
+
 class TestSuite;
 
 class TestResult
@@ -29,6 +35,11 @@ public:
     printf("%lu assertions passed out of %lu with %lu failures and %lu exceptions.\n",
             passed_,asserted_,failed_,exceptions_);
   }
+
+  bool successful() const { return (failed_==0 && exceptions_==0); }
+  unsigned long nb_failed() const { return failed_; }
+  unsigned long nb_assert() const { return asserted_; }
+  unsigned long nb_exceptions() const { return exceptions_; }
 
   void failed() { failed_++; }
   void passed() { passed_++; }
@@ -80,8 +91,10 @@ public:
 
   std::size_t ntests() const { return cases_.size(); }
 
-  void run( TestResult& __result__ )
+  int run( TestResult& __result__ )
   {
+    unsigned long nb_failed0 = __result__.nb_failed();
+    (void)(nb_failed0); // suppresses the warning of unused nb_failed0
     #ifndef STANDALONE
 
     #ifndef STDOUT_REDIRECT
@@ -117,6 +130,8 @@ public:
       }
       catch( std::exception& E )
       {
+        printf("unexpected exception!!\n");
+	std::cout << E.what() << std::endl;
         __result__.exception();
       }
     }
@@ -137,7 +152,14 @@ public:
     // reset to standard output
     std::cout.rdbuf(coutbuf);
 
+    if (__result__.nb_failed() > nb_failed0)
+      printf("suite %s failed with %lu new errors!\n",
+              name_.c_str(),__result__.nb_failed()-nb_failed0);
+
     #endif
+
+    if (__result__.successful()) return 0;
+    return -1;
   }
 
 private:
@@ -153,19 +175,32 @@ public:
     suites_.push_back(suite);
   }
 
-  void run(TestResult& __result__)
+  int run(TestResult& __result__)
   {
+    int result = 0;
     for (std::size_t i=0;i<suites_.size();i++)
     {
+      int nb_assert0 = __result__.nb_assert();
       printf("running suite: %-30s with %3lu tests ... ",
               suites_[i]->name().c_str(),suites_[i]->ntests());
       clock_t t0 = clock();
-      suites_[i]->run(__result__);
+      try
+      {
+        if (suites_[i]->run(__result__) < 0)
+          result = -1;
+      }
+      catch (...)
+      {
+        result = -1;
+      }
+      int nb_assert = __result__.nb_assert() -nb_assert0;
+      printf(" %4d assertions ... ",nb_assert);
       clock_t t1 = clock();
       double s = double(t1-t0)/CLOCKS_PER_SEC;
       double ms = 1000*s -1000*floor(s);
       printf("done [%3d s : %-3d ms]\n",int(floor(s)),int(floor(ms)));
     }
+    return result;
   }
 private:
   std::vector<TestSuite*> suites_;
@@ -184,7 +219,8 @@ TestSuite::TestSuite( const char* name , TestDriver* driver ) :
     if (X!=Y) \
     { \
       __result__.failed(); \
-      printf("%s::%s: assertion %s == %s failed on line %d of file %s.\n",suite_->name().c_str(),name_.c_str(),#X,#Y,__LINE__,__FILE__); \
+      printf("%s::%s: assertion %s  == %s failed on line %d of file %s.\n",suite_->name().c_str(),name_.c_str(),#X,#Y,__LINE__,__FILE__); \
+      std::cout << "--> expected " << Y << " but received " << X << std::endl; \
     } \
     else \
       __result__.passed(); \
@@ -205,6 +241,7 @@ TestSuite::TestSuite( const char* name , TestDriver* driver ) :
   do {__result__.asserted(); \
     if ( sqrt((X-Y)*(X-Y))>Z ) \
     { \
+      __result__.failed(); \
       printf("%s::%s: assertion %s (%g) == %s +/- %s failed on line %d of file %s.\n",suite_->name().c_str(),__FUNCTION__,#X,X,#Y,#Z,__LINE__,__FILE__); \
     } \
     else \
@@ -237,7 +274,7 @@ void run(TestResult& __result__) {printf("skipping test!\n");} void run_skip(Tes
 
 #ifdef STANDALONE
 #define UT_TEST_SUITE_END(X) } void ut_pre(int,char**); void ut_post(); int main(int argc, char* argv[]) \
-    { ut_pre(argc,argv); TestResult __result__; suite_##X::__suite__.run(__result__); __result__.summary(); ut_post(); return 0; }
+    { ut_pre(argc,argv); TestResult __result__; suite_##X::__suite__.run(__result__); __result__.summary(); ut_post(); if (__result__.nb_failed()!=0 || __result__.nb_exceptions()!=0) return 1; return 0; }
 #else
 #define UT_TEST_SUITE_END(X) }
 #endif

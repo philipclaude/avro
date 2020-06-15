@@ -1,4 +1,14 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "adaptation/adapt.h"
+#include "adaptation/geometry.h"
 #include "adaptation/metric.h"
 
 #include "mesh/topology.h"
@@ -208,8 +218,6 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         // skip candidates that are endpoints of the initial edge
         if (candidates[j]==e0 || candidates[j]==e1) continue;
 
-        continue;
-
         // try the swap
         bool accept = edge_swapper_.apply( candidates[j] , e0 , e1 );
         if (!accept)
@@ -280,79 +288,103 @@ EdgeSwap<type>::EdgeSwap( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-EdgeSwap<type>::visibleParameterSpace( index_t p , index_t e0 , index_t e1 , Entity* face0 )
+EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* face )
 {
-  EGADS::Object* face = (EGADS::Object*) face0;
-
   // check if the edge swap is valid in the parameter space
   // 2d swaps area already checks, 4d is limited to linear geometries for now
-  if (this->topology_.number()!=3) return true;
+  //if (this->topology_.number()!=3) return true;
   if (!this->curved_) return true;
   if (face->interior()) return true;
 
+  this->geometry_cavity_.set_entity(face);
+
   // based on the type of face, we may need to flip the sign for the volume calculation
-  int oclass,mtype;
-  ego ref,prev,next;
-  EGADS_ENSURE_SUCCESS( EG_getInfo(*face->object(), &oclass, &mtype,&ref, &prev, &next) );
-  if (mtype==SREVERSE)
-    this->gcavity_.sign() = -1;
-  else
-    this->gcavity_.sign() = 1;
+  this->geometry_cavity_.sign() = face->sign();
 
   // extract the geometry cavity
   this->extract_geometry( face, {e0,e1} );
-  avro_assert( this->G_.nb()>0 );
+  avro_assert( this->geometry_topology_.nb()>0 );
 
-  if (!this->G_.closed())
-    avro_assert_msg( this->G_.nb()==2 ,
-                    "|G| = %lu, |swap ghosts| = %lu" , this->G_.nb() , this->nb_ghost() );
+  if (!this->geometry_topology_.closed())
+    avro_assert_msg( this->geometry_topology_.nb()==2 ,
+                    "|G| = %lu, |swap ghosts| = %lu" , this->geometry_topology_.nb() , this->nb_ghost() );
 
-  if (this->G_.closed())
-    avro_assert( this->G_.nb_real()==2 );
+  if (this->geometry_topology_.closed())
+    avro_assert( this->geometry_topology_.nb_real()==2 );
+
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_parameter(face);
+    this->geometry_cavity_.sign() = 1;
+  }
 
   // ensure the e0 is visible to the cavity boundary
-  bool accept = this->gcavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
+  bool accept = this->geometry_cavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
   avro_assert( accept );
 
-  GeometryOrientationChecker checker( this->points_ , this->u_ , this->u2v_ , face );
-  int s = checker.signof( this->gcavity_ );
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_physical();
+  }
+
+  // reset the geometry checker to this face (which also computes the normals at the vertices of the geometry topology)
+  this->geometry_inspector_.reset(face);
+  int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
+
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_parameter(face);
+  }
 
   // ensure e1 is visible to the cavity boundary
-  accept = this->gcavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
+  accept = this->geometry_cavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
   avro_assert( accept );
-  s = checker.signof( this->gcavity_ );
+
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_physical();
+  }
+
+  s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
+
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_parameter(face);
+  }
 
   // check for visibility of p
   nb_parameter_tests_++;
-  accept = this->gcavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
-  avro_assert( this->gcavity_.nb_real()==2 );
+  accept = this->geometry_cavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
+  avro_assert( this->geometry_cavity_.nb_real()==2 );
   if (!accept)
   {
-    //printf("swap not visible in parameter space!\n");
     nb_parameter_rejections_++;
     return false;
   }
 
-  s = checker.signof( this->gcavity_ );
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_physical();
+  }
+
+  s = this->geometry_inspector_.signof( this->geometry_cavity_ );
   if (s<0)
   {
-    //printf("swap creates negative normals!\n");
     return false;
   }
 
-  if (checker.createsBadGeometry(this->gcavity_))
+  if (this->geometry_inspector_.invalidates_geometry(this->geometry_cavity_))
   {
-    //printf("swap creates bad geometry!\n");
     nb_invalid_geometry_++;
     return false;
   }
 
   // the geometry cavity should have positive volumes
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype));
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
   return true;
 }
@@ -441,6 +473,36 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     if (this->topology_.ghost(this->C_[j]))
       nb_ghost0++;
 
+  Entity* ge = this->geometry(e0,e1);
+  this->set_entity(ge);
+
+  if (this->topology_.shape().parameter())
+  {
+    avro_assert( ge!=nullptr );
+    avro_assert( ge->number()==2 ); // otherwise this shoudl have been caught by 'valid'
+    avro_assert( this->C_.size()==2 );
+
+    bool accept;
+
+    this->Cavity<type>::clear();
+    for (index_t j=0;j<this->C_.size();j++)
+    {
+      this->add_cavity( this->C_[j] );
+    }
+
+    if (!visible_geometry(p,e0,e1,ge))
+    {
+      return false;
+    }
+
+    this->check_visibility(false);
+    accept = this->compute( p ,this->topology_.points()[p],this->C_);
+    avro_assert(accept);
+    this->check_visibility(true);
+
+    return true;
+  }
+
   // apply the operator, checking visibility
   this->enlarge_ = false;
   bool accept = this->compute( p , this->topology_.points()[p] , this->C_ );
@@ -451,10 +513,9 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     return false;
 
   // check visibility in the parametric space
-  Entity* ge = this->geometry(e0,e1);
   if (ge!=NULL && ge->number()==2)
   {
-    if (!visibleParameterSpace(p,e0,e1,ge))
+    if (!visible_geometry(p,e0,e1,ge))
     {
       //printf("swap not visible in parameter space!\n");
       return false;

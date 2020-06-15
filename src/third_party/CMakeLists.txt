@@ -59,4 +59,6 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
 
+include_directories(numpack)
+
 add_library(avro_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )

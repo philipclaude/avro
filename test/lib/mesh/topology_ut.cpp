@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "common/tools.h"
@@ -8,15 +17,15 @@
 #include "library/egads.h"
 #include "library/tesseract.h"
 
-#include "master/master.h"
-#include "master/quadrature.h"
+#include "shape/shape.h"
+#include "shape/quadrature.h"
 
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
 using namespace avro;
 
-UT_TEST_SUITE( TopologySuite )
+UT_TEST_SUITE( mesh_topology_suite )
 
 UT_TEST_CASE( simplex_tests )
 {
@@ -35,10 +44,15 @@ UT_TEST_CASE( simplex_tests )
   UNUSED(c);
 
   Topology<Simplex> topology_copy( vertices , number );
-  topology_copy.template Tree<Topology<Simplex>>::copy(topology);
+  topology_copy.Tree<Topology<Simplex>>::copy(topology);
+  
+  topology_copy.Tree<Topology<Simplex>>::print();
+
+  topology_copy.Tree<Topology<Simplex>>::print();
+
 
   UT_ASSERT_EQUALS( topology_copy.nb_children() , 1 );
-  //UT_ASSERT_EQUALS( topology_copy.child(0).nb_children() , 1 );
+  UT_ASSERT_EQUALS( topology_copy.child(0).nb_children() , 1 );
 }
 UT_TEST_CASE_END( simplex_tests )
 
@@ -49,13 +63,13 @@ UT_TEST_CASE( hierarchy_from_geometry )
 
   Points points(3);
   Topology<Simplex> topology(points,2);
-  topology.template Tree<Topology<Simplex>>::copy( *box.child(0) );
+  topology.Tree<Topology<Simplex>>::copy( *box.child(0) );
 
   UT_ASSERT_EQUALS( box.child(0)->nb_children() , 6 );
   UT_ASSERT_EQUALS( topology.nb_children() , 6 );
 
-  box.child(0)->template Tree<Entity>::print();
-  topology.template Tree<Topology<Simplex>>::print();
+  box.child(0)->Tree<Entity>::print();
+  topology.Tree<Topology<Simplex>>::print();
 
   for (index_t k=0;k<box.child(0)->nb_children();k++)
   {
@@ -89,4 +103,4 @@ UT_TEST_CASE( simplex_close )
 }
 UT_TEST_CASE_END( simplex_close )
 
-UT_TEST_SUITE_END( TopologySuite )
+UT_TEST_SUITE_END( mesh_topology_suite )

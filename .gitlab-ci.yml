@@ -1,43 +1,106 @@
 stages:
   - build
   - test
+  - deploy
 
-# the build-linux job
-job-release:
+release_gnu5:
+  except:
+    - schedules
   stage: build
   script:
-    - export ESP_DIR=/home/gitlab-runner/Codes/EngSketchPad
-    - export CAS_DIR=/home/gitlab-runner/Codes/OpenCASCADE-7.3.1
-    - mkdir build
-    - mkdir build/release
-    - cd build/release
-    - cmake ../../
-    - make
+    - source util/commit.sh release_gnu5 6
   tags:
     - avro-commit
 
-# the coverage test job
-job-coverage:
+release_gnu6:
+  except:
+    - schedules
+  stage: build
+  script:
+    - source util/commit.sh release_gnu6 6
+  tags:
+    - avro-commit
+
+
+release_gnu7:
+  except:
+    - schedules
+  stage: build
+  script:
+    - source util/commit.sh release_gnu7 6
+  tags:
+    - avro-commit
+
+release_clang:
+  except:
+    - schedules
+  stage: build
+  script:
+    - source util/commit.sh release_clang 6
+  tags:
+    - avro-commit
+
+release_tests:
+  except:
+    - schedules
   stage: test
   script:
-    - export ESP_DIR=/home/gitlab-runner/Codes/EngSketchPad
-    - export CAS_DIR=/home/gitlab-runner/Codes/OpenCASCADE-7.3.1
-    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CAS_DIR/lib
-    - mkdir build
-    - mkdir build/coverage
-    - cd build/coverage
-    - cmake ../../
-    - make -j12
-    # need these tests to be shorter...
-    #- make unit_coverage
-    #- make coverage_info
+    - source util/commit.sh release_gnu7 4
+    - cd build/release_gnu7
+    - Xvfb :6 -screen 0 1280x1280x24 &
+    - export DISPLAY=:6
+    - make unit
     - cd ../../
-    # - cp -r build/coverage/avroCoverageHTML coverage_results
-    # remove this when it actually works!
-    - mkdir coverage_results
-    - cp cmake/coverage-prolog.html coverage_results/index.html
+    - mkdir unit_test_output
+    - mv build/release_gnu7/unit_tests_output.txt unit_test_output
+  tags:
+    - avro-commit
+  artifacts:
+    when: always
+    paths:
+      - unit_test_output
+
+coverage_tests:
+  except:
+    - schedules
+  stage: test
+  script:
+    #- Xvfb :5 -screen 0 1280x1280x24 &
+    #- export DISPLAY=:5
+    - source util/commit.sh coverage_gnu5 6
+    - cp -r build/coverage_gnu5/avro_coverage_html coverage_results
+    - mkdir unit_test_output
+    - mv build/coverage_gnu5/unit_tests_output.txt unit_test_output
   artifacts:
     paths:
       - coverage_results
+      - unit_test_output
   tags:
     - avro-commit
+
+regression_tests:
+  only:
+    - schedules
+  stage: test
+  script:
+    - source util/commit.sh release_gnu7 6
+    - mkdir -p regression_results
+    - cd regression_results
+    - ../test/regression/benchmark3d.sh ../build/release_gnu7/bin/avro ../test/library/ .
+  artifacts:
+    when: always
+    paths:
+      - regression_results
+  tags:
+    - avro-commit
+
+pages:
+  except:
+    - schedules
+  stage: deploy
+  script:
+    - mv doc public
+    - mv coverage_results public/coverage_results
+  artifacts:
+    paths:
+    - public

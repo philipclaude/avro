@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/error.h"
 #include "common/tools.h"
 
@@ -147,7 +156,7 @@ objFile::read()
 
   return;
 
-  // build the field with this connectivity and the same linear master element
+  // build the field with this connectivity and the same linear  element
   normal_fld->build();
   uv_fld->build();
 

@@ -1,7 +1,18 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2020, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "adaptation/adapt.h"
 #include "adaptation/filter.h"
 #include "adaptation/metric.h"
 #include "adaptation/parameters.h"
+
+#include "geometry/entity.h"
 
 #include "mesh/topology.h"
 
@@ -22,45 +33,72 @@ Insert<type>::Insert( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Insert<type>::visibleParameterSpace( real_t* x , real_t* params , Entity* ep0 )
+Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const std::vector<index_t>& edge )
 {
-  EGADS::Object* ep = (EGADS::Object*) ep0;
-
   avro_assert( ep->number()==2 );
   if (!this->curved_) return true;
   if (ep->interior()) return true;
 
+  this->geometry_cavity_.set_entity(ep);
+
   // based on the type of face, we may need to flip the sign for the volume calculation
-  int oclass,mtype;
-  ego ref,prev,next;
-  EGADS_ENSURE_SUCCESS( EG_getInfo(*ep->object(), &oclass, &mtype,&ref, &prev, &next) );
-  if (mtype==SREVERSE)
-    this->gcavity_.sign() = -1;
-  else
-    this->gcavity_.sign() = 1;
+  this->geometry_cavity_.sign() = ep->sign();
 
   // extract the geometry cavity
-  this->extract_geometry( ep ); // no facet information, will assign the cavity to non-ghosts
-  avro_assert(this->G_.nb()>0);
+  if (edge.size()==2)
+    this->extract_geometry( ep , edge ); // extract shell
+  else
+    this->extract_geometry( ep ); // no facet information, will assign the cavity to non-ghosts
+  avro_assert(this->geometry_topology_.nb()>0);
 
   // add the parameter coordinates for the inserted point along with the mapped index
-  this->u_.create( params );
+  if (this->topology_.shape().parameter())
+  {
+    std::vector<real_t> xu(this->u_.dim());
+    this->u_.create( xu.data() );
+    this->u_.set_param( this->u_.nb()-1 , params );
+  }
+  else
+    this->u_.create( params );
   this->u2v_.push_back( this->points_.nb()-1 );
 
+  // assign the geometry entities (in case this hasn't already been done)
+  for (index_t j=0;j<this->u_.nb();j++)
+  {
+    if (j < this->u_.nb_ghost()) continue;
+    this->u_.set_entity( j , this->points_.entity( this->u2v_[j] ) );
+  }
+
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_parameter(ep);
+    this->geometry_cavity_.sign() = 1;
+  }
+
   // the insertion should be visible in parameter space
-  bool accept = this->gcavity_.compute( this->u_.nb()-1 , params , this->S_ );
+  index_t ns = this->u_.nb()-1;
+  bool accept = this->geometry_cavity_.compute( ns , this->u_[ns] , this->S_ );
+  if (!accept)
+  {
+    avro_assert( this->topology_.shape().parameter());
+    return false;
+  }
   avro_assert(accept);
 
-  #if 1 // philip april 23
-  if (this->topology_.master().parameter()) return true;
-  #endif
+  if (this->topology_.shape().parameter())
+  {
+    this->convert_to_physical();
+  }
 
-  // check the orientation of the facets
-  GeometryOrientationChecker checker(this->points_,this->u_,this->u2v_,ep);
-  int s = checker.signof( this->gcavity_ );
-  if (s<0) return false;
+  // reset the geometry checker to this face (which also computes the normals at the vertices of the geometry topology)
+  this->geometry_inspector_.reset(ep);
+  int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
+  if (s<0)
+  {
+    return false;
+  }
 
-  avro_assert( checker.hasPositiveVolumes(this->gcavity_,mtype) );
+  avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()) );
 
   return true;
 }
@@ -70,7 +108,6 @@ template<typename type>
 bool
 Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell )
 {
-  //std::vector<index_t> elems;
   elems_.clear();
 
   // insertions should not enlarge the initial set of cavity elements
@@ -130,7 +167,14 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     }
   }
 
-  if (entitys!=NULL)
+  #if 1 // philip may 28 (moved up from below)
+  this->set_entity( entitys );
+  this->topology_.points().set_entity( ns , entitys );
+  this->topology_.points().set_param( ns , u );
+  this->topology_.points().body(ns) = bodys;
+  #endif
+
+  if (entitys!=NULL && !this->topology_.shape().parameter())
   {
     // enlarge the cavity for boundary insertions
     // if the shell was given, then this should have been precomputed
@@ -147,8 +191,72 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     }
   }
 
+  bool accept;
+  if (this->topology_.shape().parameter())
+  {
+    avro_assert( entitys!=nullptr );
+    avro_assert( elems_.size()==2 );
+
+    if (entitys->number()==2)
+    {
+      // check if the insertion is visible to the boundary of the geometry
+      // cavity in the parameter space of the geometry entity
+      this->Cavity<type>::clear();
+      for (index_t k=0;k<elems_.size();k++)
+        this->add_cavity(elems_[k]);
+      accept = visible_geometry( x , u , entitys );
+      if (!accept)
+      {
+        this->topology_.remove_point(ns);
+        return false;
+      }
+
+      this->check_visibility(false);
+      accept = this->compute( ns , x , elems_ );
+      avro_assert(accept);
+      this->check_visibility(true);
+    }
+    else
+    {
+      // loop through the parents of this geometry Edge
+      for (index_t k=0;k<entitys->nb_parents();k++)
+      {
+        if (entitys->parents(k)->number()!=2 || !entitys->parents(k)->tessellatable())
+          continue;
+
+        // determine all elements on this parent Face
+        this->Cavity<type>::clear();
+        for (index_t j=0;j<elems_.size();j++)
+        {
+          Entity* entityp = BoundaryUtils::geometryFacet( this->topology_.points() , this->topology_(elems_[j]) , this->topology_.nv(elems_[j]) );
+          avro_assert( entityp!=nullptr );
+          avro_assert( entityp->number()==2 );
+          if (entityp != entitys->parents(k)) continue;
+          this->add_cavity( elems_[j] );
+        }
+
+        Entity* parent = entitys->parents(k);
+        if (!visible_geometry( x , u , parent , {e0,e1} ))
+        {
+          this->topology_.remove_point(ns);
+          return false;
+        }
+      }
+
+      // we need to insert the correct topology
+      // so recompute the cavity (visibility check off) for all
+      // original cavity elements
+      this->check_visibility(false);
+      bool accept = this->compute( ns , x , elems_ );
+      avro_assert(accept);
+      this->check_visibility(true);
+    }
+
+    return true;
+  }
+
   // attempt the operator
-  bool accept = this->compute( ns , x , elems_ );
+  accept = this->compute( ns , x , elems_ );
   if (!accept)
   {
     // the cavity requested enlargment which is possible because of a
@@ -170,7 +278,8 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   {
     // check if the insertion is visible to the boundary of the geometry
     // cavity in the parameter space of the geometry entity
-    accept = visibleParameterSpace( x , u , entitys );
+    // TODO check visibility on all faces of this is an edge entity
+    accept = visible_geometry( x , u , entitys );
     if (!accept)
     {
       this->topology_.remove_point(ns);
@@ -186,7 +295,6 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
       if (this->ghost(k))
         nb_ghost++;
     }
-    PRIMITIVE_CHECK( nb_ghost==4 );
     if (nb_ghost!=4)
     {
       this->topology_.remove_point(ns);
@@ -217,7 +325,6 @@ void
 AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 {
   avro_assert( metric_.check(topology_) );
-  //return;
 
   real_t dof_factor = params_.insertion_volume_factor();
 
@@ -227,6 +334,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
   index_t nb_quality_rejected = 0;
   index_t nb_visiblity_rejected = 0;
   index_t nb_count_rejected = 0;
+  index_t nb_bad_interp = 0;
   real_t lmin1,lmax1;
 
   inserter_.nb_parameter_rejections() = 0;
@@ -262,6 +370,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     nb_quality_rejected = 0;
     nb_visiblity_rejected = 0;
     nb_count_rejected = 0;
+    nb_bad_interp = 0;
 
     done = true;
 
@@ -298,7 +407,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       index_t n1 = filter.edge( idx , 1 );
 
       real_t lk = metric_.length( topology_.points() , n0 , n1 );
-      printf("calculated length!\n");
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
@@ -321,7 +429,17 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // so we need to add the vertex and also add the interpolated metric
       index_t ns = topology_.points().nb();
       topology_.points().create(filter[idx]);
-      metric_.add(n0,n1,filter[idx]);
+      topology_.points().set_entity(ns, inserter_.geometry(n0,n1) );
+      topology_.points().set_param( ns , filter.u(idx) );
+      bool interp_result = metric_.add(n0,n1,ns,filter[idx]);
+      if (!interp_result)
+      {
+        // something bad happened in the metric interpolation...
+        // probably because of a curved geometry
+        topology_.points().remove(ns);
+        nb_bad_interp++;
+        continue;
+      }
 
       // notify the inverse topology that we want to store extra data
       topology_.inverse().create(1);
@@ -403,6 +521,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         continue;
       }
 
+
       // if the inserter was enlarged, don't be too restrictive with quality
       //inserter_.evaluate( metric );
       real_t qwi = worst_quality(inserter_,metric_);
@@ -419,7 +538,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t vol = 0.0;
       for (index_t k=0;k<inserter_.nb();k++)
         vol += metric_.volume( inserter_ , k );
-      index_t count = index_t(vol/topology_.master().reference().vunit());
+      index_t count = index_t(vol/topology_.shape().reference().vunit());
       if (dof_factor>0 && dof_factor*count<inserter_.nb_real())
       {
         if (ge==NULL || ge->number()>2)
@@ -432,8 +551,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           continue;
         }
       }
-
-      printf("inserted!!\n");
 
       // apply the insertion into the topology
       topology_.apply(inserter_);
@@ -480,9 +597,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       topology_.inverse().remove(j);
     }
 
-    printf("\t\tinserted %lu, swapped %lu, lrej = %lu, qrej = %lu, vrej = %lu, prej = %lu/%lu, dof_rej = %lu\n",
+    printf("\t\tinserted %lu, swapped %lu, lrej = %lu, qrej = %lu, vrej = %lu, prej = %lu/%lu, dof_rej = %lu, interp_rej = %lu\n",
                 nb_inserted,nb_swaps,nb_length_rejected,nb_quality_rejected,nb_visiblity_rejected,
-                inserter_.nb_parameter_rejections(),inserter_.nb_parameter_tests(),nb_count_rejected);
+                inserter_.nb_parameter_rejections(),inserter_.nb_parameter_tests(),nb_count_rejected,nb_bad_interp);
     nb_inserted_total += nb_inserted;
 
     pass++;
