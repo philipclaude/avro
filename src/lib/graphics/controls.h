@@ -40,13 +40,14 @@ public:
   const glm::mat4& model_view() const { return model_view_; }
   const glm::mat4& ui_matrix() const { return ui_matrix_; }
   const glm::mat4& normal() const { return normal_; }
+  const glm::mat4& perspective() const { return perspective_; }
 
   //const glm::mat4& transformation() const { return transformation_; }
 
   void set_ui_matrix( const glm::mat4& m ) { ui_matrix_ = m; }
   void set_mv_matrix( const glm::mat4& m ) { model_view_ = m; }
 
-  glm::mat4 perspective() const { return perspective_*model_view_; }
+  //glm::mat4 perspective() const { return perspective_*model_view_; }
 
   bool dragging;
   int modifier;
