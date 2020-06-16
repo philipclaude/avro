@@ -11,7 +11,7 @@
 
 #include "library/ckf.h"
 
-#include "shape/quadrature.h"
+#include "element/quadrature.h"
 
 #include "mesh/field.hpp"
 
@@ -87,9 +87,9 @@ UT_TEST_CASE( test1 )
   CKF_Triangulation topology( {3,3,3,3} );
   ConicalProductQuadrature quadrature(topology.points().dim());
   quadrature.define();
-  topology.shape().load_quadrature(quadrature);
+  topology.element().load_quadrature(quadrature);
 
-  topology.shape().set_basis( BasisFunctionCategory_Lagrange );
+  topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
   Integrand_Monomial integrand;
 
@@ -102,8 +102,8 @@ UT_TEST_CASE( test1 )
 
   Field<Simplex,real_t> u(topology,2,CONTINUOUS);
   u.build();
-  u.shape().set_basis( BasisFunctionCategory_Lagrange );
-  u.shape().load_quadrature(quadrature);
+  u.element().set_basis( BasisFunctionCategory_Lagrange );
+  u.element().load_quadrature(quadrature);
 
   SomeFunction fcn(2);
   u.evaluate(fcn);
@@ -128,14 +128,14 @@ UT_TEST_CASE( test2 )
     CKF_Triangulation topology( {n,n} );
     ConicalProductQuadrature quadrature(topology.points().dim());
     quadrature.define();
-    topology.shape().load_quadrature(quadrature);
+    topology.element().load_quadrature(quadrature);
 
-    topology.shape().set_basis( BasisFunctionCategory_Lagrange );
+    topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,DISCONTINUOUS);
     u.build();
-    u.shape().set_basis( BasisFunctionCategory_Lagrange );
-    u.shape().load_quadrature(quadrature);
+    u.element().set_basis( BasisFunctionCategory_Lagrange );
+    u.element().load_quadrature(quadrature);
 
     SomeFunction fcn(2);
     u.evaluate(fcn);
@@ -178,14 +178,14 @@ UT_TEST_CASE( test2_3d )
     CKF_Triangulation topology( {n,n,n} );
     ConicalProductQuadrature quadrature(topology.points().dim());
     quadrature.define();
-    topology.shape().load_quadrature(quadrature);
+    topology.element().load_quadrature(quadrature);
 
-    topology.shape().set_basis( BasisFunctionCategory_Lagrange );
+    topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,DISCONTINUOUS);
     u.build();
-    u.shape().set_basis( BasisFunctionCategory_Lagrange );
-    u.shape().load_quadrature(quadrature);
+    u.element().set_basis( BasisFunctionCategory_Lagrange );
+    u.element().load_quadrature(quadrature);
 
     SomeFunction fcn(3);
     u.evaluate(fcn);
@@ -231,14 +231,14 @@ UT_TEST_CASE( test2_4d )
     CKF_Triangulation topology( {n,n,n,n} );
     ConicalProductQuadrature quadrature(topology.points().dim());
     quadrature.define();
-    topology.shape().load_quadrature(quadrature);
+    topology.element().load_quadrature(quadrature);
 
-    topology.shape().set_basis( BasisFunctionCategory_Lagrange );
+    topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,DISCONTINUOUS);
     u.build();
-    u.shape().set_basis( BasisFunctionCategory_Lagrange );
-    u.shape().load_quadrature(quadrature);
+    u.element().set_basis( BasisFunctionCategory_Lagrange );
+    u.element().load_quadrature(quadrature);
 
     SomeFunction fcn(3);
     u.evaluate(fcn);

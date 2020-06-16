@@ -10,6 +10,7 @@
 #include "common/error.h"
 #include "common/tools.h"
 
+#include "graphics/colormap.h"
 #include "graphics/controls.h"
 #include "graphics/gl.h"
 #include "graphics/primitive.h"
@@ -386,6 +387,41 @@ void
 GLFW_Window::flip_clipping_normal()
 {
   clip_plane_.flip_normal();
+}
+
+void
+GLFW_Window::draw_colorbar(const Colormap& colormap, const real_t* ulim)
+{
+  int ncol = 10;
+  std::vector<float> values;
+  colormap.generate(ncol,values);
+
+  // generate the points and triangles with the colors
+  std::vector<real_t> points(9,0);//
+  std::vector<index_t> triangles(3);
+  std::vector<real_t> colors(9,125.);
+
+  real_t x0 = 2;
+  real_t y0 = 0.;
+  real_t h = .25;
+
+  points[0] = x0;   points[1] = y0;
+  points[3] = x0+h; points[4] = y0;
+  points[6] = x0+h; points[7] = y0+1;
+
+  triangles[0] = 0;
+  triangles[1] = 1;
+  triangles[2] = 2;
+
+  // write to the graphics manager
+  manager_.write( "colorbar" , 2 , points , {} , triangles , colors );
+  manager_.select_shader( "colorbar" , "wv" );
+
+  // draw the colorbar
+  DrawingParameters params;
+  params.transparency = 0.5;
+  params.mvp = controls_.perspective();
+  manager_.draw("colorbar",2,params);
 }
 
 void

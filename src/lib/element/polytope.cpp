@@ -11,7 +11,7 @@
 #include "common/set.h"
 #include "common/tools.h"
 
-#include "shape/polytope.h"
+#include "element/polytope.h"
 
 #include "mesh/decomposition.h"
 #include "mesh/points.h"
@@ -23,7 +23,7 @@ namespace avro
 {
 
 Polytope::Polytope( coord_t number , coord_t order , const Table<int>& incidence ) :
-  Shape(number,order),
+  Element(number,order),
   simplex_(number,order),
   incidence_(incidence),
   fullmesh_(false)
@@ -32,7 +32,7 @@ Polytope::Polytope( coord_t number , coord_t order , const Table<int>& incidence
 }
 
 Polytope::Polytope( Topology<Polytope>& topology , const coord_t order , const Table<int>& incidence ) :
-  Shape(topology.number(),order),
+  Element(topology.number(),order),
   simplex_(topology.number(),order),
   incidence_(incidence),
   fullmesh_(false)

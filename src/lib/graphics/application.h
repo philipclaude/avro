@@ -44,6 +44,7 @@ class ApplicationBase
 public:
 
   void write();
+  Colormap& colormap() { return colormap_; }
 
 protected:
   ApplicationBase( GraphicsManager& manager ) :

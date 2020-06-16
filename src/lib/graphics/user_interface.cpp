@@ -375,15 +375,52 @@ Toolbar::begin_draw()
               }
             }
 
-            // TODO field selector
+            // fields dropdown
             ImGui::SetNextItemWidth(100);
             static int current_field = 0;
-            const char* field_names[] = {"Metric","Velocity","Pressure"};
-            ImGui::Combo("Fields",&current_field,field_names,3);
+            std::vector<std::string> field_names = plot["fields"];
+            std::vector<std::string> field_ids = plot["fields_id"];
+            avro_assert( field_names.size() == field_ids.size() );
+            items.resize( field_names.size() + 1 );
+            items[0] = "none";
+            for (index_t k=0;k<field_names.size();k++)
+              items[k+1] = field_names[k].c_str();
+
+            real_t ulim[2] = {0,1};
+
+            ImGui::Combo("Fields",&current_field,items.data(),items.size());
             ImGui::SameLine();
             if (ImGui::Button("Load"))
             {
-              printf("switch to field %s!\n",field_names[current_field]);
+              std::string label(items[current_field]);
+
+              if (current_field==0)
+              {
+                // reset to no colors
+                window_.scene(k).primitive(j).set_active( "0x0" , 0 );
+              }
+              else
+              {
+                std::vector<std::string> s = split(field_ids[current_field-1],"-");
+                avro_assert( s.size()==2 );
+                index_t rank = atoi(s[1].c_str());
+
+                const Fields& fields = window_.scene(k).primitive(j).topology().fields();
+                std::string name = fields.id2name(s[0]);
+
+                // switch the field in scene k, plot j
+                window_.scene(k).primitive(j).set_active( name , rank );
+                window_.scene(k).primitive(j).get_field_limits(ulim);
+              }
+              application_.write();
+            }
+            ImGui::SameLine();
+            std::string cbar_label = "colorbar";
+            static bool draw_colorbar = false;
+            ImGui::Checkbox(cbar_label.c_str(), &draw_colorbar );
+            if (draw_colorbar)
+            {
+              window_.draw_colorbar(application_.colormap(),ulim);
             }
 
             for (index_t i=0;i<entities.size();i++)
@@ -600,6 +637,18 @@ Toolbar::begin_draw()
       label = "center axes";
       ImGui::Checkbox(label.c_str(), &window_.center_axes() );
 
+      ImGui::Separator();
+      ImGui::Text("Colormap:");
+      const char* colormaps[] = {"giraffe","parula","viridis","bgr","bwr","hsv","jet","hot"};
+      static int current_colormap;
+      ImGui::SetNextItemWidth(100);
+      ImGui::Combo("Colormaps", &current_colormap, colormaps , 8 );
+      ImGui::SameLine();
+      if (ImGui::Button("change"))
+      {
+        application_.colormap().change_style(colormaps[current_colormap]);
+        application_.write();
+      }
 
       ImGui::Separator();
       ImGui::Text("Rendering:\n");

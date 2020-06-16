@@ -22,6 +22,8 @@
 namespace avro
 {
 
+class Colormap;
+
 namespace graphics
 {
 
@@ -53,6 +55,7 @@ public:
   void write_axes();
   void draw_axes();
   void draw_plane(const real_t* focus);
+  void draw_colorbar(const Colormap& colormap,const real_t* ulim);
   void end_draw();
 
   index_t nb_scene() const { return scene_.size(); }

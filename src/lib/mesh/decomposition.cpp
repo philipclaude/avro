@@ -10,9 +10,9 @@
 
 #include "graphics/clipping.h"
 
-#include "shape/shape.h"
-#include "shape/polytope.h"
-#include "shape/simplex.h"
+#include "element/element.h"
+#include "element/polytope.h"
+#include "element/simplex.h"
 
 #include "mesh/points.h"
 #include "mesh/decomposition.h"
@@ -34,7 +34,7 @@ SimplicialDecomposition<type>::SimplicialDecomposition( const Topology<type>& to
   for (index_t k=0;k<=number_;k++)
   {
     add_child( std::make_shared<Topology<Simplex>>(points_,k) );
-    elements_.push_back( std::map<Element,index_t>() );
+    elements_.push_back( std::map<ElementIndices,index_t>() );
     parents_.push_back( std::map<index_t,std::vector<index_t>>() );
   }
 
@@ -72,11 +72,11 @@ SimplicialDecomposition<type>::add_simplex( index_t number , const index_t* v , 
 {
   std::vector<index_t> simplex(v,v+number+1);
   std::sort( simplex.begin() , simplex.end() );
-  Element element;
+  ElementIndices element;
   element.dim     = number;
   element.indices = simplex;
   element.sorted  = true;
-  std::map<Element,index_t>::iterator it = elements_[number].find(element);
+  std::map<ElementIndices,index_t>::iterator it = elements_[number].find(element);
   if (it==elements_[number].end())
   {
     elements_[number].insert( { element,child_[number]->nb() } );
@@ -94,7 +94,7 @@ SimplicialDecomposition<type>::add_point( coord_t number , const index_t* v , in
 {
   std::vector<index_t> polytope(v,v+nv);
   std::sort( polytope.begin() , polytope.end() );
-  Element element;
+  ElementIndices element;
   element.dim     = number;
   element.indices = polytope;
   element.sorted  = true;
@@ -167,7 +167,7 @@ SimplicialDecomposition<Simplex>::extract( const graphics::ClippingPlane* plane 
     }
 
     // get the edges of this cell
-    topology_.shape().get_triangles( topology_(k) , topology_.nv(k) , tk );
+    topology_.element().get_triangles( topology_(k) , topology_.nv(k) , tk );
 
     // add the edges
     for (index_t j=0;j<tk.size()/3;j++)
@@ -212,9 +212,9 @@ SimplicialDecomposition<Polytope>::extract( const graphics::ClippingPlane* plane
     }
 
     // ask the  to triangulate, points will be added to points stored
-    // in the SimplicialDecomposition object upon decomposition by the 
+    // in the SimplicialDecomposition object upon decomposition by the
     std::set<int> h;
-    topology_.shape().triangulate( topology_(k) , topology_.nv(k) , *this , k , h );
+    topology_.element().triangulate( topology_(k) , topology_.nv(k) , *this , k , h );
     avro_assert( h.size()==0 );
   }
   if (number_==topology_.points().dim())

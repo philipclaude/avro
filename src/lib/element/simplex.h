@@ -13,8 +13,8 @@
 #include "common/error.h"
 #include "common/table.h"
 
-#include "shape/basis.h"
-#include "shape/shape.h"
+#include "element/basis.h"
+#include "element/element.h"
 
 #include "numerics/functions.h"
 #include "numerics/matrix.h"
@@ -31,7 +31,7 @@ template<typename type> class SimplicialDecomposition;
 class Points;
 class Entity;
 
-class Simplex : public Shape<Simplex>
+class Simplex : public Element<Simplex>
 {
 public:
   Simplex( const coord_t number , const coord_t order );
@@ -47,7 +47,7 @@ public:
   template<typename dof_t> void transfer( const Simplex&  , const std::vector<const dof_t>& dof0 , std::vector<dof_t>& dof1 ) const;
 
   template<typename dof_t>
-  void convert( const Simplex& shape_from , const std::vector<dof_t>& A , std::vector<dof_t>& B ) const;
+  void convert( const Simplex& element_from , const std::vector<dof_t>& A , std::vector<dof_t>& B ) const;
 
   real_t volume( const Points& points , const index_t* v , index_t nv ) const;
   void edge_vector( const Points& points , index_t n0 , index_t n1 , real_t* edge , Entity* entity=nullptr ) const;
@@ -98,13 +98,13 @@ public:
     return nb_interior(number_);
   }
 
-  void get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const;
+  void get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , ElementIndices& f ) const;
   void get_edges( const index_t* v , index_t nv , std::vector<index_t>& ek ) const;
   void get_triangles( const index_t* v , index_t nv , std::vector<index_t>& tk ) const;
 
   real_t closest( const Points& x , const index_t* v , const index_t nv , const real_t* p , std::vector<real_t>& y , real_t distance2=-1 ) const;
 
-  void get_canonical_indices( const index_t* v , index_t nv , const Element& f , std::vector<index_t>& canonical ) const;
+  void get_canonical_indices( const index_t* v , index_t nv , const ElementIndices& f , std::vector<index_t>& canonical ) const;
 
   void facet( const index_t* v , index_t j , std::vector<index_t>& f ) const;
 

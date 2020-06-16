@@ -52,7 +52,7 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
   avro_assert(this->geometry_topology_.nb()>0);
 
   // add the parameter coordinates for the inserted point along with the mapped index
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     std::vector<real_t> xu(this->u_.dim());
     this->u_.create( xu.data() );
@@ -69,7 +69,7 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
     this->u_.set_entity( j , this->points_.entity( this->u2v_[j] ) );
   }
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_parameter(ep);
     this->geometry_cavity_.sign() = 1;
@@ -80,12 +80,12 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
   bool accept = this->geometry_cavity_.compute( ns , this->u_[ns] , this->S_ );
   if (!accept)
   {
-    avro_assert( this->topology_.shape().parameter());
+    avro_assert( this->topology_.element().parameter());
     return false;
   }
   avro_assert(accept);
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_physical();
   }
@@ -174,7 +174,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   this->topology_.points().body(ns) = bodys;
   #endif
 
-  if (entitys!=NULL && !this->topology_.shape().parameter())
+  if (entitys!=NULL && !this->topology_.element().parameter())
   {
     // enlarge the cavity for boundary insertions
     // if the shell was given, then this should have been precomputed
@@ -192,7 +192,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   }
 
   bool accept;
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     avro_assert( entitys!=nullptr );
     avro_assert( elems_.size()==2 );
@@ -538,7 +538,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t vol = 0.0;
       for (index_t k=0;k<inserter_.nb();k++)
         vol += metric_.volume( inserter_ , k );
-      index_t count = index_t(vol/topology_.shape().reference().vunit());
+      index_t count = index_t(vol/topology_.element().reference().vunit());
       if (dof_factor>0 && dof_factor*count<inserter_.nb_real())
       {
         if (ge==NULL || ge->number()>2)

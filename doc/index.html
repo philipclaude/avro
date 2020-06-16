@@ -231,7 +231,11 @@
         </p>
         <ul>
           <li><code>adapt</code>: runs mesh adaptation on some input <code>mesh</code> with <code>geometry</code> and <code>metric</code> to some <code>output_prefix</code>.</li>
-          <li><code>plot</code>: plots some input <code>mesh</code>.</li>
+          <li><code>plot</code>: plots some input <code>mesh</code>.
+            Instead of <code>plot</code>, you can also run the <code>webplot</code> program, which will start a graphics server.
+            Most of the functionality with <code>webplot</code> will be the same as <code>plot</code>, except for any OpenGL 4+ features.
+            After starting the graphics server, you can then open the file <code>app/webplot/webplot.html</code> in your browser to visualize your meshes.
+          </li>
           <li><code>voronoi</code>: computes a restricted Voronoi diagram of some input <code>mesh</code> with <code>points</code> (the Delaunay vertices).</li>
         </ul>
         You can learn more about required and optional arguments by running <code>avro</code> with no arguments, which will display some information about each program.

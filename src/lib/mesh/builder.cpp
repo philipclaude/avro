@@ -9,7 +9,7 @@
 //
 #include "common/tools.h"
 
-#include "shape/transfer.hpp"
+#include "element/transfer.hpp"
 
 #include "mesh/builder.h"
 
@@ -27,38 +27,38 @@ typedef struct
   std::vector< std::vector<index_t> > canonical;
 } FacetParent;
 
-template<typename Shape_t>
+template<typename type>
 class FacetDecomposition
 {
 public:
-  FacetDecomposition( const Topology<Shape_t>& topology ) :
+  FacetDecomposition( const Topology<type>& topology ) :
     topology_(topology)
   {}
 
   coord_t nb_dim() const { return facets_.size(); }
 
-  const std::map<Element,FacetParent>& operator[](index_t d) const
+  const std::map<ElementIndices,FacetParent>& operator[](index_t d) const
     { return facets_[d]; }
 
-  std::map<Element,FacetParent>& operator[](index_t d)
+  std::map<ElementIndices,FacetParent>& operator[](index_t d)
     { return facets_[d]; }
 
   void build();
 
 private:
-  std::vector< std::map<Element,FacetParent> > facets_;
-  const Topology<Shape_t>& topology_;
+  std::vector< std::map<ElementIndices,FacetParent> > facets_;
+  const Topology<type>& topology_;
 };
 
-template<typename Shape_t>
+template<typename type>
 void
-FacetDecomposition<Shape_t>::build()
+FacetDecomposition<type>::build()
 {
-  const coord_t nb_facet_dim = topology_.shape().number()+1; // always!
+  const coord_t nb_facet_dim = topology_.element().number()+1; // always!
 
   // create the maps for each dimension
   for (index_t j=0;j<nb_facet_dim;j++)
-    facets_.push_back( std::map<Element,FacetParent>() );
+    facets_.push_back( std::map<ElementIndices,FacetParent>() );
 
   // loop through the elements in the topology
   for (index_t k=0;k<topology_.nb();k++)
@@ -66,19 +66,19 @@ FacetDecomposition<Shape_t>::build()
     // loop through the facets of this element
     for (index_t j=0;j<nb_facet_dim;j++)
     {
-      std::map<Element,FacetParent>& facets_j = facets_[j];
+      std::map<ElementIndices,FacetParent>& facets_j = facets_[j];
 
-      for (index_t i=0;i<topology_.shape().nb_facets(j);i++)
+      for (index_t i=0;i<topology_.element().nb_facets(j);i++)
       {
-        Element f;
+        ElementIndices f;
         f.dim = j;
-        topology_.shape().get_facet_vertices( topology_(k) , topology_.nv(k) , i , f );
+        topology_.element().get_facet_vertices( topology_(k) , topology_.nv(k) , i , f );
 
         std::vector<index_t> canonical(f.indices.size());
-        topology_.shape().get_canonical_indices( topology_(k) , topology_.nv(k) , f , canonical );
+        topology_.element().get_canonical_indices( topology_(k) , topology_.nv(k) , f , canonical );
 
         // check if this facet exists
-        std::map<Element,FacetParent>::iterator it = facets_j.find(f);
+        std::map<ElementIndices,FacetParent>::iterator it = facets_j.find(f);
         if ( it==facets_j.end() )
         {
           std::vector<index_t> parents = {k};
@@ -103,10 +103,10 @@ template<>
 Builder<Simplex>::Builder( const Topology<Simplex>& topology , coord_t order , BasisFunctionCategory category ) :
   Table<index_t>(TableLayout_Rectangular,0),
   topology_(topology),
-  shape_(topology.number(),order)
+  element_(topology.number(),order)
 {
-  Table<index_t>::set_rank( shape_.nb_basis() );
-  shape_.set_basis( category );
+  Table<index_t>::set_rank( element_.nb_basis() );
+  element_.set_basis( category );
   build();
 }
 
@@ -147,7 +147,7 @@ Builder<type>::transfer( Topology<type>& f ) const
       index_t idx = (*this)(k,j);
       dof1[j] = f.points()[ idx ];
     }
-    shape_.transfer( topology_.shape() , dof0 , dof1 , topology_.points().dim() );
+    element_.transfer( topology_.element() , dof0 , dof1 , topology_.points().dim() );
   }
 }
 
@@ -162,7 +162,7 @@ Builder<type>::build()
   std::vector<index_t> elem;
   for (index_t k=0;k<topology_.nb();k++)
   {
-    elem.resize( shape_.nb_basis() , 0 );
+    elem.resize( element_.nb_basis() , 0 );
     add( elem.data() , elem.size() );
   }
 
@@ -170,15 +170,15 @@ Builder<type>::build()
   index_t n = 0;
   for (coord_t dim=0;dim<facets.nb_dim();dim++)
   {
-    const std::map<Element,FacetParent>& facets_d = facets[dim];
-    std::map<Element,FacetParent>::const_iterator it;
+    const std::map<ElementIndices,FacetParent>& facets_d = facets[dim];
+    std::map<ElementIndices,FacetParent>::const_iterator it;
 
-    ReferenceElement<type> reference(dim,shape_.order());
+    ReferenceElement<type> reference(dim,element_.order());
 
     // loop through all the facets
     for (it=facets_d.begin();it!=facets_d.end();++it)
     {
-      const Element& f = it->first;
+      const ElementIndices& f = it->first;
       avro_assert( f.dim == dim );
 
       const std::vector<index_t>& parents = it->second.parents;
@@ -187,7 +187,7 @@ Builder<type>::build()
       avro_assert( parents.size() == it->second.canonical.size() );
 
       // sprinkle the new dof into place
-      std::vector<index_t> dof( shape_.nb_interior(dim) );
+      std::vector<index_t> dof( element_.nb_interior(dim) );
       for (index_t j=0;j<dof.size();j++)
         dof[j] = n++;
 
@@ -205,15 +205,15 @@ Builder<type>::build()
 
           // compute the barycentric coordinates of this point in the parent simplex
           // using the canonical vertices of the facet
-          std::vector<index_t> ls( shape_.number() , 0 );
+          std::vector<index_t> ls( element_.number() , 0 );
           for (index_t ii=0;ii<ls.size();ii++)
           {
             for (index_t jj=0;jj<canonical.size();jj++)
-              ls[ii] += lf[jj]*topology_.shape().reference().get_lattice_coordinate( canonical[jj] )[ii];
+              ls[ii] += lf[jj]*topology_.element().reference().get_lattice_coordinate( canonical[jj] )[ii];
           }
 
           // determine which index in the element this corresponds to
-          int idx = shape_.reference().find_index( ls.data() );
+          int idx = element_.reference().find_index( ls.data() );
           avro_assert( idx>=0 );
 
           (*this)(k,idx) = dof[j];

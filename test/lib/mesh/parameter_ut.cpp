@@ -75,7 +75,7 @@ UT_TEST_CASE(test1)
 
   // now tell the  that it is in parameter space, so
   // it knows that it should retrieve appropriate geometry coordinates
-  topology.shape().set_parameter(true);
+  topology.element().set_parameter(true);
   topology.orient();
 
   std::vector<real_t> volumes( topology.nb() );

@@ -9,8 +9,8 @@
 //
 #include "common/tools.h"
 
-#include "shape/basis.h"
-#include "shape/simplex.h"
+#include "element/basis.h"
+#include "element/simplex.h"
 
 namespace avro
 {

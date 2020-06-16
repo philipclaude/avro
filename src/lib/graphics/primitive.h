@@ -19,7 +19,7 @@
 namespace avro
 {
 
-template<typename Shape_t> class Topology;
+template<typename type> class Topology;
 class TopologyBase;
 
 namespace graphics

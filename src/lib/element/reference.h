@@ -58,7 +58,7 @@ protected:
   real_t vorth_;
 };
 
-template<typename Shape> class ReferenceElement;
+template<typename type> class ReferenceElement;
 
 template<>
 class ReferenceElement<Simplex> : public ReferenceElementBase

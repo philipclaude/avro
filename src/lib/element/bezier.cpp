@@ -7,8 +7,8 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
-#include "shape/basis.h"
-#include "shape/simplex.h"
+#include "element/basis.h"
+#include "element/simplex.h"
 
 namespace avro
 {

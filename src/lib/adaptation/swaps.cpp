@@ -312,7 +312,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
   if (this->geometry_topology_.closed())
     avro_assert( this->geometry_topology_.nb_real()==2 );
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_parameter(face);
     this->geometry_cavity_.sign() = 1;
@@ -322,7 +322,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
   bool accept = this->geometry_cavity_.compute( this->v2u_[e0] , this->u_[this->v2u_[e0]] , this->S_ );
   avro_assert( accept );
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_physical();
   }
@@ -333,7 +333,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e0 );
   avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_parameter(face);
   }
@@ -342,7 +342,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
   accept = this->geometry_cavity_.compute( this->v2u_[e1] , this->u_[this->v2u_[e1]] , this->S_ );
   avro_assert( accept );
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_physical();
   }
@@ -351,7 +351,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
   avro_assert_msg( s > 0 , "negative orientation for edge (%lu,%lu) with vertex %lu" , e0,e1,e1 );
   avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_parameter(face);
   }
@@ -366,7 +366,7 @@ EdgeSwap<type>::visible_geometry( index_t p , index_t e0 , index_t e1 , Entity* 
     return false;
   }
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_physical();
   }
@@ -476,7 +476,7 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
   Entity* ge = this->geometry(e0,e1);
   this->set_entity(ge);
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     avro_assert( ge!=nullptr );
     avro_assert( ge->number()==2 ); // otherwise this shoudl have been caught by 'valid'

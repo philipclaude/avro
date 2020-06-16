@@ -200,14 +200,14 @@ Boundary<type>::extractall()
     // loop through all lower-dimensional facets of this simplex
     for (coord_t i=0;i<topology_.number();i++)
     {
-      Element elem;
+      ElementIndices elem;
       std::vector<index_t>& facet = elem.indices;
 
       elem.dim = i;
-      for (index_t j=0;j<topology_.shape().nb_facets(i);j++)
+      for (index_t j=0;j<topology_.element().nb_facets(i);j++)
       {
         // get the indices of this facet
-        topology_.shape().get_facet_vertices( topology_(k) , topology_.nv(k) , j , elem );
+        topology_.element().get_facet_vertices( topology_(k) , topology_.nv(k) , j , elem );
 
         // get the geometry this facet is on and lookup which topology this is
         Entity* e = BoundaryUtils::geometryFacet( topology_.points() ,facet.data() , facet.size() );

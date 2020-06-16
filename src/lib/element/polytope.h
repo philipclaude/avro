@@ -12,8 +12,8 @@
 
 #include "common/table.h"
 
-#include "shape/shape.h"
-#include "shape/simplex.h"
+#include "element/element.h"
+#include "element/simplex.h"
 
 #include <set>
 
@@ -23,7 +23,7 @@ namespace avro
 template<typename type> class Topology;
 template<typename type> class SimplicialDecomposition;
 
-class Polytope : public Shape<Polytope>
+class Polytope : public Element<Polytope>
 {
 
 public:

@@ -70,14 +70,14 @@ UT_TEST_CASE(test1)
   // retrieve all the triangles
   Topology<Simplex> topology(pmesh->points(),2);
   tess.retrieve<Simplex>(0).get_elements( topology );
-  topology.shape().set_parameter(true);
+  topology.element().set_parameter(true);
 
   topology.close();
   topology.neighbours().compute();
   topology.inverse().build();
 
   Primitive<Simplex> primitive(topology);
-  UT_ASSERT( primitive.shape().parameter() );
+  UT_ASSERT( primitive.element().parameter() );
 
   // loop through every edge, extract the cavity and ensure every edge end point is visible
   std::vector<index_t> edges;

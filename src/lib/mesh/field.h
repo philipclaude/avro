@@ -14,9 +14,9 @@
 #include "common/json.h"
 #include "common/types.h"
 
-#include "shape/shape.h"
-#include "shape/polytope.h"
-#include "shape/simplex.h"
+#include "element/element.h"
+#include "element/polytope.h"
+#include "element/simplex.h"
 
 #include "mesh/dof.h"
 
@@ -100,7 +100,7 @@ private:
   FieldType type_;
 };
 
-template<typename Shape,typename T> class Field;
+template<typename type,typename T> class Field;
 
 template<typename T>
 class Field<Simplex,T> : public FieldBase<T>
@@ -109,8 +109,8 @@ public:
   Field( const Topology<Simplex>& topology , coord_t order , FieldType type );
   void build();
 
-  const Simplex& shape() const { return shape_; }
-  Simplex& shape() { return shape_; }
+  const Simplex& element() const { return element_; }
+  Simplex& element() { return element_; }
 
   template<typename Function>
   void evaluate( const Function& function );
@@ -121,7 +121,7 @@ public:
 
 private:
   const Topology<Simplex>& topology_;
-  Simplex shape_;
+  Simplex element_;
 };
 
 template<typename T>
@@ -135,7 +135,7 @@ public:
 
 private:
   const Topology<Polytope>& topology_;
-  const Polytope shape_;
+  const Polytope element_;
 };
 
 class TopologyBase;

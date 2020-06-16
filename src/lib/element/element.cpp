@@ -9,15 +9,15 @@
 //
 #include "common/error.h"
 
-#include "shape/shape.h"
-#include "shape/quadrature.h"
+#include "element/element.h"
+#include "element/quadrature.h"
 
 namespace avro
 {
 
 // needed to create a set/map of elements
 bool
-operator==( const Element& fx , const Element& fy )
+operator==( const ElementIndices& fx , const ElementIndices& fy )
 {
   // assumes fx and fy have the same topological dimension
   // and that the indices are sorted
@@ -30,7 +30,7 @@ operator==( const Element& fx , const Element& fy )
 
 // needed to create a map of elements
 bool
-operator<( const Element& f , const Element& g )
+operator<( const ElementIndices& f , const ElementIndices& g )
 {
   // first check the topological dimension
   if (f.dim < g.dim)
@@ -43,18 +43,18 @@ operator<( const Element& f , const Element& g )
 
 template<typename type>
 void
-Shape<type>::load_quadrature( Quadrature& quadrature )
+Element<type>::load_quadrature( Quadrature& quadrature )
 {
   quadrature.retrieve(xquad_,wquad_);
 }
 
 template<typename type>
 void
-Shape<type>::set_basis( BasisFunctionCategory category )
+Element<type>::set_basis( BasisFunctionCategory category )
 {
   basis_ = std::make_shared<Basis<type>>(reference_,category);
 }
 
-template class Shape<Simplex>;
+template class Element<Simplex>;
 
 } // avro
