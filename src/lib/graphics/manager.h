@@ -29,6 +29,7 @@ class TransformFeedbackResult;
 typedef struct
 {
   float transparency;
+  float lighting;
   mat4  mvp;
 } DrawingParameters;
 

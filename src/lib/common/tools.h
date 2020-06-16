@@ -198,7 +198,7 @@ unique_label_skip( T* x , index_t n , index_t kskip )
 }
 
 inline void
-printInfo()
+print_info()
 {
 
   printf("\navro compiled with ");
@@ -206,39 +206,30 @@ printInfo()
   if (__cplusplus == 201103L) printf("c++11");
   else if (__cplusplus == 199711L ) printf("c++98");
   else printf("pre-standard c++");
-
-  printf("deleting memory upon termination using");
-  #ifdef avro_SMART_PTR
-    printf(" internal smart pointers.\n");
-  #else
-    printf(" std::shared_ptr (c++11).\n");
-  #endif
   printf("\n");
 }
 
-void avroPrintf( const char* fmt , ... );
-
 template<typename type>
 static void
-printValue( const type& x );
+print_value( const type& x );
 
 template<>
 inline void
-printValue( const index_t& x )
+print_value( const index_t& x )
 {
   printf("%d ",int(x));
 }
 
 template<>
 inline void
-printValue( const unsigned& x )
+print_value( const unsigned& x )
 {
   printf("%d ",int(x));
 }
 
 template<>
 inline void
-printValue( const int& x )
+print_value( const int& x )
 {
   printf("%d ",int(x));
 }
@@ -246,21 +237,21 @@ printValue( const int& x )
 
 template<>
 inline void
-printValue( const real_t& x )
+print_value( const real_t& x )
 {
   printf("%g ",x);
 }
 
 template<>
 inline void
-printValue( const float& x )
+print_value( const float& x )
 {
   printf("%g ",x);
 }
 
 template<>
 inline void
-printValue( const std::vector<real_t>& x )
+print_value( const std::vector<real_t>& x )
 {
   printf(" [ ");
   for (index_t j=0;j<x.size();j++)
@@ -279,7 +270,7 @@ print_inline( const std::vector<type>& s , const std::string& name=std::string()
       printf("[%d]: ",id);
   printf("( ");
   for (index_t j=0;j<s.size();j++)
-      printValue(s[j]);
+      print_value(s[j]);
   printf(")\n");
 }
 

@@ -369,6 +369,7 @@ GLFW_Window::draw_axes()
   DrawingParameters params;
   params.transparency = 1.0;
   params.mvp = controls_.model_view_projection();
+  params.lighting = 1.0;
   manager_.draw( "axes" , 1 , params );
 }
 
@@ -380,6 +381,7 @@ GLFW_Window::draw_plane(const real_t* focus)
   DrawingParameters params;
   params.transparency = 0.25;
   params.mvp = clip_controls_.model_view_projection();
+  params.lighting = 1.0;
   clip_plane_.plot( manager_,focus,controls_.model_view_projection() );
 }
 
@@ -396,31 +398,89 @@ GLFW_Window::draw_colorbar(const Colormap& colormap, const real_t* ulim)
   std::vector<float> values;
   colormap.generate(ncol,values);
 
+  index_t ntri = 2*(ncol - 1);
+  index_t npts = 3*ntri;
+
   // generate the points and triangles with the colors
-  std::vector<real_t> points(9,0);//
-  std::vector<index_t> triangles(3);
-  std::vector<real_t> colors(9,125.);
+  std::vector<real_t> points(3*npts);
+  std::vector<index_t> triangles(3*ntri);
+  std::vector<real_t> colors(3*npts);
+  std::vector<index_t> edges(8);
 
-  real_t x0 = 2;
-  real_t y0 = 0.;
-  real_t h = .25;
+  real_t x = 2;
+  real_t y = 0.;
+  real_t z = 0.8;
+  real_t w = 0.2;
+  real_t h = 5*w;
+  real_t dh = h/real_t(ncol-1);
+  index_t i0,i1,i2,i3;
 
-  points[0] = x0;   points[1] = y0;
-  points[3] = x0+h; points[4] = y0;
-  points[6] = x0+h; points[7] = y0+1;
+  index_t pt = 0;
+  for (int i=0;i<ncol-1;i++)
+  {
+    // first point
+    points[3*pt  ] = x;
+    points[3*pt+1] = y +i*dh;
+    points[3*pt+2] = z;
+    for (index_t j=0;j<3;j++)
+      colors[3*pt+j] = values[3*i+j];
+    i0 = pt;
+    pt++;
 
-  triangles[0] = 0;
-  triangles[1] = 1;
-  triangles[2] = 2;
+    // second point
+    points[3*pt  ] = x +w;
+    points[3*pt+1] = y +i*dh;
+    points[3*pt+2] = z;
+    for (index_t j=0;j<3;j++)
+      colors[3*pt+j] = values[3*i+j];
+    i1 = pt;
+    pt++;
+
+    // third point
+    points[3*pt  ] = x;
+    points[3*pt+1] = y +(i+1)*dh;
+    points[3*pt+2] = z;
+    for (index_t j=0;j<3;j++)
+      colors[3*pt+j] = values[3*(i+1)+j];
+    i2 = pt;
+    pt++;
+
+    // fourth point
+    points[3*pt  ] = x +w;
+    points[3*pt+1] = y +(i+1)*dh;
+    points[3*pt+2] = z;
+    for (index_t j=0;j<3;j++)
+      colors[3*pt+j] = values[3*(i+1)+j];
+    i3 = pt;
+    pt++;
+
+    triangles[6*i  ] = i0; triangles[6*i+1] = i1; triangles[6*i+2] = i2;
+    triangles[6*i+3] = i1; triangles[6*i+4] = i3; triangles[6*i+5] = i2;
+  }
+
+  // colormap is [0,1] so convert to [0,256]
+  for (index_t k=0;k<colors.size();k++)
+    colors[k] *= 256.;
+
+  // assign the edges
+  i0 = 0;
+  i1 = 1;
+  i2 = pt -1;
+  i3 = i2 -1;
+  edges[0] = i0; edges[1] = i1;
+  edges[2] = i1; edges[3] = i2;
+  edges[4] = i2; edges[5] = i3;
+  edges[6] = i3; edges[7] = i0;
 
   // write to the graphics manager
-  manager_.write( "colorbar" , 2 , points , {} , triangles , colors );
+  manager_.write( "colorbar" , 2 , points , edges , triangles , colors );
   manager_.select_shader( "colorbar" , "wv" );
 
   // draw the colorbar
   DrawingParameters params;
-  params.transparency = 0.5;
+  params.transparency = 1.0;
   params.mvp = controls_.perspective();
+  params.lighting = -1.0; // no lighting
   manager_.draw("colorbar",2,params);
 }
 

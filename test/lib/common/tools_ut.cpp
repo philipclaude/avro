@@ -38,10 +38,10 @@ UT_TEST_CASE(test1)
 
 
   index_t x = 3;
-  printValue(x);
+  print_value(x);
 
-  printValue<float>(3.14);
-  printValue<double>(3.14);
+  print_value<float>(3.14);
+  print_value<double>(3.14);
 
   real_t r0 = random_within( 0.0 , 1.0 );
   UT_ASSERT( r0 >= 0.0 and r0 <= 1.0 );

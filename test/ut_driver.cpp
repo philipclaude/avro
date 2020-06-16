@@ -21,7 +21,7 @@ using namespace avro;
 int
 main()
 {
-  printInfo();
+  print_info();
 
   // initialize the distributed/shared memory task/thread managers
   #ifdef avro_WITH_MPI
@@ -43,6 +43,6 @@ main()
   __driver__->run(result);
   result.summary();
   delete __driver__;
-  if (!result.successful()) return 1;  
+  if (!result.successful()) return 1;
   return 0;
 }
