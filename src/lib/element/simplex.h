@@ -31,7 +31,7 @@ template<typename type> class SimplicialDecomposition;
 class Points;
 class Entity;
 
-class Simplex : public Shape<Simplex>
+class Simplex : public Element<Simplex>
 {
 public:
   Simplex( const coord_t number , const coord_t order );

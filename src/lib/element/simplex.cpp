@@ -33,7 +33,7 @@ Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
 {}
 
 Simplex::Simplex( const coord_t number , const coord_t order ) :
-  Shape(number,order,"simplex"),
+  Element(number,order,"simplex"),
   entity_(nullptr)
 {
   precalculate();

@@ -26,14 +26,14 @@ namespace avro
 {
 
 class Quadrature;
-template<typename Shape> class Basis;
+template<typename type> class Basis;
 
 template<typename type>
-class Shape
+class Element
 {
 public:
 
-  Shape( coord_t number , coord_t order ) :
+  Element( coord_t number , coord_t order ) :
     number_(number),
     order_(order),
     reference_(number_,order_),
@@ -41,7 +41,7 @@ public:
     basis_(nullptr)
   {}
 
-  Shape( coord_t number , coord_t order , const std::string& name ) :
+  Element( coord_t number , coord_t order , const std::string& name ) :
     number_(number),
     order_(order),
     name_(name),

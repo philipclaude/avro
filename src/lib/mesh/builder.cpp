@@ -27,11 +27,11 @@ typedef struct
   std::vector< std::vector<index_t> > canonical;
 } FacetParent;
 
-template<typename Shape_t>
+template<typename type>
 class FacetDecomposition
 {
 public:
-  FacetDecomposition( const Topology<Shape_t>& topology ) :
+  FacetDecomposition( const Topology<type>& topology ) :
     topology_(topology)
   {}
 
@@ -47,12 +47,12 @@ public:
 
 private:
   std::vector< std::map<ElementIndices,FacetParent> > facets_;
-  const Topology<Shape_t>& topology_;
+  const Topology<type>& topology_;
 };
 
-template<typename Shape_t>
+template<typename type>
 void
-FacetDecomposition<Shape_t>::build()
+FacetDecomposition<type>::build()
 {
   const coord_t nb_facet_dim = topology_.element().number()+1; // always!
 

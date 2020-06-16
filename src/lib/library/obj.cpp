@@ -58,9 +58,9 @@ objFile::read()
   DOF<real_t> texture(2);
   std::vector< std::vector<index_t> > nt_vals,ut_vals;
 
-  typedef Simplex Shape_t;
-  typedef Field<Shape_t,std::vector<real_t>> FieldType;
-  typedef Field<Shape_t,std::vector<index_t>> FieldType_idx;
+  typedef Simplex Element_t;
+  typedef Field<Element_t,std::vector<real_t>> FieldType;
+  typedef Field<Element_t,std::vector<index_t>> FieldType_idx;
 
   std::shared_ptr<FieldType> normal_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);
   std::shared_ptr<FieldType> uv_fld = std::make_shared<FieldType>(*this,1,CONTINUOUS);

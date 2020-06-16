@@ -100,7 +100,7 @@ private:
   FieldType type_;
 };
 
-template<typename Shape,typename T> class Field;
+template<typename type,typename T> class Field;
 
 template<typename T>
 class Field<Simplex,T> : public FieldBase<T>

@@ -23,7 +23,7 @@ namespace avro
 template<typename type> class Topology;
 template<typename type> class SimplicialDecomposition;
 
-class Polytope : public Shape<Polytope>
+class Polytope : public Element<Polytope>
 {
 
 public:

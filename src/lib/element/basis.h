@@ -17,8 +17,8 @@
 namespace avro
 {
 
-template<typename Shape> class Bezier;
-template<typename Shape> class Lagrange;
+template<typename type> class Bezier;
+template<typename type> class Lagrange;
 class Simplex;
 
 enum BasisFunctionCategory
@@ -47,22 +47,22 @@ public:
   static void hess(const ReferenceElement<Simplex>& ref , const double* x , double* hphi );
 };
 
-template<typename Shape>
+template<typename type>
 class Basis
 {
 private:
 
-  typedef void (*eval_func_ptr)(const ReferenceElement<Shape>&,const double*,double*);
-  typedef void (*eval_grad_ptr)(const ReferenceElement<Shape>&,const double*,double*);
-  typedef void (*eval_hess_ptr)(const ReferenceElement<Shape>&,const double*,double*);
+  typedef void (*eval_func_ptr)(const ReferenceElement<type>&,const double*,double*);
+  typedef void (*eval_grad_ptr)(const ReferenceElement<type>&,const double*,double*);
+  typedef void (*eval_hess_ptr)(const ReferenceElement<type>&,const double*,double*);
 
   eval_func_ptr
   get_func( BasisFunctionCategory category )
   {
     if (category==BasisFunctionCategory_Lagrange)
-      return Lagrange<Shape>::eval;
+      return Lagrange<type>::eval;
     if (category==BasisFunctionCategory_Bezier)
-      return Bezier<Shape>::eval;
+      return Bezier<type>::eval;
     return NULL;
   }
 
@@ -70,9 +70,9 @@ private:
   get_grad( BasisFunctionCategory category )
   {
     if (category==BasisFunctionCategory_Lagrange)
-      return Lagrange<Shape>::grad;
+      return Lagrange<type>::grad;
     if (category==BasisFunctionCategory_Bezier)
-      return Bezier<Shape>::grad;
+      return Bezier<type>::grad;
     return NULL;
   }
 
@@ -80,15 +80,15 @@ private:
   get_hess( BasisFunctionCategory category )
   {
     if (category==BasisFunctionCategory_Lagrange)
-      return Lagrange<Shape>::hess;
+      return Lagrange<type>::hess;
     if (category==BasisFunctionCategory_Bezier)
-      return Bezier<Shape>::hess;
+      return Bezier<type>::hess;
     return NULL;
   }
 
 public:
 
-  Basis( const ReferenceElement<Shape>& reference , const BasisFunctionCategory category ) :
+  Basis( const ReferenceElement<type>& reference , const BasisFunctionCategory category ) :
     reference_(reference),
     category_(category),
     fptr_( get_func(category_) ),
@@ -112,7 +112,7 @@ public:
   }
 
 private:
-  const ReferenceElement<Shape>& reference_;
+  const ReferenceElement<type>& reference_;
   BasisFunctionCategory category_;
 
   const eval_func_ptr fptr_;

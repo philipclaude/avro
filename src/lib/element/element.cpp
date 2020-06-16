@@ -43,18 +43,18 @@ operator<( const ElementIndices& f , const ElementIndices& g )
 
 template<typename type>
 void
-Shape<type>::load_quadrature( Quadrature& quadrature )
+Element<type>::load_quadrature( Quadrature& quadrature )
 {
   quadrature.retrieve(xquad_,wquad_);
 }
 
 template<typename type>
 void
-Shape<type>::set_basis( BasisFunctionCategory category )
+Element<type>::set_basis( BasisFunctionCategory category )
 {
   basis_ = std::make_shared<Basis<type>>(reference_,category);
 }
 
-template class Shape<Simplex>;
+template class Element<Simplex>;
 
 } // avro
