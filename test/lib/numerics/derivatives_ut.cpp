@@ -54,7 +54,7 @@ UT_TEST_CASE( surreal_tests )
   real_t df_dx0 = test_function_derivative(x);
 
   UT_ASSERT_NEAR( df_dx , df_dx0 , 1e-12 );
-
+  
 }
 UT_TEST_CASE_END( surreal_tests )
 

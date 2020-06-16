@@ -61,4 +61,6 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/to
 
 include_directories(numpack)
 
+set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
+
 add_library(avro_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )
