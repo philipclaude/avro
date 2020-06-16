@@ -559,6 +559,7 @@ OpenGL_Manager::draw( const std::string& name , coord_t number , const DrawingPa
   shader->use();
   shader->setUniform( "xpar" , params.transparency );
   shader->setUniform( "MVP" , params.mvp );
+  shader->setUniform( "wLight" , params.lighting );
 
   if (number>=1)
   {

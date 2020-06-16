@@ -281,7 +281,7 @@
                   <li><code>geometry</code>: contains definitions for entities, bodies ad models, which are specialized in <code>egads</code> and <code>psc</code> directories.</li>
                   <li><code>graphics</code>: contains source for visualizing meshes and solutions, using both <code>OpenGL</code> and <code>WebGL</code>.</li>
                   <li><code>library</code>: contains an internal library of meshes, metric, geometries and plots used in unit tests and the <code>avro</code> interface.</li>
-                  <li><code>shape</code>: contains various reference element utilities, such as the definition of the reference simplex or polytope, along with functions for doing numerical quadrature with the reference element.</li>
+                  <li><code>element</code>: contains various reference element utilities, such as the definition of the reference simplex or polytope, along with functions for doing numerical quadrature with the reference element.</li>
                   <li><code>mesh</code>: contains the core definition of a <code>Topology</code> and <code>Points</code> along with data structures useful when manipulating meshes, such as the inverse, neighbours and facets.
                     Also contains code for defining <code>Fields</code> that can be attached to topologies.</li>
                   <li><code>numerics</code>: contains definitions of vectors, matrices and important linear algebra functions, as well as the implementation of exact geometric predicates.</li>
@@ -344,7 +344,7 @@
 
         <h5 class="mt-4">Topology</h5>
         The <code>Topology</code> (see <code>src/lib/mesh/topology.h</code>) stores the mesh topology and can be used to manipulate (add or remove) elements in the mesh.
-        Very importantly, it is <b>templated by the reference element (shape) type</b>, since most computations on meshes are independent of the type of the mesh, but invoke the reference element for specialized calculations (such as edge/facet extraction, volumes, etc.).
+        Very importantly, it is <b>templated by the reference element type</b>, since most computations on meshes are independent of the type of the mesh, but invoke the reference element for specialized calculations (such as edge/facet extraction, volumes, etc.).
         Here are some useful functions if you have a <code>Topology&lt;type&gt;</code> object called <code>topology</code>:
           <ul>
             <li> <code>topology.number()</code>: returns the topological number of the mesh.</li>

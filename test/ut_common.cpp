@@ -19,7 +19,7 @@ ut_pre(int argc, char** argv)
   int plot_on = 0;
   if (argc>1) plot_on = atoi( argv[1] );
 
-  printInfo();
+  print_info();
 
   // initialize the distributed/shared memory task/thread managers
   #ifdef avro_WITH_MPI
@@ -32,17 +32,10 @@ ut_pre(int argc, char** argv)
   exactinit(1,0,0,10,10,10);
   exactinit();
   GEO::PCK::initialize();
-
-  if (!plot_on)
-  {
-    //plotter->on() = false;
-  }
 }
 
 void
 ut_post()
 {
-  //GET_PLOTTER(plotter);
-  //if (plotter==NULL) return;
-  //delete plotter;
+  // nothing to do
 }

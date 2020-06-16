@@ -1,12 +1,12 @@
 **avro**: library for unstructured mesh adaptation
-(c) Philip Claude Caplan, 2019-2020
+(c) Philip Claude Caplan, 2017-2020
 
 <img width="60px" src="doc/fig/avro.svg"/>
 
 
-[![build status](https://gitlab.com/philipclaude/avro/badges/master/pipeline.svg)](https://gitlab.com/philipclaude/avro/badges/master/pipeline.svg)
+[![build status](https://gitlab.com/mach-II/avro/badges/master/pipeline.svg)](https://gitlab.com/mach-II/avro/badges/master/pipeline.svg)
 
-[![coverage](https://gitlab.com/philipclaude/avro/badges/master/coverage.svg)](https://gitlab.com/philipclaude/avro/badges/master/coverage.svg)
+[![coverage](https://gitlab.com/mach-II/avro/badges/master/coverage.svg)](https://gitlab.com/mach-II/avro/badges/master/coverage.svg)
 
 **avro** is an unstructured mesh adaptation library with the following capabilities:
 
