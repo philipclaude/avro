@@ -12,8 +12,8 @@
 
 #include "common/nearest_neighbours.h"
 
-#include "shape/polytope.h"
-#include "shape/simplex.h"
+#include "element/polytope.h"
+#include "element/simplex.h"
 
 #include "mesh/field.hpp"
 #include "mesh/mesh.h"

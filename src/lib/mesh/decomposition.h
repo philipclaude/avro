@@ -12,8 +12,8 @@
 
 #include "common/types.h"
 
-#include "shape/shape.h"
-#include "shape/simplex.h"
+#include "element/element.h"
+#include "element/simplex.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"
@@ -71,8 +71,8 @@ public:
 private:
   const Topology<type>& topology_;
 
-  std::vector< std::map<Element,index_t> > elements_;
-  std::map<Element,index_t> centroids_;
+  std::vector< std::map<ElementIndices,index_t> > elements_;
+  std::map<ElementIndices,index_t> centroids_;
   std::map<index_t,coord_t> centroid2dim_;
 };
 

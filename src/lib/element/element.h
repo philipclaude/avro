@@ -12,9 +12,9 @@
 
 #include "common/types.h"
 
-#include "shape/basis.h"
-#include "shape/shape.h"
-#include "shape/reference.h"
+#include "element/basis.h"
+#include "element/element.h"
+#include "element/reference.h"
 
 #include "numerics/matrix.h"
 
@@ -102,10 +102,10 @@ typedef struct
   std::vector<index_t> indices;
   coord_t dim;
   bool sorted = true;
-} Element;
+} ElementIndices;
 
-bool operator< ( const Element& f , const Element& g );
-bool operator== ( const Element& f , const Element& g );
+bool operator< ( const ElementIndices& f , const ElementIndices& g );
+bool operator== ( const ElementIndices& f , const ElementIndices& g );
 
 } // avro
 

@@ -54,7 +54,7 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	}
 	else if (number_==4)
 	{
-		normalization_ = 10./std::pow( topology_.shape().reference().vunit() ,
+		normalization_ = 10./std::pow( topology_.element().reference().vunit() ,
 																	 2./topology_.number() );
 	}
 	else
@@ -72,7 +72,7 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 		Field<type,Metric>::value(k).calculate();
 	}
 
-	this->shape().set_basis( BasisFunctionCategory_Lagrange );
+	this->element().set_basis( BasisFunctionCategory_Lagrange );
 }
 
 template<typename type>
@@ -142,7 +142,7 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
 
 	// get the vector associated with this edge
 	Entity* entity = nullptr;
-	if (topology_.shape().parameter())
+	if (topology_.element().parameter())
 	{
 		index_t e[2] = {n0,n1};
 		entity = BoundaryUtils::geometryFacet( attachment_.points() , e , 2 );
@@ -161,9 +161,9 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
 		avro_assert( entity->number()!=1 );
 	}
 	coord_t dim = topology_.points().dim();
-	if (topology_.shape().parameter()) dim = topology_.points().udim();
+	if (topology_.element().parameter()) dim = topology_.points().udim();
 	std::vector<real_t> edge0( dim );
-	topology_.shape().edge_vector( attachment_.points() , n0 , n1 , edge0.data() , entity );
+	topology_.element().edge_vector( attachment_.points() , n0 , n1 , edge0.data() , entity );
 	numerics::VectorD<real_t> edge(dim,edge0.data());
   return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
 }
@@ -185,7 +185,7 @@ MetricField<type>::volume( const Topology<type>& topology , const index_t k )
 {
 	const index_t *V = topology(k);
 	const index_t NV = topology.nv(k);
-	const type& shape = topology.shape();
+	const type& shape = topology.element();
 
 	if (topology.ghost(k)) return 0.0;
 
@@ -230,7 +230,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	const Points& points = topology.points();
 	const coord_t dim = points.dim();
 	const coord_t num = topology.number();
-	const type& shape = topology.shape();
+	const type& shape = topology.element();
 
 	if (topology.ghost(k)) return -1.;
 
@@ -262,7 +262,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	const numerics::SymMatrixD<real_t>& M = attachment_[ V[idxM] ];
 
 	Entity* entity = nullptr;
-	if (topology_.shape().parameter())
+	if (topology_.element().parameter())
 	{
 		entity = BoundaryUtils::geometryFacet( attachment_.points() , V , NV );
 		avro_assert( entity!=nullptr );
@@ -278,7 +278,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
     index_t p1 = shape.edge(j,1);
 
 		// get the edge vector and compute the length using the metric with maximum determinant
-		topology_.shape().edge_vector( attachment_.points() , V[p0] , V[p1] , e.data() , entity );
+		topology_.element().edge_vector( attachment_.points() , V[p0] , V[p1] , e.data() , entity );
 		//lj = numpack::Transpose(e)*M*e;
 		lj = quadratic_form( M , e );
 
@@ -523,7 +523,7 @@ void
 MetricAttachment::limit( const Topology<type>& topology , real_t href )
 {
 	const coord_t dim = topology.number();
-	if (!topology.shape().parameter())
+	if (!topology.element().parameter())
 		avro_assert_msg( topology.points().dim() == dim , "dim = %u , num = %u" , topology.points().dim() , dim );
 
 	// the points should be associated with each other

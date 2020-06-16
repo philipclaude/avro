@@ -15,7 +15,7 @@
 
 #include "library/tesseract.h"
 
-#include "shape/polytope.h"
+#include "element/polytope.h"
 
 namespace avro
 {

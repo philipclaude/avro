@@ -9,8 +9,8 @@
 //
 #include "common/set.h"
 
-#include "shape/simplex.h"
-#include "shape/polytope.h"
+#include "element/simplex.h"
+#include "element/polytope.h"
 
 #include "mesh/points.h"
 

@@ -12,7 +12,7 @@
 
 #include "common/tools.h"
 
-#include "shape/simplex.h"
+#include "element/simplex.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"
@@ -79,7 +79,7 @@ public:
 template<typename type>
 ElementImpliedMetric<type>::ElementImpliedMetric( const type& shape ) :
   numerics::SymMatrixD<real_t>(shape.number()),
-  shape_(shape),
+  element_(shape),
   J_( shape.number() , shape.number() ),
   J0_( shape.number() , shape.number() ),
   Jeq_(JacobianEquilateral<type>(shape.number())),
@@ -92,12 +92,12 @@ template<typename type>
 void
 ElementImpliedMetric<type>::compute( const std::vector<const real_t*>& xk )
 {
-  shape_.jacobian( xk , J0_ );
+  element_.jacobian( xk , J0_ );
   J_ = J0_*Jeq_;
   numerics::SymMatrixD<real_t> JJt = J_*numpack::Transpose(J_);
   M_ = numerics::inverse( JJt );
-  for (index_t i=0;i<shape_.number();i++)
-  for (index_t j=i;j<shape_.number();j++)
+  for (index_t i=0;i<element_.number();i++)
+  for (index_t j=i;j<element_.number();j++)
     this->operator()(i,j) = M_(i,j);
 }
 
@@ -105,12 +105,12 @@ template<typename type>
 void
 ElementImpliedMetric<type>::compute( const Points& points , const index_t* v , index_t nv )
 {
-  shape_.jacobian( v , nv , points , J0_ );
+  element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
   numerics::SymMatrixD<real_t> JJt = J_*numpack::Transpose(J_);
   M_ = numerics::inverse( JJt );
-  for (index_t i=0;i<shape_.number();i++)
-  for (index_t j=i;j<shape_.number();j++)
+  for (index_t i=0;i<element_.number();i++)
+  for (index_t j=i;j<element_.number();j++)
     this->operator()(i,j) = M_(i,j);
 }
 
@@ -119,11 +119,11 @@ template<typename type>
 void
 ElementImpliedMetric<type>::inverse( const Points& points , const index_t *v , index_t nv )
 {
-  shape_.jacobian( v , nv , points , J0_ );
+  element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
   M_ = J_*numpack::Transpose(J_); // no inverse
-  for (index_t i=0;i<shape_.number();i++)
-  for (index_t j=i;j<shape_.number();j++)
+  for (index_t i=0;i<element_.number();i++)
+  for (index_t j=i;j<element_.number();j++)
     this->operator()(i,j) = M_(i,j);
 }
 
@@ -131,7 +131,7 @@ template<typename type>
 real_t
 ElementImpliedMetric<type>::determinant( const std::vector<const real_t*>& xk )
 {
-  shape_.jacobian( xk , J0_ );
+  element_.jacobian( xk , J0_ );
   real_t detJ0 = numerics::determinant(J0_);
   if (detJ0==0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
@@ -141,7 +141,7 @@ template<typename type>
 real_t
 ElementImpliedMetric<type>::determinant( const Points& points , const index_t* v , const index_t nv )
 {
-  shape_.jacobian( v, nv, points , J0_ );
+  element_.jacobian( v, nv, points , J0_ );
   real_t detJ0 = numerics::determinant(J0_);
   if (detJ0==0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
@@ -151,7 +151,7 @@ template<typename type>
 MeshImpliedMetric<type>::MeshImpliedMetric( const Topology<type>& topology ) :
   topology_(topology)
 {
-  numerics::SymMatrixD<real_t> zero( topology_.shape().number() );
+  numerics::SymMatrixD<real_t> zero( topology_.element().number() );
   this->resize( topology.points().nb() , zero );
   nodalMetricSqrt_.resize( topology_.points().nb() , zero );
   nodalMetricSqrtDet_.resize( topology_.points().nb() , 0. );
@@ -195,12 +195,12 @@ MeshImpliedMetric<type>::initialize()
   {
     if (topology_.ghost(k))
     {
-      numerics::SymMatrixD<real_t> zero( topology_.shape().number() );
+      numerics::SymMatrixD<real_t> zero( topology_.element().number() );
       metrics[k] = zero;
       continue;
     }
     topology_.get_elem( k , xj );
-    ElementImpliedMetric<type> mk( topology_.shape() );
+    ElementImpliedMetric<type> mk( topology_.element() );
     //mk.compute( xj );
     mk.compute( topology_.points() , topology_(k) , topology_.nv(k) );
     metrics[k] = mk;
@@ -266,7 +266,7 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
   real_t  one_over_nv = 1./real_t(DIM+1);
 
   // reference complexity
-  complexity0 = topology_.nb_real()*topology_.shape().reference().vunit();
+  complexity0 = topology_.nb_real()*topology_.element().reference().vunit();
 
   avro_assert( sv.size()==topology_.points().nb() );
   if (dc_dS.size()!=0)
@@ -395,7 +395,7 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
                       topology_.points().dim() , dx.data() );
 
     Entity* entity = BoundaryUtils::geometryFacet( topology_.points() , edges_.data()+2*k , 2 );
-    topology_.shape().edge_vector( topology_.points() , p , q , dx.data() , entity );
+    topology_.element().edge_vector( topology_.points() , p , q , dx.data() , entity );
 
     // get the edge length squared
     numerics::VectorD<real_t> e( DIM , dx.data() );

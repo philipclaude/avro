@@ -45,9 +45,9 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
 
   // based on the type of face, we may need to flip the sign for the volume calculation
   this->geometry_cavity_.sign() = g->sign();
-  if (this->topology_.shape().parameter()) this->geometry_cavity_.sign() = 1;
+  if (this->topology_.element().parameter()) this->geometry_cavity_.sign() = 1;
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_parameter(g);
   }
@@ -56,7 +56,7 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
   bool accept = this->geometry_cavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
   avro_assert( accept );
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_physical();
   }
@@ -67,7 +67,7 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
   avro_assert( s > 0 );
   avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_parameter(g);
   }
@@ -82,7 +82,7 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
     return false;
   }
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     this->convert_to_physical();
   }
@@ -160,7 +160,7 @@ Collapse<type>::valid( const index_t p , const index_t q )
       }
     }
     Entity* g = this->geometry(p,q);
-    if (!contains && !g->interior() && !this->topology().shape().parameter()) return false;
+    if (!contains && !g->interior() && !this->topology().element().parameter()) return false;
   }
 
   return true;
@@ -191,7 +191,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
   Entity* g = this->geometry(p,q);
   this->set_entity(g);
 
-  if (this->topology_.shape().parameter())
+  if (this->topology_.element().parameter())
   {
     avro_assert( g!=nullptr );
 

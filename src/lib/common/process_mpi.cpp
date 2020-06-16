@@ -27,9 +27,9 @@ public:
   virtual index_t nb_processes() = 0;
   virtual index_t rank() = 0;
 
-  virtual void shape_begin( Thread& thread ) = 0;
+  virtual void element_begin( Thread& thread ) = 0;
   virtual void worker_do( Thread& thread ) = 0;
-  virtual void shape_end( Thread& thread) = 0;
+  virtual void element_end( Thread& thread) = 0;
   virtual void barrier() = 0;
 
 protected:
@@ -46,9 +46,9 @@ public:
   index_t nb_processes() { return 1; }
   index_t rank() { return 0; }
 
-  void shape_begin( Thread& thread ) { thread.run(); }
+  void element_begin( Thread& thread ) { thread.run(); }
   void worker_do( Thread& thread ) { thread.run(); }
-  void shape_end( Thread& thread) { thread.run(); }
+  void element_end( Thread& thread) { thread.run(); }
   void barrier() {}
 
 };
@@ -73,7 +73,7 @@ public:
     return mpi::rank();
   }
 
-  void shape_begin( Thread& thread )
+  void element_begin( Thread& thread )
   {
     if (rank()!=0) return;
     thread.run();
@@ -85,7 +85,7 @@ public:
     thread.run(rank());
   }
 
-  void shape_end( Thread& thread)
+  void element_end( Thread& thread)
   {
     mpi::barrier(comm_);
     if (rank()!=0) return;
@@ -126,9 +126,9 @@ void terminate()
 }
 
 void
-shape_begin( Thread& thread )
+element_begin( Thread& thread )
 {
-  task_manager_->shape_begin(thread);
+  task_manager_->element_begin(thread);
 }
 
 void
@@ -138,9 +138,9 @@ worker_do( Thread& thread )
 }
 
 void
-shape_end( Thread& thread )
+element_end( Thread& thread )
 {
-  task_manager_->shape_end(thread);
+  task_manager_->element_end(thread);
 }
 
 void

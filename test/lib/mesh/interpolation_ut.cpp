@@ -17,8 +17,8 @@
 #include "mesh/field.hpp"
 #include "mesh/interpolation.h"
 
-#include "shape/quadrature.h"
-#include "shape/simplex.h"
+#include "element/quadrature.h"
+#include "element/simplex.h"
 
 using namespace avro;
 
@@ -41,8 +41,8 @@ UT_TEST_CASE( test1 )
   CKF_Triangulation topology( {3,3} );
   ConicalProductQuadrature quadrature(topology.points().dim());
   quadrature.define();
-  topology.shape().load_quadrature(quadrature);
-  topology.shape().set_basis( BasisFunctionCategory_Lagrange );
+  topology.element().load_quadrature(quadrature);
+  topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
   topology.close();
   topology.orient();
@@ -51,8 +51,8 @@ UT_TEST_CASE( test1 )
 
   Field<Simplex,real_t> u(topology,2,CONTINUOUS);
   u.build();
-  u.shape().set_basis( BasisFunctionCategory_Lagrange );
-  u.shape().load_quadrature(quadrature);
+  u.element().set_basis( BasisFunctionCategory_Lagrange );
+  u.element().load_quadrature(quadrature);
 
   SomeFunction fcn;
   u.evaluate(fcn);

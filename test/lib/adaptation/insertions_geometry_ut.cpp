@@ -70,14 +70,14 @@ UT_TEST_CASE(test1)
   // retrieve all the triangles
   Topology<Simplex> topology(pmesh->points(),2);
   tess.retrieve<Simplex>(0).get_elements( topology );
-  topology.shape().set_parameter(true);
+  topology.element().set_parameter(true);
 
   topology.close();
   topology.neighbours().compute();
   topology.inverse().build();
 
   Insert<Simplex> inserter(topology);
-  UT_ASSERT( inserter.shape().parameter() );
+  UT_ASSERT( inserter.element().parameter() );
 
   inserter.delay() = false;
 

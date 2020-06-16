@@ -19,7 +19,7 @@ namespace avro
 template<>
 Topology<Polytope>::Topology( Points& points , coord_t number , coord_t order ) :
   TopologyBase(points,number,TableLayout_Jagged,"polytope"),
-  shape_( number , order , points.incidence() ),
+  element_( number , order , points.incidence() ),
   neighbours_(*this),
   inverse_(*this)
 {}

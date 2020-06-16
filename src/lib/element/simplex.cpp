@@ -13,8 +13,8 @@
 
 #include "geometry/entity.h"
 
-#include "shape/quadrature.h"
-#include "shape/simplex.h"
+#include "element/quadrature.h"
+#include "element/simplex.h"
 
 #include "mesh/boundary.h"
 #include "mesh/decomposition.h"
@@ -111,7 +111,7 @@ Simplex::precalculate()
 }
 
 void
-Simplex::get_canonical_indices( const index_t* v , index_t nv , const Element& f , std::vector<index_t>& canonical ) const
+Simplex::get_canonical_indices( const index_t* v , index_t nv , const ElementIndices& f , std::vector<index_t>& canonical ) const
 {
   avro_assert_msg( order_==1 , "should this only be called for linear simplices?" );
   for (index_t k=0;k<f.indices.size();k++)
@@ -131,7 +131,7 @@ Simplex::get_canonical_indices( const index_t* v , index_t nv , const Element& f
 }
 
 void
-Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , Element& f ) const
+Simplex::get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , ElementIndices& f ) const
 {
   f.indices.resize(f.dim+1);
 

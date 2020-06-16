@@ -12,8 +12,8 @@
 
 #include "common/table.h"
 
-#include "shape/shape.h"
-#include "shape/simplex.h"
+#include "element/element.h"
+#include "element/simplex.h"
 
 #include <set>
 

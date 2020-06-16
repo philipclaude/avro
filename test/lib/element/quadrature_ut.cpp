@@ -9,7 +9,7 @@
 //
 #include "unit_tester.hpp"
 
-#include "shape/quadrature.h"
+#include "element/quadrature.h"
 
 #include "numerics/functions.h"
 #include "numerics/integration.h"

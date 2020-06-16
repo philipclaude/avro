@@ -33,7 +33,7 @@ public:
 
 private:
   const Topology<type>& topology_;
-   type shape_;
+   type element_;
 };
 
 }

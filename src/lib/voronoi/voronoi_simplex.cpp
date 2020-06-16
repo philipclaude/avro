@@ -275,7 +275,7 @@ RestrictedVoronoiSimplex::clipPolytope( index_t j )
   {
     index_t e0 = polytope_[ii];
     index_t e1 = polytope_[jj];
-    if (topology_.shape().is_edge( vertex_[e0].bisectors() ,
+    if (topology_.element().is_edge( vertex_[e0].bisectors() ,
                         vertex_[e1].bisectors() ) )
     {
       // clip the edge and save the result into q

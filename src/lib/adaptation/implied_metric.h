@@ -36,7 +36,7 @@ public:
   real_t determinant( const Points& points , const index_t* v , const index_t nv );
 
 private:
-  const type& shape_;
+  const type& element_;
   numerics::MatrixD<real_t> J_;   // jacobian from physical elem to equilateral
   numerics::MatrixD<real_t> J0_;  // jacobian from physical elem to right-angled
   numerics::MatrixD<real_t> Jeq_; // jacobian from right-angled elem to equilateral

@@ -11,7 +11,7 @@
 #include "common/set.h"
 #include "common/tools.h"
 
-#include "shape/polytope.h"
+#include "element/polytope.h"
 
 #include "mesh/decomposition.h"
 #include "mesh/points.h"

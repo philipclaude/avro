@@ -12,7 +12,7 @@
 
 #include "common/types.h"
 
-#include "shape/reference.h"
+#include "element/reference.h"
 
 namespace avro
 {
