@@ -104,10 +104,10 @@ class ElementIntegral
 {
 public:
   ElementIntegral( const Topology<type>& topology , const DOF<T>& dof,
-           const Table<index_t>& field , const type& shape ) :
+           const Table<index_t>& field , const type& element ) :
     topology_(topology),
     field_(field),
-    element_(shape),
+    element_(element),
     dof_(dof)
   {
     if (topology_.layout()==TableLayout_Rectangular )

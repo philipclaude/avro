@@ -106,7 +106,7 @@ Simplex::precalculate()
   // triangulate the reference element
   // TODO
 
-  // precalculate the shape function values at the quadrature points
+  // precalculate the element function values at the quadrature points
 
 }
 

@@ -77,13 +77,13 @@ public:
 };
 
 template<typename type>
-ElementImpliedMetric<type>::ElementImpliedMetric( const type& shape ) :
-  numerics::SymMatrixD<real_t>(shape.number()),
-  element_(shape),
-  J_( shape.number() , shape.number() ),
-  J0_( shape.number() , shape.number() ),
-  Jeq_(JacobianEquilateral<type>(shape.number())),
-  M_( shape.number() , shape.number() )
+ElementImpliedMetric<type>::ElementImpliedMetric( const type& element ) :
+  numerics::SymMatrixD<real_t>(element.number()),
+  element_(element),
+  J_( element.number() , element.number() ),
+  J0_( element.number() , element.number() ),
+  Jeq_(JacobianEquilateral<type>(element.number())),
+  M_( element.number() , element.number() )
 {
   detJeq_ = numerics::determinant(Jeq_);
 }

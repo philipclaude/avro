@@ -328,12 +328,12 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
 
   Topology<Simplex> simplex_topology( decomposition.points() , rvd.number() );
 
-  const Simplex& shape = decomposition.element();
+  const Simplex& element = decomposition.element();
   for (index_t k=0;k<nb_simplices;k++)
   {
     simplex_topology.add( &simplices[k*(number+1)] , number+1 );
 
-    real_t vk = shape.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
+    real_t vk = element.volume( decomposition.points() , &simplices[k*(number+1)] , number+1 );
 
     index_t s = sites_->value( parents[k] );
     avro_assert( s < V.size() );

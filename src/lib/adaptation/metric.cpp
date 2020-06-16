@@ -185,7 +185,7 @@ MetricField<type>::volume( const Topology<type>& topology , const index_t k )
 {
 	const index_t *V = topology(k);
 	const index_t NV = topology.nv(k);
-	const type& shape = topology.element();
+	const type& element = topology.element();
 
 	if (topology.ghost(k)) return 0.0;
 
@@ -204,7 +204,7 @@ MetricField<type>::volume( const Topology<type>& topology , const index_t k )
 	}
 
 	real_t sqrtdetM = dmax;
-	real_t v = sqrtdetM*shape.volume(topology.points(),V,NV);
+	real_t v = sqrtdetM*element.volume(topology.points(),V,NV);
 	return v;
 }
 
@@ -230,7 +230,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	const Points& points = topology.points();
 	const coord_t dim = points.dim();
 	const coord_t num = topology.number();
-	const type& shape = topology.element();
+	const type& element = topology.element();
 
 	if (topology.ghost(k)) return -1.;
 
@@ -271,11 +271,11 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	// compute the edge lengths under m
   real_t l = 0.,lj;
 	numerics::VectorD<real_t> e(dim);
-  for (index_t j=0;j<shape.nb_edges();j++)
+  for (index_t j=0;j<element.nb_edges();j++)
   {
 		// retrieve the local edge indices
-    index_t p0 = shape.edge(j,0);
-    index_t p1 = shape.edge(j,1);
+    index_t p0 = element.edge(j,0);
+    index_t p1 = element.edge(j,1);
 
 		// get the edge vector and compute the length using the metric with maximum determinant
 		topology_.element().edge_vector( attachment_.points() , V[p0] , V[p1] , e.data() , entity );
@@ -287,13 +287,13 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
   }
 
 	// compute the volume under m
-	real_t v = sqrtdetM*shape.volume(topology.points(),V,NV);
+	real_t v = sqrtdetM*element.volume(topology.points(),V,NV);
 	if (v<0)
 	{
 		for (index_t j=0;j<NV;j++)
 			topology.points().print(V[j],true);
 	}
-	avro_assert_msg( v>=0. , "v = %g, sqrtDetM = %g, v_e = %g" , v , sqrtdetM , shape.volume(topology.points(),V,NV) );
+	avro_assert_msg( v>=0. , "v = %g, sqrtDetM = %g, v_e = %g" , v , sqrtdetM , element.volume(topology.points(),V,NV) );
 	v = std::pow( v , 2./num );
 
 	// normalize to be within [0,1]
