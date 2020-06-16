@@ -393,33 +393,51 @@ meshb::write( const Topology<Simplex>& topology , const std::vector<index_t>& re
 }
 
 void
+meshb::open( int dim , const std::string& filename )
+{
+  fid_ = GmfOpenMesh(filename.c_str(),GmfWrite,GmfDouble,dim);
+  avro_assert( fid_ );
+}
+
+void
+meshb::close()
+{
+  GmfCloseMesh(fid_);
+}
+
+void
+meshb::write( Points& points )
+{
+  // write the points
+  const coord_t dim = points.dim();
+  GmfSetKwd( fid_ , GmfVertices , points.nb()-points.nb_ghost() );
+  for (index_t k=0;k<points.nb();k++)
+  {
+    if (k<points.nb_ghost())
+    {
+      continue;
+    }
+    const real_t* x = points[k];
+    if (dim==2)
+      GmfSetLin( fid_ , GmfVertices , x[0], x[1] , points.body(k)+1 );
+    else if (dim>=3)
+      GmfSetLin( fid_ , GmfVertices , x[0], x[1] , x[2] , points.body(k)+1 );
+    else
+      avro_assert_not_reached;
+  }
+}
+
+void
 meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
 {
 
   printf("writing mesh to file %s\n",filename.c_str());
   int dim = mesh.points().dim();
   if (dim==4) dim = 3;
-  fid_ = GmfOpenMesh(filename.c_str(),GmfWrite,GmfDouble,dim);
-  avro_assert( fid_ );
+  open(dim,filename);
 
   // write the points
-  GmfSetKwd( fid_ , GmfVertices , mesh.points().nb()-mesh.points().nb_ghost() );
-  for (index_t k=0;k<mesh.points().nb();k++)
-  {
-    if (k<mesh.points().nb_ghost())
-    {
-      continue;
-    }
-    const real_t* x = mesh.points()[k];
-    if (dim==2)
-      GmfSetLin( fid_ , GmfVertices , x[0], x[1] , mesh.points().body(k)+1 );
-    else if (dim>=3)
-      GmfSetLin( fid_ , GmfVertices , x[0], x[1] , x[2] , mesh.points().body(k)+1 );
-    else
-      avro_assert_not_reached;
-  }
-
-  printf("retrieving topologies\n");
+  write(mesh.points());
 
   // get all the topologies
   std::vector<const TopologyBase*> topologies;
@@ -517,7 +535,7 @@ meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
                int(faceVertices[k]+1-mesh.points().nb_ghost()) , int(id) , 0. , 0. );
   }
 
-  GmfCloseMesh(fid_);
+  close();
 }
 
 } // library

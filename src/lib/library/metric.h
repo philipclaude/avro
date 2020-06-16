@@ -188,7 +188,7 @@ public:
   static constexpr real_t hmin_default = 0.0025;
 
   MetricField_Tesseract_Linear( real_t hmin = hmin_default ) :
-    MetricField_Analytic(3),
+    MetricField_Analytic(4),
     hmin_(hmin)
   {}
 
@@ -221,7 +221,7 @@ class MetricField_Tesseract_Wave : public MetricField_Analytic
 {
 public:
   MetricField_Tesseract_Wave() :
-    MetricField_Analytic(3)
+    MetricField_Analytic(4)
   {}
 
   numerics::SymMatrixD<real_t> operator()( const real_t* x ) const

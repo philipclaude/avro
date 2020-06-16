@@ -34,7 +34,11 @@ public:
     Mesh(0,0)
   {}
 
+  void open( int dim , const std::string& filename );
+  void close();
+
   void read();
+  void write( Points& points );
   void write( Mesh& mesh , const std::string& filename , bool with_bnd );
   template<typename type> void write( const Topology<type>& topology , const std::vector<index_t>& refs );
 

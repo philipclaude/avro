@@ -16,6 +16,7 @@
 #include "geometry/egads/object.h"
 
 #include "library/meshb.h"
+#include "library/spacetime.h"
 
 #include "mesh/boundary.h"
 #include "mesh/mesh.h"
@@ -518,25 +519,15 @@ adapt( AdaptationProblem& problem )
       meshb.write( problem.mesh_out , mesh_file , true );
       printf("wrote mesh %s\n",mesh_file.c_str());
     }
-    #if 0
     else if (topology.number()==4 && params.write_meshb())
     {
       // get the boundary of the mesh
-      Boundary<Simplex> tesseract_boundary( mesh_topology );
-      tesseract_boundary.extract();
+      Topology_Spacetime<Simplex> spacetime(mesh_topology);
+      spacetime.extract();
 
-      for (index_t k=0;k<tesseract_boundary.nb_children();k++)
-      {
-        if (tesseract_boundary.child(k)->number()==3)
-        {
-          // write out the mesh
-          library::Plottable<Simplex> plot( *tesseract_boundary.child(k) );
-          gamma.writeMesh( plot , params.directory()+"/"+params.boundarySubdirectory()
-                                  +"/"+params.prefix()+"_bnd"+stringify(k)+"_a"+stringify(params.adapt_iter())+".mesh" );
-        }
-      }
+      std::string filename = params.directory()+"/"+params.prefix()+"_"+stringify(params.adapt_iter())+".mesh";
+      spacetime.write( filename );
     }
-    #endif
 
     if (topology.number()==3 && params.has_interior_boundaries())
     {
