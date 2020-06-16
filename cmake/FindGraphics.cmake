@@ -5,7 +5,7 @@ if (avro_WITH_GL)
 
   find_package(glfw QUIET)
 
-  if (glf3_FOUND)
+  if (glfw3_FOUND)
     message( STATUS "found glfw3 on the system: ${GLFW3_LIB}")
     set( avro_BUILTIN_GLFW false )
   else()

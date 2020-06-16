@@ -87,6 +87,26 @@ Application<Web_Interface>::save_eps()
 }
 
 template<typename API_t>
+Application<GLFW_Interface<API_t>>::Application() :
+  ApplicationBase(manager_),
+  restart_(false)
+{
+  // initialize OpenGL
+  avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
+
+  // set the version
+  #ifdef AVRO_HEADLESS_GRAPHICS // core 3.3 supported by wazowski's drivers
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);
+  #else
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  #endif
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+}
+
+template<typename API_t>
 void
 Application<GLFW_Interface<API_t>>::initialize()
 {
