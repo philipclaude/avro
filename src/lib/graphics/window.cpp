@@ -458,14 +458,15 @@ GLFW_Window::draw_colorbar(const Colormap& colormap, const real_t* ulim)
     triangles[6*i+3] = i1; triangles[6*i+4] = i3; triangles[6*i+5] = i2;
   }
 
+  // colormap is [0,1] so convert to [0,256]
   for (index_t k=0;k<colors.size();k++)
     colors[k] *= 256.;
 
+  // assign the edges
   i0 = 0;
   i1 = 1;
   i2 = pt -1;
   i3 = i2 -1;
-
   edges[0] = i0; edges[1] = i1;
   edges[2] = i1; edges[3] = i2;
   edges[4] = i2; edges[5] = i3;
