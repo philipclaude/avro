@@ -34,7 +34,7 @@ Partition<type>::Partition( const Topology<type>& topology ) :
   topology_(topology)
 {
   // if mesh closing is needed, it should be done after partitioning
-  //avro_assert( !topology_.closed() );
+  avro_assert( !topology_.closed() );
   initialize();
 }
 
@@ -42,12 +42,14 @@ template<typename type>
 void
 Partition<type>::initialize()
 {
+  // extract the adjacencies
   for (index_t k=0;k<topology_.nb();k++)
   {
     for (index_t j=0;j<topology_.neighbours().nfacets();j++)
     {
       int n = topology_.neighbours()(k,j);
-      if (n<0) continue;
+      if (n<0) continue;      // do not create adjacency information for boundary elements
+      if (n<int(k)) continue; // only create an edge once
       edges_.push_back( k );
       edges_.push_back( index_t(n) );
     }
@@ -71,7 +73,7 @@ Partition<type>::initialize()
     for (it=node2node[k].begin();it!=node2node[k].end();++it)
       adjncy_.push_back(*it);
   }
-  //avro_assert_msg( adjncy_.size()==edges_.size() , "|adjcny| = %lu, nb_edges = %lu" , adjncy_.size() , edges_.size()/2 );
+  avro_assert_msg( adjncy_.size()==edges_.size() , "|adjcny| = %lu, nb_edges = %lu" , adjncy_.size() , edges_.size()/2 );
 }
 
 template<typename type>

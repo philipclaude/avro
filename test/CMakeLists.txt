@@ -63,7 +63,7 @@ foreach( test_src ${TEST_FILES} )
   target_compile_definitions( ${test_exe} PUBLIC -DSTANDALONE )
 
   # default to 0 processors, unless the test is found in the list of MPI tests
-  set(numprocs 0)
+  set(numprocs -1)
   list( FIND MPI_TESTS ${test_bin} idx )
   if (${idx} GREATER -1)
     message( STATUS "running test ${test_bin} with mpi")
