@@ -24,7 +24,7 @@ main()
   print_info();
 
   // initialize the distributed/shared memory task/thread managers
-  #ifdef avro_WITH_MPI
+  #ifdef AVRO_MPI
   ProcessMPI::initialize();
   #endif
   ProcessCPU::initialize();

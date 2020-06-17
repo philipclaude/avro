@@ -1,0 +1,32 @@
+--- CMakeLists.txt  2013-03-30 12:24:50.000000000 -0400
++++ CMakeLists.txt  2018-12-22 23:23:37.000000000 -0500
+@@ -1,6 +1,16 @@
+ cmake_minimum_required(VERSION 2.8)
+ project(ParMETIS)
+ 
++IF(APPLE)
++  SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
++  SET(CMAKE_INSTALL_NAME_DIR @rpath)
++  SET(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
++  # cmake --help-policy CMP0068
++  IF (CMAKE_VERSION VERSION_GREATER 3.9 OR CMAKE_VERSION VERSION_EQUAL 3.9)
++    SET(CMAKE_BUILD_WITH_INSTALL_NAME_DIR ON)
++  ENDIF()
++ENDIF(APPLE)
++
+ set(GKLIB_PATH METIS/GKlib CACHE PATH "path to GKlib")
+ set(METIS_PATH METIS CACHE PATH "path to METIS")
+ 
+@@ -33,10 +43,10 @@
+ include_directories(${METIS_PATH}/include)
+ 
+ # List of directories that cmake will look for CMakeLists.txt
+-add_subdirectory(${METIS_PATH}/libmetis ${CMAKE_BINARY_DIR}/libmetis)
++add_subdirectory(${METIS_PATH})
+ add_subdirectory(include)
+ add_subdirectory(libparmetis)
+-add_subdirectory(programs)
++#add_subdirectory(programs)
+ 
+ # This is for testing during development and is not being distributed
+ #add_subdirectory(test)

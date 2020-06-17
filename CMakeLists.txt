@@ -5,6 +5,9 @@ if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif()
 
+# PkgConfig is used by many Finds/*.cmake
+find_package(PkgConfig)
+
 # setup libraries and build type
 include(cmake/setup.cmake)
 include(cmake/compiler.cmake)
@@ -17,15 +20,11 @@ endif()
 # default options
 option(avro_STATIC_LINK_CXX "statically link to c++ libraries (probably because you're using voyager)" false)
 option(avro_SMART_PTR "use internal smart pointer (smartypants) for memory management" false )
-option(avro_WITH_MPI "compile for distributed computing support" false)
-option(avro_RUN_WITH_MPI "run with mpi. might be difficult to debug with mpirun" false)
+option(AVRO_WITH_MPI "compile for distributed computing support" false)
+option(RUN_WITH_MPI "run with mpi. might be difficult to debug with mpirun" false)
 option(avro_WITH_FPG "compile FPG needed to make new predicates" false)
 set(avro_TEST_DATA "data/" CACHE STRING "location for avro test files relative to test/" )
 set(avro_WITH_GL "option to compile OpenGL-based visualizer (along with WebGL-based one)" true)
-
-
-# PkgConfig is used by many Finds/*.cmake
-FIND_PACKAGE(PkgConfig)
 
 set(avro_CPU_THREAD_MANAGER "cpp11" CACHE STRING "type of cpu threading environment to use [openmp, cpp11, pthread, emp]")
 set(avro_GPU_THREAD_MANAGER "none" CACHE STRING "type of gpu threading environment to use [opencl,cuda]")
@@ -43,17 +42,10 @@ if (avro_SMART_PTR)
 	add_definitions(-Davro_SMART_PTR)
 endif()
 
-# required libraries
+# required dependencies
 include(cmake/FindLAPACK.cmake)
 include(cmake/FindESP.cmake)
 include(cmake/FindNLOPT.cmake)
-
-# optional libraries
-if (avro_WITH_MPI)
-  include(cmake/FindMPI.cmake)
-  include(cmake/FindPARMETIS.cmake)
-endif()
-
 include(cmake/FindGraphics.cmake)
 
 # compiler flags
@@ -65,11 +57,28 @@ include(cmake/utilities.cmake)
 # set the CPU and GPU threading options
 include(cmake/threading.cmake)
 
+set( avro_EXTERNAL_LIBRARIES )
+
+# optional libraries
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake )
+if (AVRO_WITH_MPI)
+  get_dependency(MPI)
+  set( MPI_INCLUDE_DIRS ${MPI_C_INCLUDE_PATH} )
+  include_directories( SYSTEM ${MPI_INCLUDE_DIRS} )
+  foreach (MPI_LIB ${MPI_LIBRARIES})
+    get_filename_component( MPI_LIBRARY_DIR ${MPI_LIB} PATH )
+    set_property( DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY LINK_DIRECTORIES ${MPI_LIBRARY_DIR} )
+  endforeach()
+  list( APPEND avro_EXTERNAL_LIBRARIES ${MPI_LIBRARIES} )
+
+  get_dependency(PARMETIS)
+  include_directories( SYSTEM ${PARMETIS_INCLUDE_DIRS} )
+  list( APPEND avro_EXTERNAL_LIBRARIES ${PARMETIS_LIBRARIES} )
+endif()
+
 if (NOT avro_RUN_WITH_MPI)
     add_definitions( -DNO_MPIRUN )
 endif()
-
-set( avro_EXTERNAL_LIBRARIES )
 
 # debug and coverage utilities
 include(cmake/debug.cmake)

@@ -1,10 +1,7 @@
-
-find_package( MPI )
-
-if (WITH_MPI AND MPI_CXX_FOUND)
+if (AVRO_WITH_MPI AND MPI_CXX_FOUND)
     set(USE_MPI TRUE )
     message( STATUS "found MPI ${MPI_CXX_COMPILER}" )
-    add_definitions( -DWITH_MPI )
+    add_definitions( -DAVRO_MPI )
     include_directories( SYSTEM ${MPI_CXX_INCLUDE_PATH} )
 
     # set the MPI_COMMAND
@@ -14,7 +11,7 @@ if (WITH_MPI AND MPI_CXX_FOUND)
     if (RUN_WITH_MPI)
         macro( RUN_WITH_MPIEXEC NUMPROCS )
             set( _MPIEXEC_MAX_NUMPROCS_INIT TRUE CACHE INTERNAL "" )
-            set( MPI_COMMAND ${MPIEXEC} --hostfile data/hostfile ${MPIEXEC_NUMPROC_FLAG} ${NUMPROCS} ) 
+            set( MPI_COMMAND ${MPIEXEC} --hostfile tmp/hostfile ${MPIEXEC_NUMPROC_FLAG} ${NUMPROCS} )
         endmacro()
     else()
         macro( RUN_WITH_MPIEXEC )

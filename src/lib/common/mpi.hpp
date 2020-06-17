@@ -18,7 +18,7 @@
 #include <type_traits>
 #include <vector>
 
-#ifdef avro_WITH_MPI
+#ifdef AVRO_MPI
 
 #include <mpi.h>
 

@@ -48,7 +48,7 @@ include_directories( third_party/numpack )
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )
 
-set(avro_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} dl blas z )
+set(avro_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} ${MPI_LIBRARIES} dl blas z )
 if (avro_WITH_OPENMP)
   set( avro_EXTERNAL_LIBRARIES ${avro_EXTERNAL_LIBRARIES} ${OPENMP_LINK_FLAG} )
 endif()

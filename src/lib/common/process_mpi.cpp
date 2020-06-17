@@ -9,7 +9,7 @@
 //
 #include "common/process.h"
 
-#ifdef avro_WITH_MPI
+#ifdef AVRO_MPI
 #include <mpi.h>
 #include "common/mpi.hpp"
 #endif
@@ -27,9 +27,9 @@ public:
   virtual index_t nb_processes() = 0;
   virtual index_t rank() = 0;
 
-  virtual void element_begin( Thread& thread ) = 0;
+  virtual void main_begin( Thread& thread ) = 0;
   virtual void worker_do( Thread& thread ) = 0;
-  virtual void element_end( Thread& thread) = 0;
+  virtual void main_end( Thread& thread) = 0;
   virtual void barrier() = 0;
 
 protected:
@@ -46,14 +46,14 @@ public:
   index_t nb_processes() { return 1; }
   index_t rank() { return 0; }
 
-  void element_begin( Thread& thread ) { thread.run(); }
+  void main_begin( Thread& thread ) { thread.run(); }
   void worker_do( Thread& thread ) { thread.run(); }
-  void element_end( Thread& thread) { thread.run(); }
+  void main_end( Thread& thread) { thread.run(); }
   void barrier() {}
 
 };
 
-#ifdef avro_WITH_MPI
+#ifdef AVRO_MPI
 class MPITaskManager : public TaskManager
 {
 public:
@@ -73,7 +73,7 @@ public:
     return mpi::rank();
   }
 
-  void element_begin( Thread& thread )
+  void main_begin( Thread& thread )
   {
     if (rank()!=0) return;
     thread.run();
@@ -85,7 +85,7 @@ public:
     thread.run(rank());
   }
 
-  void element_end( Thread& thread)
+  void main_end( Thread& thread)
   {
     mpi::barrier(comm_);
     if (rank()!=0) return;
@@ -113,7 +113,7 @@ index_t rank()
 
 void initialize()
 {
-  #ifdef avro_WITH_MPI
+  #ifdef AVRO_MPI
   task_manager_ = std::make_shared<MPITaskManager>();
   #else
   task_manager_ = std::make_shared<SerialTaskManager>();
@@ -121,14 +121,12 @@ void initialize()
 }
 
 void terminate()
-{
-  //delete task_manager_;
-}
+{}
 
 void
-element_begin( Thread& thread )
+main_begin( Thread& thread )
 {
-  task_manager_->element_begin(thread);
+  task_manager_->main_begin(thread);
 }
 
 void
@@ -138,9 +136,9 @@ worker_do( Thread& thread )
 }
 
 void
-element_end( Thread& thread )
+main_end( Thread& thread )
 {
-  task_manager_->element_end(thread);
+  task_manager_->main_end(thread);
 }
 
 void

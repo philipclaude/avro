@@ -36,6 +36,8 @@ include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
 include_directories( ${GLM_INCLUDE_DIRS} )
 
+set( MPI_TESTS lib_common_processMPI_ut )
+
 set( CHECK_TESTS )
 
 # set the directory for the executables
@@ -60,21 +62,27 @@ foreach( test_src ${TEST_FILES} )
   target_link_libraries( ${test_exe} ut_common_lib )
   target_compile_definitions( ${test_exe} PUBLIC -DSTANDALONE )
 
-  # TODO re-add parallel testing capability...but how...
-  # target that actually runs the executable
-  #list( GET TEST_NUMPROCS ${i} numprocs )
+  # default to 0 processors, unless the test is found in the list of MPI tests
+  set(numprocs 0)
+  list( FIND MPI_TESTS ${test_bin} idx )
+  if (${idx} GREATER -1)
+    message( STATUS "running test ${test_bin} with mpi")
+    set(numprocs 4)
+  endif()
 
-  #if ( ${numprocs} GREATER 0 AND avro_RUN_WITH_MPI)
-#    RUN_WITH_MPIEXEC( ${numprocs} )
-#  else()
+  if ( ${numprocs} GREATER 0)
+    # run the unit test with mpiexec and let the test know how many procs are used
+    RUN_WITH_MPIEXEC( ${numprocs} )
+    target_compile_definitions( ${test_exe} PUBLIC -DTEST_NUM_PROCS=${numprocs} )
+  else()
     set( MPI_COMMAND )
-#  endif()
+  endif()
+
+  # create the target
   add_custom_target( ${test_bin} command ${MPI_COMMAND} $<TARGET_FILE:${test_exe}> 1 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
-
-  add_custom_target( ${test_bin}_off command ${MPI_COMMAND} $<TARGET_FILE:${test_exe}> 0 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
-  set( check_test ${test_bin}_off )
-
-  set( CHECK_TESTS ${CHECK_TESTS} ${check_test} )
+  #add_custom_target( ${test_bin}_off command ${MPI_COMMAND} $<TARGET_FILE:${test_exe}> 0 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+  #set( check_test ${test_bin}_off )
+  #set( CHECK_TESTS ${CHECK_TESTS} ${check_test} )
 
   # target for coverage: cmake/coverage.cmake
   ADD_COVERAGE_UT( ${test_bin}_coverage ${test_bin} )
@@ -90,8 +98,8 @@ target_link_libraries( unit_exe avro_shared )
 target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
 
 # target for running all unit tests independently
-add_custom_target( check_tests )
-add_dependencies( check_tests ${CHECK_TESTS} )
+#add_custom_target( check_tests )
+#add_dependencies( check_tests ${CHECK_TESTS} )
 
 # target for running all unit tests from a single executable
 add_custom_target( unit command $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
