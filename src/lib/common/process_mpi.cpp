@@ -32,6 +32,10 @@ public:
   virtual void main_end( Thread& thread) = 0;
   virtual void barrier() = 0;
 
+  #ifdef AVRO_MPI
+  virtual mpi::communicator& get_comm() = 0;
+  #endif
+
 protected:
   virtual ~TaskManager() {}
 
@@ -98,6 +102,8 @@ public:
     mpi::barrier(comm_);
   }
 
+  mpi::communicator& get_comm() { return comm_; }
+
 private:
   mpi::communicator comm_;
   mpi::instance instance_;
@@ -146,6 +152,14 @@ barrier()
 {
   task_manager_->barrier();
 }
+
+#ifdef AVRO_MPI
+mpi::communicator&
+get_comm()
+{
+  return task_manager_->get_comm();
+}
+#endif
 
 } // ProcessMPI
 

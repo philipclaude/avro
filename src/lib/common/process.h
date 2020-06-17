@@ -15,6 +15,10 @@
 
 #include <memory>
 
+#ifdef AVRO_MPI
+#include "common/mpi.hpp"
+#endif
+
 namespace avro
 {
 
@@ -92,6 +96,10 @@ namespace ProcessMPI
 
   // worker functions
   void worker_do( Thread& task );
+
+  #ifdef AVRO_MPI
+  mpi::communicator& get_comm();
+  #endif
 
 } // ProcessMPI
 

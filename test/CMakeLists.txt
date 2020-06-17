@@ -36,7 +36,7 @@ include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
 include_directories( ${GLM_INCLUDE_DIRS} )
 
-set( MPI_TESTS lib_common_processMPI_ut )
+set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut )
 
 set( CHECK_TESTS )
 

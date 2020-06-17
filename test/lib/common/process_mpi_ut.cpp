@@ -131,11 +131,11 @@ UT_TEST_CASE(bcast_test)
 
     requests.emplace_back( mpi::send (mpi::async{}, data_to_send, 1) );
 
-    // Computation happens here
+    // computation happens here
 
     std::vector<mpi::status> const statuses = mpi::wait_all(requests);
 
-    // Now std::vector<int> is deleted after the wait_all
+    // now std::vector<int> is deleted after the wait_all
   }
   else if (mpi::rank() == 1)
   {

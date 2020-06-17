@@ -32,6 +32,15 @@ namespace mpi
 /// Functions use the world communicator by default
 enum class communicator { world, self };
 
+inline MPI_Comm
+comm_cast( const communicator comm )
+{
+  if ( comm == communicator::world ) return MPI_COMM_WORLD;
+  if ( comm == communicator::self  ) return MPI_COMM_SELF;
+  avro_assert_not_reached;
+  return 0;
+}
+
 /// The types of threading models allowed in MPI
 enum class thread : int {
     single = MPI_THREAD_SINGLE,
