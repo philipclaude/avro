@@ -14,6 +14,8 @@
 // changes:
 //   2018/05/22: cleaned up a bit to work without c++14 features (pcaplan)
 
+#include "common/error.h"
+
 #include <iostream>
 #include <type_traits>
 #include <vector>

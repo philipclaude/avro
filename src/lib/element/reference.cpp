@@ -201,8 +201,17 @@ ReferenceElement<Simplex>::precalculate()
     // but we can hack it by setting the coordinates to the centroid
     for (index_t j=0;j<index_t(number_+1);j++)
     {
-      lref_.push_back( 1 );
-      xref_.push_back( 1./(number_+1) );
+      if (j<number_)
+      {
+        lref_.push_back( 1 );
+        xref_.push_back( 1./(number_+1) );
+      }
+      else
+      {
+        // added on june 18th
+        lref_.push_back( 0 );
+        xref_.push_back( 0.);
+      }
     }
     return;
   }

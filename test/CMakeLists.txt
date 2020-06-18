@@ -66,7 +66,6 @@ foreach( test_src ${TEST_FILES} )
   set(numprocs -1)
   list( FIND MPI_TESTS ${test_bin} idx )
   if (${idx} GREATER -1)
-    message( STATUS "running test ${test_bin} with mpi")
     set(numprocs 4)
   endif()
 

@@ -24,6 +24,7 @@
 #error "unknown version of parmetis"
 #endif
 
+// option to use either metis or parmetis
 #define USE_PARMETIS 0
 
 namespace avro
@@ -161,6 +162,17 @@ template<typename type>
 void
 Partition<type>::get( std::vector< std::shared_ptr<Topology<type>>>& parts ) const
 {
+  // create the partitions
+  for (index_t k=0;k<parts.size();k++)
+  {
+    parts[k] = std::make_shared<Topology<type>>(topology_.points(),topology_.number());
+  }
+
+  avro_assert( partition_.size() == topology_.nb() );
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    parts[ partition_[k] ]->add( topology_(k) , topology_.nv(k) );
+  }
 }
 
 template class Partition<Simplex>;

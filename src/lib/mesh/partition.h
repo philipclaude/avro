@@ -21,6 +21,8 @@ public:
   void compute( index_t np );
   void get( std::vector< std::shared_ptr<Topology<type>> >& partitions ) const;
 
+  const std::vector<index_t>& partition() const { return partition_; }
+
   void add_adjacency( index_t u , index_t v );
 
   bool weighted() const { return adjwgt_.size()==adjncy_.size(); }
