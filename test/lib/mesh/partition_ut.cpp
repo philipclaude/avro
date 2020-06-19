@@ -45,13 +45,41 @@ UT_TEST_CASE( test1 )
   int rank = mpi::rank();
   if (rank!=0) return;
 
+  printf("creating topology\n");
   std::vector<index_t> dims(number,10);
-  CKF_Triangulation topology( dims );
+
+  Points points(number);
+  Topology<Simplex> topology( points , number );
+
+  index_t nb_piece = 50;
+  for (index_t i=0;i<nb_piece;i++)
+  {
+    index_t nb_points = points.nb();
+
+    CKF_Triangulation topology1( dims );
+    for (index_t k=0;k<topology1.points().nb();k++)
+    {
+      topology1.points()[k][1] += 2*i; // offset
+      points.create( topology1.points()[k] );
+    }
+
+    for (index_t k=0;k<topology1.nb();k++)
+    {
+      std::vector<index_t> tk(topology1(k),topology1(k)+topology1.nv(k));
+      for (coord_t j=0;j<tk.size();j++)
+        tk[j] += nb_points;
+      topology.add( tk.data() , tk.size() );
+    }
+  }
+
+  printf("computing neighbours\n");
+  topology.neighbours().fromscratch() = true;
   topology.neighbours().compute();
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
   Partition<Simplex> partition(topology);
 
+  printf("partitioning mesh..\n");
   index_t npart = 4;
   partition.compute(npart);
 

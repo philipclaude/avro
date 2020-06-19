@@ -69,6 +69,7 @@ Lagrange<Simplex>::eval( const ReferenceElement<Simplex>& reference , const real
     // hack for zero-order lagrange basis
     // this shouldn't be needed, but for now error out until i'm really
     // convinced that this is needed
+    avro_assert_not_reached;
     phi[0] = 1.;
     return;
   }

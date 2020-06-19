@@ -151,7 +151,7 @@ UT_TEST_CASE_END(bcast_test)
 
 UT_TEST_CASE(reduce_test)
 {
-  avro_assert( TEST_NUM_PROCS == 4 );
+  //avro_assert( TEST_NUM_PROCS == 4 );
 
   UT_ASSERT(mpi::all_reduce(1, mpi::sum{}) == mpi::size());
   UT_ASSERT(mpi::all_reduce(1, mpi::prod{}) == 1);

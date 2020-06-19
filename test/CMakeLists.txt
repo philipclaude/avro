@@ -36,7 +36,7 @@ include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
 include_directories( ${GLM_INCLUDE_DIRS} )
 
-set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut )
+set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_mesh_mpi_ut )
 
 set( CHECK_TESTS )
 
@@ -73,6 +73,7 @@ foreach( test_src ${TEST_FILES} )
     # run the unit test with mpiexec and let the test know how many procs are used
     RUN_WITH_MPIEXEC( ${numprocs} )
     target_compile_definitions( ${test_exe} PUBLIC -DTEST_NUM_PROCS=${numprocs} )
+    message( STATUS  "runniing test ${test_bin} with ${numprocs} processors" )
   else()
     set( MPI_COMMAND )
   endif()

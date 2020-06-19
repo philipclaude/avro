@@ -3,6 +3,8 @@
 
 #include "element/simplex.h"
 
+#include "geometry/entity.h"
+
 #include "mesh/partition.h"
 #include "mesh/topology.h"
 
@@ -11,6 +13,8 @@
 #ifdef AVRO_MPI
 
 #include "common/mpi.hpp"
+
+#include "mesh/mpi_tags.h"
 
 #include <parmetis.h>
 
@@ -160,12 +164,12 @@ Partition<type>::compute( index_t nparts0 )
 
 template<typename type>
 void
-Partition<type>::get( std::vector< std::shared_ptr<Topology<type>>>& parts ) const
+Partition<type>::get( std::vector< std::shared_ptr<Topology_Partition<type>>>& parts ) const
 {
   // create the partitions
   for (index_t k=0;k<parts.size();k++)
   {
-    parts[k] = std::make_shared<Topology<type>>(topology_.points(),topology_.number());
+    parts[k] = std::make_shared<Topology_Partition<type>>(topology_.points().dim(),topology_.points().udim(),topology_.number());
   }
 
   avro_assert( partition_.size() == topology_.nb() );
@@ -173,9 +177,171 @@ Partition<type>::get( std::vector< std::shared_ptr<Topology<type>>>& parts ) con
   {
     parts[ partition_[k] ]->add( topology_(k) , topology_.nv(k) );
   }
+
+  for (index_t k=0;k<parts.size();k++)
+  {
+    parts[k]->extract_points( topology_.points() );
+    parts[k]->convert();
+  }
+}
+
+template<typename type>
+Topology_Partition<type>::Topology_Partition( coord_t dim , coord_t udim , coord_t number ) :
+  Topology<type>(points_,number),
+  points_(dim,udim)
+{}
+
+template<typename type>
+void
+Topology_Partition<type>::extract_points( const Points& points )
+{
+  local2global_.clear();
+  global2local_.clear();
+  points_.clear();
+
+  for (index_t k=0;k<this->nb();k++)
+  for (index_t j=0;j<this->nv(k);j++)
+    local2global_.push_back( (*this)(k,j) );
+  uniquify(local2global_);
+
+  coord_t udim = points.udim();
+  for (index_t k=0;k<local2global_.size();k++)
+  {
+    index_t global = local2global_[k];
+    points_.create( points[global] );
+    for (coord_t d=0;d<udim;d++)
+      points_.u(k)[d] = points.u(global)[d];
+    points_.set_entity( k , points.entity(global) );
+  }
+
+  for (index_t k=0;k<local2global_.size();k++)
+  {
+    global2local_.insert( {local2global_.at(k),k} );
+  }
+}
+
+template<typename type>
+void
+Topology_Partition<type>::convert()
+{
+  for (index_t k=0;k<this->nb();k++)
+  for (index_t j=0;j<this->nv(k);j++)
+    (*this)(k,j) = global2local_[(*this)(k,j)];
+}
+
+template<typename type>
+index_t
+Topology_Partition<type>::local2global( index_t k ) const
+{
+  avro_assert( k < points_.nb() );
+  avro_assert( k < local2global_.size() );
+  return local2global_[k];
+}
+
+template<typename type>
+index_t
+Topology_Partition<type>::global2local( index_t k ) const
+{
+  avro_assert( global2local_.find(k)!=global2local_.end() );
+  avro_assert( local2global(global2local_.at(k)) == k );
+  return global2local_.at(k);
+}
+
+template<typename type>
+void
+Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
+{
+  Topology<type>::clear();
+  points_.clear();
+  local2global_.clear();
+  global2local_.clear();
+
+  this->data_  = mpi::receive<std::vector<index_t>>(sender,TAG_CELL_INDEX);
+  this->first_ = mpi::receive<std::vector<index_t>>(sender,TAG_CELL_FIRST);
+  this->last_  = mpi::receive<std::vector<index_t>>(sender,TAG_CELL_LAST);
+
+  // receive the points
+  std::vector<real_t> x = mpi::receive<std::vector<real_t>>(sender,TAG_COORDINATE);
+  std::vector<real_t> u = mpi::receive<std::vector<real_t>>(sender,TAG_PARAMETER);
+  std::vector<int> identifiers = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY);
+  local2global_ = mpi::receive<std::vector<index_t>>(sender,TAG_LOCAL2GLOBAL);
+
+  coord_t dim = points_.dim();
+  coord_t udim = points_.udim();
+  index_t nb_points = x.size()/dim;
+  avro_assert( u.size() == nb_points*udim );
+  avro_assert( local2global_.size() == nb_points );
+  avro_assert( identifiers.size() == nb_points );
+
+  for (index_t k=0;k<nb_points;k++)
+  {
+    points_.create( &x[dim*k] );
+    for (coord_t d=0;d<udim;d++)
+      points_.u(k)[d] = u[k*udim+d];
+    points_.set_entity( k , nullptr ); // TODO look up identifier
+    global2local_.insert( { local2global_[k] , k } );
+  }
+
+  int min_id = *std::min_element(identifiers.begin(),identifiers.end());
+  int max_id = *std::max_element(identifiers.begin(),identifiers.end());
+  printf("min id = %d, max id = %d\n",min_id,max_id);
+  //rint_inline(identifiers);
+}
+
+template<typename type>
+void
+Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) const
+{
+  // send the topology
+  mpi::send( mpi::blocking{} , this->data_ ,  receiver , TAG_CELL_INDEX );
+  mpi::send( mpi::blocking{} , this->first_ , receiver , TAG_CELL_FIRST );
+  mpi::send( mpi::blocking{} , this->last_ ,  receiver , TAG_CELL_LAST );
+
+  // send the points
+  coord_t dim = points_.dim();
+  coord_t udim = points_.udim();
+  index_t nb_points = local2global_.size();
+
+  std::vector<real_t> coordinates( nb_points*dim , 0.0 );
+  std::vector<real_t> parameters( nb_points*udim , 0.0 );
+  std::vector<int> identifiers( nb_points );
+
+  for (index_t k=0;k<nb_points;k++)
+  {
+    for (coord_t d=0;d<dim;d++)
+      coordinates[k*dim+d] = points_[k][d];
+    for (coord_t d=0;d<udim;d++)
+      parameters[k*udim+d] = points_.u(k)[d];
+
+    Entity* entity = points_.entity(k);
+    if (entity==nullptr) identifiers[k] = -1;
+    else identifiers[k] = entity->identifier();
+  }
+
+  int min_id = *std::min_element(identifiers.begin(),identifiers.end());
+  int max_id = *std::max_element(identifiers.begin(),identifiers.end());
+  printf("min id = %d, max id = %d\n",min_id,max_id);
+
+  mpi::send( mpi::blocking{} , coordinates , receiver , TAG_COORDINATE );
+  mpi::send( mpi::blocking{} , parameters , receiver , TAG_PARAMETER );
+  mpi::send( mpi::blocking{} , identifiers , receiver , TAG_GEOMETRY );
+  mpi::send( mpi::blocking{} , local2global_ , receiver , TAG_LOCAL2GLOBAL );
+}
+
+template<typename type>
+void
+Topology_Partition<type>::move_to_front( const std::vector<index_t>& pts )
+{
+  // move the points in the specified indices to the front
+  // this will be useful when we need to move fixed points in an
+  // adaptation chunk to the start of the points so that collapses
+  // during the adaptation (which decrement indices) do not affect the
+  // global maps
+  avro_implement;
 }
 
 template class Partition<Simplex>;
+template class Topology_Partition<Simplex>;
 
 } // avro
 

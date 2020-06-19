@@ -3,6 +3,9 @@
 
 #include "common/types.h"
 
+#include "mesh/points.h"
+
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -10,6 +13,32 @@ namespace avro
 {
 
 template<typename type> class Topology;
+
+// a partitioned topology that holds its own set of points
+template<typename type>
+class Topology_Partition : public Topology<type>
+{
+public:
+  Topology_Partition( coord_t dim , coord_t udim , coord_t number );
+
+  #ifdef AVRO_MPI
+  void send( mpi::communicator& comm , index_t receiver ) const;
+  void receive( mpi::communicator& comm , index_t sender );
+  #endif
+
+  void extract_points( const Points& points );
+  void convert();
+
+  void move_to_front( const std::vector<index_t>& pts );
+
+  index_t local2global( index_t k ) const;
+  index_t global2local( index_t k ) const;
+
+private:
+  Points points_;
+  std::vector<index_t>      local2global_;
+  std::map<index_t,index_t> global2local_;
+};
 
 template<typename type>
 class Partition
@@ -19,7 +48,7 @@ public:
 
   void initialize();
   void compute( index_t np );
-  void get( std::vector< std::shared_ptr<Topology<type>> >& partitions ) const;
+  void get( std::vector< std::shared_ptr<Topology_Partition<type>> >& partitions ) const;
 
   const std::vector<index_t>& partition() const { return partition_; }
 
@@ -41,8 +70,9 @@ private:
   std::vector<real_t> adjwgt_; // edge weights, size 2m
 
   std::vector<index_t> partition_;
-
 };
+
+
 
 } // avro
 

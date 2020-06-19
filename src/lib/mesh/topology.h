@@ -25,6 +25,10 @@
 #include <string>
 #include <vector>
 
+#ifdef AVRO_MPI
+#include "common/mpi.hpp"
+#endif
+
 namespace avro
 {
 
@@ -187,6 +191,13 @@ public:
   void print_header() const;
 
   void set_points( Points& points );
+
+  #ifdef AVRO_MPI
+  void send( mpi::communicator& comm , index_t destination ) const;
+  void receive( mpi::communicator& comm , index_t sender );
+
+  void send_points( mpi::communicator& comm , index_t destination ) const;
+  #endif
 
 private:
   type element_;
