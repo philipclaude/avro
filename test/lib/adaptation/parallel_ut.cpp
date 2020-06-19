@@ -18,9 +18,6 @@ UT_TEST_CASE( test1 )
 {
   coord_t number = 2;
 
-  mpi::communicator& comm = ProcessMPI::get_comm();
-  int rank = mpi::rank();
-
   printf("creating topology\n");
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
@@ -35,7 +32,7 @@ UT_TEST_CASE( test1 )
   params.nb_partition() = TEST_NUM_PROCS;
 
   std::vector<VertexMetric> metrics;
-  int result = adaptp( topology , metrics , params , topology_out );
+  //int result = adaptp( topology , metrics , params , topology_out );
 
 
 

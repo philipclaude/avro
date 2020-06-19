@@ -37,6 +37,7 @@ include_directories( third_party/glfw/include )
 include_directories( ${GLM_INCLUDE_DIRS} )
 
 set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_mesh_mpi_ut )
+set( numprocs_unit 4 )
 
 set( CHECK_TESTS )
 
@@ -66,7 +67,7 @@ foreach( test_src ${TEST_FILES} )
   set(numprocs -1)
   list( FIND MPI_TESTS ${test_bin} idx )
   if (${idx} GREATER -1)
-    set(numprocs 4)
+    set(numprocs ${numprocs_unit} )
   endif()
 
   if ( ${numprocs} GREATER 0)
@@ -94,6 +95,7 @@ endforeach()
 
 # create the full unit executable
 avro_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
+target_compile_definitions( unit_exe PUBLIC -DTEST_NUM_PROCS=${numprocs_unit} )
 target_link_libraries( unit_exe avro_shared )
 target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
 

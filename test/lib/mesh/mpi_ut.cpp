@@ -25,7 +25,6 @@ UT_TEST_CASE( test1 )
 
   mpi::communicator& comm = ProcessMPI::get_comm();
   int rank = mpi::rank();
-  int nb_rank = mpi::size();
 
   std::vector<index_t> dims(number,4);
   CKF_Triangulation topology(dims);

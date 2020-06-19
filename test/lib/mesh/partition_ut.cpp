@@ -41,7 +41,6 @@ UT_TEST_CASE( test1 )
 {
   coord_t number = 2;
 
-  mpi::communicator& comm = ProcessMPI::get_comm();
   int rank = mpi::rank();
   if (rank!=0) return;
 
@@ -83,7 +82,7 @@ UT_TEST_CASE( test1 )
   index_t npart = 4;
   partition.compute(npart);
 
-  std::vector<std::shared_ptr<Topology<Simplex>>> parts(npart);
+  std::vector<std::shared_ptr<Topology_Partition<Simplex>>> parts(npart);
   partition.get(parts);
   //for (index_t k=0;k<parts.size();k++)
   //  topology.add_child(parts[k]);
