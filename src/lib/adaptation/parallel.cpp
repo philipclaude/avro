@@ -16,6 +16,8 @@
 namespace avro
 {
 
+#ifdef AVRO_MPI
+
 template<typename type>
 class PartitionInterface : public Topology<type>
 {
@@ -256,5 +258,7 @@ AdaptationManager<type>::AdaptationManager( Topology<type>& topology ,
 
 template class AdaptationManager<Simplex>;
 template int adaptp( Topology<Simplex>& , const std::vector<VertexMetric>& , AdaptationParameters& , Topology<Simplex>& , index_t level );
+
+#endif
 
 } // avro
