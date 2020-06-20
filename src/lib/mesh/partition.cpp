@@ -285,7 +285,6 @@ Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
   int min_id = *std::min_element(identifiers.begin(),identifiers.end());
   int max_id = *std::max_element(identifiers.begin(),identifiers.end());
   printf("min id = %d, max id = %d\n",min_id,max_id);
-  //rint_inline(identifiers);
 }
 
 template<typename type>
