@@ -74,34 +74,6 @@ public:
 
   }
 
-  void receive( mpi::communicator& comm , index_t sender )
-  {
-    printf("receiving topology from sender %lu\n",sender);
-
-    // receive the topology data
-    this->data_  = mpi::receive<std::vector<index_t>>(sender,TAG_CELL_INDEX);
-    this->first_ = mpi::receive<std::vector<index_t>>(sender,TAG_CELL_FIRST);
-    this->last_  = mpi::receive<std::vector<index_t>>(sender,TAG_CELL_LAST);
-
-    // receive the points
-    std::vector<real_t> x = mpi::receive<std::vector<real_t>>(sender,TAG_COORDINATE);
-    std::vector<real_t> u = mpi::receive<std::vector<real_t>>(sender,TAG_PARAMETER);
-    std::vector<int> g = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY);
-    local2global_ = mpi::receive<std::vector<index_t>>(sender,TAG_LOCAL2GLOBAL);
-
-    coord_t dim = points_.dim();
-    coord_t udim = points_.udim();
-    index_t nb_points = x.size() / dim;
-    for (index_t k=0;k<nb_points;k++)
-    {
-      points_.create( &x[k*dim] );
-      points_.set_param( k , &u[k*udim] );
-
-      Entity* entity = lookup(g[k]);
-      points_.set_entity( k , entity );
-    }
-  }
-
   Entity* lookup( index_t identifier ) const
   {
     avro_implement;

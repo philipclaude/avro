@@ -59,7 +59,7 @@ Object::Object( ego* object , EGADS::Body* body ) :
 
   if (data_.member_type == SREVERSE) sign_ = -1;
 
-  name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
+  name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type()) + "-" + std::to_string(identifier_);
 }
 
 Object::Object( const Context& context ) :

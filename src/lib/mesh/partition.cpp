@@ -248,6 +248,28 @@ Topology_Partition<type>::global2local( index_t k ) const
 }
 
 template<typename type>
+Entity*
+Topology_Partition<type>::lookup( int identifier , int number ) const
+{
+  if (identifier<0 || number<0) return nullptr; // save the lookup
+  for (index_t k=0;k<entities_.size();k++)
+  {
+    if (entities_[k]->number()==number && entities_[k]->identifier()==identifier)
+      return entities_[k];
+  }
+  return nullptr;
+}
+
+template<typename type>
+void
+Topology_Partition<type>::set_entities( const std::vector<Entity*>& entities )
+{
+  entities_.resize( entities.size() );
+  for (index_t k=0;k<entities.size();k++)
+    entities_[k] = entities[k];
+}
+
+template<typename type>
 void
 Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
 {
@@ -264,6 +286,7 @@ Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
   std::vector<real_t> x = mpi::receive<std::vector<real_t>>(sender,TAG_COORDINATE);
   std::vector<real_t> u = mpi::receive<std::vector<real_t>>(sender,TAG_PARAMETER);
   std::vector<int> identifiers = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY);
+  std::vector<int> geometry_numbers = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY_NUMBERS);
   local2global_ = mpi::receive<std::vector<index_t>>(sender,TAG_LOCAL2GLOBAL);
 
   coord_t dim = points_.dim();
@@ -278,7 +301,8 @@ Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
     points_.create( &x[dim*k] );
     for (coord_t d=0;d<udim;d++)
       points_.u(k)[d] = u[k*udim+d];
-    points_.set_entity( k , nullptr ); // TODO look up identifier
+    Entity* entity = lookup( identifiers[k] , geometry_numbers[k] );
+    points_.set_entity( k , entity ); // TODO look up identifier
     global2local_.insert( { local2global_[k] , k } );
   }
 
@@ -303,7 +327,8 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
 
   std::vector<real_t> coordinates( nb_points*dim , 0.0 );
   std::vector<real_t> parameters( nb_points*udim , 0.0 );
-  std::vector<int> identifiers( nb_points );
+  std::vector<int> identifiers( nb_points , -1 );
+  std::vector<int> geometry_numbers( nb_points , -1 );
 
   for (index_t k=0;k<nb_points;k++)
   {
@@ -313,8 +338,11 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
       parameters[k*udim+d] = points_.u(k)[d];
 
     Entity* entity = points_.entity(k);
-    if (entity==nullptr) identifiers[k] = -1;
-    else identifiers[k] = entity->identifier();
+    if (entity!=nullptr)
+    {
+      identifiers[k]      = entity->identifier();
+      geometry_numbers[k] = entity->number();
+    }
   }
 
   int min_id = *std::min_element(identifiers.begin(),identifiers.end());
@@ -324,6 +352,7 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
   mpi::send( mpi::blocking{} , coordinates , receiver , TAG_COORDINATE );
   mpi::send( mpi::blocking{} , parameters , receiver , TAG_PARAMETER );
   mpi::send( mpi::blocking{} , identifiers , receiver , TAG_GEOMETRY );
+  mpi::send( mpi::blocking{} , geometry_numbers , receiver , TAG_GEOMETRY_NUMBERS );
   mpi::send( mpi::blocking{} , local2global_ , receiver , TAG_LOCAL2GLOBAL );
 }
 

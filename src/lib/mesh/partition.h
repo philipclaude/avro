@@ -13,6 +13,7 @@ namespace avro
 {
 
 template<typename type> class Topology;
+class Entity;
 
 // a partitioned topology that holds its own set of points
 template<typename type>
@@ -20,6 +21,10 @@ class Topology_Partition : public Topology<type>
 {
 public:
   Topology_Partition( coord_t dim , coord_t udim , coord_t number );
+
+  // set the entities we will use to look up geometry identifiers
+  void set_entities( const std::vector<Entity*>& entities );
+  Entity* lookup( int identifier , int number ) const;
 
   #ifdef AVRO_MPI
   void send( mpi::communicator& comm , index_t receiver ) const;
@@ -38,6 +43,7 @@ private:
   Points points_;
   std::vector<index_t>      local2global_;
   std::map<index_t,index_t> global2local_;
+  std::vector<Entity*> entities_;
 };
 
 template<typename type>

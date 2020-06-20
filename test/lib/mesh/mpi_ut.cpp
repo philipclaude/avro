@@ -36,12 +36,18 @@ UT_TEST_CASE( test1 )
   EGADS::Cube geometry(&context,lens);
   topology.points().attach(geometry);
 
+  std::vector<Entity*> entities;
+  geometry.get_entities(entities);
+
   index_t nb_partition = TEST_NUM_PROCS -1;
 
   // send the partitions to each processor
   Topology_Partition<Simplex> topology_p(dim,udim,number);
+  topology_p.set_entities(entities);
   if (rank == 0 )
   {
+    topology.points().print(true);
+
     // partition the topology
     Partition<Simplex> partition(topology);
     partition.compute(nb_partition);
@@ -70,6 +76,7 @@ UT_TEST_CASE( test1 )
     for (index_t i=0;i<nb_partition;i++)
     {
       Topology_Partition<Simplex> tk(number,number-1,number);
+      tk.set_entities(entities);
       tk.receive(comm,i+1);
 
       index_t np = points.nb();
@@ -89,8 +96,8 @@ UT_TEST_CASE( test1 )
       }
     }
 
-    topology_out.Table<index_t>::print();
-    topology_out.points().print();
+    //topology_out.Table<index_t>::print();
+    topology_out.points().print(true);
   }
   else
   {
