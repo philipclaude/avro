@@ -62,12 +62,18 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
   }
   else if (lens.size()==3)
   {
+    #ifndef AVRO_NO_ESP
     real_t data[6] = { x[0] , x[1] , x[2] , lens[0] , lens[1] , lens[2] };
     EGADS_ENSURE_SUCCESS( EG_makeSolidBody( *context_.get() , BOX , data , &object_ ) );
+    #else
+    printf("need full egads to make solid body\n");
+    avro_assert_not_reached;
+    #endif
   }
   this->build_hierarchy();
 }
 
+#ifndef AVRO_NO_ESP
 void
 SolidBody::make()
 {
@@ -498,6 +504,8 @@ Circle::Circle( const Context* context , const real_t* xc , const real_t R )
 
   buildHierarchy();
 }
+#endif
+
 #endif
 
 } // EGADS

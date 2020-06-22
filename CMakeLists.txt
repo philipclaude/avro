@@ -23,6 +23,7 @@ option(avro_SMART_PTR "use internal smart pointer (smartypants) for memory manag
 option(AVRO_WITH_MPI "compile for distributed computing support" false)
 option(RUN_WITH_MPI "run with mpi. might be difficult to debug with mpirun" false)
 option(avro_WITH_FPG "compile FPG needed to make new predicates" false)
+option(avro_NO_ESP "ESP is not available, so we will use internal wv and egads-lite" false )
 set(avro_TEST_DATA "data/" CACHE STRING "location for avro test files relative to test/" )
 set(avro_WITH_GL "option to compile OpenGL-based visualizer (along with WebGL-based one)" true)
 
@@ -44,7 +45,9 @@ endif()
 
 # required dependencies
 include(cmake/FindLAPACK.cmake)
-include(cmake/FindESP.cmake)
+if (NOT AVRO_NO_ESP)
+  include(cmake/FindESP.cmake)
+endif()
 include(cmake/FindNLOPT.cmake)
 include(cmake/FindGraphics.cmake)
 

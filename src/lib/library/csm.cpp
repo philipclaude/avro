@@ -17,16 +17,22 @@ namespace avro
 OpenCSM_Model::OpenCSM_Model( const std::string& filename0 ) :
   EGADS::Model(2)
 {
+  #ifndef AVRO_NO_ESP
   std::vector<char> filename(filename0.begin(),filename0.end());
   filename.push_back('\0');
   int status = ocsmLoad( &*filename.begin() , (void**)&modl_ );
   avro_assert(status==0);
   import();
+  #else
+  printf("OpenCSM is not included in this build. Recompile by linking with ESP.\n");
+  avro_assert_not_reached;
+  #endif
 }
 
 void
 OpenCSM_Model::import()
 {
+  #ifndef AVRO_NO_ESP
   int build_to = 0; // execute all branches
   int built_to;
   int nbody;
@@ -48,7 +54,10 @@ OpenCSM_Model::import()
   }
   printf("found %lu bodies on stack\n",body_.size());
   determine_number();
-
+  #else
+  printf("OpenCSM is not included in this build. Recompile by linking with ESP.\n");
+  avro_assert_not_reached;
+  #endif
 }
 
 } // avro

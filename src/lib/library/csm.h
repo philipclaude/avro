@@ -14,7 +14,9 @@
 
 extern "C"
 {
+#ifndef AVRO_NO_ESP
 #include <OpenCSM.h>
+#endif
 }
 #include <egads.h>
 
@@ -29,7 +31,9 @@ public:
   void import();
 
 private:
+  #ifndef AVRO_NO_ESP
   modl_T* modl_;
+  #endif
 };
 
 } // avro

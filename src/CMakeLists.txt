@@ -11,7 +11,6 @@ add_source_directories(SOURCES "Source Files\\geometry" lib/geometry)
 add_source_directories(SOURCES "Source Files\\geometry-egads" lib/geometry/egads)
 add_source_directories(SOURCES "Source Files\\geometry-psc" lib/geometry/psc)
 add_source_directories(SOURCES "Source Files\\graphics" lib/graphics)
-add_source_directories(SOURCES "Source Files\\graphics/backends" lib/graphics/backends)
 add_source_directories(SOURCES "Source Files\\library" lib/library)
 add_source_directories(SOURCES "Source Files\\mesh" lib/mesh)
 add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
@@ -47,6 +46,14 @@ include_directories( third_party/numpack )
 
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )
+
+if (AVRO_NO_ESP)
+  set( ESP_LIBRARIES )
+  set (OCC_LIBRARIES )
+  include_directories( third_party/eglite )
+  include_directories( third_party/wv )
+  add_definitions( -DAVRO_NO_ESP )
+endif()
 
 set(avro_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} ${MPI_LIBRARIES} ${PARMETIS_LIBRARIES} dl blas z )
 if (avro_WITH_OPENMP)

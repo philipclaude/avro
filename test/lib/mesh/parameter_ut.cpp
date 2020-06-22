@@ -97,10 +97,14 @@ UT_TEST_CASE(test1)
   {
     EGADS::Object* obj = static_cast<EGADS::Object*>(*it);
     if (obj->number()!=2) continue;
+    #ifndef AVRO_NO_ESP
     real_t area;
     EG_getArea( *obj->object() , NULL , &area );
     printf("area = %g\n",area);
     total_area += area;
+    #else
+    printf("cannot call EG_getArea without full EGADS\n");
+    #endif
   }
   printf("total area = %g\n",total_area);
 

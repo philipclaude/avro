@@ -36,6 +36,14 @@ include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
 include_directories( ${GLM_INCLUDE_DIRS} )
 
+if (AVRO_NO_ESP)
+  set( ESP_LIBRARIES )
+  set( OCC_LIBRARIES )
+  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/eglite )
+  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/wv )
+  add_definitions( -DAVRO_NO_ESP )
+endif()
+
 set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_mesh_mpi_ut )
 set( numprocs_unit 4 )
 
@@ -74,7 +82,6 @@ foreach( test_src ${TEST_FILES} )
     # run the unit test with mpiexec and let the test know how many procs are used
     RUN_WITH_MPIEXEC( ${numprocs} )
     target_compile_definitions( ${test_exe} PUBLIC -DTEST_NUM_PROCS=${numprocs} )
-    message( STATUS  "runniing test ${test_bin} with ${numprocs} processors" )
   else()
     set( MPI_COMMAND )
   endif()
