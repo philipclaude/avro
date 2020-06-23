@@ -70,12 +70,35 @@ UT_TEST_CASE( test1 )
 
   if (rank == 0)
   {
+    MergedPartitions<Simplex> merged(dim,udim,number);
+    PartitionInterface<Simplex> interface(dim,udim,number);
 
+    for (index_t i=0;i<nb_partition;i++)
+    {
+      // receive this partition
+      Topology_Partition<Simplex> tk(dim,udim,number);
+      tk.set_entities(entities);
+      tk.receive(comm,i+1);
+
+      tk.receive( comm , i+1 );
+
+
+      // add the partition boundary points to the map in the interface
+      interface.add_boundary( topology_p.boundary_points() );
+    }
+
+    // possible do something with the interface
+    // such as adapt the elements in it...
+
+    // now add the interface to the merged topology
+    merged.add_interface( interface );
+
+#if 0
     Points points(dim,udim);
     Topology<Simplex> topology_out(points,number);
     for (index_t i=0;i<nb_partition;i++)
     {
-      Topology_Partition<Simplex> tk(number,number-1,number);
+      Topology_Partition<Simplex> tk(dim,udim,number);
       tk.set_entities(entities);
       tk.receive(comm,i+1);
 
@@ -95,9 +118,8 @@ UT_TEST_CASE( test1 )
         topology_out.add( tk(k) , tk.nv(k) );
       }
     }
+#endif
 
-    //topology_out.Table<index_t>::print();
-    topology_out.points().print(true);
   }
   else
   {

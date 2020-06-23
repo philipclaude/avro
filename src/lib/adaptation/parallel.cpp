@@ -41,7 +41,7 @@ class PartitionChunk : public Topology_Partition<type>
 {
 public:
   PartitionChunk( const Topology<type>& topology ) :
-    Topology_Partition<type>(points_.dim(),points_.udim(),topology.number()),
+    Topology_Partition<type>(topology.points().dim(),topology.points().udim(),topology.number()),
     points_(topology.points().dim()),
     topology_(topology),
     boundary_(points_,topology.number()-1)
@@ -124,7 +124,7 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   if (rank == 0)
   {
     // partition the mesh
-    printf("partitioning level %lu with %lu partitions\n",level,nb_partition);
+    printf("partitioning level %lu with %d partitions\n",level,nb_partition);
     Partition<type> partition(topology_in);
     partition.compute(nb_partition);
     printf("done\n");

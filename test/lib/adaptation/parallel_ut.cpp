@@ -32,7 +32,7 @@ UT_TEST_CASE( test1 )
   params.nb_partition() = TEST_NUM_PROCS;
 
   std::vector<VertexMetric> metrics;
-  //int result = adaptp( topology , metrics , params , topology_out );
+  int result = adaptp( topology , metrics , params , topology_out );
 
 
 

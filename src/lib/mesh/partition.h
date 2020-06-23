@@ -39,11 +39,31 @@ public:
   index_t local2global( index_t k ) const;
   index_t global2local( index_t k ) const;
 
+  void compute_crust();
+  void compute_mantle();
+  void compute_halo();
+
 private:
   Points points_;
   std::vector<index_t>      local2global_;
   std::map<index_t,index_t> global2local_;
   std::vector<Entity*> entities_;
+  std::vector<index_t> halo_;
+  std::vector<index_t> crust_;
+  std::vector<index_t> mantle_;
+};
+
+template<typename type>
+class MergedPartitions : public Topology_Partition<type>
+{
+public:
+  #ifdef AVRO_MPI
+  void receive_partition( mpi::communicator& comm , index_t receiver );
+  void receive_halo( mpi::communicator& comm , index_t receiver );
+  #endif
+
+private:
+  std::vector<index_t> boundary_;
 };
 
 template<typename type>

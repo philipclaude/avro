@@ -5,6 +5,7 @@
 
 #include "geometry/entity.h"
 
+#include "mesh/boundary.h"
 #include "mesh/partition.h"
 #include "mesh/topology.h"
 
@@ -302,13 +303,9 @@ Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
     for (coord_t d=0;d<udim;d++)
       points_.u(k)[d] = u[k*udim+d];
     Entity* entity = lookup( identifiers[k] , geometry_numbers[k] );
-    points_.set_entity( k , entity ); // TODO look up identifier
+    points_.set_entity( k , entity );
     global2local_.insert( { local2global_[k] , k } );
   }
-
-  int min_id = *std::min_element(identifiers.begin(),identifiers.end());
-  int max_id = *std::max_element(identifiers.begin(),identifiers.end());
-  printf("min id = %d, max id = %d\n",min_id,max_id);
 }
 
 template<typename type>
@@ -367,6 +364,120 @@ Topology_Partition<type>::move_to_front( const std::vector<index_t>& pts )
   // global maps
   avro_implement;
 }
+
+template<typename type>
+void
+Topology_Partition<type>::compute_crust()
+{
+  // compute the neighbours
+  this->neighbours().fromscratch() = true;
+  this->neighbours().compute();
+
+  // loop through the neighbours
+  crust_.clear();
+  for (index_t k=0;k<this->nb();k++)
+  {
+    for (index_t j=0;j<this->neighbours().nfacets();j++)
+    {
+      // retrieve the j'th neighbour of element k
+      int n = this->neighbours()(k,j);
+
+      // skip if an interior facet
+      if (n>=0) continue;
+
+      // skip if an actual geometry facet
+      Entity* entity = BoundaryUtils::geometryFacet( this->points_ , (*this)(k) , this->nv(k) );
+      if (entity!=nullptr) continue;
+
+      // this is an element on the boundary
+      crust_.push_back(k);
+      continue; // no need to keep checking this element's neighbours
+    }
+  }
+  uniquify(crust_);
+
+  // remove any element in the boundary layer
+  std::sort( crust_.begin() , crust_.end() );
+  for (index_t k=0;k<crust_.size();k++)
+  {
+    // subtract k since element numbering decreases by 1 on every removal
+    this->remove( crust_[k]-k );
+  }
+
+  // TODO send back the crust to the root processor
+  // along with the local2global information
+  // which will define the first layer of interface elements
+}
+
+template<typename type>
+void
+Topology_Partition<type>::compute_mantle()
+{
+  // this should only be called after the adaptation
+  // because
+  this->inverse().build();
+
+  std::vector<index_t> ball;
+  mantle_.clear();
+  for (index_t k=0;k<halo_.size();k++)
+  {
+    ball.clear();
+    this->inverse().ball( {halo_[k]},ball );
+
+    for (index_t j=0;j<ball.size();j++)
+      mantle_.push_back(ball[j]);
+  }
+  uniquify(mantle_);
+
+  // TODO send back the mantle to the root processor
+  // which will define the second layer of interface elements
+  // note the local2global doesn't apply because all mantle elements
+  // will be new from the adaptation, and their indices will be mapped in the
+  // order in which they are added to the merged topology
+}
+
+template<typename type>
+void
+Topology_Partition<type>::compute_halo()
+{
+  // recompute the neighbours
+  this->neighbours().forceCompute();
+  this->neighbours().fromscratch()  = true;
+  this->neighbours().compute();
+
+  halo_.clear();
+  for (index_t k=0;k<this->nb();k++)
+  {
+    for (index_t j=0;j<this->neighbours().nfacets();j++)
+    {
+      // retrieve the j'th neighbour of element k
+      int n = this->neighbours()(k,j);
+
+      // skip if an interior facet
+      if (n>=0) continue;
+
+      // skip if an actual geometry facet
+      Entity* entity = BoundaryUtils::geometryFacet( this->points_ , (*this)(k) , this->nv(k) );
+      if (entity!=nullptr) continue;
+
+      for (index_t i=0;i<this->neighbours().nfacets();i++)
+      {
+        if (i==j) continue;
+        halo_.push_back( (*this)(k,i) );
+      }
+      continue; // no need to keep checking this element's neighbours
+    }
+  }
+  uniquify(halo_);
+
+  // TODO: send the boundary points back to root processor
+  // it needs to save the global version of these (local) indices so it knows
+  // that these points need to be re-mapped to the global points before the interface is adapted
+
+}
+
+
+
 
 template class Partition<Simplex>;
 template class Topology_Partition<Simplex>;
