@@ -22,7 +22,7 @@ UT_TEST_CASE( test1 )
   coord_t number = 3;
 
   printf("creating topology\n");
-  std::vector<index_t> dims(number,21);
+  std::vector<index_t> dims(number,31);
   CKF_Triangulation topology(dims);
 
   EGADS::Context context;

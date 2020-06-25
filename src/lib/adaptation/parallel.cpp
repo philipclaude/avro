@@ -99,7 +99,15 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   }
   else
   {
-    active.resize( nb_rank , ACTIVE );
+    index_t nb_partition0 = nb_partition;
+    nb_partition = topology_in.nb()/partition_size;
+    if (nb_partition>nb_partition0) nb_partition = nb_partition0;
+
+    active.resize( nb_rank , INACTIVE );
+    for (index_t j=0;j<nb_partition;j++)
+      active[j+1] = ACTIVE;
+
+    //active.resize( nb_rank , ACTIVE );
   }
 
   if (rank==0)
