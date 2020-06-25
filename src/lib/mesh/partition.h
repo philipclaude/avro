@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <vector>
 
 namespace avro
@@ -83,6 +84,8 @@ public:
   void add_adjacency( index_t u , index_t v );
 
   bool weighted() const { return adjwgt_.size()==adjncy_.size(); }
+
+  void compute_interface( std::vector<std::set<index_t>>& elems , std::vector<std::set<index_t>>& pts ) const;
 
 private:
   const Topology<type>& topology_;

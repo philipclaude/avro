@@ -60,9 +60,14 @@ UT_TEST_CASE( test1 )
     Partition<Simplex> partition(topology);
     partition.compute(nb_partition);
 
+    std::vector<std::set<index_t>> crust_elems( nb_partition );
+    std::vector<std::set<index_t>> halo_points( nb_partition );
+    partition.compute_interface( crust_elems , halo_points );
+
     std::vector< std::shared_ptr<Topology_Partition<Simplex> > > parts(nb_partition);
     partition.get(parts);
 
+    #if 0
     for (index_t k=0;k<parts.size();k++)
     {
       parts[k]->compute_crust();
@@ -90,6 +95,52 @@ UT_TEST_CASE( test1 )
       parts[k]->remove_elements( parts[k]->crust() );
       parts[k]->remove_unused();
     }
+    #else
+    for (index_t k=0;k<parts.size();k++)
+    {
+      parts[k]->set_entities(entities);
+
+      // extract the halo for this partition and map to local indices
+      std::vector<index_t> halo( halo_points[k].begin() , halo_points[k].end() );
+      for (index_t j=0;j<halo.size();j++)
+        halo[j] = parts[k]->global2local( halo[j] );
+
+      print_inline(halo);
+
+      // compute the set of elements touching a halo point
+      parts[k]->neighbours().fromscratch();
+      parts[k]->neighbours().compute();
+      parts[k]->inverse().build();
+      std::vector<index_t> ball;
+      std::vector<index_t> crust;
+      for (index_t j=0;j<halo.size();j++)
+      {
+        ball.clear();
+        parts[k]->inverse().ball( halo[j] , ball );
+        for (index_t i=0;i<ball.size();i++)
+          crust.push_back( ball[i] );
+      }
+      uniquify(crust);
+      avro_assert( crust.size() == crust_elems[k].size() );
+
+      // add the crust to the interface
+      // crust elements are in local indices, convert to global
+      for (index_t j=0;j<crust.size();j++)
+      {
+        std::vector<index_t> s = parts[k]->get( crust[j] );
+        for (index_t i=0;i<s.size();i++)
+          s[i] = parts[k]->local2global(s[i]);
+        interface.Topology<index_t>::add(s.data(),s.size());
+      }
+
+      printf("partition %lu has %lu elements with %lu elements in the crust\n",k+1,parts[k]->nb(),crust.size());
+
+      // remove crust elements from the partition since they do not get adapted
+      parts[k]->move_to_front( halo );
+      parts[k]->remove_elements( crust );
+      parts[k]->remove_unused();
+    }
+    #endif
 
     interface.remove_unused();
 

@@ -7,6 +7,7 @@
 
 #include "mesh/boundary.h"
 #include "mesh/facets.h"
+#include "mesh/inverse.h"
 #include "mesh/partition.h"
 #include "mesh/topology.h"
 
@@ -98,6 +99,14 @@ Partition<type>::compute( index_t nparts0 )
   UNUSED(padjwgt);
   UNUSED(wgtflag);
 
+  if (nparts0==1)
+  {
+    // if there's only one partition, then all elements
+    // will receive the same coloring
+    partition_.resize( topology_.nb() , 0 );
+    return;
+  }
+
   std::vector<PARM_INT> adjwgt(adjwgt_.begin(),adjwgt_.end());
   if (weighted())
   {
@@ -119,8 +128,6 @@ Partition<type>::compute( index_t nparts0 )
   UNUSED(pvwgt);
   UNUSED(nvtxs);
 
-  printf("nparts = %d\n",nparts);
-
   std::vector<PARM_REAL> tpwgts(ncon*nparts,1./nparts);
   std::vector<PARM_REAL> ubvec(ncon,1.05);
   PARM_INT options[3];
@@ -137,9 +144,6 @@ Partition<type>::compute( index_t nparts0 )
   //MPI_Comm comm = MPI_COMM_WORLD;
   MPI_Comm comm = mpi::comm_cast( ProcessMPI::get_comm() );
   UNUSED(comm);
-  printf("partitioning!\n");
-  print_inline( xadj );
-  print_inline( adjncy );
 #if PARMETIS_MAJOR_VERSION == 4
   int result =
 #endif
@@ -192,6 +196,59 @@ Partition<type>::get( std::vector< std::shared_ptr<Topology_Partition<type>>>& p
 
     // this ensures that all partitions only contains points they index
     avro_assert( parts[k]->all_points_accounted() );
+  }
+}
+
+template<typename type>
+void
+Partition<type>::compute_interface( std::vector<std::set<index_t>>& elems , std::vector<std::set<index_t>>& halo ) const
+{
+  Facets facets( topology_ );
+  facets.compute();
+
+  // first extract all points on the interface
+  std::set<index_t> pts;
+  std::vector<index_t> facet( topology_.number() );
+  for (index_t k=0;k<facets.nb();k++)
+  {
+    // if this is on the boundary of the partition, then it is not in the interface
+    if (facets.boundary(k)) continue;
+
+    // determine if the left and right partition are the same
+    index_t p0 = partition_[ facets.side0(k) ];
+    index_t p1 = partition_[ facets.side1(k) ];
+
+    // if the partitions are the same, then this is not in the interface
+    if (p0==p1) continue;
+
+    facets.retrieve( k , facet );
+    for (index_t j=0;j<facet.size();j++)
+      pts.insert( facet[j] );
+  }
+
+  // now extract all elements with a point on the interface
+  // TODO check that the neighbours are computed since these are needed for the inverse
+  InverseTopology<type> inverse(topology_);
+  inverse.build();
+  std::set<index_t>::iterator it;
+  std::vector<index_t> ball;
+  for (it=pts.begin();it!=pts.end();it++)
+  {
+    ball.clear();
+    inverse.ball( *it , ball );
+
+    // go through every element in the ball and add it to the list of elements
+    for (index_t j=0;j<ball.size();j++)
+    {
+      index_t elem = ball[j];
+      elems[ partition_[elem] ].insert(elem);
+
+      for (index_t i=0;i<topology_.nv(elem);i++)
+      {
+        if ( pts.find(topology_(elem,i)) == pts.end() ) continue; // not in the halo
+        halo[ partition_[elem] ].insert( topology_(elem,i) );
+      }
+    }
   }
 }
 
