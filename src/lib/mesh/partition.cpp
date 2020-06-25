@@ -6,6 +6,7 @@
 #include "geometry/entity.h"
 
 #include "mesh/boundary.h"
+#include "mesh/facets.h"
 #include "mesh/partition.h"
 #include "mesh/topology.h"
 
@@ -118,6 +119,8 @@ Partition<type>::compute( index_t nparts0 )
   UNUSED(pvwgt);
   UNUSED(nvtxs);
 
+  printf("nparts = %d\n",nparts);
+
   std::vector<PARM_REAL> tpwgts(ncon*nparts,1./nparts);
   std::vector<PARM_REAL> ubvec(ncon,1.05);
   PARM_INT options[3];
@@ -134,6 +137,9 @@ Partition<type>::compute( index_t nparts0 )
   //MPI_Comm comm = MPI_COMM_WORLD;
   MPI_Comm comm = mpi::comm_cast( ProcessMPI::get_comm() );
   UNUSED(comm);
+  printf("partitioning!\n");
+  print_inline( xadj );
+  print_inline( adjncy );
 #if PARMETIS_MAJOR_VERSION == 4
   int result =
 #endif
@@ -183,6 +189,9 @@ Partition<type>::get( std::vector< std::shared_ptr<Topology_Partition<type>>>& p
   {
     parts[k]->extract_points( topology_.points() );
     parts[k]->convert();
+
+    // this ensures that all partitions only contains points they index
+    avro_assert( parts[k]->all_points_accounted() );
   }
 }
 
@@ -294,7 +303,6 @@ Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
   coord_t udim = points_.udim();
   index_t nb_points = x.size()/dim;
   avro_assert( u.size() == nb_points*udim );
-  avro_assert( local2global_.size() == nb_points );
   avro_assert( identifiers.size() == nb_points );
 
   for (index_t k=0;k<nb_points;k++)
@@ -320,7 +328,7 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
   // send the points
   coord_t dim = points_.dim();
   coord_t udim = points_.udim();
-  index_t nb_points = local2global_.size();
+  index_t nb_points = points_.nb();
 
   std::vector<real_t> coordinates( nb_points*dim , 0.0 );
   std::vector<real_t> parameters( nb_points*udim , 0.0 );
@@ -342,10 +350,6 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
     }
   }
 
-  int min_id = *std::min_element(identifiers.begin(),identifiers.end());
-  int max_id = *std::max_element(identifiers.begin(),identifiers.end());
-  printf("min id = %d, max id = %d\n",min_id,max_id);
-
   mpi::send( mpi::blocking{} , coordinates , receiver , TAG_COORDINATE );
   mpi::send( mpi::blocking{} , parameters , receiver , TAG_PARAMETER );
   mpi::send( mpi::blocking{} , identifiers , receiver , TAG_GEOMETRY );
@@ -355,58 +359,46 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
 
 template<typename type>
 void
-Topology_Partition<type>::move_to_front( const std::vector<index_t>& pts )
-{
-  // move the points in the specified indices to the front
-  // this will be useful when we need to move fixed points in an
-  // adaptation chunk to the start of the points so that collapses
-  // during the adaptation (which decrement indices) do not affect the
-  // global maps
-  avro_implement;
-}
-
-template<typename type>
-void
 Topology_Partition<type>::compute_crust()
 {
-  // compute the neighbours
-  this->neighbours().fromscratch() = true;
-  this->neighbours().compute();
+  avro_assert( !this->closed() );
 
-  // loop through the neighbours
   crust_.clear();
-  for (index_t k=0;k<this->nb();k++)
+  halo_.clear();
+
+  // compute the points on the boundary
+  Facets facets(*this);
+  facets.compute();
+  std::vector<index_t> facet( this->number() );
+  for (index_t k=0;k<facets.nb();k++)
   {
-    for (index_t j=0;j<this->neighbours().nfacets();j++)
-    {
-      // retrieve the j'th neighbour of element k
-      int n = this->neighbours()(k,j);
+    if (!facets.boundary(k)) continue;
 
-      // skip if an interior facet
-      if (n>=0) continue;
+    facets.retrieve( k , facet );
 
-      // skip if an actual geometry facet
-      Entity* entity = BoundaryUtils::geometryFacet( this->points_ , (*this)(k) , this->nv(k) );
-      if (entity!=nullptr) continue;
+    Entity* entity = BoundaryUtils::geometryFacet( this->points_ , facet.data() , facet.size() );
+    if (entity!=nullptr) continue;
 
-      // this is an element on the boundary
-      crust_.push_back(k);
-      continue; // no need to keep checking this element's neighbours
-    }
+    for (index_t j=0;j<facet.size();j++)
+      halo_.push_back( facet[j] );
+  }
+  uniquify(halo_);
+
+  // compute the crust as any point in the ball of the boundary points
+  std::vector<index_t> ball;
+  this->neighbours().forceCompute();
+  this->neighbours().compute();
+  this->inverse().clear();
+  this->inverse().build();
+  for (index_t k=0;k<halo_.size();k++)
+  {
+    ball.clear();
+    this->inverse().ball( {halo_[k]},ball );
+
+    for (index_t j=0;j<ball.size();j++)
+      crust_.push_back(ball[j]);
   }
   uniquify(crust_);
-
-  // remove any element in the boundary layer
-  std::sort( crust_.begin() , crust_.end() );
-  for (index_t k=0;k<crust_.size();k++)
-  {
-    // subtract k since element numbering decreases by 1 on every removal
-    this->remove( crust_[k]-k );
-  }
-
-  // TODO send back the crust to the root processor
-  // along with the local2global information
-  // which will define the first layer of interface elements
 }
 
 template<typename type>
@@ -414,7 +406,7 @@ void
 Topology_Partition<type>::compute_mantle()
 {
   // this should only be called after the adaptation
-  // because
+  this->inverse().clear();
   this->inverse().build();
 
   std::vector<index_t> ball;
@@ -428,12 +420,6 @@ Topology_Partition<type>::compute_mantle()
       mantle_.push_back(ball[j]);
   }
   uniquify(mantle_);
-
-  // TODO send back the mantle to the root processor
-  // which will define the second layer of interface elements
-  // note the local2global doesn't apply because all mantle elements
-  // will be new from the adaptation, and their indices will be mapped in the
-  // order in which they are added to the merged topology
 }
 
 template<typename type>

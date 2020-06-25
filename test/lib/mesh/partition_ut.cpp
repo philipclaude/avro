@@ -3,9 +3,12 @@
 #include "common/mpi.hpp"
 #include "common/process.h"
 
+#include "geometry/egads/context.h"
+
 #include "graphics/application.h"
 
 #include "library/ckf.h"
+#include "library/egads.h"
 
 #include "mesh/field.hpp"
 #include "mesh/partition.h"
@@ -44,22 +47,29 @@ UT_TEST_CASE( test1 )
   int rank = mpi::rank();
   if (rank!=0) return;
 
+  EGADS::Context context;
+  std::vector<real_t> lens(number,1.);
+  EGADS::Cube geometry(&context,lens);
+
   printf("creating topology\n");
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,5);
 
   Points points(number);
   Topology<Simplex> topology( points , number );
 
-  index_t nb_piece = 50;
+  index_t nb_piece = 1;
   for (index_t i=0;i<nb_piece;i++)
   {
     index_t nb_points = points.nb();
 
     CKF_Triangulation topology1( dims );
+    topology1.points().attach(geometry);
+
     for (index_t k=0;k<topology1.points().nb();k++)
     {
       topology1.points()[k][1] += 2*i; // offset
       points.create( topology1.points()[k] );
+      points.set_entity( points.nb()-1 , topology1.points().entity(k) );
     }
 
     for (index_t k=0;k<topology1.nb();k++)
@@ -79,13 +89,11 @@ UT_TEST_CASE( test1 )
   Partition<Simplex> partition(topology);
 
   printf("partitioning mesh..\n");
-  index_t npart = 4;
+  index_t npart = 2;
   partition.compute(npart);
 
   std::vector<std::shared_ptr<Topology_Partition<Simplex>>> parts(npart);
   partition.get(parts);
-  //for (index_t k=0;k<parts.size();k++)
-  //  topology.add_child(parts[k]);
 
   std::shared_ptr< PartitionNumber > fld;
   fld = std::make_shared<PartitionNumber>(topology,partition.partition());
@@ -93,6 +101,30 @@ UT_TEST_CASE( test1 )
 
   graphics::Visualizer vis;
   vis.add_topology(topology);
+
+  for (index_t k=0;k<parts.size();k++)
+  {
+    // remove crust elements from the partition since they do not get adapted
+    parts[k]->compute_crust();
+    print_inline( parts[k]->halo() , "halo" );
+    parts[k]->move_to_front( parts[k]->halo() );
+    parts[k]->remove_elements( parts[k]->crust() );
+    parts[k]->remove_unused();
+
+    printf("partition %lu:\n",k);
+    parts[k]->Table<index_t>::print();
+
+    UT_ASSERT( parts[k]->all_points_accounted() );
+
+    // check if the inverse can be built successfully (will create an error if any points are left dangling)
+    parts[k]->inverse().build();
+    //UT_ASSERT( parts[k]->inverse().check() );
+
+    //topology.add_child(parts[k]);
+    vis.add_topology(*parts[k].get());
+  }
+
+
   vis.run();
 
 

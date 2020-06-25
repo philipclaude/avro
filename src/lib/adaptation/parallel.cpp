@@ -19,54 +19,13 @@ namespace avro
 #ifdef AVRO_MPI
 
 template<typename type>
-class PartitionInterface : public Topology<type>
+class AdaptationChunk : public Topology_Partition<type>
 {
 public:
-  PartitionInterface( const Topology<type>& topology ) :
-    Topology<type>(points_,topology.number()),
-    points_(topology.points().dim()),
-    topology_(topology)
+  AdaptationChunk( coord_t dim , coord_t udim , coord_t number ) :
+    Topology_Partition<type>(dim,udim,number),
+    points_(dim,udim)
   {}
-
-  void add( );
-
-private:
-  Points points_;
-  const Topology<type>& topology_;
-  std::map<index_t,index_t> local2global_;
-};
-
-template<typename type>
-class PartitionChunk : public Topology_Partition<type>
-{
-public:
-  PartitionChunk( const Topology<type>& topology ) :
-    Topology_Partition<type>(topology.points().dim(),topology.points().udim(),topology.number()),
-    points_(topology.points().dim()),
-    topology_(topology),
-    boundary_(points_,topology.number()-1)
-  {
-    initialize();
-  }
-
-  void initialize()
-  {
-    // add all the elements from the topology
-
-    // create the points and the local2global indices for the points on the boundary
-
-    // extract the boundary
-  }
-
-  void fix_points( const PartitionInterface<type>& interface )
-  {
-    // fix all points in the interface that are points in this topology
-  }
-
-  void extract_metric( std::vector<VertexMetric>& global_metrics )
-  {
-    // pick out the vertex metrics for this topology from the global list
-  }
 
   void adapt()
   {
@@ -80,14 +39,11 @@ public:
     return nullptr;
   }
 
-  const Topology<type>& boundary() const { return boundary_; }
   std::vector<VertexMetric>& metric() { return metrics_; }
 
 private:
   Points points_;
-  const Topology<type>& topology_;
   std::vector<index_t> local2global_;
-  Topology<type> boundary_;
   std::vector<VertexMetric> metrics_;
 };
 
@@ -104,13 +60,27 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   index_t rank = mpi::rank();
   mpi::communicator& comm = ProcessMPI::get_comm();
   index_t nb_rank = mpi::size();
-  printf("rank = %lu\n",rank);
+  printf("rank = %lu, nb_rank = %lu\n",rank,nb_rank);
+
+  const coord_t dim = topology_in.points().dim();
+  const coord_t udim = topology_in.points().udim();
+  const coord_t number = topology_in.number();
+
+  // determine the geometric entities
+  std::set<Entity*> entities0;
+  for (index_t k=0;k<topology_in.points().nb();k++)
+  {
+    if (topology_in.points().entity(k)==nullptr) continue;
+    entities0.insert( topology_in.points().entity(k) );
+  }
+  std::vector<Entity*> entities(entities0.begin(),entities0.end());
 
   // determine if we need to partition the mesh
   int nb_partition = params.nb_partition();
   int partition_size = params.partition_size();
   if (partition_size<0)
     partition_size = estimate_partition_size(nb_partition);
+  printf("partition size = %d\n",partition_size);
 
   // determine if an interface is needed
   bool interface_needed = true;
@@ -120,77 +90,125 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
     nb_partition     = 1;
   }
 
-  std::shared_ptr<PartitionChunk<type>> partition = nullptr;
+  std::shared_ptr<AdaptationInterface<type> > interface = nullptr;
+  std::shared_ptr<AdaptationChunk<type> > partition = nullptr;
   if (rank == 0)
   {
     // partition the mesh
-    printf("partitioning level %lu with %d partitions\n",level,nb_partition);
+    printf("partitioning level %lu with %lu elements into %d partitions\n",level,topology_in.nb(),nb_partition);
     Partition<type> partition(topology_in);
     partition.compute(nb_partition);
     printf("done\n");
+
+    // initialize the interface
+    interface = std::make_shared< AdaptationInterface<type> >(dim,udim,number);
+    topology_in.points().copy( interface->points() );
 
     // extract the partitions
     std::vector< std::shared_ptr<Topology_Partition<type>> >parts( nb_partition );
     partition.get(parts);
 
+    for (index_t k=0;k<parts.size();k++)
+    {
+      parts[k]->set_entities(entities);
+
+      // compute the crust of each partition
+      // TODO, need a better method for determining partition boundaries without depending on the geometry
+      // implement this as a method of the global partition class
+      parts[k]->compute_crust();
+
+      const std::vector<index_t>& crust = parts[k]->crust();
+
+      // add the crust to the interface
+      // everything is still in global coordinates
+      index_t np = interface->points().nb();
+      for (index_t j=0;j<crust.size();j++)
+      {
+        std::vector<index_t> s = parts[k]->get( crust[j] );
+        /*for (index_t i=0;i<s.size();i++)
+          s[i] = interface->add_point( s[i] , parts[k]->points() , np );*/
+
+        for (index_t i=0;i<s.size();i++)
+          s[i] = parts[k]->local2global(s[i]);
+        interface->Topology<index_t>::add(s.data(),s.size());
+      }
+
+      // remove crust elements from the partition since they do not get adapted
+
+      print_inline( parts[k]->halo() , "halo" );
+      parts[k]->move_to_front( parts[k]->halo() );
+      parts[k]->remove_elements( crust );
+      parts[k]->remove_unused();
+    }
+
     // send the partitions to each processor
     printf("sending partitions to processors...\n");
     for (index_t k=1;k<nb_rank;k++)
-      parts[k]->send( comm , k );
+      parts[k-1]->send( comm , k );
     printf("done\n");
   }
   else
   {
     // wait for the root to send us our partition
     printf("waiting to receive partitions on rank %lu\n",rank);
-    partition = std::make_shared<PartitionChunk<type>>(topology_in);
+    partition = std::make_shared<AdaptationChunk<type>>(dim,udim,number);
+    partition->set_entities(entities);
     partition->receive( comm , 0 );
   }
   mpi::barrier();
-  return 1;
 
   // do the serial adaptation
-  std::shared_ptr<PartitionInterface<type> > interface = nullptr;
   if (rank == 0)
   {
-    // wait for the result
-    for (index_t k=1;k<nb_rank;k++)
+    // receive the adapted partitions from the processors
+    // note: the topologies are all in local indexing
+    std::vector< std::shared_ptr<Topology_Partition<type>> > parts( nb_partition );
+    for (index_t k=0;k<nb_rank-1;k++)
     {
-      Topology<type> tk( topology_out.points() , topology_in.number() );
-      tk.receive( comm , k );
+      parts[k] = std::make_shared<Topology_Partition<type>>(dim,udim,number);
+      parts[k]->set_entities(entities);
+      parts[k]->receive( comm , k+1 );
 
-      // append the result to the outgoing topology
-      for (index_t j=0;j<tk.nb();j++)
+      printf("received adapted partition from processor %lu\n",k+1);
+
+      // compute the mantle and add it to the interface
+      parts[k]->compute_mantle();
+
+      const std::vector<index_t>& mantle = parts[k]->mantle();
+
+      for (index_t j=0;j<mantle.size();j++)
       {
-        // TODO (remember to offset the indices by the current number of points)
+        // retrieve the mantle element and add it to the interface
+        std::vector<index_t> s = parts[k]->get(mantle[j]);
+
+        // the mantle element s is in local partition coordinates
+        // it needs to be converted to local interface coordinates
+        for (index_t i=0;i<s.size();i++)
+        {
+          // determine if s[i] is a
+        }
+
       }
 
-      // append the vertices too
-      for (index_t j=0;j<tk.points().nb();j++)
-      {
-        // TODO
-      }
-    }
+      // remove the mantle from the adapted partition (it will be added by the interface)
+      parts[k]->remove_elements( mantle );
 
-    if (interface_needed)
-    {
-      // initialize the interface
-      interface = std::make_shared< PartitionInterface<type> >(topology_out);
-
-      // receive the set of interface elements from each processor
-      //std::vector<index_t> interface_elems = mpi::recv();
-
-      // add the interface elements to the interface
+      // add the mantle elements to the interface
       // TODO
-
     }
+
+
   }
   else
   {
+    // determine the fixed points and move them to the front
+    // be sure to adjust local2global maps
+
     // adapt the mesh
     partition->adapt();
 
     // send the mesh to the root processor
+    printf("sending adapted partition %lu back to root\n",rank);
     partition->send( comm , 0 );
 
     // extract all elements on the interface and then all vertices in this set of elements
@@ -205,9 +223,16 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
     // adapt the interface in parallel
     Points interface_points;
     Topology<type> interface_out( interface_points , interface->number() );
+
+    printf("adapting interface:\n");
+    interface->remove_unused();
+    interface->Table<index_t>::print();
+    interface->neighbours().fromscratch() = true;
+    interface->neighbours().compute();
+
     adaptp( *interface , metrics , params , interface_out , level+1 );
 
-    // accumulate the interface into the global topology
+    // accumulate the adapted interface into the global output opology
     // TODO
   }
   mpi::barrier();

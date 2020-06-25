@@ -34,14 +34,16 @@ public:
   void extract_points( const Points& points );
   void convert();
 
-  void move_to_front( const std::vector<index_t>& pts );
-
   index_t local2global( index_t k ) const;
   index_t global2local( index_t k ) const;
 
   void compute_crust();
   void compute_mantle();
   void compute_halo();
+
+  const std::vector<index_t>& mantle() const { return mantle_; }
+  const std::vector<index_t>& crust() const { return crust_; }
+  const std::vector<index_t>& halo() const { return halo_; }
 
 private:
   Points points_;

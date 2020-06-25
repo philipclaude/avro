@@ -117,6 +117,8 @@ public:
   void receive( mpi::communicator& comm , index_t sender );
   #endif
 
+  void move_to( index_t k0 , index_t k1 );
+
 protected:
 
   coord_t dim_;  // dimension of ambient space the vertices live in

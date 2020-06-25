@@ -414,82 +414,6 @@ Points::attach( const Model& model , real_t tol )
     attach( model.body(k) , k+1 , tol );
 }
 
-/*
-void
-Points::computePartition( ArrayBase<index_t>& data ,
-                      std::vector<index_t>& cell_partition , index_t nparts )
-{
-  // data is technically a topology, construct the adjacency graph
-  graph::Graph adjacency(nb());
-
-  std::vector<index_t> vertex(1);
-
-  // vertices are connected if they share a cell
-  for (index_t k=0;k<data.nb();k++)
-  {
-
-    // get all cells with this vertex
-    std::vector<index_t> cells;
-    vertex[0] = k;
-    data.allWithSubset(vertex,cells);
-
-    // get uniquee list of all vertices in touching cells
-    std::vector<index_t> N;
-    for (index_t j=0;j<cells.size();j++)
-    for (index_t i=0;i<data.nv(cells[j]);i++)
-      N.push_back( data(cells[j],i) );
-    uniquify(N);
-
-    // add an edge for each connected vertex
-    for (index_t j=0;j<N.size();j++)
-    {
-      if (N[j]>=k) continue; // uniqueness of edges
-      adjacency.addEdge( k , N[j] );
-    }
-  }
-
-  // convert to csr format
-  adjacency.tocsr();
-
-  // compute the partition
-  adjacency.partition( nparts , partition_ );
-
-  // revisit the vertices and try to assign the cell partition
-  for (index_t k=0;k<nb();k++)
-  {
-    // get all cells with this vertex
-    std::vector<index_t> cells;
-    vertex[0] = k;
-    data.allWithSubset(vertex,cells);
-
-    std::vector<index_t> pc(cells.size());
-    for (index_t i=0;i<cells.size();i++)
-      pc[i] = cell_partition[cells[i]];
-    uniquify(pc);
-
-    if (pc.size()==1)
-      partition_[k] = pc[0];
-    else
-    {
-      // pick the partition closest to this one
-     real_t d = fabs(real_t(pc[0]-partition_[k]) );
-      index_t p = 0;
-      for (index_t j=1;j<pc.size();j++)
-      {
-       real_t dj = fabs(real_t(pc[j]-partition_[k]) );
-        if (dj<d)
-        {
-          dj = d;
-          p = j;
-        }
-      }
-      partition_[k] = pc[p];
-    }
-  }
-
-}
-*/
-
 void
 Points::to_json( json& J ) const
 {
@@ -607,6 +531,34 @@ Points::extract_params( index_t k , Entity* e0 , real_t* param ) const
 		*/
 	}
 	#endif
+}
+
+void
+Points::move_to( index_t k0 , index_t k1 )
+{
+	std::vector<real_t> x0( (*this)[k0] , (*this)[k0]+dim_ );
+	std::vector<real_t> u0( u(k0) , u(k0)+udim_ );
+	Entity* e0 = entity(k0);
+
+	//print_inline(x0,"x0 = ");
+	//print_inline( DOF<real_t>::data_ );
+
+	//printf("moving point %lu to %lu\n",k0,k1);
+	avro_assert_msg( k1 <= k0 , "trying to move %lu to %lu"  , k0 , k1 );
+	#if 0
+	DOF<real_t>::insert( k1*dim_ , (*this)[k0] , dim_ );
+	u_.insert( k1*udim_ , u(k0) , udim_ );
+	body_.insert( k1 , body(k0) );
+	primitive_.insert( k1 , entity(k0) );
+	fixed_.insert( k1 , fixed(k0) );
+	#else
+	DOF<real_t>::insert( k1*dim_ , x0.data() , x0.size() );
+	u_.insert( k1*udim_ , u0.data() , u0.size() );
+	body_.insert( k1 , body(k0) );
+	primitive_.insert( k1 , e0 );
+	fixed_.insert( k1 , fixed(k0) );
+	#endif
+	remove(k0+1); // +1 because we added a vertex in front of k0
 }
 
 void
