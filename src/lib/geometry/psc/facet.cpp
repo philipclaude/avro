@@ -96,7 +96,7 @@ Facet::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
   numerics::VectorD<real_t> u0(number_);
   for (coord_t d=0;d<number_;d++)
   {
-    u0(d)        = u[d];
+    u0(d) = u[d];
   }
 
   // compute the linear combination of the basis using the barycentric coordinates

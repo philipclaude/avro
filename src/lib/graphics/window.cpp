@@ -369,6 +369,7 @@ GLFW_Window::draw_axes()
   DrawingParameters params;
   params.transparency = 1.0;
   params.mvp = controls_.model_view_projection();
+  //params.mvp = controls_.perspective()*controls_.rotation(); // will need full rotation matrix (not just incremental one)
   params.lighting = 1.0;
   manager_.draw( "axes" , 1 , params );
 }

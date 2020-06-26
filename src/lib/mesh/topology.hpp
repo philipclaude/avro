@@ -394,6 +394,125 @@ Topology<type>::remove_point( const index_t k )
 
 template<typename type>
 void
+Topology<type>::remove_elements( const std::vector<index_t>& elems0 )
+{
+  // make a copy so we can sort
+  std::vector<index_t> elems(elems0.begin(),elems0.end());
+  for (index_t k=0;k<elems.size();k++)
+    remove( elems[k]-k );
+}
+
+template<typename type>
+void
+Topology<type>::remove_points( const std::vector<index_t>& pts0 )
+{
+  std::vector<index_t> pts(pts0.begin(),pts0.end());
+  std::sort(pts.begin(),pts.end());
+
+  //printf("before\n");
+  //Table<index_t>::print();
+
+  for (index_t i=0;i<pts.size();i++)
+  {
+    remove_point(0);
+    //points_.remove( 0 );
+  }
+
+  for (index_t j=0;j<data_.size();j++)
+  {
+    //data_[j] -= pts.size();
+  }
+
+  //printf("after\n");
+  //Table<index_t>::print();
+  //points_.print();
+}
+
+template<typename type>
+bool
+Topology<type>::all_points_accounted() const
+{
+  std::vector<bool> accounted( points_.nb() );
+  for (index_t k=0;k<data_.size();k++)\
+    accounted[ data_[k] ] = true;
+
+  bool result = true;
+  for (index_t k=0;k<accounted.size();k++)
+  {
+    if (!accounted[k])
+    {
+      printf("point %lu is not accounted for\n",k);
+      points_.print(k);
+      result = false;
+    }
+  }
+  return result;
+}
+
+template<typename type>
+void
+Topology<type>::remove_unused()
+{
+  std::vector<bool> accounted( points_.nb() );
+  for (index_t k=0;k<data_.size();k++)\
+    accounted[ data_[k] ] = true;
+
+  std::vector<index_t> pts;
+  for (index_t k=0;k<accounted.size();k++)
+  {
+    if (!accounted[k])
+    {
+      pts.push_back(k);
+    }
+  }
+
+  for (index_t k=0;k<pts.size();k++)
+    remove_point(pts[k]-k);
+}
+
+template<typename type>
+void
+Topology<type>::move_to_front( const std::vector<index_t>& pts )
+{
+  std::map<index_t,index_t> idx;
+
+  for (index_t k=0;k<pts.size();k++)
+  {
+    idx.insert( {pts[k],k} );
+  }
+
+  for (index_t j=0;j<data_.size();j++)
+  {
+    index_t offset = 0;
+    for (index_t i=0;i<pts.size();i++)
+    {
+      if (data_[j]<pts[i]) offset++;
+    }
+    if (idx.find(data_[j])==idx.end())
+      idx.insert( {data_[j] , data_[j]+offset} );
+  }
+
+  //std::map<index_t,index_t>::iterator it;
+  //for (it=idx.begin();it!=idx.end();it++)
+  //  printf("pt %lu -> %lu\n",it->first,it->second);
+
+  //printf("before before:\n");
+  //Table<index_t>::print();
+
+  // remap all the indices
+  for (index_t j=0;j<data_.size();j++)
+    data_[j] = idx.at(data_[j]);
+
+  // now move all the points to the front
+  for (index_t k=0;k<pts.size();k++)
+  {
+    points_.move_to( pts[k] , k );
+  }
+
+}
+
+template<typename type>
+void
 Topology<type>::close()
 {
   if (closed_) return;

@@ -10,6 +10,8 @@
 #ifndef avro_LIB_LIBRARY_EGADS_H_
 #define avro_LIB_LIBRARY_EGADS_H_
 
+#include "common/tools.h"
+
 #include "geometry/egads/body.h"
 #include "geometry/egads/context.h"
 #include "geometry/egads/object.h"
@@ -132,7 +134,13 @@ public:
     double data[9] = { x[0],  x[1],  x[2],
                       e0[0], e0[1], e0[2],
                       e1[0], e1[1], e1[2] };
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeGeometry( *context->get() , SURFACE , PLANE , NULL , NULL , data , &object_ ) );
+    #else
+    UNUSED(data);
+    printf("need full EGADS to make geometry\n");
+    avro_assert_not_reached;
+    #endif
   }
 
   Plane( const Context* context , std::vector<real_t*>& x , real_t* uv=NULL );
@@ -153,7 +161,12 @@ public:
   {
     for (coord_t d=0;d<3;d++)
       xyz_[d] = xyz[d];
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , NODE , 0 , xyz , 0 , NULL , NULL , &object_ ) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
     construct(&object_);
   }
 
@@ -191,7 +204,13 @@ public:
     Curve(context)
   {
     double data[6] = { p0[0] , p0[1] , p0[2] , dx[0] , dx[1] , dx[2] };
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeGeometry(*context->get(), CURVE , LINE , NULL , NULL , data , &object_ ) );
+    #else
+    UNUSED(data);
+    printf("need full EGADS to make geometry\n");
+    avro_assert_not_reached;
+    #endif
     construct(&object_);
   }
 
@@ -200,7 +219,13 @@ public:
     Curve(context)
   {
     double data[6] = { n0[0] , n0[1] , n0[2] , n1[0]-n0[0] , n1[1]-n0[1] , n1[2]-n0[2] };
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeGeometry( *context->get() , CURVE , LINE , NULL , NULL , data , &object_ ) );
+    #else
+    UNUSED(data);
+    printf("need full EGADS to make geometry\n");
+    avro_assert_not_reached;
+    #endif
     construct(&object_);
   }
 };
@@ -282,7 +307,13 @@ public:
     EGADS_CHECK_SUCCESS( EG_invEvaluate( *line.object() , n1.x() , &range_[1] , dummy ) );
     ego nodes[2] = {*n0.object(),*n1.object()};
 
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *line.object() , EDGE , TWONODE , range_ , 2 , nodes , NULL , &object_ ) );
+    #else
+    UNUSED(nodes);
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
     construct(&object_);
   }
 
@@ -296,7 +327,13 @@ public:
     if (range_[1]<range_[0]) range_[1] = 2.*range_[0];
     ego nodes[2] = {*n0.object(),*n1.object()};
 
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *curve.object() , EDGE , TWONODE , range_ , 2 , nodes , NULL , &object_ ) );
+    #else
+    UNUSED(nodes);
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
     construct(&object_);
   }
 
@@ -311,7 +348,12 @@ public:
     real_t p[3];
     circle.point(p);
     Node n0(context,p);
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *circle.object() , EDGE , ONENODE , &range_[0] , 1 , n0.object() , NULL , &object_ ) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
     construct(&object_);
   }
 
@@ -338,7 +380,12 @@ public:
       Node node0( context , X.data() );
       node = *node0.object();
     }
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *spline.object() , EDGE , ONENODE , range_ , 1 , &node , NULL , &object_ ) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
     construct(&object_);
   }
 
@@ -386,7 +433,12 @@ public:
   void make( ego ref=NULL )
   {
     avro_assert( egos_.size() == senses_.size() );
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology(*context_->get(),ref,LOOP,data_.member_type,NULL, egos_.size()  , &egos_[0] , &senses_[0] , &object_ ) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
     construct(&object_);
   }
 
@@ -453,7 +505,12 @@ public:
     Object(*context,&object_)
   {
     // the hard way for non-planar faces
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *surface.object() , FACE , memberType , NULL , 1 , loop.object() , loop.senses().data() , &object_ ) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
   }
 private:
   ego object_;
@@ -465,7 +522,12 @@ public:
   Shell( const Context* context , ego* face , index_t nface ) :
     Object(*context,&object_)
   {
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(), NULL, SHELL ,CLOSED, NULL, nface , face , NULL, &object_ ));
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
   }
 private:
   ego object_;
@@ -477,7 +539,12 @@ public:
   SheetBody( const Context* context , Shell& shell ) :
     Body(*context,&object_)
   {
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , BODY, SHEETBODY , NULL , 1 , shell.object() , NULL, &object_) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
   }
 private:
   ego object_;
@@ -490,7 +557,12 @@ public:
     Body(*context,&object_)
   {
     // face body from a single face
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , BODY, FACEBODY , NULL , 1 , face.object() , NULL, &object_) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
   }
 private:
   ego object_;
@@ -519,13 +591,23 @@ public:
       loop.add(e,1);
     }
     loop.make();
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(),NULL, BODY , WIREBODY , NULL , 1 , loop.object() , NULL , &object_ ) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
   }
 
   WireBody( const Context* context , EdgeLoop& loop ) :
     Body(*context,&object_)
   {
+    #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(),NULL, BODY , WIREBODY , NULL , 1 , loop.object() , NULL , &object_ ) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
   }
 private:
   ego object_;

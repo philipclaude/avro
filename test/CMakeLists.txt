@@ -36,6 +36,17 @@ include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
 include_directories( ${GLM_INCLUDE_DIRS} )
 
+if (AVRO_NO_ESP)
+  set( ESP_LIBRARIES )
+  set( OCC_LIBRARIES )
+  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/eglite )
+  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/wv )
+  add_definitions( -DAVRO_NO_ESP )
+endif()
+
+set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_mesh_mpi_ut )
+set( numprocs_unit 4 )
+
 set( CHECK_TESTS )
 
 # set the directory for the executables
@@ -60,21 +71,26 @@ foreach( test_src ${TEST_FILES} )
   target_link_libraries( ${test_exe} ut_common_lib )
   target_compile_definitions( ${test_exe} PUBLIC -DSTANDALONE )
 
-  # TODO re-add parallel testing capability...but how...
-  # target that actually runs the executable
-  #list( GET TEST_NUMPROCS ${i} numprocs )
+  # default to 0 processors, unless the test is found in the list of MPI tests
+  set(numprocs -1)
+  list( FIND MPI_TESTS ${test_bin} idx )
+  if (${idx} GREATER -1)
+    set(numprocs ${numprocs_unit} )
+  endif()
 
-  #if ( ${numprocs} GREATER 0 AND avro_RUN_WITH_MPI)
-#    RUN_WITH_MPIEXEC( ${numprocs} )
-#  else()
+  if ( ${numprocs} GREATER 0)
+    # run the unit test with mpiexec and let the test know how many procs are used
+    RUN_WITH_MPIEXEC( ${numprocs} )
+    target_compile_definitions( ${test_exe} PUBLIC -DTEST_NUM_PROCS=${numprocs} )
+  else()
     set( MPI_COMMAND )
-#  endif()
+  endif()
+
+  # create the target
   add_custom_target( ${test_bin} command ${MPI_COMMAND} $<TARGET_FILE:${test_exe}> 1 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
-
-  add_custom_target( ${test_bin}_off command ${MPI_COMMAND} $<TARGET_FILE:${test_exe}> 0 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
-  set( check_test ${test_bin}_off )
-
-  set( CHECK_TESTS ${CHECK_TESTS} ${check_test} )
+  #add_custom_target( ${test_bin}_off command ${MPI_COMMAND} $<TARGET_FILE:${test_exe}> 0 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+  #set( check_test ${test_bin}_off )
+  #set( CHECK_TESTS ${CHECK_TESTS} ${check_test} )
 
   # target for coverage: cmake/coverage.cmake
   ADD_COVERAGE_UT( ${test_bin}_coverage ${test_bin} )
@@ -86,12 +102,13 @@ endforeach()
 
 # create the full unit executable
 avro_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
+target_compile_definitions( unit_exe PUBLIC -DTEST_NUM_PROCS=${numprocs_unit} )
 target_link_libraries( unit_exe avro_shared )
 target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
 
 # target for running all unit tests independently
-add_custom_target( check_tests )
-add_dependencies( check_tests ${CHECK_TESTS} )
+#add_custom_target( check_tests )
+#add_dependencies( check_tests ${CHECK_TESTS} )
 
 # target for running all unit tests from a single executable
 add_custom_target( unit command $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )

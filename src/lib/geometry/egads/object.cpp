@@ -27,6 +27,7 @@ Object::Object( const Context& context , ego* object ) :
   context_(context),
   object_(object)
 {
+  std::fill( data_.data , data_.data+4 , 0.0 );
   EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
@@ -45,6 +46,7 @@ Object::Object( ego* object , EGADS::Body* body ) :
   context_(body->context()),
   object_(object)
 {
+  std::fill( data_.data , data_.data+4 , 0.0 );
   EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
@@ -57,7 +59,7 @@ Object::Object( ego* object , EGADS::Body* body ) :
 
   if (data_.member_type == SREVERSE) sign_ = -1;
 
-  name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
+  name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type()) + "-" + std::to_string(identifier_);
 }
 
 Object::Object( const Context& context ) :
@@ -71,6 +73,7 @@ void
 Object::construct( ego* object )
 {
   set_object(object);
+  std::fill( data_.data , data_.data+4 , 0.0 );
   EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);

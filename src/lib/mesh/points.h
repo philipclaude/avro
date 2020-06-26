@@ -21,6 +21,10 @@
 #include <memory>
 #include <vector>
 
+#ifdef AVRO_MPI
+#include "common/mpi.hpp"
+#endif
+
 namespace avro
 {
 
@@ -107,6 +111,13 @@ public:
 
   bool parameter_space() const { return parameter_space_; }
   void set_parameter_space( bool x ) { parameter_space_ = x; }
+
+  #ifdef AVRO_MPI
+  void send( mpi::communicator& comm , index_t destination ) const;
+  void receive( mpi::communicator& comm , index_t sender );
+  #endif
+
+  void move_to( index_t k0 , index_t k1 );
 
 protected:
 

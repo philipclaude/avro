@@ -14,11 +14,13 @@
 // changes:
 //   2018/05/22: cleaned up a bit to work without c++14 features (pcaplan)
 
+#include "common/error.h"
+
 #include <iostream>
 #include <type_traits>
 #include <vector>
 
-#ifdef avro_WITH_MPI
+#ifdef AVRO_MPI
 
 #include <mpi.h>
 
@@ -31,6 +33,15 @@ namespace mpi
 /// Contains the type aliases for the communicators in MPI
 /// Functions use the world communicator by default
 enum class communicator { world, self };
+
+inline MPI_Comm
+comm_cast( const communicator comm )
+{
+  if ( comm == communicator::world ) return MPI_COMM_WORLD;
+  if ( comm == communicator::self  ) return MPI_COMM_SELF;
+  avro_assert_not_reached;
+  return 0;
+}
 
 /// The types of threading models allowed in MPI
 enum class thread : int {

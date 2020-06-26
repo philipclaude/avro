@@ -41,6 +41,7 @@ add_source_directories( MESHB_SOURCES "gmf source" libmeshb )
 set_source_files_properties( ${MESHB_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( libmeshb )
 
+# numpack
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack )
 
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense )
@@ -58,9 +59,18 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
-
 include_directories(numpack)
+
+# ESP
+if (AVRO_NO_ESP)
+	add_source_directories( WV_SOURCES "source files for wv" wv )
+	add_source_directories( EGLITE_SOURCES "source files for wv" eglite )
+	set_source_files_properties( ${WV_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" LWS_NO_FORK )
+	set_source_files_properties( ${EGLITE_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" LITE )
+	set( ESP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/third_party/eglite ${CMAKE_SOURCE_DIR}/src/third_party/wv )
+	set( ESP_LIBRARIES )
+endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )
+add_library(avro_third_party OBJECT ${SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )

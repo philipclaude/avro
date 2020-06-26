@@ -392,40 +392,32 @@ adapt( AdaptationProblem& problem )
   mesh_topology.TopologyBase::copy( topology );
   mesh_topology.element().set_parameter( topology.element().parameter() );
 
-  if (!params.prepared())
-  {
-    // check there are no ghosts
-    avro_assert_msg( mesh.points().nb_ghost()==0 , "there are %lu ghosts!" , mesh.points().nb_ghost() );
+  // check there are no ghosts
+  avro_assert_msg( mesh.points().nb_ghost()==0 , "there are %lu ghosts!" , mesh.points().nb_ghost() );
 
-    // check the number of tensors equals the number of points
-    avro_assert_msg( mesh.points().nb() == fld.size() ,
-                      "nb_points = %lu, nb_fld = %lu",
-                      mesh.points().nb() , fld.size() );
+  // check the number of tensors equals the number of points
+  avro_assert_msg( mesh.points().nb() == fld.size() ,
+                    "nb_points = %lu, nb_fld = %lu",
+                    mesh.points().nb() , fld.size() );
 
-    // close the mesh topology, compute the neighours and mesh inverse
-    mesh_topology.close();
+  // close the mesh topology, compute the neighours and mesh inverse
+  mesh_topology.close();
 
-    if (dim==number)
-      mesh_topology.orient();
+  if (dim==number)
+    mesh_topology.orient();
 
-    mesh_topology.neighbours().fromscratch() = true; // speed up
-    mesh_topology.neighbours().compute();
-    mesh_topology.neighbours().fromscratch() = false;
-    mesh_topology.inverse().build();
+  mesh_topology.neighbours().fromscratch() = true; // speed up
+  mesh_topology.neighbours().compute();
+  mesh_topology.neighbours().fromscratch() = false;
+  mesh_topology.inverse().build();
 
-    // copy the data into the background topology used by the discrete metric
-    points.copy( topology.points() );
-    topology.TopologyBase::copy( mesh_topology );
-    topology.element().set_parameter( mesh_topology.element().parameter() );
-    mesh_topology.neighbours().copy( topology.neighbours() );
+  // copy the data into the background topology used by the discrete metric
+  points.copy( topology.points() );
+  topology.TopologyBase::copy( mesh_topology );
+  topology.element().set_parameter( mesh_topology.element().parameter() );
+  mesh_topology.neighbours().copy( topology.neighbours() );
 
-    topology.inverse().build();
-
-  }
-  else
-  {
-    avro_assert_not_reached;
-  }
+  topology.inverse().build();
 
   // extract the boundaries to check the vertex/geometry association
   #if 0
@@ -512,14 +504,14 @@ adapt( AdaptationProblem& problem )
   std::string mesh_file = params.directory()+params.prefix()+"_"+stringify(params.adapt_iter())+".mesh";
   if (params.write_mesh())
   {
-    if (topology.number()<=3 && !params.has_interior_boundaries() && params.write_meshb())
+    if (topology.number()<=3 && !params.has_interior_boundaries())
     {
       // write the full mesh
       library::meshb meshb;
       meshb.write( problem.mesh_out , mesh_file , true );
       printf("wrote mesh %s\n",mesh_file.c_str());
     }
-    else if (topology.number()==4 && params.write_meshb())
+    else if (topology.number()==4)
     {
       // get the boundary of the mesh
       Topology_Spacetime<Simplex> spacetime(mesh_topology);
@@ -550,7 +542,7 @@ adapt( AdaptationProblem& problem )
       #endif
     }
 
-    if (!params.has_interior_boundaries() && params.write_json())
+    if (!params.has_interior_boundaries())
     {
       #if 0
       const std::string json_file = params.directory()+"mesh_"+stringify(params.adapt_iter())+".json";

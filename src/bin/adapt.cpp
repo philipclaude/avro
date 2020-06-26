@@ -125,12 +125,6 @@ adapt( int nb_input , const char** inputs )
 //  params.swapout() = false;
  // params.use_smoothing() = false;
 
-  if (number<=3)
-  {
-    params.write_meshb() = true;
-    params.write_json()  = false;
-  }
-
   std::string outputfile(inputs[3]);
   std::vector<std::string> s = split(outputfile,".");
   params.prefix() = s[0];

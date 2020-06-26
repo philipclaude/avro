@@ -13,6 +13,8 @@
 
 #include "geometry/egads/context.h"
 
+#include "graphics/application.h"
+
 #include "library/ckf.h"
 #include "library/egads.h"
 #include "library/tesseract.h"
@@ -45,7 +47,7 @@ UT_TEST_CASE( simplex_tests )
 
   Topology<Simplex> topology_copy( vertices , number );
   topology_copy.Tree<Topology<Simplex>>::copy(topology);
-  
+
   topology_copy.Tree<Topology<Simplex>>::print();
 
   topology_copy.Tree<Topology<Simplex>>::print();
@@ -102,5 +104,28 @@ UT_TEST_CASE( simplex_close )
 
 }
 UT_TEST_CASE_END( simplex_close )
+
+UT_TEST_CASE( topology_move_to_front )
+{
+  coord_t number = 2;
+  index_t N = 4;
+  std::vector<index_t> dims(number,N);
+  CKF_Triangulation topology( dims );
+
+  std::vector<index_t> pts = {0,5,7,11,12};
+  topology.move_to_front(pts);
+
+  topology.Table<index_t>::print();
+
+  real_t volume = topology.volume();
+  UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
+
+  UT_ASSERT( topology.all_points_accounted() );
+
+  graphics::Visualizer vis;
+  vis.add_topology(topology);
+  vis.run();
+}
+UT_TEST_CASE_END( topology_move_to_front )
 
 UT_TEST_SUITE_END( mesh_topology_suite )

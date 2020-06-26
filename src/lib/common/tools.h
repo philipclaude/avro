@@ -215,6 +215,14 @@ print_value( const type& x );
 
 template<>
 inline void
+print_value( const bool& x )
+{
+  if (x) printf("true ");
+  else printf("false ");
+}
+
+template<>
+inline void
 print_value( const index_t& x )
 {
   printf("%d ",int(x));
