@@ -201,17 +201,16 @@ Partition<type>::get( std::vector< std::shared_ptr<Topology_Partition<type>>>& p
 
 template<typename type>
 void
-Partition<type>::compute_interface( std::vector<std::set<index_t>>& elems , std::vector<std::set<index_t>>& halo ) const
+Partition<type>::compute_interface_points( std::vector<std::set<index_t>>& halo ) const
 {
   Facets facets( topology_ );
   facets.compute();
 
   // first extract all points on the interface
-  std::set<index_t> pts;
   std::vector<index_t> facet( topology_.number() );
   for (index_t k=0;k<facets.nb();k++)
   {
-    // if this is on the boundary of the partition, then it is not in the interface
+    // if this is on the boundary of the topology, then it is not in the interface
     if (facets.boundary(k)) continue;
 
     // determine if the left and right partition are the same
@@ -221,34 +220,23 @@ Partition<type>::compute_interface( std::vector<std::set<index_t>>& elems , std:
     // if the partitions are the same, then this is not in the interface
     if (p0==p1) continue;
 
+    // associate any point in the facet with both partitions
     facets.retrieve( k , facet );
     for (index_t j=0;j<facet.size();j++)
-      pts.insert( facet[j] );
-  }
-
-  // now extract all elements with a point on the interface
-  // TODO check that the neighbours are computed since these are needed for the inverse
-  InverseTopology<type> inverse(topology_);
-  inverse.build();
-  std::set<index_t>::iterator it;
-  std::vector<index_t> ball;
-  for (it=pts.begin();it!=pts.end();it++)
-  {
-    ball.clear();
-    inverse.ball( *it , ball );
-
-    // go through every element in the ball and add it to the list of elements
-    for (index_t j=0;j<ball.size();j++)
     {
-      index_t elem = ball[j];
-      elems[ partition_[elem] ].insert(elem);
-
-      for (index_t i=0;i<topology_.nv(elem);i++)
-      {
-        if ( pts.find(topology_(elem,i)) == pts.end() ) continue; // not in the halo
-        halo[ partition_[elem] ].insert( topology_(elem,i) );
-      }
+      halo[p0].insert( facet[j] );
+      halo[p1].insert( facet[j] );
     }
+  }
+}
+
+template<typename type>
+void
+Partition<type>::print() const
+{
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    print_inline( topology_.get(k) , "element " + std::to_string(k) + " on partition " + std::to_string(partition_[k]) );
   }
 }
 
@@ -412,6 +400,22 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
   mpi::send( mpi::blocking{} , identifiers , receiver , TAG_GEOMETRY );
   mpi::send( mpi::blocking{} , geometry_numbers , receiver , TAG_GEOMETRY_NUMBERS );
   mpi::send( mpi::blocking{} , local2global_ , receiver , TAG_LOCAL2GLOBAL );
+}
+
+template<typename type>
+void
+Topology_Partition<type>::compute_crust( const std::vector<index_t>& halo , std::vector<index_t>& crust ) const
+{
+  crust.clear();
+  std::vector<index_t> ball;
+  for (index_t j=0;j<halo.size();j++)
+  {
+    ball.clear();
+    this->inverse().ball( halo[j] , ball );
+    for (index_t i=0;i<ball.size();i++)
+      crust.push_back( ball[i] );
+  }
+  uniquify(crust);
 }
 
 template<typename type>

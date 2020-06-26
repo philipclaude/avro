@@ -42,6 +42,8 @@ public:
   void compute_mantle();
   void compute_halo();
 
+  void compute_crust( const std::vector<index_t>& halo , std::vector<index_t>& crust ) const;
+
   const std::vector<index_t>& mantle() const { return mantle_; }
   const std::vector<index_t>& crust() const { return crust_; }
   const std::vector<index_t>& halo() const { return halo_; }
@@ -85,7 +87,9 @@ public:
 
   bool weighted() const { return adjwgt_.size()==adjncy_.size(); }
 
-  void compute_interface( std::vector<std::set<index_t>>& elems , std::vector<std::set<index_t>>& pts ) const;
+  void compute_interface_points( std::vector<std::set<index_t>>& pts ) const;
+
+  void print() const;
 
 private:
   const Topology<type>& topology_;
