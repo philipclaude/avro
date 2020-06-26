@@ -17,6 +17,8 @@ using namespace avro;
 
 UT_TEST_SUITE( adaptation_parallel_test_suite )
 
+#ifdef AVRO_MPI
+
 UT_TEST_CASE( test1 )
 {
   coord_t number = 3;
@@ -38,15 +40,15 @@ UT_TEST_CASE( test1 )
   AdaptationParameters params;
   params.standard();
 
-  params.nb_partition() = TEST_NUM_PROCS -1;
+  params.nb_partition() = mpi::size()-1;//TEST_NUM_PROCS -1;
   params.partition_size() = 50;
 
   std::vector<VertexMetric> metrics;
   int result = adaptp( topology , metrics , params , topology_out );
 
-
-
 }
 UT_TEST_CASE_END( test1 )
+
+#endif
 
 UT_TEST_SUITE_END( adaptation_parallel_test_suite )

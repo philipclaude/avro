@@ -18,7 +18,6 @@
 namespace avro
 {
 
-
 #define ACTIVE 1
 #define INACTIVE 0
 #define TAG_ACTIVE 100
@@ -106,8 +105,6 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
     active.resize( nb_rank , INACTIVE );
     for (index_t j=0;j<nb_partition;j++)
       active[j+1] = ACTIVE;
-
-    //active.resize( nb_rank , ACTIVE );
   }
 
   if (rank==0)
@@ -125,7 +122,6 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   for (index_t k=0;k<active.size();k++)
     nb_total += active[k];
   if (nb_total == 0 ) return 0;
-
 
   std::shared_ptr<AdaptationInterface<type> > interface = nullptr;
   std::shared_ptr<AdaptationChunk<type> > partition = nullptr;

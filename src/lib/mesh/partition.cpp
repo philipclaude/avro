@@ -444,6 +444,7 @@ Topology_Partition<type>::compute_crust()
   // compute the crust as any point in the ball of the boundary points
   std::vector<index_t> ball;
   this->neighbours().forceCompute();
+  this->neighbours().fromscratch() = true;
   this->neighbours().compute();
   this->inverse().clear();
   this->inverse().build();
