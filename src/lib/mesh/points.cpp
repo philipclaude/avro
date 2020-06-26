@@ -540,10 +540,6 @@ Points::move_to( index_t k0 , index_t k1 )
 	std::vector<real_t> u0( u(k0) , u(k0)+udim_ );
 	Entity* e0 = entity(k0);
 
-	//print_inline(x0,"x0 = ");
-	//print_inline( DOF<real_t>::data_ );
-
-	//printf("moving point %lu to %lu\n",k0,k1);
 	avro_assert_msg( k1 <= k0 , "trying to move %lu to %lu"  , k0 , k1 );
 	#if 0
 	DOF<real_t>::insert( k1*dim_ , (*this)[k0] , dim_ );
@@ -570,6 +566,7 @@ Points::clear()
   primitive_.clear();
   nb_ghost_ = 0;
 	incidence_.clear();
+	fixed_.clear();
 }
 
 } // avro

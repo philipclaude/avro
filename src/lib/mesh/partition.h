@@ -43,12 +43,13 @@ public:
   void compute_halo();
 
   void compute_crust( const std::vector<index_t>& halo , std::vector<index_t>& crust ) const;
+  void compute_mantle( std::vector<index_t>& interior , std::vector<index_t>& exterior , std::vector<index_t>& mantle ) const;
 
   const std::vector<index_t>& mantle() const { return mantle_; }
   const std::vector<index_t>& crust() const { return crust_; }
   const std::vector<index_t>& halo() const { return halo_; }
 
-private:
+protected:
   Points points_;
   std::vector<index_t>      local2global_;
   std::map<index_t,index_t> global2local_;

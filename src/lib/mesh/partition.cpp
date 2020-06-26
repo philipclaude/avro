@@ -420,6 +420,52 @@ Topology_Partition<type>::compute_crust( const std::vector<index_t>& halo , std:
 
 template<typename type>
 void
+Topology_Partition<type>::compute_mantle( std::vector<index_t>& interior , std::vector<index_t>& exterior , std::vector<index_t>& mantle ) const
+{
+  // determine all the points that are on the boundary, but not on the geometry
+  Facets facets(*this);
+  facets.compute();
+  std::vector<index_t> facet(this->number());
+  for (index_t k=0;k<facets.nb();k++)
+  {
+    if (!facets.boundary(k)) continue;
+    facets.retrieve(k,facet);
+    Entity* entity = BoundaryUtils::geometryFacet( this->points() , facet.data() , facet.size() );
+    if (entity!=nullptr) continue;
+
+    for (index_t j=0;j<facet.size();j++)
+      exterior.push_back(facet[j]);
+  }
+  uniquify(exterior);
+
+  mantle.clear();
+  std::vector<index_t> ball;
+  for (index_t j=0;j<exterior.size();j++)
+  {
+    ball.clear();
+    this->inverse().ball( exterior[j] , ball );
+    for (index_t i=0;i<ball.size();i++)
+      mantle.push_back( ball[i] );
+  }
+  uniquify(mantle);
+
+  std::set<index_t> exteriors(exterior.begin(),exterior.end());
+  for (index_t k=0;k<mantle.size();k++)
+  {
+    index_t elem = mantle[k];
+    for (index_t j=0;j<this->nv(elem);j++)
+    {
+      index_t p = (*this)(elem,j);
+      if (exteriors.find(p)!=exteriors.end()) // not an internal point
+        continue;
+      interior.push_back(p);
+    }
+  }
+  uniquify(interior);
+}
+
+template<typename type>
+void
 Topology_Partition<type>::compute_crust()
 {
   avro_assert( !this->closed() );
@@ -462,70 +508,6 @@ Topology_Partition<type>::compute_crust()
   }
   uniquify(crust_);
 }
-
-template<typename type>
-void
-Topology_Partition<type>::compute_mantle()
-{
-  // this should only be called after the adaptation
-  this->inverse().clear();
-  this->inverse().build();
-
-  std::vector<index_t> ball;
-  mantle_.clear();
-  for (index_t k=0;k<halo_.size();k++)
-  {
-    ball.clear();
-    this->inverse().ball( {halo_[k]},ball );
-
-    for (index_t j=0;j<ball.size();j++)
-      mantle_.push_back(ball[j]);
-  }
-  uniquify(mantle_);
-}
-
-template<typename type>
-void
-Topology_Partition<type>::compute_halo()
-{
-  // recompute the neighbours
-  this->neighbours().forceCompute();
-  this->neighbours().fromscratch()  = true;
-  this->neighbours().compute();
-
-  halo_.clear();
-  for (index_t k=0;k<this->nb();k++)
-  {
-    for (index_t j=0;j<this->neighbours().nfacets();j++)
-    {
-      // retrieve the j'th neighbour of element k
-      int n = this->neighbours()(k,j);
-
-      // skip if an interior facet
-      if (n>=0) continue;
-
-      // skip if an actual geometry facet
-      Entity* entity = BoundaryUtils::geometryFacet( this->points_ , (*this)(k) , this->nv(k) );
-      if (entity!=nullptr) continue;
-
-      for (index_t i=0;i<this->neighbours().nfacets();i++)
-      {
-        if (i==j) continue;
-        halo_.push_back( (*this)(k,i) );
-      }
-      continue; // no need to keep checking this element's neighbours
-    }
-  }
-  uniquify(halo_);
-
-  // TODO: send the boundary points back to root processor
-  // it needs to save the global version of these (local) indices so it knows
-  // that these points need to be re-mapped to the global points before the interface is adapted
-
-}
-
-
-
 
 template class Partition<Simplex>;
 template class Topology_Partition<Simplex>;

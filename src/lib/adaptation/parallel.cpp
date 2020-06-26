@@ -8,6 +8,7 @@
 
 #include "library/meshb.h"
 
+#include "mesh/boundary.h"
 #include "mesh/facets.h"
 #include "mesh/mpi_tags.h"
 #include "mesh/partition.h"
@@ -31,9 +32,63 @@ class AdaptationChunk : public Topology_Partition<type>
 {
 public:
   AdaptationChunk( coord_t dim , coord_t udim , coord_t number ) :
-    Topology_Partition<type>(dim,udim,number),
-    points_(dim,udim)
+    Topology_Partition<type>(dim,udim,number)
   {}
+
+  void fix_interface()
+  {
+    Facets facets(*this);
+    facets.compute();
+
+    std::vector<index_t> pts;
+    std::vector<index_t> facet(this->number());
+    for (index_t k=0;k<facets.nb();k++)
+    {
+      if (!facets.boundary(k)) continue;
+      facets.retrieve(k,facet);
+      Entity* entity = BoundaryUtils::geometryFacet(this->points(),facet.data(),facet.size());
+      if (entity!=nullptr) continue;
+      for (index_t j=0;j<facet.size();j++)
+        pts.push_back(facet[j]);
+    }
+    uniquify(pts);
+
+    // move the boundary points to the front..they will be fixed during the adaptation
+    // they need to be in the front so that the local2global indices are not touched
+    // which would occur if they were placed after a vertex that gets collapsed
+    std::map<index_t,index_t> idx;
+    this->move_to_front(pts,&idx);
+    avro_assert( this->all_points_accounted() );
+
+    // recompute the facets...is there a way to not do this twice?
+    facets.compute();
+    pts.clear();
+    for (index_t k=0;k<facets.nb();k++)
+    {
+      if (!facets.boundary(k)) continue;
+      facets.retrieve(k,facet);
+      Entity* entity = BoundaryUtils::geometryFacet(this->points(),facet.data(),facet.size());
+      if (entity!=nullptr) continue;
+      for (index_t j=0;j<facet.size();j++)
+        pts.push_back(facet[j]);
+    }
+    uniquify(pts);
+
+    // all of these boundary points should already be at the beginning of the point list
+    for (index_t k=0;k<pts.size();k++)
+    {
+      avro_assert( pts[k] == k ); // ensures boundary points are at the beginning
+      this->points().set_fixed(k,true);
+    }
+
+    // adjust the local2global indices
+    for (index_t k=0;k<this->points().nb();k++)
+    {
+      index_t global = this->local2global_[idx.at(k)];
+      this->local2global_[k] = global;
+      this->global2local_[global] = k;
+    }
+  }
 
   void adapt()
   {
@@ -50,8 +105,6 @@ public:
   std::vector<VertexMetric>& metric() { return metrics_; }
 
 private:
-  Points points_;
-  std::vector<index_t> local2global_;
   std::vector<VertexMetric> metrics_;
 };
 
@@ -90,6 +143,9 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   if (partition_size<0)
     partition_size = estimate_partition_size(nb_partition);
 
+  // sigh...I know goto's are not good programming practice
+  // but it's just so convenient here
+  // this is the goto used in case the number of partitions needs to be reduced
   repartition:
 
   // determine if an interface is needed
@@ -179,6 +235,7 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
       // check if more than half of the partition is crust
       if (2*crust.size() > parts[k]->nb())
       {
+        // initiate the flag that partitions need to be reduced
         reduce_partitions = 1;
       }
 
@@ -198,9 +255,6 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
       parts[k]->remove_elements( crust );
       parts[k]->remove_unused();
     }
-
-    // remove unused points in the interface (recall we used global indices when adding crust elements)
-    interface->remove_unused();
 
     // send the partitions to each processor
     for (index_t k=0;k<parts.size();k++)
@@ -234,10 +288,12 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   }
   else
   {
+    // wait for the root to tell us if we need to go back
     reduce_partitions = mpi::receive<int>( 0 , TAG_REDUCE_PARTITION );
   }
   mpi::barrier();
 
+  // check if partitions need to be reduced and go back to the top!
   if (reduce_partitions==1)
   {
     printf("*** reducing number of partitions ***\n");
@@ -246,10 +302,11 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   }
   mpi::barrier();
 
-
   // do the serial adaptation
   if (rank == 0)
   {
+    std::map< std::pair<index_t,index_t> , index_t > pts;
+
     // receive the adapted partitions from the processors
     // note: the topologies are all in local indexing
     std::vector< std::shared_ptr<Topology_Partition<type>> > parts( nb_partition );
@@ -259,33 +316,53 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
       parts[k]->set_entities(entities);
       parts[k]->receive( comm , k+1 );
 
-      printf("--> received adapted partition from processor %lu\n",k+1);
+      printf("--> received adapted partition with %lu elements from processor %lu\n",parts[k]->nb(),k+1);
 
       // compute the mantle and add it to the interface
-      #if 0
-      parts[k]->compute_mantle();
+      parts[k]->neighbours().fromscratch() = true;
+      parts[k]->neighbours().compute();
+      parts[k]->inverse().build();
+      std::vector<index_t> interior, exterior, crust;
+      parts[k]->compute_mantle( interior , exterior , crust );
 
-      const std::vector<index_t>& mantle = parts[k]->mantle();
+      printf("--> there are %lu elements in the crust with %lu interior points and %lu exterior points\n",crust.size(),interior.size(),exterior.size());
 
-      for (index_t j=0;j<mantle.size();j++)
+      std::map<index_t,index_t> local2global;
+      for (index_t j=0;j<exterior.size();j++)
+        local2global.insert( {exterior[j],parts[k]->local2global(exterior[j])} );
+
+      // add all the points in the interior to the interior mesh
+      // exterior points should already be added
+      for (index_t j=0;j<interior.size();j++)
       {
-        // retrieve the mantle element and add it to the interface
-        std::vector<index_t> s = parts[k]->get(mantle[j]);
-
-        // the mantle element s is in local partition coordinates
-        // it needs to be converted to local interface coordinates
-        for (index_t i=0;i<s.size();i++)
-        {
-          // determine if s[i] is a
-        }
-
+        index_t q = interface->points().nb();
+        index_t p = interior[j];
+        interface->points().create( parts[k]->points()[p] );
+        interface->points().set_entity( q , parts[k]->points().entity(p) );
+        interface->points().set_param( q , parts[k]->points().u(p) );
+        local2global.insert( {p,q} );
       }
 
-      // remove the mantle from the adapted partition (it will be added by the interface)
-      parts[k]->remove_elements( mantle );
-      #endif
+      for (index_t j=0;j<crust.size();j++)
+      {
+        // retrieve the mantle element and add it to the interface
+        std::vector<index_t> s = parts[k]->get(crust[j]);
 
-      // add the mantle elements to the interface
+        // the mantle element s is in local partition coordinates
+        // it needs to be converted to interface coordinates
+        // which are "global" (until we remove unused points below)
+        for (index_t i=0;i<s.size();i++)
+          s[i] = local2global.at( s[i] );
+
+        // add the mantle element to the interface
+        //print_inline( s , "adding interface element " );
+        interface->add( s.data() , s.size() );
+      }
+
+      // remove the mantle from the adapted partition (these elements will be added by the interface)
+      parts[k]->remove_elements( crust );
+
+      // add the shrunk partition to the global topology
       // TODO
     }
   }
@@ -295,17 +372,18 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
     // be sure to adjust local2global maps
     if (active[rank]==ACTIVE)
     {
+      // the fixed points should have already been moved to the front
+      partition->fix_interface();
+
+      // now we can retrieve the metrics from the global list
+      // TODO
+
       // adapt the mesh
       partition->adapt();
 
       // send the mesh to the root processor
       printf("--> sending adapted partition %lu with %lu elements back to root\n",rank,partition->nb());
       partition->send( comm , 0 );
-
-      // extract all elements on the interface and then all vertices in this set of elements
-
-      // send the set of interface elements as those in the ball of any vertex we found earlier
-      //mpi::send(); // TODO
     }
     else
     {
@@ -314,24 +392,27 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   }
   mpi::barrier();
 
-  // adapt the interface in parallel
-  Points interface_points;
-  Topology<type> interface_out( interface_points , interface->number() );
-
-  interface->neighbours().fromscratch() = true;
-  interface->neighbours().compute();
-
-  // wait for all processors to make the recursive call
-  mpi::barrier();
-
   if (rank==0)
   {
     library::meshb out;
     Mesh mesh(number,dim);
     interface->points().copy(mesh.points());
     mesh.add(interface);
-    //out.write(mesh,"interface-"+std::to_string(level)+".mesh",false);
+    out.write(mesh,"interface-"+std::to_string(level)+".mesh",false);
   }
+
+  // adapt the interface in parallel
+  Points interface_points;
+  Topology<type> interface_out( interface_points , interface->number() );
+
+  // remove unused points in the interface (recall we used global indices when adding crust elements)
+  interface->remove_unused();
+
+  interface->neighbours().fromscratch() = true;
+  interface->neighbours().compute();
+
+  // retrieve the metrics passed in to the interface adaptation
+  // TODO
 
   adaptp( *interface , metrics , params , interface_out , level+1 );
 
