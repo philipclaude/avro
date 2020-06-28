@@ -13,6 +13,17 @@
 namespace avro
 {
 
+static bool
+fixed_facet( const std::vector<index_t>& facet , const Points& points )
+{
+  for (index_t j=0;j<facet.size();j++)
+  {
+    if (!points.fixed(facet[j]))
+      return false;
+  }
+  return true;
+}
+
 template<typename type> class Topology;
 class Entity;
 
@@ -38,16 +49,18 @@ public:
   index_t local2global( index_t k ) const;
   index_t global2local( index_t k ) const;
 
-  void compute_crust();
-  void compute_mantle();
-  void compute_halo();
+  void map_indices( const std::map<index_t,index_t>& idx );
+  void remove_indices( const std::vector<index_t>& idx );
 
+  void compute_crust(); // should be removed
   void compute_crust( const std::vector<index_t>& halo , std::vector<index_t>& crust ) const;
-  void compute_mantle( std::vector<index_t>& interior , std::vector<index_t>& exterior , std::vector<index_t>& mantle ) const;
+  void compute_mantle( std::vector<index_t>& interior , std::vector<index_t>& exterior , std::vector<index_t>& mantle , const std::set<index_t>& halo ) const;
 
   const std::vector<index_t>& mantle() const { return mantle_; }
   const std::vector<index_t>& crust() const { return crust_; }
   const std::vector<index_t>& halo() const { return halo_; }
+
+  bool check( const Points& points ) const;
 
 protected:
   Points points_;

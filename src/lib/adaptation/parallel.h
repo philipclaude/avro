@@ -37,7 +37,7 @@ private:
 
 
 template<typename type>
-int adaptp( Topology<type>& topology , const std::vector<VertexMetric>& metrics , AdaptationParameters& params , Topology<type>& topology_out , index_t level=0 );
+int adaptp( Topology<type>& topology , const std::vector<VertexMetric>& metrics , AdaptationParameters& params , Topology<type>& topology_out , index_t level=0 , int finished0=0 );
 
 template<typename type>
 class AdaptationInterface : public Topology<type>

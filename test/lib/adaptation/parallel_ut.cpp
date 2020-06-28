@@ -22,9 +22,9 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 2;
+  coord_t number = 3;
 
-  std::vector<index_t> dims(number,21);
+  std::vector<index_t> dims(number,41);
   CKF_Triangulation topology(dims);
 
   #if 1

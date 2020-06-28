@@ -206,6 +206,8 @@ Partition<type>::compute_interface_points( std::vector<std::set<index_t>>& halo 
   Facets facets( topology_ );
   facets.compute();
 
+  //topology_.points().print(true);
+
   // first extract all points on the interface
   std::vector<index_t> facet( topology_.number() );
   for (index_t k=0;k<facets.nb();k++)
@@ -220,8 +222,18 @@ Partition<type>::compute_interface_points( std::vector<std::set<index_t>>& halo 
     // if the partitions are the same, then this is not in the interface
     if (p0==p1) continue;
 
-    // associate any point in the facet with both partitions
+    // retrieve the indices of the facet
     facets.retrieve( k , facet );
+
+    // if all points in the facet are fixed, then this is not a partition boundary
+    if (fixed_facet(facet,topology_.points()))
+    {
+      //print_inline(facet,"fixed facet ");
+      //avro_implement;
+      continue;
+    }
+
+    // associate any point in the facet with both partitions
     for (index_t j=0;j<facet.size();j++)
     {
       halo[p0].insert( facet[j] );
@@ -267,6 +279,7 @@ Topology_Partition<type>::extract_points( const Points& points )
     for (coord_t d=0;d<udim;d++)
       points_.u(k)[d] = points.u(global)[d];
     points_.set_entity( k , points.entity(global) );
+    points_.set_fixed( k , points.fixed(global) );
   }
 
   for (index_t k=0;k<local2global_.size();k++)
@@ -343,6 +356,7 @@ Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
   std::vector<int> identifiers = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY);
   std::vector<int> geometry_numbers = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY_NUMBERS);
   local2global_ = mpi::receive<std::vector<index_t>>(sender,TAG_LOCAL2GLOBAL);
+  std::vector<int> fixed = mpi::receive<std::vector<int>>(sender,TAG_FIXED);
 
   coord_t dim = points_.dim();
   coord_t udim = points_.udim();
@@ -358,6 +372,10 @@ Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
     Entity* entity = lookup( identifiers[k] , geometry_numbers[k] );
     points_.set_entity( k , entity );
     global2local_.insert( { local2global_[k] , k } );
+    if (fixed[k]==1)
+      points_.set_fixed(k,true);
+    else
+      points_.set_fixed(k,false);
   }
 }
 
@@ -379,6 +397,7 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
   std::vector<real_t> parameters( nb_points*udim , 0.0 );
   std::vector<int> identifiers( nb_points , -1 );
   std::vector<int> geometry_numbers( nb_points , -1 );
+  std::vector<int> fixed( nb_points , 0 );
 
   for (index_t k=0;k<nb_points;k++)
   {
@@ -393,6 +412,7 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
       identifiers[k]      = entity->identifier();
       geometry_numbers[k] = entity->number();
     }
+    if (points_.fixed(k)) fixed[k] = 1;
   }
 
   mpi::send( mpi::blocking{} , coordinates , receiver , TAG_COORDINATE );
@@ -400,6 +420,7 @@ Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) con
   mpi::send( mpi::blocking{} , identifiers , receiver , TAG_GEOMETRY );
   mpi::send( mpi::blocking{} , geometry_numbers , receiver , TAG_GEOMETRY_NUMBERS );
   mpi::send( mpi::blocking{} , local2global_ , receiver , TAG_LOCAL2GLOBAL );
+  mpi::send( mpi::blocking{} , fixed , receiver , TAG_FIXED );
 }
 
 template<typename type>
@@ -420,8 +441,10 @@ Topology_Partition<type>::compute_crust( const std::vector<index_t>& halo , std:
 
 template<typename type>
 void
-Topology_Partition<type>::compute_mantle( std::vector<index_t>& interior , std::vector<index_t>& exterior , std::vector<index_t>& mantle ) const
+Topology_Partition<type>::compute_mantle( std::vector<index_t>& interior , std::vector<index_t>& exterior , std::vector<index_t>& mantle , const std::set<index_t>& halo ) const
 {
+  //this->points().print(true);
+
   // determine all the points that are on the boundary, but not on the geometry
   Facets facets(*this);
   facets.compute();
@@ -432,6 +455,7 @@ Topology_Partition<type>::compute_mantle( std::vector<index_t>& interior , std::
     facets.retrieve(k,facet);
     Entity* entity = BoundaryUtils::geometryFacet( this->points() , facet.data() , facet.size() );
     if (entity!=nullptr) continue;
+    if (fixed_facet(facet,points_)) continue;
 
     for (index_t j=0;j<facet.size();j++)
       exterior.push_back(facet[j]);
@@ -464,6 +488,38 @@ Topology_Partition<type>::compute_mantle( std::vector<index_t>& interior , std::
   uniquify(interior);
 }
 
+template<typename type>
+void
+Topology_Partition<type>::map_indices( const std::map<index_t,index_t>& idx )
+{
+  avro_assert( idx.size() == points_.nb() );
+  std::vector<index_t> global = local2global_;
+  global2local_.clear();
+  local2global_.resize( points_.nb() );
+  for (index_t k=0;k<points_.nb();k++)
+  {
+    local2global_[ idx.at(k) ] = global[k];
+    global2local_[k] = idx.at(k);
+  }
+}
+
+template<typename type>
+void
+Topology_Partition<type>::remove_indices( const std::vector<index_t>& idx0 )
+{
+  std::vector<index_t> idx(idx0.begin(),idx0.end());
+  std::sort( idx.begin() , idx.end() );
+  for (index_t k=0;k<idx.size();k++)
+  {
+    local2global_.erase( local2global_.begin() + idx[k]-k );
+  }
+
+  global2local_.clear();
+  for (index_t k=0;k<local2global_.size();k++)
+    global2local_.insert( {local2global_[k],k} );
+}
+
+/*
 template<typename type>
 void
 Topology_Partition<type>::compute_crust()
@@ -507,6 +563,27 @@ Topology_Partition<type>::compute_crust()
       crust_.push_back(ball[j]);
   }
   uniquify(crust_);
+}
+*/
+
+template<typename type>
+bool
+Topology_Partition<type>::check( const Points& points ) const
+{
+  bool result = true;
+  avro_assert_msg( local2global_.size() == points_.nb() , "|local2global| = %lu, |points| = %lu" , local2global_.size(),points_.nb() );
+  for (index_t j=0;j<points_.nb();j++)
+  {
+    real_t d = numerics::distance( points_[j] , points[local2global_[j]] , points_.dim() );
+    if (d > 1e-12)
+    {
+      printf("local point %lu -> global point %lu do not match d = %g.\n",j,local2global_[j],d);
+      points_.print(j,true);
+      points.print(local2global_[j],true);
+      result = false;
+    }
+  }
+  return result;
 }
 
 template class Partition<Simplex>;

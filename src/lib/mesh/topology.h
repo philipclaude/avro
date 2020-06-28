@@ -204,7 +204,7 @@ public:
   void move_to_front( const std::vector<index_t>& pts , std::map<index_t,index_t>* idx=nullptr );
 
   bool all_points_accounted() const;
-  void remove_unused();
+  void remove_unused( std::vector<index_t>* idx=nullptr );
 
 private:
   type element_;

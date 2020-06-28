@@ -7,10 +7,14 @@
 #define TAG_GEOMETRY   2
 #define TAG_GEOMETRY_NUMBERS 3
 #define TAG_LOCAL2GLOBAL 4
+#define TAG_FIXED 5
 
 // topology tags
-#define TAG_CELL_INDEX 5
-#define TAG_CELL_FIRST 6
-#define TAG_CELL_LAST  7
+#define TAG_CELL_INDEX 11
+#define TAG_CELL_FIRST 12
+#define TAG_CELL_LAST  13
+
+// tag for passing miscellaneous data
+#define TAG_MISC 200
 
 #endif

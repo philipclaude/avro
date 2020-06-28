@@ -451,23 +451,29 @@ Topology<type>::all_points_accounted() const
 
 template<typename type>
 void
-Topology<type>::remove_unused()
+Topology<type>::remove_unused( std::vector<index_t>* pidx0 )
 {
   std::vector<bool> accounted( points_.nb() );
   for (index_t k=0;k<data_.size();k++)\
     accounted[ data_[k] ] = true;
 
-  std::vector<index_t> pts;
+  std::vector<index_t> idx;
+  std::vector<index_t>* pts;
+  if (pidx0==nullptr)
+    pts = &idx;
+  else
+    pts = pidx0;
+
   for (index_t k=0;k<accounted.size();k++)
   {
     if (!accounted[k])
     {
-      pts.push_back(k);
+      pts->push_back(k);
     }
   }
 
-  for (index_t k=0;k<pts.size();k++)
-    remove_point(pts[k]-k);
+  for (index_t k=0;k<pts->size();k++)
+    remove_point( (*pts)[k]-k);
 }
 
 template<typename type>
