@@ -36,18 +36,14 @@ public:
   void key_down(int key);
   void mouse_wheel(double xoffset ,double yoffset);
 
-  const glm::mat4& model_view_projection() const {return model_view_projection_; }
-  const glm::mat4& model_view() const { return model_view_; }
-  const glm::mat4& ui_matrix() const { return ui_matrix_; }
-  const glm::mat4& normal() const { return normal_; }
-  const glm::mat4& perspective() const { return perspective_; }
+  const mat4& model_view_projection() const {return model_view_projection_; }
+  const mat4& model_view() const { return model_view_; }
+  const mat4& ui_matrix() const { return ui_matrix_; }
+  const mat4& normal() const { return normal_; }
+  const mat4& perspective() const { return perspective_; }
 
-  //const glm::mat4& transformation() const { return transformation_; }
-
-  void set_ui_matrix( const glm::mat4& m ) { ui_matrix_ = m; }
-  void set_mv_matrix( const glm::mat4& m ) { model_view_ = m; }
-
-  //glm::mat4 perspective() const { return perspective_*model_view_; }
+  void set_ui_matrix( const mat4& m ) { ui_matrix_ = m; }
+  void set_mv_matrix( const mat4& m ) { model_view_ = m; }
 
   bool dragging;
   int modifier;
@@ -55,17 +51,15 @@ public:
   void disable() { enabled_ = false; }
   void enable() { enabled_ = true; }
 
-  const glm::mat4& rotation() const { return rotation_; }
-  const glm::mat4& translation() const { return translation_; }
+  const mat4& rotation() const { return rotation_; }
+  const mat4& translation() const { return translation_; }
 
 private:
-  glm::mat4 perspective_;
-  glm::mat4 model_view_;
-  glm::mat4 model_view_projection_;
-  glm::mat4 normal_;
-  glm::mat4 ui_matrix_;
-
-  //glm::mat4 transformation_;
+  mat4 perspective_;
+  mat4 model_view_;
+  mat4 model_view_projection_;
+  mat4 normal_;
+  mat4 ui_matrix_;
 
   int width_;
   int height_;
@@ -81,15 +75,15 @@ private:
 
   float scale_;
 
-  const glm::vec3 eye_ = {0,0,7};
-  const glm::vec3 center_ = {0,0,0};
-  const glm::vec3 up_ = {0,1,0};
+  const vec3 eye_ = {0,0,7};
+  const vec3 center_ = {0,0,0};
+  const vec3 up_ = {0,1,0};
 
   bool enabled_;
 
   // rigid-body transformations (useful for defining clipping plane manipulations)
-  glm::mat4 rotation_;
-  glm::mat4 translation_;
+  mat4 rotation_;
+  mat4 translation_;
 };
 
 } // graphics

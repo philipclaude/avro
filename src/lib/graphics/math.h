@@ -41,8 +41,6 @@ using mat4 = glm::mat4;
 
 #else
 
-namespace glm
-{
 typedef numerics::VectorS<2,float> vec2;
 typedef numerics::VectorS<3,float> vec3;
 typedef numerics::VectorS<4,float> vec4;
@@ -53,18 +51,29 @@ public:
   float* value_ptr();
 
   float* operator[] (index_t i) { return &(*this)(i,0); }
+private:
+  MatrixS<3,3,float> mt_;
 };
 
 class mat4 : public numerics::MatrixS<4,4,float>
 {
 public:
+  mat4()
+  {
+    (*this) = 0.0;
+  }
+  mat4( const float f )
+  {
+    (*this) = 0.0;
+    for (int i=0;i<4;i++)
+      (*this)[i][i] = 1.0;
+  }
+
   float* value_ptr();
   float* operator[] (index_t i) { return &(*this)(i,0); }
+private:
+  MatrixS<4,4,float> mt_;
 };
-
-} // glm
-
-using mat4 = glm::mat4;
 
 #endif
 

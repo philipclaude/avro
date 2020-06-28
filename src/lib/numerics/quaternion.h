@@ -31,10 +31,10 @@ public:
       q_.push_back( axis[d]*sin(.5*theta) );
   }
 
-  glm::mat3
+  graphics::mat3
   rotation_matrix()
   {
-    glm::mat3 R;
+    graphics::mat3 R;
     real_t s = magnitude();
     real_t qr = q_[0], qi = q_[1], qj = q_[2], qk = q_[3];
     R[0][0] = 1. -2.*s*(qj*qj +qk*qk);
