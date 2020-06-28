@@ -111,6 +111,11 @@
 #define GLM_COMPILER_GCC70			0x02000A00
 #define GLM_COMPILER_GCC71			0x02000B00
 #define GLM_COMPILER_GCC72			0x02000C00
+// philip copy over 7.2 compiler definition to 7.3-7.5
+#define GLM_COMPILER_GCC73			0x02000C00
+#define GLM_COMPILER_GCC74			0x02000C00
+#define GLM_COMPILER_GCC75			0x02000C00
+// end philip
 #define GLM_COMPILER_GCC80			0x02000D00
 
 // CUDA
@@ -282,6 +287,8 @@
 #	elif (__GNUC__ == 7) && (__GNUC_MINOR__ == 1)
 #		define GLM_COMPILER (GLM_COMPILER_GCC71)
 #	elif (__GNUC__ == 7) && (__GNUC_MINOR__ == 2)
+#		define GLM_COMPILER (GLM_COMPILER_GCC72) // philip hack to use GCC 7.2 so it doesn't think we are using an old buggy compiler
+#	elif (__GNUC__ == 7) && (__GNUC_MINOR__ <= 9)
 #		define GLM_COMPILER (GLM_COMPILER_GCC72)
 #	elif (__GNUC__ >= 8)
 #		define GLM_COMPILER (GLM_COMPILER_GCC80)
