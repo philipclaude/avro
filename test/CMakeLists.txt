@@ -34,7 +34,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/third_party)
 include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/numpack )
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
-include_directories( ${GLM_INCLUDE_DIRS} )
 
 if (AVRO_NO_ESP)
   set( ESP_LIBRARIES )

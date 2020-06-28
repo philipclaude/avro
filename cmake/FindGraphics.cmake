@@ -20,5 +20,5 @@ else()
   message( "defaulting to only supporting webviewer")
 endif()
 
-#find_package(glm CONFIG REQUIRED)
-#include_directories( ${GLM_INCLUDE_DIRS} )
+#find_package(GLM CONFIG REQUIRED)
+#include_directories( ${GLM_INCLUDE_DIR} )
