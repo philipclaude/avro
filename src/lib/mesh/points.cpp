@@ -185,8 +185,8 @@ Points::print( bool info ) const
 				num = primitive_[k]->number();
   		}
   		else geo = "";
-  		printf(" : %s , b[ %3d ] , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
-  						body_[k],num,(void*)primitive_[k],geo.c_str());
+  		printf(" : %5s , %5s , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "ghost":"real",
+  						(fixed_[k])?("fixed"):("free"),num,(void*)primitive_[k],geo.c_str());
 			for (index_t d=0;d<udim_;d++)
 				printf(" %12.4e ",u(k)[d]);
 			printf(")");
@@ -212,8 +212,8 @@ Points::print( index_t k , bool info ) const
 			num = primitive_[k]->number();
 		}
 		else geo = "";
-		printf(" : %s , b[ %3d ] , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "GHST":"REAL",
-						body_[k],num,(void*)primitive_[k],geo.c_str());
+		printf(" : %5s , %5s , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "ghost":"real",
+							(fixed_[k])?("fixed"):("free"),num,(void*)primitive_[k],geo.c_str());
 		for (index_t d=0;d<udim_;d++)
 			printf("%12.4e ",u(k)[d]);
 		printf(")");
@@ -540,10 +540,6 @@ Points::move_to( index_t k0 , index_t k1 )
 	std::vector<real_t> u0( u(k0) , u(k0)+udim_ );
 	Entity* e0 = entity(k0);
 
-	//print_inline(x0,"x0 = ");
-	//print_inline( DOF<real_t>::data_ );
-
-	//printf("moving point %lu to %lu\n",k0,k1);
 	avro_assert_msg( k1 <= k0 , "trying to move %lu to %lu"  , k0 , k1 );
 	#if 0
 	DOF<real_t>::insert( k1*dim_ , (*this)[k0] , dim_ );
@@ -570,6 +566,7 @@ Points::clear()
   primitive_.clear();
   nb_ghost_ = 0;
 	incidence_.clear();
+	fixed_.clear();
 }
 
 } // avro

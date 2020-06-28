@@ -60,9 +60,8 @@ UT_TEST_CASE( test1 )
     Partition<Simplex> partition(topology);
     partition.compute(nb_partition);
 
-    std::vector<std::set<index_t>> crust_elems( nb_partition );
     std::vector<std::set<index_t>> halo_points( nb_partition );
-    partition.compute_interface( crust_elems , halo_points );
+    partition.compute_interface_points(  halo_points );
 
     std::vector< std::shared_ptr<Topology_Partition<Simplex> > > parts(nb_partition);
     partition.get(parts);
@@ -121,7 +120,6 @@ UT_TEST_CASE( test1 )
           crust.push_back( ball[i] );
       }
       uniquify(crust);
-      avro_assert( crust.size() == crust_elems[k].size() );
 
       // add the crust to the interface
       // crust elements are in local indices, convert to global

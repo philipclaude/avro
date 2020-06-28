@@ -247,6 +247,7 @@ public:
   void extract( Topology<Simplex>& triangulation ) const;
 
   VoronoiSites& sites() { return *sites_.get(); }
+  std::shared_ptr<VoronoiSites>& sites_ptr() { return sites_; }
 
 private:
 

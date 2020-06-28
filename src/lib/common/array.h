@@ -32,7 +32,7 @@ public:
 
   void set( index_t k , const type& x )
   {
-    avro_assert( k < nb() );
+    avro_assert_msg( k < nb() , "k = %lu but nb = %lu", k , nb() );
     data_[k] = x;
   }
 

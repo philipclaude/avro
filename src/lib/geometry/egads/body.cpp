@@ -32,7 +32,6 @@ Body::build_hierarchy()
   EGADS_ENSURE_SUCCESS( EG_getTopology( *object_ , &data_.reference , &data_.object_class ,
                         &data_.member_type , data_.data , &data_.nb_children , &data_.children , &data_.senses ) );
 
-  printf("nb_children = %d\n",data_.nb_children);
   // loop through the children obtained from egads
   // and create the topological entities
   for (int k=0;k<data_.nb_children;k++)
