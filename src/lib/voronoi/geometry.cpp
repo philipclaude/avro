@@ -83,7 +83,7 @@ GeometryConformingRVD::compute()
     // copy the site for the interior topology
     if (entity_[k]==nullptr)
     {
-      this->fields().make( "sites" , rvd_[k]->sites() );
+      this->fields().make( "sites" , rvd_[k]->sites_ptr() );
     }
   }
 }
