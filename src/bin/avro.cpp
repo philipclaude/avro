@@ -53,6 +53,8 @@ main( int argc , const char** argv )
     result = programs::voronoi(nb_inputs,inputs);
   else if (program=="conformity")
     result = programs::conformity(nb_inputs,inputs);
+  else if (program=="convert")
+    result = programs::convert(nb_inputs,inputs);
   else
   {
     printf("unknown program :(\n");
