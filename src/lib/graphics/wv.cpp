@@ -95,7 +95,8 @@ WV_Manager::write( Primitive& primitive )
   if (primitive.number()==1)
   {
     // add the line connectivity
-    status = wv_setData( WV_INT32 , primitive.edges().size() , (void*) primitive.edges().data() , WV_INDICES , &items[1] );
+    std::vector<int> edges( primitive.edges().begin() , primitive.edges().end() );
+    status = wv_setData( WV_INT32 , edges.size() , (void*) edges.data() , WV_INDICES , &items[1] );
     WV_CHECK_STATUS( status );
 
     // add the line colour

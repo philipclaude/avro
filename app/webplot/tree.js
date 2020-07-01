@@ -485,8 +485,11 @@ function TreeUpdate()
                     myElem.setAttribute("class",   "fakelinkoff");
                     myElem.title = "Toggle visibility";
                     if (this.gprim[inode] != "") {
+                      if (wv.sceneGraph[this.gprim[inode]]!=undefined)
+                      {
                         wv.sceneGraph[this.gprim[inode]].attrs &= ~wv.plotAttrs.ON;
                         wv.sceneUpd = 1;
+                      }
                     }
                 } else {
                     myElem.setAttribute("class",   "fakelinkon");
@@ -494,8 +497,11 @@ function TreeUpdate()
                     if (this.gprim[inode] != "") {
                         //this.gprim[inode] = "tess";
 
-                        wv.sceneGraph[this.gprim[inode]].attrs |=  wv.plotAttrs.ON;
-                        wv.sceneUpd = 1;
+                        if (wv.sceneGraph[this.gprim[inode]]!=undefined)
+                        {
+                          wv.sceneGraph[this.gprim[inode]].attrs |=  wv.plotAttrs.ON;
+                          wv.sceneUpd = 1;
+                        }
                     }
                 }
             }
@@ -511,18 +517,24 @@ function TreeUpdate()
                     myElem.title = "Toggle edges";
 
                     if (this.gprim[inode] != "") {
+                      if (wv.sceneGraph[this.gprim[inode]]!=undefined)
+                      {
                         wv.sceneGraph[this.gprim[inode]].attrs &= ~wv.plotAttrs.LINES;
                         wv.sceneGraph[this.gprim[inode]].attrs &= ~wv.plotAttrs.POINTS;
                         wv.sceneUpd = 1;
+                      }
                     }
                 } else {
                     myElem.setAttribute("class",   "fakelinkon");
                     myElem.title = "Toggle edges";
 
                     if (this.gprim[inode] != "") {
+                      if (wv.sceneGraph[this.gprim[inode]]!=undefined)
+                      {
                         wv.sceneGraph[this.gprim[inode]].attrs |=  wv.plotAttrs.LINES;
                         wv.sceneGraph[this.gprim[inode]].attrs |=  wv.plotAttrs.POINTS;
                         wv.sceneUpd = 1;
+                      }
                     }
                 }
             }
@@ -538,8 +550,11 @@ function TreeUpdate()
                     myElem.title = "Toggle transparency";
 
                     if (this.gprim[inode] != "") {
+                      if (wv.sceneGraph[this.gprim[inode]]!=undefined)
+                      {
                         wv.sceneGraph[this.gprim[inode]].attrs &= ~wv.plotAttrs.TRANSPARENT;
                         wv.sceneUpd = 1;
+                      }
                     }
                 } else {
                     myElem.setAttribute("class",   "fakelinkon");

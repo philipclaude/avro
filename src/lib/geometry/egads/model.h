@@ -41,6 +41,8 @@ public:
 
   Entity* find_entity( index_t id , int object_class ) const;
 
+  ego object() { return object_; }
+
   void print() const;
 
 private:

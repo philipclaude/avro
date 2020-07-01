@@ -232,6 +232,8 @@ function make_tree(primitives)
     var root = node;
     plots.push(root);
 
+    console.log(primitives[i]);
+
     // create a root node
     myTree.addNode( 0 , "Plot "+i , "",dummy,null,"","viz","on",toggle_viz,"edg","on",toggle_edges,"alpha","off",toggle_transparency );
     node++;
