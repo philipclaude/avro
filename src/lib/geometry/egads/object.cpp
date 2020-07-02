@@ -163,7 +163,8 @@ Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
     u[0] = 1;
     x[0] = data_.data[0];
     x[1] = data_.data[1];
-    x[2] = data_.data[2];
+    if (x.size()==3)
+      x[2] = data_.data[2];
     return;
   }
 

@@ -11,7 +11,10 @@
 
 #include "geometry/egads/context.h"
 
+#include "library/ckf.h"
 #include "library/egads.h"
+
+#include "mesh/boundary.h"
 
 using namespace avro;
 
@@ -24,5 +27,20 @@ UT_TEST_CASE( box_test )
   EGADS::Cube cube(&context,{1,1,1},x0);
 }
 UT_TEST_CASE_END( box_test )
+
+UT_TEST_CASE( square_test )
+{
+  EGADS::Context context;
+  EGADS::Cube square(&context,{1,1});
+
+  CKF_Triangulation ckf( {10,10} );
+  ckf.points().attach( square );
+
+  Boundary<Simplex> boundary(ckf);
+  boundary.extract();
+
+  ckf.points().print(true);
+}
+UT_TEST_CASE_END( square_test )
 
 UT_TEST_SUITE_END( library_egads_suite )

@@ -49,6 +49,10 @@ public:
   index_t local2global( index_t k ) const;
   index_t global2local( index_t k ) const;
 
+  void reset_indices();
+  void set_local2global( index_t k , index_t global );
+  void set_global2local( index_t global , index_t k );
+
   void map_indices( const std::map<index_t,index_t>& idx );
   void remove_indices( const std::vector<index_t>& idx );
 
