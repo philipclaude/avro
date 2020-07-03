@@ -13,7 +13,7 @@
 namespace avro
 {
 
-static bool
+inline bool
 fixed_facet( const std::vector<index_t>& facet , const Points& points )
 {
   for (index_t j=0;j<facet.size();j++)

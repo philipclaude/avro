@@ -14,6 +14,8 @@
 #include "library/egads.h"
 #include "library/tesseract.h"
 
+#include "numerics/geometry.h"
+
 using namespace avro;
 
 UT_TEST_SUITE( adaptation_parallel_test_suite )
@@ -60,11 +62,26 @@ UT_TEST_CASE( test1 )
     real_t volume = topology_out.volume();
     UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
 
+    for (index_t k=0;k<topology_out.points().nb();k++)
+    for (index_t j=k+1;j<topology_out.points().nb();j++)
+    {
+      real_t d = numerics::distance( topology_out.points()[k] , topology_out.points()[j] , dim );
+      if (d < 1e-12)
+      {
+        topology_out.points().print(k,true);
+        topology_out.points().print(j,true);
+      }
+    }
+
+    // it may not look like much, but this is a huge check on the partitioning and stitching algorithm
+    UT_ASSERT_EQUALS( topology_out.points().nb() , topology.points().nb() );
+
     printf("original |points| = %lu, new |points| = %lu\n",topology.points().nb(),topology_out.points().nb());
 
     graphics::Visualizer vis;
     vis.add_topology(topology_out);
-    vis.run();
+    if (number<4)
+      vis.run();
   }
 
 }
