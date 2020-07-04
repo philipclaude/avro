@@ -30,7 +30,7 @@ UT_TEST_CASE(test1)
   UT_CATCH_EXCEPTION( prim = std::make_shared<Object_t>(context,&obj) );
 
   std::shared_ptr<EGADS::Body> body_ptr;
-  body_ptr = std::make_shared<EGADS::Body>( context , &obj );
+  body_ptr = std::make_shared<EGADS::Body>( context , obj );
 
   //body.add( prim );
 }

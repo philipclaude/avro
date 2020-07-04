@@ -19,8 +19,10 @@ namespace EGADS
 {
 
 Cube::Cube( const Context* context , coord_t number ) :
-  Body(*context,&object_)
-{}
+  Body(*context)
+{
+  set_object(object_);
+}
 
 Cube::Cube( const Context* context , const std::vector<real_t>& lens , const real_t* x0 ) :
   Cube(context,lens.size())
@@ -58,7 +60,8 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
 
     WireBody wire(context,loop);
 
-    Body::object_ = wire.object();
+    object_ = wire.object();
+    set_object( wire.object() );
   }
   else if (lens.size()==3)
   {
@@ -69,6 +72,7 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
     printf("need full egads to make solid body\n");
     avro_assert_not_reached;
     #endif
+    set_object( object_ );
   }
   this->build_hierarchy();
 }
@@ -77,7 +81,8 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
 void
 SolidBody::make()
 {
-  EGADS_CHECK_SUCCESS( EG_makeSolidBody( *context_.get() , type_ , data_ , object_ ) );
+  EGADS_CHECK_SUCCESS( EG_makeSolidBody( *context_.get() , type_ , data_ , &object_ ) );
+  set_object(object_);
   build_hierarchy();
 }
 

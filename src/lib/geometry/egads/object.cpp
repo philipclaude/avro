@@ -55,7 +55,7 @@ Object::Object( ego* object , EGADS::Body* body ) :
   sense_required_ = false;
   egads_ = true;
 
-  identifier_ = EG_indexBodyTopo( *body_->object() , *object_ );
+  identifier_ = EG_indexBodyTopo( body_->object() , *object_ );
 
   if (data_.member_type == SREVERSE) sign_ = -1;
 

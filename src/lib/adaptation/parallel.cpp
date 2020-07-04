@@ -143,6 +143,14 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   if (rank == 0 )
   topology_in.points().print(true);
 
+  // set the fixed2fixed map as the identity matrix
+  std::map<index_t,index_t> fixed2fixed;
+  for (index_t k=0;k<topology_in.points().nb();k++)
+  {
+    if (!topology_in.points().fixed(k)) continue;
+    fixed2fixed.insert( {k,k} );
+  }
+
   // determine the geometric entities
   std::set<Entity*> entities0;
   for (index_t k=0;k<topology_in.points().nb();k++)
@@ -232,7 +240,6 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
       {
         index_t q = *it;
         index_t p = parts[k]->global2local(q);
-        if (parts[k]->points().fixed( p ) ) continue;
         halo.push_back(p);
         boundary_points.insert(q);
       }
@@ -296,15 +303,23 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   }
   mpi::barrier();
 
+  // keep track of all the maps!
   std::map<index_t,index_t> output2interface;
   std::map<index_t,index_t> interface2output;
+  std::map<index_t,index_t> global2output;
+  std::map<index_t,index_t> output2output;
 
   // do the serial adaptation
   int finished = finished0;
   if (rank == 0)
   {
+    for (index_t k=0;k<topology_in.points().nb();k++)
+    {
+      if (boundary_points.find(k)!=boundary_points.end()) continue;
+      global2output.insert( )
+    }
+
     // add the interface points to the global topology
-    std::map<index_t,index_t> global2output;
     for (std::set<index_t>::iterator it=boundary_points.begin();it!=boundary_points.end();++it)
     {
       index_t p = *it;
@@ -314,6 +329,13 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
       topology_out.points().set_param( q , topology_in.points().u(p) );
       topology_out.points().set_fixed( q , topology_in.points().fixed(p) );
       global2output.insert( {p,q} );
+
+      if (topology_in.points().fixed(p))
+      {
+        // adjust the fixed2fixed map
+        avro_assert( fixed2fixed.find(p)!=fixed2fixed.end() );
+        fixed2fixed[q] = p;
+      }
     }
     printf("added %lu points to output topology\n",global2output.size());
 
@@ -338,7 +360,7 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
       std::map<index_t,index_t> part2output;
       for (index_t j=0;j<parts[k]->points().nb();j++)
       {
-        index_t p = parts[k]->local2global(j);
+        index_t p = parts[k]->local2global(j); // will this be valid when the mesh is adapted??? might need to keep track of which points have a valid map
 
         // this vertex already exists
         if (global2output.find(p)!=global2output.end())
@@ -354,6 +376,9 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
         topology_out.points().set_param( q , parts[k]->points().u(j) );
         topology_out.points().set_fixed( q , parts[k]->points().fixed(j) );
         part2output.insert( {j,q} );
+
+        // determine if this vertex is one of the original fixed vertices
+        // TODO
       }
 
       // add all elements in the partition to the output topology
@@ -446,7 +471,6 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
     Points P(dim);
     topology_out.points().copy(P);
 
-    std::map<index_t,index_t> output2output;
     topology_out.move_to_front(pts,&output2output);
 
     // make sure the map is correct!
@@ -478,6 +502,24 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
     avro_assert( interface2output.size() == interface2output2.size() + pts.size() );
     interface2output = interface2output2;
     avro_assert( topology_out.all_points_accounted() );
+
+    std::map<index_t,index_t> global2output2;
+    for (std::map<index_t,index_t>::const_iterator it=global2output.begin();it!=global2output.end();it++)
+    {
+      index_t p_g = it->first;
+      index_t p_o = it->second;
+
+      // compute the new output point
+      index_t p_o2 = output2output.at(p_o);
+      if (p_o2 < pts.size()) continue;
+      p_o2 -= pts.size();
+
+      real_t d = numerics::distance( topology_in.points()[p_g] , topology_out.points()[p_o2] , dim );
+      avro_assert( d < 1e-3 );
+      global2output2.insert({p_g,p_o2});
+      printf("global point %lu maps to output point %lu\n",p_g,p_o2);
+    }
+    global2output = global2output2;
   }
   else
   {
@@ -529,7 +571,6 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
 
   // assign the boundary of the interface as fixed so that it will not be considered a partition "boundary"
   interface->build_structures();
-  #if 1
   Facets facets(*interface);
   facets.compute();
   std::vector<index_t> facet(number);
@@ -543,7 +584,8 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
       interface->points().set_fixed( facet[j] , true );
     }
   }
-  #endif
+  printf("interface points:\n");
+  interface->points().print(true);
   avro_assert( interface->all_points_accounted() );
 
   if (rank==0 && number<4)

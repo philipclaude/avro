@@ -537,7 +537,7 @@ class SheetBody : public Body
 {
 public:
   SheetBody( const Context* context , Shell& shell ) :
-    Body(*context,&object_)
+    Body(*context)
   {
     #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , BODY, SHEETBODY , NULL , 1 , shell.object() , NULL, &object_) );
@@ -545,6 +545,7 @@ public:
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
+    set_object( object_ );
   }
 private:
   ego object_;
@@ -554,7 +555,7 @@ class FaceBody : public Body
 {
 public:
   FaceBody( const Context* context , Face& face ) :
-    Body(*context,&object_)
+    Body(*context)
   {
     // face body from a single face
     #ifndef AVRO_NO_ESP
@@ -563,6 +564,7 @@ public:
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
+    set_object( object_ );
   }
 private:
   ego object_;
@@ -573,16 +575,17 @@ class WireBody : public Body
 public:
 
   WireBody( const Context* context , Edge edge ) :
-    Body(*context,&object_)
+    Body(*context)
   {
     EdgeLoop loop(context,CLOSED);
     loop.add(edge,1);
     loop.make();
     EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(),NULL, BODY , WIREBODY , NULL , 1 , loop.object() , NULL , &object_ ) );
+    set_object( object_ );
   }
 
   WireBody( const Context* context , ego* edge , index_t nedge ) :
-    Body(*context,&object_)
+    Body(*context)
   {
     EdgeLoop loop(context,CLOSED);
     for (index_t k=0;k<nedge;k++)
@@ -597,10 +600,11 @@ public:
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
+    set_object( object_ );
   }
 
   WireBody( const Context* context , EdgeLoop& loop ) :
-    Body(*context,&object_)
+    Body(*context)
   {
     #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(),NULL, BODY , WIREBODY , NULL , 1 , loop.object() , NULL , &object_ ) );
@@ -608,6 +612,7 @@ public:
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
+    set_object( object_ );
   }
 private:
   ego object_;
