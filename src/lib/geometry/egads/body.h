@@ -31,14 +31,21 @@ class Context;
 class Body : public avro::Body
 {
 public:
-  Body( const Context& context , ego* object ) :
+  Body( const Context& context , ego object ) :
     avro::Body(0),
     context_(context),
     model_(NULL),
     object_(object)
   {}
 
-  Body( ego* object , Model* model ) :
+  Body( const Context& context ) :
+    avro::Body(0),
+    context_(context),
+    model_(NULL),
+    object_(0)
+  {}
+
+  Body( ego object , Model* model ) :
     avro::Body(0),
     context_(model->context()),
     model_(model),
@@ -57,13 +64,14 @@ public:
   void print() const;
   void tessellate( BodyTessellation& body_tess ) const;
 
-  ego* object() { return object_; }
-  const ego* object() const { return object_; }
+  ego object() { return object_; }
+  const ego object() const { return object_; }
+  void set_object( ego x ) { object_ = x; }
 
 protected:
   const Context& context_;
   EGADS::Model* model_;
-  ego* object_;
+  ego object_;
   egoData data_;
 
   std::map<ego,Entity_ptr> children_;

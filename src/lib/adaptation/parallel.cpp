@@ -1,3 +1,6 @@
+#if 0
+#include "adaptation/parallel0.hpp"
+#else
 #include "common/mpi.hpp"
 #include "common/process.h"
 
@@ -137,7 +140,16 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   const coord_t udim = topology_in.points().udim();
   const coord_t number = topology_in.number();
 
-  //if (rank==0) topology_in.points().print(true);
+  if (rank == 0 )
+  topology_in.points().print(true);
+
+  // set the fixed2fixed map as the identity matrix
+  std::map<index_t,index_t> fixed2fixed;
+  for (index_t k=0;k<topology_in.points().nb();k++)
+  {
+    if (!topology_in.points().fixed(k)) continue;
+    fixed2fixed.insert( {k,k} );
+  }
 
   // determine the geometric entities
   std::set<Entity*> entities0;
@@ -170,12 +182,6 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   }
   else
   {
-    #if 0
-    index_t nb_partition0 = nb_partition;
-    nb_partition = topology_in.nb()/partition_size;
-    if (nb_partition>nb_partition0) nb_partition = nb_partition0;
-    #endif
-
     // only turn on processors which are necessary
     for (index_t j=0;j<nb_partition;j++)
       active[j+1] = ACTIVE;
@@ -196,7 +202,8 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   for (index_t k=0;k<active.size();k++)
     nb_active += active[k];
   if (nb_active == 0) return 0; // we're done!
-  printf("nb_active processors = %lu\n",nb_active);
+  if (rank == 0)
+    printf("*** nb_active processors = %lu ***\n",nb_active);
 
   std::shared_ptr<AdaptationInterface<type> > interface = nullptr;
   std::shared_ptr<AdaptationChunk<type> > partition = nullptr;
@@ -206,82 +213,46 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   // calls into this function can still be made
   interface = std::make_shared< AdaptationInterface<type> >(dim,udim,number);
 
-  std::vector<std::set<index_t>> halo_points( nb_partition );
+  std::vector<std::set<index_t>> partition_boundary_points( nb_partition );
+  std::set<index_t> boundary_points;
   int reduce_partitions = 0;
   if (rank == 0)
   {
     avro_assert( topology_in.nb() > 0 );
 
-    // copy in all the global points into the partion
-    // we will prune unused points later
-    topology_in.points().copy( interface->points() );
-
-    std::vector< std::shared_ptr<Topology_Partition<type>> >parts( nb_partition );
-
     printf("--> partitioning level %lu with %lu elements into %d partitions\n",level,topology_in.nb(),nb_partition);
+    std::vector< std::shared_ptr<Topology_Partition<type>> >parts( nb_partition );
     Partition<type> partition(topology_in);
     partition.compute(nb_partition);
 
-    // extract the partitions along with the interface points
+    // extract the partitions along with the points on the partition boundaries
     partition.get(parts);
-    partition.compute_interface_points( halo_points );
+    partition.compute_interface_points( partition_boundary_points );
 
     for (index_t k=0;k<parts.size();k++)
     {
       parts[k]->set_entities(entities);
 
       // extract the halo for this partition and map to local indices
-      #if 0
-      std::vector<index_t> halo( halo_points[k].begin() , halo_points[k].end() );
-      for (index_t j=0;j<halo.size();j++)
-        halo[j] = parts[k]->global2local( halo[j] );
-      #else
       std::vector<index_t> halo;
       std::set<index_t>::iterator it;
-      for (it=halo_points[k].begin();it!=halo_points[k].end();it++)
+      for (it=partition_boundary_points[k].begin();it!=partition_boundary_points[k].end();it++)
       {
-        if (parts[k]->points().fixed( *it ) ) continue;
-        halo.push_back( parts[k]->global2local( *it ) );
-      }
-      #endif
-
-      // compute the set of elements touching a halo point
-      parts[k]->neighbours().fromscratch() = true;
-      parts[k]->neighbours().compute();
-      parts[k]->inverse().build();
-      std::vector<index_t> crust;
-      parts[k]->compute_crust( halo , crust );
-
-      // check if more than half of the partition is crust
-      //if (2*crust.size() > parts[k]->nb())
-      if (crust.size() >= parts[k]->nb())
-      {
-        // initiate the flag that partitions need to be reduced
-        reduce_partitions = 1;
+        index_t q = *it;
+        index_t p = parts[k]->global2local(q);
+        halo.push_back(p);
+        boundary_points.insert(q);
       }
 
-      // add the crust to the interface
-      // crust elements are in local indices, convert to global
-      for (index_t j=0;j<crust.size();j++)
-      {
-        std::vector<index_t> s = parts[k]->get( crust[j] );
-        for (index_t i=0;i<s.size();i++)
-          s[i] = parts[k]->local2global(s[i]);
-        //if (level==0)
-        interface->Topology<index_t>::add(s.data(),s.size());
-      }
-      printf("partition %lu has %lu elements with %lu elements in the crust\n",k+1,parts[k]->nb(),crust.size());
-
-      // remove crust elements from the partition since they do not get adapted
+      // move the partition boundary points to the front
       std::map<index_t,index_t> idx;
-      parts[k]->move_to_front( halo , &idx );
-      parts[k]->map_indices(idx);
-      parts[k]->remove_elements( crust );
       std::vector<index_t> pts;
-      parts[k]->remove_unused(&pts);
-      parts[k]->remove_indices(pts);
+      parts[k]->move_to_front( halo , &idx );
+      parts[k]->map_indices(idx); // maps the local2global indices based on the shift to the front*/
+      parts[k]->remove_unused(&pts);  // removes extra points
+      parts[k]->remove_indices(pts);  // removes local2global indices associated with extra points
 
-      bool check = parts[k]->check( interface->points() );
+      bool check = parts[k]->check( topology_in.points() );
       avro_assert( check );
     }
 
@@ -309,6 +280,7 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   }
   mpi::barrier();
 
+  // communicate whether partitions should be reduced
   if (rank==0)
   {
     // the root needs to inform the processors whether the partitions should be reduced
@@ -331,97 +303,223 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   }
   mpi::barrier();
 
+  // keep track of all the maps!
+  std::map<index_t,index_t> output2interface;
+  std::map<index_t,index_t> interface2output;
+  std::map<index_t,index_t> global2output;
+  std::map<index_t,index_t> output2output;
+
   // do the serial adaptation
   int finished = finished0;
   if (rank == 0)
   {
-    // receive the adapted partitions from the processors
-    // note: the topologies are all in local indexing
+    for (index_t k=0;k<topology_in.points().nb();k++)
+    {
+      if (boundary_points.find(k)!=boundary_points.end()) continue;
+      global2output.insert( )
+    }
+
+    // add the interface points to the global topology
+    for (std::set<index_t>::iterator it=boundary_points.begin();it!=boundary_points.end();++it)
+    {
+      index_t p = *it;
+      index_t q = topology_out.points().nb();
+      topology_out.points().create( topology_in.points()[p] );
+      topology_out.points().set_entity( q , topology_in.points().entity(p) );
+      topology_out.points().set_param( q , topology_in.points().u(p) );
+      topology_out.points().set_fixed( q , topology_in.points().fixed(p) );
+      global2output.insert( {p,q} );
+
+      if (topology_in.points().fixed(p))
+      {
+        // adjust the fixed2fixed map
+        avro_assert( fixed2fixed.find(p)!=fixed2fixed.end() );
+        fixed2fixed[q] = p;
+      }
+    }
+    printf("added %lu points to output topology\n",global2output.size());
+
     std::vector< std::shared_ptr<Topology_Partition<type>> > parts( nb_partition );
     for (index_t k=0;k<nb_partition;k++)
     {
+      // receive the adapted partition from the processor
+      // note: the topology is in local indexing
+      // with fixed points in the beginning of the points container
       parts[k] = std::make_shared<Topology_Partition<type>>(dim,udim,number);
       parts[k]->set_entities(entities);
       parts[k]->receive( comm , k+1 );
 
-      bool check = parts[k]->check( interface->points() );
+      // check the local2global indexing is correct
+      bool check = parts[k]->check( topology_in.points() );
       avro_assert( check );
 
       printf("--> received adapted partition with %lu elements from processor %lu\n",parts[k]->nb(),k+1);
 
-      if (finished0==0)
+      // add the vertices to the output topology and
+      // compute the map between the local partition indices to the output indices
+      std::map<index_t,index_t> part2output;
+      for (index_t j=0;j<parts[k]->points().nb();j++)
       {
-        // all points were unfixed before they were sent here
+        index_t p = parts[k]->local2global(j); // will this be valid when the mesh is adapted??? might need to keep track of which points have a valid map
 
-
-        // compute the mantle and add it to the interface
-        // the mantle consists of all elements touching a vertex on the adapted partition boundary
-        // in which the boundary is identified from any facet that is on the actual geometry boundary
-        // and which is not currently fixed
-        parts[k]->neighbours().fromscratch() = true;
-        parts[k]->neighbours().compute();
-        parts[k]->inverse().build();
-        std::vector<index_t> interior, exterior, crust;
-        parts[k]->compute_mantle( interior , exterior , crust , halo_points[k] );
-
-        //parts[k]->points().print(true);
-
-        printf("--> there are %lu elements in the crust with %lu interior points and %lu exterior points\n",crust.size(),interior.size(),exterior.size());
-        if (2*crust.size() > parts[k]->nb() && finished0==0)
+        // this vertex already exists
+        if (global2output.find(p)!=global2output.end())
         {
-          printf("*** crust is too big --> will perform next adaptation in serial ***\n");
-          finished = 1;
+          part2output.insert( {j,global2output.at(p)} );
+          continue;
         }
 
-        std::map<index_t,index_t> local2global;
-        for (index_t j=0;j<exterior.size();j++)
-          local2global.insert( {exterior[j],parts[k]->local2global(exterior[j])} );
+        // vertex does not yet exist so add it
+        index_t q = topology_out.points().nb();
+        topology_out.points().create( parts[k]->points()[j] );
+        topology_out.points().set_entity( q , parts[k]->points().entity(j) );
+        topology_out.points().set_param( q , parts[k]->points().u(j) );
+        topology_out.points().set_fixed( q , parts[k]->points().fixed(j) );
+        part2output.insert( {j,q} );
 
-        // add all the points in the interior to the interior mesh
-        // exterior points should already be added
-        for (index_t j=0;j<interior.size();j++)
-        {
-          index_t q = interface->points().nb();
-          index_t p = interior[j];
-          interface->points().create( parts[k]->points()[p] );
-          interface->points().set_entity( q , parts[k]->points().entity(p) );
-          interface->points().set_param( q , parts[k]->points().u(p) );
-          interface->points().set_fixed( q , parts[k]->points().fixed(p) );
-          local2global.insert( {p,q} );
-        }
-
-        for (index_t j=0;j<crust.size();j++)
-        {
-          // retrieve the mantle element and add it to the interface
-          std::vector<index_t> s = parts[k]->get(crust[j]);
-
-          // the mantle element s is in local partition indexing...
-          // it needs to be converted to interface coordinates
-          // which are "global" (until we remove unused points below)
-          for (index_t i=0;i<s.size();i++)
-            s[i] = local2global.at( s[i] );
-
-          // add the mantle element to the interface
-          interface->add( s.data() , s.size() );
-        }
-
-        // remove the mantle from the adapted partition (these elements will be added by the interface)
-        parts[k]->remove_elements( crust );
-
-        // add the shrunk partition to the global topology
-        printf("[TODO]: add shrunk partition to the global topology\n");
-      }
-      else
-      {
-        avro_assert( nb_partition==1 );
-
-        // we were not requested an interface mesh
-
-        // add this adapted partition to the global topology
-        printf("[TODO]: add entire single adapted partition to output topology!\n");
+        // determine if this vertex is one of the original fixed vertices
+        // TODO
       }
 
+      // add all elements in the partition to the output topology
+      // we will remove interface elements later
+      for (index_t j=0;j<parts[k]->nb();j++)
+      {
+        // retrieve the element in the partition
+        std::vector<index_t> s = parts[k]->get(j);
+
+        // map the element indices to the output indices
+        for (index_t i=0;i<s.size();i++)
+          s[i] = part2output.at(s[i]);
+
+        // add the element to the output topology
+        topology_out.add( s.data() , s.size() );
+      }
+    } // loop over partitions
+
+    // build the data structures for the output topology
+    // so we can retrieve the ball of vertices
+    topology_out.build_structures();
+
+    // identify all elements in the output topology that are:
+    //   1) in the ball of the interface points
+    //   2) in the ball of any point in an element in the ball of (1)
+    std::set<index_t> crust;
+    std::vector<index_t> ball1,ball2;
+    for (std::set<index_t>::iterator it=boundary_points.begin();it!=boundary_points.end();++it)
+    {
+      index_t p = global2output.at( *it );
+      ball1.clear();
+      topology_out.inverse().ball( p , ball1 );
+      for (index_t i=0;i<ball1.size();i++)
+      {
+        for (index_t j=0;j<topology_out.nv(ball1[i]);j++)
+        {
+          index_t q = topology_out(ball1[i],j);
+          ball2.clear();
+          topology_out.inverse().ball( q , ball2 );
+          for (index_t k=0;k<ball2.size();k++)
+            crust.insert(ball2[k]);
+        }
+      }
     }
+    printf("there are %lu elements in the crust\n",crust.size());
+
+    // add every element in the crust to the interface
+    for (std::set<index_t>::iterator it=crust.begin();it!=crust.end();++it)
+    {
+      std::vector<index_t> s = topology_out.get( *it );
+
+      // remap the indices to local interface indices
+      for (index_t i=0;i<s.size();i++)
+      {
+        index_t p = s[i];
+        if (output2interface.find(p) == output2interface.end())
+        {
+          // add the point to the interface
+          index_t q = interface->points().nb();
+          interface->points().create( topology_out.points()[p] );
+          interface->points().set_entity( q , topology_out.points().entity(p) );
+          interface->points().set_param( q , topology_out.points().u(p) );
+          interface->points().set_fixed( q , topology_out.points().fixed(p) );
+          output2interface.insert( {p,q} );
+          interface2output.insert( {q,p} );
+        }
+        s[i] = output2interface.at(p);
+      }
+      interface->add( s.data() , s.size() );
+    }
+    avro_assert( interface->points().nb() == output2interface.size() );
+
+    // remove the crust elements
+    std::vector<index_t> crust0(crust.begin(),crust.end());
+    topology_out.remove_elements(crust0);
+
+    std::vector<index_t> pts; // the indices of the removed points (in the output)
+    topology_out.determine_unused(pts);
+
+    // check the original map
+    for (std::map<index_t,index_t>::iterator it=interface2output.begin();it!=interface2output.end();++it)
+    {
+      index_t p_i = it->first;
+      index_t p_o = it->second;
+      real_t d0 = numerics::distance( interface->points()[p_i] , topology_out.points()[ p_o ] , dim );
+      avro_assert( d0 < 1e-3 );
+    }
+
+    // copy the points so we can check the map
+    Points P(dim);
+    topology_out.points().copy(P);
+
+    topology_out.move_to_front(pts,&output2output);
+
+    // make sure the map is correct!
+    for (std::map<index_t,index_t>::const_iterator it=output2output.begin();it!=output2output.end();++it)
+    {
+      index_t p0 = it->first;
+      index_t p1 = it->second;
+
+      real_t d = numerics::distance( P[p0] , topology_out.points()[p1] , dim );
+      avro_assert( d<1e-3 );
+    }
+    topology_out.remove_points(pts);
+
+    std::map<index_t,index_t> interface2output2;
+    for (std::map<index_t,index_t>::const_iterator it=interface2output.begin();it!=interface2output.end();it++)
+    {
+      index_t p_i = it->first;
+      index_t p_o = it->second;
+
+      // compute the new output point
+      index_t p_o2 = output2output.at(p_o);
+      if (p_o2 < pts.size()) continue;
+      p_o2 -= pts.size();
+
+      real_t d = numerics::distance( interface->points()[p_i] , topology_out.points()[p_o2] , dim );
+      avro_assert( d < 1e-3 );
+      interface2output2.insert({p_i,p_o2});
+    }
+    avro_assert( interface2output.size() == interface2output2.size() + pts.size() );
+    interface2output = interface2output2;
+    avro_assert( topology_out.all_points_accounted() );
+
+    std::map<index_t,index_t> global2output2;
+    for (std::map<index_t,index_t>::const_iterator it=global2output.begin();it!=global2output.end();it++)
+    {
+      index_t p_g = it->first;
+      index_t p_o = it->second;
+
+      // compute the new output point
+      index_t p_o2 = output2output.at(p_o);
+      if (p_o2 < pts.size()) continue;
+      p_o2 -= pts.size();
+
+      real_t d = numerics::distance( topology_in.points()[p_g] , topology_out.points()[p_o2] , dim );
+      avro_assert( d < 1e-3 );
+      global2output2.insert({p_g,p_o2});
+      printf("global point %lu maps to output point %lu\n",p_g,p_o2);
+    }
+    global2output = global2output2;
   }
   else
   {
@@ -430,7 +528,7 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
     if (active[rank]==ACTIVE)
     {
       // the fixed points should have already been moved to the front
-      partition->fix_interface();
+      //partition->fix_interface();
 
       // now we can retrieve the metrics from the global list
       // TODO
@@ -438,11 +536,10 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
       // adapt the mesh
       partition->adapt();
 
-      // unfix the partition
-      for (index_t j=0;j<partition->points().nb();j++)
-        partition->points().set_fixed(j,false);
-
-      partition->unfix_interface();
+      // unfix the partition before sending it to the root
+      // everything in the partition will be fixed except for the partition
+      // boundary, which is needed to extract the correct set of mantle elements
+      //partition->unfix_interface();
 
       // send the mesh to the root processor
       printf("--> sending adapted partition %lu with %lu elements back to root\n",rank,partition->nb());
@@ -469,52 +566,63 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   mpi::barrier();
 
   // adapt the interface in parallel
-  Points interface_points;
+  Points interface_points(dim,udim);
   Topology<type> interface_out( interface_points , interface->number() );
 
-  // remove unused points in the interface (recall we used global indices when adding crust elements)
-  interface->remove_unused();
-  interface->neighbours().fromscratch() = true;
-  interface->neighbours().compute();
+  // assign the boundary of the interface as fixed so that it will not be considered a partition "boundary"
+  interface->build_structures();
+  Facets facets(*interface);
+  facets.compute();
+  std::vector<index_t> facet(number);
+  for (index_t k=0;k<facets.nb();k++)
+  {
+    if (!facets.boundary(k)) continue;
+    facets.retrieve(k,facet);
+    for (index_t j=0;j<facet.size();j++)
+    {
+      if (interface->points().entity(facet[j])!=nullptr) continue;
+      interface->points().set_fixed( facet[j] , true );
+    }
+  }
+  printf("interface points:\n");
+  interface->points().print(true);
+  avro_assert( interface->all_points_accounted() );
 
-  if (rank==0)
+  if (rank==0 && number<4)
   {
     library::meshb out;
     Mesh mesh(number,dim);
     interface->points().copy(mesh.points());
     mesh.add(interface);
     out.write(mesh,"interface-"+std::to_string(level)+".mesh",false);
+
+    topology_out.add_child( interface );
   }
+
+  // make sure the interface2output map is correct before adapting the interface
+  index_t nerror = 0;
+  index_t ncheck = 0;
+  for (index_t k=0;k<interface->points().nb();k++)
+  {
+    if (interface2output.find(k)==interface2output.end()) continue;
+    ncheck++;
+
+    index_t p = interface2output.at(k);
+    real_t d = numerics::distance( interface->points()[k] , topology_out.points()[p] , dim );
+    if (d>1e-3)
+    {
+      interface->points().print(k);
+      topology_out.points().print(p);
+      printf("distance = %g\n",d);
+      nerror++;
+    }
+  }
+  if (rank == 0 )
+    printf("there were %lu errors out of %lu\n",nerror,ncheck);
+  avro_assert( nerror == 0 );
 
   // retrieve the metrics passed in to the interface adaptation
   // TODO
-
-  for (index_t k=0;k<interface->points().nb();k++)
-    interface->points().set_fixed(k,false);
-
-  // assign the boundary of the interface as fixed so that it will not be considered a partition "boundary"
-  Facets facets(*interface);
-  facets.compute();
-  std::vector<index_t> facet(number);
-  index_t nb_bnd = 0;
-  std::vector<index_t> bnd_pts;
-  for (index_t k=0;k<facets.nb();k++)
-  {
-    if (!facets.boundary(k)) continue;
-    facets.retrieve(k,facet);
-    nb_bnd++;
-    for (index_t j=0;j<facet.size();j++)
-    {
-      bnd_pts.push_back(facet[j]);
-      interface->points().set_fixed( facet[j] , true );
-    }
-  }
-  uniquify(bnd_pts);
-  if (rank==0)
-  {
-    printf("number of boundary facets = %lu out of %lu\n",nb_bnd,facets.nb());
-    printf("number of boundary points = %lu out of %lu\n",bnd_pts.size(),interface->points().nb());
-  }
 
   // if the finished flag was initiated then the next adaptation must occur in serial
   if (finished==1)
@@ -524,21 +632,60 @@ adaptp( Topology<type>& topology_in , const std::vector<VertexMetric>& metrics ,
   if (finished0==0)
   {
     // adapt the interface
-    adaptp( *interface , metrics , params , interface_out , level+1 , finished );
-
-    /*if (rank==0)
-      interface->points().print(true);
+    if (level<1)
+      adaptp( *interface , metrics , params , interface_out , level+1 , finished );
     else
-      avro_assert( interface->points().nb()==0 );*/
+    {
+      // don't adapt, just copy (for now)
+      interface->points().copy(interface_out.points());
+      interface_out.TopologyBase::copy(*interface);
+    }
+
+    if (rank == 0 )
+    {
+      printf("topology_out volume = %g\n",topology_out.volume());
+      printf("interface volume = %g\n",interface->volume());
+      printf("interface out volume = %g\n",interface_out.volume());
+    }
+
+    std::vector<index_t> interface_point_map( interface_out.points().nb() );
+    for (index_t k=0;k<interface_out.points().nb();k++)
+    {
+      if (interface2output.find(k)!=interface2output.end())
+        interface_point_map[k] = interface2output.at(k);
+      else
+      {
+        interface_point_map[k] = topology_out.points().nb();
+        index_t p = topology_out.points().nb();
+        topology_out.points().create( interface_out.points()[k] );
+        topology_out.points().set_entity( p , interface_out.points().entity(k) );
+        topology_out.points().set_param( p , interface_out.points().u(k) );
+        topology_out.points().set_fixed( p , interface_out.points().fixed(k) );
+      }
+    }
 
     // accumulate the adapted interface into the global output topology
-    printf("[TODO]: add adapted interface to global topology\n");
+    for (index_t k=0;k<interface_out.nb();k++)
+    {
+      // map the element indices
+      std::vector<index_t> s = interface_out.get(k);
+      for (index_t i=0;i<s.size();i++)
+        s[i] = interface_point_map[s[i]];
+      topology_out.add( s.data() , s.size() );
+    }
+
+    for (index_t k=0;k<interface_out.nb_children();k++)
+      topology_out.add_child( interface_out.child_smptr(k) );
+
+    if (rank == 0 )
+    {
+      printf("new topology_out volume = %g\n",topology_out.volume());
+    }
   }
   else
   {
     // the interface should have been completely added by parts[0] (above)
   }
-
   mpi::barrier();
 
   return 0;
@@ -562,3 +709,5 @@ template int adaptp( Topology<Simplex>& , const std::vector<VertexMetric>& , Ada
 #endif
 
 } // avro
+
+#endif

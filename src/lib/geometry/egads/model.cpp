@@ -42,12 +42,11 @@ Model::Model( Context* context , const std::string& filename , bool split  ) :
   status = EG_getTopology( object_ , &data.reference , &data.object_class ,
                                      &data.member_type , NULL , &data.nb_children ,
                                      &data.children , &data.senses );
-  printf("detected %d bodies\n",data.nb_children);
 
   // define and build the hierarchy for each body
   for (int k=0;k<data.nb_children;k++)
   {
-    std::shared_ptr<EGADS::Body> body = std::make_shared<EGADS::Body>( data.children+k , this );
+    std::shared_ptr<EGADS::Body> body = std::make_shared<EGADS::Body>( data.children[k] , this );
 
     body->build_hierarchy();
     body_.push_back(body);
@@ -70,12 +69,11 @@ Model::Model( const std::string& filename , bool split  ) :
   status = EG_getTopology( object_ , &data.reference , &data.object_class ,
                                      &data.member_type , NULL , &data.nb_children ,
                                      &data.children , &data.senses );
-  printf("detected %d bodies\n",data.nb_children);
 
   // define and build the hierarchy for each body
   for (int k=0;k<data.nb_children;k++)
   {
-    std::shared_ptr<EGADS::Body> body = std::make_shared<EGADS::Body>( data.children+k , this );
+    std::shared_ptr<EGADS::Body> body = std::make_shared<EGADS::Body>( data.children[k] , this );
 
     body->build_hierarchy();
     body_.push_back(body);
@@ -98,7 +96,7 @@ Model::find_entity( index_t id , int object_class ) const
 
   const Body* b = dynamic_cast<const EGADS::Body*>(&body(0));
 	ego object;
-	EGADS_ENSURE_SUCCESS( EG_objectBodyTopo( *b->object() , object_class , id , &object ) );
+	EGADS_ENSURE_SUCCESS( EG_objectBodyTopo( b->object() , object_class , id , &object ) );
 	return b->lookup(object).get();
 }
 

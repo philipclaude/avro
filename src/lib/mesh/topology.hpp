@@ -177,17 +177,14 @@ template<typename type>
 void
 Topology<type>::get_elements( Topology<type>& topology ) const
 {
-  for (index_t k=0;k<nb_children();k++)
+  std::vector<const Topology<type>*> children;
+  this->get_children(children);
+  children.push_back(this);
+  for (index_t i=0;i<children.size();i++)
   {
-    if (this->child(k).number()!=topology.number())
-      continue;
-    this->child(k).get_elements(topology);
-  }
-
-  if (topology.number()==number())
-  {
-    for (index_t k=0;k<nb();k++)
-      topology.add( (*this)(k) , nv(k) );
+    if (children[i]->number()!=number()) continue;
+    for (index_t k=0;k<children[i]->nb();k++)
+      topology.add( (*children[i])(k) , nv(k) );
   }
 }
 
@@ -398,6 +395,7 @@ Topology<type>::remove_elements( const std::vector<index_t>& elems0 )
 {
   // make a copy so we can sort
   std::vector<index_t> elems(elems0.begin(),elems0.end());
+  std::sort( elems.begin() , elems.end() );
   for (index_t k=0;k<elems.size();k++)
     remove( elems[k]-k );
 }
@@ -451,10 +449,27 @@ Topology<type>::all_points_accounted() const
 
 template<typename type>
 void
+Topology<type>::determine_unused( std::vector<index_t>& pts ) const
+{
+  std::vector<bool> accounted( points_.nb() );
+  for (index_t k=0;k<data_.size();k++)
+    accounted[ data_[k] ] = true;
+
+  for (index_t k=0;k<accounted.size();k++)
+  {
+    if (!accounted[k])
+    {
+      pts.push_back(k);
+    }
+  }
+}
+
+template<typename type>
+void
 Topology<type>::remove_unused( std::vector<index_t>* pidx0 )
 {
   std::vector<bool> accounted( points_.nb() );
-  for (index_t k=0;k<data_.size();k++)\
+  for (index_t k=0;k<data_.size();k++)
     accounted[ data_[k] ] = true;
 
   std::vector<index_t> idx;
@@ -486,7 +501,6 @@ Topology<type>::move_to_front( const std::vector<index_t>& pts , std::map<index_
     pidx = &idx;
   else
     pidx = pidx0;
-
 
   for (index_t k=0;k<pts.size();k++)
   {
@@ -618,6 +632,16 @@ void
 Topology<type>::print_header() const
 {
   printf("topology %p: order = %u, number = %u\n",(void*)this,element_.order(),element_.number());
+}
+
+template<typename type>
+void
+Topology<type>::build_structures()
+{
+  neighbours_.fromscratch() = true;
+  neighbours_.forceCompute();
+  neighbours_.compute();
+  inverse_.build();
 }
 
 } // avro

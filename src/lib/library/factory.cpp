@@ -137,11 +137,11 @@ get_geometry( const std::string& name , bool& curved )
   if (name=="square")
   {
     curved = false;
-    real_t x0[3] = {0.5,0.5,0.};
+    //real_t x0[3] = {0.5,0.5,0.};
     std::shared_ptr<EGADS::Model> emodel = std::make_shared<EGADS::Model>(1);
     std::vector<real_t> lengths(2,1);
     const EGADS::Context* context = &emodel->context();
-    pbody  = std::make_shared<EGADS::Cube>(context,lengths,x0);
+    pbody  = std::make_shared<EGADS::Cube>(context,lengths);
     pmodel = emodel;
   }
   avro_assert( pbody!=nullptr );

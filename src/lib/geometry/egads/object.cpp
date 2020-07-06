@@ -55,7 +55,7 @@ Object::Object( ego* object , EGADS::Body* body ) :
   sense_required_ = false;
   egads_ = true;
 
-  identifier_ = EG_indexBodyTopo( *body_->object() , *object_ );
+  identifier_ = EG_indexBodyTopo( body_->object() , *object_ );
 
   if (data_.member_type == SREVERSE) sign_ = -1;
 
@@ -102,6 +102,12 @@ const ego*
 Object::object() const
 {
   return object_;
+}
+
+void
+Object::delete_object()
+{
+  EGADS_ENSURE_SUCCESS( EG_deleteObject(*object_) );
 }
 
 ego
@@ -163,7 +169,8 @@ Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
     u[0] = 1;
     x[0] = data_.data[0];
     x[1] = data_.data[1];
-    x[2] = data_.data[2];
+    if (x.size()==3)
+      x[2] = data_.data[2];
     return;
   }
 
@@ -222,10 +229,10 @@ Object::print(bool with_children) const
   if (with_children)
     for (coord_t i=0;i<body_->number()-number_;i++)
       printf("\t");
-  printf("EGADS: number = %u , class = %s, type = %s at %p\n",number_,
+  printf("EGADS: number = %u , class = %s, type = %s at %p, id = %d\n",number_,
   EGADS::utilities::object_class_name(data_.object_class).c_str(),
   EGADS::utilities::member_type_name(data_.object_class,data_.member_type).c_str(),
-  (void*)(this) );
+  (void*)(this) , identifier_ );
   printf("--> data = (%g,%g,%g,%g)\n",data_.data[0],data_.data[1],data_.data[2],data_.data[3]);
   if (!with_children) return;
   for (index_t k=0;k<nb_children();k++)

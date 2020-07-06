@@ -77,6 +77,8 @@ if (AVRO_WITH_MPI)
   get_dependency(PARMETIS)
   include_directories( SYSTEM ${PARMETIS_INCLUDE_DIRS} )
   list( APPEND avro_EXTERNAL_LIBRARIES ${PARMETIS_LIBRARIES} )
+
+  #include(cmake/FindZoltan.cmake)
 else()
   macro( RUN_WITH_MPIEXEC )
   endmacro()
