@@ -43,9 +43,14 @@ UT_TEST_CASE(test1)
   metric = std::make_shared<library::MetricField_UniformGeometry<Simplex>>(2,0.4);
 
   // geometry
-  #if 1
+  #if 0
   EGADS::Context context;
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  #elif 1
+  EGADS::Context context;
+  std::shared_ptr<Body> face = std::make_shared<EGADS::Face3D>( &context , 0 );
+  EGADS::Model model(2);
+  model.add_body(face);
   #else
   OpenCSM_Model model("/Users/pcaplan/Codes/EngSketchPad/data/bottle.csm");
   #endif
@@ -70,8 +75,7 @@ UT_TEST_CASE(test1)
     pmesh->points().u(k,1) = u[1];
     pmesh->points().set_entity(k,tess.points().entity(k));
   }
-
-  pmesh->points().print(true);
+  //pmesh->points().print(true);
 
   // retrieve all the triangles
   std::shared_ptr<Topology<Simplex>> ptopology;
@@ -80,13 +84,6 @@ UT_TEST_CASE(test1)
   tess.retrieve<Simplex>(0).get_elements( *ptopology );
   ptopology->element().set_parameter(true);
   ptopology->element().set_basis( BasisFunctionCategory_Lagrange );
-
-  ptopology->Table<index_t>::print();
-
-  //graphics::Visualizer vis;
-  //vis.add_topology(*ptopology);
-  //vis.run();
-  //return;
 
   // define the problem and adapt
   AdaptationParameters params;
