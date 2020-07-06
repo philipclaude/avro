@@ -71,6 +71,8 @@ UT_TEST_CASE(test1)
     pmesh->points().set_entity(k,tess.points().entity(k));
   }
 
+  pmesh->points().print(true);
+
   // retrieve all the triangles
   std::shared_ptr<Topology<Simplex>> ptopology;
   ptopology = std::make_shared<Topology<Simplex>>(pmesh->points(),2);
@@ -78,6 +80,13 @@ UT_TEST_CASE(test1)
   tess.retrieve<Simplex>(0).get_elements( *ptopology );
   ptopology->element().set_parameter(true);
   ptopology->element().set_basis( BasisFunctionCategory_Lagrange );
+
+  ptopology->Table<index_t>::print();
+
+  //graphics::Visualizer vis;
+  //vis.add_topology(*ptopology);
+  //vis.run();
+  //return;
 
   // define the problem and adapt
   AdaptationParameters params;

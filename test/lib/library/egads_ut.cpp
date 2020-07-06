@@ -60,11 +60,21 @@ UT_TEST_CASE( solid_bodies )
   std::shared_ptr<Body> cone = std::make_shared<EGADS::Cone>(&context,apex,x0,rs);
 
   // torus
-  
+  real_t dir[3] = {0,0,1};
+  real_t r0 = 0.1;
+  real_t r1 = 2.0;
+  std::shared_ptr<Body> torus = std::make_shared<EGADS::Torus>(&context,x0,dir,r1,r0);
+
+  // cylinder
+  real_t x1[3] = {0,0,1};
+  real_t rc = 0.5;
+  std::shared_ptr<Body> cylinder = std::make_shared<EGADS::Cylinder>(&context,x0,x1,rc);
 
   EGADS::Model model(2);
   model.add_body( sphere );
   model.add_body( cone );
+  model.add_body( torus );
+  model.add_body( cylinder );
 
   TessellationParameters params;
   params.standard();
@@ -75,10 +85,31 @@ UT_TEST_CASE( solid_bodies )
   for (index_t j=0;j<tess.nb_topologies();j++)
     vis.add_topology(tess.topology(j));
 
-  vis.run();
-
+  //vis.run();
 
 }
 UT_TEST_CASE_END( solid_bodies )
+
+UT_TEST_CASE( smiley_test )
+{
+  EGADS::Context context;
+  real_t x0[3] = {0,0,0};
+  //std::shared_ptr<Body> smiley = std::make_shared<EGADS::Smiley>( &context , x0 , 1.0 , 0.2 , 0.01 , 2.*M_PI/3. , 0.1 , 0.1 , M_PI/4. );
+  std::shared_ptr<Body> smiley = std::make_shared<EGADS::Face3D>( &context , 0 );
+
+  EGADS::Model model(2);
+  model.add_body(smiley);
+
+  TessellationParameters params;
+  params.standard();
+
+  ModelTessellation tess(model,params);
+
+  graphics::Visualizer vis;
+  for (index_t j=0;j<tess.nb_topologies();j++)
+    vis.add_topology(tess.topology(j));
+  vis.run();
+}
+UT_TEST_CASE_END( smiley_test )
 
 UT_TEST_SUITE_END( library_egads_suite )

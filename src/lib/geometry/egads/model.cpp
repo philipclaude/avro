@@ -42,7 +42,6 @@ Model::Model( Context* context , const std::string& filename , bool split  ) :
   status = EG_getTopology( object_ , &data.reference , &data.object_class ,
                                      &data.member_type , NULL , &data.nb_children ,
                                      &data.children , &data.senses );
-  printf("detected %d bodies\n",data.nb_children);
 
   // define and build the hierarchy for each body
   for (int k=0;k<data.nb_children;k++)
@@ -70,7 +69,6 @@ Model::Model( const std::string& filename , bool split  ) :
   status = EG_getTopology( object_ , &data.reference , &data.object_class ,
                                      &data.member_type , NULL , &data.nb_children ,
                                      &data.children , &data.senses );
-  printf("detected %d bodies\n",data.nb_children);
 
   // define and build the hierarchy for each body
   for (int k=0;k<data.nb_children;k++)

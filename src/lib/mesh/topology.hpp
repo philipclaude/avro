@@ -177,17 +177,14 @@ template<typename type>
 void
 Topology<type>::get_elements( Topology<type>& topology ) const
 {
-  for (index_t k=0;k<nb_children();k++)
+  std::vector<const Topology<type>*> children;
+  this->get_children(children);
+  children.push_back(this);
+  for (index_t i=0;i<children.size();i++)
   {
-    if (this->child(k).number()!=topology.number())
-      continue;
-    this->child(k).get_elements(topology);
-  }
-
-  if (topology.number()==number())
-  {
-    for (index_t k=0;k<nb();k++)
-      topology.add( (*this)(k) , nv(k) );
+    if (children[i]->number()!=number()) continue;
+    for (index_t k=0;k<children[i]->nb();k++)
+      topology.add( (*children[i])(k) , nv(k) );
   }
 }
 

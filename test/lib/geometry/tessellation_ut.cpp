@@ -25,8 +25,9 @@ UT_TEST_CASE(test1)
 {
   EGADS::Context context;
   //EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/tire.egads" );
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   //EGADS::Model model(&context,"/Users/pcaplan/Codes/EngSketchPad/data/basic/import_2.egads" );
-  EGADS::Model model(&context,"/Users/pcaplan/Codes/mach-II/library/geometry/turtle.step");
+  //EGADS::Model model(&context,"/Users/pcaplan/Codes/mach-II/library/geometry/turtle.step");
 
   TessellationParameters params;
   params.standard();

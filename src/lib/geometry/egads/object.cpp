@@ -104,6 +104,12 @@ Object::object() const
   return object_;
 }
 
+void
+Object::delete_object()
+{
+  EGADS_ENSURE_SUCCESS( EG_deleteObject(*object_) );
+}
+
 ego
 Object::egchild( index_t k ) const
 {
@@ -129,6 +135,8 @@ Object::build_hierarchy()
       // add the new entity to the body's full list
       body_->add_child( data_.children[k] , entity );
     }
+
+    //entity->print();
 
     // look to see if the child edge is repeated twice in the loop
     // this means the edge needs a sense for EG_getEdgeUV
@@ -223,10 +231,10 @@ Object::print(bool with_children) const
   if (with_children)
     for (coord_t i=0;i<body_->number()-number_;i++)
       printf("\t");
-  printf("EGADS: number = %u , class = %s, type = %s at %p\n",number_,
+  printf("EGADS: number = %u , class = %s, type = %s at %p, id = %d\n",number_,
   EGADS::utilities::object_class_name(data_.object_class).c_str(),
   EGADS::utilities::member_type_name(data_.object_class,data_.member_type).c_str(),
-  (void*)(this) );
+  (void*)(this) , identifier_ );
   printf("--> data = (%g,%g,%g,%g)\n",data_.data[0],data_.data[1],data_.data[2],data_.data[3]);
   if (!with_children) return;
   for (index_t k=0;k<nb_children();k++)

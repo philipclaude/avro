@@ -85,15 +85,15 @@ public:
   Torus( const Context* context , real_t* x0 , real_t* dir , real_t R , real_t r );
 };
 
-class Airfoil : public Body
+class NACA_Airfoil : public Body
 {
 public:
-  Airfoil( const Context* context , const std::string& type="naca" , real_t chord=1., real_t* digits0=NULL, index_t np=100 );
+  NACA_Airfoil( const Context* context , real_t chord=1., real_t* digits0=NULL, index_t np=100 );
 
-  void addWake( const Context* context , const real_t length , real_t* dir=NULL );
+  void add_wake( const Context* context , const real_t length , real_t* dir=NULL );
 
 protected:
-  ego getTrailingEdge();
+  ego get_trailing_edge();
   real_t te_[3];
 };
 
@@ -105,13 +105,6 @@ public:
 private:
   ego object_;
 };
-
-/*
-class Circle : public Airfoil
-{
-public:
-  Circle( const Context* context , const real_t* xc , const real_t R );
-};*/
 
 class Plane : public Object
 {
@@ -251,6 +244,22 @@ public:
     construct(&object_);
   }
 
+  Circle( const Context* context , const real_t* x , const real_t r ) :
+    Curve(context)
+  {
+    real_t dx[3] = {1.,0.,0.};
+    real_t dy[3] = {0.,1.,0.};
+    double prv[] = { x[0] , x[1] , x[2] , 1 , 0 , 0 , 0 , 1 , 0 , r };
+    prv[3] = dx[0]; prv[4] = dx[1]; prv[5] = dx[2];
+    prv[6] = dy[0]; prv[7] = dy[1]; prv[8] = dy[2];
+    c_[0]  = x[0];  c_[1]  = x[1];  c_[2]  = x[2];
+    dx_[0] = dx[0]; dx_[1] = dx[1]; dx_[2] = dx[2];
+    dy_[0] = dy[0]; dy_[1] = dy[2]; dy_[2] = dy[2];
+    r_ = r;
+    EGADS_CHECK_SUCCESS( EG_makeGeometry( *context->get() , CURVE , CIRCLE , NULL , NULL , prv , &object_ ) );
+    construct(&object_);
+  }
+
   void point( real_t* p ) const
   {
     real_t d = std::sqrt( dx_[0]*dx_[0] +dx_[1]*dx_[1] +dx_[2]*dx_[2] );
@@ -289,7 +298,6 @@ private:
   EndConditions end_;
   real_t tol_;
   real_t range_[4];
-  int periodic_;
   bool ok_;
 };
 
@@ -339,8 +347,7 @@ public:
 
   // constructor from a full circle [0,2pi]
   Edge( const Context* context , Circle& circle ) :
-    Object(*context),
-    object_(*circle.object())
+    Object(*context)
   {
     int periodic;
     EGADS_CHECK_SUCCESS( EG_getRange( *circle.object() , &range_[0] , &periodic ) );
@@ -408,10 +415,10 @@ class Surface : public Object
 public:
 
   Surface( const Context* context ) :
-    Object(*context,&object_)
+    Object(*context)
   {}
 
-  void otherCurve( ego& input , ego& output , double tol=0. )
+  void other_curve( ego& input , ego& output , double tol=0. )
   {
     EGADS_CHECK_SUCCESS( EG_otherCurve( object_ , input , tol , &output ) );
   }
@@ -432,9 +439,9 @@ public:
 
   void make( ego ref=NULL )
   {
-    avro_assert( egos_.size() == senses_.size() );
+    //avro_assert( egos_.size() == senses_.size() );
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology(*context_->get(),ref,LOOP,data_.member_type,NULL, egos_.size()  , &egos_[0] , &senses_[0] , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeTopology(*context_->get(),ref,LOOP,data_.member_type,NULL, senses_.size()  , &egos_[0] , &senses_[0] , &object_ ) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
@@ -448,11 +455,12 @@ public:
     senses_.push_back(sense);
   }
 
-  void addOther( Surface& surface , const index_t k )
+  void add_other( Surface& surface , const index_t k )
   {
     ego other;
-    surface.otherCurve( egos_[k] , other );
+    surface.other_curve( egos_[k] , other );
     egos_.push_back( other );
+    //senses_.push_back( senses_[k] );
   }
 
   std::vector<int>& senses() { return senses_; }
@@ -476,6 +484,7 @@ public:
     Surface(loop.context())
   {
     EGADS_CHECK_SUCCESS( EG_isoCline(*loop.object(), style , 0. , &object_ ) );
+    construct(&object_);
   }
 };
 
@@ -483,26 +492,29 @@ class Face : public Object
 {
 public:
   Face( EdgeLoop& loop , int memberType ) :
-    Object( *loop.context() , &object_ )
+    Object( *loop.context() )
   {
     // the easy way for planar faces
     EGADS_CHECK_SUCCESS( EG_makeFace( *loop.object() , memberType , NULL , &object_ ) );
+    construct(&object_);
   }
 
   Face( const Context* context , Spline& surface , int memberType ) :
-    Object(*context,&object_)
+    Object(*context)
   {
     EGADS_CHECK_SUCCESS( EG_makeFace( *surface.object() , memberType , surface.range() , &object_ ) );
+    construct(&object_);
   }
 
   Face( const Context* context , Plane& plane , int memberType ) :
-    Object(*context,&object_)
+    Object(*context)
   {
     EGADS_CHECK_SUCCESS( EG_makeFace( *plane.object() , memberType , plane.range() , &object_ ) );
+    construct(&object_);
   }
 
   Face( const Context* context , Isocline& surface , EdgeLoop& loop , int memberType ) :
-    Object(*context,&object_)
+    Object(*context)
   {
     // the hard way for non-planar faces
     #ifndef AVRO_NO_ESP
@@ -511,6 +523,7 @@ public:
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
+    construct(&object_);
   }
 private:
   ego object_;
@@ -619,6 +632,14 @@ private:
 
 };
 
+class Smiley : public Body
+{
+public:
+  Smiley( const Context* context , real_t* x0 , real_t rf , real_t rm , real_t hm , real_t tm , real_t re , real_t de , real_t te );
+
+private:
+  ego object_;
+};
 
 } // EGADS
 
