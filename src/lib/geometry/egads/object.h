@@ -46,6 +46,8 @@ public:
   void set_object( ego* object );
   void construct( ego* object );
 
+  void delete_object();
+
   void build_hierarchy();
 
   ego* object();

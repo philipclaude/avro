@@ -130,12 +130,17 @@ Partition<type>::compute( index_t nparts0 )
 
   std::vector<PARM_REAL> tpwgts(ncon*nparts,1./nparts);
   std::vector<PARM_REAL> ubvec(ncon,1.05);
-  PARM_INT options[3];
+  PARM_INT options[METIS_NOPTIONS];
   UNUSED(options);
 
+  #if USE_PARMETIS
   options[0] = 0;
   options[1] = 3;
-  options[2] = 0;
+  options[2] = 0; // default random seed
+  #else
+  METIS_SetDefaultOptions(options);
+  options[METIS_OPTION_SEED] = 0;
+  #endif
 
   PARM_INT edgecut = 0;
   std::vector<PARM_INT> part(topology_.nb());
@@ -159,7 +164,7 @@ Partition<type>::compute( index_t nparts0 )
                         &comm);
 #else
   METIS_PartGraphKway( &nvtxs , &ncon , xadj.data() , adjncy.data() ,
-                       NULL , NULL , NULL , &nparts , NULL , NULL , NULL , &edgecut , part.data() );
+                       NULL , NULL , NULL , &nparts , NULL , NULL , options , &edgecut , part.data() );
 #endif
 
 #if PARMETIS_MAJOR_VERSION == 4
@@ -206,8 +211,6 @@ Partition<type>::compute_interface_points( std::vector<std::set<index_t>>& halo 
   Facets facets( topology_ );
   facets.compute();
 
-  //topology_.points().print(true);
-
   // first extract all points on the interface
   std::vector<index_t> facet( topology_.number() );
   for (index_t k=0;k<facets.nb();k++)
@@ -225,11 +228,9 @@ Partition<type>::compute_interface_points( std::vector<std::set<index_t>>& halo 
     // retrieve the indices of the facet
     facets.retrieve( k , facet );
 
-    // if all points in the facet are fixed, then this is not a partition boundary
     if (fixed_facet(facet,topology_.points()))
     {
-      //print_inline(facet,"fixed facet ");
-      //avro_implement;
+      // if all points in the facet are fixed, then this is not a partition boundary
       continue;
     }
 

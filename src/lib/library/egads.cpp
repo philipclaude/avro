@@ -9,8 +9,16 @@
 //
 #include "geometry/egads/context.h"
 #include "library/egads.h"
+#include "numerics/geometry.h"
 
 #include <array>
+
+extern "C" int EG_isPlanar(ego object);
+
+#define CROSS(a,b,c)      a[0] = (b[1]*c[2]) - (b[2]*c[1]);\
+                          a[1] = (b[2]*c[0]) - (b[0]*c[2]);\
+                          a[2] = (b[0]*c[1]) - (b[1]*c[0])
+#define DOT(a,b)         (a[0]*b[0] + a[1]*b[1] + a[2]*b[2])
 
 namespace avro
 {
@@ -19,8 +27,10 @@ namespace EGADS
 {
 
 Cube::Cube( const Context* context , coord_t number ) :
-  Body(*context,&object_)
-{}
+  Body(*context)
+{
+  set_object(object_);
+}
 
 Cube::Cube( const Context* context , const std::vector<real_t>& lens , const real_t* x0 ) :
   Cube(context,lens.size())
@@ -58,7 +68,8 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
 
     WireBody wire(context,loop);
 
-    Body::object_ = wire.object();
+    object_ = wire.object();
+    set_object( wire.object() );
   }
   else if (lens.size()==3)
   {
@@ -69,6 +80,7 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
     printf("need full egads to make solid body\n");
     avro_assert_not_reached;
     #endif
+    set_object( object_ );
   }
   this->build_hierarchy();
 }
@@ -77,7 +89,8 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
 void
 SolidBody::make()
 {
-  EGADS_CHECK_SUCCESS( EG_makeSolidBody( *context_.get() , type_ , data_ , object_ ) );
+  EGADS_CHECK_SUCCESS( EG_makeSolidBody( *context_.get() , type_ , data_ , &object_ ) );
+  set_object(object_);
   build_hierarchy();
 }
 
@@ -117,8 +130,8 @@ Torus::Torus( const Context* context , real_t* x0 , real_t* dir , real_t R , rea
   make();
 }
 
-#if 0
-Plane::Plane( const Context* context , std::vector<real_t*>& x , real_t* uv )
+Plane::Plane( const Context* context , std::vector<real_t*>& x , real_t* uv ) :
+  Object(*context)
 {
   avro_assert( x.size()==3 );
   real_t u[3],v[3];
@@ -135,8 +148,8 @@ Plane::Plane( const Context* context , std::vector<real_t*>& x , real_t* uv )
   // get u x v
   CROSS(v,u,n);
 
-  geometrics::normalize(u,3);
-  geometrics::normalize(v,3);
+  numerics::normalize(u,3);
+  numerics::normalize(v,3);
 
   double data[9] = { x[0][0],  x[0][1],  x[0][2],
                     u[0], u[1], u[2],
@@ -159,7 +172,8 @@ Plane::Plane( const Context* context , std::vector<real_t*>& x , real_t* uv )
 }
 
 // constructor from a set of points, end condition and tolerance
-Spline::Spline( const Context* _context , const endConditions end , const real_t tol , const std::vector<real_t>& points , bool _surface ) :
+Spline::Spline( const Context* _context , const EndConditions end , const real_t tol , const std::vector<real_t>& points , bool _surface ) :
+  Curve(_context),
   context_(_context), surface_(_surface), end_(end), tol_(tol)
 {
   int sizes[2] = { (int)points.size()/3 , surface_ ? 1 : 0 };
@@ -170,91 +184,13 @@ Spline::Spline( const Context* _context , const endConditions end , const real_t
   EGADS_CHECK_SUCCESS( status ); // for printing message;
 }
 
-Spline::Spline( const Context* _context , const endConditions end , const real_t tol , Topology<Simplex>& topology ) :
-  context_(_context), end_(end), tol_(tol)
-{
-
-  Vertices& x = topology.vertices();
-
-  if (topology.number()==1)
-  {
-    surface_ = false;
-
-    // assume the topology edges are contiguous
-    std::vector<real_t> points( 3*(topology.nb()+1) , 0. );
-    for (index_t d=0;d<x.dim();d++)
-      points[d] = x[ topology(0,0) ][d];
-    for (index_t k=0;k<topology.nb();k++)
-    {
-      for (index_t d=0;d<x.dim();d++)
-        points[3*(k+1)+d] = x[ topology(k,1) ][d];
-    }
-
-    int sizes[2] = { (int)points.size()/3 , 0 };
-
-    int status = EG_approximate( *context_->get() , (int)end , tol , sizes , &points[0] , &object_ );
-    if (status==EGADS_SUCCESS) ok_ = true;
-    else ok_ = false;
-    EGADS_CHECK_SUCCESS( status ); // for printing message;
-
-  }
-  else if (topology.number()==2)
-  {
-    surface_ = true;
-
-    #if 1
-    // fit the entire triangulation
-    int ntri = topology.nb();
-
-    int len = int(x.nb()); // not necessary to have all of them, but as a first pass ok
-    std::vector<real_t> points(3*len,0.);
-
-    for (index_t k=0;k<x.nb();k++)
-    for (index_t d=0;d<x.dim();d++)
-      points[3*k+d] = x[k][d];
-
-    std::vector<int> tris( 3*ntri );
-    for (index_t k=0;k<topology.nb();k++)
-    for (index_t j=0;j<3;j++)
-      tris[3*k+j] = topology(k,j)+1; // 1-bias in egads fitTriangles
-    #else
-    // fit only one triangle, resulting in a planar geometry
-    int ntri = 1;
-    int len = 3;
-    std::vector<real_t> points(3*len,0);
-
-    // use the first triangle coordinates
-    for (index_t j=0;j<len;j++)
-    for (coord_t d=0;d<x.dim();d++)
-    {
-      points[3*j+d] = x[topology(0,j)][d];
-    }
-
-    std::vector<int> tris = {1,2,3};
-    #endif
-
-    int status = EG_fitTriangles( *context_->get() , len , points.data() , ntri , tris.data() , NULL , tol_ , &object_ );
-    if (status==EGADS_SUCCESS) ok_ = true;
-    else ok_ = false;
-    EGADS_CHECK_SUCCESS( status ); // for printing message;
-
-    status = EG_getRange( object_ , range_ , &periodic_ );
-    if (status==EGADS_SUCCESS) ok_ = true;
-    else ok_ = false;
-    EGADS_CHECK_SUCCESS( status ); // for printing message;
-  }
-  else
-    avro_assert_not_reached;
-
-}
-
-Spline::endConditions
+Spline::EndConditions
 Spline::condition() const
 {
   return end_;
 }
 
-real
+real_t
 Spline::tolerance() const
 {
   return tol_;
@@ -266,23 +202,24 @@ Spline::context() const
   return context_;
 }
 
-Face3D::Face3D( const Context* context , int style ) :
-  Body(context,"makeFace3D")
-{
+#define NEDGE 4
 
+Face3D::Face3D( const Context* context , int style ) :
+  Body(*context)
+{
   // construct the nodes
   real_t xyz_[3] = {0.,0.,0.};
-  Node n0(context_,xyz_);
+  Node n0(context,xyz_);
 
   xyz_[0] = 1.;
-  Node n1(context_,xyz_);
+  Node n1(context,xyz_);
 
   xyz_[0] = 0.;
   xyz_[1] = 2.;
-  Node n2(context_,xyz_);
+  Node n2(context,xyz_);
 
   xyz_[0] = 1.;
-  Node n3(context_,xyz_);
+  Node n3(context,xyz_);
 
   // construct the curves
   double p[3] = {0.,0.,0.};
@@ -294,18 +231,18 @@ Face3D::Face3D( const Context* context , int style ) :
   dx[0] = dy[2] = -1.;
   p[1] = p[2] = dx[1] = dx[2] = dy[0] = dy[1] = 0.;
   r = 0.5;
-  Circlele circle0( context_ , p , dx , dy , r );
+  Circle circle0( context , p , dx , dy , r );
 
   p[0] = p[1] = p[2] = dx[2] = 0.;
   dx[0] = 0.;
   dx[1] = 2.;
-  Line line1( context_ , p , dx );
+  Line line1( context , p , dx );
 
   p[0]  = 1.;
-  #if NEDGE==3
+  #if NEDGE == 4
   dx[0] = -1.;
   #endif
-  Line line2( context_ , p , dx );
+  Line line2( context , p , dx );
 
   p[0] = 0.5;
   p[1] = 2.;
@@ -314,21 +251,21 @@ Face3D::Face3D( const Context* context , int style ) :
   dx[0] = dy[2] = -1.;
   dx[1] = dx[2] = dy[0] = dy[1] = 0.;
   r = .5;
-  Circlele circle3( context_ , p , dx , dy , r );
+  Circle circle3( context , p , dx , dy , r );
 
   // construct the edges
-  Edge edge0(context_,circle0,n0,n1);
-  Edge edge1(context_,n0,n2);
+  Edge edge0(context,circle0,n0,n1);
+  Edge edge1(context,n0,n2);
 
   #if NEDGE == 3
-  Edge edge2(context_,n1,n2);
+  Edge edge2(context,n1,n2);
   #else
-  Edge edge2(context_,circle3,n3,n2);
-  Edge edge3(context_,n1,n3);
+  Edge edge2(context,circle3,n3,n2);
+  Edge edge3(context,n1,n3);
   #endif
 
   // make a surface without a loop
-  EdgeLoop loop0(CLOSED);
+  EdgeLoop loop0(context,CLOSED);
   loop0.add( edge0 , -1 );
   loop0.add( edge1 , 1 );
   loop0.add( edge2 , -1 );
@@ -336,70 +273,45 @@ Face3D::Face3D( const Context* context , int style ) :
   loop0.add( edge3 , -1 );
   #endif
 
-  ego faceObject;
 
   // make the loop
-  loop0.make( context_ );
-  if (EG_isPlanar(loop0.object()) == 0) {
+  loop0.make();
 
-    Face face0(loop0,SFORWARD);
-    faceObject = face0.object();
-
+  // make the face
+  std::shared_ptr<Face> face = nullptr;
+  if (EG_isPlanar(*loop0.object()) == 0)
+  {
+    face = std::make_shared<Face>(loop0,SFORWARD);
   }
   else
   {
     // get the surface that fits the loop
-    EGADSIsocline surface0(loop0,style);
-    loop0.deleteObject();
+    Isocline surface0(loop0,style);
+    loop0.delete_object();
 
     for (index_t k=0;k<NEDGE;k++)
-      loop0.addOther( surface0 , k );
+      loop0.add_other( surface0 , k );
 
     // update the loop
-    loop0.make( context_ , surface0.object() );
-    surface0.setObject( surface0.object() );
+    loop0.make( *surface0.object() );
+    surface0.set_object( surface0.object() );
 
-    Face face0( context_ , surface0 , loop0 , SFORWARD );
-    faceObject = face0.object();
-
+    face = std::make_shared<Face>( context , surface0 , loop0 , SFORWARD );
   }
 
   // make a face body
-  EGADSBody body(context_,faceObject);
-  setObject( body.object() );
+  FaceBody face_body(context,*face.get());
+  set_object( face_body.object() );
+  object_ = face_body.object();
 
-  // retrieve the info about object class and model type
-  EG_getInfo( object_ , &objectClass_ , &memberType_ , &top_ , &prev_ , &next_ );
-  determine_number();
+  build_hierarchy();
 
-  buildHierarchy();
-
+  print();
 }
 
-void
-getPoints( Topology<Simplex>& topology , std::vector<real_t>& points )
+NACA_Airfoil::NACA_Airfoil( const Context* context , real_t chord , real_t* digits0 , index_t np  ) :
+  Body(*context)
 {
-  points.clear();
-  std::vector<index_t> indices;
-  for (index_t k=0;k<topology.nb();k++)
-  {
-    indices.push_back( topology(k,0) );
-    if (k==topology.nb()-1) indices.push_back( topology(k,1) );
-  }
-
-  coord_t dlim = (topology.vertices().dim()<3) ? topology.vertices().dim() : 3;
-  for (index_t k=0;k<indices.size();k++)
-  {
-    for (coord_t d=0;d<dlim;d++)
-      points.push_back(topology.vertices()[indices[k]][d] );
-    for (coord_t d=dlim;d<3;d++)
-      points.push_back( 0. );
-  }
-}
-
-Airfoil::Airfoil( const Context* context , const std::string& type , real_t chord , real_t* digits0 , index_t np  )
-{
-#if 0
   real_t digits[4] = {0,0,1,2};
   te_[0] = chord;
   te_[1] = te_[2] = 0.;
@@ -409,36 +321,26 @@ Airfoil::Airfoil( const Context* context , const std::string& type , real_t chor
       digits[j] = digits0[j];
   }
 
-  if (type=="naca")
-  {
-    //mesh = smart_new(NACA)(np,chord,digits);
-    //topology = &mesh->topology(0);
-  }
-  else
-  {
-    avro_assert_not_reached;
-  }
-#else
+  printf("get naca airfoil points!\n");
   avro_implement;
-#endif
 
   // interpolate the airfoil
   std::vector<real_t> points;
   Spline spline( context , Spline::Slope , 1e-7 , points , false );
   Edge edge(context,spline);
 
-  EdgeLoop loop(CLOSED);
+  EdgeLoop loop(context,CLOSED);
   loop.add(edge,1);
   loop.make();
 
-  EGADSWireBody body(context,loop);
-  setObject( body.object() );
+  WireBody body(context,loop);
+  set_object( body.object() );
 
-  buildHierarchy();
+  build_hierarchy();
 }
 
 void
-Airfoil::addWake( const Context* context , const real_t length , real_t* dir0 )
+NACA_Airfoil::add_wake( const Context* context , const real_t length , real_t* dir0 )
 {
   real_t dir[3] = {0,0,0};
   if (dir0==NULL)
@@ -449,62 +351,120 @@ Airfoil::addWake( const Context* context , const real_t length , real_t* dir0 )
   }
 
   // get the node representing the trailing edge
-  ego te = getTrailingEdge();
+  ego te = get_trailing_edge();
 
   real_t xyzWake[3];
   for (coord_t d=0;d<3;d++)
     xyzWake[d] = te_[d] +length*dir[d];
 
   // create the wake edge
-  Node teNode(&te);
+  Node teNode(context,&te);
   Node wakeNode( context , xyzWake );
   Edge wake(context,teNode,wakeNode);
 
   // retrieve the airfoil edge
   //                   loop       edge
-  Edge airfoil( entity(0)->child(0)->pobject() );
+  ego* airfoil_ego = static_cast<EGADS::Object*>(&this->child(0)->child(0))->object();
+  Edge airfoil(context,airfoil_ego);
 
   // create an open loop with both airfoil and wake edges
-  EdgeLoop loop(OPEN);
+  EdgeLoop loop(context,OPEN);
   loop.add( airfoil , -1 );
   loop.add( wake , -1 );
   loop.make();
 
   // make a wirebody from the single loop
   WireBody body(context,loop);
-  setObject(body.object());
+  set_object(body.object());
 
   // build the entity hierarchy
-  buildHierarchy();
+  build_hierarchy();
 }
 
 ego
-Airfoil::getTrailingEdge()
+NACA_Airfoil::get_trailing_edge()
 {
   //     loop         edge     node
-  return entity(0)->child(0)->child(0)->object();
+  return *static_cast<EGADS::Object*>(&this->child(0)->child(0).child(0))->object();
 }
 
-Circle::Circle( const Context* context , const real_t* xc , const real_t R )
+Smiley::Smiley( const Context* context , real_t* x0 , real_t rf , real_t rm , real_t hm , real_t tm , real_t re , real_t de , real_t te ) :
+  Body(*context)
 {
-  real_t dx[3] = {1.,0.,0.};
-  real_t dy[3] = {0.,1.,0.};
-  Circlele circle( context , xc , dx , dy , R  );
-  Edge edge(context,circle);
+   // define the outer circle geometry for the head and the topological edge
+  Circle head(context,x0,rf);
+  Edge head_edge(context,head);
+  EdgeLoop loop0(context,CLOSED);
+  loop0.add( head_edge , 1 );
+  loop0.make();
 
-  te_[0] = R;
-  te_[1] = te_[2] = 0.;
+  // mouth corner coordinates
+  real_t x1[3] = { x0[0] +  rm    *cos(tm) , x0[1] -  rm    *sin(tm) , 0.0 };
+  real_t x2[3] = { x0[0] + (rm+hm)*cos(tm) , x0[1] - (rm+hm)*sin(tm) , 0.0 };
+  real_t x3[3] = { x0[0] - (rm+hm)*cos(tm) , x0[1] - (rm+hm)*sin(tm) , 0.0 };
+  real_t x4[3] = { x0[0] -  rm    *cos(tm) , x0[1] -  rm    *sin(tm) , 0.0 };
 
-  EdgeLoop loop(CLOSED);
-  loop.add(edge,1);
-  loop.make(context);
+  // create the corners of the mouth
+  Node node0(context,x1);
+  Node node1(context,x2);
+  Node node2(context,x3);
+  Node node3(context,x4);
 
-  WireBody wire(context,loop);
-  setObject(wire.object());
+  // define the geometry for the upper/lower lip
+  Circle upper_lip( context , x0 , rm );
+  Circle lower_lip( context , x0 , rm+hm );
 
-  buildHierarchy();
+  // make the edges for the mouth
+  Edge edge0(context,node0,node1);
+  Edge edge1(context,lower_lip,node2,node1);
+  Edge edge2(context,node2,node3);
+  Edge edge3(context,upper_lip,node3,node0);
+
+  // make the loop for the mouth
+  EdgeLoop loop1(context,CLOSED);
+  loop1.add( edge0 , 1 );
+  loop1.add( edge1 , 1 );
+  loop1.add( edge2 , 1 );
+  loop1.add( edge3 , 1 );
+  loop1.make();
+
+  // define the circle geometry & topology for the left eye
+  real_t xl[3] = { x0[0] - de*cos(te) , x0[1] + de*sin(te) , 0.0 };
+  Circle eyeL( context , xl , re );
+  Edge eyeL_edge( context , eyeL );
+  EdgeLoop loop2(context,CLOSED);
+  loop2.add( eyeL_edge , 1 );
+  loop2.make();
+
+  // define the circle geometry & topology for the right eye
+  real_t xr[3] = { x0[0] + de*cos(te) , x0[1] + de*sin(te) , 0.0 };
+  Circle eyeR( context , xr , re );
+  Edge eyeR_edge( context , eyeR );
+  EdgeLoop loop3(context,CLOSED);
+  loop3.add( eyeR_edge , 1 );
+  loop3.make();
+
+  // create the planar face geometry
+  std::vector<real_t> p0 = {0.,0.,0.};
+  std::vector<real_t> e0 = {1.,0.,0.};
+  std::vector<real_t> e1 = {0.,1.,0.};
+  Plane plane(context,p0.data(),e0.data(),e1.data());
+
+  // define the face from the collection of loops
+  ego face;
+  ego loops[4] = { *loop0.object() , *loop1.object() , *loop2.object() , *loop3.object() };
+  int senses[4] = {1,-1,-1,-1};
+  EGADS_ENSURE_SUCCESS( EG_makeTopology( *context->get() , *plane.object() , FACE , SFORWARD , NULL , 4 , loops , senses , &face ) );
+
+  // create a body from the face
+  FaceBody body(context,face);
+  object_ = body.object();
+
+  // build it!
+  set_object(object_);
+  build_hierarchy();
 }
-#endif
+
 
 #endif
 

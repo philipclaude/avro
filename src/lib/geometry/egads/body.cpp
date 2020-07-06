@@ -29,7 +29,7 @@ Body::build_hierarchy()
   avro_assert( nb_entities()==0 );
 
   // get the topology of the associated ego with the children
-  EGADS_ENSURE_SUCCESS( EG_getTopology( *object_ , &data_.reference , &data_.object_class ,
+  EGADS_ENSURE_SUCCESS( EG_getTopology( object_ , &data_.reference , &data_.object_class ,
                         &data_.member_type , data_.data , &data_.nb_children , &data_.children , &data_.senses ) );
 
   // loop through the children obtained from egads
@@ -40,6 +40,7 @@ Body::build_hierarchy()
     std::shared_ptr<EGADS::Object> entity;
     entity = std::make_shared<EGADS::Object>(&data_.children[k],this);
     add(entity);
+    add_child( data_.children[k] , entity );
 
     // build the entity hierarchy
     entity->build_hierarchy();
@@ -115,7 +116,7 @@ get_tessellation_node( Entity* node , ego tess , BodyTessellation& body_tess )
 
 		if (ptype!=0) continue; // not a node vertex
 
-		if (pindex!=EG_indexBodyTopo(body_->object(),object_)) continue; // not this node
+		if (pindex!=EG_indexBodyTopo(body_->object(),&object_)) continue; // not this node
 		index = k;
 		break;
 
@@ -131,7 +132,7 @@ get_tessellation_node( Entity* node , ego tess , BodyTessellation& body_tess )
 #endif
 
 std::shared_ptr<TopologyBase>
-get_tessellation_node( ego body , ego egads_tess , ego node , BodyTessellation& tess , TessellationParameters& params )
+get_tessellation_node( ego body , ego egads_tess , ego node , BodyTessellation& tess , TessellationParameters& params , index_t offset )
 {
   // allocate the appropriate object to hold the tessellation
   std::shared_ptr<TopologyBase> topology = nullptr;
@@ -164,13 +165,14 @@ get_tessellation_node( ego body , ego egads_tess , ego node , BodyTessellation& 
   avro_assert( index < index_t(nb_points) );
 
   // add the element
+  index += offset;
   topology->add( &index , 1 );
 
   return topology;
 }
 
 std::shared_ptr<TopologyBase>
-get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTessellation& tess , TessellationParameters& params )
+get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTessellation& tess , TessellationParameters& params , index_t offset )
 {
   // allocate the appropriate object to hold the tessellation
   std::shared_ptr<TopologyBase> topology = nullptr;
@@ -219,7 +221,7 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
     edges[2*(k-1)  ] = (index_t) e0 -1;
     edges[2*(k-1)+1] = (index_t) e1 -1;
 
-    tess.model_points().set_param( e1-1 , {u[k],1e20} );
+    tess.model_points().set_param( e1-1 + offset , {u[k],1e20} );
 
     // the first index is now the last one
     e0 = e1;
@@ -232,7 +234,7 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
   {
     for (index_t i=0;i<2;i++)
 		{
-      s[i] = edges[2*k+i];
+      s[i] = edges[2*k+i] + offset;
 		}
     topology->add(s.data(),s.size());
   }
@@ -243,7 +245,7 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
 }
 
 std::shared_ptr<TopologyBase>
-get_tessellation_face( ego body , ego egads_tess , const Object& face , BodyTessellation& tess , TessellationParameters& params )
+get_tessellation_face( ego body , ego egads_tess , const Object& face , BodyTessellation& tess , TessellationParameters& params , index_t offset )
 {
   // allocate the appropriate object to hold the tessellation
   std::shared_ptr<TopologyBase> topology = nullptr;
@@ -251,6 +253,8 @@ get_tessellation_face( ego body , ego egads_tess , const Object& face , BodyTess
     topology = std::make_shared< Topology<Simplex> >( tess.model_points() , 2 );
   else
     avro_implement;
+
+  if (!face.tessellatable()) return topology;
 
   int status,idx;
   int nv,nt;
@@ -293,7 +297,7 @@ get_tessellation_face( ego body , ego egads_tess , const Object& face , BodyTess
   {
     for (index_t i=0;i<3;i++)
 		{
-      s[i] = triangles[3*k+i];
+      s[i] = triangles[3*k+i] + offset;
 
       // save the parameter coordinates
       index_t v = t[3*k+i] -1;
@@ -320,7 +324,7 @@ Body::tessellate( BodyTessellation& tess ) const
   double box[6],size;
 
   // get the bounding box of the model
-  EG_getBoundingBox( *object_ , box );
+  EG_getBoundingBox( object_ , box );
   size = box[3] -box[0];
   if (size < box[4] -box[1]) size = box[4] -box[1];
   if (size < box[5] -box[2]) size = box[5] -box[2];
@@ -332,10 +336,10 @@ Body::tessellate( BodyTessellation& tess ) const
   printf("sizes = (%g,%g,%g)\n",sizes[0],sizes[1],sizes[2]);
 
   // ask EGADS to tessellate the body
-  EGADS_ENSURE_SUCCESS( EG_makeTessBody( *object_ , sizes , &egads_tess ) );
+  EGADS_ENSURE_SUCCESS( EG_makeTessBody( object_ , sizes , &egads_tess ) );
 
   // get the number of points
-  EGADS_CHECK_SUCCESS( EG_statusTessBody( egads_tess , object_ , &status , &nb_points ) );
+  EGADS_CHECK_SUCCESS( EG_statusTessBody( egads_tess , const_cast<ego*>(&object_) , &status , &nb_points ) );
   avro_assert_msg( status==1 , "egads status tessellation = %d" , status );
 
   std::shared_ptr<TopologyBase> root;
@@ -344,6 +348,8 @@ Body::tessellate( BodyTessellation& tess ) const
   else
     avro_implement;
   tess.add(root);
+
+  index_t offset = tess.model_points().nb();
 
   // add all points to the tessellation
   std::map<ego,Entity_ptr>::const_iterator it;
@@ -360,11 +366,12 @@ Body::tessellate( BodyTessellation& tess ) const
     {
       Entity* e = it->second.get();
       ego egads_object = it->first;
+
       if (!e->tessellatable()) continue; // don't assign non-tessellatable entities (e.g. loops)
 
       if (e->number()==0 && ptype==0)
       {
-        index_t idx = EG_indexBodyTopo( *object_ , egads_object );
+        index_t idx = EG_indexBodyTopo( object_ , egads_object );
         if (int(idx)==pindex)
         {
           found = true;
@@ -374,7 +381,7 @@ Body::tessellate( BodyTessellation& tess ) const
       }
       if (e->number()==1 && ptype>0)
       {
-        index_t idx = EG_indexBodyTopo( *object_ , egads_object );
+        index_t idx = EG_indexBodyTopo( object_ , egads_object );
         if (int(idx)==pindex)
         {
           found = true;
@@ -384,7 +391,7 @@ Body::tessellate( BodyTessellation& tess ) const
       }
       if (e->number()==2 && ptype<0)
       {
-        index_t idx = EG_indexBodyTopo( *object_ , egads_object );
+        index_t idx = EG_indexBodyTopo( object_ , egads_object );
         if (int(idx)==pindex)
         {
           found = true;
@@ -393,9 +400,18 @@ Body::tessellate( BodyTessellation& tess ) const
         }
       }
     }
-    avro_assert( found );
-  }
+    if (!found)
+    {
+      print();
+      for (it=children_.begin();it!=children_.end();++it)
+      {
+        if (!it->second->tessellatable()) continue;
+        it->second->print();
+      }
+    }
+    avro_assert_msg( found , "could not find entity for pindex = %d, ptype = %d" , pindex , ptype );
 
+  } // loop over points
 
   // retrieve the tessellation from each entity in the body
   std::map<Entity_ptr, std::shared_ptr<TopologyBase> > topologies;
@@ -407,17 +423,17 @@ Body::tessellate( BodyTessellation& tess ) const
     std::shared_ptr<TopologyBase> topology = nullptr;
     if (entity.number()==0)
     {
-      topology = get_tessellation_node( *object_ , egads_tess , egads_entity , tess , params );
+      topology = get_tessellation_node( object_ , egads_tess , egads_entity , tess , params , offset );
     }
     else if (entity.number()==1)
     {
       const Object& edge = static_cast<const Object&>(entity);
-      topology = get_tessellation_edge( *object_ , egads_tess , edge , tess , params );
+      topology = get_tessellation_edge( object_ , egads_tess , edge , tess , params , offset );
     }
     else if (entity.number()==2)
     {
       const Object& face = static_cast<const Object&>(entity);
-      topology = get_tessellation_face( *object_ , egads_tess , face , tess , params );
+      topology = get_tessellation_face( object_ , egads_tess , face , tess , params , offset );
     }
     else
       avro_assert_not_reached;

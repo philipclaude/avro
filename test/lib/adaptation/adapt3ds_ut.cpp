@@ -46,13 +46,18 @@ UT_TEST_CASE(test1)
   #if 1
   EGADS::Context context;
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  #elif 0 // doesn't work because I think Face3D is negatively oriented
+  EGADS::Context context;
+  std::shared_ptr<Body> face = std::make_shared<EGADS::Face3D>( &context , 0 );
+  EGADS::Model model(2);
+  model.add_body(face);
   #else
   OpenCSM_Model model("/Users/pcaplan/Codes/EngSketchPad/data/bottle.csm");
   #endif
 
   TessellationParameters tess_params;
   tess_params.standard();
-  tess_params.min_size() = 0.5;
+  tess_params.min_size() = 0.4;
   tess_params.min_angle() = 20;
 
   ModelTessellation tess(model,tess_params);
@@ -70,6 +75,7 @@ UT_TEST_CASE(test1)
     pmesh->points().u(k,1) = u[1];
     pmesh->points().set_entity(k,tess.points().entity(k));
   }
+  //pmesh->points().print(true);
 
   // retrieve all the triangles
   std::shared_ptr<Topology<Simplex>> ptopology;
@@ -97,6 +103,7 @@ UT_TEST_CASE(test1)
 
     // create the metric field
     std::vector<numerics::SymMatrixD<real_t>> fld;
+//    #pragma omp parallel for
     for (index_t k=0;k<pmesh->points().nb();k++)
       fld.push_back( (*metric.get())( pmesh->points() , k ) );
 

@@ -47,7 +47,7 @@ OpenCSM_Model::import()
     if (modl_->body[ibody].onstack!=1) continue;
 
     // retrieve the egads body
-    std::shared_ptr<EGADS::Body> pbody = std::make_shared<EGADS::Body>(&modl_->body[ibody].ebody,this);
+    std::shared_ptr<EGADS::Body> pbody = std::make_shared<EGADS::Body>(modl_->body[ibody].ebody,this);
 
     pbody->build_hierarchy();
     body_.push_back(pbody);

@@ -205,6 +205,9 @@ public:
 
   bool all_points_accounted() const;
   void remove_unused( std::vector<index_t>* idx=nullptr );
+  void determine_unused( std::vector<index_t>& pts ) const;
+
+  void build_structures();
 
 private:
   type element_;

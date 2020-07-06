@@ -13,7 +13,7 @@
 namespace avro
 {
 
-static bool
+inline bool
 fixed_facet( const std::vector<index_t>& facet , const Points& points )
 {
   for (index_t j=0;j<facet.size();j++)
@@ -48,6 +48,10 @@ public:
 
   index_t local2global( index_t k ) const;
   index_t global2local( index_t k ) const;
+
+  void reset_indices();
+  void set_local2global( index_t k , index_t global );
+  void set_global2local( index_t global , index_t k );
 
   void map_indices( const std::map<index_t,index_t>& idx );
   void remove_indices( const std::vector<index_t>& idx );
