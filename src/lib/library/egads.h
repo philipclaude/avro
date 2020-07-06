@@ -16,6 +16,8 @@
 #include "geometry/egads/context.h"
 #include "geometry/egads/object.h"
 
+#include "numerics/geometry.h"
+
 namespace avro
 {
 
@@ -112,7 +114,7 @@ public:
 
   // default constructor, basis is cartesian ex, ey about (0,0,0)
   Plane( const Context* context  ) :
-    Object(*context,&object_)
+    Object(*context)
   {
     std::vector<real_t> x = {0.,0.,0.};
     std::vector<real_t> e0 = {1.,0.,0.};
@@ -122,7 +124,7 @@ public:
 
   // constructor from a basis e0, e1 about x0
   Plane( const Context* context , double *x , double *e0 , double *e1 ) :
-    Object(*context,&object_)
+    Object(*context)
   {
     double data[9] = { x[0],  x[1],  x[2],
                       e0[0], e0[1], e0[2],
@@ -134,6 +136,7 @@ public:
     printf("need full EGADS to make geometry\n");
     avro_assert_not_reached;
     #endif
+    construct(&object_);
   }
 
   Plane( const Context* context , std::vector<real_t*>& x , real_t* uv=NULL );
@@ -364,6 +367,28 @@ public:
     construct(&object_);
   }
 
+  Edge( const Context* context , Circle& circle , Node& n0 , Node& n1 ) :
+    Object(*context)
+  {
+    // constructor for an arc
+    real_t xyz[3];
+    real_t d;
+    EGADS_ENSURE_SUCCESS( EG_invEvaluate( *circle.object() , n0.x() , &range_[0] , xyz ) );
+    d = numerics::distance( n0.x() , xyz , 3 );
+    avro_assert( d < 1e-3 );
+    EGADS_ENSURE_SUCCESS( EG_invEvaluate( *circle.object() , n1.x() , &range_[1] , xyz ) );
+    d = numerics::distance( n1.x() , xyz , 3 );
+    avro_assert( d < 1e-3 );
+    ego nodes[2] = {*n0.object(),*n1.object()};
+    #ifndef AVRO_NO_ESP
+    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *circle.object() , EDGE , TWONODE , &range_[0] , 2 , nodes , NULL , &object_ ) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
+    construct(&object_);
+  }
+
   // constructor from a spline
   Edge( const Context* context , Spline& spline , real_t* x0=NULL ) :
     Object(*context),
@@ -441,7 +466,7 @@ public:
   {
     //avro_assert( egos_.size() == senses_.size() );
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology(*context_->get(),ref,LOOP,data_.member_type,NULL, senses_.size()  , &egos_[0] , &senses_[0] , &object_ ) );
+    EGADS_ENSURE_SUCCESS( EG_makeTopology(*context_->get(),ref,LOOP,data_.member_type,NULL, senses_.size()  , &egos_[0] , &senses_[0] , &object_ ) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
@@ -525,6 +550,7 @@ public:
     #endif
     construct(&object_);
   }
+
 private:
   ego object_;
 };

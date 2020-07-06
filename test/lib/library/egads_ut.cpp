@@ -94,14 +94,15 @@ UT_TEST_CASE( smiley_test )
 {
   EGADS::Context context;
   real_t x0[3] = {0,0,0};
-  //std::shared_ptr<Body> smiley = std::make_shared<EGADS::Smiley>( &context , x0 , 1.0 , 0.2 , 0.01 , 2.*M_PI/3. , 0.1 , 0.1 , M_PI/4. );
-  std::shared_ptr<Body> smiley = std::make_shared<EGADS::Face3D>( &context , 0 );
+  std::shared_ptr<Body> smiley = std::make_shared<EGADS::Smiley>( &context , x0 , 1.0 , 0.5 , 0.1 , M_PI/8 , 0.2 , 0.45 , M_PI/5. );
+  //std::shared_ptr<Body> smiley = std::make_shared<EGADS::Face3D>( &context , 0 );
 
   EGADS::Model model(2);
   model.add_body(smiley);
 
   TessellationParameters params;
   params.standard();
+  params.min_size() = 0.1;
 
   ModelTessellation tess(model,params);
 

@@ -304,10 +304,6 @@ Face3D::Face3D( const Context* context , int style ) :
   set_object( face_body.object() );
   object_ = face_body.object();
 
-  // retrieve the info about object class and model type
-  //EG_getInfo( object_ , &data_.object_class , &data_.member_type , &data_.reference , &data_.previous , &data_.next );
-
-  //number_ = 2;
   build_hierarchy();
 
   print();
@@ -418,6 +414,7 @@ Smiley::Smiley( const Context* context , real_t* x0 , real_t rf , real_t rm , re
   Body(*context)
 {
   Circle head(context,x0,rf);
+  Edge head_edge(context,head);
 
   real_t x1[3] = { x0[0] +  rm    *cos(tm) , x0[1] -  rm    *sin(tm) , 0.0 };
   real_t x2[3] = { x0[0] + (rm+hm)*cos(tm) , x0[1] - (rm+hm)*sin(tm) , 0.0 };
@@ -429,10 +426,16 @@ Smiley::Smiley( const Context* context , real_t* x0 , real_t rf , real_t rm , re
   Node node2(context,x3);
   Node node3(context,x4);
 
+  Circle upper_lip( context , x0 , rm );
+  Circle lower_lip( context , x0 , rm+hm );
+
+
   Edge edge0(context,node0,node1);
-  Edge edge1(context,node1,node2);
   Edge edge2(context,node2,node3);
-  Edge edge3(context,node3,node0);
+
+  Edge edge1(context,lower_lip,node2,node1);
+  printf("made lower lip\n");
+  Edge edge3(context,upper_lip,node3,node0);
 
   real_t xr[3] = { x0[0] + de*cos(te) , x0[1] + de*sin(te) , 0.0 };
   Circle eyeR( context , xr , re );
@@ -442,16 +445,57 @@ Smiley::Smiley( const Context* context , real_t* x0 , real_t rf , real_t rm , re
   Circle eyeL( context , xl , re );
   Edge eyeL_edge( context , eyeL );
 
+  EdgeLoop mouth(context,CLOSED);
+  mouth.add(edge0,1);
+  mouth.add(edge1,1);
+  mouth.add(edge2,1);
+  mouth.add(edge3,1);
+  mouth.make();
+
+  EdgeLoop eye1(context,CLOSED);
+  eye1.add( eyeL_edge , 1 );
+  EdgeLoop eye2(context,CLOSED);
+  eye2.add( eyeR_edge , 1 );
+
+  eye1.make();
+  eye2.make();
+
+  EdgeLoop head_loop(context,CLOSED);
+  head_loop.add(head_edge,1);
+  head_loop.make();
+
   EdgeLoop loop(context,CLOSED);
-  loop.add(edge0,1);
-  loop.add(edge1,1);
-  loop.add(edge2,1);
-  loop.add(edge3,1);
-  //loop.add(eyeR_edge,1);
-  //loop.add(eyeL_edge,-1);
+  loop.add( head_edge , 1 );
   loop.make();
 
+  EdgeLoop loop2(context,CLOSED);
+  loop2.add( edge0 , 1 );
+  loop2.add( edge1 , 1 );
+  loop2.add( edge2 , 1 );
+  loop2.add( edge3 , 1 );
+  loop2.make();
+
+  EdgeLoop loop3(context,CLOSED);
+  loop3.add( eyeL_edge , 1 );
+  loop3.make();
+
+  EdgeLoop loop4(context,CLOSED);
+  loop4.add( eyeR_edge , 1 );
+  loop4.make();
+
+  std::vector<real_t> p0 = {0.,0.,0.};
+  std::vector<real_t> e0 = {1.,0.,0.};
+  std::vector<real_t> e1 = {0.,1.,0.};
+  Plane plane(context,p0.data(),e0.data(),e1.data());
+
+  ego face_ego;
+  ego loops[4] = { *loop.object() , *loop2.object() , *loop3.object() , *loop4.object() };
+  int senses[4] = {1,-1,-1,-1};
+  EGADS_ENSURE_SUCCESS( EG_makeTopology( *context->get() , *plane.object() , FACE , SFORWARD , NULL , 4 , loops , senses , &face_ego ) );
+
   Face face(loop,SFORWARD);
+  face.construct(&face_ego);
+
   FaceBody body(context,face);
   object_ = body.object();
 
