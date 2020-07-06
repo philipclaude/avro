@@ -388,117 +388,79 @@ NACA_Airfoil::get_trailing_edge()
   return *static_cast<EGADS::Object*>(&this->child(0)->child(0).child(0))->object();
 }
 
-/*
-Circle::Circle( const Context* context , const real_t* xc , const real_t R )
-{
-  real_t dx[3] = {1.,0.,0.};
-  real_t dy[3] = {0.,1.,0.};
-  Circlele circle( context , xc , dx , dy , R  );
-  Edge edge(context,circle);
-
-  te_[0] = R;
-  te_[1] = te_[2] = 0.;
-
-  EdgeLoop loop(CLOSED);
-  loop.add(edge,1);
-  loop.make(context);
-
-  WireBody wire(context,loop);
-  set_object(wire.object());
-
-  build_hierarchy();
-}
-*/
-
 Smiley::Smiley( const Context* context , real_t* x0 , real_t rf , real_t rm , real_t hm , real_t tm , real_t re , real_t de , real_t te ) :
   Body(*context)
 {
+   // define the outer circle geometry for the head and the topological edge
   Circle head(context,x0,rf);
   Edge head_edge(context,head);
+  EdgeLoop loop0(context,CLOSED);
+  loop0.add( head_edge , 1 );
+  loop0.make();
 
+  // mouth corner coordinates
   real_t x1[3] = { x0[0] +  rm    *cos(tm) , x0[1] -  rm    *sin(tm) , 0.0 };
   real_t x2[3] = { x0[0] + (rm+hm)*cos(tm) , x0[1] - (rm+hm)*sin(tm) , 0.0 };
   real_t x3[3] = { x0[0] - (rm+hm)*cos(tm) , x0[1] - (rm+hm)*sin(tm) , 0.0 };
   real_t x4[3] = { x0[0] -  rm    *cos(tm) , x0[1] -  rm    *sin(tm) , 0.0 };
 
+  // create the corners of the mouth
   Node node0(context,x1);
   Node node1(context,x2);
   Node node2(context,x3);
   Node node3(context,x4);
 
+  // define the geometry for the upper/lower lip
   Circle upper_lip( context , x0 , rm );
   Circle lower_lip( context , x0 , rm+hm );
 
-
+  // make the edges for the mouth
   Edge edge0(context,node0,node1);
-  Edge edge2(context,node2,node3);
-
   Edge edge1(context,lower_lip,node2,node1);
-  printf("made lower lip\n");
+  Edge edge2(context,node2,node3);
   Edge edge3(context,upper_lip,node3,node0);
 
-  real_t xr[3] = { x0[0] + de*cos(te) , x0[1] + de*sin(te) , 0.0 };
-  Circle eyeR( context , xr , re );
-  Edge eyeR_edge( context , eyeR );
+  // make the loop for the mouth
+  EdgeLoop loop1(context,CLOSED);
+  loop1.add( edge0 , 1 );
+  loop1.add( edge1 , 1 );
+  loop1.add( edge2 , 1 );
+  loop1.add( edge3 , 1 );
+  loop1.make();
 
+  // define the circle geometry & topology for the left eye
   real_t xl[3] = { x0[0] - de*cos(te) , x0[1] + de*sin(te) , 0.0 };
   Circle eyeL( context , xl , re );
   Edge eyeL_edge( context , eyeL );
-
-  EdgeLoop mouth(context,CLOSED);
-  mouth.add(edge0,1);
-  mouth.add(edge1,1);
-  mouth.add(edge2,1);
-  mouth.add(edge3,1);
-  mouth.make();
-
-  EdgeLoop eye1(context,CLOSED);
-  eye1.add( eyeL_edge , 1 );
-  EdgeLoop eye2(context,CLOSED);
-  eye2.add( eyeR_edge , 1 );
-
-  eye1.make();
-  eye2.make();
-
-  EdgeLoop head_loop(context,CLOSED);
-  head_loop.add(head_edge,1);
-  head_loop.make();
-
-  EdgeLoop loop(context,CLOSED);
-  loop.add( head_edge , 1 );
-  loop.make();
-
   EdgeLoop loop2(context,CLOSED);
-  loop2.add( edge0 , 1 );
-  loop2.add( edge1 , 1 );
-  loop2.add( edge2 , 1 );
-  loop2.add( edge3 , 1 );
+  loop2.add( eyeL_edge , 1 );
   loop2.make();
 
+  // define the circle geometry & topology for the right eye
+  real_t xr[3] = { x0[0] + de*cos(te) , x0[1] + de*sin(te) , 0.0 };
+  Circle eyeR( context , xr , re );
+  Edge eyeR_edge( context , eyeR );
   EdgeLoop loop3(context,CLOSED);
-  loop3.add( eyeL_edge , 1 );
+  loop3.add( eyeR_edge , 1 );
   loop3.make();
 
-  EdgeLoop loop4(context,CLOSED);
-  loop4.add( eyeR_edge , 1 );
-  loop4.make();
-
+  // create the planar face geometry
   std::vector<real_t> p0 = {0.,0.,0.};
   std::vector<real_t> e0 = {1.,0.,0.};
   std::vector<real_t> e1 = {0.,1.,0.};
   Plane plane(context,p0.data(),e0.data(),e1.data());
 
-  ego face_ego;
-  ego loops[4] = { *loop.object() , *loop2.object() , *loop3.object() , *loop4.object() };
+  // define the face from the collection of loops
+  ego face;
+  ego loops[4] = { *loop0.object() , *loop1.object() , *loop2.object() , *loop3.object() };
   int senses[4] = {1,-1,-1,-1};
-  EGADS_ENSURE_SUCCESS( EG_makeTopology( *context->get() , *plane.object() , FACE , SFORWARD , NULL , 4 , loops , senses , &face_ego ) );
+  EGADS_ENSURE_SUCCESS( EG_makeTopology( *context->get() , *plane.object() , FACE , SFORWARD , NULL , 4 , loops , senses , &face ) );
 
-  Face face(loop,SFORWARD);
-  face.construct(&face_ego);
-
+  // create a body from the face
   FaceBody body(context,face);
   object_ = body.object();
 
+  // build it!
   set_object(object_);
   build_hierarchy();
 }

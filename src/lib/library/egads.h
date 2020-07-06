@@ -605,6 +605,19 @@ public:
     #endif
     set_object( object_ );
   }
+
+  FaceBody( const Context* context , ego face ) :
+    Body(*context)
+  {
+    // face body from a single face
+    #ifndef AVRO_NO_ESP
+    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , BODY, FACEBODY , NULL , 1 , &face , NULL, &object_) );
+    #else
+    printf("need full EGADS to make topology\n");
+    avro_assert_not_reached;
+    #endif
+    set_object( object_ );
+  }
 private:
   ego object_;
 };
