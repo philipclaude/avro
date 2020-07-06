@@ -182,7 +182,7 @@ Topology<type>::get_elements( Topology<type>& topology ) const
   children.push_back(this);
   for (index_t i=0;i<children.size();i++)
   {
-    if (children[i]->number()!=number()) continue;
+    if (children[i]->number()!=topology.number()) continue;
     for (index_t k=0;k<children[i]->nb();k++)
       topology.add( (*children[i])(k) , nv(k) );
   }
