@@ -43,10 +43,10 @@ UT_TEST_CASE(test1)
   metric = std::make_shared<library::MetricField_UniformGeometry<Simplex>>(2,0.4);
 
   // geometry
-  #if 0
+  #if 1
   EGADS::Context context;
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
-  #elif 1
+  #elif 0 // doesn't work because I think Face3D is negatively oriented
   EGADS::Context context;
   std::shared_ptr<Body> face = std::make_shared<EGADS::Face3D>( &context , 0 );
   EGADS::Model model(2);
@@ -57,7 +57,7 @@ UT_TEST_CASE(test1)
 
   TessellationParameters tess_params;
   tess_params.standard();
-  tess_params.min_size() = 0.5;
+  tess_params.min_size() = 0.4;
   tess_params.min_angle() = 20;
 
   ModelTessellation tess(model,tess_params);

@@ -136,8 +136,6 @@ Object::build_hierarchy()
       body_->add_child( data_.children[k] , entity );
     }
 
-    //entity->print();
-
     // look to see if the child edge is repeated twice in the loop
     // this means the edge needs a sense for EG_getEdgeUV
     if (data_.object_class==LOOP)

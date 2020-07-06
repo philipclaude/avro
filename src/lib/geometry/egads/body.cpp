@@ -40,8 +40,7 @@ Body::build_hierarchy()
     std::shared_ptr<EGADS::Object> entity;
     entity = std::make_shared<EGADS::Object>(&data_.children[k],this);
     add(entity);
-
-    Body::add_child( data_.children[k] , entity );
+    add_child( data_.children[k] , entity );
 
     // build the entity hierarchy
     entity->build_hierarchy();
@@ -274,9 +273,6 @@ get_tessellation_face( ego body , ego egads_tess , const Object& face , BodyTess
     idx = -idx;
   }
 
-  printf("retrieving tessellation..\n");
-  face.print_header();
-
   // get the tessellation of this object from the body tessellation
   status = EG_getTessFace( egads_tess , idx , &nv , &x , &u , &ptype , &pindex , &nt , &t , &ptric );
   avro_assert( status==EGADS_SUCCESS );
@@ -310,8 +306,6 @@ get_tessellation_face( ego body , ego egads_tess , const Object& face , BodyTess
 		}
     topology->add(s.data(),s.size());
   }
-
-  topology->Table<index_t>::print();
 
   free(triangles);
 
