@@ -340,7 +340,7 @@ Topology_Partition<type>::set_entities( const std::vector<Entity*>& entities )
 
 template<typename type>
 void
-Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
+Topology_Partition<type>::receive( index_t sender )
 {
   Topology<type>::clear();
   points_.clear();
@@ -382,7 +382,7 @@ Topology_Partition<type>::receive( mpi::communicator& comm , index_t sender )
 
 template<typename type>
 void
-Topology_Partition<type>::send( mpi::communicator& comm , index_t receiver ) const
+Topology_Partition<type>::send( index_t receiver ) const
 {
   // send the topology
   mpi::send( mpi::blocking{} , this->data_ ,  receiver , TAG_CELL_INDEX );

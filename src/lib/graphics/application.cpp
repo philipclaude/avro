@@ -104,6 +104,7 @@ Application<GLFW_Interface<API_t>>::Application() :
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
   #endif
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 }
 
 template<typename API_t>

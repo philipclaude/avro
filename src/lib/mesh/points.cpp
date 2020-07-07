@@ -80,6 +80,7 @@ Points::create( const real_t* x )
 	body_.add(0);
 	primitive_.add(NULL);
 	fixed_.add(false);
+	global_.add(nb()); // 1-bias
 }
 
 void
@@ -109,6 +110,7 @@ Points::copy( Points& v , const bool ghosts) const
     v.set_entity( k , primitive_[k] );
     v.set_fixed( k , fixed_[k] );
     v.set_param( k , u(k) );
+		v.set_global( k , global_[k] );
   }
 
 	for (index_t k=0;k<incidence_.nb();k++)
@@ -132,6 +134,7 @@ Points::create_ghost()
 	body_.insert( nb_ghost_ , nb_ghost_ );
 	primitive_.insert( nb_ghost_ , NULL );
 	fixed_.insert( nb_ghost_ , false );
+	global_.insert( nb_ghost_ , 0 );
 
 	// increment the ghost counter
 	nb_ghost_++;
@@ -233,6 +236,7 @@ Points::remove( const index_t k )
 	body_.remove(k);
 	primitive_.remove(k);
 	fixed_.remove(k);
+	global_.remove(k);
 
 	if (k<nb_ghost_) nb_ghost_--;
 }

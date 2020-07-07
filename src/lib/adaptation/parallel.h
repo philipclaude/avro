@@ -17,58 +17,49 @@ template<typename type> class Topology;
 
 typedef numerics::SymMatrixD<real_t> VertexMetric;
 class AdaptationParameters;
+template<typename type> class Topology_Partition;
 
 template<typename type>
 class AdaptationManager
 {
 public:
-  AdaptationManager( Topology<type>& topology , std::vector<VertexMetric>& metrics , AdaptationParameters& params );
+  AdaptationManager( const Topology<type>& topology , const std::vector<VertexMetric>& metric , AdaptationParameters& params );
 
+  // extracts the topology into the working topology (partitions if necessary)
+  void initialize( const Topology<type>& topology , const std::vector<VertexMetric>& metrics );
+
+  // fixes the boundary of the partition that is not on the geometry
+  void fix_boundary();
+
+  // runs a sequence of [optional: balance]  - adapt - migrate
   void adapt();
 
-  void repartition();
-  void partition();
+  // balances all meshes across processors
+  void balance(real_t alpha=-1 , real_t beta=-1);
+
+  // migrates the interface mesh
+  void migrate();
+
+  // synchronizes global vertex numbers (at the interfaces) across all processors
+  void synchronize();
+
+  // analyzes the metric conformity on this processor,
+  // and communicates with all other processors to determine if we are done
+  bool analyze();
+
+  // retrieves the adapted and load-balanced partition
+  void retrieve( Topology<type>& topology ) const;
 
 private:
-  Topology<type>& topology_;
-  std::vector<VertexMetric> metrics_;
+
+  void send_metrics( index_t receiver , const std::vector<index_t>& global_indices , const std::vector<VertexMetric>& metrics , bool global_flag );
+  void receive_metrics( index_t sender , bool overwrite=false );
+
   AdaptationParameters& params_;
-};
+  Topology_Partition<type> topology_;
+  std::vector<VertexMetric> metrics_;
 
-
-template<typename type>
-int adaptp( Topology<type>& topology , const std::vector<VertexMetric>& metrics , AdaptationParameters& params , Topology<type>& topology_out , index_t level=0 , int finished0=0 );
-
-template<typename type>
-class AdaptationInterface : public Topology<type>
-{
-public:
-  AdaptationInterface( coord_t dim , coord_t udim , coord_t number ) :
-    Topology<type>(points_,number),
-    points_(dim,udim)
-  {}
-
-  index_t add_point( index_t p , Points& points , index_t offset=0 )
-  {
-    index_t idx;
-    if (global2local_.find(p+offset)==global2local_.end())
-    {
-      idx = points_.nb();
-      global2local_.insert( { p+offset,idx } );
-      local2global_.push_back( p+offset );
-      points_.create( points[p] );
-      points_.set_entity( idx , points.entity(p) );
-      points_.set_param( idx , points.u(p) );
-    }
-    else
-      idx = global2local_.at(p+offset);
-    return idx;
-  }
-
-private:
-  Points points_;
-  std::vector<index_t> local2global_;
-  std::map<index_t,index_t> global2local_;
+  index_t rank_;
 };
 
 } // avro

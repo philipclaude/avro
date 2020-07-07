@@ -26,7 +26,7 @@ public:
   AdaptationParameters()
   {
     names_ = {"directory","prefix","adapt_iter","output_redirect","write_mesh","write_conformity",
-    "has_interior_boundaries","curved","has_uv","nb_partition","partition_size",
+    "has_interior_boundaries","curved","has_uv","partitioned", "balanced","max_passes",
     "insertion_volume_factor","limit_insertion_length","swapout","lt_min",
     "lt_max","use_smoothing","fefloa","limit_metric"};
   }
@@ -43,8 +43,9 @@ public:
   bool& curved() { return boolParams_["curved"]; }
   bool& has_interior_boundaries() { return boolParams_["has_interior_boundaries"]; }
   bool& has_uv() { return boolParams_["has_uv"]; }
-  int& nb_partition() { return intParams_["nb_partition"]; }
-  int& partition_size() { return intParams_["partition_size"]; }
+  bool& partitioned() { return boolParams_["partitioned"]; }
+  bool& balanced() { return boolParams_["balanced"]; }
+  int& max_passes() { return intParams_["max_passes"]; }
 
   // algorithm parameters
   real_t& insertion_volume_factor() { return realParams_["insertion_volume_factor"]; }
