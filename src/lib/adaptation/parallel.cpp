@@ -308,9 +308,7 @@ AdaptationManager<type>::adapt()
     mpi::barrier();
 
     // synchronize all the global point indices
-
-
-    mpi::barrier();
+    synchronize();
 
     // analyze whether we are done
     done = analyze();
