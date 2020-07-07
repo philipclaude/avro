@@ -557,6 +557,7 @@ Points::move_to( index_t k0 , index_t k1 )
 	body_.insert( k1 , body(k0) );
 	primitive_.insert( k1 , e0 );
 	fixed_.insert( k1 , fixed(k0) );
+	global_.insert( k1 , global(k0) );
 	#endif
 	remove(k0+1); // +1 because we added a vertex in front of k0
 }
@@ -571,6 +572,7 @@ Points::clear()
   nb_ghost_ = 0;
 	incidence_.clear();
 	fixed_.clear();
+	global_.clear();
 }
 
 } // avro
