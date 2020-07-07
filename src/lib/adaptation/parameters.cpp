@@ -26,13 +26,12 @@ AdaptationParameters::standard()
   if (!stringParams_.has("output_redirect")) stringParams_["output_redirect"] = std::string();
 
   // incoming mesh proeperties
-  if (!boolParams_.has("partitioned")) boolParams_["partitioned"] = false;
   if (!boolParams_.has("curved")) boolParams_["curved"] = true;
   if (!boolParams_.has("has_interior_boundaries")) boolParams_["has_interior_boundaries"] = false;
   if (!boolParams_.has("has_uv")) boolParams_["has_uv"] = false;
-  if (!intParams_.has("nb_partition")) intParams_["nb_partition"] = 1;
-  if (!intParams_.has("partition_size")) intParams_["partition_size"] = -1;
-
+  if (!boolParams_.has("partitioned")) boolParams_["partitioned"] = false;
+  if (!boolParams_.has("balanced")) boolParams_["balacned"] = true;
+  if (!intParams_.has("max_passes")) intParams_["max_passes"] = 10;
 
   // algorithm parameters
   if (!realParams_.has("insertion_volume_factor")) realParams_["insertion_volume_factor"] = sqrt(2.);

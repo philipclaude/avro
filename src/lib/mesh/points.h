@@ -72,9 +72,11 @@ public:
   void set_param( const index_t k , const std::vector<real_t>& u );
   void set_param( const index_t k , const real_t* u );
   void set_fixed( const index_t k , bool f ) { fixed_.set(k,f); }
+  void set_global( const index_t k , index_t g ) { global_.set(k,g); }
 
   Entity* entity( const index_t k ) const { return primitive_[k]; }
   bool fixed( const index_t k ) const { return fixed_[k]; }
+  index_t global( const index_t k ) const { return global_[k]; }
 
   // boundary vertex query function
   bool boundary( const index_t k ) const;
@@ -108,6 +110,7 @@ public:
   void extract_params( index_t k , Entity* face , real_t* u ) const;
 
   real_t INFTY = 1.0e20;
+  index_t GLOBAL_UNSET = 0;
 
   bool parameter_space() const { return parameter_space_; }
   void set_parameter_space( bool x ) { parameter_space_ = x; }
@@ -128,6 +131,7 @@ protected:
   Array<Entity*> primitive_; // which geometric primitive this vertex is on
   Array<int>     body_;      // which geometry body this vertex is on
   Array<bool>    fixed_;     // whether this vertex is tagged as fixed
+  Array<index_t> global_;    // global id of this vertex (used for parallel algorithms), 1-bias since 0 = GLOBAL_UNSET
   Table<int>     incidence_; // vertex-facet/bisector incidence matrix
 
   index_t nb_ghost_; // how many ghost vertices

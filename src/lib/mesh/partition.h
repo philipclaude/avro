@@ -39,8 +39,8 @@ public:
   Entity* lookup( int identifier , int number ) const;
 
   #ifdef AVRO_MPI
-  void send( mpi::communicator& comm , index_t receiver ) const;
-  void receive( mpi::communicator& comm , index_t sender );
+  void send( index_t receiver ) const;
+  void receive( index_t sender );
   #endif
 
   void extract_points( const Points& points );
