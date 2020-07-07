@@ -227,7 +227,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 
     // compute the force on the vertex
     //f = std::pow(len,4);
-    len = std::pow(len,4);    
+    //len = std::pow(len,4);
     f = (1. -len)*std::exp(-len);
 
     for (coord_t d=0;d<dim;d++)
