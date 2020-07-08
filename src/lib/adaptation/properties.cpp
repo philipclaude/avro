@@ -153,7 +153,7 @@ void
 Properties::conformity( real_t& lunit , real_t& qunit , index_t& nb_elem ) const
 {
   lunit   = 100.*lstats_.count( sqrt(2.)/2. , sqrt(2.) )/length_.size();
-  qunit   = 100.*lstats_.count( 0.8 , 1.0 + 1e-12 )/quality_.size(); // little higher than 1 in case of precision issues
+  qunit   = 100.*qstats_.count( 0.8 , 1.0 + 1e-12 )/quality_.size(); // little higher than 1 in case of precision issues
   nb_elem = quality_.size();
 }
 

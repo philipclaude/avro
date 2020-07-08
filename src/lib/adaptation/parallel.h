@@ -18,6 +18,7 @@ template<typename type> class Topology;
 typedef numerics::SymMatrixD<real_t> VertexMetric;
 class AdaptationParameters;
 template<typename type> class Topology_Partition;
+class Mesh;
 
 template<typename type>
 class AdaptationManager
@@ -58,6 +59,9 @@ private:
   AdaptationParameters& params_;
   Topology_Partition<type> topology_;
   std::vector<VertexMetric> metrics_;
+
+  std::shared_ptr<Topology<type>> topology_out_;
+  std::shared_ptr<Mesh> mesh_out_;
 
   index_t rank_;
 };

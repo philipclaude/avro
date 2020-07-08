@@ -49,6 +49,8 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
   inserter_.curved() = params.curved();
   smoother_.curved() = params.curved();
   edge_swapper_.curved() = params.curved();
+
+  smoother_.set_equation( params.smoothing_equation() );
 }
 
 const real_t nb_smooth = 10;
@@ -508,7 +510,7 @@ adapt( AdaptationProblem& problem )
     {
       // write the full mesh
       library::meshb meshb;
-      meshb.write( problem.mesh_out , mesh_file , true );
+      meshb.write( problem.mesh_out , mesh_file , params.export_boundary() );
       printf("wrote mesh %s\n",mesh_file.c_str());
     }
     else if (topology.number()==4)

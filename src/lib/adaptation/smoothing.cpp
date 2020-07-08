@@ -71,11 +71,29 @@ Smooth<type>::Smooth( Topology<type>& _topology ) :
   delta_(0.0),
   delta_min_(1e20),
   delta_max_(-1),
-  M0_(_topology.number())
+  M0_(_topology.number()),
+  equation_avro_(true)
 {
   this->setName("smoother");
   resetRejections();
   nb_accepted_ = 0;
+}
+
+template<typename type>
+void
+Smooth<type>::set_equation( const std::string& equation )
+{
+  equation_avro_ = true;
+  return;
+  if (equation == "avro")
+    equation_avro_ = true;
+  else if (equation == "bossen-heckbert")
+    equation_avro_ = false;
+  else
+  {
+    printf("unknown smoothing equation %s\n",equation.c_str());
+    avro_assert_not_reached;
+  }
 }
 
 template<typename type>
@@ -143,6 +161,8 @@ template<typename type>
 bool
 Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 {
+  if (this->topology_.points().fixed(p)) return false;
+
   // compute the cavity around p
   this->C_.clear();
   this->topology_.intersect( {p} , this->C_ );
@@ -226,8 +246,10 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     #endif
 
     // compute the force on the vertex
-    //f = std::pow(len,4);
-    //len = std::pow(len,4);
+    // this is a variant of Bossen & Heckbert's equation
+    // which will have a non-zero df/dl at l = 0
+    if (!equation_avro_)
+      len = std::pow(len,4); // recovers bossen-heckbert smoothing equation
     f = (1. -len)*std::exp(-len);
 
     for (coord_t d=0;d<dim;d++)
@@ -290,8 +312,6 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
       // signal the smoothing was not applied
       return false;
     }
-
-    //printf("accepted smooth!\n");
     return true;
   }
 

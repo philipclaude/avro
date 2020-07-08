@@ -24,6 +24,7 @@ AdaptationParameters::standard()
   if (!boolParams_.has("write_mesh")) boolParams_["write_mesh"] = true;
   if (!boolParams_.has("write_conformity")) boolParams_["write_conformity"] = true;
   if (!stringParams_.has("output_redirect")) stringParams_["output_redirect"] = std::string();
+  if (!boolParams_.has("export_boundary")) stringParams_["export_boundary"] = true;
 
   // incoming mesh proeperties
   if (!boolParams_.has("curved")) boolParams_["curved"] = true;
@@ -42,6 +43,7 @@ AdaptationParameters::standard()
   if (!boolParams_.has("use_smoothing")) boolParams_["use_smoothing"] = true;
   if (!boolParams_.has("fefloa")) boolParams_["fefloa"] = false;
   if (!boolParams_.has("limit_metric")) boolParams_["limit_metric"] = false;
+  if (!stringParams_.has("smoothing-equuation")) stringParams_["smoothing-equation"] = "avro"; // other option is bossen-heckbert
 }
 
 } // avro

@@ -394,7 +394,7 @@ bool
 EdgeSwap<type>::valid( const index_t p , const index_t e0 , const index_t e1 )
 {
   // topology checks
-  if (this->topology_.points().fixed(e0) ||
+  if (this->topology_.points().fixed(e0) &&
       this->topology_.points().fixed(e1))
     return false;
   if (p<this->topology_.points().nb_ghost()) return false;
