@@ -19,6 +19,7 @@ typedef numerics::SymMatrixD<real_t> VertexMetric;
 class AdaptationParameters;
 template<typename type> class Topology_Partition;
 class Mesh;
+template<typename type> class PartitionField;
 
 template<typename type>
 class AdaptationManager
@@ -49,21 +50,26 @@ public:
   bool analyze();
 
   // retrieves the adapted and load-balanced partition
-  void retrieve( Topology<type>& topology ) const;
+  void retrieve( Topology<type>& topology );
+
+  // retrieves the total number of points
+  index_t get_total_nb_points() const;
 
 private:
 
   void send_metrics( index_t receiver , const std::vector<index_t>& global_indices , const std::vector<VertexMetric>& metrics , bool global_flag );
   void receive_metrics( index_t sender , bool overwrite=false );
 
+  void append_partition( index_t p , Topology<type>& topology , Topology_Partition<type>& partition ,
+                         std::vector<bool>& created , std::vector<real_t>& partition_index ) const;
+
   AdaptationParameters& params_;
   Topology_Partition<type> topology_;
   std::vector<VertexMetric> metrics_;
 
-  std::shared_ptr<Topology<type>> topology_out_;
-  std::shared_ptr<Mesh> mesh_out_;
-
   index_t rank_;
+  std::shared_ptr<PartitionField<type>> field_;
+  std::map<index_t,bool> global_created_;
 };
 
 } // avro

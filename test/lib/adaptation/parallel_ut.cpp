@@ -58,7 +58,7 @@ UT_TEST_CASE( test1 )
   coord_t number = 3;
   coord_t dim = number;
 
-  std::vector<index_t> dims(number,20);
+  std::vector<index_t> dims(number,6);
   CKF_Triangulation topology(dims);
 
   #if 1
@@ -71,9 +71,6 @@ UT_TEST_CASE( test1 )
   library::Tesseract geometry(c,lengths);
   #endif
   topology.points().attach(geometry);
-
-  topology.neighbours().fromscratch() = true;
-  topology.neighbours().compute();
 
   AdaptationParameters params;
   params.standard();

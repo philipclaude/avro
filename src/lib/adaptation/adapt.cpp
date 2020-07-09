@@ -348,10 +348,12 @@ adapt( AdaptationProblem& problem )
 
   const std::string& output_redirect = params.output_redirect();
 
+  fpos_t pos;
   int redirected_fd = 0;
   FILE *redirected_fid = 0;
   if (!output_redirect.empty())
   {
+    fgetpos(stdout,&pos);
     fflush(stdout);
     redirected_fd = dup(fileno(stdout));
     redirected_fid = freopen(output_redirect.c_str(),"w",stdout);
@@ -565,7 +567,8 @@ adapt( AdaptationProblem& problem )
     fflush(stdout);
     dup2(redirected_fd,fileno(stdout));
     close(redirected_fd);
-    fclose(redirected_fid);
+    clearerr(stdout);
+    fsetpos(stdout,&pos);
   }
 
   return result;
