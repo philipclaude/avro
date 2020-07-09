@@ -266,9 +266,7 @@ CKF_Triangulation::generate()
       idx[j] = 0;
       for (coord_t d=0;d<number_;d++)
         idx[j] += (u0[d]+table(j,d))*offset[d];
-        //idx[j] += (u0[d]+table(j,d))*pow(dims_[d],number_-d-1);
     }
-    //print_inline(idx);
 
     for (index_t k=0;k<base.nb();k++)
     {
