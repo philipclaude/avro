@@ -98,7 +98,7 @@ Object::object()
   return object_;
 }
 
-const ego*
+ego*
 Object::object() const
 {
   return object_;

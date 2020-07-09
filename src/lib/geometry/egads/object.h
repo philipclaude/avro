@@ -51,7 +51,7 @@ public:
   void build_hierarchy();
 
   ego* object();
-  const ego* object() const;
+  ego* object() const;
 
   ego egchild( index_t k ) const;
 

@@ -12,11 +12,42 @@
 
 #include "library/ckf.h"
 #include "library/egads.h"
+#include "library/metric.h"
 #include "library/tesseract.h"
+
+#include "mesh/partition.h"
 
 #include "numerics/geometry.h"
 
 using namespace avro;
+
+namespace avro
+{
+namespace library
+{
+class MetricField_UGAWG_Linear2 : public MetricField_Analytic
+{
+public:
+  MetricField_UGAWG_Linear2() :
+    MetricField_Analytic(2)
+  {}
+
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  {
+    numerics::SymMatrixD<real_t> m(dim_);
+
+    real_t hx = 0.1;
+    real_t h0 = 1e-3;
+    real_t hy = h0 +2.*(0.1 -h0)*fabs( x[1] -0.5 );
+
+    m(0,0) = 1./(hx*hx);
+    m(0,1) = 0.;
+    m(1,1) = 1./(hy*hy);
+    return m;
+  }
+};
+} // library
+} // avro
 
 UT_TEST_SUITE( adaptation_parallel_test_suite )
 
@@ -24,10 +55,10 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 2;
+  coord_t number = 3;
   coord_t dim = number;
 
-  std::vector<index_t> dims(number,7);
+  std::vector<index_t> dims(number,20);
   CKF_Triangulation topology(dims);
 
   #if 1
@@ -44,17 +75,29 @@ UT_TEST_CASE( test1 )
   topology.neighbours().fromscratch() = true;
   topology.neighbours().compute();
 
-  Points points_out(dim);
-  Topology<Simplex> topology_out(points_out,number);
   AdaptationParameters params;
   params.standard();
 
-  params.nb_partition() = mpi::size()-1;
-  params.partition_size() = 50;
+  std::vector<VertexMetric> metrics(topology.points().nb());
+  library::MetricField_UGAWG_Linear analytic;
+  //library::MetricField_Uniform analytic(number,0.01);
+  for (index_t k=0;k<topology.points().nb();k++)
+    metrics[k] = analytic( topology.points()[k] );
 
-  std::vector<VertexMetric> metrics;
-  int result = adaptp( topology , metrics , params , topology_out );
-  UT_ASSERT_EQUALS( result , 0 );
+  params.partitioned() = false;
+  params.balanced() = true; // assume load-balanced once the first partition is computed
+  params.curved() = false;
+  params.insertion_volume_factor() = -1;
+  params.limit_metric() = true;
+
+  topology.build_structures();
+
+  AdaptationManager<Simplex> manager( topology , metrics , params );
+  manager.adapt();
+
+  Points points_out(dim,dim-1);
+  Topology<Simplex> topology_out(points_out,number);
+  manager.retrieve(topology_out);
 
   index_t rank = mpi::rank();
   if (rank==0)
@@ -68,13 +111,13 @@ UT_TEST_CASE( test1 )
       real_t d = numerics::distance( topology_out.points()[k] , topology_out.points()[j] , dim );
       if (d < 1e-12)
       {
-        topology_out.points().print(k,true);
-        topology_out.points().print(j,true);
+        //topology_out.points().print(k,true);
+        //topology_out.points().print(j,true);
       }
     }
 
     // it may not look like much, but this is a huge check on the partitioning and stitching algorithm
-    UT_ASSERT_EQUALS( topology_out.points().nb() , topology.points().nb() );
+    //UT_ASSERT_EQUALS( topology_out.points().nb() , topology.points().nb() );
 
     printf("original |points| = %lu, new |points| = %lu\n",topology.points().nb(),topology_out.points().nb());
 

@@ -75,18 +75,6 @@ private:
   EdgeSwap<type> edge_swapper_;
 };
 
-template<typename type>
-class AdaptationManager
-{
-public:
-  AdaptationManager( Topology<type>& topology ); // serial adaptation
-  AdaptationManager( Mesh& mesh ); // parallel adaptatoin
-
-private:
-  std::vector<AdaptThread<type>> thread_;
-
-};
-
 } // avro
 
 #endif

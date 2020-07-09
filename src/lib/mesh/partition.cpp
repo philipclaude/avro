@@ -196,10 +196,7 @@ Partition<type>::get( std::vector< std::shared_ptr<Topology_Partition<type>>>& p
 
   for (index_t k=0;k<parts.size();k++)
   {
-    parts[k]->extract_points( topology_.points() );
-    parts[k]->convert();
-
-    // this ensures that all partitions only contains points they index
+    parts[k]->convert( topology_.points() );
     avro_assert( parts[k]->all_points_accounted() );
   }
 }
@@ -261,59 +258,31 @@ Topology_Partition<type>::Topology_Partition( coord_t dim , coord_t udim , coord
 
 template<typename type>
 void
-Topology_Partition<type>::extract_points( const Points& points )
+Topology_Partition<type>::convert( const Points& points )
 {
-  local2global_.clear();
-  global2local_.clear();
   points_.clear();
 
+  std::vector<index_t> local2global;
   for (index_t k=0;k<this->nb();k++)
   for (index_t j=0;j<this->nv(k);j++)
-    local2global_.push_back( (*this)(k,j) );
-  uniquify(local2global_);
+    local2global.push_back( (*this)(k,j) );
+  uniquify(local2global);
 
-  coord_t udim = points.udim();
-  for (index_t k=0;k<local2global_.size();k++)
+  std::map<index_t,index_t> global2local;
+  for (index_t k=0;k<local2global.size();k++)
   {
-    index_t global = local2global_[k];
+    index_t global = local2global[k];
+    global2local.insert({global,k});
     points_.create( points[global] );
-    for (coord_t d=0;d<udim;d++)
-      points_.u(k)[d] = points.u(global)[d];
+    points_.set_param( k , points.u(global) );
     points_.set_entity( k , points.entity(global) );
     points_.set_fixed( k , points.fixed(global) );
+    points_.set_global( k , points.global(global) );
   }
 
-  for (index_t k=0;k<local2global_.size();k++)
-  {
-    global2local_.insert( {local2global_.at(k),k} );
-  }
-}
-
-template<typename type>
-void
-Topology_Partition<type>::convert()
-{
   for (index_t k=0;k<this->nb();k++)
   for (index_t j=0;j<this->nv(k);j++)
-    (*this)(k,j) = global2local_[(*this)(k,j)];
-}
-
-template<typename type>
-index_t
-Topology_Partition<type>::local2global( index_t k ) const
-{
-  avro_assert( k < points_.nb() );
-  avro_assert( k < local2global_.size() );
-  return local2global_[k];
-}
-
-template<typename type>
-index_t
-Topology_Partition<type>::global2local( index_t k ) const
-{
-  avro_assert( global2local_.find(k)!=global2local_.end() );
-  avro_assert( local2global(global2local_.at(k)) == k );
-  return global2local_.at(k);
+    (*this)(k,j) = global2local[(*this)(k,j)];
 }
 
 template<typename type>
@@ -344,8 +313,6 @@ Topology_Partition<type>::receive( index_t sender )
 {
   Topology<type>::clear();
   points_.clear();
-  local2global_.clear();
-  global2local_.clear();
 
   this->data_  = mpi::receive<std::vector<index_t>>(sender,TAG_CELL_INDEX);
   this->first_ = mpi::receive<std::vector<index_t>>(sender,TAG_CELL_FIRST);
@@ -356,7 +323,7 @@ Topology_Partition<type>::receive( index_t sender )
   std::vector<real_t> u = mpi::receive<std::vector<real_t>>(sender,TAG_PARAMETER);
   std::vector<int> identifiers = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY);
   std::vector<int> geometry_numbers = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY_NUMBERS);
-  local2global_ = mpi::receive<std::vector<index_t>>(sender,TAG_LOCAL2GLOBAL);
+  std::vector<int> global = mpi::receive<std::vector<int>>(sender,TAG_LOCAL2GLOBAL);
   std::vector<int> fixed = mpi::receive<std::vector<int>>(sender,TAG_FIXED);
 
   coord_t dim = points_.dim();
@@ -372,11 +339,11 @@ Topology_Partition<type>::receive( index_t sender )
       points_.u(k)[d] = u[k*udim+d];
     Entity* entity = lookup( identifiers[k] , geometry_numbers[k] );
     points_.set_entity( k , entity );
-    global2local_.insert( { local2global_[k] , k } );
     if (fixed[k]==1)
       points_.set_fixed(k,true);
     else
       points_.set_fixed(k,false);
+    points_.set_global( k , global[k] );
   }
 }
 
@@ -399,6 +366,7 @@ Topology_Partition<type>::send( index_t receiver ) const
   std::vector<int> identifiers( nb_points , -1 );
   std::vector<int> geometry_numbers( nb_points , -1 );
   std::vector<int> fixed( nb_points , 0 );
+  std::vector<int> global( nb_points , -1 );
 
   for (index_t k=0;k<nb_points;k++)
   {
@@ -414,14 +382,25 @@ Topology_Partition<type>::send( index_t receiver ) const
       geometry_numbers[k] = entity->number();
     }
     if (points_.fixed(k)) fixed[k] = 1;
+    global[k] = points_.global(k);
   }
 
   mpi::send( mpi::blocking{} , coordinates , receiver , TAG_COORDINATE );
   mpi::send( mpi::blocking{} , parameters , receiver , TAG_PARAMETER );
   mpi::send( mpi::blocking{} , identifiers , receiver , TAG_GEOMETRY );
   mpi::send( mpi::blocking{} , geometry_numbers , receiver , TAG_GEOMETRY_NUMBERS );
-  mpi::send( mpi::blocking{} , local2global_ , receiver , TAG_LOCAL2GLOBAL );
+  mpi::send( mpi::blocking{} , global , receiver , TAG_LOCAL2GLOBAL );
   mpi::send( mpi::blocking{} , fixed , receiver , TAG_FIXED );
+}
+
+/*
+
+template<typename type>
+index_t
+Topology_Partition<type>::local2global( index_t k ) const
+{
+  avro_assert( k < points_.nb() );
+  return points_.global(k);
 }
 
 template<typename type>
@@ -488,7 +467,9 @@ Topology_Partition<type>::compute_mantle( std::vector<index_t>& interior , std::
   }
   uniquify(interior);
 }
+*/
 
+/*
 template<typename type>
 void
 Topology_Partition<type>::map_indices( const std::map<index_t,index_t>& idx )
@@ -519,6 +500,7 @@ Topology_Partition<type>::remove_indices( const std::vector<index_t>& idx0 )
   for (index_t k=0;k<local2global_.size();k++)
     global2local_.insert( {local2global_[k],k} );
 }
+*/
 
 /*
 template<typename type>
@@ -572,15 +554,14 @@ bool
 Topology_Partition<type>::check( const Points& points ) const
 {
   bool result = true;
-  avro_assert_msg( local2global_.size() == points_.nb() , "|local2global| = %lu, |points| = %lu" , local2global_.size(),points_.nb() );
   for (index_t j=0;j<points_.nb();j++)
   {
-    real_t d = numerics::distance( points_[j] , points[local2global_[j]] , points_.dim() );
+    real_t d = numerics::distance( points_[j] , points[points.global(j)] , points_.dim() );
     if (d > 1e-12)
     {
-      printf("local point %lu -> global point %lu do not match d = %g.\n",j,local2global_[j],d);
+      printf("local point %lu -> global point %lu do not match d = %g.\n",j,points.global(j),d);
       points_.print(j,true);
-      points.print(local2global_[j],true);
+      points.print(points.global(j),true);
       result = false;
     }
   }

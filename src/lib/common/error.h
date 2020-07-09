@@ -16,6 +16,7 @@
 
 namespace avro
 {
+
 #ifndef unlikely
 #ifdef __GNUC__
 #define unlikely(x) __builtin_expect(!!(x), 0)
@@ -27,12 +28,17 @@ namespace avro
 #define avro_throw(args...) throw(avro::Exception(__FILE__,__LINE__,args));
 
 #if (1 || defined(avro_DEBUG))
-#define avro_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__);avro_throw("assertion error");}
-#define avro_assert_msg(X,...) { try{ avro_assert(X); } catch(...) { printf(__VA_ARGS__); avro_throw("assertion error"); } }
-#define avro_assert_else(X,Y) { try{ avro_assert(X); } catch(...) { Y ; avro_throw("assertion error"); } }
+  //#ifdef AVRO_MPI
+  //  #define avro_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__); avro_throw("assertion error");}
+  //#else
+    #define avro_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__);avro_throw("assertion error");}
+  //#endif
+
+  #define avro_assert_msg(X,...) { try{ avro_assert(X); } catch(...) { printf(__VA_ARGS__); avro_throw("assertion error"); } }
+  #define avro_assert_else(X,Y) { try{ avro_assert(X); } catch(...) { Y ; avro_throw("assertion error"); } }
 #else
-#define avro_assert(X) {}
-#define avro_assert_msg(X,...) {}
+  #define avro_assert(X) {}
+  #define avro_assert_msg(X,...) {}
 #endif
 
 #define avro_implement avro_throw("not implemented");

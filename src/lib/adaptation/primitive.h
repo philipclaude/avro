@@ -231,6 +231,8 @@ public:
     nb_interpolated_outside_ = 0;
   }
 
+  index_t& exponent() { return exponent_; }
+
 private:
   real_t delta_,delta_min_,delta_max_;
   index_t nb_parameter_tests_;
@@ -247,6 +249,8 @@ private:
   index_t Ntot_; // average no. points attached to vertex used in smoothing computation
   index_t nb_zero_valency_;
   index_t nb_interpolated_outside_;
+
+  index_t exponent_; // 1 for avro-style, 4 for bossen-heckbert style
 };
 
 } // avro

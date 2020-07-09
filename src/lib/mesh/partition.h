@@ -43,9 +43,9 @@ public:
   void receive( index_t sender );
   #endif
 
-  void extract_points( const Points& points );
-  void convert();
+  void convert( const Points& points );
 
+  /*
   index_t local2global( index_t k ) const;
   index_t global2local( index_t k ) const;
 
@@ -63,17 +63,16 @@ public:
   const std::vector<index_t>& mantle() const { return mantle_; }
   const std::vector<index_t>& crust() const { return crust_; }
   const std::vector<index_t>& halo() const { return halo_; }
+  */
 
   bool check( const Points& points ) const;
 
 protected:
   Points points_;
-  std::vector<index_t>      local2global_;
-  std::map<index_t,index_t> global2local_;
   std::vector<Entity*> entities_;
-  std::vector<index_t> halo_;
-  std::vector<index_t> crust_;
-  std::vector<index_t> mantle_;
+  //std::vector<index_t> halo_;
+  //std::vector<index_t> crust_;
+  //std::vector<index_t> mantle_;
 };
 
 template<typename type>
