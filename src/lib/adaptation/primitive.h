@@ -204,8 +204,6 @@ public:
   bool visible_geometry( index_t p , real_t* x , real_t* params , Entity* ep );
   bool apply( const index_t p , MetricField<type>& metric , real_t Q0=-1 );
 
-  void set_equation( const std::string& equation );
-
   index_t& nb_parameter_tests() { return nb_parameter_tests_; }
   index_t& nb_parameter_rejections() { return nb_parameter_rejections_; }
   real_t& delta() { return delta_; }
@@ -233,6 +231,8 @@ public:
     nb_interpolated_outside_ = 0;
   }
 
+  index_t& exponent() { return exponent_; }
+
 private:
   real_t delta_,delta_min_,delta_max_;
   index_t nb_parameter_tests_;
@@ -250,7 +250,7 @@ private:
   index_t nb_zero_valency_;
   index_t nb_interpolated_outside_;
 
-  bool equation_avro_;
+  index_t exponent_; // 1 for avro-style, 4 for bossen-heckbert style
 };
 
 } // avro

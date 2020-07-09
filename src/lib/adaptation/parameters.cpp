@@ -43,7 +43,7 @@ AdaptationParameters::standard()
   if (!boolParams_.has("use_smoothing")) boolParams_["use_smoothing"] = true;
   if (!boolParams_.has("fefloa")) boolParams_["fefloa"] = false;
   if (!boolParams_.has("limit_metric")) boolParams_["limit_metric"] = false;
-  if (!stringParams_.has("smoothing-equuation")) stringParams_["smoothing-equation"] = "avro"; // other option is bossen-heckbert
+  if (!intParams_.has("smoothing-exponent")) intParams_["smoothing-exponent"] = 1; // 4 = 1996 bossen-heckbert paper
 }
 
 } // avro

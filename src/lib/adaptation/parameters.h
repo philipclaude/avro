@@ -57,7 +57,7 @@ public:
   bool& use_smoothing() { return boolParams_["use_smoothing"]; }
   bool& fefloa() { return boolParams_["fefloa"]; }
   bool& limit_metric() { return boolParams_["limit_metric"]; }
-  std::string& smoothing_equation() { return stringParams_["smoothing-equation"]; }
+  int& smoothing_exponent() { return intParams_["smoothing-exponent"]; }
 
   // set the default
   void standard();

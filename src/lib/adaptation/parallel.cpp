@@ -162,6 +162,8 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
       std::vector<std::shared_ptr<Topology_Partition<type>>> pieces(nb_partition);
       partition.get(pieces);
 
+      pieces[0]->points().print(true);
+
       // steal partition 0 with the metrics into our working partition
       topology_.TopologyBase::copy( *pieces[0] );
       pieces[0]->points().copy( topology_.points() );
@@ -309,7 +311,10 @@ AdaptationManager<type>::fix_boundary()
   std::sort(pts.begin(),pts.end());
   printf("there are %lu fixed facets out of %lu on boundary and %lu total\n",nb_fixed_facets,nb_bnd,facets.nb());
 
-  // fix all the points
+  if (mpi::size() == 1 )
+    avro_assert( nb_fixed_facets == 0 );
+
+  // fix all the partition boundary points
   for (index_t j=0;j<pts.size();j++)
   {
     topology_.points().set_fixed(pts[j],true);
@@ -320,14 +325,14 @@ AdaptationManager<type>::fix_boundary()
   // this should also adjust the global indices
   // but we'll need to adjust the metrics
   std::map<index_t,index_t> point_map;
-  //topology_.move_to_front( pts , &point_map );
+  topology_.move_to_front( pts , &point_map );
 
   // map the metrics
   coord_t number = topology_.number();
   std::vector<VertexMetric> mapped_metrics(metrics_.size(),VertexMetric(number));
-  //for (index_t k=0;k<metrics_.size();k++)
-  //  mapped_metrics[ point_map[k] ] = metrics_[k];
-  //metrics_ = mapped_metrics;
+  for (index_t k=0;k<metrics_.size();k++)
+    mapped_metrics[ point_map[k] ] = metrics_[k];
+  metrics_ = mapped_metrics;
 }
 
 template<typename type>

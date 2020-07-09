@@ -72,28 +72,11 @@ Smooth<type>::Smooth( Topology<type>& _topology ) :
   delta_min_(1e20),
   delta_max_(-1),
   M0_(_topology.number()),
-  equation_avro_(true)
+  exponent_(1)
 {
   this->setName("smoother");
   resetRejections();
   nb_accepted_ = 0;
-}
-
-template<typename type>
-void
-Smooth<type>::set_equation( const std::string& equation )
-{
-  equation_avro_ = true;
-  return;
-  if (equation == "avro")
-    equation_avro_ = true;
-  else if (equation == "bossen-heckbert")
-    equation_avro_ = false;
-  else
-  {
-    printf("unknown smoothing equation %s\n",equation.c_str());
-    avro_assert_not_reached;
-  }
 }
 
 template<typename type>
@@ -248,8 +231,8 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     // compute the force on the vertex
     // this is a variant of Bossen & Heckbert's equation
     // which will have a non-zero df/dl at l = 0
-    if (!equation_avro_)
-      len = std::pow(len,4); // recovers bossen-heckbert smoothing equation
+    avro_assert_msg( exponent_ == 1 , "exponent = 1 is recommended" );
+    len = std::pow(len,exponent_);
     f = (1. -len)*std::exp(-len);
 
     for (coord_t d=0;d<dim;d++)

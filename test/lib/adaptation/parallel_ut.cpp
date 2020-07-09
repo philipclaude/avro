@@ -21,6 +21,34 @@
 
 using namespace avro;
 
+namespace avro
+{
+namespace library
+{
+class MetricField_UGAWG_Linear2 : public MetricField_Analytic
+{
+public:
+  MetricField_UGAWG_Linear2() :
+    MetricField_Analytic(2)
+  {}
+
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  {
+    numerics::SymMatrixD<real_t> m(dim_);
+
+    real_t hx = 0.1;
+    real_t h0 = 1e-3;
+    real_t hy = h0 +2.*(0.1 -h0)*fabs( x[1] -0.5 );
+
+    m(0,0) = 1./(hx*hx);
+    m(0,1) = 0.;
+    m(1,1) = 1./(hy*hy);
+    return m;
+  }
+};
+} // library
+} // avro
+
 UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 #ifdef AVRO_MPI
@@ -30,7 +58,7 @@ UT_TEST_CASE( test1 )
   coord_t number = 3;
   coord_t dim = number;
 
-  std::vector<index_t> dims(number,6);
+  std::vector<index_t> dims(number,20);
   CKF_Triangulation topology(dims);
 
   #if 1
@@ -52,6 +80,7 @@ UT_TEST_CASE( test1 )
 
   std::vector<VertexMetric> metrics(topology.points().nb());
   library::MetricField_UGAWG_Linear analytic;
+  //library::MetricField_Uniform analytic(number,0.01);
   for (index_t k=0;k<topology.points().nb();k++)
     metrics[k] = analytic( topology.points()[k] );
 
@@ -59,7 +88,7 @@ UT_TEST_CASE( test1 )
   params.balanced() = true; // assume load-balanced once the first partition is computed
   params.curved() = false;
   params.insertion_volume_factor() = -1;
-  //params.limit_metric() = false;
+  params.limit_metric() = true;
 
   topology.build_structures();
 
@@ -74,7 +103,7 @@ UT_TEST_CASE( test1 )
   if (rank==0)
   {
     real_t volume = topology_out.volume();
-    //UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
+    UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
 
     for (index_t k=0;k<topology_out.points().nb();k++)
     for (index_t j=k+1;j<topology_out.points().nb();j++)

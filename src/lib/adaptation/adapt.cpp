@@ -50,7 +50,7 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
   smoother_.curved() = params.curved();
   edge_swapper_.curved() = params.curved();
 
-  smoother_.set_equation( params.smoothing_equation() );
+  smoother_.exponent() = index_t(params.smoothing_exponent());
 }
 
 const real_t nb_smooth = 10;
