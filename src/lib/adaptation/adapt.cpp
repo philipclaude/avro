@@ -515,7 +515,7 @@ adapt( AdaptationProblem& problem )
       meshb.write( problem.mesh_out , mesh_file , params.export_boundary() );
       printf("wrote mesh %s\n",mesh_file.c_str());
     }
-    else if (topology.number()==4)
+    else if (topology.number()==4 && params.export_boundary())
     {
       // get the boundary of the mesh
       Topology_Spacetime<Simplex> spacetime(mesh_topology);

@@ -57,6 +57,9 @@ public:
 
 private:
 
+  void migrate_parmetis();
+  void migrate_native();
+
   void send_metrics( index_t receiver , const std::vector<index_t>& global_indices , const std::vector<VertexMetric>& metrics , bool global_flag );
   void receive_metrics( index_t sender , bool overwrite=false );
 
@@ -69,7 +72,6 @@ private:
 
   index_t rank_;
   std::shared_ptr<PartitionField<type>> field_;
-  std::map<index_t,bool> global_created_;
 };
 
 } // avro

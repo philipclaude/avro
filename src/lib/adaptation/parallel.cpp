@@ -29,6 +29,11 @@ namespace avro
 #define TAG_METRIC_INDICES 301
 #define TAG_METRIC_ENTRIES 302
 
+#define TAG_FIXED_GLOBALS 401
+#define TAG_GLOBAL_KEYS 402
+#define TAG_GLOBAL_VALUES 403
+#define TAG_POINT_OFFSET 404
+
 void
 pprintf(const char* format , ... )
 {
@@ -238,10 +243,107 @@ AdaptationManager<type>::balance(real_t alpha , real_t beta)
 
 template<typename type>
 void
+AdaptationManager<type>::migrate_parmetis()
+{
+  index_t nb_rank = mpi::size();
+
+  // migrate the interface into the interior of the partitions
+  // simultaneously performing a load balance
+  topology_.build_structures();
+
+  // assign global identifiers for all elements
+
+  // exchange partition boundaries to all processors
+  PartitionBoundary<type> boundary(topology_.number()-1);
+  boundary.compute(topology_,rank_);
+
+  PartitionBoundary<type> interface( topology_.number()-1 );
+  if (rank_ == 0)
+  {
+    // receive and accumulate all boundary information
+    interface.append( boundary );
+    for (index_t k=1;k<nb_rank;k++)
+    {
+      PartitionBoundary<type> boundary_k( topology_.number()-1 );
+      boundary_k.receive(k);
+      interface.append(boundary_k);
+
+      printf("nb_facets = %lu\n",boundary_k.nb());
+    }
+    printf("total number of interface facets = %lu\n",interface.nb());
+  }
+  else
+  {
+    // send our partition boundary information
+    printf("sending boundary with %lu facets\n",boundary.nb());
+    boundary.send(0);
+  }
+  mpi::barrier();
+
+  if (rank_ == 0 )
+  {
+    // send the accumulated boundary information
+    printf("sending interface with %lu facets\n",interface.nb());
+    for (index_t k=1;k<nb_rank;k++)
+      interface.send(k);
+  }
+  else
+  {
+    // receive the accumulated boundary information
+    interface.receive(0);
+  }
+  mpi::barrier();
+
+  // fill in the missing elemR/partR information
+  //boundary.fill( interface );
+
+  // build up the local adjacency graph, accounting for elements (graph vertices)
+  // on other processors stored in the elemR/partR information
+
+  // determine a weight on each element using the metric
+
+  // build up the graph representation for this partition
+  // and weights the vertices of the graph (elements of the mesh)
+
+  // call parmetis to perform the load balance
+
+  // retrieve which elements we keep and which we send away
+  // also send away the metrics
+
+  // receive elements from another partition
+  // also receive the metrics
+}
+
+template<typename type>
+void
+AdaptationManager<type>::migrate_native()
+{
+  // setup a buddy system
+  index_t buddy = 0;
+  if (rank_ == 0)
+  {
+    // build up the interprocessor graph
+    // with vertex weights defined be current processor work
+
+    // compute a matching of this graph
+
+    // send off the processor pairs
+  }
+  else
+  {
+    // wait to receive our processor pair
+  }
+  mpi::barrier();
+
+  pprintf("my buddy is %lu\n",buddy);
+}
+
+template<typename type>
+void
 AdaptationManager<type>::migrate()
 {
-  // migrate the interface into the interior of the partitions
-  // simulatneously performing a load balance
+  // TODO add parameter to switch between parmetis/native
+  migrate_parmetis();
 }
 
 void
@@ -265,12 +367,6 @@ struct map_builder : public std::map<key,value>
   }
 };
 
-
-
-#define TAG_FIXED_GLOBALS 401
-#define TAG_GLOBAL_KEYS 402
-#define TAG_GLOBAL_VALUES 403
-#define TAG_POINT_OFFSET 404
 
 template<typename type>
 void
@@ -335,10 +431,6 @@ AdaptationManager<type>::synchronize()
 
   if (rank_ == 0)
   {
-
-    printf("there are a total of %lu vertices!\n",nb_points_total);
-    printf("there are %lu fixed vertices\n",fixed_map.size());
-
     // assign the new global indices for this processor
     index_t count = fixed_map.size();
     for (index_t j=0;j<topology_.points().nb();j++)
@@ -378,7 +470,6 @@ AdaptationManager<type>::synchronize()
 
     // receive the point offset
     index_t offset = mpi::receive<index_t>(0,TAG_POINT_OFFSET);
-    printf("point offset = %lu, need to add %lu vertices\n",offset,topology_.points().nb()-global.size());
 
     // make a map!
     map_builder<index_t,index_t> global_map(keys,values);
@@ -400,7 +491,6 @@ AdaptationManager<type>::synchronize()
       // assign the new global index
       topology_.points().set_global( k , global_map.at(g) );
     }
-    topology_.points().print(true);
   }
 
   mpi::barrier();
@@ -499,16 +589,16 @@ AdaptationManager<type>::adapt()
     topology_.points().copy(mesh.points());
     Mesh mesh_out(number,number);
 
-    if (rank_ > 0)
+    //if (rank_ > 0)
       params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_);
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
 
-    pprintf("adapting mesh\n");
     try
     {
       #if 1
+      pprintf("adapting mesh\n");
       ::avro::adapt<type>( problem );
 
       // clear the topology and copy in the output topology
@@ -527,7 +617,6 @@ AdaptationManager<type>::adapt()
     }
     catch(...)
     {
-      pprintf("failure!!\n");
       mpi::abort(1);
     }
     mpi::barrier();
@@ -671,7 +760,6 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
   }
   mpi::barrier();
 }
-
 
 template class AdaptationManager<Simplex>;
 

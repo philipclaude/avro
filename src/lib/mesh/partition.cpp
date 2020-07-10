@@ -81,7 +81,7 @@ Partition<type>::initialize()
     for (it=node2node[k].begin();it!=node2node[k].end();++it)
       adjncy_.push_back(*it);
   }
-  avro_assert_msg( adjncy_.size()==edges_.size() , "|adjcny| = %lu, nb_edges = %lu" , adjncy_.size() , edges_.size()/2 );
+  avro_assert_msg( adjncy_.size()==edges_.size() , "|adjncy| = %lu, nb_edges = %lu" , adjncy_.size() , edges_.size()/2 );
 }
 
 template<typename type>
@@ -393,162 +393,6 @@ Topology_Partition<type>::send( index_t receiver ) const
   mpi::send( mpi::blocking{} , fixed , receiver , TAG_FIXED );
 }
 
-/*
-
-template<typename type>
-index_t
-Topology_Partition<type>::local2global( index_t k ) const
-{
-  avro_assert( k < points_.nb() );
-  return points_.global(k);
-}
-
-template<typename type>
-void
-Topology_Partition<type>::compute_crust( const std::vector<index_t>& halo , std::vector<index_t>& crust ) const
-{
-  crust.clear();
-  std::vector<index_t> ball;
-  for (index_t j=0;j<halo.size();j++)
-  {
-    ball.clear();
-    this->inverse().ball( halo[j] , ball );
-    for (index_t i=0;i<ball.size();i++)
-      crust.push_back( ball[i] );
-  }
-  uniquify(crust);
-}
-
-template<typename type>
-void
-Topology_Partition<type>::compute_mantle( std::vector<index_t>& interior , std::vector<index_t>& exterior , std::vector<index_t>& mantle , const std::set<index_t>& halo ) const
-{
-  //this->points().print(true);
-
-  // determine all the points that are on the boundary, but not on the geometry
-  Facets facets(*this);
-  facets.compute();
-  std::vector<index_t> facet(this->number());
-  for (index_t k=0;k<facets.nb();k++)
-  {
-    if (!facets.boundary(k)) continue;
-    facets.retrieve(k,facet);
-    Entity* entity = BoundaryUtils::geometryFacet( this->points() , facet.data() , facet.size() );
-    if (entity!=nullptr) continue;
-    if (fixed_facet(facet,points_)) continue;
-
-    for (index_t j=0;j<facet.size();j++)
-      exterior.push_back(facet[j]);
-  }
-  uniquify(exterior);
-
-  mantle.clear();
-  std::vector<index_t> ball;
-  for (index_t j=0;j<exterior.size();j++)
-  {
-    ball.clear();
-    this->inverse().ball( exterior[j] , ball );
-    for (index_t i=0;i<ball.size();i++)
-      mantle.push_back( ball[i] );
-  }
-  uniquify(mantle);
-
-  std::set<index_t> exteriors(exterior.begin(),exterior.end());
-  for (index_t k=0;k<mantle.size();k++)
-  {
-    index_t elem = mantle[k];
-    for (index_t j=0;j<this->nv(elem);j++)
-    {
-      index_t p = (*this)(elem,j);
-      if (exteriors.find(p)!=exteriors.end()) // not an internal point
-        continue;
-      interior.push_back(p);
-    }
-  }
-  uniquify(interior);
-}
-*/
-
-/*
-template<typename type>
-void
-Topology_Partition<type>::map_indices( const std::map<index_t,index_t>& idx )
-{
-  avro_assert( idx.size() == points_.nb() );
-  std::vector<index_t> global = local2global_;
-  global2local_.clear();
-  local2global_.resize( points_.nb() );
-  for (index_t k=0;k<points_.nb();k++)
-  {
-    local2global_[ idx.at(k) ] = global[k];
-    global2local_[k] = idx.at(k);
-  }
-}
-
-template<typename type>
-void
-Topology_Partition<type>::remove_indices( const std::vector<index_t>& idx0 )
-{
-  std::vector<index_t> idx(idx0.begin(),idx0.end());
-  std::sort( idx.begin() , idx.end() );
-  for (index_t k=0;k<idx.size();k++)
-  {
-    local2global_.erase( local2global_.begin() + idx[k]-k );
-  }
-
-  global2local_.clear();
-  for (index_t k=0;k<local2global_.size();k++)
-    global2local_.insert( {local2global_[k],k} );
-}
-*/
-
-/*
-template<typename type>
-void
-Topology_Partition<type>::compute_crust()
-{
-  avro_assert( !this->closed() );
-
-  crust_.clear();
-  halo_.clear();
-
-  // compute the points on the boundary
-  Facets facets(*this);
-  facets.compute();
-  std::vector<index_t> facet( this->number() );
-  for (index_t k=0;k<facets.nb();k++)
-  {
-    if (!facets.boundary(k)) continue;
-
-    facets.retrieve( k , facet );
-
-    Entity* entity = BoundaryUtils::geometryFacet( this->points_ , facet.data() , facet.size() );
-    if (entity!=nullptr) continue;
-
-    for (index_t j=0;j<facet.size();j++)
-      halo_.push_back( facet[j] );
-  }
-  uniquify(halo_);
-
-  // compute the crust as any point in the ball of the boundary points
-  std::vector<index_t> ball;
-  this->neighbours().forceCompute();
-  this->neighbours().fromscratch() = true;
-  this->neighbours().compute();
-  this->inverse().clear();
-  this->inverse().build();
-  for (index_t k=0;k<halo_.size();k++)
-  {
-    ball.clear();
-    this->inverse().ball( {halo_[k]},ball );
-
-    for (index_t j=0;j<ball.size();j++)
-      crust_.push_back(ball[j]);
-  }
-  uniquify(crust_);
-}
-*/
-
 template<typename type>
 bool
 Topology_Partition<type>::check( const Points& points ) const
@@ -568,8 +412,203 @@ Topology_Partition<type>::check( const Points& points ) const
   return result;
 }
 
+template<typename type>
+PartitionBoundary<type>::PartitionBoundary( coord_t number ) :
+  Topology<type>(dummy_,number),
+  dummy_(number)
+{
+  this->set_sorted(true);
+}
+
+template<typename type>
+void
+PartitionBoundary<type>::compute( const Topology<type>& topology , index_t partition )
+{
+  Facets facets(topology);
+  facets.compute();
+
+  std::vector<index_t> facet(topology.number());
+  for (index_t k=0;k<facets.nb();k++)
+  {
+    if (!facets.boundary(k)) continue;
+    facets.retrieve(k,facet);
+    Entity* entity = BoundaryUtils::geometryFacet( topology.points() , facet.data() , facet.size() );
+    if (entity!=nullptr) continue;
+
+    index_t elemL = facets.side0(k);
+    index_t elemL_global = elemL; // TODO keep tracking of global element number too
+
+    // add the global indices
+    for (index_t i=0;i<facet.size();i++)
+      facet[i] = topology.points().global(facet[i]);
+
+    std::sort( facet.begin() , facet.end() );
+    ElementIndices f;
+    f.dim = this->number();
+    f.indices = facet;
+
+    add_left( f , elemL , elemL_global , partition );
+  }
+}
+
+template<typename type>
+void
+PartitionBoundary<type>::add_left( const ElementIndices& f , index_t elemL , index_t elemL_global , index_t partL )
+{
+  ElementIndices facet;
+  facet.dim = f.dim;
+  facet.indices = f.indices;
+  facet_.insert( {facet,facet_.size()} );
+
+  elemL_.push_back(elemL);
+  elemL_global_.push_back(elemL_global);
+  partL_.push_back(partL);
+
+  elemR_.push_back(0);
+  elemR_global_.push_back(0);
+  partR_.push_back(0);
+}
+
+template<typename type>
+void
+PartitionBoundary<type>::append( const PartitionBoundary<type>& boundary )
+{
+  index_t elemL,partL;
+
+  const std::map<ElementIndices,index_t>& facets = boundary.facets();
+  for (std::map<ElementIndices,index_t>::const_iterator it=facets.begin();it!=facets.end();++it)
+  {
+    // make sure this facet does not already exist
+    const ElementIndices& facet = it->first;
+    index_t k = it->second;
+    int id = find(facet);
+    if (id>=0)
+    {
+      // add information to the right
+      elemR_[id] = boundary.elemL(k);
+      partR_[id] = boundary.partL(k);
+      continue;
+    }
+
+    elemL = boundary.elemL(k);
+    partL = boundary.partL(k);
+
+    // add the facet to this partition boundary
+    add_left( facet , elemL , elemL , partL );
+  }
+}
+
+template<typename type>
+void
+PartitionBoundary<type>::fill( const PartitionBoundary<type>& interface )
+{
+  for (std::map<ElementIndices,index_t>::iterator it=facet_.begin();it!=facet_.end();++it)
+  {
+    const ElementIndices& facet = it->first;
+    index_t k = it->second;
+
+    int id = interface.find(facet);
+    avro_assert(id>=0);
+
+    // check if we match the left element
+    index_t elemL = interface.elemL(id);
+    index_t partL = interface.partL(id);
+    if (elemL_[k] == elemL && partL_[k] == partL)
+    {
+      elemR_[k] = interface.elemR(id);
+      partR_[k] = interface.partR(id);
+    }
+    else
+    {
+      if ( elemL_[k] != interface.elemR(id) || partL_[k] != interface.partR(id) )
+      {
+        interface.print();
+        print_inline( facet.indices );
+        printf("id = %d, elemL = %lu, partL = %lu\n",id,elemL_[k],partL_[k]);
+      }
+      avro_assert( elemL_[k] == interface.elemR(id) && partL_[k] == interface.partR(id) );
+      elemR_[k] = elemL;
+      partR_[k] = partL;
+    }
+  }
+}
+
+
+template<typename type>
+int
+PartitionBoundary<type>::find( const ElementIndices& f ) const
+{
+  std::map<ElementIndices,index_t>::const_iterator it = facet_.find(f);
+  if (it == facet_.end()) return -1;
+  return int(it->second);
+}
+
+#define TAG_PARTITION_BND_DATA 501
+#define TAG_PARTITION_BND_ELEML 502
+#define TAG_PARTITION_BND_PARTL 503
+#define TAG_PARTITION_BND_ELEMR 504
+#define TAG_PARTITION_BND_PARTR 505
+
+template<typename type>
+void
+PartitionBoundary<type>::send( index_t receiver ) const
+{
+  std::vector<index_t> data;
+  for (std::map<ElementIndices,index_t>::const_iterator it=facet_.begin();it!=facet_.end();++it)
+  {
+    const ElementIndices& f = it->first;
+    for (index_t j=0;j<f.indices.size();j++)
+      data.push_back( f.indices[j] );
+  }
+
+  mpi::send( mpi::blocking{} , data , receiver , TAG_PARTITION_BND_DATA );
+  mpi::send( mpi::blocking{} , elemL_ , receiver , TAG_PARTITION_BND_ELEML );
+  mpi::send( mpi::blocking{} , partL_ , receiver , TAG_PARTITION_BND_PARTL );
+  mpi::send( mpi::blocking{} , elemR_ , receiver , TAG_PARTITION_BND_ELEMR );
+  mpi::send( mpi::blocking{} , partR_ , receiver , TAG_PARTITION_BND_PARTR );
+}
+
+template<typename type>
+void
+PartitionBoundary<type>::receive( index_t sender )
+{
+
+  std::vector<index_t> F = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_DATA );
+  elemL_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_ELEML );
+  partL_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_PARTL );
+  elemR_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_ELEMR );
+  partR_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_PARTR );
+
+  index_t nb_facet = F.size()/(this->number()+1);
+  avro_assert( nb_facet == elemL_.size() );
+  for (index_t k=0;k<nb_facet;k++)
+  {
+    ElementIndices facet;
+    facet.dim = this->number();
+    facet.indices.assign( &F[(this->number()+1)*k] , &F[(this->number()+1)*(k+1)] );
+    facet_.insert( {facet,facet_.size()} );
+  }
+}
+
+template<typename type>
+void
+PartitionBoundary<type>::print() const
+{
+  for (std::map<ElementIndices,index_t>::const_iterator it=facet_.begin();it!=facet_.end();++it)
+  {
+    const ElementIndices& f = it->first;
+    index_t k = it->second;
+    avro_assert( k < elemL_.size() && k < partL_.size() && k < elemR_.size() & k < partR_.size() );
+    print_inline( f.indices , "facet with elemL = " + std::to_string(elemL_[k]) + ", partL = " +
+                                                      std::to_string(partL_[k]) + ", elemR = " +
+                                                      std::to_string(elemR_[k]) + ", partR = " +
+                                                      std::to_string(partR_[k]) + ": " );
+  }
+}
+
 template class Partition<Simplex>;
 template class Topology_Partition<Simplex>;
+template class PartitionBoundary<Simplex>;
 
 } // avro
 

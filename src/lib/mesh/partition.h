@@ -45,48 +45,61 @@ public:
 
   void convert( const Points& points );
 
-  /*
-  index_t local2global( index_t k ) const;
-  index_t global2local( index_t k ) const;
-
-  void reset_indices();
-  void set_local2global( index_t k , index_t global );
-  void set_global2local( index_t global , index_t k );
-
-  void map_indices( const std::map<index_t,index_t>& idx );
-  void remove_indices( const std::vector<index_t>& idx );
-
-  void compute_crust(); // should be removed
-  void compute_crust( const std::vector<index_t>& halo , std::vector<index_t>& crust ) const;
-  void compute_mantle( std::vector<index_t>& interior , std::vector<index_t>& exterior , std::vector<index_t>& mantle , const std::set<index_t>& halo ) const;
-
-  const std::vector<index_t>& mantle() const { return mantle_; }
-  const std::vector<index_t>& crust() const { return crust_; }
-  const std::vector<index_t>& halo() const { return halo_; }
-  */
-
   bool check( const Points& points ) const;
 
 protected:
   Points points_;
   std::vector<Entity*> entities_;
-  //std::vector<index_t> halo_;
-  //std::vector<index_t> crust_;
-  //std::vector<index_t> mantle_;
 };
 
 template<typename type>
-class MergedPartitions : public Topology_Partition<type>
+class PartitionBoundary : public Topology<type>
 {
 public:
-  #ifdef AVRO_MPI
-  void receive_partition( mpi::communicator& comm , index_t receiver );
-  void receive_halo( mpi::communicator& comm , index_t receiver );
-  #endif
+  PartitionBoundary( coord_t number );
+
+  void send( index_t receiver ) const;
+  void receive( index_t sender );
+
+  void compute( const Topology<type>& topology , index_t partition );
+
+  void add_left( const ElementIndices& f , index_t elemL , index_t partL , index_t elemL_global );
+  void add_rite( const std::vector<index_t>& f , index_t elemL , index_t partL , index_t elemL_global );
+
+  index_t elemL( index_t k ) const { return elemL_[k]; }
+  index_t elemL_global( index_t k ) const { return elemL_global_[k]; }
+  index_t partL( index_t k ) const { return partL_[k]; }
+
+  index_t elemR( index_t k ) const { return elemR_[k]; }
+  index_t elemR_global( index_t k ) const { return elemR_global_[k]; }
+  index_t partR( index_t k ) const { return partR_[k]; }
+
+  void ball( index_t p , std::vector<index_t>& B ) const;
+
+  void append( const PartitionBoundary<type>& boundary );
+  void fill( const PartitionBoundary<type>& interface );
+
+  int find( const ElementIndices& f ) const;
+
+  index_t nb() const { return facet_.size(); }
+
+  const std::map<ElementIndices,index_t>& facets() const { return facet_; }
+
+  void print() const;
 
 private:
-  std::vector<index_t> boundary_;
+  Points dummy_; // should not be used, but we need this to inherit from topology so we can use the inverse
+  std::vector<index_t> elemL_;
+  std::vector<index_t> elemL_global_;
+  std::vector<index_t> partL_;
+
+  std::vector<index_t> elemR_;
+  std::vector<index_t> elemR_global_;
+  std::vector<index_t> partR_;
+
+  std::map<ElementIndices,index_t> facet_;
 };
+
 
 template<typename type>
 class Partition
