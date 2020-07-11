@@ -424,29 +424,36 @@ template<typename type>
 void
 PartitionBoundary<type>::compute( const Topology<type>& topology , index_t partition )
 {
+  avro_assert( topology.number() == this->number()+1 );
+
+  // build all the facets in this partition
   Facets facets(topology);
   facets.compute();
 
   std::vector<index_t> facet(topology.number());
   for (index_t k=0;k<facets.nb();k++)
   {
+    // only consider facets on the partition boundary which are not on the geometry
     if (!facets.boundary(k)) continue;
     facets.retrieve(k,facet);
     Entity* entity = BoundaryUtils::geometryFacet( topology.points() , facet.data() , facet.size() );
     if (entity!=nullptr) continue;
 
+    // retrieve the left element information (right should be null)
     index_t elemL = facets.side0(k);
     index_t elemL_global = elemL; // TODO keep tracking of global element number too
 
-    // add the global indices
+    // convert to global indices
     for (index_t i=0;i<facet.size();i++)
       facet[i] = topology.points().global(facet[i]);
 
+    // setup the facet element
     std::sort( facet.begin() , facet.end() );
     ElementIndices f;
     f.dim = this->number();
     f.indices = facet;
 
+    // add the (global) facet with element and partition information
     add_left( f , elemL , elemL_global , partition );
   }
 }
@@ -455,10 +462,7 @@ template<typename type>
 void
 PartitionBoundary<type>::add_left( const ElementIndices& f , index_t elemL , index_t elemL_global , index_t partL )
 {
-  ElementIndices facet;
-  facet.dim = f.dim;
-  facet.indices = f.indices;
-  facet_.insert( {facet,facet_.size()} );
+  facet_.insert( {f,facet_.size()} );
 
   elemL_.push_back(elemL);
   elemL_global_.push_back(elemL_global);
@@ -473,7 +477,7 @@ template<typename type>
 void
 PartitionBoundary<type>::append( const PartitionBoundary<type>& boundary )
 {
-  index_t elemL,partL;
+  index_t elemL,elemL_global,partL;
 
   const std::map<ElementIndices,index_t>& facets = boundary.facets();
   for (std::map<ElementIndices,index_t>::const_iterator it=facets.begin();it!=facets.end();++it)
@@ -486,15 +490,17 @@ PartitionBoundary<type>::append( const PartitionBoundary<type>& boundary )
     {
       // add information to the right
       elemR_[id] = boundary.elemL(k);
+      elemR_global_[id] = boundary.elemL_global(k);
       partR_[id] = boundary.partL(k);
       continue;
     }
 
     elemL = boundary.elemL(k);
+    elemL_global = boundary.elemL_global(k);
     partL = boundary.partL(k);
 
     // add the facet to this partition boundary
-    add_left( facet , elemL , elemL , partL );
+    add_left( facet , elemL , elemL_global , partL );
   }
 }
 
@@ -510,25 +516,23 @@ PartitionBoundary<type>::fill( const PartitionBoundary<type>& interface )
     int id = interface.find(facet);
     avro_assert(id>=0);
 
-    // check if we match the left element
-    index_t elemL = interface.elemL(id);
-    index_t partL = interface.partL(id);
-    if (elemL_[k] == elemL && partL_[k] == partL)
+    index_t elemL = elemL_[k];
+    index_t partL = partL_[k];
+
+    // fill in the right element & partition information
+    if (elemL == interface.elemL(id) && partL == interface.partL(id))
     {
+      // the left element is matched
       elemR_[k] = interface.elemR(id);
       partR_[k] = interface.partR(id);
     }
     else
     {
-      if ( elemL_[k] != interface.elemR(id) || partL_[k] != interface.partR(id) )
-      {
-        interface.print();
-        print_inline( facet.indices );
-        printf("id = %d, elemL = %lu, partL = %lu\n",id,elemL_[k],partL_[k]);
-      }
-      avro_assert( elemL_[k] == interface.elemR(id) && partL_[k] == interface.partR(id) );
-      elemR_[k] = elemL;
-      partR_[k] = partL;
+      avro_assert( elemL == interface.elemR(id) && partL == interface.partR(id) );
+
+      // the right element is matched
+      elemR_[k] = interface.elemL(id);
+      partR_[k] = interface.partL(id);
     }
   }
 }
@@ -548,17 +552,20 @@ PartitionBoundary<type>::find( const ElementIndices& f ) const
 #define TAG_PARTITION_BND_PARTL 503
 #define TAG_PARTITION_BND_ELEMR 504
 #define TAG_PARTITION_BND_PARTR 505
+#define TAG_PARTITION_BND_INDEX 506
 
 template<typename type>
 void
 PartitionBoundary<type>::send( index_t receiver ) const
 {
   std::vector<index_t> data;
+  std::vector<index_t> idx;
   for (std::map<ElementIndices,index_t>::const_iterator it=facet_.begin();it!=facet_.end();++it)
   {
     const ElementIndices& f = it->first;
     for (index_t j=0;j<f.indices.size();j++)
       data.push_back( f.indices[j] );
+    idx.push_back( it->second );
   }
 
   mpi::send( mpi::blocking{} , data , receiver , TAG_PARTITION_BND_DATA );
@@ -566,29 +573,42 @@ PartitionBoundary<type>::send( index_t receiver ) const
   mpi::send( mpi::blocking{} , partL_ , receiver , TAG_PARTITION_BND_PARTL );
   mpi::send( mpi::blocking{} , elemR_ , receiver , TAG_PARTITION_BND_ELEMR );
   mpi::send( mpi::blocking{} , partR_ , receiver , TAG_PARTITION_BND_PARTR );
+  mpi::send( mpi::blocking{} , idx , receiver , TAG_PARTITION_BND_INDEX );
 }
 
 template<typename type>
 void
 PartitionBoundary<type>::receive( index_t sender )
 {
-
+  index_t nv = this->number()+1; // assume linear simplices
   std::vector<index_t> F = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_DATA );
   elemL_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_ELEML );
   partL_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_PARTL );
   elemR_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_ELEMR );
   partR_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_PARTR );
+  std::vector<index_t> idx = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_INDEX );
 
-  index_t nb_facet = F.size()/(this->number()+1);
+  // TODO: does this information need to be sent too?
+  elemL_global_.resize( elemL_.size() );
+  elemR_global_.resize( elemR_.size() );
+
+  index_t nb_facet = F.size()/nv;
   avro_assert( nb_facet == elemL_.size() );
   for (index_t k=0;k<nb_facet;k++)
   {
     ElementIndices facet;
     facet.dim = this->number();
-    facet.indices.assign( &F[(this->number()+1)*k] , &F[(this->number()+1)*(k+1)] );
-    facet_.insert( {facet,facet_.size()} );
+    facet.indices.assign( &F[nv*k] , &F[nv*(k+1)] );
+    facet_.insert( {facet,idx[k]} );
   }
 }
+
+#undef TAG_PARTITION_BND_DATA
+#undef TAG_PARTITION_BND_ELEML
+#undef TAG_PARTITION_BND_PARTL
+#undef TAG_PARTITION_BND_ELEMR
+#undef TAG_PARTITION_BND_PARTR
+#undef TAG_PARTITION_BND_INDEX
 
 template<typename type>
 void
@@ -599,7 +619,7 @@ PartitionBoundary<type>::print() const
     const ElementIndices& f = it->first;
     index_t k = it->second;
     avro_assert( k < elemL_.size() && k < partL_.size() && k < elemR_.size() & k < partR_.size() );
-    print_inline( f.indices , "facet with elemL = " + std::to_string(elemL_[k]) + ", partL = " +
+    print_inline( f.indices , "facet (" + std::to_string(k) + ") with elemL = " + std::to_string(elemL_[k]) + ", partL = " +
                                                       std::to_string(partL_[k]) + ", elemR = " +
                                                       std::to_string(elemR_[k]) + ", partR = " +
                                                       std::to_string(partR_[k]) + ": " );

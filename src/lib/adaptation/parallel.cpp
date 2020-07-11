@@ -5,6 +5,7 @@
 #include "common/process.h"
 
 #include "adaptation/adapt.h"
+#include "adaptation/metric.h"
 #include "adaptation/parallel.h"
 #include "adaptation/parameters.h"
 
@@ -20,6 +21,8 @@
 #include "mesh/topology.h"
 
 #include "numerics/matrix.h"
+
+#include <unistd.h>
 
 namespace avro
 {
@@ -190,7 +193,6 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
     else
     {
       // receive our partition
-      pprintf("waiting to receive mesh\n");
       topology_.set_entities(entities);
       topology_.receive(0);
 
@@ -242,6 +244,112 @@ AdaptationManager<type>::balance(real_t alpha , real_t beta)
 }
 
 template<typename type>
+class PartitionGraph
+{
+public:
+  PartitionGraph( Topology<type>& partition , const PartitionBoundary<type>& boundary ) :
+    partition_(partition),
+    boundary_(boundary)
+  {
+    vtxdist_.resize( mpi::size()+1 , 0 ); // todo actually retrieve this!
+    build();
+  }
+
+  void build()
+  {
+    // extract the adjacencies from the partition
+    for (index_t k=0;k<partition_.nb();k++)
+    {
+      for (index_t j=0;j<partition_.neighbours().nfacets();j++)
+      {
+        int n = partition_.neighbours()(k,j);
+        if (n<0) continue;      // do not create adjacency information for boundary elements
+        if (n<int(k)) continue; // only create an edge once
+
+        index_t g0 = global_elem( mpi::rank() , k );
+        index_t g1 = global_elem( mpi::rank() , index_t(n) );
+
+        edges_.push_back( g0 );
+        edges_.push_back( g1 );
+      }
+    }
+
+    // add the edges corresponding to the boundary facets
+    for (index_t k=0;k<boundary_.nb();k++)
+    {
+      index_t g0 = global_elem( boundary_.partL(k) , boundary_.elemL(k) );
+      index_t g1 = global_elem( boundary_.partR(k) , boundary_.elemR(k) );
+
+      if (g1<g0) continue;
+      edges_.push_back(g0);
+      edges_.push_back(g1);
+    }
+    index_t nb_vert = partition_.nb() + boundary_.nb();
+
+    // convert to csr
+    std::vector< std::set<index_t> > node2node(nb_vert);
+    for (index_t k=0;k<edges_.size()/2;k++)
+    {
+      node2node[ edges_[2*k]   ].insert( edges_[2*k+1] );
+      node2node[ edges_[2*k+1] ].insert( edges_[2*k] );
+    }
+
+    xadj_.resize( nb_vert+1 );
+    xadj_[0] = 0;
+    adjncy_.clear();
+    std::set<index_t>::iterator it;
+    for (index_t k=0;k<nb_vert;k++)
+    {
+      xadj_[k+1] = xadj_[k] + node2node[k].size();
+      for (it=node2node[k].begin();it!=node2node[k].end();++it)
+        adjncy_.push_back(*it);
+    }
+
+    avro_assert_msg( adjncy_.size()==edges_.size() , "|adjncy| = %lu, nb_edges = %lu" , adjncy_.size() , edges_.size()/2 );
+  }
+
+  void assign_weights( const std::vector<VertexMetric>& metrics )
+  {
+    // create a metric field to make computations easier
+    MetricAttachment attachment( partition_.points() , metrics );
+    MetricField<type> metric( partition_ , attachment );
+
+    // loop through elements and calculate quality
+    vgwt_.resize( partition_.nb() + boundary_.nb() , 0.0 );
+    for (index_t k=0;k<partition_.nb();k++)
+      vgwt_[k] = metric.quality( partition_ , k );
+
+    // assign a small quality (more work needed) for interface elements
+    for (index_t k=0;k<boundary_.nb();k++)
+      vgwt_[partition_.nb()+k] = 0.01;
+  }
+
+  index_t global_elem( index_t partition , index_t elem ) const
+  {
+    return vtxdist_[ partition ] + elem;
+  }
+
+  void repartition()
+  {
+    // TODO call parmetis!
+  }
+
+private:
+  Topology<type>& partition_;
+  const PartitionBoundary<type>& boundary_;
+
+  std::vector<index_t> edges_;
+  std::vector<index_t> adjncy_;
+  std::vector<index_t> xadj_;
+
+  std::vector<real_t> vgwt_;
+  std::vector<real_t> egwt_;
+
+  std::vector<index_t> vtxdist_;
+
+};
+
+template<typename type>
 void
 AdaptationManager<type>::migrate_parmetis()
 {
@@ -252,6 +360,7 @@ AdaptationManager<type>::migrate_parmetis()
   topology_.build_structures();
 
   // assign global identifiers for all elements
+  //synchronize_elements();
 
   // exchange partition boundaries to all processors
   PartitionBoundary<type> boundary(topology_.number()-1);
@@ -267,15 +376,11 @@ AdaptationManager<type>::migrate_parmetis()
       PartitionBoundary<type> boundary_k( topology_.number()-1 );
       boundary_k.receive(k);
       interface.append(boundary_k);
-
-      printf("nb_facets = %lu\n",boundary_k.nb());
     }
-    printf("total number of interface facets = %lu\n",interface.nb());
   }
   else
   {
     // send our partition boundary information
-    printf("sending boundary with %lu facets\n",boundary.nb());
     boundary.send(0);
   }
   mpi::barrier();
@@ -283,7 +388,6 @@ AdaptationManager<type>::migrate_parmetis()
   if (rank_ == 0 )
   {
     // send the accumulated boundary information
-    printf("sending interface with %lu facets\n",interface.nb());
     for (index_t k=1;k<nb_rank;k++)
       interface.send(k);
   }
@@ -295,17 +399,20 @@ AdaptationManager<type>::migrate_parmetis()
   mpi::barrier();
 
   // fill in the missing elemR/partR information
-  //boundary.fill( interface );
+  boundary.fill( interface );
 
   // build up the local adjacency graph, accounting for elements (graph vertices)
   // on other processors stored in the elemR/partR information
+  PartitionGraph<type> graph( topology_ , boundary );
+
+  // append the metrics from the required processors
+  // maybe not? can probably just assign a really poor quality element to interface elements
 
   // determine a weight on each element using the metric
-
-  // build up the graph representation for this partition
-  // and weights the vertices of the graph (elements of the mesh)
+  graph.assign_weights( metrics_ );
 
   // call parmetis to perform the load balance
+  graph.repartition();
 
   // retrieve which elements we keep and which we send away
   // also send away the metrics
@@ -590,7 +697,7 @@ AdaptationManager<type>::adapt()
     Mesh mesh_out(number,number);
 
     //if (rank_ > 0)
-      params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
+    //params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_);
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
@@ -600,6 +707,8 @@ AdaptationManager<type>::adapt()
       #if 1
       pprintf("adapting mesh\n");
       ::avro::adapt<type>( problem );
+      fflush(NULL);
+      usleep(100);
 
       // clear the topology and copy in the output topology
       topology_.clear();
