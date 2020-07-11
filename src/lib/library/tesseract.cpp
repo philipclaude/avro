@@ -349,8 +349,8 @@ Tesseract::build()
   {
     index_t pid = id2entity[identifiers[k]]->identifier();
     id2entity[identifiers[k]]->set_identifier(k+1);
-    if (id2entity[identifiers[k]]->number()==3)
-      printf("entity %lu (%lu) maps to %lu\n",pid,identifiers[k],id2entity.size()-k );
+    //if (id2entity[identifiers[k]]->number()==3)
+    //  printf("entity %lu (%lu) maps to %lu\n",pid,identifiers[k],id2entity.size()-k );
   }
 
   // I really want the body indices of the cubes to come first

@@ -72,6 +72,8 @@ private:
 
   index_t rank_;
   std::shared_ptr<PartitionField<type>> field_;
+
+  std::vector<index_t> element_offset_;
 };
 
 } // avro

@@ -24,6 +24,20 @@
 
 #include <unistd.h>
 
+#ifdef AVRO_MPI
+#include <parmetis.h>
+
+#if PARMETIS_MAJOR_VERSION == 3
+#define PARM_INT idxtype
+#define PARM_REAL float
+#elif PARMETIS_MAJOR_VERSION == 4
+#define PARM_INT idx_t
+#define PARM_REAL float
+#else
+#error "unknown version of parmetis"
+#endif
+#endif
+
 namespace avro
 {
 
@@ -247,17 +261,21 @@ template<typename type>
 class PartitionGraph
 {
 public:
-  PartitionGraph( Topology<type>& partition , const PartitionBoundary<type>& boundary ) :
+  PartitionGraph( Topology<type>& partition , const PartitionBoundary<type>& boundary , const std::vector<index_t>& vtxdist ) :
     partition_(partition),
-    boundary_(boundary)
+    boundary_(boundary),
+    vtxdist_(vtxdist)
   {
-    vtxdist_.resize( mpi::size()+1 , 0 ); // todo actually retrieve this!
+    avro_assert( vtxdist_.size() == mpi::size()+1 );
     build();
   }
 
   void build()
   {
+    index_t rank = mpi::rank();
+
     // extract the adjacencies from the partition
+    std::map<index_t,index_t> local;
     for (index_t k=0;k<partition_.nb();k++)
     {
       for (index_t j=0;j<partition_.neighbours().nfacets();j++)
@@ -266,11 +284,16 @@ public:
         if (n<0) continue;      // do not create adjacency information for boundary elements
         if (n<int(k)) continue; // only create an edge once
 
-        index_t g0 = global_elem( mpi::rank() , k );
-        index_t g1 = global_elem( mpi::rank() , index_t(n) );
+        index_t g0 = global_elem( rank , k );
+        index_t g1 = global_elem( rank , index_t(n) );
 
         edges_.push_back( g0 );
         edges_.push_back( g1 );
+
+        if (local.find(g0) == local.end())
+          local.insert( {g0,local.size()} );
+        if (local.find(g1) == local.end())
+          local.insert( {g1,local.size()} );
       }
     }
 
@@ -280,32 +303,51 @@ public:
       index_t g0 = global_elem( boundary_.partL(k) , boundary_.elemL(k) );
       index_t g1 = global_elem( boundary_.partR(k) , boundary_.elemR(k) );
 
-      if (g1<g0) continue;
-      edges_.push_back(g0);
-      edges_.push_back(g1);
+      if (boundary_.partL(k) == rank )
+      {
+        avro_assert( boundary_.partR(k) != rank );
+        avro_assert( local.find(g0) != local.end() );
+        edges_.push_back( g0 );
+        edges_.push_back( g1 );
+
+        if (local.find(g1) == local.end())
+          local.insert( {g1,local.size()} );
+      }
+      else
+      {
+        avro_assert( boundary_.partR(k) == rank );
+        avro_assert( local.find(g1) != local.end() );
+        edges_.push_back( g1 );
+        edges_.push_back( g0 );
+
+        if (local.find(g0) == local.end())
+          local.insert( {g0,local.size()} );
+      }
     }
-    index_t nb_vert = partition_.nb() + boundary_.nb();
+    nb_vert_ = partition_.nb(); // number of vertices local to this processor
 
     // convert to csr
-    std::vector< std::set<index_t> > node2node(nb_vert);
+    std::vector< std::set<index_t> > node2node(local.size());
     for (index_t k=0;k<edges_.size()/2;k++)
     {
-      node2node[ edges_[2*k]   ].insert( edges_[2*k+1] );
-      node2node[ edges_[2*k+1] ].insert( edges_[2*k] );
+      node2node[ local.at(edges_[2*k])   ].insert( edges_[2*k+1] );
+      node2node[ local.at(edges_[2*k+1]) ].insert( edges_[2*k] );
     }
 
-    xadj_.resize( nb_vert+1 );
+    // only add the adjacency information for the vertices (elements) on this processor
+    xadj_.resize( nb_vert_+1 );
     xadj_[0] = 0;
     adjncy_.clear();
     std::set<index_t>::iterator it;
-    for (index_t k=0;k<nb_vert;k++)
+    for (index_t k=0;k<nb_vert_;k++)
     {
       xadj_[k+1] = xadj_[k] + node2node[k].size();
       for (it=node2node[k].begin();it!=node2node[k].end();++it)
         adjncy_.push_back(*it);
     }
 
-    avro_assert_msg( adjncy_.size()==edges_.size() , "|adjncy| = %lu, nb_edges = %lu" , adjncy_.size() , edges_.size()/2 );
+    // this assertion doesn't hold anymore for the partitioned graph
+    //avro_assert_msg( adjncy_.size()==edges_.size() , "|adjncy| = %lu, nb_edges = %lu" , adjncy_.size() , edges_.size()/2 );
   }
 
   void assign_weights( const std::vector<VertexMetric>& metrics )
@@ -326,12 +368,55 @@ public:
 
   index_t global_elem( index_t partition , index_t elem ) const
   {
+    avro_assert( partition < vtxdist_.size() );
     return vtxdist_[ partition ] + elem;
   }
 
   void repartition()
   {
-    // TODO call parmetis!
+    // setup the parmetis version of the adjacency graph
+    std::vector<PARM_INT> vtxdist(vtxdist_.begin(),vtxdist_.end());
+    std::vector<PARM_INT> xadj(xadj_.begin(),xadj_.end());
+    std::vector<PARM_INT> adjncy(adjncy_.begin(),adjncy_.end());
+    PARM_INT *pvwgt = NULL;
+    PARM_INT *padjwgt = NULL;
+    PARM_INT wgtflag = 0;
+    PARM_INT edgecut = 0;
+    PARM_INT bias = 0;
+    PARM_INT ncon = 1;
+    PARM_INT nparts = mpi::size();
+
+    std::vector<PARM_REAL> tpwgts(ncon*nparts,1./nparts);
+    std::vector<PARM_REAL> ubvec(ncon,1.05);
+    PARM_INT options[3];
+    options[0] = 1;
+    options[1] = 32;
+    options[2] = 0;
+
+
+    printf("calling parmetis on local graph on processor %d with %lu vertices\n",mpi::rank(),nb_vert_);
+    //print_inline( adjncy );
+
+    mpi::barrier();
+
+    // partition the graph!
+    std::vector<PARM_INT> part(nb_vert_,mpi::rank());
+    MPI_Comm comm = MPI_COMM_WORLD;
+    int result = ParMETIS_V3_PartKway( vtxdist.data() , xadj.data() , adjncy.data() ,
+                            pvwgt, padjwgt, &wgtflag,
+                            &bias , &ncon , &nparts,
+                            tpwgts.data() , ubvec.data(),
+                            options,
+                            &edgecut,
+                            part.data(),
+                            &comm);
+    avro_assert( result == METIS_OK );
+
+    // analyze how many elements are sent to the other processors
+    std::vector<index_t> nb_send( mpi::size() , 0 );
+    for (index_t k=0;k<part.size();k++)
+      nb_send[part[k]]++;
+    print_inline(nb_send,"[processor " + std::to_string(mpi::rank()) + "]: send away ->");
   }
 
 private:
@@ -345,7 +430,9 @@ private:
   std::vector<real_t> vgwt_;
   std::vector<real_t> egwt_;
 
-  std::vector<index_t> vtxdist_;
+  const std::vector<index_t>& vtxdist_;
+
+  index_t nb_vert_;
 
 };
 
@@ -358,9 +445,6 @@ AdaptationManager<type>::migrate_parmetis()
   // migrate the interface into the interior of the partitions
   // simultaneously performing a load balance
   topology_.build_structures();
-
-  // assign global identifiers for all elements
-  //synchronize_elements();
 
   // exchange partition boundaries to all processors
   PartitionBoundary<type> boundary(topology_.number()-1);
@@ -403,7 +487,7 @@ AdaptationManager<type>::migrate_parmetis()
 
   // build up the local adjacency graph, accounting for elements (graph vertices)
   // on other processors stored in the elemR/partR information
-  PartitionGraph<type> graph( topology_ , boundary );
+  PartitionGraph<type> graph( topology_ , boundary , element_offset_ );
 
   // append the metrics from the required processors
   // maybe not? can probably just assign a really poor quality element to interface elements
@@ -413,6 +497,8 @@ AdaptationManager<type>::migrate_parmetis()
 
   // call parmetis to perform the load balance
   graph.repartition();
+
+  mpi::barrier();
 
   // retrieve which elements we keep and which we send away
   // also send away the metrics
@@ -481,6 +567,30 @@ AdaptationManager<type>::synchronize()
 {
   index_t nb_rank = mpi::size();
 
+  // synchronize the element offsets
+  element_offset_.resize( nb_rank+1 , 0 );
+  if (rank_ == 0)
+  {
+    std::vector<index_t> nb_elem( nb_rank , 0 );
+    nb_elem[0] = topology_.nb();
+    for (index_t k=1;k<nb_rank;k++)
+      nb_elem[k] = mpi::receive<index_t>( k , TAG_MISC );
+    for (index_t k=0;k<nb_rank;k++)
+      element_offset_[k+1] = element_offset_[k] + nb_elem[k];
+  }
+  else
+    mpi::send( mpi::blocking{} , topology_.nb() , 0 , TAG_MISC );
+  mpi::barrier();
+
+  if (rank_ == 0)
+  {
+    for (index_t k=1;k<nb_rank;k++)
+      mpi::send( mpi::blocking{} , element_offset_ , k , TAG_MISC );
+  }
+  else
+    element_offset_ = mpi::receive<std::vector<index_t>>( 0 , TAG_MISC );
+  mpi::barrier();
+
   // synchronize all the global point indices between processors
   // the root processor needs to know how many vertices there are in total
   std::vector<index_t> global;
@@ -524,7 +634,6 @@ AdaptationManager<type>::synchronize()
     {
       pt_offset[k] = pt_offset[k-1] + nb_interior[k-1];
     }
-
   }
   else
   {
@@ -707,8 +816,6 @@ AdaptationManager<type>::adapt()
       #if 1
       pprintf("adapting mesh\n");
       ::avro::adapt<type>( problem );
-      fflush(NULL);
-      usleep(100);
 
       // clear the topology and copy in the output topology
       topology_.clear();
