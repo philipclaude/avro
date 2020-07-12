@@ -55,6 +55,9 @@ public:
   // retrieves the total number of points
   index_t get_total_nb_points() const;
 
+  // exchanges the elements between the partitions
+  void exchange( const std::vector<index_t>& repartition );
+
 private:
 
   void migrate_parmetis();

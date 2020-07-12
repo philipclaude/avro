@@ -372,7 +372,7 @@ public:
     return vtxdist_[ partition ] + elem;
   }
 
-  void repartition()
+  void repartition( std::vector<index_t>& repartition )
   {
     // setup the parmetis version of the adjacency graph
     std::vector<PARM_INT> vtxdist(vtxdist_.begin(),vtxdist_.end());
@@ -413,10 +413,10 @@ public:
     avro_assert( result == METIS_OK );
 
     // analyze how many elements are sent to the other processors
-    std::vector<index_t> nb_send( mpi::size() , 0 );
-    for (index_t k=0;k<part.size();k++)
-      nb_send[part[k]]++;
-    print_inline(nb_send,"[processor " + std::to_string(mpi::rank()) + "]: send away ->");
+
+    repartition.assign( part.begin() , part.end() );
+
+    mpi::barrier();
   }
 
 private:
@@ -433,8 +433,269 @@ private:
   const std::vector<index_t>& vtxdist_;
 
   index_t nb_vert_;
-
 };
+
+template<typename type>
+class MigrationChunk : public Topology_Partition<type>
+{
+public:
+  MigrationChunk( coord_t dim , coord_t udim , coord_t number ) :
+    Topology_Partition<type>(dim,udim,number)
+  {}
+
+  void extract( const Topology_Partition<type>& topology , const std::vector<index_t>& partition , index_t rank )
+  {
+    // first add any element that stays in our partition
+    // keep track of the global indices that have been added
+    std::set<index_t> pts;
+    for (index_t k=0;k<topology.nb();k++)
+    {
+      if (partition[k] != rank) continue;
+
+      std::vector<index_t> s = topology.get(k);
+      for (index_t j=0;j<s.size();j++)
+      {
+        index_t p = topology.points().global(s[j]);
+        if (global_.find(p) == global_.end())
+        {
+          global_.insert( {p,global_.size()} );
+          pts.insert( s[j] );
+        }
+        s[j] = global_.at(p);
+      }
+      this->add(s.data(),s.size());
+      partition_.push_back(rank);
+    }
+
+    // add the points
+    for (index_t k=0;k<topology.points().nb();k++)
+    {
+      index_t p = topology.points().global(k);
+      if (global_.find(p) == global_.end()) continue;
+      if (pts.find(k) == pts.end() ) continue;
+
+      index_t q = points_.nb();
+      points_.create( topology.points()[k] );
+      points_.set_entity( q , topology.points().entity(k) );
+      points_.set_param( q , topology.points().u(k) );
+      points_.set_global( q , topology.points().global(k) );
+      points_.set_fixed( q , topology.points().fixed(k) );
+    }
+
+    avro_assert_msg( global_.size() == points_.nb() , "|global| = %lu, |points| = %lu" , global_.size() , points_.nb() );
+  }
+
+  void append( const Topology_Partition<type>& chunk , index_t rank )
+  {
+    // first add any element that stays in our partition
+    // keep track of the global indices that have been added
+    for (index_t k=0;k<chunk.nb();k++)
+    {
+      std::vector<index_t> s = chunk.get(k);
+      for (index_t j=0;j<s.size();j++)
+      {
+        index_t p = chunk.points().global(s[j]);
+        if (global_.find(p) == global_.end())
+          global_.insert( {p,global_.size()} );
+        s[j] = global_.at(p);
+      }
+      this->add(s.data(),s.size());
+      partition_.push_back(rank);
+    }
+
+    // add the points
+    for (index_t k=0;k<chunk.points().nb();k++)
+    {
+      index_t p = chunk.points().global(k);
+      if (global_.find(p) == global_.end()) continue;
+
+      index_t q = points_.nb();
+      points_.create( chunk.points()[k] );
+      points_.set_entity( q , chunk.points().entity(k) );
+      points_.set_param( q , chunk.points().u(k) );
+      points_.set_global( q , chunk.points().global(k) );
+      points_.set_fixed( q , chunk.points().fixed(k) );
+    }
+  }
+
+  const std::vector<index_t>& partition() const { return partition_; }
+
+private:
+  using Topology_Partition<type>::points_;
+  std::map<index_t,index_t> global_;
+  std::vector<index_t> partition_;
+};
+
+template<typename type>
+void
+append_chunk( Topology<type>& topology , Topology<type>& chunk )
+{
+  std::map<index_t,index_t> global;
+  for (index_t k=0;k<topology.points().nb();k++)
+    global.insert( {topology.points().global(k) , k} );
+
+  std::map<index_t,index_t> pts;
+  for (index_t k=0;k<chunk.nb();k++)
+  {
+    std::vector<index_t> s = chunk.get(k);
+    for (index_t j=0;j<s.size();j++)
+    {
+      // check if this index already exists in the global list
+      index_t p = chunk.points().global(s[j]);
+      index_t q;
+      if (global.find(p) == global.end())
+      {
+        // we will need to add this point
+        if (pts.find(p) == pts.end())
+          pts.insert( {p,pts.size()} );
+
+        q = pts.at(p);
+      }
+      else
+        q = global.at(p);
+      s[j] = q;
+    }
+    topology.add( s.data() , s.size() );
+  }
+  printf("proc %d, added elements\n",mpi::rank());
+  for (index_t k=0;k<chunk.points().nb();k++)
+  {
+    index_t p = chunk.points().global(k);
+    if (pts.find(p) == pts.end()) continue;
+
+    index_t q = topology.points().nb();
+    topology.points().create( chunk.points()[k] );
+    topology.points().set_entity( q , chunk.points().entity(k) );
+    topology.points().set_param( q , chunk.points().u(k) );
+    topology.points().set_global( q , chunk.points().global(k) );
+    topology.points().set_fixed( q , chunk.points().fixed(k) );
+  }
+}
+
+template<typename type>
+void
+AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
+{
+  index_t nb_rank = mpi::size();
+
+  std::vector<index_t> nb_send( nb_rank , 0 );
+  for (index_t k=0;k<repartition.size();k++)
+    nb_send[repartition[k]]++;
+  print_inline(nb_send,"[processor " + std::to_string(rank_) + "]: send away ->");
+
+  coord_t dim = topology_.points().dim();
+  coord_t udim = topology_.points().udim();
+  coord_t number = topology_.number();
+
+  Topology_Partition<type> partition(dim,udim,number);
+
+  // first add any element that stays in our partition
+  // keep track of the global indices that have been added
+  std::map<index_t,index_t> global;
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    if (repartition[k] != rank_) continue;
+
+    std::vector<index_t> s = topology_.get(k);
+    for (index_t j=0;j<topology_.nv(k);j++)
+    {
+      index_t p = topology_.points().global(s[j]);
+      if (global.find(p) == global.end())
+        global.insert( {p,global.size()} );
+      s[j] = global.at(p);
+    }
+    partition.add(s.data(),s.size());
+  }
+
+  // add the points
+  for (index_t k=0;k<topology_.points().nb();k++)
+  {
+    index_t p = topology_.points().global(k);
+    if (global.find(p) == global.end()) continue;
+
+    index_t q = partition.points().nb();
+    partition.points().create( topology_.points()[k] );
+    partition.points().set_entity( q , topology_.points().entity(k) );
+    partition.points().set_param( q , topology_.points().u(k) );
+    partition.points().set_global( q , topology_.points().global(k) );
+    partition.points().set_fixed( q , topology_.points().fixed(k) );
+  }
+
+  // accumulate the elements to send away
+  MigrationChunk<type> goodbye(dim,udim,number);
+  for (index_t j=0;j<nb_rank;j++)
+  {
+    if (j == rank_) continue;
+    goodbye.extract( topology_ , repartition , j );
+  }
+  printf("send away %lu elements and %lu points\n",goodbye.nb(),goodbye.points().nb());
+
+  // receive chunks on the root processor so we can send the combined chunks away
+  std::vector<MigrationChunk<type>> pieces( nb_rank , MigrationChunk<type>(dim,udim,number) );
+  if (rank_ == 0)
+  {
+    // todo fill in data for processor 0
+    for (index_t j=1;j<nb_rank;j++)
+    {
+      pieces[0].TopologyBase::copy(goodbye);
+      goodbye.points().copy( pieces[0].points() );
+    }
+
+    for (index_t k=1;k<nb_rank;k++)
+    {
+      MigrationChunk<type> chunk(dim,udim,number);
+      chunk.receive( k );
+      std::vector<index_t> p = mpi::receive<std::vector<index_t>>(k,TAG_MISC);
+      avro_assert( p.size() == chunk.nb() );
+
+      // add the elements to the appropriate pieces
+      for (index_t j=0;j<nb_rank;j++)
+        pieces[j].extract( chunk , p , j );
+    }
+  }
+  else
+  {
+    goodbye.send(0);
+    mpi::send( mpi::blocking{} , goodbye.partition() , 0 , TAG_MISC );
+  }
+  mpi::barrier();
+
+  // send the chunks to the corresponding processors
+  Topology_Partition<type> chunk(dim,udim,number);
+  if (rank_ == 0)
+  {
+    // accumulate the pieces
+    for (index_t k=1;k<nb_rank;k++)
+      pieces[k].send(k);
+
+    // append the root piece into the chunk
+    chunk.TopologyBase::copy( pieces[0] );
+    pieces[0].points().copy(chunk.points());
+  }
+  else
+  {
+    // receive the chunks we need to add
+    chunk.receive(0);
+  }
+  mpi::barrier();
+
+  printf("need to append %lu elements with %lu points\n",chunk.nb(),chunk.points().nb());
+
+  //if (rank_!=0)
+  //append_chunk( topology_ , chunk );
+
+  std::vector<index_t> removals;
+  for (index_t k=0;k<repartition.size();k++)
+  {
+    if (repartition[k] != rank_ ) removals.push_back( k );
+  }
+  //topology_.remove_elements( removals );
+
+  // determine which metrics need to be added
+  // make a request to the corresponding processors if we don't own this metric
+
+  mpi::barrier();
+}
 
 template<typename type>
 void
@@ -496,15 +757,11 @@ AdaptationManager<type>::migrate_parmetis()
   graph.assign_weights( metrics_ );
 
   // call parmetis to perform the load balance
-  graph.repartition();
+  std::vector<index_t> repartition;
+  graph.repartition(repartition);
 
-  mpi::barrier();
-
-  // retrieve which elements we keep and which we send away
-  // also send away the metrics
-
-  // receive elements from another partition
-  // also receive the metrics
+  // exchange the elements between partitions
+  exchange(repartition);
 }
 
 template<typename type>
@@ -960,6 +1217,7 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
     }
 
     // fill the partition field
+    #if 1
     field_ = std::make_shared<PartitionField<type>>(topology);
     topology.element().set_basis( BasisFunctionCategory_Lagrange );
     field_->build();
@@ -967,6 +1225,7 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
     for (index_t j=0;j<topology.nv(k);j++)
       (*field_)(k,j) = partition_index[k];
     topology.fields().make("partition",field_);
+    #endif
 
   }
   else
