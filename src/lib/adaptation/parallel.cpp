@@ -634,7 +634,6 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   std::vector<MigrationChunk<type>> pieces( nb_rank , MigrationChunk<type>(dim,udim,number) );
   if (rank_ == 0)
   {
-    // todo fill in data for processor 0
     for (index_t j=1;j<nb_rank;j++)
     {
       pieces[0].TopologyBase::copy(goodbye);
@@ -679,7 +678,7 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   }
   mpi::barrier();
 
-  printf("need to append %lu elements with %lu points\n",chunk.nb(),chunk.points().nb());
+  printf("[processor %lu]: need to append %lu elements with %lu points\n",rank_,chunk.nb(),chunk.points().nb());
 
   //if (rank_!=0)
   //append_chunk( topology_ , chunk );
