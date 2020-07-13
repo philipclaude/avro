@@ -11,6 +11,8 @@
 
 #include "element/simplex.h"
 
+#include "graphics/application.h"
+
 #include "library/meshb.h"
 
 #include "mesh/boundary.h"
@@ -443,25 +445,29 @@ public:
     Topology_Partition<type>(dim,udim,number)
   {}
 
-  void extract( const Topology_Partition<type>& topology , const std::vector<index_t>& partition , index_t rank , bool verbose=false )
+  void extract( const Topology_Partition<type>& topology , const std::vector<index_t>& partition , index_t rank )
   {
-    if (verbose) printf("extracting element in partition %lu, nb_points = %lu\n",rank,points_.nb());
-
     // first add any element that stays in our partition
     // keep track of the global indices that have been added
-    std::set<index_t> pts;
     for (index_t k=0;k<topology.nb();k++)
     {
       if (partition[k] != rank) continue;
 
-      std::vector<index_t> s = topology.get(k);
+      std::vector<index_t> s = topology.get(k); // in local topology indexing
       for (index_t j=0;j<s.size();j++)
       {
         index_t p = topology.points().global(s[j]);
         if (global_.find(p) == global_.end())
         {
-          global_.insert( {p,global_.size()} );
-          pts.insert( s[j] );
+          // create the point
+          index_t q = points_.nb();
+          index_t m = s[j];
+          points_.create( topology.points()[m] );
+          points_.set_entity( q , topology.points().entity(m) );
+          points_.set_param( q , topology.points().u(m) );
+          points_.set_global( q , topology.points().global(m) );
+          points_.set_fixed( q , topology.points().fixed(m) );
+          global_.insert( {p,q} );
         }
         s[j] = global_.at(p);
       }
@@ -469,65 +475,7 @@ public:
       partition_.push_back(rank);
     }
 
-    //for (std::set<index_t>::iterator it=pts.begin();it!=pts.end();++it)
-    //  printf("need to add point %lu\n",*it);
-
-    // add the points
-    for (index_t k=0;k<topology.points().nb();k++)
-    {
-      index_t p = topology.points().global(k);
-      if (global_.find(p) == global_.end()) continue;
-      if (pts.find(k) == pts.end() )
-      {
-        if (verbose) printf("point %lu already exists\n",k);
-        continue;
-      }
-
-      index_t q = points_.nb();
-      points_.create( topology.points()[k] );
-      points_.set_entity( q , topology.points().entity(k) );
-      points_.set_param( q , topology.points().u(k) );
-      points_.set_global( q , topology.points().global(k) );
-      points_.set_fixed( q , topology.points().fixed(k) );
-    }
-
-    if (verbose)
-      printf("nb_points = %lu\n",points_.nb());
-
     avro_assert_msg( global_.size() == points_.nb() , "|global| = %lu, |points| = %lu" , global_.size() , points_.nb() );
-  }
-
-  void append( const Topology_Partition<type>& chunk , index_t rank )
-  {
-    // first add any element that stays in our partition
-    // keep track of the global indices that have been added
-    for (index_t k=0;k<chunk.nb();k++)
-    {
-      std::vector<index_t> s = chunk.get(k);
-      for (index_t j=0;j<s.size();j++)
-      {
-        index_t p = chunk.points().global(s[j]);
-        if (global_.find(p) == global_.end())
-          global_.insert( {p,global_.size()} );
-        s[j] = global_.at(p);
-      }
-      this->add(s.data(),s.size());
-      partition_.push_back(rank);
-    }
-
-    // add the points
-    for (index_t k=0;k<chunk.points().nb();k++)
-    {
-      index_t p = chunk.points().global(k);
-      if (global_.find(p) == global_.end()) continue;
-
-      index_t q = points_.nb();
-      points_.create( chunk.points()[k] );
-      points_.set_entity( q , chunk.points().entity(k) );
-      points_.set_param( q , chunk.points().u(k) );
-      points_.set_global( q , chunk.points().global(k) );
-      points_.set_fixed( q , chunk.points().fixed(k) );
-    }
   }
 
   const std::vector<index_t>& partition() const { return partition_; }
@@ -557,30 +505,21 @@ append_chunk( Topology<type>& topology , Topology<type>& chunk )
       index_t q;
       if (global.find(p) == global.end())
       {
-        // we will need to add this point
-        if (pts.find(p) == pts.end())
-          pts.insert( {p,pts.size()} );
-
-        q = pts.at(p);
+        // create the point
+        q = topology.points().nb();
+        index_t m = s[j];
+        topology.points().create( chunk.points()[m] );
+        topology.points().set_entity( q , chunk.points().entity(m) );
+        topology.points().set_param( q , chunk.points().u(m) );
+        topology.points().set_global( q , chunk.points().global(m) );
+        topology.points().set_fixed( q , chunk.points().fixed(m) );
+        global.insert( {p,q} );
       }
       else
         q = global.at(p);
       s[j] = q;
     }
     topology.add( s.data() , s.size() );
-  }
-  printf("proc %d, added elements\n",mpi::rank());
-  for (index_t k=0;k<chunk.points().nb();k++)
-  {
-    index_t p = chunk.points().global(k);
-    if (pts.find(p) == pts.end()) continue;
-
-    index_t q = topology.points().nb();
-    topology.points().create( chunk.points()[k] );
-    topology.points().set_entity( q , chunk.points().entity(k) );
-    topology.points().set_param( q , chunk.points().u(k) );
-    topology.points().set_global( q , chunk.points().global(k) );
-    topology.points().set_fixed( q , chunk.points().fixed(k) );
   }
 }
 
@@ -599,40 +538,6 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   coord_t udim = topology_.points().udim();
   coord_t number = topology_.number();
 
-  Topology_Partition<type> partition(dim,udim,number);
-
-  // first add any element that stays in our partition
-  // keep track of the global indices that have been added
-  std::map<index_t,index_t> global;
-  for (index_t k=0;k<topology_.nb();k++)
-  {
-    if (repartition[k] != rank_) continue;
-
-    std::vector<index_t> s = topology_.get(k);
-    for (index_t j=0;j<topology_.nv(k);j++)
-    {
-      index_t p = topology_.points().global(s[j]);
-      if (global.find(p) == global.end())
-        global.insert( {p,global.size()} );
-      s[j] = global.at(p);
-    }
-    partition.add(s.data(),s.size());
-  }
-
-  // add the points
-  for (index_t k=0;k<topology_.points().nb();k++)
-  {
-    index_t p = topology_.points().global(k);
-    if (global.find(p) == global.end()) continue;
-
-    index_t q = partition.points().nb();
-    partition.points().create( topology_.points()[k] );
-    partition.points().set_entity( q , topology_.points().entity(k) );
-    partition.points().set_param( q , topology_.points().u(k) );
-    partition.points().set_global( q , topology_.points().global(k) );
-    partition.points().set_fixed( q , topology_.points().fixed(k) );
-  }
-
   // accumulate the elements to send away
   MigrationChunk<type> goodbye(dim,udim,number);
   for (index_t j=0;j<nb_rank;j++)
@@ -647,35 +552,30 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   std::vector< std::shared_ptr<MigrationChunk<type>> > pieces( nb_rank );
   if (rank_ == 0)
   {
+    // initialize the pieces
     for (index_t k=0;k<nb_rank;k++)
       pieces[k] = std::make_shared<MigrationChunk<type>>(dim,udim,number);
 
+    // extract the pieces from the root processor
     for (index_t j=1;j<nb_rank;j++)
       pieces[j]->extract( goodbye , goodbye.partition() , j );
 
     for (index_t k=1;k<nb_rank;k++)
     {
-      printf("receiving chunks from process %lu\n",k);
+      // receive the chunk from processor k
       MigrationChunk<type> chunk(dim,udim,number);
       chunk.receive( k );
-      std::vector<index_t> p = mpi::receive<std::vector<index_t>>(k,TAG_MISC);
-      avro_assert( p.size() == chunk.nb() );
-
-      print_inline(p);
+      std::vector<index_t> partition_k = mpi::receive<std::vector<index_t>>(k,TAG_MISC);
+      avro_assert( partition_k.size() == chunk.nb() );
 
       // add the elements to the appropriate pieces
       for (index_t j=0;j<nb_rank;j++)
-      {
-        printf("before: nb piece(%lu) points = %lu\n",j,pieces[j]->points().nb());
-        pieces[j]->extract( chunk , p , j , true );
-        printf("--> nb piece(%lu) points = %lu\n",j,pieces[j]->points().nb());
-      }
+        pieces[j]->extract( chunk , partition_k , j );
     }
-    for (index_t j=0;j<nb_rank;j++)
-      printf("nb_points(%lu) = %lu, |pieces| = %lu\n",j,pieces[j]->points().nb(),pieces[j]->nb());
   }
   else
   {
+    // send the elements we don't need anymore to the root processor
     goodbye.send(0);
     mpi::send( mpi::blocking{} , goodbye.partition() , 0 , TAG_MISC );
   }
@@ -701,14 +601,13 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   mpi::barrier();
 
   printf("[processor %lu]: need to append %lu elements with %lu points\n",rank_,chunk.nb(),chunk.points().nb());
-
-  //if (rank_!=0)
   append_chunk( topology_ , chunk );
 
   std::vector<index_t> removals;
   for (index_t k=0;k<repartition.size();k++)
   {
-    if (repartition[k] != rank_ ) removals.push_back( k );
+    if (repartition[k] != rank_)
+      removals.push_back( k );
   }
   topology_.remove_elements( removals );
 
@@ -1247,7 +1146,6 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
       (*field_)(k,j) = partition_index[k];
     topology.fields().make("partition",field_);
     #endif
-
   }
   else
   {
