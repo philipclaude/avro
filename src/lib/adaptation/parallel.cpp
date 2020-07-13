@@ -300,6 +300,7 @@ public:
     }
 
     // add the edges corresponding to the boundary facets
+    std::set<index_t> ghost;
     for (index_t k=0;k<boundary_.nb();k++)
     {
       index_t g0 = global_elem( boundary_.partL(k) , boundary_.elemL(k) );
@@ -312,6 +313,7 @@ public:
         edges_.push_back( g0 );
         edges_.push_back( g1 );
 
+        ghost.insert( g1 );
         if (local.find(g1) == local.end())
           local.insert( {g1,local.size()} );
       }
@@ -322,6 +324,7 @@ public:
         edges_.push_back( g1 );
         edges_.push_back( g0 );
 
+        ghost.insert(g0);
         if (local.find(g0) == local.end())
           local.insert( {g0,local.size()} );
       }
@@ -332,8 +335,10 @@ public:
     std::vector< std::set<index_t> > node2node(local.size());
     for (index_t k=0;k<edges_.size()/2;k++)
     {
-      node2node[ local.at(edges_[2*k])   ].insert( edges_[2*k+1] );
-      node2node[ local.at(edges_[2*k+1]) ].insert( edges_[2*k] );
+      if (ghost.find(edges_[2*k]) == ghost.end())
+        node2node[ local.at(edges_[2*k])   ].insert( edges_[2*k+1] );
+      if (ghost.find(edges_[2*k+1]) == ghost.end())
+        node2node[ local.at(edges_[2*k+1]) ].insert( edges_[2*k] );
     }
 
     // only add the adjacency information for the vertices (elements) on this processor
@@ -344,12 +349,18 @@ public:
     for (index_t k=0;k<nb_vert_;k++)
     {
       xadj_[k+1] = xadj_[k] + node2node[k].size();
-      for (it=node2node[k].begin();it!=node2node[k].end();++it)
-        adjncy_.push_back(*it);
+      std::vector<index_t> adjlist( node2node[k].begin(),node2node[k].end() );
+      std::sort(adjlist.begin(),adjlist.end());
+      for (index_t i=0;i<adjlist.size();i++)
+        adjncy_.push_back(adjlist[i]);
+      //for (it=node2node[k].begin();it!=node2node[k].end();++it)
+      //  adjncy_.push_back(*it);
     }
 
-    // this assertion doesn't hold anymore for the partitioned graph
-    //avro_assert_msg( adjncy_.size()==edges_.size() , "|adjncy| = %lu, nb_edges = %lu" , adjncy_.size() , edges_.size()/2 );
+    pprintf("graph:\n");
+    print_inline( xadj_ );
+    print_inline( adjncy_ );
+
   }
 
   void assign_weights( const std::vector<VertexMetric>& metrics )
@@ -392,8 +403,9 @@ public:
     std::vector<PARM_REAL> ubvec(ncon,1.05);
     PARM_INT options[3];
     options[0] = 1;
-    options[1] = 32;
+    options[1] = 0;
     options[2] = 0;
+    //options[3] = PARMETIS_PSR_COUPLED;
 
 
     printf("calling parmetis on local graph on processor %d with %lu vertices\n",mpi::rank(),nb_vert_);
@@ -404,6 +416,7 @@ public:
     // partition the graph!
     std::vector<PARM_INT> part(nb_vert_,mpi::rank());
     MPI_Comm comm = MPI_COMM_WORLD;
+    #if 1
     int result = ParMETIS_V3_PartKway( vtxdist.data() , xadj.data() , adjncy.data() ,
                             pvwgt, padjwgt, &wgtflag,
                             &bias , &ncon , &nparts,
@@ -412,12 +425,23 @@ public:
                             &edgecut,
                             part.data(),
                             &comm);
+    #else
+    PARM_REAL itr = 1000.;
+    index_t mem_vertex = (partition_.number()+1)*sizeof(index_t);
+    std::vector<PARM_INT> vsize(nb_vert_,mem_vertex);
+    int result = ParMETIS_V3_AdaptiveRepart( vtxdist.data() , xadj.data() , adjncy.data() ,
+                            pvwgt, vsize.data(), padjwgt, &wgtflag,
+                            &bias , &ncon , &nparts,
+                            tpwgts.data() , ubvec.data(), &itr,
+                            options,
+                            &edgecut,
+                            part.data(),
+                            &comm);
+    #endif
     avro_assert( result == METIS_OK );
 
-    // analyze how many elements are sent to the other processors
-
+    // store the partition result
     repartition.assign( part.begin() , part.end() );
-
     mpi::barrier();
   }
 
