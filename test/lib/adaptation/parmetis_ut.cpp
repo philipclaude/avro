@@ -63,7 +63,7 @@ UT_TEST_CASE( test1 )
     std::vector<PARM_REAL> ubvec(ncon,1.05);
     PARM_INT options[4];
     options[0] = 1;
-    options[1] = 0;
+    options[1] = 3;
     options[2] = 0;
     options[3] = PARMETIS_PSR_COUPLED;
     mpi::barrier();
@@ -71,7 +71,7 @@ UT_TEST_CASE( test1 )
     index_t nb_vert = 5;
 
     // partition the graph!
-    std::vector<PARM_INT> part(nb_vert,mpi::rank());
+    std::vector<PARM_INT> part(nb_vert,rank);
     MPI_Comm comm = MPI_COMM_WORLD;
     #if 1
     int result = ParMETIS_V3_PartKway( vtxdist.data() , xadj.data() , adjncy.data() ,

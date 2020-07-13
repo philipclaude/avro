@@ -291,13 +291,12 @@ public:
 
         edges_.push_back( g0 );
         edges_.push_back( g1 );
-
-        if (local.find(g0) == local.end())
-          local.insert( {g0,local.size()} );
-        if (local.find(g1) == local.end())
-          local.insert( {g1,local.size()} );
       }
     }
+
+    // create the global to local information
+    for (index_t k=0;k<partition_.nb();k++)
+      local.insert( {global_elem(rank,k),k} );
 
     // add the edges corresponding to the boundary facets
     std::set<index_t> ghost;
@@ -313,9 +312,8 @@ public:
         edges_.push_back( g0 );
         edges_.push_back( g1 );
 
+        // keep track of ghost elements
         ghost.insert( g1 );
-        if (local.find(g1) == local.end())
-          local.insert( {g1,local.size()} );
       }
       else
       {
@@ -324,17 +322,18 @@ public:
         edges_.push_back( g1 );
         edges_.push_back( g0 );
 
+        // keep track of ghost elements
         ghost.insert(g0);
-        if (local.find(g0) == local.end())
-          local.insert( {g0,local.size()} );
       }
     }
     nb_vert_ = partition_.nb(); // number of vertices local to this processor
 
     // convert to csr
-    std::vector< std::set<index_t> > node2node(local.size());
+    std::vector< std::set<index_t> > node2node(nb_vert_);
     for (index_t k=0;k<edges_.size()/2;k++)
     {
+      avro_assert( edges_[2*k] != edges_[2*k+1] );
+
       if (ghost.find(edges_[2*k]) == ghost.end())
         node2node[ local.at(edges_[2*k])   ].insert( edges_[2*k+1] );
       if (ghost.find(edges_[2*k+1]) == ghost.end())
@@ -345,22 +344,17 @@ public:
     xadj_.resize( nb_vert_+1 );
     xadj_[0] = 0;
     adjncy_.clear();
-    std::set<index_t>::iterator it;
     for (index_t k=0;k<nb_vert_;k++)
     {
+      // set the adjacency pointers
       xadj_[k+1] = xadj_[k] + node2node[k].size();
+
+      // does parmetis want these sorted? not sure
       std::vector<index_t> adjlist( node2node[k].begin(),node2node[k].end() );
       std::sort(adjlist.begin(),adjlist.end());
       for (index_t i=0;i<adjlist.size();i++)
         adjncy_.push_back(adjlist[i]);
-      //for (it=node2node[k].begin();it!=node2node[k].end();++it)
-      //  adjncy_.push_back(*it);
     }
-
-    pprintf("graph:\n");
-    print_inline( xadj_ );
-    print_inline( adjncy_ );
-
   }
 
   void assign_weights( const std::vector<VertexMetric>& metrics )
@@ -381,7 +375,7 @@ public:
 
   index_t global_elem( index_t partition , index_t elem ) const
   {
-    avro_assert( partition < vtxdist_.size() );
+    avro_assert( partition < vtxdist_.size()-1 );
     return vtxdist_[ partition ] + elem;
   }
 
@@ -401,16 +395,13 @@ public:
 
     std::vector<PARM_REAL> tpwgts(ncon*nparts,1./nparts);
     std::vector<PARM_REAL> ubvec(ncon,1.05);
-    PARM_INT options[3];
+    PARM_INT options[4];
     options[0] = 1;
-    options[1] = 0;
+    options[1] = 3;
     options[2] = 0;
-    //options[3] = PARMETIS_PSR_COUPLED;
-
+    options[3] = PARMETIS_PSR_COUPLED;
 
     printf("calling parmetis on local graph on processor %d with %lu vertices\n",mpi::rank(),nb_vert_);
-    //print_inline( adjncy );
-
     mpi::barrier();
 
     // partition the graph!
@@ -1064,12 +1055,10 @@ AdaptationManager<type>::adapt()
     topology_.points().copy(mesh.points());
     Mesh mesh_out(number,number);
 
-    //if (rank_ > 0)
     //params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_);
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
-
     try
     {
       #if 1
