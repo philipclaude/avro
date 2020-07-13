@@ -72,6 +72,7 @@ private:
   AdaptationParameters& params_;
   Topology_Partition<type> topology_;
   std::vector<VertexMetric> metrics_;
+  std::vector<index_t> metric_index_; // global index of the metric
 
   index_t rank_;
   std::shared_ptr<PartitionField<type>> field_;

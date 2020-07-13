@@ -478,50 +478,52 @@ public:
     avro_assert_msg( global_.size() == points_.nb() , "|global| = %lu, |points| = %lu" , global_.size() , points_.nb() );
   }
 
+  void add_to( Topology<type>& topology )
+  {
+    std::map<index_t,index_t> global;
+    for (index_t k=0;k<topology.points().nb();k++)
+      global.insert( {topology.points().global(k) , k} );
+
+    for (index_t k=0;k<this->nb();k++)
+    {
+      std::vector<index_t> s = this->get(k);
+      for (index_t j=0;j<s.size();j++)
+      {
+        // check if this index already exists in the global list
+        index_t p = points_.global(s[j]);
+        index_t q;
+        if (global.find(p) == global.end())
+        {
+          // this point is added to the topology, so the metric will be needed
+          metric_.push_back( p );
+
+          // create the point
+          q = topology.points().nb();
+          index_t m = s[j];
+          topology.points().create( points_[m] );
+          topology.points().set_entity( q , points_.entity(m) );
+          topology.points().set_param( q , points_.u(m) );
+          topology.points().set_global( q , points_.global(m) );
+          topology.points().set_fixed( q , points_.fixed(m) );
+          global.insert( {p,q} );
+        }
+        else
+          q = global.at(p);
+        s[j] = q;
+      }
+      topology.add( s.data() , s.size() );
+    }
+  }
+
   const std::vector<index_t>& partition() const { return partition_; }
+  const std::vector<index_t>& metric() const { return metric_; }
 
 private:
   using Topology_Partition<type>::points_;
   std::map<index_t,index_t> global_;
   std::vector<index_t> partition_;
+  std::vector<index_t> metric_;
 };
-
-template<typename type>
-void
-append_chunk( Topology<type>& topology , Topology<type>& chunk )
-{
-  std::map<index_t,index_t> global;
-  for (index_t k=0;k<topology.points().nb();k++)
-    global.insert( {topology.points().global(k) , k} );
-
-  std::map<index_t,index_t> pts;
-  for (index_t k=0;k<chunk.nb();k++)
-  {
-    std::vector<index_t> s = chunk.get(k);
-    for (index_t j=0;j<s.size();j++)
-    {
-      // check if this index already exists in the global list
-      index_t p = chunk.points().global(s[j]);
-      index_t q;
-      if (global.find(p) == global.end())
-      {
-        // create the point
-        q = topology.points().nb();
-        index_t m = s[j];
-        topology.points().create( chunk.points()[m] );
-        topology.points().set_entity( q , chunk.points().entity(m) );
-        topology.points().set_param( q , chunk.points().u(m) );
-        topology.points().set_global( q , chunk.points().global(m) );
-        topology.points().set_fixed( q , chunk.points().fixed(m) );
-        global.insert( {p,q} );
-      }
-      else
-        q = global.at(p);
-      s[j] = q;
-    }
-    topology.add( s.data() , s.size() );
-  }
-}
 
 template<typename type>
 void
@@ -546,7 +548,6 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
     if (j == rank_) continue;
     goodbye.extract( topology_ , repartition , j );
   }
-  printf("send away %lu elements and %lu points\n",goodbye.nb(),goodbye.points().nb());
   mpi::barrier();
 
   // receive chunks on the root processor so we can send the combined chunks away
@@ -587,7 +588,7 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   mpi::barrier();
 
   // send the chunks to the corresponding processors
-  Topology_Partition<type> chunk(dim,udim,number);
+  MigrationChunk<type> chunk(dim,udim,number);
   if (rank_ == 0)
   {
     // accumulate the pieces
@@ -605,8 +606,10 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   }
   mpi::barrier();
 
-  printf("[processor %lu]: need to append %lu elements with %lu points\n",rank_,chunk.nb(),chunk.points().nb());
-  append_chunk( topology_ , chunk );
+  std::set<index_t> metrics_owned;
+  for (index_t k=0;k<topology_.points().nb();k++)
+    metrics_owned.insert( topology_.points().global(k) );
+  chunk.add_to( topology_ );
 
   std::vector<index_t> removals;
   for (index_t k=0;k<repartition.size();k++)
@@ -615,9 +618,59 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
       removals.push_back( k );
   }
   topology_.remove_elements( removals );
+  topology_.remove_unused();
 
   // determine which metrics need to be added
-  // make a request to the corresponding processors if we don't own this metric
+  print_inline( chunk.metric() , "metrics needed: " );
+  std::set<index_t> idx( chunk.metric().begin() , chunk.metric().end() );
+  std::vector<index_t> metric;
+  for (index_t k=0;k<chunk.metric().size();k++)
+  {
+    index_t p = chunk.metric()[k];
+    if (metrics_owned.find(p) == metrics_owned.end())
+      metric.push_back(p);
+  }
+  print_inline(metric,"--> please send me these metrics:");
+
+  // accumulate the requested metrics on the root processor
+  std::vector<std::set<index_t>> metric_send_idx(nb_rank);
+  if (rank_ == 0)
+  {
+    std::vector<index_t> metric_requests = metric;
+
+    for (index_t k=1;k<nb_rank;k++)
+    {
+      std::vector<index_t> metric_k = mpi::receive<std::vector<index_t>>( k , TAG_MISC );
+      std::copy( metric_k.begin() , metric_k.end() , std::inserter(metric_send_idx[k],metric_send_idx[k].end() ) );
+      for (index_t j=0;j<metric_k.size();j++)
+        metric_requests.push_back(metric_k[j]);
+    }
+    uniquify(metric_requests);
+    print_inline(metric_requests,"received all metric requests: ");
+  }
+  else
+  {
+    mpi::send( mpi::blocking{} , metric , 0 , TAG_MISC );
+  }
+  mpi::barrier();
+
+  // send off the metric data to the processors
+  if (rank_ == 0)
+  {
+    print_inline(metric,"send away metrics (0): ");
+
+    // extract the metric data we need to send
+    for (index_t k=1;k<nb_rank;k++)
+    {
+      std::vector<index_t> metric_k(metric_send_idx[k].begin(),metric_send_idx[k].end());
+      print_inline(metric_k,"send away metrics ("+std::to_string(k)+"): ");
+    }
+
+  }
+  else
+  {
+    // receive the metric data we requested from the root
+  }
 
   mpi::barrier();
 }
