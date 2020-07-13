@@ -36,6 +36,7 @@ public:
 
   // set the entities we will use to look up geometry identifiers
   void set_entities( const std::vector<Entity*>& entities );
+  const std::vector<Entity*>& entities() const { return entities_; }
   Entity* lookup( int identifier , int number ) const;
 
   #ifdef AVRO_MPI

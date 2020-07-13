@@ -540,6 +540,7 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
 
   // accumulate the elements to send away
   MigrationChunk<type> goodbye(dim,udim,number);
+  goodbye.set_entities(topology_.entities());
   for (index_t j=0;j<nb_rank;j++)
   {
     if (j == rank_) continue;
@@ -554,7 +555,10 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   {
     // initialize the pieces
     for (index_t k=0;k<nb_rank;k++)
+    {
       pieces[k] = std::make_shared<MigrationChunk<type>>(dim,udim,number);
+      pieces[k]->set_entities(topology_.entities());
+    }
 
     // extract the pieces from the root processor
     for (index_t j=1;j<nb_rank;j++)
@@ -564,6 +568,7 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
     {
       // receive the chunk from processor k
       MigrationChunk<type> chunk(dim,udim,number);
+      chunk.set_entities( topology_.entities() );
       chunk.receive( k );
       std::vector<index_t> partition_k = mpi::receive<std::vector<index_t>>(k,TAG_MISC);
       avro_assert( partition_k.size() == chunk.nb() );
