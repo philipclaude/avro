@@ -443,8 +443,10 @@ public:
     Topology_Partition<type>(dim,udim,number)
   {}
 
-  void extract( const Topology_Partition<type>& topology , const std::vector<index_t>& partition , index_t rank )
+  void extract( const Topology_Partition<type>& topology , const std::vector<index_t>& partition , index_t rank , bool verbose=false )
   {
+    if (verbose) printf("extracting element in partition %lu, nb_points = %lu\n",rank,points_.nb());
+
     // first add any element that stays in our partition
     // keep track of the global indices that have been added
     std::set<index_t> pts;
@@ -467,12 +469,19 @@ public:
       partition_.push_back(rank);
     }
 
+    //for (std::set<index_t>::iterator it=pts.begin();it!=pts.end();++it)
+    //  printf("need to add point %lu\n",*it);
+
     // add the points
     for (index_t k=0;k<topology.points().nb();k++)
     {
       index_t p = topology.points().global(k);
       if (global_.find(p) == global_.end()) continue;
-      if (pts.find(k) == pts.end() ) continue;
+      if (pts.find(k) == pts.end() )
+      {
+        if (verbose) printf("point %lu already exists\n",k);
+        continue;
+      }
 
       index_t q = points_.nb();
       points_.create( topology.points()[k] );
@@ -481,6 +490,9 @@ public:
       points_.set_global( q , topology.points().global(k) );
       points_.set_fixed( q , topology.points().fixed(k) );
     }
+
+    if (verbose)
+      printf("nb_points = %lu\n",points_.nb());
 
     avro_assert_msg( global_.size() == points_.nb() , "|global| = %lu, |points| = %lu" , global_.size() , points_.nb() );
   }
@@ -629,28 +641,38 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
     goodbye.extract( topology_ , repartition , j );
   }
   printf("send away %lu elements and %lu points\n",goodbye.nb(),goodbye.points().nb());
+  mpi::barrier();
 
   // receive chunks on the root processor so we can send the combined chunks away
-  std::vector<MigrationChunk<type>> pieces( nb_rank , MigrationChunk<type>(dim,udim,number) );
+  std::vector< std::shared_ptr<MigrationChunk<type>> > pieces( nb_rank );
   if (rank_ == 0)
   {
+    for (index_t k=0;k<nb_rank;k++)
+      pieces[k] = std::make_shared<MigrationChunk<type>>(dim,udim,number);
+
     for (index_t j=1;j<nb_rank;j++)
-    {
-      pieces[0].TopologyBase::copy(goodbye);
-      goodbye.points().copy( pieces[0].points() );
-    }
+      pieces[j]->extract( goodbye , goodbye.partition() , j );
 
     for (index_t k=1;k<nb_rank;k++)
     {
+      printf("receiving chunks from process %lu\n",k);
       MigrationChunk<type> chunk(dim,udim,number);
       chunk.receive( k );
       std::vector<index_t> p = mpi::receive<std::vector<index_t>>(k,TAG_MISC);
       avro_assert( p.size() == chunk.nb() );
 
+      print_inline(p);
+
       // add the elements to the appropriate pieces
       for (index_t j=0;j<nb_rank;j++)
-        pieces[j].extract( chunk , p , j );
+      {
+        printf("before: nb piece(%lu) points = %lu\n",j,pieces[j]->points().nb());
+        pieces[j]->extract( chunk , p , j , true );
+        printf("--> nb piece(%lu) points = %lu\n",j,pieces[j]->points().nb());
+      }
     }
+    for (index_t j=0;j<nb_rank;j++)
+      printf("nb_points(%lu) = %lu, |pieces| = %lu\n",j,pieces[j]->points().nb(),pieces[j]->nb());
   }
   else
   {
@@ -665,11 +687,11 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   {
     // accumulate the pieces
     for (index_t k=1;k<nb_rank;k++)
-      pieces[k].send(k);
+      pieces[k]->send(k);
 
     // append the root piece into the chunk
-    chunk.TopologyBase::copy( pieces[0] );
-    pieces[0].points().copy(chunk.points());
+    chunk.TopologyBase::copy( *pieces[0].get() );
+    pieces[0]->points().copy(chunk.points());
   }
   else
   {
@@ -681,14 +703,14 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   printf("[processor %lu]: need to append %lu elements with %lu points\n",rank_,chunk.nb(),chunk.points().nb());
 
   //if (rank_!=0)
-  //append_chunk( topology_ , chunk );
+  append_chunk( topology_ , chunk );
 
   std::vector<index_t> removals;
   for (index_t k=0;k<repartition.size();k++)
   {
     if (repartition[k] != rank_ ) removals.push_back( k );
   }
-  //topology_.remove_elements( removals );
+  topology_.remove_elements( removals );
 
   // determine which metrics need to be added
   // make a request to the corresponding processors if we don't own this metric
