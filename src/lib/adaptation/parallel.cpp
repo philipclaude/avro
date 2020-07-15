@@ -11,6 +11,8 @@
 
 #include "element/simplex.h"
 
+#include "geometry/entity.h"
+
 #include "graphics/application.h"
 
 #include "library/meshb.h"
@@ -62,6 +64,37 @@ pprintf(const char* format , ... )
   printf("[processor %2lu]: ",rank);
   printf(format,args);
   va_end(args);
+}
+
+// useful for debugging for problems in [0,1]^d
+inline bool
+check_geometry( const Points& points )
+{
+  real_t tol = 1e-12;
+  index_t nb_error = 0;
+  for (index_t k=0;k<points.nb();k++)
+  {
+    bool geometry = false;
+    for (coord_t d=0;d<points.dim();d++)
+    {
+      if (fabs(points[k][d]-1.0)<tol) geometry = true;
+      if (fabs(points[k][d]    )<tol) geometry = true;
+    }
+
+    if (geometry && points.entity(k) == nullptr )
+    {
+      printf("point %lu is on geometry but has no entity!\n",k);
+      points.print(k,true);
+      nb_error++;
+    }
+    else if (!geometry && points.entity(k) != nullptr)
+    {
+      printf("point %lu is interior but has an entity!\n",k);
+      points.print(k,true);
+      nb_error++;
+    }
+  }
+  return nb_error == 0;
 }
 
 template<typename type>
@@ -215,6 +248,7 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
       // receive our set of metrics
       receive_metrics(0,true);
     }
+    topology_.set_entities(entities);
   }
   else
   {
@@ -276,6 +310,10 @@ public:
   {
     index_t rank = mpi::rank();
 
+    edges_.clear();
+    adjncy_.clear();
+    xadj_.clear();
+
     // extract the adjacencies from the partition
     std::map<index_t,index_t> local;
     for (index_t k=0;k<partition_.nb();k++)
@@ -334,13 +372,14 @@ public:
     {
       avro_assert( edges_[2*k] != edges_[2*k+1] );
 
+      // only add adjacency information for vertices (elements) on this processor
       if (ghost.find(edges_[2*k]) == ghost.end())
         node2node[ local.at(edges_[2*k])   ].insert( edges_[2*k+1] );
       if (ghost.find(edges_[2*k+1]) == ghost.end())
         node2node[ local.at(edges_[2*k+1]) ].insert( edges_[2*k] );
     }
 
-    // only add the adjacency information for the vertices (elements) on this processor
+    // convert to the parmetis arrays
     xadj_.resize( nb_vert_+1 );
     xadj_[0] = 0;
     adjncy_.clear();
@@ -357,25 +396,92 @@ public:
     }
   }
 
+  void check()
+  {
+    // this should only be run for small problems
+    index_t N = vtxdist_[mpi::size()];
+    if (mpi::rank() == 0)
+    {
+      numerics::MatrixD<real_t> graph(N,N);
+
+      index_t n = 0;
+      for (index_t k=0;k<xadj_.size()-1;k++)
+      {
+        index_t p = xadj_[k];
+        index_t q = xadj_[k+1];
+        for (index_t j=p;j<q;j++)
+          graph(n,adjncy_[j]) = 1.0;
+        n++;
+      }
+
+      for (index_t r=1;r<mpi::size();r++)
+      {
+        std::vector<index_t> xadj = mpi::receive<std::vector<index_t>>(r,TAG_CELL_FIRST);
+        std::vector<index_t> adjncy = mpi::receive<std::vector<index_t>>(r,TAG_CELL_LAST);
+        for (index_t k=0;k<xadj.size()-1;k++)
+        {
+          index_t p = xadj[k];
+          index_t q = xadj[k+1];
+          for (index_t j=p;j<q;j++)
+            graph(n,adjncy[j]) = 1.0;
+          n++;
+        }
+      }
+
+      index_t nb_error = 0;
+      for (index_t k=0;k<graph.m();k++)
+      for (index_t i=0;i<graph.n();i++)
+      {
+        if (graph(k,i) != graph(i,k))
+        {
+          printf( "non-symmetric adjacency matrix in entry (%lu,%lu) = %g but (%lu,%lu) = %g\n" ,k,i , graph(k,i) , i,k,graph(i,k) );
+          nb_error++;
+        }
+      }
+      avro_assert_msg( nb_error == 0 , "non-symmetric adjacency matrix");
+    }
+    else
+    {
+      mpi::send( mpi::blocking{} , xadj_ , 0 , TAG_CELL_FIRST );
+      mpi::send( mpi::blocking{} , adjncy_ , 0 , TAG_CELL_LAST );
+    }
+    mpi::barrier();
+  }
+
   void assign_weights( const std::vector<VertexMetric>& metrics )
   {
+    real_t alpha = 10.0;
+    real_t beta = 0.01;
+
     // create a metric field to make computations easier
     MetricAttachment attachment( partition_.points() , metrics );
     MetricField<type> metric( partition_ , attachment );
 
-    // loop through elements and calculate quality
-    vgwt_.resize( partition_.nb() + boundary_.nb() , 0.0 );
+    // assign a weight based on digonnet 2019
+    vgwt_.resize( nb_vert_ , 0.0 );
     for (index_t k=0;k<partition_.nb();k++)
-      vgwt_[k] = metric.quality( partition_ , k );
+      vgwt_[k] = alpha*( 1. + beta*( 1. - 1./metric.quality( partition_ , k ) ) );
 
+    #if 0
     // assign a small quality (more work needed) for interface elements
+    index_t rank = mpi::rank();
+    real_t minq = 0.1;
     for (index_t k=0;k<boundary_.nb();k++)
-      vgwt_[partition_.nb()+k] = 0.01;
+    {
+      if (boundary_.partL(k) == rank)
+        vgwt_[boundary_.elemL(k)] = alpha/minq;
+      else
+      {
+        assert( boundary_.partR(k) == rank );
+        vgwt_[boundary_.elemR(k)] = alpha/minq;
+      }
+    }
+    #endif
   }
 
   index_t global_elem( index_t partition , index_t elem ) const
   {
-    avro_assert( partition < vtxdist_.size()-1 );
+    avro_assert_msg( partition < vtxdist_.size()-1 , "partition = %lu" , partition );
     return vtxdist_[ partition ] + elem;
   }
 
@@ -385,9 +491,9 @@ public:
     std::vector<PARM_INT> vtxdist(vtxdist_.begin(),vtxdist_.end());
     std::vector<PARM_INT> xadj(xadj_.begin(),xadj_.end());
     std::vector<PARM_INT> adjncy(adjncy_.begin(),adjncy_.end());
-    PARM_INT *pvwgt = NULL;
+    std::vector<PARM_INT> vwgt( vgwt_.begin() , vgwt_.end() );
     PARM_INT *padjwgt = NULL;
-    PARM_INT wgtflag = 0;
+    PARM_INT wgtflag = 2; // 0 for no weights, 1 for edge weights, 2 for vertex weights, 3 for both
     PARM_INT edgecut = 0;
     PARM_INT bias = 0;
     PARM_INT ncon = 1;
@@ -399,17 +505,17 @@ public:
     options[0] = 1;
     options[1] = 3;
     options[2] = 0;
-    options[3] = PARMETIS_PSR_COUPLED;
+    options[3] = PARMETIS_PSR_COUPLED; // only used for AdaptiveRepart
 
-    printf("calling parmetis on local graph on processor %d with %lu vertices\n",mpi::rank(),nb_vert_);
     mpi::barrier();
+    printf("calling parmetis on local graph on processor %d with %lu vertices\n",mpi::rank(),nb_vert_);
 
     // partition the graph!
     std::vector<PARM_INT> part(nb_vert_,mpi::rank());
     MPI_Comm comm = MPI_COMM_WORLD;
     #if 1
     int result = ParMETIS_V3_PartKway( vtxdist.data() , xadj.data() , adjncy.data() ,
-                            pvwgt, padjwgt, &wgtflag,
+                            vwgt.data() , padjwgt, &wgtflag,
                             &bias , &ncon , &nparts,
                             tpwgts.data() , ubvec.data(),
                             options,
@@ -418,7 +524,7 @@ public:
                             &comm);
     #else
     PARM_REAL itr = 1000.;
-    index_t mem_vertex = (partition_.number()+1)*sizeof(index_t);
+    index_t mem_vertex = (partition_.number()+1)*sizeof(real_t);
     std::vector<PARM_INT> vsize(nb_vert_,mem_vertex);
     int result = ParMETIS_V3_AdaptiveRepart( vtxdist.data() , xadj.data() , adjncy.data() ,
                             pvwgt, vsize.data(), padjwgt, &wgtflag,
@@ -604,6 +710,7 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
 
   // send the chunks to the corresponding processors
   MigrationChunk<type> chunk(dim,udim,number);
+  chunk.set_entities( topology_.entities() );
   if (rank_ == 0)
   {
     // accumulate the pieces
@@ -621,9 +728,9 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   }
   mpi::barrier();
 
-  std::set<index_t> metrics_owned;
+  std::map<index_t,index_t> metrics_owned;
   for (index_t k=0;k<topology_.points().nb();k++)
-    metrics_owned.insert( topology_.points().global(k) );
+    metrics_owned.insert( {topology_.points().global(k),k} );
   chunk.add_to( topology_ );
 
   std::vector<index_t> removals;
@@ -633,10 +740,9 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
       removals.push_back( k );
   }
   topology_.remove_elements( removals );
-  topology_.remove_unused();
 
   // determine which metrics need to be added
-  print_inline( chunk.metric() , "metrics needed: " );
+  //print_inline( chunk.metric() , "metrics needed: " );
   std::set<index_t> idx( chunk.metric().begin() , chunk.metric().end() );
   std::vector<index_t> metric;
   for (index_t k=0;k<chunk.metric().size();k++)
@@ -645,14 +751,17 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
     if (metrics_owned.find(p) == metrics_owned.end())
       metric.push_back(p);
   }
-  print_inline(metric,"--> please send me these metrics:");
+  //print_inline(metric,"--> please send me these metrics:");
 
   // accumulate the requested metrics on the root processor
   std::vector<std::set<index_t>> metric_send_idx(nb_rank);
+  std::vector<index_t> metric_requests;
   if (rank_ == 0)
   {
-    std::vector<index_t> metric_requests = metric;
+    // initialize the full list of metrics on the root processor
+    metric_requests = metric;
 
+    // append the metric requests received from other processors
     for (index_t k=1;k<nb_rank;k++)
     {
       std::vector<index_t> metric_k = mpi::receive<std::vector<index_t>>( k , TAG_MISC );
@@ -661,7 +770,6 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
         metric_requests.push_back(metric_k[j]);
     }
     uniquify(metric_requests);
-    print_inline(metric_requests,"received all metric requests: ");
   }
   else
   {
@@ -669,22 +777,113 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   }
   mpi::barrier();
 
-  // send off the metric data to the processors
+  // now gather the data from all the processors
   if (rank_ == 0)
   {
-    print_inline(metric,"send away metrics (0): ");
-
-    // extract the metric data we need to send
     for (index_t k=1;k<nb_rank;k++)
-    {
-      std::vector<index_t> metric_k(metric_send_idx[k].begin(),metric_send_idx[k].end());
-      print_inline(metric_k,"send away metrics ("+std::to_string(k)+"): ");
-    }
-
+      mpi::send( mpi::blocking{} , metric_requests , k , TAG_MISC );
   }
   else
   {
-    // receive the metric data we requested from the root
+    metric_requests = mpi::receive<std::vector<index_t>>(0,TAG_MISC);
+  }
+  mpi::barrier();
+
+  // create the metric data to send for the points we own
+  std::vector<real_t> metric_data;
+  std::vector<index_t> metric_idx;
+  for (index_t k=0;k<metric_requests.size();k++)
+  {
+    // determine if we own this metric
+    index_t p = metric_requests[k];
+    if (metrics_owned.find(p) == metrics_owned.end()) continue;
+
+    index_t q = metrics_owned.at(p);
+    metric_idx.push_back( metric_requests[k] );
+    for (index_t j=0;j<number;j++)
+    for (index_t i=j;i<number;i++)
+      metric_data.push_back( metrics_[q](i,j) );
+  }
+
+  if (rank_ == 0)
+  {
+    // receive all the metric data and append it to the list (initialized by the root)
+    for (index_t k=1;k<nb_rank;k++)
+    {
+      std::vector<index_t> metric_idx_k = mpi::receive<std::vector<index_t>>( k , TAG_METRIC_INDICES );
+      std::vector<real_t> metric_data_k = mpi::receive<std::vector<real_t>>( k , TAG_METRIC_ENTRIES );
+
+      // append the data
+      index_t count = 0;
+      for (index_t m=0;m<metric_idx_k.size();m++)
+      {
+        metric_idx.push_back(metric_idx_k[m]);
+        for (index_t j=0;j<number;j++)
+        for (index_t i=j;i<number;i++)
+          metric_data.push_back( metric_data_k[count++] );
+      }
+    }
+  }
+  else
+  {
+    // send our metric data to the root
+    mpi::send( mpi::blocking{} , metric_idx , 0 , TAG_METRIC_INDICES );
+    mpi::send( mpi::blocking{} , metric_data , 0 , TAG_METRIC_ENTRIES );
+  }
+  mpi::barrier();
+
+  // now receive all the data from the host
+  if (rank_ == 0)
+  {
+    for (index_t k=1;k<nb_rank;k++)
+    {
+      mpi::send( mpi::blocking{} , metric_idx , k , TAG_METRIC_INDICES );
+      mpi::send( mpi::blocking{} , metric_data , k , TAG_METRIC_ENTRIES );
+    }
+  }
+  else
+  {
+    metric_idx  = mpi::receive<std::vector<index_t>>(0,TAG_METRIC_INDICES);
+    metric_data = mpi::receive<std::vector<real_t>>(0,TAG_METRIC_ENTRIES);
+  }
+  mpi::barrier();
+
+  // find the data we need and append it into our array
+  index_t N = number*(number+1)/2;
+  for (index_t k=0;k<metric.size();k++)
+  {
+    bool found = false;
+    for (index_t m=0;m<metric_idx.size();m++)
+    {
+      if (metric_idx[m] == metric[k])
+      {
+        VertexMetric mk(number);
+        index_t count = 0;
+        for (index_t j=0;j<number;j++)
+        for (index_t i=j;i<number;i++)
+          mk(i,j) = metric_data[ m*N + count++ ];
+        metrics_.push_back(mk);
+        found = true;
+        break;
+      }
+    }
+    avro_assert( found );
+  }
+  avro_assert( metrics_.size() == topology_.points().nb() );
+
+  // remove points that are not referenced by the topology
+  std::vector<index_t> point_map;
+  topology_.remove_unused(&point_map);
+
+  // map the metrics too
+  for (index_t k=0;k<point_map.size();k++)
+    metrics_.erase( metrics_.begin() + point_map[k]-k );
+
+  avro_assert( metrics_.size() == topology_.points().nb() );
+  for (index_t k=0;k<topology_.nb();k++)
+  {
+    for (index_t j=0;j<topology_.nv(k);j++)
+      avro_assert( topology_(k,j) < topology_.points().nb() );
   }
 
   mpi::barrier();
@@ -715,6 +914,7 @@ AdaptationManager<type>::migrate_parmetis()
       boundary_k.receive(k);
       interface.append(boundary_k);
     }
+    avro_assert( interface.complete(element_offset_) );
   }
   else
   {
@@ -742,9 +942,6 @@ AdaptationManager<type>::migrate_parmetis()
   // build up the local adjacency graph, accounting for elements (graph vertices)
   // on other processors stored in the elemR/partR information
   PartitionGraph<type> graph( topology_ , boundary , element_offset_ );
-
-  // append the metrics from the required processors
-  // maybe not? can probably just assign a really poor quality element to interface elements
 
   // determine a weight on each element using the metric
   graph.assign_weights( metrics_ );
@@ -1034,8 +1231,6 @@ template<typename type>
 void
 AdaptationManager<type>::adapt()
 {
-  mpi::communicator& comm = ProcessMPI::get_comm();
-  UNUSED(comm);
   coord_t number = topology_.number();
 
   bool done = false;
@@ -1045,6 +1240,12 @@ AdaptationManager<type>::adapt()
     // and move the fixed points to the beginning of the points structure
     fix_boundary();
 
+    for (index_t k=0;k<topology_.nb();k++)
+    {
+      for (index_t j=0;j<topology_.nv(k);j++)
+        avro_assert( topology_(k,j) < topology_.points().nb() );
+    }
+
     // do the adaptation
     // create the mesh we will write to
     // create a mesh and add the topology
@@ -1053,11 +1254,14 @@ AdaptationManager<type>::adapt()
     ptopology->TopologyBase::copy(topology_);
     mesh.add(ptopology);
     topology_.points().copy(mesh.points());
-    Mesh mesh_out(number,number);
+    Mesh mesh_out(number,mesh.points().dim());
+
+    library::meshb out;
+    out.write( mesh , "input-proc" + std::to_string(rank_) + "_pass" + std::to_string(pass)+".mesh" , false );
 
     //params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
     params_.export_boundary() = false;
-    params_.prefix() = "mesh-proc"+std::to_string(rank_);
+    params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     try
     {
@@ -1094,8 +1298,6 @@ AdaptationManager<type>::adapt()
 
     // migrate the interface between partitions
     migrate();
-
-    break; // only one pass for now..
   }
 
   // balance the mesh between the partitions
@@ -1154,6 +1356,7 @@ void
 AdaptationManager<type>::append_partition( index_t p , Topology<type>& topology , Topology_Partition<type>& partition ,
                                            std::vector<bool>& created , std::vector<real_t>& partition_index ) const
 {
+  printf("appending partition with %lu elements\n",partition.nb());
   for (index_t j=0;j<partition.points().nb();j++)
   {
     // retrieve the global index of this point
@@ -1192,7 +1395,7 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
     std::vector<bool> created(nb_points,false);
 
     // initialize all the points (data filled below)
-    std::vector<real_t> zero(topology.points().dim());
+    std::vector<real_t> zero(topology.points().dim(),0.0);
     for (index_t j=0;j<nb_points;j++)
       topology.points().create(zero.data());
 

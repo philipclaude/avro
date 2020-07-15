@@ -468,9 +468,9 @@ PartitionBoundary<type>::add_left( const ElementIndices& f , index_t elemL , ind
   elemL_global_.push_back(elemL_global);
   partL_.push_back(partL);
 
-  elemR_.push_back(0);
-  elemR_global_.push_back(0);
-  partR_.push_back(0);
+  elemR_.push_back(-1);
+  elemR_global_.push_back(-1);
+  partR_.push_back(-1);
 }
 
 template<typename type>
@@ -584,8 +584,8 @@ PartitionBoundary<type>::receive( index_t sender )
   std::vector<index_t> F = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_DATA );
   elemL_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_ELEML );
   partL_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_PARTL );
-  elemR_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_ELEMR );
-  partR_ = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_PARTR );
+  elemR_ = mpi::receive<std::vector<int>>( sender , TAG_PARTITION_BND_ELEMR );
+  partR_ = mpi::receive<std::vector<int>>( sender , TAG_PARTITION_BND_PARTR );
   std::vector<index_t> idx = mpi::receive<std::vector<index_t>>( sender , TAG_PARTITION_BND_INDEX );
 
   // TODO: does this information need to be sent too?
@@ -609,6 +609,28 @@ PartitionBoundary<type>::receive( index_t sender )
 #undef TAG_PARTITION_BND_ELEMR
 #undef TAG_PARTITION_BND_PARTR
 #undef TAG_PARTITION_BND_INDEX
+
+template<typename type>
+bool
+PartitionBoundary<type>::complete( const std::vector<index_t>& offset ) const
+{
+  bool result = true;
+  for (std::map<ElementIndices,index_t>::const_iterator it=facet_.begin();it!=facet_.end();++it)
+  {
+    index_t k = it->second;
+    bool problem = false;
+    if (elemR_[k]<0) problem = true;
+    if (elemR_global_[k]<0) problem = true;
+    if (partR_[k]<0) problem = true;
+    if (problem)
+    {
+      result = false;
+      print_inline( it->first.indices );
+      printf("elemL = %lu, partL = %lu, elemR = %d , partR = %d is not fully defined\n",offset[partL_[k]]+elemL_[k],partL_[k],elemR_[k],partR_[k]);
+    }
+  }
+  return result;
+}
 
 template<typename type>
 void

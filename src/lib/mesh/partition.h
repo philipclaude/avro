@@ -71,9 +71,9 @@ public:
   index_t elemL_global( index_t k ) const { return elemL_global_[k]; }
   index_t partL( index_t k ) const { return partL_[k]; }
 
-  index_t elemR( index_t k ) const { return elemR_[k]; }
-  index_t elemR_global( index_t k ) const { return elemR_global_[k]; }
-  index_t partR( index_t k ) const { return partR_[k]; }
+  index_t elemR( index_t k ) const { avro_assert_msg( elemR_[k]>=0 , "not set k = %lu" , k ); return elemR_[k]; }
+  index_t elemR_global( index_t k ) const { avro_assert_msg( elemR_global_[k]>=0 , "not set k = %lu" , k ); return elemR_global_[k]; }
+  index_t partR( index_t k ) const { avro_assert_msg( partR_[k]>=0 , "not set k = %lu" , k ); return partR_[k]; }
 
   void ball( index_t p , std::vector<index_t>& B ) const;
 
@@ -88,15 +88,17 @@ public:
 
   void print() const;
 
+  bool complete( const std::vector<index_t>& offset ) const;
+
 private:
   Points dummy_; // should not be used, but we need this to inherit from topology so we can use the inverse
   std::vector<index_t> elemL_;
   std::vector<index_t> elemL_global_;
   std::vector<index_t> partL_;
 
-  std::vector<index_t> elemR_;
-  std::vector<index_t> elemR_global_;
-  std::vector<index_t> partR_;
+  std::vector<int> elemR_;
+  std::vector<int> elemR_global_;
+  std::vector<int> partR_;
 
   std::map<ElementIndices,index_t> facet_;
 };

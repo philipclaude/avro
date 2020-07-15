@@ -215,11 +215,11 @@ Points::print( index_t k , bool info ) const
 			num = primitive_[k]->number();
 		}
 		else geo = "";
-		printf(" : %5s , %5s , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "ghost":"real",
-							(fixed_[k])?("fixed"):("free"),num,(void*)primitive_[k],geo.c_str());
+		printf(" : %5s , e[ %2d-%16p%20s ] , u = (",(k<nb_ghost_)? "ghost":(fixed_[k])?("fixed"):("free"),num,(void*)primitive_[k],geo.c_str());
 		for (index_t d=0;d<udim_;d++)
-			printf("%12.4e ",u(k)[d]);
+			printf(" %10.2e ",u(k)[d]);
 		printf(")");
+		printf(" g(%4lu)",global(k));
 	}
 	printf("\n");
 }
