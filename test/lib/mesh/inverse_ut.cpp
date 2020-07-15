@@ -85,9 +85,55 @@ UT_TEST_CASE(ckf_nd)
     topology.points().create( x.data() );
     topology.inverse().create(1);
     std::vector<index_t> S;
-    UT_CATCH_EXCEPTION( topology.inverse().shell( 0 , topology.points().nb()-1 , S ) );
+    //UT_CATCH_EXCEPTION( topology.inverse().shell( 0 , topology.points().nb()-1 , S ) );
   }
 }
 UT_TEST_CASE_END(ckf_nd)
+
+UT_TEST_CASE( non_manifold_topology )
+{
+  coord_t number = 2;
+  coord_t dim = number;
+
+  Points points(dim);
+
+  real_t x0[2] = {0,0};
+  real_t x1[2] = {1,0};
+  real_t x2[2] = {1,1};
+  real_t x3[2] = {2,1};
+  real_t x4[2] = {1,2};
+  real_t x5[2] = {2,2};
+  points.create(x0);
+  points.create(x1);
+  points.create(x2);
+  points.create(x3);
+  points.create(x4);
+  points.create(x5);
+
+  Topology<Simplex> topology(points,number);
+  index_t t0[3] = {0,1,2};
+  index_t t1[3] = {2,5,4};
+  index_t t2[3] = {2,3,5};
+  topology.add(t0,3);
+  topology.add(t1,3);
+  topology.add(t2,3);
+
+  topology.close();
+  topology.build_structures();
+
+  std::vector<index_t> C;
+  std::vector<index_t> edges;
+  topology.get_edges(edges);
+  for (index_t k=0;k<edges.size()/2;k++)
+  {
+    topology.inverse().shell( edges[2*k],edges[2*k+1] , C );
+    print_inline(C);
+  }
+
+  topology.Table<index_t>::print();
+  //topology.neighbours().print();
+
+}
+UT_TEST_CASE_END( non_manifold_topology )
 
 UT_TEST_SUITE_END(mesh_inverse_suite)

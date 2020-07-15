@@ -126,6 +126,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     // likely a geometry insertion, use the provided shell
     elems_ = shell;
   }
+  if (elems_.size()==0) return false;
 
   // index of the vertex to be inserted
   index_t ns = this->topology_.points().nb();
@@ -462,6 +463,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // if the current length is greater than 4.0, we need to be more flexible
       if (lk>4.0) Lmin = 0.0;
 
+      // loossen up the minimum length if this is a partition boundary
+      if (topology_.points().fixed(n0) || topology_.points().fixed(n1)) Lmin = 0.01;
+
       // also relax the insertion criterion when we insert on geometry Edges
       Entity* ge = inserter_.geometry(n0,n1);
       if (ge!=NULL && ge->number()==1)
@@ -523,7 +527,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
 
       // if the inserter was enlarged, don't be too restrictive with quality
-      //inserter_.evaluate( metric );
       real_t qwi = worst_quality(inserter_,metric_);
       if (qwi<Q0)
       {

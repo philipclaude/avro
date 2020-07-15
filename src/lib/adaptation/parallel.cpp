@@ -400,6 +400,7 @@ public:
   {
     // this should only be run for small problems
     index_t N = vtxdist_[mpi::size()];
+    avro_assert_msg( N < 1000 , "this should only be used for debugging on small problems");
     if (mpi::rank() == 0)
     {
       numerics::MatrixD<real_t> graph(N,N);
@@ -527,7 +528,7 @@ public:
     index_t mem_vertex = (partition_.number()+1)*sizeof(real_t);
     std::vector<PARM_INT> vsize(nb_vert_,mem_vertex);
     int result = ParMETIS_V3_AdaptiveRepart( vtxdist.data() , xadj.data() , adjncy.data() ,
-                            pvwgt, vsize.data(), padjwgt, &wgtflag,
+                            vwgt.data(), vsize.data(), padjwgt, &wgtflag,
                             &bias , &ncon , &nparts,
                             tpwgts.data() , ubvec.data(), &itr,
                             options,
@@ -959,7 +960,6 @@ void
 AdaptationManager<type>::migrate_native()
 {
   // setup a buddy system
-  index_t buddy = 0;
   if (rank_ == 0)
   {
     // build up the interprocessor graph
@@ -974,8 +974,6 @@ AdaptationManager<type>::migrate_native()
     // wait to receive our processor pair
   }
   mpi::barrier();
-
-  pprintf("my buddy is %lu\n",buddy);
 }
 
 template<typename type>
@@ -1256,17 +1254,16 @@ AdaptationManager<type>::adapt()
     topology_.points().copy(mesh.points());
     Mesh mesh_out(number,mesh.points().dim());
 
-    library::meshb out;
-    out.write( mesh , "input-proc" + std::to_string(rank_) + "_pass" + std::to_string(pass)+".mesh" , false );
+    library::meshb input;
+    input.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
-    //params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
+    params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     try
     {
-      #if 1
-      pprintf("adapting mesh\n");
+      pprintf("adapting mesh...\n");
       ::avro::adapt<type>( problem );
 
       // clear the topology and copy in the output topology
@@ -1274,7 +1271,6 @@ AdaptationManager<type>::adapt()
       topology_.points().clear();
       topology_.TopologyBase::copy( mesh_out.template retrieve<type>(0) );
       mesh_out.points().copy( topology_.points() );
-      #endif
 
       // unset any global indices in unfixed points, since these need to be renumbered
       for (index_t k=0;k<topology_.points().nb();k++)
@@ -1411,15 +1407,17 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
     }
 
     // fill the partition field
-    #if 1
-    field_ = std::make_shared<PartitionField<type>>(topology);
-    topology.element().set_basis( BasisFunctionCategory_Lagrange );
-    field_->build();
-    for (index_t k=0;k<topology.nb();k++)
-    for (index_t j=0;j<topology.nv(k);j++)
-      (*field_)(k,j) = partition_index[k];
-    topology.fields().make("partition",field_);
-    #endif
+    if (topology.nb() < 20000)
+    {
+      // field construction will be super slow if there are too many elements
+      field_ = std::make_shared<PartitionField<type>>(topology);
+      topology.element().set_basis( BasisFunctionCategory_Lagrange );
+      field_->build();
+      for (index_t k=0;k<topology.nb();k++)
+      for (index_t j=0;j<topology.nv(k);j++)
+        (*field_)(k,j) = partition_index[k];
+      topology.fields().make("partition",field_);
+    }
   }
   else
   {
@@ -1427,6 +1425,13 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
     topology_.send(0);
   }
   mpi::barrier();
+}
+
+template<typename type>
+void
+AdaptationManager<type>::reassign_metrics( const std::vector<VertexMetric>& metrics )
+{
+  metrics_ = metrics;
 }
 
 template class AdaptationManager<Simplex>;

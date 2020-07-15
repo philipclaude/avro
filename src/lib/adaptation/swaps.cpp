@@ -47,6 +47,8 @@ template<typename type>
 bool
 AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 , real_t lmax0 )
 {
+  if (topology_.points().fixed(p) && topology_.points().fixed(q)) return false;
+
   // try edge swapping around the edge (p,q) such that the
   // global worst quality does not get worse
   std::vector<index_t> shell;
@@ -180,8 +182,8 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       // it will affect the visibility of each swap so they might not be accepted
       index_t e0 = edges[2*k];
       index_t e1 = edges[2*k+1];
-      std::vector<index_t> edge = {e0,e1};
 
+      std::vector<index_t> edge = {e0,e1};
       topology_.intersect(edge,elems);
       if (elems.size()==0) continue;
       avro_assert( elems.size()>0 );
@@ -410,8 +412,8 @@ EdgeSwap<type>::valid( const index_t p , const index_t e0 , const index_t e1 )
   for (index_t k=0;k<elems.size();k++)
   for (index_t j=0;j<this->topology_.nv(elems[k]);j++)
   {
-    if (this->topology_.points().fixed(this->topology_(elems[k],j)))
-      return false;
+    //if (this->topology_.points().fixed(this->topology_(elems[k],j)))
+    //  return false;
   }
 
   // check if the two points lie on an Edge entity

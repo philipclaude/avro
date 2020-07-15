@@ -121,11 +121,29 @@ UT_TEST_CASE( test1 )
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
   params.max_passes() = 2;
+  params.swapout() = false;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
-  manager.adapt();
+
+  index_t niter = 3;
+  for (index_t iter=0;iter<=niter;iter++)
+  {
+    printf("global pass %lu\n",iter);
+
+    // adapt the mesh, migrate interfaces, etc.
+    manager.adapt();
+
+    // re-evaluate the metrics
+    metrics.resize( manager.topology().points().nb() );
+    for (index_t k=0;k<metrics.size();k++)
+      metrics[k] = analytic( manager.topology().points()[k] );
+
+    manager.reassign_metrics(metrics);
+
+    mpi::barrier();
+  }
 
   Points points_out(dim,dim-1);
   Topology<Simplex> topology_out(points_out,number);

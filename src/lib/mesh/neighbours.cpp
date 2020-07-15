@@ -366,7 +366,8 @@ Neighbours<type>::print( const index_t k ) const
   printf("element %lu: [",k);
   for (index_t j=0;j<nfacets_;j++)
   {
-    printf(" %d (%d)",neighbours_[k*nfacets_+j],indexofme(k,j));
+    //printf(" %d (%d)",neighbours_[k*nfacets_+j],indexofme(k,j));
+    printf(" %d",neighbours_[k*nfacets_+j]);
   }
   printf(" ]\n");
 }

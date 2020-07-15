@@ -58,6 +58,9 @@ public:
   // exchanges the elements between the partitions
   void exchange( const std::vector<index_t>& repartition );
 
+  const Topology_Partition<type>& topology() const { return topology_; }
+  void reassign_metrics( const std::vector<VertexMetric>& metrics );
+
 private:
 
   void migrate_parmetis();
@@ -72,7 +75,6 @@ private:
   AdaptationParameters& params_;
   Topology_Partition<type> topology_;
   std::vector<VertexMetric> metrics_;
-  std::vector<index_t> metric_index_; // global index of the metric
 
   index_t rank_;
   std::shared_ptr<PartitionField<type>> field_;
