@@ -178,6 +178,8 @@ CKF_Triangulation::CKF_Triangulation( const std::vector<index_t>& dims ) :
   dims_(dims),
   grid_(TableLayout_Rectangular,number_)
 {
+  for (index_t d=0;d<dims.size();d++)
+    avro_assert_msg( dims[d] > 1 , "need more than 1 point in dimension %lu!" , d );
   generate();
 }
 
@@ -232,8 +234,6 @@ CKF_Triangulation::generate()
   Cube base(number_);
   base.triangulate();
 
-  //base.print();
-
   Table<index_t> table(TableLayout_Rectangular,number_);
   for (index_t k=0;k<base.nb_points();k++)
   {
@@ -241,7 +241,6 @@ CKF_Triangulation::generate()
     std::vector<index_t> idx(x,x+number_);
     table.add( idx.data() , idx.size() );
   }
-  //table.print();
 
   std::vector<index_t> simplex(number_+1);
   std::vector<index_t> idx( base.nb_points() );
@@ -267,9 +266,7 @@ CKF_Triangulation::generate()
       idx[j] = 0;
       for (coord_t d=0;d<number_;d++)
         idx[j] += (u0[d]+table(j,d))*offset[d];
-        //idx[j] += (u0[d]+table(j,d))*pow(dims_[d],number_-d-1);
     }
-    //print_inline(idx);
 
     for (index_t k=0;k<base.nb();k++)
     {

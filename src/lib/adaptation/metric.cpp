@@ -507,6 +507,7 @@ MetricAttachment::set_cells( const Topology<type>& topology )
 		if (topology.ghost(k)) continue;
 		for (index_t j=0;j<topology.nv(k);j++)
 		{
+			avro_assert_msg( topology(k,j) < topology.points().nb() , "topology(%lu,%lu) = %lu, but |points| = %lu" , k,j,topology(k,j),topology.points().nb() );
 			if (visited[topology(k,j)]) continue;
 
 			counted++;

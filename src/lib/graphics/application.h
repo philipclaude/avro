@@ -165,7 +165,7 @@ public:
 
   WebVisualizer();
 
-  void add_topology( TopologyBase& topology )
+  void add_topology( const TopologyBase& topology )
   {
     // create a new root in the scene graph
     scene_->add_primitive(topology);

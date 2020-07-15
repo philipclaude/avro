@@ -348,10 +348,12 @@ adapt( AdaptationProblem& problem )
 
   const std::string& output_redirect = params.output_redirect();
 
+  fpos_t pos;
   int redirected_fd = 0;
   FILE *redirected_fid = 0;
   if (!output_redirect.empty())
   {
+    fgetpos(stdout,&pos);
     fflush(stdout);
     redirected_fd = dup(fileno(stdout));
     redirected_fid = freopen(output_redirect.c_str(),"w",stdout);
@@ -380,6 +382,12 @@ adapt( AdaptationProblem& problem )
     return 0;
   }
 
+  for (index_t k=0;k<topology.nb();k++)
+  {
+    for (index_t j=0;j<topology.nv(k);j++)
+      avro_assert( topology(k,j) < topology.points().nb() );
+  }
+
   // retrieve some info about the mesh
   const coord_t number = mesh.number();
   avro_assert( number == topology.number() );
@@ -405,6 +413,13 @@ adapt( AdaptationProblem& problem )
   // close the mesh topology, compute the neighours and mesh inverse
   mesh_topology.close();
 
+  for (index_t k=0;k<mesh_topology.nb();k++)
+  {
+    for (index_t j=0;j<mesh_topology.nv(k);j++)
+      avro_assert_msg( mesh_topology(k,j) < mesh_topology.points().nb() , "topology(%lu,%lu) = %lu, but |points| = %lu" , k,j,mesh_topology(k,j),mesh_topology.points().nb() );
+      
+  }
+
   if (dim==number)
     mesh_topology.orient();
 
@@ -420,44 +435,6 @@ adapt( AdaptationProblem& problem )
   mesh_topology.neighbours().copy( topology.neighbours() );
 
   topology.inverse().build();
-
-  // extract the boundaries to check the vertex/geometry association
-  #if 0
-  Boundary<Simplex> bnd( mesh_topology );
-  bnd.extract( params.has_interior_boundaries() );
-
-  Topology<Simplex> bnd_topology( bnd.points() , mesh_topology.number()-1 );
-  bnd.retrieve( bnd_topology );
-
-  // check all points on geometries are accounted for in the boundary topology
-  Points& verts = mesh_topology.points();
-  std::vector<bool> accounted( verts.nb() , false );
-  for (index_t k=0;k<accounted.size();k++)
-  {
-    if (verts.entity(k)==NULL)
-      accounted[k] = true;
-  }
-
-  for (index_t k=0;k<bnd_topology.nb();k++)
-  {
-    for (index_t j=0;j<bnd_topology.nv(k);j++)
-      accounted[ bnd_topology(k,j) ] = true;
-  }
-
-  // there should be no points leftover that were not accounted for
-  index_t nerr = 0;
-  for (index_t k=0;k<accounted.size();k++)
-  {
-    if (verts.entity(k)!=NULL && !accounted[k])
-    {
-      printf("error! vertex %lu is tagged on geometry!\n",k);
-      verts.print(k,true);
-      nerr++;
-    }
-  }
-  avro_assert_msg(nerr==0,
-    "there are interior points tagged on the geometry! if you have interior boundary groups, set this flag to true!");
-  #endif
 
   // check how many ghost points are present and adjust the field
   if (fld.size() < mesh_topology.points().nb() )
@@ -513,7 +490,7 @@ adapt( AdaptationProblem& problem )
       meshb.write( problem.mesh_out , mesh_file , params.export_boundary() );
       printf("wrote mesh %s\n",mesh_file.c_str());
     }
-    else if (topology.number()==4)
+    else if (topology.number()==4 && params.export_boundary())
     {
       // get the boundary of the mesh
       Topology_Spacetime<Simplex> spacetime(mesh_topology);
@@ -565,7 +542,8 @@ adapt( AdaptationProblem& problem )
     fflush(stdout);
     dup2(redirected_fd,fileno(stdout));
     close(redirected_fd);
-    fclose(redirected_fid);
+    clearerr(stdout);
+    fsetpos(stdout,&pos);
   }
 
   return result;

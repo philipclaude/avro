@@ -25,6 +25,34 @@ namespace avro
 {
 namespace library
 {
+class MetricField_UGAWG_sin : public MetricField_Analytic
+{
+public:
+  MetricField_UGAWG_sin() :
+    MetricField_Analytic(2)
+  {}
+
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  {
+    numerics::SymMatrixD<real_t> m(dim_);
+
+    real_t H_ = 5.;
+		real_t f_ = 10.;
+		real_t A_ = 2.;
+		real_t P_ = 5.;
+		real_t y0_ = 5.;
+		real_t w_ = 1.*M_PI/P_;
+
+    real_t phi = -f_*( x[1] -A_*cos(w_*x[0]) -y0_ );
+  	real_t dzdx = -A_*H_*f_*w_*sin(w_*x[0])*( pow(tanh(phi),2.) -1. );
+  	real_t dzdy = -H_*f_*( pow(tanh(phi),2.) -1. );
+  	m(0,0) = 1. +dzdx*dzdx;
+  	m(0,1) = dzdx*dzdy;
+  	m(1,1) = 1. +dzdy*dzdy;
+    return m;
+  }
+};
+
 class MetricField_UGAWG_Linear2 : public MetricField_Analytic
 {
 public:
@@ -46,6 +74,7 @@ public:
     return m;
   }
 };
+
 } // library
 } // avro
 
@@ -58,8 +87,12 @@ UT_TEST_CASE( test1 )
   coord_t number = 3;
   coord_t dim = number;
 
-  std::vector<index_t> dims(number,20);
+  std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
+
+  //for (index_t k=0;k<topology.points().nb();k++)
+  //for (coord_t d=0;d<topology.points().dim();d++)
+  //  topology.points()[k][d] *= 10;
 
   #if 1
   EGADS::Context context;
@@ -72,15 +105,13 @@ UT_TEST_CASE( test1 )
   #endif
   topology.points().attach(geometry);
 
-  topology.neighbours().fromscratch() = true;
-  topology.neighbours().compute();
-
   AdaptationParameters params;
   params.standard();
 
   std::vector<VertexMetric> metrics(topology.points().nb());
   library::MetricField_UGAWG_Linear analytic;
-  //library::MetricField_Uniform analytic(number,0.01);
+  //library::MetricField_UGAWG_sin analytic;
+  //library::MetricField_Uniform analytic(number,0.2);
   for (index_t k=0;k<topology.points().nb();k++)
     metrics[k] = analytic( topology.points()[k] );
 
@@ -89,11 +120,30 @@ UT_TEST_CASE( test1 )
   params.curved() = false;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
+  params.max_passes() = 2;
+  params.swapout() = false;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
-  manager.adapt();
+
+  index_t niter = 3;
+  for (index_t iter=0;iter<=niter;iter++)
+  {
+    printf("global pass %lu\n",iter);
+
+    // adapt the mesh, migrate interfaces, etc.
+    manager.adapt();
+
+    // re-evaluate the metrics
+    metrics.resize( manager.topology().points().nb() );
+    for (index_t k=0;k<metrics.size();k++)
+      metrics[k] = analytic( manager.topology().points()[k] );
+
+    manager.reassign_metrics(metrics);
+
+    mpi::barrier();
+  }
 
   Points points_out(dim,dim-1);
   Topology<Simplex> topology_out(points_out,number);
@@ -105,21 +155,8 @@ UT_TEST_CASE( test1 )
     real_t volume = topology_out.volume();
     UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
 
-    for (index_t k=0;k<topology_out.points().nb();k++)
-    for (index_t j=k+1;j<topology_out.points().nb();j++)
-    {
-      real_t d = numerics::distance( topology_out.points()[k] , topology_out.points()[j] , dim );
-      if (d < 1e-12)
-      {
-        //topology_out.points().print(k,true);
-        //topology_out.points().print(j,true);
-      }
-    }
-
     // it may not look like much, but this is a huge check on the partitioning and stitching algorithm
     //UT_ASSERT_EQUALS( topology_out.points().nb() , topology.points().nb() );
-
-    printf("original |points| = %lu, new |points| = %lu\n",topology.points().nb(),topology_out.points().nb());
 
     graphics::Visualizer vis;
     vis.add_topology(topology_out);
