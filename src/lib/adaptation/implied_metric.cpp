@@ -605,6 +605,15 @@ MeshImpliedMetric<type>::optimize()
       this->data_[k] = 0;
       continue;
     }
+
+    real_t detm = numerics::determinant(this->data_[k]);
+    if (detm <= 0.0)
+    {
+      // forget about the step
+      //this->data_[k].dump();
+      this->data_[k] = nodalMetricSqrt_[k]*nodalMetricSqrt_[k];
+    }
+    //avro_assert_msg( detm > 0. , "detm = %g for vertex %lu",detm,k );
 	}
 }
 

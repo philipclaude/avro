@@ -464,7 +464,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       if (lk>4.0) Lmin = 0.0;
 
       // loossen up the minimum length if this is a partition boundary
-      if (topology_.points().fixed(n0) || topology_.points().fixed(n1)) Lmin = 0.01;
+      //if (topology_.points().fixed(n0) || topology_.points().fixed(n1)) Lmin = 0.01;
 
       // also relax the insertion criterion when we insert on geometry Edges
       Entity* ge = inserter_.geometry(n0,n1);

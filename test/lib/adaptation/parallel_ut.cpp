@@ -66,7 +66,7 @@ public:
 
     real_t hx = 0.1;
     real_t h0 = 1e-3;
-    real_t hy = h0 +2.*(0.1 -h0)*fabs( x[1] -0.5 );
+    real_t hy = h0 +2.*(hx -h0)*fabs( x[1] -0.5 );
 
     m(0,0) = 1./(hx*hx);
     m(0,1) = 0.;
@@ -120,17 +120,20 @@ UT_TEST_CASE( test1 )
   params.curved() = false;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 2;
+  params.max_passes() = 5;
   params.swapout() = false;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
 
-  index_t niter = 3;
+  index_t rank = mpi::rank();
+
+  index_t niter = 5;
   for (index_t iter=0;iter<=niter;iter++)
   {
-    printf("global pass %lu\n",iter);
+    if (rank == 0)
+      printf("*** global pass %lu ***\n",iter);
 
     // adapt the mesh, migrate interfaces, etc.
     manager.adapt();
@@ -149,7 +152,6 @@ UT_TEST_CASE( test1 )
   Topology<Simplex> topology_out(points_out,number);
   manager.retrieve(topology_out);
 
-  index_t rank = mpi::rank();
   if (rank==0)
   {
     real_t volume = topology_out.volume();

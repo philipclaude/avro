@@ -452,7 +452,7 @@ public:
   void assign_weights( const std::vector<VertexMetric>& metrics )
   {
     real_t alpha = 10.0;
-    real_t beta = 0.01;
+    real_t beta = 0.1;
 
     // create a metric field to make computations easier
     MetricAttachment attachment( partition_.points() , metrics );
@@ -461,23 +461,11 @@ public:
     // assign a weight based on digonnet 2019
     vgwt_.resize( nb_vert_ , 0.0 );
     for (index_t k=0;k<partition_.nb();k++)
-      vgwt_[k] = alpha*( 1. + beta*( 1. - 1./metric.quality( partition_ , k ) ) );
-
-    #if 0
-    // assign a small quality (more work needed) for interface elements
-    index_t rank = mpi::rank();
-    real_t minq = 0.1;
-    for (index_t k=0;k<boundary_.nb();k++)
     {
-      if (boundary_.partL(k) == rank)
-        vgwt_[boundary_.elemL(k)] = alpha/minq;
-      else
-      {
-        assert( boundary_.partR(k) == rank );
-        vgwt_[boundary_.elemR(k)] = alpha/minq;
-      }
+      real_t q = metric.quality(partition_,k);
+      avro_assert( q>=0.0 );
+      vgwt_[k] = alpha*( 1. + beta*fabs( 1. - 1./q ) );
     }
-    #endif
   }
 
   index_t global_elem( index_t partition , index_t elem ) const
@@ -524,8 +512,8 @@ public:
                             part.data(),
                             &comm);
     #else
-    PARM_REAL itr = 1000.;
-    index_t mem_vertex = (partition_.number()+1)*sizeof(real_t);
+    PARM_REAL itr = 1000000.;
+    index_t mem_vertex = (partition_.number()+1)*sizeof(index_t);
     std::vector<PARM_INT> vsize(nb_vert_,mem_vertex);
     int result = ParMETIS_V3_AdaptiveRepart( vtxdist.data() , xadj.data() , adjncy.data() ,
                             vwgt.data(), vsize.data(), padjwgt, &wgtflag,
@@ -743,7 +731,6 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   topology_.remove_elements( removals );
 
   // determine which metrics need to be added
-  //print_inline( chunk.metric() , "metrics needed: " );
   std::set<index_t> idx( chunk.metric().begin() , chunk.metric().end() );
   std::vector<index_t> metric;
   for (index_t k=0;k<chunk.metric().size();k++)
@@ -752,7 +739,6 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
     if (metrics_owned.find(p) == metrics_owned.end())
       metric.push_back(p);
   }
-  //print_inline(metric,"--> please send me these metrics:");
 
   // accumulate the requested metrics on the root processor
   std::vector<std::set<index_t>> metric_send_idx(nb_rank);
