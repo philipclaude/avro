@@ -613,7 +613,7 @@ MeshImpliedMetric<type>::optimize()
       //this->data_[k].dump();
       this->data_[k] = nodalMetricSqrt_[k]*nodalMetricSqrt_[k];
     }
-    //avro_assert_msg( detm > 0. , "detm = %g for vertex %lu",detm,k );
+    avro_assert_msg( detm > 0. , "detm = %g for vertex %lu",detm,k );
 	}
 }
 

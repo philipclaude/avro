@@ -41,6 +41,12 @@ add_source_directories( MESHB_SOURCES "gmf source" libmeshb )
 set_source_files_properties( ${MESHB_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( libmeshb )
 
+add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5 )
+add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/GEOM )
+add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/MinCost )
+set_source_files_properties( ${BLOSSOM_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
+include_directories( blossom5 )
+
 # numpack
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack )
 
@@ -73,4 +79,4 @@ endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )
+add_library(avro_third_party OBJECT ${SOURCES} ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )

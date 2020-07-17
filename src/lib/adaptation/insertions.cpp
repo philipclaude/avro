@@ -464,7 +464,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       if (lk>4.0) Lmin = 0.0;
 
       // loossen up the minimum length if this is a partition boundary
-      //if (topology_.points().fixed(n0) || topology_.points().fixed(n1)) Lmin = 0.01;
+      bool fixed = (topology_.points().fixed(n0) || topology_.points().fixed(n1));
+      //if (fixed) Lmin = 0.01;
 
       // also relax the insertion criterion when we insert on geometry Edges
       Entity* ge = inserter_.geometry(n0,n1);
@@ -524,7 +525,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         nb_visiblity_rejected++;
         continue;
       }
-
 
       // if the inserter was enlarged, don't be too restrictive with quality
       real_t qwi = worst_quality(inserter_,metric_);

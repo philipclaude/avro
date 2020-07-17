@@ -84,7 +84,7 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 3;
+  coord_t number = 2;
   coord_t dim = number;
 
   std::vector<index_t> dims(number,10);
@@ -109,7 +109,7 @@ UT_TEST_CASE( test1 )
   params.standard();
 
   std::vector<VertexMetric> metrics(topology.points().nb());
-  library::MetricField_UGAWG_Linear analytic;
+  library::MetricField_UGAWG_Linear2 analytic;
   //library::MetricField_UGAWG_sin analytic;
   //library::MetricField_Uniform analytic(number,0.2);
   for (index_t k=0;k<topology.points().nb();k++)
@@ -120,7 +120,7 @@ UT_TEST_CASE( test1 )
   params.curved() = false;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 5;
+  params.max_passes() = 3;
   params.swapout() = false;
 
   topology.build_structures();

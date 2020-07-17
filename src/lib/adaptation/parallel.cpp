@@ -31,6 +31,8 @@
 #ifdef AVRO_MPI
 #include <parmetis.h>
 
+#include "blossom5/PerfectMatching.h"
+
 #if PARMETIS_MAJOR_VERSION == 3
 #define PARM_INT idxtype
 #define PARM_REAL float
@@ -466,6 +468,23 @@ public:
       avro_assert( q>=0.0 );
       vgwt_[k] = alpha*( 1. + beta*fabs( 1. - 1./q ) );
     }
+
+    #if 1
+   // assign a small quality (more work needed) for interface elements
+   index_t rank = mpi::rank();
+   real_t factor = 2;
+   for (index_t k=0;k<boundary_.nb();k++)
+   {
+     if (boundary_.partL(k) == rank)
+       vgwt_[boundary_.elemL(k)] *= factor;
+     else
+     {
+       assert( boundary_.partR(k) == rank );
+       vgwt_[boundary_.elemR(k)] *= factor;
+     }
+   }
+   #endif
+
   }
 
   index_t global_elem( index_t partition , index_t elem ) const
@@ -512,7 +531,7 @@ public:
                             part.data(),
                             &comm);
     #else
-    PARM_REAL itr = 1000000.;
+    PARM_REAL itr = 1000.;
     index_t mem_vertex = (partition_.number()+1)*sizeof(index_t);
     std::vector<PARM_INT> vsize(nb_vert_,mem_vertex);
     int result = ParMETIS_V3_AdaptiveRepart( vtxdist.data() , xadj.data() , adjncy.data() ,
@@ -545,6 +564,69 @@ private:
   const std::vector<index_t>& vtxdist_;
 
   index_t nb_vert_;
+};
+
+class ProcessorGraph
+{
+public:
+  ProcessorGraph( const std::vector<index_t>& element_offset ) :
+    element_offset_(element_offset)
+  {}
+
+  template<typename type>
+  void match( const PartitionBoundary<type>& interface )
+  {
+    avro_assert( mpi::size()%2 == 0 );
+
+    std::set< std::pair<index_t,index_t> > E;
+    const std::map<ElementIndices,index_t>& facets = interface.facets();
+    std::map<ElementIndices,index_t>::const_iterator it;
+    for (it=facets.begin();it!=facets.end();++it)
+    {
+      index_t k = it->second;
+
+      index_t partL = interface.partL(k);
+      index_t partR = interface.partR(k);
+      avro_assert( partL != partR );
+
+      // always keep processors with lower id's to the left
+      if (partL > partR) std::swap(partL,partR);
+      E.insert( {partL,partR} );
+    }
+
+    PerfectMatching graph( mpi::size() , E.size() );
+    std::vector<index_t> edges;
+    std::vector<index_t> edge_ids;
+    for (std::set< std::pair<index_t,index_t> >::iterator it=E.begin();it!=E.end();++it)
+    {
+      index_t p0 = it->first;
+      index_t p1 = it->second;
+      edges.push_back(p0);
+      edges.push_back(p1);
+
+      // TODO determine a better cost function
+      // likely the number of facets on this interface
+      real_t cost = ( element_offset_[p0+1] + element_offset_[p1+1] )/2.;
+      edge_ids.push_back( graph.AddEdge( p0 , p1 , cost ) );
+    }
+
+    // solve the graph matching problem
+    graph.Solve();
+    for (index_t k=0;k<edge_ids.size();k++)
+    {
+      index_t id = edge_ids[k];
+      if (graph.GetSolution(id) == 0) continue; // not an edge in the matching
+      pairs_.push_back( {edges[2*k],edges[2*k+1]} );
+    }
+  }
+
+  index_t nb_pairs() const { return pairs_.size(); }
+
+  std::pair<index_t,index_t> get_pair( index_t k ) { return pairs_[k]; }
+
+private:
+  const std::vector<index_t>& element_offset_;
+  std::vector< std::pair<index_t,index_t> > pairs_;
 };
 
 template<typename type>
@@ -941,25 +1023,159 @@ AdaptationManager<type>::migrate_parmetis()
   exchange(repartition);
 }
 
+#define TAG_BUDDY 601
+
 template<typename type>
 void
 AdaptationManager<type>::migrate_native()
 {
+  index_t nb_rank = mpi::size();
+
+  // migrate the interface into the interior of the partitions
+  // simultaneously performing a load balance
+  topology_.build_structures();
+
+  // exchange partition boundaries to all processors
+  PartitionBoundary<type> boundary(topology_.number()-1);
+  boundary.compute(topology_,rank_);
+
+  PartitionBoundary<type> interface( topology_.number()-1 );
+  if (rank_ == 0)
+  {
+    // receive and accumulate all boundary information
+    interface.append( boundary );
+    for (index_t k=1;k<nb_rank;k++)
+    {
+      PartitionBoundary<type> boundary_k( topology_.number()-1 );
+      boundary_k.receive(k);
+      interface.append(boundary_k);
+    }
+    avro_assert( interface.complete(element_offset_) );
+  }
+  else
+  {
+    // send our partition boundary information
+    boundary.send(0);
+  }
+  mpi::barrier();
+
+  if (rank_ == 0 )
+  {
+    // send the accumulated boundary information
+    for (index_t k=1;k<nb_rank;k++)
+      interface.send(k);
+  }
+  else
+  {
+    // receive the accumulated boundary information
+    interface.receive(0);
+  }
+  mpi::barrier();
+
+  // fill in the missing elemR/partR information
+  boundary.fill( interface );
+
   // setup a buddy system
+  index_t buddy;
   if (rank_ == 0)
   {
     // build up the interprocessor graph
     // with vertex weights defined be current processor work
-
     // compute a matching of this graph
+    ProcessorGraph graph(element_offset_);
+    graph.match(interface);
 
     // send off the processor pairs
+    for (index_t k=0;k<graph.nb_pairs();k++)
+    {
+      std::pair<index_t,index_t> p = graph.get_pair(k);
+
+      index_t p0 = p.first;
+      index_t p1 = p.second;
+
+      mpi::send( mpi::blocking{} , p1 , p0 , TAG_BUDDY );
+      if (p1!=rank_)
+        mpi::send( mpi::blocking{} , p0 , p1 , TAG_BUDDY );
+
+      if (p0 == rank_) buddy = p1;
+    }
   }
   else
   {
     // wait to receive our processor pair
+    buddy = mpi::receive<index_t>(0,TAG_BUDDY);
   }
   mpi::barrier();
+  printf("processor %lu: my buddy is %lu\n",rank_,buddy);
+
+  std::vector<index_t> repartition(topology_.nb());
+  std::vector<index_t> discard;
+  if (rank_ < buddy)
+  {
+    // extract a topology with the facets between this processor and the buddy
+    Points dummy(topology_.points().dim());
+    Topology<type> bnd(dummy,topology_.number()-1);
+
+    const std::map<ElementIndices,index_t>& facets = interface.facets();
+    std::map<ElementIndices,index_t>::const_iterator it;
+    std::vector<index_t> elemsL,elemsR;
+    for (it=facets.begin();it!=facets.end();++it)
+    {
+      const ElementIndices& f = it->first;
+      index_t k = it->second;
+
+      index_t partL = interface.partL(k);
+      index_t partR = interface.partR(k);
+
+      index_t elemL = interface.elemL(k);
+      index_t elemR = interface.elemR(k);
+
+      // always keep rank to the left and buddy to the right
+      if (partL > partR)
+      {
+        std::swap(partL,partR);
+        std::swap(elemL,elemR);
+      }
+      if (partL != rank_ || partR != buddy) continue;
+
+      // add the boundary facet
+      bnd.add( f.indices.data() , f.indices.size() );
+      elemsL.push_back(elemL); // elements on rank
+      elemsR.push_back(elemR); // elements on buddy
+    }
+    printf("interface between %lu and %lu has %lu facets\n",rank_,buddy,bnd.nb());
+
+    // compute a 2-partition of this topology
+    // (serially since if we can fit the partition on this processor, we can fit the partition boundary
+    bnd.neighbours().fromscratch() = true;
+    bnd.neighbours().compute();
+    Partition<type> partition(bnd);
+    partition.compute(2);
+    const std::vector<index_t>& assignment = partition.partition();
+
+    std::vector<index_t> request;
+    for (index_t k=0;k<assignment.size();k++)
+    {
+      if (assignment[k] == 0) // this facet was assigned to rank
+        discard.push_back(elemsL[k]);
+      else
+        request.push_back(elemsR[k]); // this facet assigned to buddy
+    }
+
+    mpi::send( mpi::blocking{} , request , buddy , TAG_MISC );
+  }
+  else
+  {
+    // wait to receive the result from our buddy
+    discard = mpi::receive<std::vector<index_t>>( buddy , TAG_MISC );
+  }
+
+  print_inline( discard , "processor " + std::to_string(rank_) + ": will discard ");
+
+  avro_implement;
+
+  // exchange the partition
+  exchange(repartition);
 }
 
 template<typename type>
@@ -967,7 +1183,8 @@ void
 AdaptationManager<type>::migrate()
 {
   // TODO add parameter to switch between parmetis/native
-  migrate_parmetis();
+  //migrate_parmetis();
+  migrate_native();
 }
 
 void

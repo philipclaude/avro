@@ -577,6 +577,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		real_t detm = numerics::determinant(mk);
 		if (detm <= 0.0)
 		{
+			// hack! revert to target metric...a pretty bad idea
 			mk = mt;
 		}
 
