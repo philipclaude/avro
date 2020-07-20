@@ -42,7 +42,7 @@ UT_TEST_CASE(ckf_nd)
     topology.neighbours().compute();
     topology.inverse().build();
 
-    topology.inverse().print();
+    //topology.inverse().print();
 
     UT_ASSERT( topology.inverse().check() );
 
@@ -71,7 +71,7 @@ UT_TEST_CASE(ckf_nd)
       }
 
     }
-    topology.inverse().print();
+    //topology.inverse().print();
 
     printf("checking inverse topology the long way...\n");
     UT_ASSERT( topology.inverse().check() );

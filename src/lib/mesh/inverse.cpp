@@ -56,7 +56,7 @@ InverseTopology<type>::build()
       if (topology_.ghost(k) && p>=topology_.points().nb_ghost()) continue;
 
       // choose the minimum element index attached to the vertex
-      elem_[p] = std::min(k,elem_[p]);
+      elem_[p] = k;//std::min(k,elem_[p]);
     }
   }
 

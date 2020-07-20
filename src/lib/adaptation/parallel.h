@@ -80,6 +80,7 @@ private:
   std::shared_ptr<PartitionField<type>> field_;
 
   std::vector<index_t> element_offset_;
+  std::vector<std::pair<index_t,index_t>> pairs_;
 };
 
 } // avro

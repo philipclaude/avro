@@ -469,7 +469,7 @@ public:
       vgwt_[k] = alpha*( 1. + beta*fabs( 1. - 1./q ) );
     }
 
-    #if 1
+    #if 0
    // assign a small quality (more work needed) for interface elements
    index_t rank = mpi::rank();
    real_t factor = 2;
@@ -531,7 +531,7 @@ public:
                             part.data(),
                             &comm);
     #else
-    PARM_REAL itr = 1000.;
+    PARM_REAL itr = 1000000.;
     index_t mem_vertex = (partition_.number()+1)*sizeof(index_t);
     std::vector<PARM_INT> vsize(nb_vert_,mem_vertex);
     int result = ParMETIS_V3_AdaptiveRepart( vtxdist.data() , xadj.data() , adjncy.data() ,
@@ -569,8 +569,9 @@ private:
 class ProcessorGraph
 {
 public:
-  ProcessorGraph( const std::vector<index_t>& element_offset ) :
-    element_offset_(element_offset)
+  ProcessorGraph( const std::vector<index_t>& element_offset , std::vector< std::pair<index_t,index_t> >& pairs ) :
+    element_offset_(element_offset),
+    previous_pairs_(pairs.begin(),pairs.end())
   {}
 
   template<typename type>
@@ -606,7 +607,14 @@ public:
 
       // TODO determine a better cost function
       // likely the number of facets on this interface
-      real_t cost = ( element_offset_[p0+1] + element_offset_[p1+1] )/2.;
+      index_t nb0 = element_offset_[p0+1] - element_offset_[p0];
+      index_t nb1 = element_offset_[p1+1] - element_offset_[p1];
+      real_t cost = ( nb0 + nb1 )/2.;
+
+      // heavily penalize edges in the matching that would repeat a previous matching
+      if (previous_pairs_.find( {p0,p1} ) != previous_pairs_.end())
+        cost = 1e20;
+
       edge_ids.push_back( graph.AddEdge( p0 , p1 , cost ) );
     }
 
@@ -621,12 +629,14 @@ public:
   }
 
   index_t nb_pairs() const { return pairs_.size(); }
+  std::vector<std::pair<index_t,index_t>> pairs() const { return pairs_; }
 
   std::pair<index_t,index_t> get_pair( index_t k ) { return pairs_[k]; }
 
 private:
   const std::vector<index_t>& element_offset_;
   std::vector< std::pair<index_t,index_t> > pairs_;
+  std::set< std::pair<index_t,index_t> > previous_pairs_;
 };
 
 template<typename type>
@@ -1082,7 +1092,7 @@ AdaptationManager<type>::migrate_native()
     // build up the interprocessor graph
     // with vertex weights defined be current processor work
     // compute a matching of this graph
-    ProcessorGraph graph(element_offset_);
+    ProcessorGraph graph(element_offset_,pairs_);
     graph.match(interface);
 
     // send off the processor pairs
@@ -1099,6 +1109,8 @@ AdaptationManager<type>::migrate_native()
 
       if (p0 == rank_) buddy = p1;
     }
+
+    pairs_ = graph.pairs();
   }
   else
   {
@@ -1108,17 +1120,13 @@ AdaptationManager<type>::migrate_native()
   mpi::barrier();
   printf("processor %lu: my buddy is %lu\n",rank_,buddy);
 
-  std::vector<index_t> repartition(topology_.nb());
   std::vector<index_t> discard;
+  std::set<index_t> interface_point;
   if (rank_ < buddy)
   {
-    // extract a topology with the facets between this processor and the buddy
-    Points dummy(topology_.points().dim());
-    Topology<type> bnd(dummy,topology_.number()-1);
-
     const std::map<ElementIndices,index_t>& facets = interface.facets();
     std::map<ElementIndices,index_t>::const_iterator it;
-    std::vector<index_t> elemsL,elemsR;
+    std::vector<index_t> elems;
     for (it=facets.begin();it!=facets.end();++it)
     {
       const ElementIndices& f = it->first;
@@ -1138,44 +1146,44 @@ AdaptationManager<type>::migrate_native()
       }
       if (partL != rank_ || partR != buddy) continue;
 
+      for (index_t j=0;j<f.indices.size();j++)
+        interface_point.insert( f.indices[j] );
+
       // add the boundary facet
-      bnd.add( f.indices.data() , f.indices.size() );
-      elemsL.push_back(elemL); // elements on rank
-      elemsR.push_back(elemR); // elements on buddy
+      discard.push_back(elemL); // elements on rank
     }
-    printf("interface between %lu and %lu has %lu facets\n",rank_,buddy,bnd.nb());
-
-    // compute a 2-partition of this topology
-    // (serially since if we can fit the partition on this processor, we can fit the partition boundary
-    bnd.neighbours().fromscratch() = true;
-    bnd.neighbours().compute();
-    Partition<type> partition(bnd);
-    partition.compute(2);
-    const std::vector<index_t>& assignment = partition.partition();
-
-    std::vector<index_t> request;
-    for (index_t k=0;k<assignment.size();k++)
-    {
-      if (assignment[k] == 0) // this facet was assigned to rank
-        discard.push_back(elemsL[k]);
-      else
-        request.push_back(elemsR[k]); // this facet assigned to buddy
-    }
-
-    mpi::send( mpi::blocking{} , request , buddy , TAG_MISC );
   }
-  else
+  mpi::barrier();
+
+  // add any element in the ball of an interface vertex
+  std::set<index_t> pts;
+  for (index_t k=0;k<topology_.points().nb();k++)
   {
-    // wait to receive the result from our buddy
-    discard = mpi::receive<std::vector<index_t>>( buddy , TAG_MISC );
+    index_t p = topology_.points().global(k);
+    if (interface_point.find(p) == interface_point.end()) continue;
+    pts.insert( k );
   }
 
-  print_inline( discard , "processor " + std::to_string(rank_) + ": will discard ");
+  std::vector<index_t> ball;
+  for (std::set<index_t>::iterator it=pts.begin();it!=pts.end();++it)
+  {
+    topology_.inverse().ball( *it , ball );
+    for (index_t j=0;j<ball.size();j++)
+      discard.push_back(ball[j]);
+  }
+  uniquify(discard);
 
-  avro_implement;
+  // initialize all of the elements to this partition
+  std::vector<index_t> repartition(topology_.nb(),rank_);
+
+  // re-assign the discarded elements to the buddy
+  for (index_t k=0;k<discard.size();k++)
+    repartition[discard[k]] = buddy;
+  mpi::barrier();
 
   // exchange the partition
   exchange(repartition);
+  mpi::barrier();
 }
 
 template<typename type>
@@ -1379,17 +1387,54 @@ AdaptationManager<type>::analyze()
 
 template<typename type>
 void
+fix_non_manifold( Topology<type>& topology )
+{
+  std::vector<std::vector<index_t>> node2elem( topology.points().nb() );
+  for (index_t k=0;k<topology.nb();k++)
+  {
+    for (index_t j=0;j<topology.nv(k);j++)
+      node2elem[ topology(k,j) ].push_back(k);
+  }
+
+  topology.build_structures();
+  std::vector<index_t> ball;
+  for (index_t k=0;k<topology.points().nb();k++)
+  {
+    ball.clear();
+    topology.inverse().ball( k , ball );
+    if (ball.size() != node2elem[k].size() )
+    {
+      for (index_t j=0;j<node2elem[k].size();j++)
+      for (index_t i=0;i<topology.nv(node2elem[k].size());i++)
+        topology.points().set_fixed( topology(node2elem[k][j],i) , true );
+    }
+  }
+}
+
+template<typename type>
+void
 AdaptationManager<type>::fix_boundary()
 {
   // first unfix all the vertices
   for (index_t k=0;k<topology_.points().nb();k++)
     topology_.points().set_fixed(k,false);
 
+  // the set of points that will be fixed
+  std::vector<index_t> pts;
+
+  // fix all non-manifold vertices (i.e. vertices in which the ball does not match the actual inverse)
+  fix_non_manifold(topology_);
+  for (index_t k=0;k<topology_.points().nb();k++)
+  {
+    if (topology_.points().fixed(k))
+      pts.push_back(k);
+  }
+  printf("there are %lu non-manifold vertices out of %lu!\n",pts.size(),topology_.points().nb());
+
   // compute the boundary
   Facets facets(topology_);
   facets.compute();
   std::vector<index_t> facet(topology_.number());
-  std::vector<index_t> pts;
   index_t nb_fixed_facets = 0;
   index_t nb_bnd = 0;
   for (index_t k=0;k<facets.nb();k++)
@@ -1437,15 +1482,19 @@ AdaptationManager<type>::adapt()
   bool done = false;
   for (index_t pass=0;pass<params_.max_passes();pass++)
   {
+    #if 0
+    if (pass > 0)
+    {
+      // perform a load-balance using parmetis
+      fix_boundary();
+      synchronize();
+      migrate_parmetis();
+    }
+    #endif
+
     // fix the boundary of the topology
     // and move the fixed points to the beginning of the points structure
     fix_boundary();
-
-    for (index_t k=0;k<topology_.nb();k++)
-    {
-      for (index_t j=0;j<topology_.nv(k);j++)
-        avro_assert( topology_(k,j) < topology_.points().nb() );
-    }
 
     // do the adaptation
     // create the mesh we will write to
@@ -1491,12 +1540,28 @@ AdaptationManager<type>::adapt()
     // synchronize all the global point indices
     synchronize();
 
+    Mesh m(number,number);
+    std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
+    retrieve(*topology_out.get());
+    m.add(topology_out);
+    if (rank_==0)
+      input.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false);
+
+
+
     // analyze whether we are done
     done = analyze();
     if (done) break;
 
     // migrate the interface between partitions
-    migrate();
+    if (pass%2 == 0)
+    {
+      migrate_native();
+    }
+    else
+    {
+      migrate_parmetis();
+    }
   }
 
   // balance the mesh between the partitions

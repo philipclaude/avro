@@ -417,7 +417,7 @@ adapt( AdaptationProblem& problem )
   {
     for (index_t j=0;j<mesh_topology.nv(k);j++)
       avro_assert_msg( mesh_topology(k,j) < mesh_topology.points().nb() , "topology(%lu,%lu) = %lu, but |points| = %lu" , k,j,mesh_topology(k,j),mesh_topology.points().nb() );
-      
+
   }
 
   if (dim==number)
