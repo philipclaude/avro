@@ -46,7 +46,7 @@ InverseTopology<type>::build()
 {
   elem_.resize( topology_.points().nb() , topology_.nb()+1 );
 
-#if 0
+#if 1
   for (index_t k=0;k<topology_.nb();k++)
   {
     for (index_t j=0;j<topology_.nv(k);j++)
@@ -63,11 +63,11 @@ InverseTopology<type>::build()
 #else
 for (index_t k=0;k<topology_.nb();k++)
 {
-  if (topology_.ghost(k)) continue;
+  //if (topology_.ghost(k)) continue;
   for (index_t j=0;j<topology_.nv(k);j++)
   {
     index_t p = topology_(k,j);
-    if (p < topology_.points().nb_ghost()) continue;
+    //if (p < topology_.points().nb_ghost()) continue;
 
     // choose the minimum element index attached to the vertex
     elem_[p] = k;//std::min(k,elem_[p]);
