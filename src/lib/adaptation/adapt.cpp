@@ -348,7 +348,7 @@ adapt( AdaptationProblem& problem )
 
   fpos_t pos;
   int redirected_fd = 0;
-  FILE *redirected_fid = 0;
+  FILE *redirected_fid;
   if (!output_redirect.empty())
   {
     fgetpos(stdout,&pos);

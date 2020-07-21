@@ -43,8 +43,8 @@ if (AVRO_NO_ESP)
   add_definitions( -DAVRO_NO_ESP )
 endif()
 
-set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_mesh_mpi_ut lib_adaptation_parmetis_ut )
-set( numprocs_unit 4 )
+set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_adaptation_parmetis_ut )
+set( numprocs_unit 4 4 4 3 )
 
 set( CHECK_TESTS )
 
@@ -74,7 +74,7 @@ foreach( test_src ${TEST_FILES} )
   set(numprocs -1)
   list( FIND MPI_TESTS ${test_bin} idx )
   if (${idx} GREATER -1)
-    set(numprocs ${numprocs_unit} )
+    list( GET numprocs_unit ${idx} numprocs )
   endif()
 
   if ( ${numprocs} GREATER 0)

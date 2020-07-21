@@ -73,7 +73,7 @@ avro_msgp( const std::string& msg )
   if (rank == 0)
   {
     printf("[processor %3lu]: %s\n",index_t(0),msg.c_str());
-    for (index_t k=1;k<mpi::size();k++)
+    for (index_t k=1;k<index_t(mpi::size());k++)
     {
       std::vector<char> msgc = mpi::receive<std::vector<char>>( k , TAG_MISC );
       printf("[processor %3lu]: %s\n",k,msgc.data());
@@ -149,8 +149,8 @@ AdaptationManager<type>::send_metrics( index_t receiver , const std::vector<inde
     {
       index_t g = indices[k];
       const VertexMetric& m = metrics[g];
-      for (index_t i=0;i<m.n();i++)
-      for (index_t j=i;j<m.n();j++)
+      for (int i=0;i<m.n();i++)
+      for (int j=i;j<m.n();j++)
         metric_data[entry++] = m(i,j);
     }
     global_indices = indices;
@@ -161,8 +161,8 @@ AdaptationManager<type>::send_metrics( index_t receiver , const std::vector<inde
     for (index_t k=0;k<indices.size();k++)
     {
       const VertexMetric& m = metrics[indices[k]];
-      for (index_t i=0;i<m.n();i++)
-      for (index_t j=i;j<m.n();j++)
+      for (int i=0;i<m.n();i++)
+      for (int j=i;j<m.n();j++)
         metric_data[entry++] = m(i,j);
       global_indices[k] = topology_.points().global( indices[k] );
     }
@@ -204,8 +204,8 @@ AdaptationManager<type>::receive_metrics( index_t sender , bool overwrite )
     // unpack the metric
     VertexMetric m( topology_.number() );
     index_t entry = 0;
-    for (index_t i=0;i<m.n();i++)
-    for (index_t j=i;j<m.n();j++)
+    for (int i=0;i<m.n();i++)
+    for (int j=i;j<m.n();j++)
       m(i,j) = metric_data[ idx*n + entry++ ];
     metrics_[k] = m;
   }
@@ -295,7 +295,7 @@ public:
     boundary_(boundary),
     vtxdist_(vtxdist)
   {
-    avro_assert( vtxdist_.size() == mpi::size()+1 );
+    avro_assert( vtxdist_.size() == index_t(mpi::size()+1) );
     build();
   }
 
@@ -1091,7 +1091,7 @@ AdaptationManager<type>::migrate_interface()
   boundary.fill( interface );
 
   // setup a buddy system
-  index_t buddy;
+  index_t buddy = mpi::size();
   if (rank_ == 0)
   {
     // build up the interprocessor graph
@@ -1125,6 +1125,7 @@ AdaptationManager<type>::migrate_interface()
     // wait to receive our processor pair
     buddy = mpi::receive<index_t>(0,TAG_BUDDY);
   }
+  avro_assert( buddy < mpi::size() );
   mpi::barrier();
 
   std::vector<index_t> discard;
@@ -1531,7 +1532,7 @@ AdaptationManager<type>::adapt()
 
   // perform the passes, alternating between doing an interface migration
   // and a load balance
-  for (index_t pass=0;pass<params_.max_passes();pass++)
+  for (index_t pass=0;pass<index_t(params_.max_passes());pass++)
   {
     // fix the boundary of the topology
     // and move the fixed points to the beginning of the points structure
