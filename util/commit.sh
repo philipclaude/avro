@@ -16,14 +16,13 @@ cmakedir=build/$config
 mkdir -p $cmakedir
 cd $cmakedir
 
+CMAKE_ARGS="-DMACHII_LIBRARY_LOCATION='/home/gitlab-runner/Codes/mach-II/library' -DAVRO_HEADLESS_GRAPHICS=1"
+
 if [[ $config == *"coverage"* ]]; then
-  CMAKE_ARGS="-DAVRO_WITH_MPI=ON"
+  CMAKE_ARGS="$CMAKE_ARGS  -DAVRO_WITH_MPI=ON"
 else
   CMAKE_ARGS=""
 fi
-
-CMAKE_ARGS="-DMACHII_LIBRARY_LOCATION='/home/gitlab-runner/Codes/mach-II/library' -DAVRO_HEADLESS_GRAPHICS=1"
-
 
 if [[ $config == *"memcheck"* ]]; then
   CMAKE_ARGS="$CMAKE_ARGS -DUSE_MPI=OFF"
