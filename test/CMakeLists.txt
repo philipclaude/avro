@@ -101,7 +101,7 @@ endforeach()
 
 # create the full unit executable
 avro_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
-target_compile_definitions( unit_exe PUBLIC -DTEST_NUM_PROCS=${numprocs_unit} )
+target_compile_definitions( unit_exe PUBLIC -DTEST_NUM_PROCS=4 )
 target_link_libraries( unit_exe avro_shared )
 target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
 
@@ -110,9 +110,14 @@ target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DI
 #add_dependencies( check_tests ${CHECK_TESTS} )
 
 # target for running all unit tests from a single executable
-add_custom_target( unit command $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
-ADD_DEBUG_TARGETS( unit ${CMAKE_SOURCE_DIR}/test )
-ADD_COVERAGE_UT( unit_coverage unit )
+if (AVRO_WITH_MPI)
+  RUN_WITH_MPIEXEC( 4 )
+  add_custom_target( unit command ${MPI_COMMAND} $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+else()
+  add_custom_target( unit command $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+  ADD_DEBUG_TARGETS( unit ${CMAKE_SOURCE_DIR}/test )
+  ADD_COVERAGE_UT( unit_coverage unit )
+endif()
 
 # create targets for the sandbox files
 set( SBX_COMPILE )
