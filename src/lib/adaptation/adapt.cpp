@@ -348,13 +348,13 @@ adapt( AdaptationProblem& problem )
 
   fpos_t pos;
   int redirected_fd = 0;
-  FILE *redirected_fid;
+  //FILE *redirected_fid;
   if (!output_redirect.empty())
   {
     fgetpos(stdout,&pos);
     fflush(stdout);
     redirected_fd = dup(fileno(stdout));
-    redirected_fid = freopen(output_redirect.c_str(),"w",stdout);
+    //redirected_fid = freopen(output_redirect.c_str(),"w",stdout);
   }
 
   params.standard();

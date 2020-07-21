@@ -1125,7 +1125,7 @@ AdaptationManager<type>::migrate_interface()
     // wait to receive our processor pair
     buddy = mpi::receive<index_t>(0,TAG_BUDDY);
   }
-  avro_assert( buddy < mpi::size() );
+  avro_assert( buddy < index_t(mpi::size()) );
   mpi::barrier();
 
   std::vector<index_t> discard;
