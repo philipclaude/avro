@@ -102,31 +102,7 @@ UT_TEST_CASE( test1 )
   graphics::Visualizer vis;
   vis.add_topology(topology);
 
-  for (index_t k=0;k<parts.size();k++)
-  {
-    // remove crust elements from the partition since they do not get adapted
-    parts[k]->compute_crust();
-    print_inline( parts[k]->halo() , "halo" );
-    parts[k]->move_to_front( parts[k]->halo() );
-    parts[k]->remove_elements( parts[k]->crust() );
-    parts[k]->remove_unused();
-
-    printf("partition %lu:\n",k);
-    parts[k]->Table<index_t>::print();
-
-    UT_ASSERT( parts[k]->all_points_accounted() );
-
-    // check if the inverse can be built successfully (will create an error if any points are left dangling)
-    parts[k]->inverse().build();
-    //UT_ASSERT( parts[k]->inverse().check() );
-
-    //topology.add_child(parts[k]);
-    vis.add_topology(*parts[k].get());
-  }
-
-
   vis.run();
-
 
 }
 UT_TEST_CASE_END( test1 )
