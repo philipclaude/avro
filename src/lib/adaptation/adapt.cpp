@@ -341,8 +341,6 @@ template<typename type>
 int
 adapt( AdaptationProblem& problem )
 {
-  //Gamma<Simplex> gamma; // used to write meshes if necessary
-
   // standardize the parameters
   AdaptationParameters& params = problem.params;
 

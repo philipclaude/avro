@@ -1561,9 +1561,9 @@ AdaptationManager<type>::adapt()
     Mesh mesh_out(number,dim);
 
     // option to write out the input mesh (for debugging)
-    library::meshb input;
+    library::meshb writer;
     if (number<4)
-      input.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
+      writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
     params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
@@ -1606,7 +1606,7 @@ AdaptationManager<type>::adapt()
     retrieve(*topology_out.get());
     m.add(topology_out);
     if (rank_==0 && number<4)
-      input.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false,true);
+      writer.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false,true);
 
     // we alternate between forcing the interfaces to migrate and performing a load balance
     if (pass % 2 == 0)

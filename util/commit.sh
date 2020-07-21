@@ -17,7 +17,7 @@ mkdir -p $cmakedir
 cd $cmakedir
 
 if [[ $config == *"coverage"* ]]; then
-  CMAKE_ARGS=""
+  CMAKE_ARGS="-DAVRO_WITH_MPI=ON"
 else
   CMAKE_ARGS=""
 fi
@@ -32,6 +32,10 @@ fi
 # there is a bug in gcc 4.8 which prevents from using some features needed by mpi wrapper
 if [[ $config == *"gnu48"* ]]; then
   CMAKE_ARGS="$CMAKE_ARGS -DUSE_MPI=OFF"
+fi
+
+if [[ $config == *"mpi"* ]]; then
+  CMAKE_ARGS="$CMAKE_ARGS -DAVRO_WITH_MPI=ON"
 fi
 
 time source $workspace/util/configure.sh $CMAKE_ARGS

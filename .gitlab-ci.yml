@@ -40,6 +40,24 @@ release_clang:
   tags:
     - avro-commit
 
+release_mpi:
+  except:
+    - schedules
+  stage: build
+  script:
+    - source util/commit.sh release_mpi 6
+  tags:
+    - avro-commit
+
+release_clang:
+  except:
+    - schedules
+  stage: build
+  script:
+    - source util/commit.sh release_clang 6
+  tags:
+    - avro-commit
+
 release_tests:
   except:
     - schedules
