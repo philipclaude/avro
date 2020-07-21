@@ -512,7 +512,7 @@ public:
     // partition the graph!
     std::vector<PARM_INT> part(nb_vert_,mpi::rank());
     MPI_Comm comm = MPI_COMM_WORLD;
-    #if 0
+    #if 1
     int result = ParMETIS_V3_PartKway( vtxdist.data() , xadj.data() , adjncy.data() ,
                             vwgt.data() , padjwgt, &wgtflag,
                             &bias , &ncon , &nparts,
@@ -601,11 +601,11 @@ public:
       // likely the number of facets on this interface
       index_t nb0 = element_offset_[p0+1] - element_offset_[p0];
       index_t nb1 = element_offset_[p1+1] - element_offset_[p1];
-      real_t cost = ( nb0 + nb1 )/2.;
+      int cost = ( nb0 + nb1 );
 
       // heavily penalize edges in the matching that would repeat a previous matching
       if (previous_pairs_.find( {p0,p1} ) != previous_pairs_.end())
-        cost = 1e20;
+        cost = PM_INFTY;
 
       edge_ids.push_back( graph.AddEdge( p0 , p1 , cost ) );
     }

@@ -1,3 +1,5 @@
+include(CheckCXXSourceCompiles)
+
 # make sure that the PARMETIS library is available
 SET(CMAKE_REQUIRED_LIBRARIES ${PARMETIS_LIBRARIES} ${MPI_LIBRARIES})
 SET(CMAKE_REQUIRED_INCLUDES ${PARMETIS_INCLUDE_DIRS} ${MPI_INCLUDE_DIRS})
@@ -14,13 +16,13 @@ IF( DEFINED PARMETIS_TEST AND (NOT PARMETIS_TEST OR NOT (PARMETIS_TEST_LIBRARIES
   UNSET( PARMETIS_TEST_INCLUDE_DIRS CACHE )
 ENDIF()
 
-CHECK_CXX_SOURCE_COMPILES( 
+CHECK_CXX_SOURCE_COMPILES(
 "
 #include <parmetis.h>
 
 #if PARMETIS_MAJOR_VERSION == 3 && PARMETIS_MINOR_VERSION < 2
 #error \"Parmetis versions less than 3.2 have a memory allocation bug\"
-#endif 
+#endif
 
 #if PARMETIS_MAJOR_VERSION == 3
 #define PARM_INT  idxtype
@@ -64,13 +66,13 @@ int main(int argc, char *argv[])
 
 IF(PARMETIS_TEST)
   SET(PARMETIS_TEST_FAIL FALSE)
-  
+
   # Save off the current state in case the library or inlcude is changed
   SET( PARMETIS_TEST_LIBRARIES ${PARMETIS_LIBRARIES} CACHE INTERNAL "PARMETIS libraries used for testing" FORCE)
   SET( PARMETIS_TEST_INCLUDE_DIRS ${PARMETIS_INCLUDE_DIRS} CACHE INTERNAL "PARMETIS inlude used for testing" FORCE)
 ELSE()
 
-  MESSAGE(STATUS "" )  
+  MESSAGE(STATUS "" )
   MESSAGE(STATUS "====================================================================" )
   MESSAGE(STATUS " PARMETIS library test failed. See CMakeFiles/CMakeError.log for more details." )
   MESSAGE(STATUS "" )
