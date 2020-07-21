@@ -34,6 +34,8 @@ public:
   index_t elem( const index_t k ) const { return elem_[k]; }
 
   void ball( index_t k , std::vector<index_t>& B ) const;
+  void getball( index_t p , index_t k , std::unordered_set<index_t>& B ) const;
+
   void shell( index_t p , index_t k , std::vector<index_t>& S ) const;
   void shell( index_t t0, index_t t1, index_t t2 , std::vector<index_t>& S ) const;
 
@@ -55,9 +57,9 @@ public:
 
   void print( bool balls=true ) const;
 
+
 private:
 
-  void getball( index_t p , index_t k , std::unordered_set<index_t>& B ) const;
   void getshell( index_t p , index_t q , index_t k , std::unordered_set<index_t>& B ) const;
   void getshell( index_t t0 , index_t t1 , index_t t2 , index_t k , std::unordered_set<index_t>& B ) const;
 

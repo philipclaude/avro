@@ -38,6 +38,7 @@ public:
   std::string& output_redirect() { return stringParams_["output_redirect"]; }
   bool& write_mesh() { return boolParams_["write_mesh"]; }
   bool& write_conformity() { return boolParams_["write_conformity"]; }
+  bool& export_boundary() { return boolParams_["export_boundary"]; }
 
   // properties of the incoming mesh
   bool& curved() { return boolParams_["curved"]; }
@@ -56,6 +57,7 @@ public:
   bool& use_smoothing() { return boolParams_["use_smoothing"]; }
   bool& fefloa() { return boolParams_["fefloa"]; }
   bool& limit_metric() { return boolParams_["limit_metric"]; }
+  int& smoothing_exponent() { return intParams_["smoothing-exponent"]; }
 
   // set the default
   void standard();

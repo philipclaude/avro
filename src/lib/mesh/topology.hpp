@@ -534,7 +534,11 @@ template<typename type>
 void
 Topology<type>::close()
 {
-  if (closed_) return;
+  if (closed_)
+  {
+    printf("mesh is already closed!\n");
+    return;
+  }
 
   // compute the boundary
   Topology<type> bnd(this->points_,this->number_-1);
@@ -574,6 +578,10 @@ Topology<type>::close()
   bnd.offset_by(nb_offset);
   offset_by(nb_offset);
 
+  for (index_t k=0;k<nb();k++)
+  for (index_t j=0;j<nv(k);j++)
+    avro_assert( (*this)(k,j) < points_.nb() );
+
   // pick the ghost for partition boundaries
   int pbody = -1;
   for (index_t k=0;k<bodies.size();k++)
@@ -593,12 +601,17 @@ Topology<type>::close()
 
     // reset the body for partition boundaries
     if (ibnd<0) ibnd = pbody;
+    ibnd = 1; // philip: july 15 -> bnd tag not even used
 
     std::vector<index_t> fk = bnd.get(k);
     std::sort(fk.begin(),fk.end());
     fk.insert( fk.begin() , index_t(ibnd-1) );
     this->add( fk.data() , fk.size() );
   }
+
+  for (index_t k=0;k<nb();k++)
+  for (index_t j=0;j<nv(k);j++)
+    avro_assert( (*this)(k,j) < points_.nb() );
 
   closed_ = true;
 }

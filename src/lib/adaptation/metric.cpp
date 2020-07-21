@@ -507,6 +507,7 @@ MetricAttachment::set_cells( const Topology<type>& topology )
 		if (topology.ghost(k)) continue;
 		for (index_t j=0;j<topology.nv(k);j++)
 		{
+			avro_assert_msg( topology(k,j) < topology.points().nb() , "topology(%lu,%lu) = %lu, but |points| = %lu" , k,j,topology(k,j),topology.points().nb() );
 			if (visited[topology(k,j)]) continue;
 
 			counted++;
@@ -572,6 +573,13 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		// compute the new metric from the step
 		numerics::SymMatrixD<real_t> sqrt_M0 = numerics::sqrtm(mi);
 		numerics::SymMatrixD<real_t> mk = sqrt_M0*numerics::expm(s)*sqrt_M0;
+
+		real_t detm = numerics::determinant(mk);
+		if (detm <= 0.0)
+		{
+			// hack! revert to target metric...a pretty bad idea
+			mk = mt;
+		}
 
 		this->operator[](k).set(mk);
 		this->operator[](k).calculate();

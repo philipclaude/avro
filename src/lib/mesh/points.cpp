@@ -80,7 +80,7 @@ Points::create( const real_t* x )
 	body_.add(0);
 	primitive_.add(NULL);
 	fixed_.add(false);
-	global_.add(nb()); // 1-bias
+	global_.add(nb()-1); // 1-bias
 }
 
 void
@@ -176,7 +176,7 @@ Points::print( bool info ) const
 	{
 		printf("p[%4d]: (",int(k));
 		for (index_t d=0;d<dim_;d++)
-			printf(" %12.4e ", operator[](k)[d] );
+			printf(" %10.2e ", operator[](k)[d] );
 		printf(")");
 		if (info)
 		{
@@ -188,11 +188,11 @@ Points::print( bool info ) const
 				num = primitive_[k]->number();
   		}
   		else geo = "";
-  		printf(" : %5s , %5s , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "ghost":"real",
-  						(fixed_[k])?("fixed"):("free"),num,(void*)primitive_[k],geo.c_str());
+  		printf(" : %5s , e[ %2d-%16p%20s ] , u = (",(k<nb_ghost_)? "ghost":(fixed_[k])?("fixed"):("free"),num,(void*)primitive_[k],geo.c_str());
 			for (index_t d=0;d<udim_;d++)
-				printf(" %12.4e ",u(k)[d]);
+				printf(" %10.2e ",u(k)[d]);
 			printf(")");
+			printf(" g(%4lu)",global(k));
 		}
 		printf("\n");
 	}
@@ -215,11 +215,11 @@ Points::print( index_t k , bool info ) const
 			num = primitive_[k]->number();
 		}
 		else geo = "";
-		printf(" : %5s , %5s , g[ %1d-%p%s ] , u = (",(k<nb_ghost_)? "ghost":"real",
-							(fixed_[k])?("fixed"):("free"),num,(void*)primitive_[k],geo.c_str());
+		printf(" : %5s , e[ %2d-%16p%20s ] , u = (",(k<nb_ghost_)? "ghost":(fixed_[k])?("fixed"):("free"),num,(void*)primitive_[k],geo.c_str());
 		for (index_t d=0;d<udim_;d++)
-			printf("%12.4e ",u(k)[d]);
+			printf(" %10.2e ",u(k)[d]);
 		printf(")");
+		printf(" g(%4lu)",global(k));
 	}
 	printf("\n");
 }
@@ -557,6 +557,7 @@ Points::move_to( index_t k0 , index_t k1 )
 	body_.insert( k1 , body(k0) );
 	primitive_.insert( k1 , e0 );
 	fixed_.insert( k1 , fixed(k0) );
+	global_.insert( k1 , global(k0) );
 	#endif
 	remove(k0+1); // +1 because we added a vertex in front of k0
 }
@@ -571,6 +572,7 @@ Points::clear()
   nb_ghost_ = 0;
 	incidence_.clear();
 	fixed_.clear();
+	global_.clear();
 }
 
 } // avro

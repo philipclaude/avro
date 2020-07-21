@@ -12,11 +12,72 @@
 
 #include "library/ckf.h"
 #include "library/egads.h"
+#include "library/meshb.h"
+#include "library/metric.h"
 #include "library/tesseract.h"
+
+#include "mesh/partition.h"
 
 #include "numerics/geometry.h"
 
 using namespace avro;
+
+namespace avro
+{
+namespace library
+{
+class MetricField_UGAWG_sin : public MetricField_Analytic
+{
+public:
+  MetricField_UGAWG_sin() :
+    MetricField_Analytic(2)
+  {}
+
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  {
+    numerics::SymMatrixD<real_t> m(dim_);
+
+    real_t H_ = 5.;
+		real_t f_ = 10.;
+		real_t A_ = 2.;
+		real_t P_ = 5.;
+		real_t y0_ = 5.;
+		real_t w_ = 1.*M_PI/P_;
+
+    real_t phi = -f_*( x[1] -A_*cos(w_*x[0]) -y0_ );
+  	real_t dzdx = -A_*H_*f_*w_*sin(w_*x[0])*( pow(tanh(phi),2.) -1. );
+  	real_t dzdy = -H_*f_*( pow(tanh(phi),2.) -1. );
+  	m(0,0) = 1. +dzdx*dzdx;
+  	m(0,1) = dzdx*dzdy;
+  	m(1,1) = 1. +dzdy*dzdy;
+    return m;
+  }
+};
+
+class MetricField_UGAWG_Linear2 : public MetricField_Analytic
+{
+public:
+  MetricField_UGAWG_Linear2() :
+    MetricField_Analytic(2)
+  {}
+
+  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  {
+    numerics::SymMatrixD<real_t> m(dim_);
+
+    real_t hx = 0.1;
+    real_t h0 = 1e-3;
+    real_t hy = h0 +2.*(hx -h0)*fabs( x[1] -0.5 );
+
+    m(0,0) = 1./(hx*hx);
+    m(0,1) = 0.;
+    m(1,1) = 1./(hy*hy);
+    return m;
+  }
+};
+
+} // library
+} // avro
 
 UT_TEST_SUITE( adaptation_parallel_test_suite )
 
@@ -24,59 +85,89 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 2;
+  coord_t number = 3;
   coord_t dim = number;
 
-  std::vector<index_t> dims(number,7);
-  CKF_Triangulation topology(dims);
-
-  #if 1
   EGADS::Context context;
+  #if 1
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
+  std::vector<index_t> dims(number,10);
+  CKF_Triangulation topology(dims);
+  #elif 0
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  Body& geometry = model.body(0);
+  library::meshb mesh(BASE_TEST_DIR+"/meshes/cube-cylinder.mesh");
+  std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
+  Topology<Simplex>& topology = *ptopology.get();
   #else
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
   library::Tesseract geometry(c,lengths);
+  std::vector<index_t> dims(number,10);
+  CKF_Triangulation topology(dims);
   #endif
   topology.points().attach(geometry);
 
-  topology.neighbours().fromscratch() = true;
-  topology.neighbours().compute();
-
-  Points points_out(dim);
-  Topology<Simplex> topology_out(points_out,number);
   AdaptationParameters params;
   params.standard();
 
-  params.nb_partition() = mpi::size()-1;
-  params.partition_size() = 50;
+  std::vector<VertexMetric> metrics(topology.points().nb());
+  library::MetricField_UGAWG_Polar2 analytic;
+  //library::MetricField_UGAWG_sin analytic;
+  //library::MetricField_Uniform analytic(number,0.2);
+  for (index_t k=0;k<topology.points().nb();k++)
+    metrics[k] = analytic( topology.points()[k] );
 
-  std::vector<VertexMetric> metrics;
-  int result = adaptp( topology , metrics , params , topology_out );
-  UT_ASSERT_EQUALS( result , 0 );
+  params.partitioned() = false;
+  params.balanced() = true; // assume load-balanced once the first partition is computed
+  params.curved() = true;
+  params.insertion_volume_factor() = -1;
+  params.limit_metric() = true;
+  params.max_passes() = 2*pow(2,number-1);
+  params.swapout() = false;
+  params.has_uv() = true;
+
+  topology.build_structures();
+
+  AdaptationManager<Simplex> manager( topology , metrics , params );
 
   index_t rank = mpi::rank();
+
+  index_t niter = 5;
+  for (index_t iter=0;iter<=niter;iter++)
+  {
+    params.adapt_iter() = iter;
+    params.limit_metric() = true;
+    if (rank == 0)
+      printf("\n=== iteration %lu ===\n\n",iter);
+
+    // adapt the mesh, migrate interfaces, etc.
+    manager.adapt();
+
+    // re-evaluate the metrics
+    metrics.resize( manager.topology().points().nb() );
+    for (index_t k=0;k<metrics.size();k++)
+      metrics[k] = analytic( manager.topology().points()[k] );
+
+    manager.reassign_metrics(metrics);
+
+    mpi::barrier();
+  }
+  fflush(stdout);
+
+  Points points_out(dim,dim-1);
+  Topology<Simplex> topology_out(points_out,number);
+  manager.retrieve(topology_out);
+
   if (rank==0)
   {
     real_t volume = topology_out.volume();
     UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
 
-    for (index_t k=0;k<topology_out.points().nb();k++)
-    for (index_t j=k+1;j<topology_out.points().nb();j++)
-    {
-      real_t d = numerics::distance( topology_out.points()[k] , topology_out.points()[j] , dim );
-      if (d < 1e-12)
-      {
-        topology_out.points().print(k,true);
-        topology_out.points().print(j,true);
-      }
-    }
-
     // it may not look like much, but this is a huge check on the partitioning and stitching algorithm
-    UT_ASSERT_EQUALS( topology_out.points().nb() , topology.points().nb() );
-
-    printf("original |points| = %lu, new |points| = %lu\n",topology.points().nb(),topology_out.points().nb());
+    // but this will only pass if no adaptation is performed
+    //UT_ASSERT_EQUALS( topology_out.points().nb() , topology.points().nb() );
 
     graphics::Visualizer vis;
     vis.add_topology(topology_out);

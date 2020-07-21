@@ -16,6 +16,8 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
+#include <unistd.h>
+
 namespace avro
 {
 
@@ -44,6 +46,7 @@ InverseTopology<type>::build()
 {
   elem_.resize( topology_.points().nb() , topology_.nb()+1 );
 
+#if 1
   for (index_t k=0;k<topology_.nb();k++)
   {
     for (index_t j=0;j<topology_.nv(k);j++)
@@ -54,9 +57,23 @@ InverseTopology<type>::build()
       if (topology_.ghost(k) && p>=topology_.points().nb_ghost()) continue;
 
       // choose the minimum element index attached to the vertex
-      elem_[p] = std::min(k,elem_[p]);
+      elem_[p] = k;//std::min(k,elem_[p]);
     }
   }
+#else
+for (index_t k=0;k<topology_.nb();k++)
+{
+  //if (topology_.ghost(k)) continue;
+  for (index_t j=0;j<topology_.nv(k);j++)
+  {
+    index_t p = topology_(k,j);
+    //if (p < topology_.points().nb_ghost()) continue;
+
+    // choose the minimum element index attached to the vertex
+    elem_[p] = k;//std::min(k,elem_[p]);
+  }
+}
+#endif
 
   // make sure all points are set
   for (index_t k=0;k<nb();k++)
@@ -116,10 +133,10 @@ InverseTopology<type>::getball( index_t p , index_t k0 , std::unordered_set<inde
     if (k1<0) continue;
 
     // skip if this neighbours exists in b
-    if (b.find(k1)!=b.end()) continue;
+    if (b.find(k1)!=b.end()) { /*printf("exists!\n");*/ continue; }
 
     // skip if this neighbour doesn't contain p
-    if (!topology_.has(k1,p)) continue;
+    if (!topology_.has(k1,p)) { /*printf("elem %d doesn't have %lu!\n",k1,p);*/ continue; }
 
     // step into k1
     getball( p , k1 , b );
@@ -143,6 +160,22 @@ InverseTopology<type>::shell( index_t p , index_t q , std::vector<index_t>& S ) 
   }
   if (start<0)
   {
+    try
+    {
+      // this is kind of a disastrous hack around potential non-manifold meshes
+      // when really bad partitions are produced in parallel computations
+      // todo: check for non-manifold points as a preprocessing step!
+      //topology_.all_with( {p,q} , S );
+      S.clear();return;
+      shell(q,p,S);
+      return;
+    }
+    catch(...)
+    {
+      avro_implement;
+      topology_.all_with( {p,q} , S );
+      return;
+    }
     std::vector<index_t> bq;
     ball(q,bq);
     std::sort( b.begin() , b.end() );
@@ -162,7 +195,9 @@ InverseTopology<type>::shell( index_t p , index_t q , std::vector<index_t>& S ) 
       if (topology_.has(k,q)) Bq.push_back(k);
       if (topology_.has(k,p) && topology_.has(k,q))
       {
+        //start = k;
         printf("element %lu has (%lu,%lu)!\n",k,p,q);
+        topology_.neighbours().print(k);
         printf("must be a bug!\n");
       }
     }
@@ -170,6 +205,12 @@ InverseTopology<type>::shell( index_t p , index_t q , std::vector<index_t>& S ) 
     std::sort( Bq.begin() , Bq.end() );
     print_inline( Bp , "recomputed ball of vertex " +stringify(p) +":" );
     print_inline( Bq , "recomputed ball of vertex " +stringify(q) +":" );
+    for (index_t j=0;j<Bp.size();j++)
+      topology_.neighbours().print(Bp[j]);
+    for (index_t j=0;j<Bq.size();j++)
+      topology_.neighbours().print(Bq[j]);
+    topology_.neighbours().print();
+    fflush(stdout);
   }
   avro_assert_msg( start>=0 ,
       "could not find element touching edge (%lu,%lu)",p,q);
