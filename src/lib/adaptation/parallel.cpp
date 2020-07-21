@@ -1,6 +1,3 @@
-#if 0
-#include "adaptation/parallel0.hpp"
-#else
 #include "common/mpi.hpp"
 #include "common/process.h"
 
@@ -56,6 +53,7 @@ namespace avro
 #define TAG_GLOBAL_KEYS 402
 #define TAG_GLOBAL_VALUES 403
 #define TAG_POINT_OFFSET 404
+#define TAG_BUDDY 601
 
 void
 pprintf(const char* format , ... )
@@ -66,6 +64,29 @@ pprintf(const char* format , ... )
   printf("[processor %2lu]: ",rank);
   printf(format,args);
   va_end(args);
+}
+
+void
+avro_msgp( const std::string& msg )
+{
+  index_t rank = mpi::rank();
+  if (rank == 0)
+  {
+    printf("[processor %3lu]: %s\n",index_t(0),msg.c_str());
+    for (index_t k=1;k<mpi::size();k++)
+    {
+      std::vector<char> msgc = mpi::receive<std::vector<char>>( k , TAG_MISC );
+      printf("[processor %3lu]: %s\n",k,msgc.data());
+    }
+    fflush(stdout);
+  }
+  else
+  {
+    std::vector<char> msgc(msg.begin(),msg.end());
+    msgc.push_back('\0');
+    mpi::send( mpi::blocking{} , msgc , 0 , TAG_MISC );
+  }
+  mpi::barrier();
 }
 
 // useful for debugging for problems in [0,1]^d
@@ -263,36 +284,6 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
   }
   mpi::barrier();
 
-  // balance the partitions so they have an equal adaptation work
-  if (!params_.balanced())
-  {
-    // everything should still be saved into the partition
-    balance();
-  }
-}
-
-template<typename type>
-void
-AdaptationManager<type>::balance(real_t alpha , real_t beta)
-{
-  if (alpha<0) alpha = 1.0;
-  if (beta<0) beta = 1.0;
-
-  //avro_assert( metrics_.size() == topology_.points().nb() );
-
-  // compute the weights on all the elements in our partition
-
-  // compute the adjacency information
-
-  // call the repartitioner/load-balancer
-
-  // transfer data to another partition
-  // TODO topology and metrics
-
-  // receive data from another partition
-  // TODO topology and metrics
-
-  mpi::barrier();
 }
 
 template<typename type>
@@ -511,17 +502,17 @@ public:
     std::vector<PARM_REAL> ubvec(ncon,1.05);
     PARM_INT options[4];
     options[0] = 1;
-    options[1] = 3;
+    options[1] = 0;
     options[2] = 0;
     options[3] = PARMETIS_PSR_COUPLED; // only used for AdaptiveRepart
 
     mpi::barrier();
-    printf("calling parmetis on local graph on processor %d with %lu vertices\n",mpi::rank(),nb_vert_);
+    avro_msgp("calling parmetis on local graph with " + std::to_string(nb_vert_) + " vertices");
 
     // partition the graph!
     std::vector<PARM_INT> part(nb_vert_,mpi::rank());
     MPI_Comm comm = MPI_COMM_WORLD;
-    #if 1
+    #if 0
     int result = ParMETIS_V3_PartKway( vtxdist.data() , xadj.data() , adjncy.data() ,
                             vwgt.data() , padjwgt, &wgtflag,
                             &bias , &ncon , &nparts,
@@ -569,9 +560,9 @@ private:
 class ProcessorGraph
 {
 public:
-  ProcessorGraph( const std::vector<index_t>& element_offset , std::vector< std::pair<index_t,index_t> >& pairs ) :
+  ProcessorGraph( const std::vector<index_t>& element_offset , const std::set< std::pair<index_t,index_t> >& pairs ) :
     element_offset_(element_offset),
-    previous_pairs_(pairs.begin(),pairs.end())
+    previous_pairs_(pairs)
   {}
 
   template<typename type>
@@ -596,6 +587,7 @@ public:
     }
 
     PerfectMatching graph( mpi::size() , E.size() );
+    graph.options.verbose = false;
     std::vector<index_t> edges;
     std::vector<index_t> edge_ids;
     for (std::set< std::pair<index_t,index_t> >::iterator it=E.begin();it!=E.end();++it)
@@ -636,7 +628,7 @@ public:
 private:
   const std::vector<index_t>& element_offset_;
   std::vector< std::pair<index_t,index_t> > pairs_;
-  std::set< std::pair<index_t,index_t> > previous_pairs_;
+  const std::set<std::pair<index_t,index_t>>& previous_pairs_;
 };
 
 template<typename type>
@@ -733,10 +725,18 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
 {
   index_t nb_rank = mpi::size();
 
+  if (rank_ == 0) printf("--> exchanging elements\n");
+  mpi::barrier();
+
+  // print a message with all the send information
   std::vector<index_t> nb_send( nb_rank , 0 );
   for (index_t k=0;k<repartition.size();k++)
     nb_send[repartition[k]]++;
-  print_inline(nb_send,"[processor " + std::to_string(rank_) + "]: send away ->");
+  std::string msg = "send away: ( ";
+  for (index_t j=0;j<nb_send.size();j++)
+    msg += std::to_string(nb_send[j]) + " ";
+  msg += ")";
+  avro_msgp( msg );
 
   coord_t dim = topology_.points().dim();
   coord_t udim = topology_.points().udim();
@@ -809,10 +809,7 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   }
   mpi::barrier();
 
-  std::map<index_t,index_t> metrics_owned;
-  for (index_t k=0;k<topology_.points().nb();k++)
-    metrics_owned.insert( {topology_.points().global(k),k} );
-  chunk.add_to( topology_ );
+  index_t nb_added = chunk.nb();
 
   std::vector<index_t> removals;
   for (index_t k=0;k<repartition.size();k++)
@@ -820,6 +817,16 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
     if (repartition[k] != rank_)
       removals.push_back( k );
   }
+
+  std::map<index_t,index_t> metrics_owned;
+  for (index_t k=0;k<topology_.points().nb();k++)
+    metrics_owned.insert( {topology_.points().global(k),k} );
+  chunk.add_to( topology_ );
+
+  index_t nb_elem = topology_.nb() - removals.size();
+  for (index_t k=0;k<nb_added;k++)
+    crust_.push_back( nb_elem + k );
+
   topology_.remove_elements( removals );
 
   // determine which metrics need to be added
@@ -970,7 +977,7 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
 
 template<typename type>
 void
-AdaptationManager<type>::migrate_parmetis()
+AdaptationManager<type>::migrate_balance()
 {
   index_t nb_rank = mpi::size();
 
@@ -1033,11 +1040,9 @@ AdaptationManager<type>::migrate_parmetis()
   exchange(repartition);
 }
 
-#define TAG_BUDDY 601
-
 template<typename type>
 void
-AdaptationManager<type>::migrate_native()
+AdaptationManager<type>::migrate_interface()
 {
   index_t nb_rank = mpi::size();
 
@@ -1110,7 +1115,10 @@ AdaptationManager<type>::migrate_native()
       if (p0 == rank_) buddy = p1;
     }
 
-    pairs_ = graph.pairs();
+    // save the matched pairs so we don't match them again
+    const std::vector< std::pair<index_t,index_t>>& pairs = graph.pairs();
+    for (auto it=pairs.begin();it!=pairs.end();++it)
+      pairs_.insert(*it);
   }
   else
   {
@@ -1118,7 +1126,6 @@ AdaptationManager<type>::migrate_native()
     buddy = mpi::receive<index_t>(0,TAG_BUDDY);
   }
   mpi::barrier();
-  printf("processor %lu: my buddy is %lu\n",rank_,buddy);
 
   std::vector<index_t> discard;
   std::set<index_t> interface_point;
@@ -1153,9 +1160,30 @@ AdaptationManager<type>::migrate_native()
       discard.push_back(elemL); // elements on rank
     }
   }
+  else
+  {
+    // initialiaize the crust to elements on the interface
+    const std::map<ElementIndices,index_t>& facets = boundary.facets();
+    std::map<ElementIndices,index_t>::const_iterator it;
+    std::vector<index_t> elems;
+    for (it=facets.begin();it!=facets.end();++it)
+    {
+      const ElementIndices& f = it->first;
+      index_t k = it->second;
+
+      index_t partL = boundary.partL(k);
+      index_t partR = boundary.partR(k);
+
+      avro_assert( partL == rank_ );
+      if (partR != buddy) continue;
+
+      for (index_t j=0;j<f.indices.size();j++)
+        interface_point.insert( f.indices[j] );
+    }
+  }
   mpi::barrier();
 
-  // add any element in the ball of an interface vertex
+  // list out the interface points
   std::set<index_t> pts;
   for (index_t k=0;k<topology_.points().nb();k++)
   {
@@ -1164,6 +1192,7 @@ AdaptationManager<type>::migrate_native()
     pts.insert( k );
   }
 
+  // we will discard any element in the ball of an interface point
   std::vector<index_t> ball;
   for (std::set<index_t>::iterator it=pts.begin();it!=pts.end();++it)
   {
@@ -1173,6 +1202,12 @@ AdaptationManager<type>::migrate_native()
   }
   uniquify(discard);
 
+  if (rank_ > buddy)
+  {
+    crust_ = discard;
+    discard.clear();
+  }
+
   // initialize all of the elements to this partition
   std::vector<index_t> repartition(topology_.nb(),rank_);
 
@@ -1181,18 +1216,8 @@ AdaptationManager<type>::migrate_native()
     repartition[discard[k]] = buddy;
   mpi::barrier();
 
-  // exchange the partition
+  // exchange the elements
   exchange(repartition);
-  mpi::barrier();
-}
-
-template<typename type>
-void
-AdaptationManager<type>::migrate()
-{
-  // TODO add parameter to switch between parmetis/native
-  //migrate_parmetis();
-  migrate_native();
 }
 
 void
@@ -1215,7 +1240,6 @@ struct map_builder : public std::map<key,value>
       this->insert( {keys[k] , values[k] } );
   }
 };
-
 
 template<typename type>
 void
@@ -1369,23 +1393,6 @@ AdaptationManager<type>::synchronize()
 }
 
 template<typename type>
-bool
-AdaptationManager<type>::analyze()
-{
-  bool result = false;
-
-  // compute metric conformity on our processor
-
-  // communicate the result to all processors
-
-  // if a single processor is unhappy, then we are not done
-
-  mpi::barrier();
-
-  return result;
-}
-
-template<typename type>
 void
 fix_non_manifold( Topology<type>& topology )
 {
@@ -1429,7 +1436,7 @@ AdaptationManager<type>::fix_boundary()
     if (topology_.points().fixed(k))
       pts.push_back(k);
   }
-  printf("there are %lu non-manifold vertices out of %lu!\n",pts.size(),topology_.points().nb());
+  avro_msgp("detected "+ std::to_string(pts.size()) + " non-manifold vertices out of " + std::to_string(topology_.points().nb()) + "!");
 
   // compute the boundary
   Facets facets(topology_);
@@ -1475,47 +1482,99 @@ AdaptationManager<type>::fix_boundary()
 
 template<typename type>
 void
+fix_crust( Topology<type>& topology , const std::vector<index_t>& crust0 )
+{
+  std::set<index_t> pts;
+  for (index_t k=0;k<topology.points().nb();k++)
+  {
+    if (topology.points().fixed(k))
+      pts.insert(k);
+  }
+
+  std::set<index_t> crust(crust0.begin(),crust0.end());
+  index_t nb_fixed = 0;
+  for (index_t k=0;k<topology.nb();k++)
+  {
+    // don't fix crust elements
+    if (crust.find(k) != crust.end()) continue;
+
+    bool fixed = true;
+    for (index_t j=0;j<topology.nv(k);j++)
+    {
+      if (pts.find(topology(k,j)) != pts.end())
+      {
+        fixed = false;
+        break;
+      }
+    }
+    if (!fixed) continue;
+
+    nb_fixed++;
+    for (index_t j=0;j<topology.nv(k);j++)
+      topology.points().set_fixed( topology(k,j),true);
+  }
+
+  avro_msgp( "there were " + std::to_string(nb_fixed) + " fixed elements with a crust of " + std::to_string(crust.size()) + " elements" );
+}
+
+template<typename type>
+void
 AdaptationManager<type>::adapt()
 {
+  avro_assert_msg( params_.max_passes() % 2 == 0 , "number of passes should be even" );
+
+  coord_t dim = topology_.points().dim();
   coord_t number = topology_.number();
 
-  bool done = false;
+  // clear any previous processor-processor pairs that may have been stored
+  pairs_.clear();
+
+  // perform the passes, alternating between doing an interface migration
+  // and a load balance
   for (index_t pass=0;pass<params_.max_passes();pass++)
   {
-    #if 0
-    if (pass > 0)
-    {
-      // perform a load-balance using parmetis
-      fix_boundary();
-      synchronize();
-      migrate_parmetis();
-    }
-    #endif
-
     // fix the boundary of the topology
     // and move the fixed points to the beginning of the points structure
+    if (rank_ == 0) printf("--> fixing partition boundaries\n");
+    mpi::barrier();
+
     fix_boundary();
 
-    // do the adaptation
+    // fix any points that are part of non-contributing elements
+    if (pass % 2 == 1)
+    {
+      if (rank_ == 0) printf("--> fixing crust\n");
+      mpi::barrier();
+
+      // fix any points that are not in the crust
+      fix_crust( topology_ , crust_ );
+      crust_.clear();
+    }
+
     // create the mesh we will write to
     // create a mesh and add the topology
-    Mesh mesh(number,number);
+    Mesh mesh(number,dim);
     std::shared_ptr<Topology<type>> ptopology = std::make_shared<Topology<type>>(mesh.points(),number);
     ptopology->TopologyBase::copy(topology_);
     mesh.add(ptopology);
     topology_.points().copy(mesh.points());
-    Mesh mesh_out(number,mesh.points().dim());
+    Mesh mesh_out(number,dim);
 
+    // option to write out the input mesh (for debugging)
     library::meshb input;
-    input.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
+    if (number<4)
+      input.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
+    // setup the adaptation
     params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
+    if (pass > 0) params_.limit_metric() = false;
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     try
     {
-      pprintf("adapting mesh...\n");
+      // do the adaptation!
+      if (rank_ == 0) printf("--> adapting mesh!\n");
       ::avro::adapt<type>( problem );
 
       // clear the topology and copy in the output topology
@@ -1533,6 +1592,7 @@ AdaptationManager<type>::adapt()
     }
     catch(...)
     {
+      pprintf("there was an error adapting the mesh :(\n");
       mpi::abort(1);
     }
     mpi::barrier();
@@ -1540,32 +1600,33 @@ AdaptationManager<type>::adapt()
     // synchronize all the global point indices
     synchronize();
 
-    Mesh m(number,number);
+    // option to retrieve and export the full mesh
+    Mesh m(number,dim);
     std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
     retrieve(*topology_out.get());
     m.add(topology_out);
-    if (rank_==0)
-      input.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false);
+    if (rank_==0 && number<4)
+      input.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false,true);
 
-
-
-    // analyze whether we are done
-    done = analyze();
-    if (done) break;
-
-    // migrate the interface between partitions
-    if (pass%2 == 0)
+    // we alternate between forcing the interfaces to migrate and performing a load balance
+    if (pass % 2 == 0)
     {
-      migrate_native();
+      if (rank_ == 0) printf("--> migrating interface\n");
+      mpi::barrier();
+
+      // the first time we adapt (and every even pass), we need to push the interfaces into processor neighbours
+      migrate_interface();
     }
     else
     {
-      migrate_parmetis();
+      if (rank_ == 0) printf("--> balancing partitions\n");
+      mpi::barrier();
+
+      // after an adaptation involving an interface migration, we need to load-balance the partitions
+      // the last pass will always be a load-balance
+      migrate_balance();
     }
   }
-
-  // balance the mesh between the partitions
-  balance();
 }
 
 template<typename type>
@@ -1620,7 +1681,6 @@ void
 AdaptationManager<type>::append_partition( index_t p , Topology<type>& topology , Topology_Partition<type>& partition ,
                                            std::vector<bool>& created , std::vector<real_t>& partition_index ) const
 {
-  printf("appending partition with %lu elements\n",partition.nb());
   for (index_t j=0;j<partition.points().nb();j++)
   {
     // retrieve the global index of this point
@@ -1707,5 +1767,3 @@ template class AdaptationManager<Simplex>;
 #endif
 
 } // avro
-
-#endif

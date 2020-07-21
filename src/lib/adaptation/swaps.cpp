@@ -183,10 +183,12 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       index_t e0 = edges[2*k];
       index_t e1 = edges[2*k+1];
 
+      // skip fixed edges (when working in parallel)
+      if (topology_.points().fixed(e0) && topology_.points().fixed(e1)) continue;
+
       std::vector<index_t> edge = {e0,e1};
       topology_.intersect(edge,elems);
       if (elems.size()==0) continue;
-      avro_assert( elems.size()>0 );
 
       // initial worst quality
       real_t q0 = -1;

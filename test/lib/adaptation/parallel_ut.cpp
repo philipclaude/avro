@@ -12,6 +12,7 @@
 
 #include "library/ckf.h"
 #include "library/egads.h"
+#include "library/meshb.h"
 #include "library/metric.h"
 #include "library/tesseract.h"
 
@@ -87,21 +88,24 @@ UT_TEST_CASE( test1 )
   coord_t number = 3;
   coord_t dim = number;
 
-  std::vector<index_t> dims(number,10);
-  CKF_Triangulation topology(dims);
-
-  //for (index_t k=0;k<topology.points().nb();k++)
-  //for (coord_t d=0;d<topology.points().dim();d++)
-  //  topology.points()[k][d] *= 10;
-
-  #if 1
   EGADS::Context context;
+  #if 1
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
+  std::vector<index_t> dims(number,10);
+  CKF_Triangulation topology(dims);
+  #elif 0
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  Body& geometry = model.body(0);
+  library::meshb mesh(BASE_TEST_DIR+"/meshes/cube-cylinder.mesh");
+  std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
+  Topology<Simplex>& topology = *ptopology.get();
   #else
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
   library::Tesseract geometry(c,lengths);
+  std::vector<index_t> dims(number,10);
+  CKF_Triangulation topology(dims);
   #endif
   topology.points().attach(geometry);
 
@@ -109,7 +113,7 @@ UT_TEST_CASE( test1 )
   params.standard();
 
   std::vector<VertexMetric> metrics(topology.points().nb());
-  library::MetricField_UGAWG_Linear analytic;
+  library::MetricField_UGAWG_Polar2 analytic;
   //library::MetricField_UGAWG_sin analytic;
   //library::MetricField_Uniform analytic(number,0.2);
   for (index_t k=0;k<topology.points().nb();k++)
@@ -117,11 +121,12 @@ UT_TEST_CASE( test1 )
 
   params.partitioned() = false;
   params.balanced() = true; // assume load-balanced once the first partition is computed
-  params.curved() = false;
+  params.curved() = true;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 6;
+  params.max_passes() = 2*pow(2,number-1);
   params.swapout() = false;
+  params.has_uv() = true;
 
   topology.build_structures();
 
@@ -133,8 +138,9 @@ UT_TEST_CASE( test1 )
   for (index_t iter=0;iter<=niter;iter++)
   {
     params.adapt_iter() = iter;
+    params.limit_metric() = true;
     if (rank == 0)
-      printf("*** global pass %lu ***\n",iter);
+      printf("\n=== iteration %lu ===\n\n",iter);
 
     // adapt the mesh, migrate interfaces, etc.
     manager.adapt();

@@ -423,10 +423,10 @@ meshb::write( Points& points )
 }
 
 void
-meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
+meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd , bool verbose )
 {
-
-  printf("--> writing mesh to: %s\n",filename.c_str());
+  if (verbose)
+    printf("--> writing mesh to: %s\n",filename.c_str());
   int dim = mesh.points().dim();
   if (dim==4) dim = 3;
   open(dim,filename);

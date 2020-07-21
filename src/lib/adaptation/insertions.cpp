@@ -555,14 +555,14 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         }
       }
 
-      if (!inserter_.has_unique_elems())
+      /*if (!inserter_.has_unique_elems())
       {
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
         nb_count_rejected++;
         continue;
-      }
+      }*/
 
       // apply the insertion into the topology
       topology_.apply(inserter_);

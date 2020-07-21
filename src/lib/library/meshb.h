@@ -39,7 +39,7 @@ public:
 
   void read();
   void write( Points& points );
-  void write( Mesh& mesh , const std::string& filename , bool with_bnd );
+  void write( Mesh& mesh , const std::string& filename , bool with_bnd , bool verbose=false );
   template<typename type> void write( const Topology<type>& topology , const std::vector<index_t>& refs );
 
   index_t nv( const int GmfType ) const;

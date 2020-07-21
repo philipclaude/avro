@@ -8,6 +8,7 @@
 #include "numerics/matrix.h"
 
 #include <map>
+#include <set>
 #include <vector>
 
 namespace avro
@@ -36,18 +37,8 @@ public:
   // runs a sequence of [optional: balance]  - adapt - migrate
   void adapt();
 
-  // balances all meshes across processors
-  void balance(real_t alpha=-1 , real_t beta=-1);
-
-  // migrates the interface mesh
-  void migrate();
-
   // synchronizes global vertex numbers (at the interfaces) across all processors
   void synchronize();
-
-  // analyzes the metric conformity on this processor,
-  // and communicates with all other processors to determine if we are done
-  bool analyze();
 
   // retrieves the adapted and load-balanced partition
   void retrieve( Topology<type>& topology );
@@ -63,8 +54,8 @@ public:
 
 private:
 
-  void migrate_parmetis();
-  void migrate_native();
+  void migrate_balance();
+  void migrate_interface();
 
   void send_metrics( index_t receiver , const std::vector<index_t>& global_indices , const std::vector<VertexMetric>& metrics , bool global_flag );
   void receive_metrics( index_t sender , bool overwrite=false );
@@ -80,7 +71,9 @@ private:
   std::shared_ptr<PartitionField<type>> field_;
 
   std::vector<index_t> element_offset_;
-  std::vector<std::pair<index_t,index_t>> pairs_;
+  std::set<std::pair<index_t,index_t>> pairs_;
+
+  std::vector<index_t> crust_;
 };
 
 } // avro
