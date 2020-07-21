@@ -49,6 +49,15 @@ release_mpi:
   tags:
     - avro-commit
 
+release_no_esp:
+  except:
+    - schedules
+  stage: build
+  script:
+    - source util/commit.sh release_no_esp 6
+  tags:
+    - avro-commit
+
 release_clang:
   except:
     - schedules

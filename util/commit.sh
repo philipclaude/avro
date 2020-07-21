@@ -46,6 +46,10 @@ if [[ $config == *"coverage"* ]]; then
   time make coverage_cleaner
 fi
 
+if [[ $config == *"no_esp"* ]]; then
+  CMAKE_ARGS="$CMAKE_ARGS -DAVRO_NO_ESP=ON"
+fi
+
 # build all libraries and executables
 time make -j $nproc
 
