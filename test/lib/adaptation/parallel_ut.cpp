@@ -87,16 +87,16 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 3;
+  coord_t number = 2;
   coord_t dim = number;
 
   EGADS::Context context;
   #if 1
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,4);
   CKF_Triangulation topology(dims);
-  library::MetricField_UGAWG_Linear analytic;
+  library::MetricField_UGAWG_Linear2 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
@@ -144,7 +144,7 @@ UT_TEST_CASE( test1 )
 
   index_t rank = mpi::rank();
 
-  index_t niter = 5;
+  index_t niter = 10;
   for (index_t iter=0;iter<=niter;iter++)
   {
     params.adapt_iter() = iter;

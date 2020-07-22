@@ -339,7 +339,6 @@ adapt( AdaptationProblem& problem )
 
   // retrieve the background mesh and metric field
   Mesh& mesh = problem.mesh_in;
-  //VertexField<numerics::SPDT<real_t>>& fld = problem.fld;
   std::vector<numerics::SymMatrixD<real_t>>& fld = problem.fld;
 
   // extract the background topology
@@ -361,9 +360,7 @@ adapt( AdaptationProblem& problem )
   // retrieve some info about the mesh
   const coord_t number = mesh.number();
   avro_assert( number == topology.number() );
-
   const coord_t dim = mesh.points().dim();
-  //avro_assert( number == dim );
 
   // create a mesh topology by copying the input one
   Points points( dim );

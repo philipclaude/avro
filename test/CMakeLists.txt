@@ -44,7 +44,7 @@ if (AVRO_NO_ESP)
 endif()
 
 set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_adaptation_parmetis_ut )
-set( numprocs_unit 4 4 4 3 )
+set( numprocs_unit 4 4 2 3 )
 
 set( CHECK_TESTS )
 

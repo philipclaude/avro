@@ -38,7 +38,7 @@ UT_TEST_CASE(ckf_nd)
     CKF_Triangulation topology( dims );
 
     topology.orient();
-    topology.close();
+    //topology.close();
     topology.neighbours().compute();
     topology.inverse().build();
 

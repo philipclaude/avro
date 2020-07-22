@@ -85,6 +85,7 @@ Cache<type>::generate( const std::vector<index_t>& f ) const
   if (f.size()==2) return std::to_string(f[0])+"|"+std::to_string(f[1]);
   if (f.size()==3) return std::to_string(f[0])+"|"+std::to_string(f[1])+"|"+std::to_string(f[2]);
   if (f.size()==4) return std::to_string(f[0])+"|"+std::to_string(f[1])+"|"+std::to_string(f[2])+"|"+std::to_string(f[3]);
+  print_inline(f,"unknown facet dimension");
   avro_implement;
   return "";
   /*for (index_t i=0;i<f.size();i++)

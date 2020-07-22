@@ -46,7 +46,6 @@ InverseTopology<type>::build()
 {
   elem_.resize( topology_.points().nb() , topology_.nb()+1 );
 
-#if 1
   for (index_t k=0;k<topology_.nb();k++)
   {
     for (index_t j=0;j<topology_.nv(k);j++)
@@ -56,24 +55,10 @@ InverseTopology<type>::build()
       // skip ghosts
       if (topology_.ghost(k) && p>=topology_.points().nb_ghost()) continue;
 
-      // choose the minimum element index attached to the vertex
-      elem_[p] = k;//std::min(k,elem_[p]);
+      //elem_[p] = std::min(k,elem_[p]);
+      elem_[p] = k;
     }
   }
-#else
-for (index_t k=0;k<topology_.nb();k++)
-{
-  //if (topology_.ghost(k)) continue;
-  for (index_t j=0;j<topology_.nv(k);j++)
-  {
-    index_t p = topology_(k,j);
-    //if (p < topology_.points().nb_ghost()) continue;
-
-    // choose the minimum element index attached to the vertex
-    elem_[p] = k;//std::min(k,elem_[p]);
-  }
-}
-#endif
 
   // make sure all points are set
   for (index_t k=0;k<nb();k++)
@@ -81,6 +66,7 @@ for (index_t k=0;k<topology_.nb();k++)
     if (k<topology_.points().nb_ghost()) continue;
     if (elem_[k]>= topology_.nb()+1) topology_.points().print(true);
     avro_assert_msg(elem_[k] < topology_.nb()+1 , "inverse not found for vertex %lu" , k );
+    avro_assert_msg( topology_.has( elem_[k] , k ) , "element %lu does not have vertex %lu!" , elem_[k] , k );
   }
 }
 
