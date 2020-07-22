@@ -383,6 +383,7 @@ public:
     #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *circle.object() , EDGE , TWONODE , &range_[0] , 2 , nodes , NULL , &object_ ) );
     #else
+    UNUSED(nodes);
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
@@ -415,6 +416,7 @@ public:
     #ifndef AVRO_NO_ESP
     EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *spline.object() , EDGE , ONENODE , range_ , 1 , &node , NULL , &object_ ) );
     #else
+    UNUSED(node);
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif

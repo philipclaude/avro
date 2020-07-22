@@ -65,7 +65,7 @@ public:
   void tessellate( BodyTessellation& body_tess ) const;
 
   ego object() { return object_; }
-  const ego object() const { return object_; }
+  ego object() const { return object_; }
   void set_object( ego x ) { object_ = x; }
 
 protected:

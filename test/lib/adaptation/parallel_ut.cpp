@@ -65,9 +65,11 @@ public:
   {
     numerics::SymMatrixD<real_t> m(dim_);
 
-    real_t hx = 0.1;
-    real_t h0 = 1e-3;
-    real_t hy = h0 +2.*(hx -h0)*fabs( x[1] -0.5 );
+    real_t hu = 0.1;
+    real_t h0 = hu/10;
+    real_t hy = h0 +2.*(hu -h0)*fabs( x[1] -0.5 );
+    real_t hx = hu;//h0 +2.*(hu -h0)*fabs( x[0] -0.5 );
+
 
     m(0,0) = 1./(hx*hx);
     m(0,1) = 0.;
@@ -85,7 +87,7 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 3;
+  coord_t number = 2;
   coord_t dim = number;
 
   EGADS::Context context;
@@ -94,18 +96,29 @@ UT_TEST_CASE( test1 )
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
+  library::MetricField_UGAWG_Linear2 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
   library::meshb mesh(BASE_TEST_DIR+"/meshes/cube-cylinder.mesh");
   std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
   Topology<Simplex>& topology = *ptopology.get();
+  #elif 0
+  std::vector<real_t> lens(number,10.);
+  EGADS::Cube geometry(&context,lens);
+  std::vector<index_t> dims(number,20);
+  CKF_Triangulation topology(dims);
+  for (index_t k=0;k<topology.points().nb();k++)
+  for (coord_t d=0;d<topology.points().dim();d++)
+    topology.points()[k][d] *= 10.;
+  library::MetricField_UGAWG_sin analytic;
   #else
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
   library::Tesseract geometry(c,lengths);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
+  library::MetricField_Uniform analytic(number,0.2);
   #endif
   topology.points().attach(geometry);
 
@@ -113,9 +126,6 @@ UT_TEST_CASE( test1 )
   params.standard();
 
   std::vector<VertexMetric> metrics(topology.points().nb());
-  library::MetricField_UGAWG_Polar2 analytic;
-  //library::MetricField_UGAWG_sin analytic;
-  //library::MetricField_Uniform analytic(number,0.2);
   for (index_t k=0;k<topology.points().nb();k++)
     metrics[k] = analytic( topology.points()[k] );
 
@@ -124,7 +134,7 @@ UT_TEST_CASE( test1 )
   params.curved() = true;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 2*pow(2,number-1);
+  params.max_passes() = 2*number;
   params.swapout() = false;
   params.has_uv() = true;
 

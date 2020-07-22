@@ -33,7 +33,7 @@ main_end( index_t k )
   printf("goodbye!\n");
 }
 
-UT_TEST_SUITE(ParallelMPISuite)
+UT_TEST_SUITE( common_mpi_suite )
 
 UT_TEST_CASE(hello_test)
 {
@@ -240,11 +240,11 @@ UT_TEST_CASE(reduce_test)
 }
 UT_TEST_CASE_END(reduce_test)
 
-UT_TEST_SUITE_END(ParallelMPISuite)
+UT_TEST_SUITE_END(common_mpi_suite)
 
 #else // NO_MPIRUN
 
-UT_TEST_SUITE(ParallelMPISuite)
-UT_TEST_SUITE_END(ParallelMPISuite)
+UT_TEST_SUITE(common_mpi_suite)
+UT_TEST_SUITE_END(common_mpi_suite)
 
 #endif // NO_MPIRUN

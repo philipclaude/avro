@@ -43,8 +43,8 @@ if (AVRO_NO_ESP)
   add_definitions( -DAVRO_NO_ESP )
 endif()
 
-set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_mesh_mpi_ut lib_adaptation_parmetis_ut )
-set( numprocs_unit 4 )
+set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_adaptation_parmetis_ut )
+set( numprocs_unit 4 4 4 3 )
 
 set( CHECK_TESTS )
 
@@ -74,7 +74,7 @@ foreach( test_src ${TEST_FILES} )
   set(numprocs -1)
   list( FIND MPI_TESTS ${test_bin} idx )
   if (${idx} GREATER -1)
-    set(numprocs ${numprocs_unit} )
+    list( GET numprocs_unit ${idx} numprocs )
   endif()
 
   if ( ${numprocs} GREATER 0)
@@ -101,7 +101,7 @@ endforeach()
 
 # create the full unit executable
 avro_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
-target_compile_definitions( unit_exe PUBLIC -DTEST_NUM_PROCS=${numprocs_unit} )
+target_compile_definitions( unit_exe PUBLIC -DTEST_NUM_PROCS=4 )
 target_link_libraries( unit_exe avro_shared )
 target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
 
@@ -110,7 +110,13 @@ target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DI
 #add_dependencies( check_tests ${CHECK_TESTS} )
 
 # target for running all unit tests from a single executable
-add_custom_target( unit command $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+if (AVRO_WITH_MPI)
+  RUN_WITH_MPIEXEC( 4 )
+  add_custom_target( unit command ${MPI_COMMAND} $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+else()
+  add_custom_target( unit command $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
+endif()
+
 ADD_DEBUG_TARGETS( unit ${CMAKE_SOURCE_DIR}/test )
 ADD_COVERAGE_UT( unit_coverage unit )
 

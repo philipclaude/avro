@@ -46,6 +46,7 @@ UT_TEST_CASE( square_test )
 }
 UT_TEST_CASE_END( square_test )
 
+#ifndef AVRO_NO_ESP
 UT_TEST_CASE( solid_bodies )
 {
   EGADS::Context context;
@@ -111,5 +112,7 @@ UT_TEST_CASE( smiley_test )
   vis.run();
 }
 UT_TEST_CASE_END( smiley_test )
+
+#endif
 
 UT_TEST_SUITE_END( library_egads_suite )

@@ -16,9 +16,6 @@ ut_pre(int argc, char** argv)
   UNUSED(argc);
   UNUSED(argv);
 
-  int plot_on = 0;
-  if (argc>1) plot_on = atoi( argv[1] );
-
   print_info();
 
   // initialize the distributed/shared memory task/thread managers

@@ -7,6 +7,8 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
+#include "common/tools.h"
+
 #include "library/csm.h"
 
 #include "geometry/egads/body.h"
@@ -37,6 +39,7 @@ OpenCSM_Model::import()
   int built_to;
   int nbody;
   int status;
+  UNUSED(status);
 
   ocsmCheck(modl_);
   status = ocsmBuild(modl_,build_to,&built_to,&nbody,NULL);

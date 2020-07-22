@@ -292,7 +292,7 @@ Topology_Partition<type>::lookup( int identifier , int number ) const
   if (identifier<0 || number<0) return nullptr; // save the lookup
   for (index_t k=0;k<entities_.size();k++)
   {
-    if (entities_[k]->number()==number && entities_[k]->identifier()==identifier)
+    if (entities_[k]->number()==number && entities_[k]->identifier()==index_t(identifier))
       return entities_[k];
   }
   return nullptr;
@@ -640,7 +640,7 @@ PartitionBoundary<type>::print() const
   {
     const ElementIndices& f = it->first;
     index_t k = it->second;
-    avro_assert( k < elemL_.size() && k < partL_.size() && k < elemR_.size() & k < partR_.size() );
+    avro_assert( k < elemL_.size() && k < partL_.size() && k < elemR_.size() && k < partR_.size() );
     print_inline( f.indices , "facet (" + std::to_string(k) + ") with elemL = " + std::to_string(elemL_[k]) + ", partL = " +
                                                       std::to_string(partL_[k]) + ", elemR = " +
                                                       std::to_string(elemR_[k]) + ", partR = " +
