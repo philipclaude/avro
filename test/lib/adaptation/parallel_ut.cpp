@@ -66,7 +66,7 @@ public:
     numerics::SymMatrixD<real_t> m(dim_);
 
     real_t hu = 0.1;
-    real_t h0 = hu/10;
+    real_t h0 = hu/100;
     real_t hy = h0 +2.*(hu -h0)*fabs( x[1] -0.5 );
     real_t hx = hu;//h0 +2.*(hu -h0)*fabs( x[0] -0.5 );
 
@@ -94,7 +94,7 @@ UT_TEST_CASE( test1 )
   #if 1
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,4);
   CKF_Triangulation topology(dims);
   library::MetricField_UGAWG_Linear2 analytic;
   #elif 0
@@ -144,7 +144,7 @@ UT_TEST_CASE( test1 )
 
   index_t rank = mpi::rank();
 
-  index_t niter = 5;
+  index_t niter = 10;
   for (index_t iter=0;iter<=niter;iter++)
   {
     params.adapt_iter() = iter;

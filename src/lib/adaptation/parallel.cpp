@@ -1165,27 +1165,6 @@ AdaptationManager<type>::migrate_interface()
       discard.push_back(elemL); // elements on rank
     }
   }
-  else
-  {
-    // initialiaize the crust to elements on the interface
-    const std::map<ElementIndices,index_t>& facets = boundary.facets();
-    std::map<ElementIndices,index_t>::const_iterator it;
-    std::vector<index_t> elems;
-    for (it=facets.begin();it!=facets.end();++it)
-    {
-      const ElementIndices& f = it->first;
-      index_t k = it->second;
-
-      index_t partL = boundary.partL(k);
-      index_t partR = boundary.partR(k);
-
-      avro_assert( partL == rank_ );
-      if (partR != buddy) continue;
-
-      for (index_t j=0;j<f.indices.size();j++)
-        interface_point.insert( f.indices[j] );
-    }
-  }
   mpi::barrier();
 
   // list out the interface points
@@ -1201,17 +1180,12 @@ AdaptationManager<type>::migrate_interface()
   std::vector<index_t> ball;
   for (std::set<index_t>::iterator it=pts.begin();it!=pts.end();++it)
   {
+    ball.clear();
     topology_.inverse().ball( *it , ball );
     for (index_t j=0;j<ball.size();j++)
       discard.push_back(ball[j]);
   }
   uniquify(discard);
-
-  if (rank_ > buddy)
-  {
-    crust_ = discard;
-    discard.clear();
-  }
 
   // initialize all of the elements to this partition
   std::vector<index_t> repartition(topology_.nb(),rank_);
@@ -1393,7 +1367,6 @@ AdaptationManager<type>::synchronize()
       topology_.points().set_global( k , global_map.at(g) );
     }
   }
-
   mpi::barrier();
 }
 
@@ -1483,6 +1456,7 @@ AdaptationManager<type>::fix_boundary()
   for (index_t k=0;k<metrics_.size();k++)
     mapped_metrics[ point_map[k] ] = metrics_[k];
   metrics_ = mapped_metrics;
+  mpi::barrier();
 }
 
 template<typename type>
@@ -1526,6 +1500,7 @@ fix_crust( Topology<type>& topology , const std::vector<index_t>& crust0 )
   }
 
   avro_msgp( "there were " + std::to_string(nb_fixed) + " fixed elements with a crust of " + std::to_string(crust.size()) + " elements" );
+  mpi::barrier();
 }
 
 template<typename type>
@@ -1550,6 +1525,7 @@ add_mantle( Topology<type>& topology , std::vector<index_t>& crust )
       crust.push_back( ball[j] );
   }
   uniquify(crust);
+  mpi::barrier();
 }
 
 template<typename type>
@@ -1572,22 +1548,17 @@ AdaptationManager<type>::adapt()
     // and move the fixed points to the beginning of the points structure
     if (rank_ == 0) printf("--> fixing partition boundaries\n");
     mpi::barrier();
-
     fix_boundary();
 
     // fix any points that are part of non-contributing elements
-    if (true || pass % 2 == 1)
-    {
-      if (rank_ == 0) printf("--> fixing crust\n");
-      mpi::barrier();
+    // puff out the crust (include the mantle :P)
+    if (rank_ == 0) printf("--> determining remesh region\n");
+    mpi::barrier();
+    add_mantle( topology_ , crust_ );
 
-      // puff out the crust (include the mantle :P)
-      add_mantle( topology_ , crust_ );
-
-      // fix any points that are not in the crust
-      fix_crust( topology_ , crust_ );
-      crust_.clear();
-    }
+    // fix any points that are not in the crust
+    fix_crust( topology_ , crust_ );
+    crust_.clear();
 
     // create the mesh we will write to
     // create a mesh and add the topology
@@ -1630,7 +1601,7 @@ AdaptationManager<type>::adapt()
     }
     catch(...)
     {
-      pprintf("there was an error adapting the mesh :(\n");
+      printf("there was an error adapting the mesh on processor %lu:(\n",rank_);
       mpi::abort(1);
     }
     mpi::barrier();
