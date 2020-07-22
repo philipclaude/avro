@@ -115,9 +115,10 @@ if (AVRO_WITH_MPI)
   add_custom_target( unit command ${MPI_COMMAND} $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
 else()
   add_custom_target( unit command $<TARGET_FILE:unit_exe> WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test )
-  ADD_DEBUG_TARGETS( unit ${CMAKE_SOURCE_DIR}/test )
-  ADD_COVERAGE_UT( unit_coverage unit )
 endif()
+
+ADD_DEBUG_TARGETS( unit ${CMAKE_SOURCE_DIR}/test )
+ADD_COVERAGE_UT( unit_coverage unit )
 
 # create targets for the sandbox files
 set( SBX_COMPILE )

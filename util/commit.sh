@@ -20,17 +20,15 @@ CMAKE_ARGS="-DMACHII_LIBRARY_LOCATION='/home/gitlab-runner/Codes/mach-II/library
 
 if [[ $config == *"coverage"* ]]; then
   CMAKE_ARGS="$CMAKE_ARGS  -DAVRO_WITH_MPI=ON"
-else
-  CMAKE_ARGS=""
-fi
-
-if [[ $config == *"memcheck"* ]]; then
-  CMAKE_ARGS="$CMAKE_ARGS -DUSE_MPI=OFF"
 fi
 
 # there is a bug in gcc 4.8 which prevents from using some features needed by mpi wrapper
 if [[ $config == *"gnu48"* ]]; then
   CMAKE_ARGS="$CMAKE_ARGS -DUSE_MPI=OFF"
+fi
+
+if [[ $config == *"no_esp"* ]]; then
+  CMAKE_ARGS="$CMAKE_ARGS -DAVRO_NO_ESP=ON"
 fi
 
 if [[ $config == *"mpi"* ]]; then
@@ -43,10 +41,6 @@ if [[ $config == *"coverage"* ]]; then
 
   # coverage information always needs to be completely recompiled
   time make coverage_cleaner
-fi
-
-if [[ $config == *"no_esp"* ]]; then
-  CMAKE_ARGS="$CMAKE_ARGS -DAVRO_NO_ESP=ON"
 fi
 
 # build all libraries and executables
