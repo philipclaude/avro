@@ -66,7 +66,7 @@ public:
     numerics::SymMatrixD<real_t> m(dim_);
 
     real_t hu = 0.1;
-    real_t h0 = hu/10;
+    real_t h0 = hu/100;
     real_t hy = h0 +2.*(hu -h0)*fabs( x[1] -0.5 );
     real_t hx = hu;//h0 +2.*(hu -h0)*fabs( x[0] -0.5 );
 
@@ -87,7 +87,7 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 2;
+  coord_t number = 3;
   coord_t dim = number;
 
   EGADS::Context context;
@@ -96,7 +96,7 @@ UT_TEST_CASE( test1 )
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
-  library::MetricField_UGAWG_Linear2 analytic;
+  library::MetricField_UGAWG_Linear analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
