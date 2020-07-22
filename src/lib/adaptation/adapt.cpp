@@ -75,32 +75,6 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
 
   if (fefloa) lt_max = sqrt(2.0); // and we will do one pass
 
-#if 0
-  // project the mesh_topology points to the geometry
-  for (index_t k=0;k<mesh_topology.points().nb();k++)
-  {
-    if (mesh_topology.points().entity(k)==NULL) continue;
-    Entity* e = mesh_topology.points().entity(k);
-    real_t* x = mesh_topology.points()[k];
-    std::vector<real_t> X(x,x+mesh_topology.points().dim());
-    e->project(X);
-    for (coord_t d=0;d<mesh_topology.points().dim();d++)
-      x[d] = X[d];
-  }
-
-  // project the metric topology points to the geometry
-  for (index_t k=0;k<topology.points().nb();k++)
-  {
-    if (topology.points().entity(k)==NULL) continue;
-    Entity* e = topology.points().entity(k);
-    real_t* x = topology.points()[k];
-    std::vector<real_t> X(x,x+topology.points().dim());
-    e->project(X);
-    for (coord_t d=0;d<topology.points().dim();d++)
-      x[d] = X[d];
-  }
-#endif
-
   // the uv-parameters might not be set for the incoming points
   // for the case of real_t geometries
   if (params.curved())
@@ -302,8 +276,6 @@ done:
  Topology<type>& topology_out = mesh_out.retrieve<type>(0);
  mesh_topology.points().copy( mesh_out.points() );
  topology_out.TopologyBase::copy( mesh_topology );
- //mesh_topology.neighbours().copy( topology_out.neighbours() );
- //topology_out.inverse().copy( mesh_topology.inverse() );
 
  // identify ghost elements
  std::vector<index_t> ghost;
@@ -341,8 +313,6 @@ template<typename type>
 int
 adapt( AdaptationProblem& problem )
 {
-  //Gamma<Simplex> gamma; // used to write meshes if necessary
-
   // standardize the parameters
   AdaptationParameters& params = problem.params;
 
@@ -350,7 +320,7 @@ adapt( AdaptationProblem& problem )
 
   fpos_t pos;
   int redirected_fd = 0;
-  FILE *redirected_fid = 0;
+  FILE *redirected_fid;
   if (!output_redirect.empty())
   {
     fgetpos(stdout,&pos);
@@ -369,7 +339,6 @@ adapt( AdaptationProblem& problem )
 
   // retrieve the background mesh and metric field
   Mesh& mesh = problem.mesh_in;
-  //VertexField<numerics::SPDT<real_t>>& fld = problem.fld;
   std::vector<numerics::SymMatrixD<real_t>>& fld = problem.fld;
 
   // extract the background topology
@@ -391,9 +360,7 @@ adapt( AdaptationProblem& problem )
   // retrieve some info about the mesh
   const coord_t number = mesh.number();
   avro_assert( number == topology.number() );
-
   const coord_t dim = mesh.points().dim();
-  //avro_assert( number == dim );
 
   // create a mesh topology by copying the input one
   Points points( dim );
@@ -417,7 +384,7 @@ adapt( AdaptationProblem& problem )
   {
     for (index_t j=0;j<mesh_topology.nv(k);j++)
       avro_assert_msg( mesh_topology(k,j) < mesh_topology.points().nb() , "topology(%lu,%lu) = %lu, but |points| = %lu" , k,j,mesh_topology(k,j),mesh_topology.points().nb() );
-      
+
   }
 
   if (dim==number)

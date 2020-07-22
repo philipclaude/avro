@@ -25,6 +25,8 @@ UT_TEST_SUITE( parmetis_test_suite )
 
 #ifdef AVRO_MPI
 
+#if TEST_NUM_PROCS == 3
+
 UT_TEST_CASE( test1 )
 {
   index_t rank = mpi::rank();
@@ -103,6 +105,8 @@ UT_TEST_CASE( test1 )
 
 }
 UT_TEST_CASE_END(test1)
+
+#endif // TEST_NUM_PROCS
 
 #endif
 

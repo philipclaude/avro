@@ -128,8 +128,6 @@ meshb::read_elements( int GmfType )
       retrieve<type>( it->second ).add( simplex , nv(GmfType) );
     }
   }
-
-  printf("read %lu topologies\n",nb_topologies());
 }
 
 index_t
@@ -151,8 +149,6 @@ meshb::read()
   int dim;
   fid_ = GmfOpenMesh(filename_.c_str(),GmfRead,&version_,&dim);
   avro_assert_msg( fid_ , "could not open mesh file %s ",filename_.c_str() );
-
-  printf("--> points dimension = %d\n",dim);
 
   points_.set_dim(coord_t(dim));
   points_.set_parameter_dim(coord_t(dim-1));
@@ -342,7 +338,6 @@ meshb::write( const Topology<Simplex>& topology , const std::vector<index_t>& re
 {
   const coord_t num = topology.number();
 
-  printf("writing topology with number %u\n",num);
   if (refs.size()!=1) avro_assert( topology.nb() == refs.size() );
 
   int gmfType;
@@ -428,10 +423,10 @@ meshb::write( Points& points )
 }
 
 void
-meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
+meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd , bool verbose )
 {
-
-  printf("writing mesh to file %s\n",filename.c_str());
+  if (verbose)
+    printf("--> writing mesh to: %s\n",filename.c_str());
   int dim = mesh.points().dim();
   if (dim==4) dim = 3;
   open(dim,filename);
@@ -442,8 +437,6 @@ meshb::write( Mesh& mesh , const std::string& filename , bool with_bnd )
   // get all the topologies
   std::vector<const TopologyBase*> topologies;
   mesh.retrieve(topologies);
-
-  printf("nb topologies to write = %lu\n",topologies.size());
 
   index_t ref = 0;
   for (index_t k=0;k<topologies.size();k++)

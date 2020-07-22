@@ -320,6 +320,7 @@ NACA_Airfoil::NACA_Airfoil( const Context* context , real_t chord , real_t* digi
     for (index_t j=0;j<4;j++)
       digits[j] = digits0[j];
   }
+  UNUSED(digits);
 
   printf("get naca airfoil points!\n");
   avro_implement;

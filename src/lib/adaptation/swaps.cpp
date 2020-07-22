@@ -183,10 +183,12 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       index_t e0 = edges[2*k];
       index_t e1 = edges[2*k+1];
 
+      // skip fixed edges (when working in parallel)
+      if (topology_.points().fixed(e0) && topology_.points().fixed(e1)) continue;
+
       std::vector<index_t> edge = {e0,e1};
       topology_.intersect(edge,elems);
       if (elems.size()==0) continue;
-      avro_assert( elems.size()>0 );
 
       // initial worst quality
       real_t q0 = -1;
@@ -406,15 +408,7 @@ EdgeSwap<type>::valid( const index_t p , const index_t e0 , const index_t e1 )
   std::vector<index_t> edge = {e0,e1};
   if (this->C_.empty())
     this->topology_.intersect(edge,this->C_);
-
-  std::vector<index_t>& elems = this->C_;
-
-  for (index_t k=0;k<elems.size();k++)
-  for (index_t j=0;j<this->topology_.nv(elems[k]);j++)
-  {
-    //if (this->topology_.points().fixed(this->topology_(elems[k],j)))
-    //  return false;
-  }
+  if (this->C_.size()==0) return false;
 
   // check if the two points lie on an Edge entity
   Entity* ge = this->geometry(e0,e1);

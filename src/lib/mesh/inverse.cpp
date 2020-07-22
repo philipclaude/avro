@@ -55,8 +55,8 @@ InverseTopology<type>::build()
       // skip ghosts
       if (topology_.ghost(k) && p>=topology_.points().nb_ghost()) continue;
 
-      // choose the minimum element index attached to the vertex
-      elem_[p] = std::min(k,elem_[p]);
+      //elem_[p] = std::min(k,elem_[p]);
+      elem_[p] = k;
     }
   }
 
@@ -66,6 +66,7 @@ InverseTopology<type>::build()
     if (k<topology_.points().nb_ghost()) continue;
     if (elem_[k]>= topology_.nb()+1) topology_.points().print(true);
     avro_assert_msg(elem_[k] < topology_.nb()+1 , "inverse not found for vertex %lu" , k );
+    avro_assert_msg( topology_.has( elem_[k] , k ) , "element %lu does not have vertex %lu!" , elem_[k] , k );
   }
 }
 

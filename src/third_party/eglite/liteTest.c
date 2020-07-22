@@ -9,6 +9,8 @@
  *
  */
 
+#if 0
+
 #include "egads.h"
 
 
@@ -24,7 +26,7 @@ attrOut(int level, ego object)
   stat = EG_attributeNum(object, &nattr);
   if (stat  != EGADS_SUCCESS) return;
   if (nattr == 0)             return;
-  
+
   for (i = 1; i <= nattr; i++) {
     stat = EG_attributeGet(object, i, &name, &atype, &alen, &ints, &reals, &str);
     if (stat != EGADS_SUCCESS) continue;
@@ -54,21 +56,21 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
   long unsigned int pointer;
   static char *classType[27] = {"CONTEXT", "TRANSFORM", "TESSELLATION",
                                 "NIL", "EMPTY", "REFERENCE", "", "",
-                                "", "", "PCURVE", "CURVE", "SURFACE", "", 
+                                "", "", "PCURVE", "CURVE", "SURFACE", "",
                                 "", "", "", "", "", "", "NODE",
                                 "EGDE", "LOOP", "FACE", "SHELL",
                                 "BODY", "MODEL"};
   static char *curvType[9] = {"Line", "Circle", "Ellipse", "Parabola",
-                              "Hyperbola", "Trimmed", "Bezier", "BSpline", 
+                              "Hyperbola", "Trimmed", "Bezier", "BSpline",
                               "Offset"};
   static char *surfType[11] = {"Plane", "Spherical", "Cylinder", "Revolution",
-                               "Toroidal", "Trimmed" , "Bezier", "BSpline", 
+                               "Toroidal", "Trimmed" , "Bezier", "BSpline",
                                "Offset", "Conical", "Extrusion"};
-  
+
   pointer = (long unsigned int) object;
   oclass  = object->oclass;
   mtype   = object->mtype;
-  
+
   /* geometry */
   if ((oclass >= PCURVE) && (oclass <= SURFACE)) {
     stat = EG_getGeometry(object, &oclass, &mtype, &geom, &ivec, &rvec);
@@ -82,7 +84,7 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
     if (oclass != SURFACE) {
 
       for (i = 0; i < 2*level; i++) printf(" ");
-      printf("%s %lx  range = %le %le  per = %d\n", 
+      printf("%s %lx  range = %le %le  per = %d\n",
              classType[oclass], pointer, limits[0], limits[1], periodic);
 
       for (i = 0; i < 2*level+2; i++) printf(" ");
@@ -92,26 +94,26 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
             printf("%s  radius = %lf\n", curvType[mtype-1], rvec[6]);
             break;
           case ELLIPSE:
-            printf("%s  major = %lf, minor = %lf\n", 
+            printf("%s  major = %lf, minor = %lf\n",
                    curvType[mtype-1], rvec[6], rvec[7]);
             break;
           case PARABOLA:
             printf("%s  focus = %lf\n", curvType[mtype-1], rvec[6]);
             break;
           case HYPERBOLA:
-            printf("%s  major = %lf, minor = %lf\n", 
+            printf("%s  major = %lf, minor = %lf\n",
                    curvType[mtype-1], rvec[6], rvec[7]);
             break;
           case TRIMMED:
-            printf("%s  first = %lf, last = %lf\n", 
+            printf("%s  first = %lf, last = %lf\n",
                    curvType[mtype-1], rvec[0], rvec[1]);
             break;
           case BEZIER:
-            printf("%s  flags = %x, degree = %d, #CPs = %d\n", 
+            printf("%s  flags = %x, degree = %d, #CPs = %d\n",
                    curvType[mtype-1], ivec[0], ivec[1], ivec[2]);
-            break;       
+            break;
           case BSPLINE:
-            printf("%s  flags = %x, degree = %d, #CPs = %d, #knots = %d\n", 
+            printf("%s  flags = %x, degree = %d, #CPs = %d, #knots = %d\n",
                    curvType[mtype-1], ivec[0], ivec[1], ivec[2], ivec[3]);
 /*          for (i = 0; i < 2*level+2; i++) printf(" ");
             printf("knots =");
@@ -134,26 +136,26 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
             printf("%s  radius = %lf\n", curvType[mtype-1], rvec[9]);
             break;
           case ELLIPSE:
-            printf("%s  major = %lf, minor = %lf\n", 
+            printf("%s  major = %lf, minor = %lf\n",
                    curvType[mtype-1], rvec[9], rvec[10]);
             break;
           case PARABOLA:
             printf("%s  focus = %lf\n", curvType[mtype-1], rvec[9]);
             break;
           case HYPERBOLA:
-            printf("%s  major = %lf, minor = %lf\n", 
+            printf("%s  major = %lf, minor = %lf\n",
                    curvType[mtype-1], rvec[9], rvec[10]);
             break;
           case TRIMMED:
-            printf("%s  first = %lf, last = %lf\n", 
+            printf("%s  first = %lf, last = %lf\n",
                    curvType[mtype-1], rvec[0], rvec[1]);
             break;
           case BEZIER:
-            printf("%s  flags = %x, degree = %d, #CPs = %d\n", 
+            printf("%s  flags = %x, degree = %d, #CPs = %d\n",
                    curvType[mtype-1], ivec[0], ivec[1], ivec[2]);
-            break;       
+            break;
           case BSPLINE:
-            printf("%s  flags = %x, degree = %d, #CPs = %d, #knots = %d\n", 
+            printf("%s  flags = %x, degree = %d, #CPs = %d, #knots = %d\n",
                    curvType[mtype-1], ivec[0], ivec[1], ivec[2], ivec[3]);
 /*          for (i = 0; i < 2*level+2; i++) printf(" ");
             printf("knots =");
@@ -172,10 +174,10 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
       }
 
     } else {
-    
+
       for (i = 0; i < 2*level; i++) printf(" ");
-      printf("%s %lx  Urange = %le %le  Vrange = %le %le  per = %d\n", 
-             classType[oclass], pointer, limits[0], limits[1], 
+      printf("%s %lx  Urange = %le %le  Vrange = %le %le  per = %d\n",
+             classType[oclass], pointer, limits[0], limits[1],
                                          limits[2], limits[3], periodic);
 
       for (i = 0; i < 2*level+2; i++) printf(" ");
@@ -184,22 +186,22 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
           printf("%s  radius = %lf\n", surfType[mtype-1], rvec[9]);
           break;
         case CONICAL:
-          printf("%s  angle = %lf, radius = %lf\n", 
+          printf("%s  angle = %lf, radius = %lf\n",
                  surfType[mtype-1], rvec[12], rvec[13]);
-          printf("    rvec = %lf %lf %lf   %lf %lf %lf  \n", 
+          printf("    rvec = %lf %lf %lf   %lf %lf %lf  \n",
                  rvec[0], rvec[1], rvec[2], rvec[3], rvec[4],  rvec[5]);
-          printf("           %lf %lf %lf   %lf %lf %lf  \n", 
+          printf("           %lf %lf %lf   %lf %lf %lf  \n",
                  rvec[6], rvec[7], rvec[8], rvec[9], rvec[10], rvec[11]);
           break;
         case CYLINDRICAL:
           printf("%s  radius = %lf\n", surfType[mtype-1], rvec[12]);
           break;
         case TOROIDAL:
-          printf("%s  major = %lf, minor = %lf\n", 
+          printf("%s  major = %lf, minor = %lf\n",
                  surfType[mtype-1], rvec[12], rvec[13]);
           break;
         case BEZIER:
-          printf("%s  flags = %x, U deg = %d #CPs = %d, V deg = %d #CPs = %d\n", 
+          printf("%s  flags = %x, U deg = %d #CPs = %d, V deg = %d #CPs = %d\n",
                  surfType[mtype-1], ivec[0], ivec[1], ivec[2], ivec[3], ivec[4]);
           break;
         case BSPLINE:
@@ -216,7 +218,7 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
           printf("\n"); */
           break;
         case TRIMMED:
-          printf("%s  U trim = %lf %lf, V trim = %lf %lf\n", 
+          printf("%s  U trim = %lf %lf, V trim = %lf %lf\n",
                  surfType[mtype-1], rvec[0], rvec[1], rvec[2], rvec[3]);
           break;
         case OFFSET:
@@ -269,7 +271,7 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
       }
     } else if (oclass == FACE) {
       for (i = 0; i < 2*level+2; i++) printf(" ");
-      printf("uRange = %lf %lf, vRange = %lf %lf\n", limits[0], limits[1], 
+      printf("uRange = %lf %lf, vRange = %lf %lf\n", limits[0], limits[1],
                                                      limits[2], limits[3]);
     }
     if (oclass != NODE) {
@@ -281,7 +283,7 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
       }
     }
     attrOut(level, object);
-    
+
     if ((geom != NULL) && (mtype != DEGENERATE))
       parseOut(level+1, geom, body, 0);
     if (senses == NULL) {
@@ -295,7 +297,7 @@ parseOut(int level, ego object, /*@null@*/ ego body, int sense)
     }
     if ((geom != NULL) && (oclass == LOOP))
       for (i = 0; i < nobjs; i++) parseOut(level+1, objs[i+nobjs], body, 0);
-    
+
   }
 
 }
@@ -305,7 +307,7 @@ int main(int argc, char *argv[])
 {
   int i, j, k, n, nn, stat, oclass, mtype, nbodies, *senses;
   ego context, model, geom, *bodies, *objs, *nobjs;
-  
+
   if (argc != 2) {
     printf(" Usage: liteTest liteFile\n\n");
     exit(EXIT_FAILURE);
@@ -314,7 +316,7 @@ int main(int argc, char *argv[])
   printf(" EG_open          = %d\n", EG_open(&context));
   printf(" EG_loadModel     = %d  %s\n", EG_loadModel(context, 0, argv[1],
                                                       &model), argv[1]);
-  
+
   /* test bodyTopo functions */
   stat = EG_getTopology(model, &geom, &oclass, &mtype, NULL, &nbodies,
                         &bodies, &senses);
@@ -388,7 +390,7 @@ int main(int argc, char *argv[])
       }
     }
   printf(" \n");
-  
+
   /* output the entire model structure */
   parseOut(0, model, NULL, 0);
   printf(" \n");
@@ -396,3 +398,5 @@ int main(int argc, char *argv[])
   printf(" EG_close         = %d\n", EG_close(context));
   return 0;
 }
+
+#endif

@@ -2,3 +2,4 @@ build/
 app/WebViewer
 test/tmp/*.*
 external/*
+test/*.mesh

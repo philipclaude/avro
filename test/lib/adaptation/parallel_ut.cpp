@@ -12,6 +12,7 @@
 
 #include "library/ckf.h"
 #include "library/egads.h"
+#include "library/meshb.h"
 #include "library/metric.h"
 #include "library/tesseract.h"
 
@@ -64,9 +65,11 @@ public:
   {
     numerics::SymMatrixD<real_t> m(dim_);
 
-    real_t hx = 0.1;
-    real_t h0 = 1e-3;
-    real_t hy = h0 +2.*(0.1 -h0)*fabs( x[1] -0.5 );
+    real_t hu = 0.1;
+    real_t h0 = hu/100;
+    real_t hy = h0 +2.*(hu -h0)*fabs( x[1] -0.5 );
+    real_t hx = hu;//h0 +2.*(hu -h0)*fabs( x[0] -0.5 );
+
 
     m(0,0) = 1./(hx*hx);
     m(0,1) = 0.;
@@ -84,24 +87,38 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 3;
+  coord_t number = 2;
   coord_t dim = number;
 
-  std::vector<index_t> dims(number,10);
-  CKF_Triangulation topology(dims);
-
-  //for (index_t k=0;k<topology.points().nb();k++)
-  //for (coord_t d=0;d<topology.points().dim();d++)
-  //  topology.points()[k][d] *= 10;
-
-  #if 1
   EGADS::Context context;
+  #if 1
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
+  std::vector<index_t> dims(number,4);
+  CKF_Triangulation topology(dims);
+  library::MetricField_UGAWG_Linear2 analytic;
+  #elif 0
+  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  Body& geometry = model.body(0);
+  library::meshb mesh(BASE_TEST_DIR+"/meshes/cube-cylinder.mesh");
+  std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
+  Topology<Simplex>& topology = *ptopology.get();
+  #elif 0
+  std::vector<real_t> lens(number,10.);
+  EGADS::Cube geometry(&context,lens);
+  std::vector<index_t> dims(number,20);
+  CKF_Triangulation topology(dims);
+  for (index_t k=0;k<topology.points().nb();k++)
+  for (coord_t d=0;d<topology.points().dim();d++)
+    topology.points()[k][d] *= 10.;
+  library::MetricField_UGAWG_sin analytic;
   #else
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
   library::Tesseract geometry(c,lengths);
+  std::vector<index_t> dims(number,10);
+  CKF_Triangulation topology(dims);
+  library::MetricField_Uniform analytic(number,0.2);
   #endif
   topology.points().attach(geometry);
 
@@ -109,28 +126,31 @@ UT_TEST_CASE( test1 )
   params.standard();
 
   std::vector<VertexMetric> metrics(topology.points().nb());
-  library::MetricField_UGAWG_Linear analytic;
-  //library::MetricField_UGAWG_sin analytic;
-  //library::MetricField_Uniform analytic(number,0.2);
   for (index_t k=0;k<topology.points().nb();k++)
     metrics[k] = analytic( topology.points()[k] );
 
   params.partitioned() = false;
   params.balanced() = true; // assume load-balanced once the first partition is computed
-  params.curved() = false;
+  params.curved() = true;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 2;
+  params.max_passes() = 2*number;
   params.swapout() = false;
+  params.has_uv() = true;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
 
-  index_t niter = 3;
+  index_t rank = mpi::rank();
+
+  index_t niter = 10;
   for (index_t iter=0;iter<=niter;iter++)
   {
-    printf("global pass %lu\n",iter);
+    params.adapt_iter() = iter;
+    params.limit_metric() = true;
+    if (rank == 0)
+      printf("\n=== iteration %lu ===\n\n",iter);
 
     // adapt the mesh, migrate interfaces, etc.
     manager.adapt();
@@ -144,18 +164,19 @@ UT_TEST_CASE( test1 )
 
     mpi::barrier();
   }
+  fflush(stdout);
 
   Points points_out(dim,dim-1);
   Topology<Simplex> topology_out(points_out,number);
   manager.retrieve(topology_out);
 
-  index_t rank = mpi::rank();
   if (rank==0)
   {
     real_t volume = topology_out.volume();
     UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
 
     // it may not look like much, but this is a huge check on the partitioning and stitching algorithm
+    // but this will only pass if no adaptation is performed
     //UT_ASSERT_EQUALS( topology_out.points().nb() , topology.points().nb() );
 
     graphics::Visualizer vis;
