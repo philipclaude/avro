@@ -452,7 +452,7 @@ public:
     MetricField<type> metric( partition_ , attachment );
 
     // assign a weight based on digonnet 2019
-    vgwt_.resize( nb_vert_ , 0.0 );
+    vgwt_.resize( nb_vert_ , 0.0 ); return;
     for (index_t k=0;k<partition_.nb();k++)
     {
       real_t q = metric.quality(partition_,k);
@@ -492,7 +492,7 @@ public:
     std::vector<PARM_INT> adjncy(adjncy_.begin(),adjncy_.end());
     std::vector<PARM_INT> vwgt( vgwt_.begin() , vgwt_.end() );
     PARM_INT *padjwgt = NULL;
-    PARM_INT wgtflag = 2; // 0 for no weights, 1 for edge weights, 2 for vertex weights, 3 for both
+    PARM_INT wgtflag = 0; // 0 for no weights, 1 for edge weights, 2 for vertex weights, 3 for both
     PARM_INT edgecut = 0;
     PARM_INT bias = 0;
     PARM_INT ncon = 1;
@@ -732,7 +732,7 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   std::vector<index_t> nb_send( nb_rank , 0 );
   for (index_t k=0;k<repartition.size();k++)
     nb_send[repartition[k]]++;
-  std::string msg = "send away: ( ";
+  std::string msg = "exchange: ( ";
   for (index_t j=0;j<nb_send.size();j++)
     msg += std::to_string(nb_send[j]) + " ";
   msg += ")";
@@ -809,8 +809,6 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   }
   mpi::barrier();
 
-  index_t nb_added = chunk.nb();
-
   std::vector<index_t> removals;
   for (index_t k=0;k<repartition.size();k++)
   {
@@ -821,13 +819,19 @@ AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
   std::map<index_t,index_t> metrics_owned;
   for (index_t k=0;k<topology_.points().nb();k++)
     metrics_owned.insert( {topology_.points().global(k),k} );
+
+  // add the received chunk to the topology
+  index_t nb_elem = topology_.nb() - removals.size();
   chunk.add_to( topology_ );
 
-  index_t nb_elem = topology_.nb() - removals.size();
-  for (index_t k=0;k<nb_added;k++)
+  crust_.clear();
+  for (index_t k=0;k<chunk.nb();k++)
     crust_.push_back( nb_elem + k );
 
   topology_.remove_elements( removals );
+
+  for (index_t k=0;k<crust_.size();k++)
+    avro_assert_msg( crust_[k] < topology_.nb(), "crust = %lu, |topology| = %lu on rank %lu",crust_[k],topology_.nb(),rank_);
 
   // determine which metrics need to be added
   std::set<index_t> idx( chunk.metric().begin() , chunk.metric().end() );
@@ -1485,6 +1489,12 @@ template<typename type>
 void
 fix_crust( Topology<type>& topology , const std::vector<index_t>& crust0 )
 {
+  for (index_t k=0;k<crust0.size();k++)
+  {
+    if (crust0[k] >= topology.nb()) print_inline(crust0);
+    avro_assert_msg( crust0[k] < topology.nb() , "crust elem %lu but topology has %lu elements" , crust0[k] , topology.nb() );
+  }
+
   std::set<index_t> pts;
   for (index_t k=0;k<topology.points().nb();k++)
   {
@@ -1520,6 +1530,30 @@ fix_crust( Topology<type>& topology , const std::vector<index_t>& crust0 )
 
 template<typename type>
 void
+add_mantle( Topology<type>& topology , std::vector<index_t>& crust )
+{
+  topology.build_structures();
+
+  std::set<index_t> pts;
+  for (index_t k=0;k<crust.size();k++)
+  {
+    for (index_t j=0;j<topology.nv(crust[k]);j++)
+      pts.insert( topology(crust[k],j) );
+  }
+
+  std::vector<index_t> ball;
+  for (std::set<index_t>::iterator it=pts.begin();it!=pts.end();++it)
+  {
+    ball.clear();
+    topology.inverse().ball( *it , ball );
+    for (index_t j=0;j<ball.size();j++)
+      crust.push_back( ball[j] );
+  }
+  uniquify(crust);
+}
+
+template<typename type>
+void
 AdaptationManager<type>::adapt()
 {
   avro_assert_msg( params_.max_passes() % 2 == 0 , "number of passes should be even" );
@@ -1542,10 +1576,13 @@ AdaptationManager<type>::adapt()
     fix_boundary();
 
     // fix any points that are part of non-contributing elements
-    if (pass % 2 == 1)
+    if (true || pass % 2 == 1)
     {
       if (rank_ == 0) printf("--> fixing crust\n");
       mpi::barrier();
+
+      // puff out the crust (include the mantle :P)
+      add_mantle( topology_ , crust_ );
 
       // fix any points that are not in the crust
       fix_crust( topology_ , crust_ );
@@ -1611,6 +1648,7 @@ AdaptationManager<type>::adapt()
 
     // we alternate between forcing the interfaces to migrate and performing a load balance
     if (pass % 2 == 0)
+    //if (pass < params_.max_passes()-1)
     {
       if (rank_ == 0) printf("--> migrating interface\n");
       mpi::barrier();
