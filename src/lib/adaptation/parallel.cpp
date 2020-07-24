@@ -617,11 +617,9 @@ public:
 
       edge_ids.push_back( graph.AddEdge( p0 , p1 , cost ) );
     }
-    printf("added edges\n");
 
     // solve the graph matching problem
     graph.Solve();
-    printf("solved matching\n");
     for (index_t k=0;k<edge_ids.size();k++)
     {
       index_t id = edge_ids[k];
@@ -1601,7 +1599,7 @@ AdaptationManager<type>::adapt()
       writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
-    //params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
+    params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
     if (pass > 0) params_.limit_metric() = false;

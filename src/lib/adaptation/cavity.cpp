@@ -827,27 +827,15 @@ Cavity<type>::closed_boundary()
     {
       int n0 = topology_.neighbours()(cavity_[k],j);
       avro_assert( n0 >= 0 );
-      //index_t n = index_t(n0);
-
-      //try
-      //{
       bool ok = false;
-        //index_t jn = topology_.neighbours().indexofme( cavity_[k] , j );
-        //int n1 = topology_.neighbours()(cavity_[k],j);
-        //if (n1<0) continue;
-        for (index_t i=0;i<topology_.neighbours().nfacets();i++)
+      for (index_t i=0;i<topology_.neighbours().nfacets();i++)
+      {
+        if (topology_.neighbours()(index_t(n0),i)==int(cavity_[k]))
         {
-          if (topology_.neighbours()(index_t(n0),i)==int(cavity_[k]))
-          {
-            ok = true;
-            break;
-          }
+          ok = true;
+          break;
         }
-      //}
-      //catch(...)
-      //{
-      //  return false;
-      //}
+      }
       if (!ok) return false;
     }
   }
