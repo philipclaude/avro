@@ -612,8 +612,16 @@ MeshImpliedMetric<type>::optimize()
       // forget about the step
       //this->data_[k].dump();
       this->data_[k] = nodalMetricSqrt_[k]*nodalMetricSqrt_[k];
+
+      std::vector<index_t> ball;
+      topology_.inverse().ball( k , ball );
+      for (index_t j=0;j<ball.size();j++)
+      for (index_t i=0;i<topology_.nv(ball[j]);i++)
+        topology_.points().set_fixed( topology_(ball[j],i) , true );
+
+      printf("detm = %g! -> fixing ball of vertex %lu",detm,k);
     }
-    avro_assert_msg( detm > 0. , "detm = %g for vertex %lu",detm,k );
+    //avro_assert_msg( detm > 0. , "detm = %g for vertex %lu",detm,k );
 	}
 }
 

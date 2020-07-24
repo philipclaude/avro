@@ -280,7 +280,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
     return false;
   }
 
-  // check if all produce elements have a positive determinant of implied metric
+  // check if all produced elements have a positive determinant of implied metric
   if (!this->positive_implied_metrics())
     return false;
 
@@ -504,6 +504,18 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
       {
         edge++;
         continue;
+      }
+
+      if (!collapser_.closed_boundary())
+      {
+        printf("boundary is not closed!\n");
+        edge++;
+        continue;
+      }
+
+      if (collapser_.fixed())
+      {
+        printf("boundary is fixed!\n");
       }
 
       // the collapse was finally accepted! apply the topology change

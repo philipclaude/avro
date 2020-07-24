@@ -47,7 +47,7 @@ public:
   index_t get_total_nb_points() const;
 
   // exchanges the elements between the partitions
-  void exchange( const std::vector<index_t>& repartition );
+  void exchange( std::vector<index_t>& repartition );
 
   const Topology_Partition<type>& topology() const { return topology_; }
   void reassign_metrics( const std::vector<VertexMetric>& metrics );

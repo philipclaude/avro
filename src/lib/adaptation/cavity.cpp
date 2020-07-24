@@ -13,6 +13,7 @@
 #include "adaptation/cavity.h"
 #include "adaptation/geometry.h"
 
+#include "mesh/facets.h"
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
@@ -773,6 +774,90 @@ Cavity<type>::copy( const Cavity<type>& cavity )
   for (index_t k=0;k<cavity.nodes().size();k++)
     add_node( cavity.nodes()[k] );
   inserted_.resize( nb_insert() );
+}
+
+template<typename type>
+bool
+Cavity<type>::fixed() const
+{
+  for (index_t k=0;k<cavity_.size();k++)
+  {
+    for (index_t j=0;j<topology_.nv(cavity_[k]);j++)
+    {
+      if (topology_(cavity_[k],j)==star_) continue;
+      if (topology_(cavity_[k],j)<topology_.points().nb_ghost()) continue;
+      if (!topology_.points().fixed( topology_(cavity_[k],j) )) return false;
+    }
+  }
+  // all the points were fixed
+  return true;
+}
+
+template<typename type>
+bool
+Cavity<type>::closed_boundary()
+{
+  std::map<ElementIndices,index_t> facets;
+
+  std::vector<index_t> facet( topology_.number() );
+  for (index_t k=0;k<cavity_.size();k++)
+  {
+    for (index_t j=0;j<topology_.nv(cavity_[k]);j++)
+    {
+      index_t c = 0;
+      ElementIndices f;
+      f.dim = topology_.number()-1;
+      f.indices.resize(topology_.number());
+      for (index_t i=0;i<topology_.nv(cavity_[k]);i++)
+      {
+        if (i == j) continue;
+        f.indices[c++] = topology_(cavity_[k],i);
+      }
+
+      if (facets.find(f) != facets.end() )
+        facets[f]++;
+      else
+        facets.insert( {f,1} );
+    }
+  }
+
+  for (index_t k=0;k<cavity_.size();k++)
+  {
+    for (index_t j=0;j<topology_.nv(cavity_[k]);j++)
+    {
+      int n0 = topology_.neighbours()(cavity_[k],j);
+      avro_assert( n0 >= 0 );
+      //index_t n = index_t(n0);
+
+      //try
+      //{
+      bool ok = false;
+        //index_t jn = topology_.neighbours().indexofme( cavity_[k] , j );
+        //int n1 = topology_.neighbours()(cavity_[k],j);
+        //if (n1<0) continue;
+        for (index_t i=0;i<topology_.neighbours().nfacets();i++)
+        {
+          if (topology_.neighbours()(index_t(n0),i)==int(cavity_[k]))
+          {
+            ok = true;
+            break;
+          }
+        }
+      //}
+      //catch(...)
+      //{
+      //  return false;
+      //}
+      if (!ok) return false;
+    }
+  }
+
+  for (std::map<ElementIndices,index_t>::iterator it=facets.begin();it!=facets.end();++it)
+  {
+    if (it->second > 2 ) avro_implement;
+  }
+
+  return true;
 }
 
 template class Cavity<Simplex>;

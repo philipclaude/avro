@@ -99,7 +99,15 @@ Topology<Simplex>::apply( Cavity<Simplex>& cavity )
     {
       elem = cavity.cavity(k);
 
-      this->neighbours_.remove( elem , false  ); // no erase
+      try
+      {
+        this->neighbours_.remove( elem , false  ); // no erase
+      }
+      catch(...)
+      {
+        printf("error removing cavity element %lu (%lu)\n",k,elem);
+        avro_assert_not_reached;
+      }
       for (index_t j=0;j<cavity.nv(k);j++)
         this->operator()( elem , j ) = cavity(k,j);
     }
@@ -109,7 +117,15 @@ Topology<Simplex>::apply( Cavity<Simplex>& cavity )
     for (index_t k=cavity.nb_insert();k<cavity.nb_cavity();k++)
     {
       elem = cavity.cavity(k);
+      try
+      {
       this->neighbours_.remove( elem-count ); // erase
+      }
+      catch(...)
+      {
+        printf("error removing cavity element %lu (%lu)\n",k,elem);
+        avro_assert_not_reached;
+      }
       Topology<Simplex>::remove( elem-count );
       count++;
     }
@@ -129,7 +145,16 @@ Topology<Simplex>::apply( Cavity<Simplex>& cavity )
     {
       elem = cavity.cavity(k);
 
-      this->neighbours_.remove( elem , false  );
+      try
+      {
+        this->neighbours_.remove( elem , false  );
+      }
+      catch(...)
+      {
+        printf("error removing cavity element %lu (%lu)\n",k,elem);
+        cavity.print();
+        avro_assert_not_reached;
+      }
       for (index_t j=0;j<cavity.nv(elem);j++)
         this->operator()( elem , j ) = cavity(k,j);
     }
