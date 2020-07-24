@@ -253,6 +253,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         {
           // check that no elements (ghosts) become duplicated
           if (!edge_swapper_.has_unique_elems()) continue;
+          if (!edge_swapper_.closed_boundary()) continue;
           m  = candidates[j];
           qw = qw_swap;
         }

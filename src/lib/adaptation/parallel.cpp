@@ -13,6 +13,7 @@
 #include "graphics/application.h"
 
 #include "library/meshb.h"
+#include "library/spacetime.h"
 
 #include "mesh/boundary.h"
 #include "mesh/facets.h"
@@ -447,6 +448,13 @@ public:
     real_t alpha = 10.0;
     real_t beta = 0.1;
 
+    if (metrics.size() == 0)
+    {
+      // it's possible to have partitions with no points if there are too many partitions
+      vgwt_.resize( nb_vert_ , 0. );
+      return;
+    }
+
     // create a metric field to make computations easier
     MetricAttachment attachment( partition_.points() , metrics );
     MetricField<type> metric( partition_ , attachment );
@@ -605,13 +613,15 @@ public:
 
       // heavily penalize edges in the matching that would repeat a previous matching
       if (previous_pairs_.find( {p0,p1} ) != previous_pairs_.end())
-        cost = PM_INFTY;
+        cost = 100*cost;
 
       edge_ids.push_back( graph.AddEdge( p0 , p1 , cost ) );
     }
+    printf("added edges\n");
 
     // solve the graph matching problem
     graph.Solve();
+    printf("solved matching\n");
     for (index_t k=0;k<edge_ids.size();k++)
     {
       index_t id = edge_ids[k];
@@ -721,12 +731,24 @@ private:
 
 template<typename type>
 void
-AdaptationManager<type>::exchange( const std::vector<index_t>& repartition )
+AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
 {
   index_t nb_rank = mpi::size();
 
   if (rank_ == 0) printf("--> exchanging elements\n");
   mpi::barrier();
+
+  // determine if there will be zero elements remaining on this processor
+  index_t nb_keep = 0;
+  for (index_t k=0;k<repartition.size();k++)
+  {
+    if (repartition[k] == rank_) nb_keep++;
+  }
+  if (nb_keep == 0)
+  {
+    // unset one element
+    repartition[0] = rank_;
+  }
 
   // print a message with all the send information
   std::vector<index_t> nb_send( nb_rank , 0 );
@@ -1101,6 +1123,7 @@ AdaptationManager<type>::migrate_interface()
     // build up the interprocessor graph
     // with vertex weights defined be current processor work
     // compute a matching of this graph
+    print_inline(element_offset_);
     ProcessorGraph graph(element_offset_,pairs_);
     graph.match(interface);
 
@@ -1544,6 +1567,9 @@ AdaptationManager<type>::adapt()
   // and a load balance
   for (index_t pass=0;pass<index_t(params_.max_passes());pass++)
   {
+    if (rank_ == 0) printf("\n*** pass %lu ***\n\n",pass);
+    mpi::barrier();
+
     // fix the boundary of the topology
     // and move the fixed points to the beginning of the points structure
     if (rank_ == 0) printf("--> fixing partition boundaries\n");
@@ -1575,7 +1601,7 @@ AdaptationManager<type>::adapt()
       writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
-    params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
+    //params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
     if (pass > 0) params_.limit_metric() = false;
@@ -1601,7 +1627,7 @@ AdaptationManager<type>::adapt()
     }
     catch(...)
     {
-      printf("there was an error adapting the mesh on processor %lu:(\n",rank_);
+      printf("there was an error adapting the mesh on processor %lu :(\n",rank_);
       mpi::abort(1);
     }
     mpi::barrier();
@@ -1613,19 +1639,36 @@ AdaptationManager<type>::adapt()
     Mesh m(number,dim);
     std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
     retrieve(*topology_out.get());
-    m.add(topology_out);
-    if (rank_==0 && number<4)
-      writer.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false,true);
+    if (rank_==0)
+    {
+      if (number<4)
+      {
+        m.add(topology_out);
+        writer.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false,true);
+      }
+      else
+      {
+        Topology_Spacetime<type> spacetime(*topology_out.get());
+        spacetime.extract();
+        spacetime.write( "mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh" );
+      }
+    }
 
     // we alternate between forcing the interfaces to migrate and performing a load balance
     if (pass % 2 == 0)
-    //if (pass < params_.max_passes()-1)
     {
       if (rank_ == 0) printf("--> migrating interface\n");
       mpi::barrier();
 
       // the first time we adapt (and every even pass), we need to push the interfaces into processor neighbours
-      migrate_interface();
+      try
+      {
+        migrate_interface();
+      }
+      catch(...)
+      {
+        migrate_balance();
+      }
     }
     else
     {
@@ -1695,10 +1738,17 @@ AdaptationManager<type>::append_partition( index_t p , Topology<type>& topology 
   {
     // retrieve the global index of this point
     index_t g = partition.points().global(j);
-    if (created[g]) continue;
+    if (created[g])
+    {
+      // this point was already created
+      continue;
+    }
     created[g] = true;
     for (index_t d=0;d<topology.points().dim();d++)
+    {
       topology.points()[g][d] = partition.points()[j][d];
+    }
+    topology.points().set_entity(g,partition.points().entity(j));
   }
 
   for (index_t j=0;j<partition.nb();j++)
@@ -1723,7 +1773,6 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
   // assign the globals into the points
   index_t nb_rank = mpi::size();
   index_t nb_points = get_total_nb_points() + 1; // +1 because of 0-bias
-
   if (rank_==0)
   {
     std::vector<bool> created(nb_points,false);
@@ -1735,17 +1784,22 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
 
     // append the root partition into the output topology
     std::vector<real_t> partition_index;
+    printf("appending partition\n");
     append_partition( 0 , topology , topology_ , created , partition_index );
     for (index_t k=1;k<nb_rank;k++)
     {
+      printf("receiving partition %lu\n",k);
       // receive the partition from processor k and append it into the output topology
       Topology_Partition<type> partition( topology_.points().dim() , topology_.points().udim() , topology_.number() );
+      partition.set_entities( topology_.entities() );
       partition.receive(k);
       append_partition( k , topology , partition , created , partition_index );
     }
 
+    //topology.points().print(true);
+
     // fill the partition field
-    if (topology.nb() < 20000)
+    if (topology.nb() < 20000 && false)
     {
       // field construction will be super slow if there are too many elements
       field_ = std::make_shared<PartitionField<type>>(topology);
