@@ -116,7 +116,7 @@ UT_TEST_CASE( test1 )
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
   library::Tesseract geometry(c,lengths);
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,5);
   CKF_Triangulation topology(dims);
   //library::MetricField_Uniform analytic(number,0.25);
   library::MetricField_Tesseract_Linear analytic;

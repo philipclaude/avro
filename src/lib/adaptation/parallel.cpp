@@ -24,6 +24,7 @@
 
 #include "numerics/matrix.h"
 
+#include <time.h>
 #include <unistd.h>
 
 #ifdef AVRO_MPI
@@ -1429,7 +1430,7 @@ AdaptationManager<type>::fix_boundary()
   std::vector<index_t> pts;
 
   // fix all non-manifold vertices (i.e. vertices in which the ball does not match the actual inverse)
-  fix_non_manifold(topology_);
+  //fix_non_manifold(topology_);
   for (index_t k=0;k<topology_.points().nb();k++)
   {
     if (topology_.points().fixed(k))
@@ -1607,8 +1608,18 @@ AdaptationManager<type>::adapt()
     try
     {
       // do the adaptation!
-      if (rank_ == 0) printf("--> adapting mesh!\n");
+      clock_t t0,t1;
+      if (rank_ == 0)
+      {
+        printf("--> adapting mesh!\n");
+        t0 = clock();
+      }
       ::avro::adapt<type>( problem );
+      if (rank_ == 0)
+      {
+        t1 = clock();
+        printf("--> time = %4.3g seconds.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
+      }
 
       // clear the topology and copy in the output topology
       topology_.clear();
