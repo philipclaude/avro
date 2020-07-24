@@ -508,14 +508,8 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
 
       if (!collapser_.closed_boundary())
       {
-        printf("boundary is not closed!\n");
         edge++;
         continue;
-      }
-
-      if (collapser_.fixed())
-      {
-        printf("boundary is fixed!\n");
       }
 
       // the collapse was finally accepted! apply the topology change

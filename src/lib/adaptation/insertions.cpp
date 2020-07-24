@@ -560,7 +560,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       if (!inserter_.closed_boundary())
       {
         // it's going to be really hard to come back from something like this
-        printf("boundary is not closed!\n");
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
