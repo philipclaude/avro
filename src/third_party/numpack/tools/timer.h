@@ -12,11 +12,11 @@
 #elif defined(_OPENMP)
 #include <omp.h>
 #else
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+//#include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <chrono>
 #endif
 
-namespace numpack 
+namespace numpack
 {
 #if defined(_MPI)
 

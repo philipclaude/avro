@@ -15,7 +15,7 @@ SANSException::SANSException() : errString(""), barrier("\n#====================
 
 //=============================================================================
 SANSException::SANSException( const SANSException& e ) :
-  boost::exception(e), std::exception(e),
+  std::exception(e),
   errString(e.errString), barrier(e.barrier), outString(e.outString)
 {
 }
@@ -215,6 +215,7 @@ RuntimeException::RuntimeException(const char *fmt, ...)
 RuntimeException::~RuntimeException() noexcept {}
 
 //=============================================================================
+/*
 template class boost::exception_detail::clone_impl<AssertionException>;
 template class boost::exception_detail::clone_impl<DeveloperException>;
 template class boost::exception_detail::clone_impl<RuntimeException>;
@@ -225,4 +226,4 @@ template void boost::throw_exception<RuntimeException>(RuntimeException const&);
 
 template void boost::exception_detail::throw_exception_<AssertionException>(AssertionException const&, char const*, char const*, int);
 template void boost::exception_detail::throw_exception_<DeveloperException>(DeveloperException const&, char const*, char const*, int);
-template void boost::exception_detail::throw_exception_<RuntimeException>(RuntimeException const&, char const*, char const*, int);
+template void boost::exception_detail::throw_exception_<RuntimeException>(RuntimeException const&, char const*, char const*, int);*/

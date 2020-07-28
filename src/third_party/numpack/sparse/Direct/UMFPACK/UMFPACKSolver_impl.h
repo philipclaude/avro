@@ -11,7 +11,7 @@
 
 #include "UMFPACKSolver.h"
 
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -52,6 +52,7 @@ UMFPACK( AlgebraicEquationSetBase<Matrix_type>& f, LinearSystemSolve solve, bool
 }
 
 //-----------------------------------------------------------------------------
+/*
 template< class Matrix_type >
 UMFPACK<Matrix_type>::
 UMFPACK( const PyDict& d,
@@ -59,6 +60,7 @@ UMFPACK( const PyDict& d,
          LinearSystemSolve solve ) :
   UMFPACK(f, solve, d.get(UMFPACKParam::params.Timing))
   {}
+*/
 
 //-----------------------------------------------------------------------------
 template< class Matrix_type >
@@ -91,4 +93,4 @@ UMFPACK<Matrix_type>::~UMFPACK()
 }
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack

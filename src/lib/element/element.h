@@ -28,12 +28,24 @@ namespace avro
 class Quadrature;
 template<typename type> class Basis;
 
+class ElementBase
+{
+public:
+  ElementBase( const std::string& name ) :
+    name_(name)
+  {}
+  const std::string name() const { return name_; }
+protected:
+  std::string name_;
+};
+
 template<typename type>
-class Element
+class Element : public ElementBase
 {
 public:
 
   Element( coord_t number , coord_t order ) :
+    ElementBase("unknown"),
     number_(number),
     order_(order),
     reference_(number_,order_),
@@ -42,9 +54,9 @@ public:
   {}
 
   Element( coord_t number , coord_t order , const std::string& name ) :
+    ElementBase(name),
     number_(number),
     order_(order),
-    name_(name),
     reference_(number,order_),
     parameter_(false),
     basis_(nullptr)
@@ -54,7 +66,6 @@ public:
 
   coord_t number() const { return number_; }
   coord_t order() const {return order_; }
-  const std::string name() const { return name_; }
 
   index_t nb_quad() const { return wquad_.size(); }
 
@@ -80,7 +91,6 @@ public:
 protected:
   coord_t number_;
   coord_t order_;
-  std::string name_;
 
   numerics::MatrixD<real_t> phi_;
   std::vector< numerics::MatrixD<real_t> > dphi_;

@@ -88,6 +88,10 @@ if (NOT avro_RUN_WITH_MPI)
     add_definitions( -DNO_MPIRUN )
 endif()
 
+get_dependency(SUITESPARSE)
+include_directories( SYSTEM ${SUITESPARSE_INCLUDE_DIRS} )
+list(APPEND avro_EXTERNAL_LIBRARIES ${SUITESPARESE_LIBRARIES} )
+
 # debug and coverage utilities
 include(cmake/debug.cmake)
 include(cmake/coverage.cmake)

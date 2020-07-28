@@ -15,7 +15,7 @@
 
 #include <memory>
 
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -111,6 +111,6 @@ public:
 };
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack
 
 #endif //FGMRES_H

@@ -28,7 +28,7 @@
 #include "SANSException.h"
 #include "timer.h"
 
-namespace numpack 
+namespace numpack
 {
 
 void system_call(const std::string& name, const std::string& exec, const std::string& args)
@@ -81,16 +81,16 @@ void system_call(const std::string& name, const std::string& exec, const std::st
   // http://www.tldp.org/LDP/abs/html/exitcodes.html
   //
   if (WEXITSTATUS(ret) == 127)
-    SANS_RUNTIME_EXCEPTION("Command '%s' not found. Is it in PATH?.", exec.c_str());
+    {SANS_RUNTIME_EXCEPTION("Command '%s' not found. Is it in PATH?.", exec.c_str());}
 
   else if (WEXITSTATUS(ret) == 126)
-    SANS_RUNTIME_EXCEPTION("Command '%s' does not have execute permissions.", exec.c_str());
+    {SANS_RUNTIME_EXCEPTION("Command '%s' does not have execute permissions.", exec.c_str());}
 
   else if (WIFSIGNALED(ret) && (WTERMSIG(ret) == SIGINT || WTERMSIG(ret) == SIGQUIT))
-    SANS_RUNTIME_EXCEPTION("%s was interrupted or quit unexpectedly.", name.c_str());
+    {SANS_RUNTIME_EXCEPTION("%s was interrupted or quit unexpectedly.", name.c_str());}
 
   else if (WEXITSTATUS(ret) != 0)
-    SANS_RUNTIME_EXCEPTION("%s returned with error %d.", exec.c_str(), WEXITSTATUS(ret));
+    {SANS_RUNTIME_EXCEPTION("%s returned with error %d.", exec.c_str(), WEXITSTATUS(ret));}
 }
 
 // useful function to make sure that files are available to read

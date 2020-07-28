@@ -92,12 +92,15 @@ public:
 
   virtual void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const = 0;
 
+  const ElementBase& element() const { return element_; }
+
 protected:
-  FieldBase( FieldType type , TableLayoutCategory category=TableLayout_Jagged );
+  FieldBase( FieldType type , ElementBase& element , TableLayoutCategory category=TableLayout_Jagged );
   DOF<T> data_;
 
 private:
   FieldType type_;
+  ElementBase& element_;
 };
 
 template<typename type,typename T> class Field;
@@ -135,7 +138,7 @@ public:
 
 private:
   const Topology<Polytope>& topology_;
-  const Polytope element_;
+  Polytope element_;
 };
 
 class TopologyBase;

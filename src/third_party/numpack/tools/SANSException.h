@@ -103,8 +103,7 @@ struct RuntimeException : public SANSException
   virtual ~RuntimeException() noexcept;
 };
 
-#define SANS_RUNTIME_EXCEPTION( msg... ) \
-{}
+#define SANS_RUNTIME_EXCEPTION( msg... ) {}
   //BOOST_THROW_EXCEPTION( RuntimeException( msg ) )
 
 // Reduce compile time by explicitly instantiating these

@@ -19,7 +19,7 @@
 
 #include "tools/timer.h"
 
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -88,7 +88,7 @@ void UMFPACK<Matrix_type>::init()
 #endif
 
     if ( status != UMFPACK_OK )
-      BOOST_THROW_EXCEPTION( UMFPACKException(status) );
+      throw(UMFPACKException(status));
   }
 
   // perform symbolic factorization
@@ -106,7 +106,7 @@ void UMFPACK<Matrix_type>::init()
 #endif
 
     if ( status != UMFPACK_OK )
-      BOOST_THROW_EXCEPTION( UMFPACKException(status, info_.data()) );
+      throw( UMFPACKException(status, info_.data()) );
 
     if (timing_) std::cout << symbolictime.elapsed() << " second(s)" << std::endl;
   }
@@ -182,7 +182,7 @@ void UMFPACK<Matrix_type>::factorizeMatrix()
     status = SANS_UMFPACK_TRANSPOSE(Ms.m(), Ms.m(), Ms.Rp(), Ms.Ri(), Ms.Rx(), nullptr, nullptr, Ap_, Ai_, Ax_);
 
     if ( status != UMFPACK_OK )
-      BOOST_THROW_EXCEPTION( UMFPACKException(status) );
+      throw( UMFPACKException(status) );
   }
 
   timer numerictime;
@@ -204,10 +204,10 @@ void UMFPACK<Matrix_type>::factorizeMatrix()
 #endif
 
   if ( status != UMFPACK_OK )
-    BOOST_THROW_EXCEPTION( UMFPACKException(status, info_.data()) );
+    throw( UMFPACKException(status, info_.data()) );
 
   if (timing_) std::cout << numerictime.elapsed() << " second(s)" << std::endl;
 }
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack

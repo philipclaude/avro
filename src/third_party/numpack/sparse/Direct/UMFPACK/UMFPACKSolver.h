@@ -9,8 +9,8 @@
 #include <array> // std::array
 #include <memory> // std::shared_ptr
 
-#include "Python/PyDict.h"
-#include "Python/Parameter.h"
+//#include "Python/PyDict.h"
+//#include "Python/Parameter.h"
 
 #include "tools/SANSException.h"
 #include "tools/noncopyable.h"
@@ -21,7 +21,7 @@
 
 #include "UMFPACKSolver_defines.h"
 
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -43,18 +43,21 @@ class UMFPACK;
 //=============================================================================
 struct UMFPACKParam : noncopyable
 {
-  const ParameterBool Timing{"Timing", false, "Time Components of UMFPACK Solve"};
+  //const ParameterBool Timing{"Timing", false, "Time Components of UMFPACK Solve"};
+  const bool Timing = true;
 
   template<class Matrix_type>
   static std::shared_ptr< LinearSolverBase<Matrix_type> >
-  newSolver(const PyDict& SolverParam, AlgebraicEquationSetBase<Matrix_type>& f, LinearSystemSolve solve = RegularSolve )
+  //newSolver(const PyDict& SolverParam, AlgebraicEquationSetBase<Matrix_type>& f, LinearSystemSolve solve = RegularSolve )
+  newSolver(AlgebraicEquationSetBase<Matrix_type>& f, LinearSystemSolve solve = RegularSolve )
   {
     typedef std::shared_ptr< LinearSolverBase<Matrix_type> > Solver_ptr;
 
-    return Solver_ptr( new UMFPACK<Matrix_type>( SolverParam, f, solve ) );
+    return Solver_ptr( new UMFPACK<Matrix_type>( f, solve ) );
+    //return Solver_ptr( new UMFPACK<Matrix_type>( SolverParam, f, solve ) );
   }
 
-  static void checkInputs(PyDict d);
+  //static void checkInputs(PyDict d);
   static UMFPACKParam params;
 };
 
@@ -77,7 +80,7 @@ public:
 
 //-----------------------------------------------------------------------------
   UMFPACK( AlgebraicEquationSetBase<Matrix_type>& f, LinearSystemSolve solve = RegularSolve, bool timing = false );
-  UMFPACK( const PyDict& d, AlgebraicEquationSetBase<Matrix_type>& f, LinearSystemSolve solve = RegularSolve );
+  //UMFPACK( const PyDict& d, AlgebraicEquationSetBase<Matrix_type>& f, LinearSystemSolve solve = RegularSolve );
   virtual ~UMFPACK();
 
 //-----------------------------------------------------------------------------
@@ -122,6 +125,6 @@ protected:
 };
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack
 
 #endif //UMFPACKSOLVER_H

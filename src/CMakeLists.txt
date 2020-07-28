@@ -15,6 +15,7 @@ add_source_directories(SOURCES "Source Files\\library" lib/library)
 add_source_directories(SOURCES "Source Files\\mesh" lib/mesh)
 add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
+add_source_directories(SOURCES "Source Files\\simulation" lib/simulation )
 add_source_directories(SOURCES "Source Files\\voronoi" lib/voronoi)
 
 # add the bin sources but remove the avro.cpp (main) executable source
@@ -55,7 +56,7 @@ if (AVRO_NO_ESP)
   add_definitions( -DAVRO_NO_ESP )
 endif()
 
-set(avro_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} ${MPI_LIBRARIES} ${PARMETIS_LIBRARIES} dl blas z )
+set(avro_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} ${MPI_LIBRARIES} ${PARMETIS_LIBRARIES} ${SUITESPARSE_LIBRARIES} dl blas z )
 if (avro_WITH_OPENMP)
   set( avro_EXTERNAL_LIBRARIES ${avro_EXTERNAL_LIBRARIES} ${OPENMP_LINK_FLAG} )
 endif()

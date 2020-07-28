@@ -5,26 +5,27 @@
 
 #include "sparse_LinearSolver.h"
 
-#define PYDICT_INSTANTIATE
-#include "Python/PyDict_impl.h"
+//#define PYDICT_INSTANTIATE
+//#include "Python/PyDict_impl.h"
 
-namespace numpack 
+namespace numpack
 {
 
-PYDICT_PARAMETER_OPTION_INSTANTIATE(SLA::LinearSolverParam::LinearSolverOptions)
+//PYDICT_PARAMETER_OPTION_INSTANTIATE(SLA::LinearSolverParam::LinearSolverOptions)
 
 namespace SLA
 {
 
 // cppcheck-suppress passedByValue
+/*
 void LinearSolverParam::checkInputs(PyDict d)
 {
   std::vector<const ParameterBase*> allParams;
   allParams.push_back(d.checkInputs(params.LinearSolver));
   d.checkUnknownInputs(allParams);
-}
+}*/
 LinearSolverParam LinearSolverParam::params;
 
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack
