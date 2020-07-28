@@ -3,6 +3,7 @@
 #include "mesh/field.h"
 
 #include "simulation/discretization.h"
+#include "simulation/equations.h"
 #include "simulation/jacobian.h"
 
 namespace avro
