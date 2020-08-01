@@ -63,14 +63,14 @@ private:
   const std::vector<real_t> tol_;
 };
 
-template<typename PDE,class Traits>
+template<typename PDE,typename Element_t, class _Traits_t>
 class EquationSet_Galerkin : public EquationSet_LineSearch<PDE>
 {
 public:
   typedef typename PDE::template ArrayQ<real_t> ArrayQ;
   typedef typename PDE::template MatrixQ<real_t> MatrixQ;
 
-  typedef EquationSetTraits<MatrixQ,ArrayQ,Traits> Traits_t;
+  typedef EquationSetTraits<MatrixQ,ArrayQ,_Traits_t> Traits_t;
   typedef typename Traits_t::AlgebraicEquationSetBaseClass BaseType;
 
   typedef typename Traits_t::VectorSizeClass VectorSizeClass;
@@ -85,8 +85,9 @@ public:
   typedef IntegrandCell<PDE> IntegrandCellClass;
 
   virtual void residual( SystemVectorView& rsd ) override;
-  virtual void jacobian( SystemMatrixView& mtx ) override { this->template jacobian< SystemMatrixView&>(mtx); }
+  virtual void jacobian( SystemMatrixView& mtx ) override { this->template jacobian<SystemMatrixView&>(mtx); }
 
+  // indices in the system view block matrix
   static const int iPDE = 0;
   static const int iBC  = 1;
   static const int iq   = 0;
@@ -96,16 +97,17 @@ protected:
   template<class SparseMatrix_t> void jacobian( SparseMatrix_t mtx );
 
   IntegrandCellClass fcn_cell_;
-  Field<Simplex,ArrayQ>& qfld_;
-  Field<Simplex,ArrayQ>& lgfld_;
+  Field<Element_t,ArrayQ>& qfld_;
+  Field<Element_t,ArrayQ>& lgfld_;
+  const Topology<Element_t>& xfld_;
   const PDE& pde_;
   const std::vector<real_t> tol_;
 };
 
-template<typename PDE,class Traits_t>
+template<typename PDE,typename Element_t,class Traits_t>
 template<typename SparseMatrix_t>
 void
-EquationSet_Galerkin<PDE,Traits_t>::jacobian( SparseMatrix_t jac )
+EquationSet_Galerkin<PDE,Element_t,Traits_t>::jacobian( SparseMatrix_t jac )
 {
   avro_assert( jac.m() == 2 );
   avro_assert( jac.n() == 2 );
@@ -122,10 +124,15 @@ EquationSet_Galerkin<PDE,Traits_t>::jacobian( SparseMatrix_t jac )
   const int qorder = -1;
 
   // dispatch the integration over the interior cells
-  IntegrateCellGroups::integrate( JacobianCell_impl<IntegrandCellClass>(fcn_cell_,jacPDE_q) );//, qfld_.topology() , qfld_ , qorder ) );
+  // does this include the integration over the interior traces?
+  IntegrateCellGroups::integrate( JacobianCell_impl<IntegrandCellClass>(fcn_cell_, jacPDE_q, xfld_, qfld_, qorder ) );
 
-  // dispatch the interation over the boundary traces
-  // TODO
+  // dispatch the integration over the boundary traces
+  IntegrateTraceGroups::integrate( JacobianBoundaryTrace<SurrealClass>(xfld_,qfld_,lgfld_,qorder,jacPDE_q,jacPDE_lg,jacBC_q,jacBC_lg) );
+
+  /*dispatchBC_.dispatch(
+      JacobianBoundaryTrace_mitLG_Dispatch_Galerkin<SurrealClass>( xfld_, qfld_, lgfld_, qorder, jacPDE_q, jacPDE_lg, jacBC_q, jacBC_lg ),
+      JacobianBoundaryTrace_sansLG_Dispatch_Galerkin<SurrealClass>( xfld_, qfld_, qorder, jacPDE_q ) ); */
 }
 
 

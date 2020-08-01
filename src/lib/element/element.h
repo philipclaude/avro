@@ -13,10 +13,9 @@
 #include "common/types.h"
 
 #include "element/basis.h"
-#include "element/element.h"
 #include "element/reference.h"
 
-#include "numerics/matrix.h"
+//#include "numerics/matrix.h"
 
 #include <memory>
 #include <string>
@@ -92,8 +91,8 @@ protected:
   coord_t number_;
   coord_t order_;
 
-  numerics::MatrixD<real_t> phi_;
-  std::vector< numerics::MatrixD<real_t> > dphi_;
+  //numerics::MatrixD<real_t> phi_;
+  //std::vector< numerics::MatrixD<real_t> > dphi_;
 
   std::vector<real_t> xquad_;
   std::vector<real_t> wquad_;

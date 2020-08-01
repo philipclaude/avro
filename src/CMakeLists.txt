@@ -4,6 +4,7 @@ set(CMAKE_CXX_FLAGS ${CXX_FLAGS0})
 
 # add all the source files
 add_source_directories(SOURCES "Source Files" .)
+add_source_directories(SOURCES "Source Files\\api" api)
 add_source_directories(SOURCES "Source Files\\adaptation" lib/adaptation)
 add_source_directories(SOURCES "Source Files\\common" lib/common)
 add_source_directories(SOURCES "Source Files\\mesh" lib/element)
@@ -15,7 +16,7 @@ add_source_directories(SOURCES "Source Files\\library" lib/library)
 add_source_directories(SOURCES "Source Files\\mesh" lib/mesh)
 add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
-add_source_directories(SOURCES "Source Files\\simulation" lib/simulation )
+#add_source_directories(SOURCES "Source Files\\simulation" lib/simulation )
 add_source_directories(SOURCES "Source Files\\voronoi" lib/voronoi)
 
 # add the bin sources but remove the avro.cpp (main) executable source

@@ -118,7 +118,7 @@ Tree<Node_t>::get_adjacency( numerics::MatrixD<int>& A ) const
   std::vector<const Node_t*> children;
   get_children(children);
   children.insert( children.begin() , derived() );
-  
+
   A.resize( children.size() , children.size() );
   A = 0;
   for (index_t i=0;i<children.size();i++)
