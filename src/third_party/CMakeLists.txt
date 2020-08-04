@@ -65,6 +65,14 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/st
 
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
+
+add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/sparse )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/sparse/Direct/UMFPACK )
+#add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/sparse/Krylov )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/sparse/tools )
+
+add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/tools )
+
 include_directories(numpack)
 
 # ESP

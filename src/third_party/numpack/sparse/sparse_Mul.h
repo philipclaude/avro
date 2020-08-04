@@ -6,14 +6,14 @@
 #ifndef sparse_MUL_H
 #define sparse_MUL_H
 
-#include <boost/type_traits/is_arithmetic.hpp>
+//#include <boost/type_traits/is_arithmetic.hpp>
 #include <memory> //shared_ptr
 
 #include "sparse_Type.h"
 
 #include "SparseMatrix_CRS.h"
 
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -139,21 +139,21 @@ public:
 //=============================================================================
 // Overloaded operators to represent multiplication between a scalar and a matrix expression
 template<class Expr, bool useRF, typename T>
-inline typename std::enable_if< boost::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
+inline typename std::enable_if< std::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
 operator*(const sparseType<Expr, useRF>& e, const T& s)
 {
   return OpMulScalar<Expr, useRF>( e.cast(), s );
 }
 
 template<class Expr, bool useRF, typename T>
-inline typename std::enable_if< boost::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
+inline typename std::enable_if< std::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
 operator/(const sparseType<Expr, useRF>& e, const T& s)
 {
   return OpMulScalar<Expr, useRF>( e.cast(), Real(1)/s );
 }
 
 template<class Expr, bool useRF, typename T>
-inline typename std::enable_if< boost::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
+inline typename std::enable_if< std::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
 operator*(const T& s, const sparseType<Expr, useRF>& e)
 {
   return OpMulScalar<Expr, useRF>( e.cast(), s );
@@ -171,21 +171,21 @@ operator-(sparseType<Expr, useRF> const& e)
 // This is a special case when multiplies scalars are multiplying from two sides, i.e. B = 2*A*2;
 // This reduces the complexity of the expression tree and hence reduces code bloat
 template<class Expr, bool useRF, typename T>
-inline typename std::enable_if< boost::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
+inline typename std::enable_if< std::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
 operator*(const OpMulScalar<Expr, useRF>& MulScal, const T& s)
 {
   return OpMulScalar<Expr, useRF>( MulScal.e, MulScal.s*s );
 }
 
 template<class Expr, bool useRF, typename T>
-inline typename std::enable_if< boost::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
+inline typename std::enable_if< std::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
 operator/(const OpMulScalar<Expr, useRF>& MulScal, const T& s)
 {
   return OpMulScalar<Expr, useRF>( MulScal.e, MulScal.s/s );
 }
 
 template<class Expr, bool useRF, typename T>
-inline typename std::enable_if< boost::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
+inline typename std::enable_if< std::is_arithmetic<T>::value, OpMulScalar<Expr, useRF> >::type
 operator*(const T& s, const OpMulScalar<Expr, useRF>& MulScal)
 {
   return OpMulScalar<Expr, useRF>( MulScal.e, MulScal.s*s );
@@ -330,7 +330,7 @@ operator*(const SparseNonZeroPattern<TM>& A, const SparseVector<TV>& x)
 }
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack
 
 
 #endif //DENSEMATRIX_MUL_H

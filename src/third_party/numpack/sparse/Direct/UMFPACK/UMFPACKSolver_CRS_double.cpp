@@ -10,7 +10,7 @@
 
 #include <memory>
 
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -30,7 +30,7 @@ backsolve( const int solvecode, const SparseVectorView_type& b, SparseVectorView
   status = SANS_UMFPACK_SOLVE(solvecode, Ap_, Ai_, Ax_, &x[0], &b[0], Numeric_, control_.data(), info_.data() );
 
   if ( status != UMFPACK_OK )
-    BOOST_THROW_EXCEPTION( UMFPACKException(status, info_.data()) );
+    throw( UMFPACKException(status, info_.data()) );
 
   if (timing_) std::cout << "UMFPACK solve time : " << solvetime.elapsed() << " second(s)" << std::endl;
 
@@ -40,4 +40,4 @@ backsolve( const int solvecode, const SparseVectorView_type& b, SparseVectorView
 template class UMFPACK< SparseMatrix_CRS<double> >;
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack

@@ -8,7 +8,7 @@
 
 #include <umfpack.h>
 
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -76,14 +76,15 @@ UMFPACKException::UMFPACKException( const int status, const double* info )
 }
 
 // cppcheck-suppress passedByValue
+/*
 void UMFPACKParam::checkInputs(PyDict d)
 {
   std::vector<const ParameterBase*> allParams;
   allParams.push_back(d.checkInputs(params.Timing));
   d.checkUnknownInputs(allParams);
-}
+}*/
 UMFPACKParam UMFPACKParam::params;
 
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack

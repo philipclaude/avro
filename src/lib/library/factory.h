@@ -24,7 +24,7 @@ class Context;
 class Model;
 class Points;
 class Mesh;
-template<typename type> class Topology;
+class TopologyBase;
 class MetricAttachment;
 
 namespace library

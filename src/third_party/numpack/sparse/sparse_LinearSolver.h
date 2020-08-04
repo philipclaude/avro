@@ -7,7 +7,7 @@
 #define sparse_LINEARSOLVER_H
 
 //Python must be included first
-#include "Python/PyDict.h"
+//#include "Python/PyDict.h"
 
 #include <memory>
 
@@ -17,7 +17,7 @@
 #include "LinearSolverBase.h"
 #include "sparse_Inverse.h"
 
-#include "Krylov/FGMRES.h"
+//#include "Krylov/FGMRES.h"
 #include "Direct/UMFPACK/UMFPACKSolver.h"
 #ifdef SANS_PETSC
 #include "PETSc/PETScSolver.h"
@@ -25,7 +25,7 @@
 #ifdef INTEL_MKL
 #include "Direct/MKL_PARDISO/MKL_PARDISOSolver.h"
 #endif
-namespace numpack 
+namespace numpack
 {
 namespace SLA
 {
@@ -35,19 +35,22 @@ struct LinearSolverParam : noncopyable
 {
   struct LinearSolverOptions
   {
-    typedef DictKeyPair ExtractType;
-    const ParameterString Solver{"Solver", "FGMRES", "Linear Solver Name" };
-    const ParameterString& key = Solver;
+    //typedef DictKeyPair ExtractType;
+    //const ParameterString Solver{"Solver", "FGMRES", "Linear Solver Name" };
+    //const ParameterString& key = Solver;
 
-    const DictOption FGMRES{"FGMRES", FGMRESParam::checkInputs};
-    const DictOption UMFPACK{"UMFPACK", UMFPACKParam::checkInputs};
+    const std::string Solver = "UMFPACK";
+
+
+    //const DictOption FGMRES{"FGMRES", FGMRESParam::checkInputs};
+    //const DictOption UMFPACK{"UMFPACK", UMFPACKParam::checkInputs};
 #ifdef SANS_PETSC
     const DictOption PETSc{"PETSc", PETScSolverParam::checkInputs};
 #endif
 #ifdef INTEL_MKL
     const DictOption MKL_PARDISO{"MKL_PARDISO", MKL_PARDISOParam::checkInputs};
 #endif
-    const std::vector<DictOption> options{ FGMRES
+    /*const std::vector<DictOption> options{ FGMRES
                                          , UMFPACK
 #ifdef SANS_PETSC
                                          , PETSc
@@ -55,11 +58,11 @@ struct LinearSolverParam : noncopyable
 #ifdef INTEL_MKL
                                          , MKL_PARDISO
 #endif
-                                         };
+};*/
   };
-  const ParameterOption<LinearSolverOptions> LinearSolver{"LinearSolver", NO_DEFAULT, "Iterative or Direct Linear Solver"};
+  //const ParameterOption<LinearSolverOptions> LinearSolver{"LinearSolver", NO_DEFAULT, "Iterative or Direct Linear Solver"};
 
-  static void checkInputs(PyDict d);
+  //static void checkInputs(PyDict d);
   static LinearSolverParam params;
 };
 
@@ -74,6 +77,7 @@ public:
 
   LinearSolverParam& params = LinearSolverParam::params;
 
+  /*
   explicit LinearSolver( const PyDict& d, AlgebraicEquationSetBase<Matrix_type>& f, LinearSystemSolve solve = RegularSolve )
   {
     DictKeyPair SolverParam = d.get(params.LinearSolver);
@@ -93,6 +97,7 @@ public:
     else
       SANS_DEVELOPER_EXCEPTION("Unknown linear solver: %s", SolverParam.key().c_str());
   }
+  */
 
   const Matrix_type& A() { return solver_->A(); }
 
@@ -130,6 +135,6 @@ private:
 
 
 } //namespace SLA
-} //namespace numpack 
+} //namespace numpack
 
 #endif //sparse_LINEARSOLVER_H

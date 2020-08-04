@@ -40,7 +40,7 @@ UT_TEST_CASE(test1)
 
   // parameters
   std::shared_ptr<library::MetricField_UniformGeometry<Simplex>> metric;
-  metric = std::make_shared<library::MetricField_UniformGeometry<Simplex>>(2,0.4);
+  metric = std::make_shared<library::MetricField_UniformGeometry<Simplex>>(2,0.1);
 
   // geometry
   #if 1
@@ -51,13 +51,20 @@ UT_TEST_CASE(test1)
   std::shared_ptr<Body> face = std::make_shared<EGADS::Face3D>( &context , 0 );
   EGADS::Model model(2);
   model.add_body(face);
+  #elif 1
+  EGADS::Context context;
+  real_t x0[3] = {0,0,0};
+  real_t dir[3] = {0,0,1};
+  std::shared_ptr<Body> face = std::make_shared<EGADS::Torus>( &context , x0,dir,1.,0.1);
+  EGADS::Model model(2);
+  model.add_body(face);
   #else
   OpenCSM_Model model("/Users/pcaplan/Codes/EngSketchPad/data/bottle.csm");
   #endif
 
   TessellationParameters tess_params;
   tess_params.standard();
-  tess_params.min_size() = 0.4;
+  tess_params.min_size() = 1.0;
   tess_params.min_angle() = 20;
 
   ModelTessellation tess(model,tess_params);

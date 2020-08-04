@@ -20,11 +20,11 @@
 #include "VectorSizeType.h"
 #include "MatrixSizeType.h"
 
-#include "MPI/communicator_fwd.h"
+//#include "MPI/communicator_fwd.h"
 #include "LinesearchDataType.h"
 #include "GlobalContinuousMap.h"
 
-namespace numpack 
+namespace numpack
 {
 
 //----------------------------------------------------------------------------//
@@ -137,7 +137,7 @@ public:
   virtual std::vector<GlobalContinuousMap> continuousGlobalMap() const { return {}; } // TODO: This should be abstract
 
   // MPI communicator for this algebraic equation set
-  virtual std::shared_ptr<mpi::communicator> comm() const = 0;
+  //virtual std::shared_ptr<mpi::communicator> comm() const = 0;
 
   // Syncronize gost/zombie DOFs in all fields that need it
   virtual void syncDOFs_MPI() = 0;
@@ -162,6 +162,6 @@ protected:
 };
 
 
-} //namespace numpack 
+} //namespace numpack
 
 #endif //ALGEBRAICEQUATIONSETBASE_H

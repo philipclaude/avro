@@ -72,15 +72,16 @@ Fields::id2name( const std::string& id ) const
 }
 
 template<typename T>
-FieldBase<T>::FieldBase( FieldType type , TableLayoutCategory category ) :
+FieldBase<T>::FieldBase( FieldType type , ElementBase& element , TableLayoutCategory category ) :
   Table<index_t>(category),
   data_(1),
-  type_(type)
+  type_(type),
+  element_(element)
 {}
 
 template<typename T>
 Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , FieldType type ) :
-  FieldBase<T>(type,TableLayout_Rectangular),
+  FieldBase<T>(type,element_,TableLayout_Rectangular),
   topology_(topology),
   element_(topology.number(),order)
 {
@@ -89,7 +90,7 @@ Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , Fie
 
 template<typename T>
 Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
-  FieldBase<T>(type),
+  FieldBase<T>(type,element_),
   topology_(topology),
   element_(topology,order,topology.points().incidence())
 {}
