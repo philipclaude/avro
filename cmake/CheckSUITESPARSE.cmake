@@ -1,0 +1,90 @@
+include(CheckCXXSourceCompiles)
+
+# make sure that the CBLAS library is available
+SET(CMAKE_REQUIRED_LIBRARIES ${SUITESPARSE_LIBRARIES} ${BLAS_LIBRARIES})
+SET(CMAKE_REQUIRED_INCLUDES ${SUITESPARSE_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src)
+IF( CMAKE_BUILD_TYPE )
+  STRING( TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE )
+  SET(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}} ${CMAKE_EXE_LINKER_FLAGS_${BUILD_TYPE}}")
+ELSE()
+  SET(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
+ENDIF()
+
+IF( DEFINED SUITESPARSE_TEST AND (NOT SUITESPARSE_TEST OR NOT (SUITESPARSE_TEST_LIBRARIES STREQUAL SUITESPARSE_LIBRARIES AND SUITESPARSE_INCLUDE_DIRS STREQUAL SUITESPARSE_TEST_INCLUDE_DIRS)) )
+  UNSET( SUITESPARSE_TEST CACHE )
+  UNSET( SUITESPARSE_TEST_LIBRARIES CACHE )
+  UNSET( SUITESPARSE_TEST_INCLUDE_DIRS CACHE )
+ENDIF()
+
+
+CHECK_CXX_SOURCE_COMPILES(
+"
+/* */
+
+#include <third_party/numpack/sparse/Direct/UMFPACK/UMFPACKSolver_defines.h>
+
+int main(int argc, char** argv)
+{
+  void *Symbolic;
+  void *Numeric;
+
+  double info[UMFPACK_INFO] = {0};
+
+  SANS_UMFPACK_INT m=0;
+
+  SANS_UMFPACK_INT *Ap=NULL, *Ai=NULL;
+  double *Ax=NULL;
+
+  SANS_UMFPACK_INT *Rp=NULL, *Ri=NULL;
+  double *Rx=NULL;
+
+  double *x=NULL, *b=NULL;
+
+  SANS_UMFPACK_INT status = 0;
+  status = SANS_UMFPACK_TRANSPOSE (m, m, Rp, Ri, Rx, NULL, NULL, Ap, Ai, Ax);
+  status = SANS_UMFPACK_SYMBOLIC(m, m, Ap, Ai, Ax, &Symbolic, NULL, info);
+  status = SANS_UMFPACK_NUMERIC(Ap, Ai, Ax, Symbolic, &Numeric, NULL, info);
+  status = SANS_UMFPACK_SOLVE(UMFPACK_A, Ap, Ai, Ax, x, b, Numeric, NULL, info);
+
+
+  SANS_UMFPACK_FREE_SYMBOLIC(&Symbolic);
+  SANS_UMFPACK_FREE_NUMERIC(&Numeric);
+
+  return status;
+}
+"
+SUITESPARSE_TEST )
+
+IF(SUITESPARSE_TEST)
+  SET(SUITESPARSE_TEST_FAIL FALSE)
+
+  # Save off the current state in case the library or inlcude is changed
+  SET( SUITESPARSE_TEST_LIBRARIES ${SUITESPARSE_LIBRARIES} CACHE INTERNAL "SUITESPARSE libraries used for testing" FORCE)
+  SET( SUITESPARSE_TEST_INCLUDE_DIRS ${SUITESPARSE_INCLUDE_DIRS} CACHE INTERNAL "SUITESPARSE inlude used for testing" FORCE)
+ELSE()
+
+  MESSAGE(STATUS "" )
+  MESSAGE(STATUS "====================================================================" )
+  MESSAGE(STATUS " suitesparse library test failed. See CMakeFiles/CMakeError.log for more details." )
+  MESSAGE(STATUS "" )
+  MESSAGE(STATUS " SUITESPARSE_LIBRARIES:" )
+  FOREACH(LIBNAME ${SUITESPARSE_LIBRARIES})
+  MESSAGE(STATUS "                       ${LIBNAME}" )
+  ENDFOREACH()
+  MESSAGE(STATUS "" )
+  MESSAGE(STATUS " SUITESPARSE_INCLUDE_DIRS:" )
+  FOREACH(INCNAME ${SUITESPARSE_INCLUDE_DIRS})
+  MESSAGE(STATUS "                          ${INCNAME}" )
+  ENDFOREACH()
+  MESSAGE(STATUS "" )
+  MESSAGE(STATUS " SANS will attempt to compile suitesparse for you to resolve this." )
+  MESSAGE(STATUS "====================================================================" )
+  MESSAGE(STATUS "" )
+
+  SET(SUITESPARSE_TEST_FAIL TRUE)
+ENDIF()
+
+
+UNSET( CMAKE_REQUIRED_INCLUDES )
+UNSET( CMAKE_REQUIRED_LIBRARIES )
+UNSET( CMAKE_REQUIRED_FLAGS )
