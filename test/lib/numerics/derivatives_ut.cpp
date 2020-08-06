@@ -2,7 +2,7 @@
 
 #include "numerics/dual.h"
 
-#include <numpack/types/SurrealS.h>
+#include <tinymat/types/SurrealS.h>
 
 using namespace avro;
 

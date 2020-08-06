@@ -326,7 +326,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
     V(j,k) = x[ v[k] ][j];
 
   // set the least-squares portion of the system
-  numerics::SymMatrixD<real_t> A = numpack::Transpose(V)*V;
+  numerics::SymMatrixD<real_t> A = tinymat::Transpose(V)*V;
   numerics::MatrixD<real_t> B(nv+1,nv+1);
   B = 0;
   for (index_t i=0;i<nv;i++)
@@ -342,7 +342,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
 
   // set the right-hand side
   numerics::VectorD<real_t> b0(nv+1);
-  b0 = numpack::Transpose(V)*p;
+  b0 = tinymat::Transpose(V)*p;
   b0[nv] = 1.0;
 
   if (numerics::determinant(B)==0.0)
@@ -352,7 +352,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
 
   // solve the system
   numerics::VectorD<real_t> b(nv+1);
-  b = numpack::DLA::InverseLUP::Solve(B,b0);
+  b = tinymat::DLA::InverseLUP::Solve(B,b0);
 
   // set the barycentric coordinates ignoring the last entry
   // because it holds the lagrange multiplier

@@ -19,7 +19,6 @@ endif()
 
 # default options
 option(avro_STATIC_LINK_CXX "statically link to c++ libraries (probably because you're using voyager)" false)
-option(avro_SMART_PTR "use internal smart pointer (smartypants) for memory management" false )
 option(AVRO_WITH_MPI "compile for distributed computing support" false)
 option(RUN_WITH_MPI "run with mpi. might be difficult to debug with mpirun" false)
 option(avro_WITH_FPG "compile FPG needed to make new predicates" false)
@@ -37,11 +36,6 @@ endif()
 
 # avro requires the c++11 standard
 set(CMAKE_CXX_STANDARD 11)
-
-# option to use internal smart pointer implementation
-if (avro_SMART_PTR)
-	add_definitions(-Davro_SMART_PTR)
-endif()
 
 # required dependencies
 include(cmake/FindLAPACK.cmake)
@@ -77,8 +71,6 @@ if (AVRO_WITH_MPI)
   get_dependency(PARMETIS)
   include_directories( SYSTEM ${PARMETIS_INCLUDE_DIRS} )
   list( APPEND avro_EXTERNAL_LIBRARIES ${PARMETIS_LIBRARIES} )
-
-  #include(cmake/FindZoltan.cmake)
 else()
   macro( RUN_WITH_MPIEXEC )
   endmacro()
@@ -87,10 +79,6 @@ endif()
 if (NOT avro_RUN_WITH_MPI)
     add_definitions( -DNO_MPIRUN )
 endif()
-
-get_dependency(SUITESPARSE)
-include_directories( SYSTEM ${SUITESPARSE_INCLUDE_DIRS} )
-list(APPEND avro_EXTERNAL_LIBRARIES ${SUITESPARESE_LIBRARIES} )
 
 # debug and coverage utilities
 include(cmake/debug.cmake)

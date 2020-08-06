@@ -21,7 +21,7 @@ CHECK_CXX_SOURCE_COMPILES(
 "
 /* */
 
-#include <third_party/numpack/sparse/Direct/UMFPACK/UMFPACKSolver_defines.h>
+#include <third_party/tinymat/sparse/Direct/UMFPACK/UMFPACKSolver_defines.h>
 
 int main(int argc, char** argv)
 {

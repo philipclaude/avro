@@ -30,7 +30,7 @@ target_link_libraries( ut_common_lib avro_shared )
 # needed for the directory class definitions
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src/third_party)
-include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/numpack )
+include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/tinymat )
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
 

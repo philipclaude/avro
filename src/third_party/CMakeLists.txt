@@ -47,33 +47,27 @@ add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/MinCost )
 set_source_files_properties( ${BLOSSOM_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( blossom5 )
 
-# numpack
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack )
+# tinymat
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat )
+add_source_directories(NUMPACK_SOURCES "Source Files\\tinymat" tinymat/tools )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/tools )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/tools )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/dynamic )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/dynamic/Eigen )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/dynamic/lapack )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/dynamic/MatMul )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/dynamic )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/dynamic/Eigen )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/dynamic/lapack )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/dynamic/MatMul )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/static )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/static/Eigen )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/static/MatMul )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/dense/static/SVD )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static/Eigen )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static/MatMul )
+add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static/SVD )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" numpack/block/tools )
+add_source_directories(HLBFGS_SOURCES "HLBFGS" HLBFGS )
+add_source_directories(OPENNL_SOURCES "OpenNL" OpenNL )
 
-add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/sparse )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/sparse/Direct/UMFPACK )
-#add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/sparse/Krylov )
-add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/sparse/tools )
-
-add_source_directories(NUMPACK_SOURCES "Source Files\\numpack" numpack/tools )
-
-include_directories(numpack)
+include_directories(tinymat)
 
 # ESP
 if (AVRO_NO_ESP)

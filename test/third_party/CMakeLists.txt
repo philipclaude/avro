@@ -1,7 +1,7 @@
 include_directories( ${CMAKE_SOURCE_DIR}/test )
 
 # add the unit tests in the subdirectories
-add_test_files( TEST_FILES "ut" numpack/DenseLinAlg )
+add_test_files( TEST_FILES "ut" tinymat/DenseLinAlg )
 
 # the master unit test file
 set( MASTER_UNIT ${CMAKE_SOURCE_DIR}/test/ut_driver.cpp )
@@ -12,7 +12,7 @@ target_link_libraries( ut_third_party_common_lib avro_shared )
 
 # needed for the directory class definitions
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/numpack )
+include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/tinymat )
 
 # set the directory for the executables
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test/bin )

@@ -10,10 +10,10 @@
 
 #include <tools/SANSException.h>
 
-#include "numpack/dense/dynamic/MatrixSymD.h"
-#include "numpack/dense/dynamic/VectorD.h"
-#include "numpack/dense/dynamic/Eigen.h"
-#include "numpack/dense/dynamic/MatrixD_Diag.h"
+#include "tinymat/dense/dynamic/MatrixSymD.h"
+#include "tinymat/dense/dynamic/VectorD.h"
+#include "tinymat/dense/dynamic/Eigen.h"
+#include "tinymat/dense/dynamic/MatrixD_Diag.h"
 
 #include "chkMatrixD_btest.h"
 
@@ -22,7 +22,7 @@ using namespace std;
 
 
 //Explicitly instantiate the classes so that coverage information is correct
-namespace numpack
+namespace tinymat
 {
 namespace DLA
 {
@@ -30,8 +30,8 @@ namespace DLA
 }
 }
 
-using namespace numpack::DLA;
-using namespace numpack;
+using namespace tinymat::DLA;
+using namespace tinymat;
 
 typedef double Real;
 
@@ -216,7 +216,7 @@ UT_TEST_CASE( Eigen_Decomposition_2x2 )
 
   EigenSystem( A1, L, E );
 
-  MatrixSymD<Real> A1_decomp = E*numpack::DLA::diag(L)*numpack::Transpose(E);
+  MatrixSymD<Real> A1_decomp = E*tinymat::DLA::diag(L)*tinymat::Transpose(E);
 
   UT_ASSERT_CLOSE( A1(0,0), A1_decomp(0,0), tol, tol );
   UT_ASSERT_CLOSE( A1(1,0), A1_decomp(1,0), tol, tol );
@@ -224,7 +224,7 @@ UT_TEST_CASE( Eigen_Decomposition_2x2 )
 
   EigenSystem( A2, L, E );
 
-  MatrixSymD<Real> A2_decomp = E*numpack::DLA::diag(L)*numpack::Transpose(E);
+  MatrixSymD<Real> A2_decomp = E*tinymat::DLA::diag(L)*tinymat::Transpose(E);
 
   UT_ASSERT_CLOSE( A2(0,0), A2_decomp(0,0), tol, tol );
   UT_ASSERT_CLOSE( A2(1,0), A2_decomp(1,0), tol, tol );

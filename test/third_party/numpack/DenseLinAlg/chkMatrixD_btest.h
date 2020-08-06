@@ -75,7 +75,7 @@ bool chkMatrixD12( const MatrixType& z, int m11, int m12 )
 
 //----------------------------------------------------------------------------//
 template< class T, class Int>
-bool chkMatrixSymD22( const numpack::DLA::MatrixSymD<T>& z, Int m00, Int m01, Int m10, Int m11 )
+bool chkMatrixSymD22( const tinymat::DLA::MatrixSymD<T>& z, Int m00, Int m01, Int m10, Int m11 )
 {
   if (z.m()!=2 || z.n()!=2) return false;
 
@@ -100,7 +100,7 @@ bool chkMatrixSymD22( const numpack::DLA::MatrixSymD<T>& z, Int m00, Int m01, In
 
 //----------------------------------------------------------------------------//
 template< class T, class Int>
-bool chkVectorD2( const numpack::DLA::VectorD<T>& z, Int a, Int b )
+bool chkVectorD2( const tinymat::DLA::VectorD<T>& z, Int a, Int b )
 {
   if (z.m()!=2){
     printf("bad size!!\n");

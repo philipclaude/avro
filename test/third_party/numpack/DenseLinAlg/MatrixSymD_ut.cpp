@@ -8,17 +8,17 @@
 
 #include "unit_tester.hpp"
 
-#include "numpack/dense/dynamic/MatrixD.h"
-#include "numpack/dense/dynamic/MatrixD_Sub.h"
-#include "numpack/dense/dynamic/MatrixSymD.h"
-#include "numpack/dense/dynamic/VectorD.h"
+#include "tinymat/dense/dynamic/MatrixD.h"
+#include "tinymat/dense/dynamic/MatrixD_Sub.h"
+#include "tinymat/dense/dynamic/MatrixSymD.h"
+#include "tinymat/dense/dynamic/VectorD.h"
 
 #include "chkMatrixD_btest.h"
 
 #include <iostream>
 
-using namespace numpack;
-using namespace numpack::DLA;
+using namespace tinymat;
+using namespace tinymat::DLA;
 
 UT_TEST_SUITE( MatrixSymD_tests )
 

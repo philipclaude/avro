@@ -44,7 +44,7 @@ include_directories( ${THIRD_PARTY_INCLUDE_DIRS} )
 
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
-include_directories( third_party/numpack )
+include_directories( third_party/tinymat )
 
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )

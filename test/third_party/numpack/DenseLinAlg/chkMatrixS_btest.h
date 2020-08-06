@@ -6,13 +6,13 @@
 #ifndef CHKMATRIXS_BTEST_H
 #define CHKMATRIXS_BTEST_H
 
-#include "numpack/dense/static/MatrixS.h"
-#include "numpack/dense/static/MatrixSymS.h"
-#include "numpack/dense/static/VectorS.h"
+#include "tinymat/dense/static/MatrixS.h"
+#include "tinymat/dense/static/MatrixSymS.h"
+#include "tinymat/dense/static/VectorS.h"
 
 //----------------------------------------------------------------------------//
 template< class T, class Int>
-bool chkMatrixS22( const numpack::DLA::MatrixS<2,2,T>& z, Int m00, Int m01, Int m10, Int m11 )
+bool chkMatrixS22( const tinymat::DLA::MatrixS<2,2,T>& z, Int m00, Int m01, Int m10, Int m11 )
 {
   bool isEqual = true;
   if (z(0,0) != m00) isEqual = false;
@@ -35,7 +35,7 @@ bool chkMatrixS22( const numpack::DLA::MatrixS<2,2,T>& z, Int m00, Int m01, Int 
 
 //----------------------------------------------------------------------------//
 template< class T, class Int>
-bool chkMatrixSymS22( const numpack::DLA::MatrixSymS<2,T>& z, Int m00, Int m01, Int m10, Int m11 )
+bool chkMatrixSymS22( const tinymat::DLA::MatrixSymS<2,T>& z, Int m00, Int m01, Int m10, Int m11 )
 {
   bool isEqual = true;
   if (z(0,0) != m00) isEqual = false;
@@ -59,7 +59,7 @@ bool chkMatrixSymS22( const numpack::DLA::MatrixSymS<2,T>& z, Int m00, Int m01, 
 
 //----------------------------------------------------------------------------//
 template< class T, class Int>
-bool chkVectorS2( const numpack::DLA::VectorS<2,T>& z, Int a, Int b )
+bool chkVectorS2( const tinymat::DLA::VectorS<2,T>& z, Int a, Int b )
 {
   bool isEqual = true;
   if ((z[0] != a) || (z[1] != b))

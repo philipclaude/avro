@@ -5,16 +5,16 @@
 
 #include "unit_tester.hpp"
 
-#include "numpack/dense/dynamic/MatrixD.h"
-#include "numpack/dense/dynamic/MatrixD_Sub.h"
-#include "numpack/dense/static/MatrixS.h"
+#include "tinymat/dense/dynamic/MatrixD.h"
+#include "tinymat/dense/dynamic/MatrixD_Sub.h"
+#include "tinymat/dense/static/MatrixS.h"
 
 #include "chkMatrixD_btest.h"
 
 #include <iostream>
-using namespace numpack::DLA;
+using namespace tinymat::DLA;
 
-namespace numpack
+namespace tinymat
 {
 namespace DLA
 {

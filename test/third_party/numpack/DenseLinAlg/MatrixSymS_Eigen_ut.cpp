@@ -8,10 +8,10 @@
 
 #include "unit_tester.hpp"
 
-#include "numpack/dense/static/MatrixSymS.h"
-#include "numpack/dense/static/VectorS.h"
-#include "numpack/dense/static/Eigen.h"
-#include "numpack/dense/static/MatrixS_Diag.h"
+#include "tinymat/dense/static/MatrixSymS.h"
+#include "tinymat/dense/static/VectorS.h"
+#include "tinymat/dense/static/Eigen.h"
+#include "tinymat/dense/static/MatrixS_Diag.h"
 
 #include "chkMatrixS_btest.h"
 
@@ -20,7 +20,7 @@ using namespace std;
 
 
 //Explicitly instantiate the classes so that coverage information is correct
-namespace numpack
+namespace tinymat
 {
 namespace DLA
 {
@@ -28,8 +28,8 @@ namespace DLA
 }
 }
 
-using namespace numpack::DLA;
-using namespace numpack;
+using namespace tinymat::DLA;
+using namespace tinymat;
 
 //############################################################################//
 UT_TEST_SUITE( MatrixSymS_test_suite )
@@ -210,7 +210,7 @@ UT_TEST_CASE( Eigen_Decomposition_2x2 )
 
   EigenSystem( A1, L, E );
 
-  MatrixSymS<2,Real> A1_decomp = E*numpack::DLA::diag(L)*numpack::Transpose(E);
+  MatrixSymS<2,Real> A1_decomp = E*tinymat::DLA::diag(L)*tinymat::Transpose(E);
 
   UT_ASSERT_CLOSE( A1(0,0), A1_decomp(0,0), tol, tol );
   UT_ASSERT_CLOSE( A1(1,0), A1_decomp(1,0), tol, tol );
@@ -218,7 +218,7 @@ UT_TEST_CASE( Eigen_Decomposition_2x2 )
 
   EigenSystem( A2, L, E );
 
-  MatrixSymS<2,Real> A2_decomp = E*numpack::DLA::diag(L)*numpack::Transpose(E);
+  MatrixSymS<2,Real> A2_decomp = E*tinymat::DLA::diag(L)*tinymat::Transpose(E);
 
   UT_ASSERT_CLOSE( A2(0,0), A2_decomp(0,0), tol, tol );
   UT_ASSERT_CLOSE( A2(1,0), A2_decomp(1,0), tol, tol );
