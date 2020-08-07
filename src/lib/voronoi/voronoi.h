@@ -102,6 +102,7 @@ public:
   // side query relative to a bisector
   GEO::Sign sideFast( const real_t* zi , const real_t *zj );
   GEO::Sign side( const real_t* zi , const real_t* zj , const bool exact = true );
+  GEO::Sign side_meshless( const real_t* zi , const real_t* zj , const bool exact = true );
 
   // print function
   void print( const std::string& pre , const bool symbolic=false ) const;

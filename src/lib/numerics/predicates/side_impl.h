@@ -345,8 +345,8 @@ Sign side4_3d_SOS(const double* p0,const double* p1,const double* p2,const doubl
 {
 	Sign result = Sign(side4_3d_filter(p0,p1,p2,p3,p4,q0,q1,q2,q3));
 	if(result==ZERO) {
-		result = side4_3d_exact_pck(p0,p1,p2,p3,p4,true); // true for sos
-		//result = side4_nd_exact_pck(p0,p1,p2,p3,p4,q0,q1,q2,q3,3);
+		//result = side4_3d_exact_pck(p0,p1,p2,p3,p4,true); // true for sos
+		result = side4_nd_exact_pck(p0,p1,p2,p3,p4,q0,q1,q2,q3,3);
 	}
 	return result;
 }
