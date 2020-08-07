@@ -5,9 +5,9 @@
 
 #include "unit_tester.hpp"
 
-#include "tinymat/dynamic/MatrixD.h"
-#include "tinymat/dynamic/MatrixD_Sub.h"
-#include "tinymat/static/MatrixS.h"
+#include "tinymat/dense/dynamic/MatrixD.h"
+#include "tinymat/dense/dynamic/MatrixD_Sub.h"
+#include "tinymat/dense/static/MatrixS.h"
 
 #include "chkMatrixD_btest.h"
 
