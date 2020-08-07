@@ -8,10 +8,10 @@
 
 #include "unit_tester.hpp"
 
-#include "tinymat/dense/static/MatrixS.h"
-//#include "tinymat/dense/static/MatrixS_Sub.h"
-#include "tinymat/dense/static/MatrixSymS.h"
-#include "tinymat/dense/static/VectorS.h"
+#include "tinymat/static/MatrixS.h"
+//#include "tinymat/static/MatrixS_Sub.h"
+#include "tinymat/static/MatrixSymS.h"
+#include "tinymat/static/VectorS.h"
 
 #include "chkMatrixD_btest.h"
 

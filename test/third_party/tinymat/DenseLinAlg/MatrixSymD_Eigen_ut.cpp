@@ -10,10 +10,10 @@
 
 #include <tools/SANSException.h>
 
-#include "tinymat/dense/dynamic/MatrixSymD.h"
-#include "tinymat/dense/dynamic/VectorD.h"
-#include "tinymat/dense/dynamic/Eigen.h"
-#include "tinymat/dense/dynamic/MatrixD_Diag.h"
+#include "tinymat/dynamic/MatrixSymD.h"
+#include "tinymat/dynamic/VectorD.h"
+#include "tinymat/dynamic/Eigen.h"
+#include "tinymat/dynamic/MatrixD_Diag.h"
 
 #include "chkMatrixD_btest.h"
 

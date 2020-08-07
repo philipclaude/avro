@@ -71,16 +71,16 @@ include_directories(tinymat)
 
 # ESP
 if (AVRO_NO_ESP)
-	add_source_directories( WV_SOURCES "source files for wv" wv )
-	add_source_directories( EGLITE_SOURCES "source files for wv" eglite )
+	add_source_directories( WV_SOURCES "wv" wv )
+	add_source_directories( EGLITE_SOURCES "egads" egads )
 	set_source_files_properties( ${WV_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" LWS_NO_FORK )
 	set_source_files_properties( ${WV_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 	set_source_files_properties( ${EGLITE_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" LITE )
 	set_source_files_properties( ${EGLITE_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
-	set( ESP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/third_party/eglite ${CMAKE_SOURCE_DIR}/src/third_party/wv )
+	set( ESP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/third_party/egads ${CMAKE_SOURCE_DIR}/src/third_party/wv )
 	set( ESP_LIBRARIES )
 endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${SOURCES} ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )
+add_library(avro_third_party OBJECT ${SOURCES} ${HLBFGS_SOURCES} ${OPENNL_SOURCES} ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )

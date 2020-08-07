@@ -6,9 +6,9 @@
 #ifndef CHKMATRIXS_BTEST_H
 #define CHKMATRIXS_BTEST_H
 
-#include "tinymat/dense/static/MatrixS.h"
-#include "tinymat/dense/static/MatrixSymS.h"
-#include "tinymat/dense/static/VectorS.h"
+#include "tinymat/static/MatrixS.h"
+#include "tinymat/static/MatrixSymS.h"
+#include "tinymat/static/VectorS.h"
 
 //----------------------------------------------------------------------------//
 template< class T, class Int>
