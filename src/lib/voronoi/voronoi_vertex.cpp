@@ -70,13 +70,19 @@ Vertex::init()
 }
 
 void
+Vertex::addSite( const real_t* zj )
+{
+	site_.push_back(zj);
+}
+
+void
 Vertex::intersectSymbolic( const Vertex* v , const Vertex* v0 ,
 	const Delaunay& delaunay )
 {
 	intersectBisectors(v,v0);
 	intersectMeshes(v,v0);
 	intersectSimplices(v,v0);
-	setSites(delaunay);
+	//setSites(delaunay);
 }
 
 void
@@ -122,6 +128,32 @@ Vertex::setSites( const Delaunay& delaunay )
 
 		// get the actual seed indices in the delaunay container
 		delaunay.seeds( bisector_[k] , Pi_i , Pi_j );
+
+		if ( delaunay[Pi_j]==z0_ )
+			site_.push_back( delaunay[Pi_i] );
+		else
+			site_.push_back( delaunay[Pi_j] );
+	}
+	uniquify(site_);
+}
+
+void
+Vertex::setSites( const Delaunay& delaunay , const std::map<int,Bisector>& B )
+{
+	index_t Pi_i, Pi_j;
+
+	site_.clear();
+
+	for (index_t k=0;k<bisector_.size();k++)
+	{
+		if (bisector_[k]<0) continue; // skip mesh facets
+
+		// get the actual seed indices in the delaunay container
+		std::map<int,Bisector>::const_iterator it = B.find(bisector_[k]);
+		avro_assert( it != B.end() );
+
+		Pi_i = it->second.p0;
+		Pi_j = it->second.p1;
 
 		if ( delaunay[Pi_j]==z0_ )
 			site_.push_back( delaunay[Pi_i] );
@@ -207,7 +239,15 @@ Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
       break;
     case 3:
       // this vertex is the intersection of two bisectors with a triangle (p0-p1-p2) of the topology
-      result = GEO::PCK::side3_SOS(zi,site_[0],site_[1],zj,simplex_[0],simplex_[1],simplex_[2],dim_);
+			try
+			{
+      	result = GEO::PCK::side3_SOS(zi,site_[0],site_[1],zj,simplex_[0],simplex_[1],simplex_[2],dim_);
+			}
+			catch(...)
+			{
+				print("v",true);
+				avro_implement;
+			}
 			if (result==GEO::ZERO)
 			{
 				for (index_t k=0;k<site_.size();k++)

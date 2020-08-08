@@ -37,6 +37,9 @@ private:
   void clip_edge( index_t e0 , index_t e1 , const int b , std::vector<index_t>& q );
   bool security_radius_reached( index_t bj ) const;
 
+  int add_bisector( index_t p0 , index_t p1 );
+  void get_bisector( int b , index_t& p0 , index_t& p1 ) const;
+
   const index_t site_;
   Points points_;
   const Delaunay& delaunay_;
@@ -49,6 +52,9 @@ private:
 
   RVDFacets* facets_;
   bool simplex_;
+
+  std::map<Bisector,int> bisector_;
+  std::map<int,Bisector> ids_;
 };
 
 class VoronoiDiagram : public Topology<Polytope>
