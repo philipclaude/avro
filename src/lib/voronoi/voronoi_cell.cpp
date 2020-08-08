@@ -45,7 +45,7 @@ VoronoiCell::VoronoiCell( index_t site , const Delaunay& delaunay , const Neares
   facets_(nullptr),
   simplex_(simplex)
 {
-  avro_assert( domain.number() == points_.dim() );
+  //avro_assert( domain.number() == points_.dim() );
   initialize();
 }
 
@@ -391,8 +391,10 @@ VoronoiDiagram::compute( bool exact )
   {
     const VoronoiCell& cell = *cells_[k].get();
 
+    // cells could be submerged
+    if (cell.nb() == 0) continue;
+
     // add the cells
-    avro_assert( cell.nb() >= 1 );
     for (index_t j=0;j<cell.nb();j++)
     {
       std::vector<index_t> polytope = cell.get(j);

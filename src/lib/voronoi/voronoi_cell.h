@@ -76,19 +76,6 @@ private:
   bool simplex_;
 };
 
-class LaguerreDiagram : public Topology<Polytope>
-{
-public:
-  LaguerreDiagram( const Topology<Polytope>& domain , Delaunay& delaunay );
-
-  void compute();
-  void decompose();
-  void compute_objective();
-
-private:
-
-};
-
 } // delaunay
 
 } // avro

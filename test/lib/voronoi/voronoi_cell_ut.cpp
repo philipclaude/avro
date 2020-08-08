@@ -13,7 +13,7 @@ UT_TEST_SUITE( voronoi_cell_test_suite )
 
 UT_TEST_CASE( test_2d )
 {
-  //return;
+  return;
   GEO::PCK::initialize();
 
   coord_t number = 2;
@@ -90,12 +90,13 @@ UT_TEST_CASE( test_2d_simplex )
   coord_t number = 3;
   coord_t dim = number;
 
-  CKF_Triangulation domain( {2,2,2} );
+  std::vector<index_t> sizes(number,2);
+  CKF_Triangulation domain(sizes);
 
   // create random delaunay vertices
   Delaunay delaunay( dim );
   #if 1
-  index_t nb_points = 1e2;
+  index_t nb_points = 1e5;
   std::vector<real_t> x(dim,0.);
   for (index_t k=0;k<nb_points;k++)
   {
@@ -110,12 +111,13 @@ UT_TEST_CASE( test_2d_simplex )
   #endif
 
   delaunay::VoronoiDiagram diagram( delaunay , domain , true );
-  diagram.compute(true);
+  diagram.compute(false);
 
   graphics::Visualizer vis;
   vis.add_topology(diagram);
 
-  vis.run();
+  if (number<=4)
+    vis.run();
 }
 UT_TEST_CASE_END( test_2d_simplex )
 
