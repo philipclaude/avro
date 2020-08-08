@@ -24,12 +24,17 @@ public:
       const std::vector<real_t>& weights = std::vector<real_t>() );
 
   void set_target_mass( const std::vector<real_t>& mass );
+  void initialize();
   void compute();
-  void optimize();
+  void optimize_cvt();
+  void optimize_otm();
 
-  real_t eval_objective( std::vector<real_t>& gradient ) const;
+  real_t eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW ) const;
+  real_t eval_objective() const;
 
   void set_exact( bool x ) { exact_ = x; }
+
+  void set_delaunay( const real_t* x , coord_t dim );
 
 private:
   Points points_;
@@ -37,6 +42,7 @@ private:
   Topology<Simplex> domain_;
   std::vector<real_t> weight_;
   std::vector<real_t> mass_;
+  std::vector<index_t> sites_;
 
   Delaunay delaunay_;
 

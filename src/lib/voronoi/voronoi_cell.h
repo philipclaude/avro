@@ -68,11 +68,14 @@ public:
   void clip( const index_t k )
     { cells_[k]->compute(); }
 
+  const std::vector<index_t>& sites() const { return sites_; }
+
 private:
   Points points_;
   Delaunay& delaunay_;
   const TopologyBase& domain_;
   std::vector<std::shared_ptr<VoronoiCell>> cells_;
+  std::vector<index_t> sites_;
   bool simplex_;
 };
 

@@ -212,7 +212,7 @@ public:
     avro_assert( topology.nb() == field.nb() );
 
     ElementIntegral<type,T> elem( topology , field.dof() , field , field.element() );
-    for (index_t k=0;k<field.nb();k++)
+    for (index_t k=0;k<field.nb_elem();k++)
     {
       T df = 0;
       elem.integrate( k , integrand_ , df );

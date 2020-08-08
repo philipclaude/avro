@@ -168,6 +168,7 @@ VoronoiCell::compute_simplex()
       if (security_radius_reached(bj)) break;
       j++;
       if (j == delaunay_.nb()) break;
+      if (j == 100) break; // max nearest neighbours
     }
     if (polytope_.size() == 0 ) continue;
 
@@ -368,7 +369,7 @@ VoronoiDiagram::compute( bool exact )
 
   NearestNeighbours neighbours(delaunay_,100);
   neighbours.compute();
-  printf("computed neighbours!\n");
+  //printf("computed neighbours!\n");
 
   for (index_t k=0;k<delaunay_.nb();k++)
   {
@@ -387,6 +388,7 @@ VoronoiDiagram::compute( bool exact )
   #endif
 
   // accumulate the result
+  sites_.clear();
   for (index_t k=0;k<cells_.size();k++)
   {
     const VoronoiCell& cell = *cells_[k].get();
@@ -397,6 +399,7 @@ VoronoiDiagram::compute( bool exact )
     // add the cells
     for (index_t j=0;j<cell.nb();j++)
     {
+      sites_.push_back( k );
       std::vector<index_t> polytope = cell.get(j);
       for (index_t i=0;i<polytope.size();i++)
         polytope[i] += points_.nb();
