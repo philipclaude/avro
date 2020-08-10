@@ -30,6 +30,8 @@ add_source_directories( IMGUI_SOURCES "imgui source" imgui/GL )
 set_source_files_properties( ${IMGUI_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" IMGUI_IMPL_OPENGL_LOADER_GLAD )
 include_directories( imgui )
 
+add_source_directories( NNSEARCH_SOURCES "nnsearch" nnsearch )
+
 set( GLAD_SOURCES )
 if (avro_WITH_GL)
 	add_source_directories( GLAD_SOURCES "glad source" glad/src )
@@ -64,10 +66,11 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/st
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static/MatMul )
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static/SVD )
 
+include_directories(tinymat)
+
 add_source_directories(HLBFGS_SOURCES "HLBFGS" HLBFGS )
 add_source_directories(OPENNL_SOURCES "OpenNL" OpenNL )
 
-include_directories(tinymat)
 
 # ESP
 if (AVRO_NO_ESP)
@@ -83,4 +86,4 @@ endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${SOURCES} ${HLBFGS_SOURCES} ${OPENNL_SOURCES} ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} )
+add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${NNSEARCH_SOURCES} )

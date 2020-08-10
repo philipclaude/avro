@@ -196,6 +196,7 @@ public:
   integrate( const Topology<type>& topology )
   {
     ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.element() );
+    #pragma omp parallel for
     for (index_t k=0;k<topology.nb();k++)
     {
       T df = 0;

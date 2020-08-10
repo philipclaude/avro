@@ -17,6 +17,8 @@ namespace avro
 namespace delaunay
 {
 
+class VoronoiDiagram;
+
 class LaguerreDiagram : public Topology<Polytope>
 {
 public:
@@ -48,6 +50,11 @@ private:
 
   bool exact_;
 
+  real_t time_voronoi_;
+  real_t time_decompose_;
+  real_t time_neighbours_;
+
+  std::shared_ptr<VoronoiDiagram> diagram_;
 };
 
 } // delaunay

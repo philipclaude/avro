@@ -96,7 +96,7 @@ UT_TEST_CASE( test_2d_simplex )
   // create random delaunay vertices
   Delaunay delaunay( dim );
   #if 1
-  index_t nb_points = 1e5;
+  index_t nb_points = 1e1;
   std::vector<real_t> x(dim,0.);
   for (index_t k=0;k<nb_points;k++)
   {
@@ -113,11 +113,13 @@ UT_TEST_CASE( test_2d_simplex )
   delaunay::VoronoiDiagram diagram( delaunay , domain , true );
   diagram.compute(false);
 
+  #if 1
   graphics::Visualizer vis;
   vis.add_topology(diagram);
 
-  if (number<=4)
+  if (number<4)
     vis.run();
+  #endif
 }
 UT_TEST_CASE_END( test_2d_simplex )
 

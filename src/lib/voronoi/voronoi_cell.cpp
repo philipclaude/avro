@@ -34,7 +34,9 @@ operator<( const Bisector& f , const Bisector& g )
   return false;
 }
 
-VoronoiCell::VoronoiCell( index_t site , const Delaunay& delaunay , const NearestNeighbours& neighbours , const TopologyBase& domain , bool exact , bool simplex ) :
+VoronoiCell::VoronoiCell( index_t site , const Delaunay& delaunay , const NearestNeighbours& neighbours ,
+                          const TopologyBase& domain , bool exact , bool simplex ,
+                          GEO::NearestNeighborSearch* nns , index_t nb_nns ) :
   Topology<Polytope>(points_,domain.number()),
   site_(site),
   points_(delaunay.dim()),
@@ -43,15 +45,22 @@ VoronoiCell::VoronoiCell( index_t site , const Delaunay& delaunay , const Neares
   domain_(domain),
   exact_(exact),
   facets_(nullptr),
-  simplex_(simplex)
-{
-  //avro_assert( domain.number() == points_.dim() );
-  initialize();
-}
+  simplex_(simplex),
+  nns_(nns),
+  nn_(nb_nns,0),
+  recycle_neighbours_(false),
+  simplex_points_(delaunay_.dim()),
+  simplices_(simplex_points_,domain.number())
+{}
 
 void
 VoronoiCell::initialize()
 {
+  clear();
+  points_.clear();
+  simplices_.clear();
+  simplex_points_.clear();
+
   if (simplex_) initialize_simplex();
   else initialize_polytope();
 }
@@ -82,10 +91,46 @@ VoronoiCell::initialize_simplex()
 }
 
 void
+VoronoiCell::enlarge_neighbours()
+{
+  avro_assert( nns_ != nullptr );
+  index_t nb_nns = nn_.size();
+  nb_nns += 10;
+  std::vector<real_t> dist2(nb_nns); // not used
+  nn_.resize( nb_nns );
+  nns_->get_nearest_neighbors( nb_nns , delaunay_[site_] , nn_.data() , dist2.data()  );
+}
+
+void
 VoronoiCell::compute()
 {
+  initialize();
+  if (nns_ != nullptr)
+  {
+    std::vector<double> dist2(nn_.size(),0.0);
+    if (!recycle_neighbours_)
+    {
+      nns_->get_nearest_neighbors( nn_.size() , site_ , nn_.data() , dist2.data() );
+      //recycle_neighbours_ = true; // seems to be a bug when keeping initial values..
+    }
+    else
+    {
+      avro_implement; // there's a bug
+      nns_->get_nearest_neighbors( nn_.size() , delaunay_[site_] , nn_.data() , dist2.data() , GEO::NearestNeighborSearch::KeepInitialValues() );
+    }
+    avro_assert( nn_[0] == site_ );
+  }
+  else
+  {
+    avro_assert_msg( nn_.size() == neighbours_.knear() , "|nn| = %lu, knear = %lu\n",nn_.size(),neighbours_.knear() );
+    for (index_t k=0;k<nn_.size();k++)
+      nn_[k] = neighbours_(site_,k);
+  }
+
   if (simplex_) compute_simplex();
   else compute_polytope();
+
+  generate_simplices();
 }
 
 void
@@ -94,7 +139,8 @@ VoronoiCell::compute_polytope()
   index_t j = 1;
   while (true)
   {
-    index_t bj = neighbours_(site_,j);
+    //index_t bj = neighbours_(site_,j);
+    index_t bj = nn_[j];
     clip_by_bisector( j , bj );
 
     if (security_radius_reached(bj)) break;
@@ -162,13 +208,18 @@ VoronoiCell::compute_simplex()
     index_t j = 1;
     while (true)
     {
-      index_t bj = neighbours_(site_,j);
+      //index_t bj = neighbours_(site_,j);
+      index_t bj = nn_[j];
       clip_by_bisector( j , bj );
 
       if (security_radius_reached(bj)) break;
       j++;
       if (j == delaunay_.nb()) break;
-      if (j == 100) break; // max nearest neighbours
+      if (j == nn_.size())
+      {
+        // max nearest neighbours
+        enlarge_neighbours();
+      }
     }
     if (polytope_.size() == 0 ) continue;
 
@@ -352,12 +403,103 @@ VoronoiCell::security_radius_reached( index_t bj ) const
   return false;
 }
 
+void
+VoronoiCell::generate_simplices()
+{
+  simplices_.clear();
+  simplex_points_.clear();
+
+  coord_t dim = delaunay_.dim();
+
+  points_.copy( simplex_points_ );
+
+  std::vector<real_t> xc(dim,0.);
+  std::vector<int> facets;
+  std::vector<index_t> simplex(number_+1);
+
+  if (number_ == 2)
+  {
+    // add a point for the centroid of each polygon and triangulate
+    for (index_t k=0;k<nb();k++)
+    {
+      index_t idc = simplex_points_.nb();
+      numerics::centroid( (*this)(k) , nv(k) , points_ , xc );
+      simplex_points_.create( xc.data() );
+
+      // get the hrep of this polygon
+      element().hrep( (*this)(k) ,  nv(k) , facets );
+
+      avro_assert( facets.size() == nv(k) ); // for polygons
+      for (index_t j=0;j<facets.size();j++)
+      {
+        // get the points with this bisector
+        std::vector<index_t> vf;
+        element().vrep( (*this)(k) , nv(k) , facets[j] , vf );
+        avro_assert( vf.size() == 2 ); // for polygons
+
+        simplex[0] = vf[0];
+        simplex[1] = vf[1];
+        simplex[2] = idc;
+
+        simplices_.add( simplex.data() , simplex.size() );
+      }
+    }
+  }
+  else if (number_ == 3)
+  {
+    // add a point for the centroid of each polygon and triangulate
+    std::vector<real_t> xf(dim,0.);
+    std::vector<index_t> edges;
+    for (index_t k=0;k<nb();k++)
+    {
+      index_t idc = simplex_points_.nb();
+      numerics::centroid( (*this)(k) , nv(k) , points_ , xc );
+      simplex_points_.create( xc.data() );
+
+      // get the hrep of this polygon
+      element().hrep( (*this)(k) ,  nv(k) , facets );
+
+      for (index_t j=0;j<facets.size();j++)
+      {
+        // get the points with this bisector
+        std::vector<index_t> vf;
+        element().vrep( (*this)(k) , nv(k) , facets[j] , vf );
+
+        // compute the centroid of the facet
+        index_t idf = simplex_points_.nb();
+        numerics::centroid( vf.data() , vf.size() , points_ , xf );
+        simplex_points_.create( xf.data() );
+
+        // retrieve the edges
+        std::vector<int> edges;
+        element().hrep( vf.data() , vf.size() , edges );
+        for (index_t e=0;e<edges.size();e++)
+        {
+          if (edges[e] == facets[j]) continue;
+
+          std::vector<index_t> ve;
+          element().vrep( vf.data() , vf.size() , edges[e] , ve );
+          avro_assert( ve.size() == 2 );
+
+          simplex[0] = ve[0];
+          simplex[1] = ve[1];
+          simplex[2] = idf;
+          simplex[3] = idc;
+          simplices_.add( simplex.data() , simplex.size() );
+        }
+      }
+    }
+  }
+}
+
 VoronoiDiagram::VoronoiDiagram( Delaunay& delaunay , const TopologyBase& domain , bool simplex ) :
   Topology<Polytope>(points_,domain.number()),
   points_(delaunay.dim()),
   delaunay_(delaunay),
   domain_(domain),
-  simplex_(simplex)
+  cells_(delaunay.nb(),nullptr),
+  simplex_(simplex),
+  nns_(nullptr)
 {}
 
 void
@@ -367,16 +509,35 @@ VoronoiDiagram::compute( bool exact )
   if (simplex_)
     facets = std::make_shared<RVDFacets>( static_cast<const Topology<Simplex>&>(domain_) );
 
-  NearestNeighbours neighbours(delaunay_,100);
+  real_t t0 = clock();
+  index_t nb_nns = 200;
+  if (delaunay_.nb() < nb_nns) nb_nns = delaunay_.nb();
+  NearestNeighbours neighbours(delaunay_,nb_nns);
+
+  #if 0
   neighbours.compute();
-  //printf("computed neighbours!\n");
+  #else
+  const coord_t dim = delaunay_.dim();
+  if (nns_ == nullptr)
+    nns_ = GEO::NearestNeighborSearch::create(dim,"BNN");
+  std::vector<real_t> x(delaunay_.nb()*dim);
+  for (index_t k=0;k<delaunay_.nb();k++)
+  for (index_t d=0;d<dim;d++)
+    x[k*dim+d] = delaunay_[k][d];
+  t0 = clock();
+  nns_->set_points( delaunay_.nb() , x.data() );
+  #endif
+  time_neighbours_ = real_t( clock() - t0 )/real_t(CLOCKS_PER_SEC);
+  printf("--> time neighbours = %g\n",time_neighbours_);
 
   for (index_t k=0;k<delaunay_.nb();k++)
   {
-    cells_.push_back( std::make_shared<VoronoiCell>(k,delaunay_,neighbours,domain_,exact,simplex_) );
+    if (cells_[k] == nullptr || nns_ == nullptr)
+      cells_[k] = std::make_shared<VoronoiCell>(k,delaunay_,neighbours,domain_,exact,simplex_,nns_,nb_nns );
     cells_[k]->set_facets( facets.get() );
   }
 
+  t0 = clock();
   #if 1
   ProcessCPU::parallel_for(
     parallel_for_member_callback( this , &thisclass::clip ),
@@ -386,6 +547,8 @@ VoronoiDiagram::compute( bool exact )
   for (index_t k=0;k<cells_.size();k++)
     cells_[k]->compute();
   #endif
+  time_voronoi_ = real_t(clock() - t0 )/real_t(CLOCKS_PER_SEC);
+  printf("--> time voronoi = %g\n",time_voronoi_/ProcessCPU::maximum_concurrent_threads());
 
   // accumulate the result
   sites_.clear();

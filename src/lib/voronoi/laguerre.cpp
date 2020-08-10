@@ -1,4 +1,5 @@
 #include "common/error.h"
+#include "common/process.h"
 
 #include "element/quadrature.h"
 
@@ -9,8 +10,6 @@
 
 #include "voronoi/laguerre.h"
 #include "voronoi/voronoi_cell.h"
-
-#include <HLBFGS/HLBFGS.h>
 
 #include <tinymat/types/SurrealS.h>
 #include <tinymat/types/SurrealD.h>
@@ -47,13 +46,15 @@ public:
   {
     avro_assert_msg( k < parents_.size() , "elem = %lu, nb_parents = %lu", k , parents_.size() );
 
-    index_t site = sites_[parents_[k]];
-    avro_assert_msg( site < delaunay_.nb() , "requested site %lu but nb_delaunay = %lu",site,delaunay_.nb());
-    const real_t* z = delaunay_[ sites_[parents_[k]] ];
+    index_t parent = k;
+    //index_t parent = parents_[k];
+    index_t site = sites_[parent];
+    avro_assert_msg( site < delaunay_.nb() , "elem = %lu, requested site %lu but nb_delaunay = %lu",k,site,delaunay_.nb());
+    const real_t* z = delaunay_[ sites_[parent] ];
     T f = 0;
-    for (coord_t d=0;d<delaunay_.dim();d++)
+    for (coord_t d=0;d<delaunay_.dim()-1;d++)
       f += (z[d] - x[d])*(z[d] - x[d]);
-    f -= weights_[ sites_[parents_[k]] ]*weights_[ sites_[parents_[k]] ];
+    f -= weights_[ sites_[parent] ]*weights_[ sites_[parent] ];
     return f;
   }
 
@@ -72,16 +73,19 @@ LaguerreDiagram::LaguerreDiagram( const Points& sites , const Topology<Simplex>&
   domain_(domain_points_,domain.number()),
   weight_(weights),
   delaunay_(sites.dim()+1),
-  exact_(true)
+  exact_(true),
+  diagram_(nullptr)
 {
   avro_assert( sites.nb() > 0 );
   coord_t dim = sites.dim();
 
   // copy the domain, considering that it is embedded into dim + 1
+  std::vector<real_t> x( dim+1 , 0.0 );
   for (index_t k=0;k<domain.points().nb();k++)
   {
-    domain_points_.create( domain.points()[k] );
-    domain_points_[k][dim] = 0.0;
+    for (index_t d=0;d<dim;d++)
+      x[d] = domain.points()[k][d];
+    domain_points_.create(x.data());
   }
   domain_.TopologyBase::copy( domain );
 
@@ -103,8 +107,16 @@ void
 LaguerreDiagram::compute()
 {
   // compute the voronoi diagram
-  VoronoiDiagram diagram( delaunay_ , domain_ , true );
-  diagram.compute(exact_);
+  if (diagram_ == nullptr)
+    diagram_ = std::make_shared<VoronoiDiagram>( delaunay_ , domain_ , true );
+  else
+  {
+    diagram_->clear();
+  }
+  diagram_->compute(exact_);
+
+  time_neighbours_ = diagram_->time_neighbours();
+  time_voronoi_    = diagram_->time_voronoi();
 
   coord_t dim = points_.dim();
   points_.clear();
@@ -112,14 +124,14 @@ LaguerreDiagram::compute()
   clear();
 
   // copy the points, removing the extra coordinate (in dim+1)
-  for (index_t k=0;k<diagram.points().nb();k++)
+  for (index_t k=0;k<diagram_->points().nb();k++)
   {
-    points_.create( diagram.points()[k] );
-    std::vector<int> bisectors = diagram.points().incidence().get(k);
+    points_.create( diagram_->points()[k] );
+    std::vector<int> bisectors = diagram_->points().incidence().get(k);
     points_.incidence().add( bisectors.data() , bisectors.size() );
   }
-  TopologyBase::copy( diagram );
-  sites_ = diagram.sites();
+  TopologyBase::copy( *diagram_.get() );
+  sites_ = diagram_->sites();
 
   avro_assert( sites_.size() == nb() );
 }
@@ -136,14 +148,59 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
 
   std::vector<real_t> V( delaunay_.nb() , 0. );
 
+  real_t t0 = clock();
+  #if 0
+  // slow!
   SimplicialDecomposition<Polytope> decomposition(*this);
   decomposition.extract();
+  real_t time_decompose = real_t(clock()-t0)/real_t(CLOCKS_PER_SEC);
 
   std::vector<index_t> simplices;
   std::vector<index_t> parents;
   decomposition.get_simplices( number() , simplices , parents );
-  index_t nb_simplices = simplices.size()/(number_+1);
 
+  std::vector<index_t> sites( simplices.size()/(number_+1) );
+  for (index_t k=0;k<sites.size();k++)
+    sites[k] = sites_[parents[k]];
+
+  #else
+  // assumes cells have been decomposed into simplices
+  std::vector<index_t> parents;
+  std::vector<index_t> simplices;
+  std::vector<index_t> sites;
+
+  Points decomposition_points( points_.dim() );
+  Topology<Simplex> decomposition(decomposition_points,number_);
+  std::vector<index_t> simplex(number_+1);
+  for (index_t k=0;k<delaunay_.nb();k++)
+  {
+    const VoronoiCell& cell_k = diagram_->cell(k);
+    const Topology<Simplex>& cell_k_simplices = cell_k.simplices();
+
+    index_t offset = decomposition_points.nb();
+    for (index_t j=0;j<cell_k_simplices.points().nb();j++)
+      decomposition_points.create( cell_k_simplices.points()[j] );
+
+    for (index_t j=0;j<cell_k_simplices.nb();j++)
+    {
+      //parents.push_back( k );
+      sites.push_back(k);
+      parents.push_back(decomposition.nb());
+      for (coord_t d=0;d<cell_k_simplices.nv(j);d++)
+        simplex[d] = cell_k_simplices(j,d) + offset;
+      decomposition.add( simplex.data() , simplex.size() );
+    }
+  }
+  decomposition.orient();
+  avro_assert( fabs(decomposition.volume() - 1.0) < 1e-12 ); // for now until more complicated geometries are studied
+  index_t count = 0;
+  simplices.resize( decomposition.nb()*(number_+1) );
+  for (index_t k=0;k<decomposition.nb();k++)
+  for (index_t j=0;j<decomposition.nv(k);j++)
+    simplices[count++] = decomposition(k,j);
+  real_t time_decompose = real_t(clock()-t0)/real_t(CLOCKS_PER_SEC);
+  #endif
+  index_t nb_simplices = simplices.size()/(number_+1);
   Topology<Simplex> simplex_topology( decomposition.points() , number_ );
   const Simplex& element = decomposition.element();
   for (index_t k=0;k<nb_simplices;k++)
@@ -151,8 +208,10 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
     simplex_topology.add( &simplices[k*(number_+1)] , number_+1 );
 
     real_t vk = element.volume( decomposition.points() , &simplices[k*(number_+1)] , number_+1 );
+    avro_assert( vk > 0. );
 
-    index_t s = sites_[ parents[k] ];
+    index_t s = sites[k];
+    //index_t s = sites_[ parents[k] ];
     avro_assert( s < V.size() );
     V[s] += vk;
 
@@ -161,7 +220,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
     numerics::centroid( &simplices[k*(number_+1)] , number_+1 , decomposition.points() , c );
 
     // add the contribution to x*V and V
-    for (coord_t d=0;d<delaunay_.dim();d++)
+    for (coord_t d=0;d<centroids.dim();d++)
       centroids[s][d] += c[d]*vk;
   }
 
@@ -198,41 +257,25 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   gnorm_w = std::sqrt( gnorm_w );
 
   // compute the CVT energy
-  ConicalProductQuadrature quadrature(number_,3);
+  ConicalProductQuadrature quadrature(number_,2);
   simplex_topology.element().set_basis( BasisFunctionCategory_Lagrange );
   quadrature.define();
   simplex_topology.element().load_quadrature(quadrature);
 
   typedef Integrand_Laguerre_Energy<real_t> Integrand_t;
-  Integrand_t integrand(delaunay_,sites_,parents,weight_,mass_);
+  Integrand_t integrand(delaunay_,sites,parents,weight_,mass_);
 
   Functional<Integrand_t> f(integrand);
   f.integrate( simplex_topology );
-
-  printf("f = %g, |g_x| = %g, |g_w| = %g\n",f.value(),gnorm_x,gnorm_w);
 
   real_t energy = f.value();
   for (index_t k=0;k<delaunay_.nb();k++)
     energy += weight_[k]*mass_[k];
 
+  printf("f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec, t_d = %g sec.\n",
+          energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_/ProcessCPU::maximum_concurrent_threads(),time_decompose);
+
   return energy;
-}
-
-static void
-hlbfgs_eval_func( int n , double* x , double* prev_x , double *f , double* g )
-{
-
-}
-
-static void
-hlbfgs_new_iteration( int iter , int call_iter , double* x , double* f , double* g , double* gnorm )
-{
-  UNUSED(iter);
-  UNUSED(call_iter);
-  UNUSED(x);
-  UNUSED(f);
-  UNUSED(g);
-  UNUSED(gnorm);
 }
 
 struct nlopt_data_cvt
@@ -263,6 +306,9 @@ nlopt_cvt_objective( unsigned n , const double* x , double* grad, void* data0 )
   nlopt_data_cvt* data = (nlopt_data_cvt*)(data0);
 
   LaguerreDiagram& laguerre = data->laguerre;
+
+  printf("iteration %lu:\n",data->eval_count);
+  data->eval_count++;
 
   // set the coordinates of the delaunay points
   laguerre.set_delaunay(x,laguerre.points().dim());
@@ -305,6 +351,7 @@ LaguerreDiagram::optimize_cvt()
   opt.set_xtol_rel(1e-7);
   opt.set_ftol_rel(1e-7);
   opt.set_maxeval(20);
+  //opt.set_vector_storage(20);
 
   opt.optimize(x);
 

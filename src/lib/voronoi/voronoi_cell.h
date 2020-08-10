@@ -9,6 +9,8 @@
 
 #include <memory>
 
+#include "nnsearch/nn_search.h"
+
 namespace avro
 {
 
@@ -20,18 +22,29 @@ class RVDFacets;
 class VoronoiCell : public Topology<Polytope>
 {
 public:
-  VoronoiCell( index_t site , const Delaunay& delaunay , const NearestNeighbours& neighbours , const TopologyBase& domin , bool exact , bool simplex );
+  VoronoiCell( index_t site , const Delaunay& delaunay , const NearestNeighbours& neighbours ,
+               const TopologyBase& domin , bool exact , bool simplex ,
+               GEO::NearestNeighborSearch* nns=nullptr , index_t nb_nns=0 );
 
   void initialize();
   void compute();
 
   void set_facets( RVDFacets* facets ) { facets_ = facets; }
 
+  // for passing initial guess back to neighbour reconstruction
+  index_t nb_neighbours() const { return nn_.size(); }
+  const std::vector<index_t>& neighbours() const { return nn_; }
+
+  void generate_simplices();
+  const Topology<Simplex>& simplices() const { return simplices_; }
+
 private:
   void initialize_polytope();
   void initialize_simplex();
   void compute_polytope();
   void compute_simplex();
+
+  void enlarge_neighbours();
 
   void clip_by_bisector( index_t j , index_t bj );
   void clip_edge( index_t e0 , index_t e1 , const int b , std::vector<index_t>& q );
@@ -55,6 +68,14 @@ private:
 
   std::map<Bisector,int> bisector_;
   std::map<int,Bisector> ids_;
+
+  GEO::NearestNeighborSearch* nns_;
+  std::vector<index_t> nn_;
+  bool recycle_neighbours_;
+
+  Points simplex_points_;
+  Topology<Simplex> simplices_;
+
 };
 
 class VoronoiDiagram : public Topology<Polytope>
@@ -69,6 +90,10 @@ public:
     { cells_[k]->compute(); }
 
   const std::vector<index_t>& sites() const { return sites_; }
+  const VoronoiCell& cell( index_t k ) const { return *cells_[k].get(); }
+
+  real_t time_neighbours() const { return time_neighbours_; }
+  real_t time_voronoi() const { return time_voronoi_; }
 
 private:
   Points points_;
@@ -77,6 +102,11 @@ private:
   std::vector<std::shared_ptr<VoronoiCell>> cells_;
   std::vector<index_t> sites_;
   bool simplex_;
+  real_t time_neighbours_;
+  real_t time_voronoi_;
+
+  GEO::NearestNeighborSearch* nns_;
+
 };
 
 } // delaunay

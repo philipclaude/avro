@@ -27,7 +27,7 @@ NearestNeighbours::NearestNeighbours( Points& _points , const index_t _knear ) :
   if (_knear==0) knear_ = points_.nb();
   if (knear_>=points_.nb()) knear_ = points_.nb();
   //neighbours_.set_rank(knear_);
-  compute();
+  //compute();
 }
 
 void
