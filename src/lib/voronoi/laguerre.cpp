@@ -347,10 +347,10 @@ LaguerreDiagram::optimize_cvt()
 	opt.set_min_objective( &nlopt_cvt_objective , static_cast<void*>(&data) );
 
   // set some optimization parameters
-  opt.set_stopval(1e-7);
-  opt.set_xtol_rel(1e-7);
-  opt.set_ftol_rel(1e-7);
-  opt.set_maxeval(20);
+  opt.set_stopval(1e-12);
+  opt.set_xtol_rel(1e-12);
+  opt.set_ftol_rel(1e-12);
+  opt.set_maxeval(10);
   //opt.set_vector_storage(20);
 
   opt.optimize(x);

@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "numeric.h"
 
+#include <memory>
 #include <vector>
 
 /**

@@ -20,7 +20,7 @@ UT_TEST_CASE( test_simplex )
 
   GEO::PCK::initialize();
 
-  coord_t number = 3;
+  coord_t number = 2;
   coord_t dim = number;
 
   std::vector<index_t> sizes(number,2);
@@ -53,7 +53,7 @@ UT_TEST_CASE( test_simplex )
 
   diagram.optimize_cvt();
 
-  graphics::Visualizer vis;
+  graphics::WebVisualizer vis;
   vis.add_topology(diagram);
 
   if (number<=4)

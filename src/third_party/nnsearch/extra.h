@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <float.h>
+#include <functional>
 #include <limits.h>
 #include <algorithm> // for std::min / std::max
 
