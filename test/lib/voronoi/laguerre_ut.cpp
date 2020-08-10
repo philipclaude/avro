@@ -53,7 +53,7 @@ UT_TEST_CASE( test_simplex )
 
   diagram.optimize_cvt();
 
-  graphics::WebVisualizer vis;
+  graphics::Visualizer vis;
   vis.add_topology(diagram);
 
   if (number<=4)

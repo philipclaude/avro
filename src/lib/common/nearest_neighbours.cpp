@@ -64,7 +64,7 @@ NearestNeighbours::compute()
   std::shared_ptr<KdTreeNd> kdtree = initializeKdTree( cloud );
   kdtree->build();
 
-  #pragma omp parallel for
+  //#pragma omp parallel for
   for (index_t k=0;k<nv;k++)
   {
     std::vector<real_t> d( knear_ , 0. );
