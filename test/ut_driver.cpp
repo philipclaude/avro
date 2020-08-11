@@ -21,7 +21,7 @@ using namespace avro;
 int
 main()
 {
-  print_info();
+  initialize_avro();
 
   // initialize the distributed/shared memory task/thread managers
   #ifdef AVRO_MPI

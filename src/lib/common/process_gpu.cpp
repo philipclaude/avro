@@ -64,6 +64,8 @@ namespace ProcessGPU
   public:
     CUDAThreadManager() {}
 
+    std::string name() const { return "CUDA"; }
+
     index_t maxConcurrentThreads()
       { avro_implement; }
     void enterCriticalSection()
@@ -115,6 +117,8 @@ namespace ProcessGPU
       CL_CHECK( err_ );
 
     }
+
+    std::string name() const { return "OpenCL"; }
 
     index_t maxConcurrentThreads()
       { return index_t(CL_DEVICE_MAX_WORK_GROUP_SIZE); }
@@ -228,15 +232,21 @@ void
 initialize()
 {
   #if defined(avro_GPU_THREAD_MANAGER_CUDA)
-    printf("enabling cuda for GPU threading\n");
+    //printf("enabling cuda for GPU threading\n");
     set_thread_manager( std::make_shared<CUDAThreadManager>() );
   #elif defined(avro_GPU_THREAD_MANAGER_OPENCL)
-    printf("enabling opencl for GPU threading\n");
+    //printf("enabling opencl for GPU threading\n");
     set_thread_manager( std::make_shared<OpenCLThreadManager>() );
   #else
-    printf("only enabling serial computations\n");
+    //printf("only enabling serial computations\n");
     set_thread_manager( std::make_shared<SerialThreadManager>() );
   #endif
+}
+
+std::string
+manager_name()
+{
+  return thread_manager_->name();
 }
 
 index_t maximum_concurrent_threads()

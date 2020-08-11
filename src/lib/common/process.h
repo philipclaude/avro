@@ -28,6 +28,7 @@ namespace ProcessCPU
   void initialize();
   void terminate();
 
+  std::string manager_name();
   index_t maximum_concurrent_threads();
   void run_threads(ThreadGroup& threads );
 
@@ -55,6 +56,7 @@ namespace ProcessGPU
   void initialize();
   void terminate();
 
+  std::string manager_name();
   index_t maximum_concurrent_threads();
   template<typename type> void add_kernel_arg( type* arg , index_t n );
   template<typename type> void retrieve_kernel_value( index_t k , type* value , index_t n );

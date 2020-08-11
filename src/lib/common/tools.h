@@ -25,6 +25,8 @@
 namespace avro
 {
 
+void initialize_avro();
+
 #define UNUSED(x) (void)(x);
 
 real_t random_within( const real_t lo , const real_t hi );
@@ -199,17 +201,6 @@ unique_label_skip( T* x , index_t n , index_t kskip )
   return unique_label(f);
 }
 
-inline void
-print_info()
-{
-
-  printf("\navro compiled with ");
-
-  if (__cplusplus == 201103L) printf("c++11");
-  else if (__cplusplus == 199711L ) printf("c++98");
-  else printf("pre-standard c++");
-  printf("\n");
-}
 
 template<typename type>
 static void

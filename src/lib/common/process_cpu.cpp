@@ -54,6 +54,8 @@ namespace ProcessCPU
       pthread_attr_setdetachstate(&attr_,PTHREAD_CREATE_JOINABLE);
     }
 
+    std::string name() const { return "PThread"; }
+
     index_t maxConcurrentThreads() { return ProcessCPU::nb_cores(); }
 
     void enterCriticalSection()
@@ -76,7 +78,6 @@ namespace ProcessCPU
 
     void runConcurrentThreads( ThreadGroup& threads0 , index_t max_threads )
     {
-      printf("running with pthreads...\n");
       threads_.resize( threads0.size() );
       for (index_t i=0;i<threads0.size();i++)
       {
@@ -108,6 +109,8 @@ namespace ProcessCPU
   {
   public:
     CppThreadManager() {}
+
+    std::string name() const { return "c++ threads"; }
 
     index_t maxConcurrentThreads()
       { return std::thread::hardware_concurrency(); }
@@ -154,6 +157,8 @@ namespace ProcessCPU
       omp_init_lock(&lock_);
     }
 
+    std::string name() const { return "OpenMP"; }
+
     index_t maxConcurrentThreads()
     {
       return omp_get_max_threads();
@@ -199,6 +204,8 @@ namespace ProcessCPU
       EMP_Init(NULL);
       lock_ = EMP_LockCreate();
     }
+
+    std::string name() const { return "EMP"; }
 
     index_t maxConcurrentThreads() { return ProcessCPU::nb_cores(); }
 
@@ -266,22 +273,28 @@ void initialize()
 
   // set the appropriate thread manager
   #if defined(avro_CPU_THREAD_MANAGER_OPENMP)
-    printf("enabling openmp threads\n");
+    //printf("enabling openmp threads\n");
     set_thread_manager( std::make_shared<OpenMPThreadManager>() );
   #elif defined(avro_CPU_THREAD_MANAGER_CPP)
-    printf("enabling cpp threads\n");
+    //printf("enabling cpp threads\n");
     set_thread_manager(  std::make_shared<CppThreadManager>() );
   #elif defined(avro_CPU_THREAD_MANAGER_PTHREAD)
-    printf("enabling pthreads\n");
+    //printf("enabling pthreads\n");
     set_thread_manager( std::make_shared<PThreadManager>() );
   #elif defined(avro_CPU_THREAD_MANAGER_EMP)
-    printf("enabling emp threads\n");
+    //printf("enabling emp threads\n");
     set_thread_manager(  std::make_shared<EMPThreadManager>() );
   #else
-    printf("only enabling serial computations\n");
+    //printf("only enabling serial computations\n");
     set_thread_manager(  std::make_shared<SerialThreadManager>() );
   #endif
 
+}
+
+std::string
+manager_name()
+{
+  return thread_manager_->name();
 }
 
 index_t
