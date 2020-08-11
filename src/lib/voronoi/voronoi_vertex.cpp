@@ -80,7 +80,7 @@ Vertex::intersectSymbolic( const Vertex* v , const Vertex* v0 ,
 	const Delaunay& delaunay )
 {
 	intersectBisectors(v,v0);
-	intersectMeshes(v,v0);
+	//intersectMeshes(v,v0);
 	intersectSimplices(v,v0);
 	//setSites(delaunay);
 }

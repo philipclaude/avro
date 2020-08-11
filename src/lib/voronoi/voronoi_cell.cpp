@@ -98,16 +98,23 @@ VoronoiCell::enlarge_neighbours()
   nb_nns += 10;
   std::vector<real_t> dist2(nb_nns); // not used
   nn_.resize( nb_nns );
+  clock_t t0 = clock();
   nns_->get_nearest_neighbors( nb_nns , delaunay_[site_] , nn_.data() , dist2.data()  );
+  time_neighbours_ += real_t(clock()-t0)/real_t(CLOCKS_PER_SEC);
 }
 
 void
 VoronoiCell::compute()
 {
+  time_neighbours_ = 0;
+  time_clip_       = 0;
+  time_decompose_  = 0;
+
   initialize();
   if (nns_ != nullptr)
   {
     std::vector<double> dist2(nn_.size(),0.0);
+    clock_t t0 = clock();
     if (!recycle_neighbours_)
     {
       nns_->get_nearest_neighbors( nn_.size() , site_ , nn_.data() , dist2.data() );
@@ -119,6 +126,7 @@ VoronoiCell::compute()
       nns_->get_nearest_neighbors( nn_.size() , delaunay_[site_] , nn_.data() , dist2.data() , GEO::NearestNeighborSearch::KeepInitialValues() );
     }
     avro_assert( nn_[0] == site_ );
+    time_neighbours_ += real_t(clock() -t0) / real_t(CLOCKS_PER_SEC);
   }
   else
   {
@@ -127,10 +135,14 @@ VoronoiCell::compute()
       nn_[k] = neighbours_(site_,k);
   }
 
+  clock_t t0 = clock();
   if (simplex_) compute_simplex();
   else compute_polytope();
+  time_clip_ += real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 
+  t0 = clock();
   generate_simplices();
+  time_decompose_ = real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 }
 
 void
@@ -274,7 +286,7 @@ VoronoiCell::clip_by_bisector( index_t j , index_t bj )
   #endif
 
   // initialize the clipped polytope
-  std::vector<index_t> q;
+  qpolytope_.clear();
 
   // retrieve the edges
   for (index_t ii=0;ii<polytope_.size();ii++)
@@ -285,12 +297,13 @@ VoronoiCell::clip_by_bisector( index_t j , index_t bj )
     if (element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) )
     {
       // clip the edge and save the result into q
-      clip_edge(e0,e1,b,q);
+      clip_edge(e0,e1,b,qpolytope_);
     }
   }
 
   // the current polytope becomes the clipped one
-  polytope_ = q;
+  polytope_.assign( qpolytope_.begin() , qpolytope_.end() );
+  //polytope_ = q;
   uniquify(polytope_);
   for (index_t ii=0;ii<polytope_.size();ii++)
     vertex_[ polytope_[ii] ].setBaseSite( delaunay_[site_] );
@@ -490,6 +503,8 @@ VoronoiCell::generate_simplices()
       }
     }
   }
+  else
+    avro_implement;
 }
 
 VoronoiDiagram::VoronoiDiagram( Delaunay& delaunay , const TopologyBase& domain , bool simplex ) :
@@ -510,7 +525,7 @@ VoronoiDiagram::compute( bool exact )
     facets = std::make_shared<RVDFacets>( static_cast<const Topology<Simplex>&>(domain_) );
 
   real_t t0 = clock();
-  index_t nb_nns = 200;
+  index_t nb_nns = 50;
   if (delaunay_.nb() < nb_nns) nb_nns = delaunay_.nb();
   NearestNeighbours neighbours(delaunay_,nb_nns);
 
@@ -519,7 +534,7 @@ VoronoiDiagram::compute( bool exact )
   #else
   const coord_t dim = delaunay_.dim();
   if (nns_ == nullptr)
-    nns_ = GEO::NearestNeighborSearch::create(dim,"BNN");
+    nns_ = GEO::NearestNeighborSearch::create(dim,"ANN");
   std::vector<real_t> x(delaunay_.nb()*dim);
   for (index_t k=0;k<delaunay_.nb();k++)
   for (index_t d=0;d<dim;d++)
@@ -528,7 +543,6 @@ VoronoiDiagram::compute( bool exact )
   nns_->set_points( delaunay_.nb() , x.data() );
   #endif
   time_neighbours_ = real_t( clock() - t0 )/real_t(CLOCKS_PER_SEC);
-  printf("--> time neighbours = %g\n",time_neighbours_);
 
   for (index_t k=0;k<delaunay_.nb();k++)
   {
@@ -537,7 +551,7 @@ VoronoiDiagram::compute( bool exact )
     cells_[k]->set_facets( facets.get() );
   }
 
-  t0 = clock();
+  //t0 = clock();
   #if 1
   ProcessCPU::parallel_for(
     parallel_for_member_callback( this , &thisclass::clip ),
@@ -547,14 +561,20 @@ VoronoiDiagram::compute( bool exact )
   for (index_t k=0;k<cells_.size();k++)
     cells_[k]->compute();
   #endif
-  time_voronoi_ = real_t(clock() - t0 )/real_t(CLOCKS_PER_SEC);
-  printf("--> time voronoi = %g\n",time_voronoi_/ProcessCPU::maximum_concurrent_threads());
+  //time_voronoi_ = real_t(clock() - t0 )/real_t(CLOCKS_PER_SEC);
+
+  time_voronoi_ = 0;
+  real_t time_decompose = 0;
 
   // accumulate the result
   sites_.clear();
   for (index_t k=0;k<cells_.size();k++)
   {
     const VoronoiCell& cell = *cells_[k].get();
+
+    time_neighbours_ += cell.time_neighbours() / ProcessCPU::maximum_concurrent_threads();
+    time_voronoi_    += cell.time_clip() / ProcessCPU::maximum_concurrent_threads();
+    time_decompose   += cell.time_decompose() / ProcessCPU::maximum_concurrent_threads();
 
     // cells could be submerged
     if (cell.nb() == 0) continue;
@@ -582,6 +602,8 @@ VoronoiDiagram::compute( bool exact )
     }
 
   }
+
+  printf("--> timing: neighbours (%3.4g sec.), clipping (%3.4g sec.), decompose (%3.4g sec.)\n",time_neighbours_,time_voronoi_,time_decompose);
 }
 
 } // delaunay

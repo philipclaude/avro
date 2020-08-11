@@ -31,12 +31,16 @@ public:
   void optimize_cvt();
   void optimize_otm();
 
-  real_t eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW ) const;
-  real_t eval_objective() const;
+  real_t eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW , std::vector<real_t>& volumes );
+  real_t eval_objective();
 
   void set_exact( bool x ) { exact_ = x; }
 
   void set_delaunay( const real_t* x , coord_t dim );
+  void set_weights( const real_t* w );
+  void set_volumes( std::vector<real_t>& v ) { volume_ = v; }
+
+  void clear_decomposition();
 
 private:
   Points points_;
@@ -45,6 +49,7 @@ private:
   std::vector<real_t> weight_;
   std::vector<real_t> mass_;
   std::vector<index_t> sites_;
+  std::vector<real_t> volume_;
 
   Delaunay delaunay_;
 
@@ -55,6 +60,9 @@ private:
   real_t time_neighbours_;
 
   std::shared_ptr<VoronoiDiagram> diagram_;
+
+  Topology<Simplex> decomposition_;
+  Points decomposition_points_;
 };
 
 } // delaunay

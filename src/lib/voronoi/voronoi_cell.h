@@ -38,6 +38,10 @@ public:
   void generate_simplices();
   const Topology<Simplex>& simplices() const { return simplices_; }
 
+  real_t time_neighbours() const { return time_neighbours_; }
+  real_t time_clip() const { return time_clip_; }
+  real_t time_decompose() const { return time_decompose_; }
+
 private:
   void initialize_polytope();
   void initialize_simplex();
@@ -75,6 +79,12 @@ private:
 
   Points simplex_points_;
   Topology<Simplex> simplices_;
+
+  real_t time_neighbours_;
+  real_t time_clip_;
+  real_t time_decompose_;
+
+  std::vector<index_t> qpolytope_;
 
 };
 

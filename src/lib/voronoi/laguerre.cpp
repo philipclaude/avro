@@ -7,6 +7,7 @@
 
 #include "numerics/geometry.h"
 #include "numerics/integration.h"
+#include "numerics/nlopt_result.h"
 
 #include "voronoi/laguerre.h"
 #include "voronoi/voronoi_cell.h"
@@ -54,7 +55,7 @@ public:
     T f = 0;
     for (coord_t d=0;d<delaunay_.dim()-1;d++)
       f += (z[d] - x[d])*(z[d] - x[d]);
-    f -= weights_[ sites_[parent] ]*weights_[ sites_[parent] ];
+    f -= weights_[ sites_[parent] ];
     return f;
   }
 
@@ -72,9 +73,12 @@ LaguerreDiagram::LaguerreDiagram( const Points& sites , const Topology<Simplex>&
   domain_points_(sites.dim()+1),
   domain_(domain_points_,domain.number()),
   weight_(weights),
+  volume_(sites.nb(),0.0),
   delaunay_(sites.dim()+1),
   exact_(true),
-  diagram_(nullptr)
+  diagram_(nullptr),
+  decomposition_(decomposition_points_,domain.number()),
+  decomposition_points_( points_.dim() )
 {
   avro_assert( sites.nb() > 0 );
   coord_t dim = sites.dim();
@@ -96,11 +100,20 @@ LaguerreDiagram::LaguerreDiagram( const Points& sites , const Topology<Simplex>&
 
   for (index_t k=0;k<sites.nb();k++)
   {
-    delaunay_.create( sites[k] );
+    for (coord_t d=0;d<delaunay_.dim();d++)
+      x[d] = sites[k][d];
+    delaunay_.create( x.data() );
     delaunay_[k][dim] = std::sqrt( wm - weight_[k] );
   }
 
   mass_.resize( delaunay_.nb() , 0.0 );
+}
+
+void
+LaguerreDiagram::clear_decomposition()
+{
+  decomposition_points_.clear();
+  decomposition_.clear();
 }
 
 void
@@ -137,7 +150,7 @@ LaguerreDiagram::compute()
 }
 
 real_t
-LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW ) const
+LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW , std::vector<real_t>& V )
 {
   // initialize size of centroids
   coord_t dim = points_.dim();
@@ -146,7 +159,8 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   for (index_t k=0;k<delaunay_.nb();k++)
     centroids.create( x0.data() );
 
-  std::vector<real_t> V( delaunay_.nb() , 0. );
+  // size the volume array
+  V.resize( delaunay_.nb() , 0. );
 
   real_t t0 = clock();
   #if 0
@@ -169,55 +183,55 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   std::vector<index_t> simplices;
   std::vector<index_t> sites;
 
-  Points decomposition_points( points_.dim() );
-  Topology<Simplex> decomposition(decomposition_points,number_);
+  parents.reserve(1e6);
+  simplices.reserve(1e6);
+  sites.reserve(1e6);
+
   std::vector<index_t> simplex(number_+1);
   for (index_t k=0;k<delaunay_.nb();k++)
   {
     const VoronoiCell& cell_k = diagram_->cell(k);
     const Topology<Simplex>& cell_k_simplices = cell_k.simplices();
 
-    index_t offset = decomposition_points.nb();
+    index_t offset = decomposition_points_.nb();
     for (index_t j=0;j<cell_k_simplices.points().nb();j++)
-      decomposition_points.create( cell_k_simplices.points()[j] );
+      decomposition_points_.create( cell_k_simplices.points()[j] );
 
     for (index_t j=0;j<cell_k_simplices.nb();j++)
     {
-      //parents.push_back( k );
       sites.push_back(k);
-      parents.push_back(decomposition.nb());
+      parents.push_back(decomposition_.nb());
       for (coord_t d=0;d<cell_k_simplices.nv(j);d++)
         simplex[d] = cell_k_simplices(j,d) + offset;
-      decomposition.add( simplex.data() , simplex.size() );
+      decomposition_.add( simplex.data() , simplex.size() );
     }
   }
-  decomposition.orient();
-  avro_assert( fabs(decomposition.volume() - 1.0) < 1e-12 ); // for now until more complicated geometries are studied
+  decomposition_.orient();
+  avro_assert( fabs(decomposition_.volume() - 1.0) < 1e-12 ); // for now until more complicated geometries are studied
   index_t count = 0;
-  simplices.resize( decomposition.nb()*(number_+1) );
-  for (index_t k=0;k<decomposition.nb();k++)
-  for (index_t j=0;j<decomposition.nv(k);j++)
-    simplices[count++] = decomposition(k,j);
+  simplices.resize( decomposition_.nb()*(number_+1) );
+  for (index_t k=0;k<decomposition_.nb();k++)
+  for (index_t j=0;j<decomposition_.nv(k);j++)
+    simplices[count++] = decomposition_(k,j);
   real_t time_decompose = real_t(clock()-t0)/real_t(CLOCKS_PER_SEC);
   #endif
   index_t nb_simplices = simplices.size()/(number_+1);
-  Topology<Simplex> simplex_topology( decomposition.points() , number_ );
-  const Simplex& element = decomposition.element();
+  Topology<Simplex> simplex_topology( decomposition_.points() , number_ );
+  const Simplex& element = decomposition_.element();
   for (index_t k=0;k<nb_simplices;k++)
   {
     simplex_topology.add( &simplices[k*(number_+1)] , number_+1 );
 
-    real_t vk = element.volume( decomposition.points() , &simplices[k*(number_+1)] , number_+1 );
+    real_t vk = element.volume( decomposition_.points() , &simplices[k*(number_+1)] , number_+1 );
     avro_assert( vk > 0. );
 
     index_t s = sites[k];
-    //index_t s = sites_[ parents[k] ];
     avro_assert( s < V.size() );
     V[s] += vk;
 
     // compute the centroid of this piece
     std::vector<real_t> c( dim );
-    numerics::centroid( &simplices[k*(number_+1)] , number_+1 , decomposition.points() , c );
+    numerics::centroid( &simplices[k*(number_+1)] , number_+1 , decomposition_.points() , c );
 
     // add the contribution to x*V and V
     for (coord_t d=0;d<centroids.dim();d++)
@@ -257,7 +271,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   gnorm_w = std::sqrt( gnorm_w );
 
   // compute the CVT energy
-  ConicalProductQuadrature quadrature(number_,2);
+  ConicalProductQuadrature quadrature(number_,1);
   simplex_topology.element().set_basis( BasisFunctionCategory_Lagrange );
   quadrature.define();
   simplex_topology.element().load_quadrature(quadrature);
@@ -272,7 +286,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   for (index_t k=0;k<delaunay_.nb();k++)
     energy += weight_[k]*mass_[k];
 
-  printf("f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec, t_d = %g sec.\n",
+  printf("--> f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec, t_d = %g sec.\n",
           energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_/ProcessCPU::maximum_concurrent_threads(),time_decompose);
 
   return energy;
@@ -283,13 +297,14 @@ struct nlopt_data_cvt
 	LaguerreDiagram& laguerre;
 	index_t eval_count;
 	real_t objective;
+  int mode; // 0 for cvt, 1 for otm
 };
 
 real_t
-LaguerreDiagram::eval_objective() const
+LaguerreDiagram::eval_objective()
 {
-  std::vector<real_t> dE_dZ,dE_dW;
-  return eval_objective(dE_dZ,dE_dW);
+  std::vector<real_t> dE_dZ,dE_dW,volumes;
+  return eval_objective(dE_dZ,dE_dW,volumes);
 }
 
 void
@@ -300,8 +315,19 @@ LaguerreDiagram::set_delaunay( const real_t* x , coord_t dim )
     delaunay_[k][d] = x[k*dim+d];
 }
 
+void
+LaguerreDiagram::set_weights( const real_t* w )
+{
+  for (index_t k=0;k<delaunay_.nb();k++)
+    weight_[k] = w[k];
+  coord_t dim = points_.dim();
+  real_t wm = * std::max_element( weight_.begin() , weight_.end() );
+  for (index_t k=0;k<weight_.size();k++)
+    delaunay_[k][dim] = std::sqrt( wm - weight_[k] );
+}
+
 double
-nlopt_cvt_objective( unsigned n , const double* x , double* grad, void* data0 )
+nlopt_otm_objective( unsigned n , const double* x , double* grad, void* data0 )
 {
   nlopt_data_cvt* data = (nlopt_data_cvt*)(data0);
 
@@ -311,20 +337,41 @@ nlopt_cvt_objective( unsigned n , const double* x , double* grad, void* data0 )
   data->eval_count++;
 
   // set the coordinates of the delaunay points
-  laguerre.set_delaunay(x,laguerre.points().dim());
+  if (data->mode == 0)
+    laguerre.set_delaunay(x,laguerre.points().dim());
+  else if (data->mode == 1)
+    laguerre.set_weights(x);
+  else
+    avro_assert_not_reached;
 
   // recompute the voronoi diagram
   laguerre.compute();
 
+  laguerre.clear_decomposition();
+
   // compute the energy and gradients
-  std::vector<real_t> dE_dZ,dE_dW;
-  real_t energy = laguerre.eval_objective( dE_dZ , dE_dW );
+  std::vector<real_t> dE_dZ,dE_dW,volumes;
+  real_t energy = laguerre.eval_objective( dE_dZ , dE_dW , volumes );
   if (grad != nullptr)
   {
-    for (index_t k=0;k<dE_dZ.size();k++)
-      grad[k] = dE_dZ[k];
-  }
+    if (data->mode == 0)
+    {
+      // cvt mode
+      for (index_t k=0;k<dE_dZ.size();k++)
+        grad[k] = dE_dZ[k];
+    }
+    else if (data->mode == 1)
+    {
+      energy *= -1.0;
 
+      // otm mode
+      for (index_t k=0;k<dE_dW.size();k++)
+        grad[k] = -dE_dW[k];
+    }
+    else
+      avro_assert_not_reached;
+  }
+  laguerre.set_volumes(volumes);
   return energy;
 }
 
@@ -341,26 +388,64 @@ LaguerreDiagram::optimize_cvt()
 
   // setup the optimizer
   nlopt::opt opt( nlopt::LD_LBFGS , n );
-  nlopt_data_cvt data = {*this,0,1};
+  nlopt_data_cvt data = {*this,0,1,0};
 
 	// set the objective function
-	opt.set_min_objective( &nlopt_cvt_objective , static_cast<void*>(&data) );
+	opt.set_min_objective( &nlopt_otm_objective , static_cast<void*>(&data) );
 
   // set some optimization parameters
-  opt.set_stopval(1e-12);
   opt.set_xtol_rel(1e-12);
   opt.set_ftol_rel(1e-12);
   opt.set_maxeval(10);
   //opt.set_vector_storage(20);
 
-  opt.optimize(x);
-
+  real_t f_opt;
+  nlopt::result result = nlopt::result::SUCCESS;
+  result = opt.optimize(x,f_opt);
+  std::string desc = nloptResultDescription(result);
+  printf("nlopt result: %s\n",desc.c_str());
 }
 
 void
 LaguerreDiagram::optimize_otm()
 {
+  index_t n = weight_.size();
 
+  mass_.resize( n , real_t(1.0/weight_.size()) );
+  for (index_t k=0;k<n;k++)
+  {
+    weight_[k] = 0;
+    //delaunay_[k][0] -= 0.1;
+  }
+  mass_ = volume_;
+  set_weights(weight_.data());
+
+  std::vector<real_t> x(weight_.begin(),weight_.end());
+
+  // setup the optimizer
+  nlopt::opt opt( nlopt::LD_LBFGS , n );
+  nlopt_data_cvt data = {*this,0,1,1};
+
+	// set the objective function
+	opt.set_min_objective( &nlopt_otm_objective , static_cast<void*>(&data) );
+
+  // set some optimization parameters
+  opt.set_xtol_rel(1e-12);
+  opt.set_ftol_rel(1e-12);
+  opt.set_maxeval(20);
+  //opt.set_vector_storage(20);
+
+  // set the lower and upper bounds on the entries of the step matrix
+	std::vector<real_t> lower_bound( n , 0.0 );
+	std::vector<real_t> upper_bound( n ,  1e10 );
+	opt.set_lower_bounds(lower_bound);
+	opt.set_upper_bounds(upper_bound);
+
+  real_t f_opt;
+  nlopt::result result = nlopt::result::SUCCESS;
+  result = opt.optimize(x,f_opt);
+  std::string desc = nloptResultDescription(result);
+  printf("nlopt result: %s\n",desc.c_str());
 }
 
 } // delaunay

@@ -87,7 +87,7 @@ UT_TEST_CASE( test_2d_simplex )
 
   GEO::PCK::initialize();
 
-  coord_t number = 3;
+  coord_t number = 2;
   coord_t dim = number;
 
   std::vector<index_t> sizes(number,2);
@@ -96,7 +96,7 @@ UT_TEST_CASE( test_2d_simplex )
   // create random delaunay vertices
   Delaunay delaunay( dim );
   #if 1
-  index_t nb_points = 1e1;
+  index_t nb_points = 1e3;
   std::vector<real_t> x(dim,0.);
   for (index_t k=0;k<nb_points;k++)
   {
@@ -111,7 +111,13 @@ UT_TEST_CASE( test_2d_simplex )
   #endif
 
   delaunay::VoronoiDiagram diagram( delaunay , domain , true );
-  diagram.compute(false);
+  diagram.compute(true);
+  diagram.clear();
+
+  for (index_t k=0;k<delaunay.nb();k++)
+    delaunay[k][1] -= 0.1;
+
+  diagram.compute(true);
 
   #if 1
   graphics::Visualizer vis;
