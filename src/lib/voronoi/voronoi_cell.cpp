@@ -5,7 +5,11 @@
 #include "voronoi/delaunay.h"
 #include "voronoi/voronoi_cell.h"
 
+#include <csignal>
+
 #define SAFE_HASH 1
+
+bool __check_capacity__ = true;
 
 namespace avro
 {
@@ -96,6 +100,7 @@ VoronoiCell::enlarge_neighbours()
   avro_assert( nns_ != nullptr );
   index_t nb_nns = nn_.size();
   nb_nns += 10;
+  if (nb_nns>delaunay_.nb()) nb_nns = delaunay_.nb();
   std::vector<real_t> dist2(nb_nns); // not used
   nn_.resize( nb_nns );
   clock_t t0 = clock();
@@ -109,6 +114,8 @@ VoronoiCell::compute()
   time_neighbours_ = 0;
   time_clip_       = 0;
   time_decompose_  = 0;
+
+  incomplete_ = false;
 
   initialize();
   if (nns_ != nullptr)
@@ -141,7 +148,8 @@ VoronoiCell::compute()
   time_clip_ += real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 
   t0 = clock();
-  generate_simplices();
+  if (number_<4)
+    generate_simplices();
   time_decompose_ = real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 }
 
@@ -154,6 +162,7 @@ VoronoiCell::compute_polytope()
     //index_t bj = neighbours_(site_,j);
     index_t bj = nn_[j];
     clip_by_bisector( j , bj );
+    if (incomplete_) break;
 
     if (security_radius_reached(bj)) break;
     j++;
@@ -298,6 +307,7 @@ VoronoiCell::clip_by_bisector( index_t j , index_t bj )
     {
       // clip the edge and save the result into q
       clip_edge(e0,e1,b,qpolytope_);
+      if (incomplete_) return;
     }
   }
 
@@ -338,6 +348,12 @@ VoronoiCell::clip_edge( const index_t e0 , const index_t e1 , const int b , std:
 
   GEO::Sign side1 = v0.side( zi , zj , exact_ );
   GEO::Sign side2 = v1.side( zi , zj , exact_ );
+
+  if (side1 == GEO::ZERO || side2 == GEO::ZERO)
+  {
+    incomplete_ = true;
+    return;
+  }
 
   avro_assert( side1!=GEO::ZERO && side2!=GEO::ZERO );
 
@@ -492,7 +508,8 @@ VoronoiCell::generate_simplices()
 
           std::vector<index_t> ve;
           element().vrep( vf.data() , vf.size() , edges[e] , ve );
-          avro_assert( ve.size() == 2 );
+          if (ve.size() != 2) continue;
+          avro_assert_msg( ve.size() == 2 , "|ve| = %lu" , ve.size() );
 
           simplex[0] = ve[0];
           simplex[1] = ve[1];
@@ -525,13 +542,13 @@ VoronoiDiagram::compute( bool exact )
     facets = std::make_shared<RVDFacets>( static_cast<const Topology<Simplex>&>(domain_) );
 
   real_t t0 = clock();
-  index_t nb_nns = 50;
+  index_t nb_nns = 20;
   if (delaunay_.nb() < nb_nns) nb_nns = delaunay_.nb();
   NearestNeighbours neighbours(delaunay_,nb_nns);
 
-  #if 0
+  #if 0 // use nanoflann kd-tree for nearest neighbours
   neighbours.compute();
-  #else
+  #else // use geogram-based neereast neighbours & kd-tree
   const coord_t dim = delaunay_.dim();
   if (nns_ == nullptr)
     nns_ = GEO::NearestNeighborSearch::create(dim,"ANN");
@@ -551,17 +568,33 @@ VoronoiDiagram::compute( bool exact )
     cells_[k]->set_facets( facets.get() );
   }
 
-  //t0 = clock();
   #if 1
+  __check_capacity__ = false;
   ProcessCPU::parallel_for(
     parallel_for_member_callback( this , &thisclass::clip ),
-    0,cells_.size()
-  );
+    0,cells_.size() );
+
+  // clip the troublemakers in serial
+  // we don't need to check the capacity because the stack size should
+  // be bigger in serial
+  __check_capacity__ = false;
+  index_t nb_trouble = 0;
+  for (index_t k=0;k<cells_.size();k++)
+    if (cells_[k]->incomplete()) nb_trouble++;
+  //printf("reclipping %lu troublemakers.\n",nb_trouble);
+
+  for (index_t k=0;k<cells_.size();k++)
+  {
+    if (!cells_[k]->incomplete()) continue;
+    clip(k);
+    avro_assert( !cells_[k]->incomplete() );
+  }
   #else
   for (index_t k=0;k<cells_.size();k++)
+  {
     cells_[k]->compute();
+  }
   #endif
-  //time_voronoi_ = real_t(clock() - t0 )/real_t(CLOCKS_PER_SEC);
 
   time_voronoi_ = 0;
   real_t time_decompose = 0;

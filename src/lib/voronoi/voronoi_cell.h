@@ -42,6 +42,8 @@ public:
   real_t time_clip() const { return time_clip_; }
   real_t time_decompose() const { return time_decompose_; }
 
+  bool incomplete() const { return incomplete_; }
+
 private:
   void initialize_polytope();
   void initialize_simplex();
@@ -86,6 +88,8 @@ private:
 
   std::vector<index_t> qpolytope_;
 
+  bool incomplete_;
+
 };
 
 class VoronoiDiagram : public Topology<Polytope>
@@ -97,7 +101,9 @@ public:
 
   void compute( bool exact );
   void clip( const index_t k )
-    { cells_[k]->compute(); }
+  {
+    cells_[k]->compute();
+  }
 
   const std::vector<index_t>& sites() const { return sites_; }
   const VoronoiCell& cell( index_t k ) const { return *cells_[k].get(); }

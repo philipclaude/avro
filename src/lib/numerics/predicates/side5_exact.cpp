@@ -11,51 +11,58 @@
 #include "numerics/expansion.h"
 #include "numerics/predicates.h"
 
+extern bool __check_capacity__;
+
 namespace GEO
 {
 namespace PCK
 {
 
+#define check_capacity( x ) \
+capacity += expansion::bytes(x.capacity()); if (capacity > 300000 && __check_capacity__) { /*printf("exceeded stack capacity at %lu bytes for variable %s on line %d\n",capacity,#x,__LINE__);*/ return GEO::ZERO; }
+
 Sign avro_side5_nd_exact_pck(const double* p0,const double* p1,const double* p2,const double* p3,const double* p4,const double* p5,
  const double* q0,const double* q1,const double* q2,const double* q3,const double* q4 ,unsigned short dim
 ){
 
- const expansion& l1 = expansion_sq_dist(p1,p0,dim);
- const expansion& l2 = expansion_sq_dist(p2,p0,dim);
- const expansion& l3 = expansion_sq_dist(p3,p0,dim);
- const expansion& l4 = expansion_sq_dist(p4,p0,dim);
- const expansion& l5 = expansion_sq_dist(p5,p0,dim);
+ unsigned long capacity = 0;
+ (void)(capacity);
 
+ const expansion& l1 = expansion_sq_dist(p1,p0,dim); check_capacity(l1);
+ const expansion& l2 = expansion_sq_dist(p2,p0,dim); check_capacity(l2);
+ const expansion& l3 = expansion_sq_dist(p3,p0,dim); check_capacity(l3);
+ const expansion& l4 = expansion_sq_dist(p4,p0,dim); check_capacity(l4);
+ const expansion& l5 = expansion_sq_dist(p5,p0,dim); check_capacity(l5);
 
- const expansion& a10 = expansion_dot_at(p1,q0,p0,dim).scale_fast(2.0);
- const expansion& a11 = expansion_dot_at(p1,q1,p0,dim).scale_fast(2.0);
- const expansion& a12 = expansion_dot_at(p1,q2,p0,dim).scale_fast(2.0);
- const expansion& a13 = expansion_dot_at(p1,q3,p0,dim).scale_fast(2.0);
- const expansion& a14 = expansion_dot_at(p1,q4,p0,dim).scale_fast(2.0);
+ const expansion& a10 = expansion_dot_at(p1,q0,p0,dim).scale_fast(2.0); check_capacity(a10);
+ const expansion& a11 = expansion_dot_at(p1,q1,p0,dim).scale_fast(2.0); check_capacity(a11);
+ const expansion& a12 = expansion_dot_at(p1,q2,p0,dim).scale_fast(2.0); check_capacity(a12);
+ const expansion& a13 = expansion_dot_at(p1,q3,p0,dim).scale_fast(2.0); check_capacity(a13);
+ const expansion& a14 = expansion_dot_at(p1,q4,p0,dim).scale_fast(2.0); check_capacity(a14);
 
- const expansion& a20 = expansion_dot_at(p2,q0,p0,dim).scale_fast(2.0);
- const expansion& a21 = expansion_dot_at(p2,q1,p0,dim).scale_fast(2.0);
- const expansion& a22 = expansion_dot_at(p2,q2,p0,dim).scale_fast(2.0);
- const expansion& a23 = expansion_dot_at(p2,q3,p0,dim).scale_fast(2.0);
- const expansion& a24 = expansion_dot_at(p2,q4,p0,dim).scale_fast(2.0);
+ const expansion& a20 = expansion_dot_at(p2,q0,p0,dim).scale_fast(2.0); check_capacity(a20);
+ const expansion& a21 = expansion_dot_at(p2,q1,p0,dim).scale_fast(2.0); check_capacity(a21);
+ const expansion& a22 = expansion_dot_at(p2,q2,p0,dim).scale_fast(2.0); check_capacity(a22);
+ const expansion& a23 = expansion_dot_at(p2,q3,p0,dim).scale_fast(2.0); check_capacity(a23);
+ const expansion& a24 = expansion_dot_at(p2,q4,p0,dim).scale_fast(2.0); check_capacity(a24);
 
- const expansion& a30 = expansion_dot_at(p3,q0,p0,dim).scale_fast(2.0);
- const expansion& a31 = expansion_dot_at(p3,q1,p0,dim).scale_fast(2.0);
- const expansion& a32 = expansion_dot_at(p3,q2,p0,dim).scale_fast(2.0);
- const expansion& a33 = expansion_dot_at(p3,q3,p0,dim).scale_fast(2.0);
- const expansion& a34 = expansion_dot_at(p3,q4,p0,dim).scale_fast(2.0);
+ const expansion& a30 = expansion_dot_at(p3,q0,p0,dim).scale_fast(2.0); check_capacity(a30);
+ const expansion& a31 = expansion_dot_at(p3,q1,p0,dim).scale_fast(2.0); check_capacity(a31);
+ const expansion& a32 = expansion_dot_at(p3,q2,p0,dim).scale_fast(2.0); check_capacity(a32);
+ const expansion& a33 = expansion_dot_at(p3,q3,p0,dim).scale_fast(2.0); check_capacity(a33);
+ const expansion& a34 = expansion_dot_at(p3,q4,p0,dim).scale_fast(2.0); check_capacity(a34);
 
- const expansion& a40 = expansion_dot_at(p4,q0,p0,dim).scale_fast(2.0);
- const expansion& a41 = expansion_dot_at(p4,q1,p0,dim).scale_fast(2.0);
- const expansion& a42 = expansion_dot_at(p4,q2,p0,dim).scale_fast(2.0);
- const expansion& a43 = expansion_dot_at(p4,q3,p0,dim).scale_fast(2.0);
- const expansion& a44 = expansion_dot_at(p4,q4,p0,dim).scale_fast(2.0);
+ const expansion& a40 = expansion_dot_at(p4,q0,p0,dim).scale_fast(2.0); check_capacity(a40);
+ const expansion& a41 = expansion_dot_at(p4,q1,p0,dim).scale_fast(2.0); check_capacity(a41);
+ const expansion& a42 = expansion_dot_at(p4,q2,p0,dim).scale_fast(2.0); check_capacity(a42);
+ const expansion& a43 = expansion_dot_at(p4,q3,p0,dim).scale_fast(2.0); check_capacity(a43);
+ const expansion& a44 = expansion_dot_at(p4,q4,p0,dim).scale_fast(2.0); check_capacity(a44);
 
- const expansion& a50 = expansion_dot_at(p5,q0,p0,dim).scale_fast(2.0);
- const expansion& a51 = expansion_dot_at(p5,q1,p0,dim).scale_fast(2.0);
- const expansion& a52 = expansion_dot_at(p5,q2,p0,dim).scale_fast(2.0);
- const expansion& a53 = expansion_dot_at(p5,q3,p0,dim).scale_fast(2.0);
- const expansion& a54 = expansion_dot_at(p5,q4,p0,dim).scale_fast(2.0);
+ const expansion& a50 = expansion_dot_at(p5,q0,p0,dim).scale_fast(2.0); check_capacity(a50);
+ const expansion& a51 = expansion_dot_at(p5,q1,p0,dim).scale_fast(2.0); check_capacity(a51);
+ const expansion& a52 = expansion_dot_at(p5,q2,p0,dim).scale_fast(2.0); check_capacity(a52);
+ const expansion& a53 = expansion_dot_at(p5,q3,p0,dim).scale_fast(2.0); check_capacity(a53);
+ const expansion& a54 = expansion_dot_at(p5,q4,p0,dim).scale_fast(2.0); check_capacity(a54);
 
  // [ b00 b01 b02 b03 b04 ]           [  1   1   1   1   1  ] -1
  // [ b10 b11 b12 b13 b14 ]           [ a10 a11 a12 a13 a14 ]
@@ -63,34 +70,34 @@ Sign avro_side5_nd_exact_pck(const double* p0,const double* p1,const double* p2,
  // [ b30 b31 b32 b33 b34 ]           [ a30 a31 a32 a33 a34 ]
  // [ b40 b41 b42 b43 b44 ]           [ a40 a41 a42 a43 a44 ]
 
- const expansion& b00 = expansion_det4x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);
- const expansion& b01 = expansion_det_1111_3x4(a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44).negate();
- const expansion& b02 = expansion_det_1111_3x4(a11,a12,a13,a14,a31,a32,a33,a34,a41,a42,a43,a44);
- const expansion& b03 = expansion_det_1111_3x4(a11,a12,a13,a14,a21,a22,a23,a24,a41,a42,a43,a44).negate();
- const expansion& b04 = expansion_det_1111_3x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34);
+ const expansion& b00 = expansion_det4x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44); check_capacity(b00);
+ const expansion& b01 = expansion_det_1111_3x4(a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44).negate(); check_capacity(b01);
+ const expansion& b02 = expansion_det_1111_3x4(a11,a12,a13,a14,a31,a32,a33,a34,a41,a42,a43,a44); check_capacity(b02);
+ const expansion& b03 = expansion_det_1111_3x4(a11,a12,a13,a14,a21,a22,a23,a24,a41,a42,a43,a44).negate(); check_capacity( b03 );
+ const expansion& b04 = expansion_det_1111_3x4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34); check_capacity( b04 );
 
- const expansion& b10 = expansion_det4x4(a10,a12,a13,a14,a20,a22,a23,a24,a30,a32,a33,a34,a40,a42,a43,a44).negate();
- const expansion& b11 = expansion_det_1111_3x4(a20,a22,a23,a24,a30,a32,a33,a34,a40,a42,a43,a44);
- const expansion& b12 = expansion_det_1111_3x4(a10,a12,a13,a14,a30,a32,a33,a34,a40,a42,a43,a44).negate();
- const expansion& b13 = expansion_det_1111_3x4(a10,a12,a13,a14,a20,a22,a23,a24,a40,a42,a43,a44);
- const expansion& b14 = expansion_det_1111_3x4(a10,a12,a13,a14,a20,a22,a23,a24,a30,a32,a33,a34).negate();
+ const expansion& b10 = expansion_det4x4(a10,a12,a13,a14,a20,a22,a23,a24,a30,a32,a33,a34,a40,a42,a43,a44).negate(); check_capacity( b10 );
+ const expansion& b11 = expansion_det_1111_3x4(a20,a22,a23,a24,a30,a32,a33,a34,a40,a42,a43,a44); check_capacity( b11 );
+ const expansion& b12 = expansion_det_1111_3x4(a10,a12,a13,a14,a30,a32,a33,a34,a40,a42,a43,a44).negate(); check_capacity(b12);
+ const expansion& b13 = expansion_det_1111_3x4(a10,a12,a13,a14,a20,a22,a23,a24,a40,a42,a43,a44); check_capacity( b13 );
+ const expansion& b14 = expansion_det_1111_3x4(a10,a12,a13,a14,a20,a22,a23,a24,a30,a32,a33,a34).negate(); check_capacity( b14 );
 
- const expansion& b20 = expansion_det4x4(a10,a11,a13,a14,a20,a21,a23,a24,a30,a31,a33,a34,a40,a41,a43,a44);
- const expansion& b21 = expansion_det_1111_3x4(a20,a21,a23,a24,a30,a31,a33,a34,a40,a41,a43,a44).negate();
- const expansion& b22 = expansion_det_1111_3x4(a10,a11,a13,a14,a30,a31,a33,a34,a40,a41,a43,a44);
- const expansion& b23 = expansion_det_1111_3x4(a10,a11,a13,a14,a20,a21,a23,a24,a40,a41,a43,a44).negate();
- const expansion& b24 = expansion_det_1111_3x4(a10,a11,a13,a14,a20,a21,a23,a24,a30,a31,a33,a34);
+ const expansion& b20 = expansion_det4x4(a10,a11,a13,a14,a20,a21,a23,a24,a30,a31,a33,a34,a40,a41,a43,a44); check_capacity( b20 );
+ const expansion& b21 = expansion_det_1111_3x4(a20,a21,a23,a24,a30,a31,a33,a34,a40,a41,a43,a44).negate(); check_capacity( b21 );
+ const expansion& b22 = expansion_det_1111_3x4(a10,a11,a13,a14,a30,a31,a33,a34,a40,a41,a43,a44); check_capacity( b22 );
+ const expansion& b23 = expansion_det_1111_3x4(a10,a11,a13,a14,a20,a21,a23,a24,a40,a41,a43,a44).negate(); check_capacity( b23 );
+ const expansion& b24 = expansion_det_1111_3x4(a10,a11,a13,a14,a20,a21,a23,a24,a30,a31,a33,a34); check_capacity( b24 );
 
- const expansion& b30 = expansion_det4x4(a10,a11,a12,a14,a20,a21,a22,a24,a30,a31,a32,a34,a40,a41,a42,a44).negate();
- const expansion& b31 = expansion_det_1111_3x4(a20,a21,a22,a24,a30,a31,a32,a34,a40,a41,a42,a44);
- const expansion& b32 = expansion_det_1111_3x4(a10,a11,a12,a14,a30,a31,a32,a34,a40,a41,a42,a44).negate();
- const expansion& b33 = expansion_det_1111_3x4(a10,a11,a12,a14,a20,a21,a22,a24,a40,a41,a42,a44);
- const expansion& b34 = expansion_det_1111_3x4(a10,a11,a12,a14,a20,a21,a22,a24,a30,a31,a32,a34).negate();
+ const expansion& b30 = expansion_det4x4(a10,a11,a12,a14,a20,a21,a22,a24,a30,a31,a32,a34,a40,a41,a42,a44).negate(); check_capacity( b30 );
+ const expansion& b31 = expansion_det_1111_3x4(a20,a21,a22,a24,a30,a31,a32,a34,a40,a41,a42,a44); check_capacity( b31 );
+ const expansion& b32 = expansion_det_1111_3x4(a10,a11,a12,a14,a30,a31,a32,a34,a40,a41,a42,a44).negate(); check_capacity( b32 );
+ const expansion& b33 = expansion_det_1111_3x4(a10,a11,a12,a14,a20,a21,a22,a24,a40,a41,a42,a44); check_capacity( b33 );
+ const expansion& b34 = expansion_det_1111_3x4(a10,a11,a12,a14,a20,a21,a22,a24,a30,a31,a32,a34).negate(); check_capacity( b34 );
 
- const expansion& b40 = expansion_det4x4(a10,a11,a12,a13,a20,a21,a22,a23,a30,a31,a32,a33,a40,a41,a42,a43);
- const expansion& b41 = expansion_det_1111_3x4(a20,a21,a22,a23,a30,a31,a32,a33,a40,a41,a42,a43).negate();
- const expansion& b42 = expansion_det_1111_3x4(a10,a11,a12,a13,a30,a31,a32,a33,a40,a41,a42,a43);
- const expansion& b43 = expansion_det_1111_3x4(a10,a11,a12,a13,a20,a21,a22,a23,a40,a41,a42,a43).negate();
+ const expansion& b40 = expansion_det4x4(a10,a11,a12,a13,a20,a21,a22,a23,a30,a31,a32,a33,a40,a41,a42,a43); check_capacity( b40 );
+ const expansion& b41 = expansion_det_1111_3x4(a20,a21,a22,a23,a30,a31,a32,a33,a40,a41,a42,a43).negate(); check_capacity(b41);
+ const expansion& b42 = expansion_det_1111_3x4(a10,a11,a12,a13,a30,a31,a32,a33,a40,a41,a42,a43); check_capacity( b42 );
+ const expansion& b43 = expansion_det_1111_3x4(a10,a11,a12,a13,a20,a21,a22,a23,a40,a41,a42,a43).negate(); check_capacity(b43);
  const expansion& b44 = expansion_det_1111_3x4(a10,a11,a12,a13,a20,a21,a22,a23,a30,a31,a32,a33);
 
 // expansion Delta = b00+b10+b20+b30+b40;
@@ -242,6 +249,7 @@ Sign avro_side5_nd_exact_pck(const double* p0,const double* p1,const double* p2,
     }
   } // loop over all p_sort
  }
+
  return Sign( r_sign*Delta_sign );
 }
 

@@ -67,6 +67,7 @@ initialize_avro()
   GEO::PCK::initialize();
   printf("--> initialized robust predicates.\n");
 
+	#if 0
   if (!glfwInit()) printf("error initializing glfw!\n");
 
   // set the version
@@ -91,6 +92,7 @@ initialize_avro()
   glGetIntegerv(GL_MAJOR_VERSION, &major);
   glGetIntegerv(GL_MINOR_VERSION, &minor);
   printf("--> initialized OpenGL: %s (version %d.%d with GLSL %s)\n",renderer,major,minor,glslVersion);
+	#endif
 
 }
 

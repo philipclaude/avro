@@ -120,6 +120,7 @@ Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<P
   std::vector<index_t> simplex_idx;
   if (number_<=1)
   {
+    if ( nv != index_t(number_+1) ) return {}; // TODO is there a bug somewhere with inexact voronoi diagrams?
     avro_assert_msg( nv == index_t(number_+1) , "nv = %lu , number = %u" , nv , number_ );
     index_t idx = decomposition.add_simplex( number_ , v , parent );
     simplex_idx.push_back(idx);

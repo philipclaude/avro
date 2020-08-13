@@ -96,7 +96,7 @@ UT_TEST_CASE( test_2d_simplex )
   // create random delaunay vertices
   Delaunay delaunay( dim );
   #if 1
-  index_t nb_points = 1e3;
+  index_t nb_points = 1e2;
   std::vector<real_t> x(dim,0.);
   for (index_t k=0;k<nb_points;k++)
   {
@@ -105,19 +105,30 @@ UT_TEST_CASE( test_2d_simplex )
     delaunay.create(x.data());
   }
   #else
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,4);
   CKF_Triangulation ckf(dims);
   ckf.points().copy(delaunay);
+
+  for (index_t k=0;k<delaunay.nb();k++)
+  for (coord_t d=0;d<dim;d++)
+  {
+    //delaunay[k][d] -= .5/(dims[d]-1.0);
+  }
+
   #endif
 
+  GEO::PCK::initialize();
+
   delaunay::VoronoiDiagram diagram( delaunay , domain , true );
-  diagram.compute(true);
+  diagram.compute(false);
+
+  /*
   diagram.clear();
 
   for (index_t k=0;k<delaunay.nb();k++)
     delaunay[k][1] -= 0.1;
-
   diagram.compute(true);
+  */
 
   #if 1
   graphics::Visualizer vis;

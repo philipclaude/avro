@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <new>
+#include <stdlib.h>
 
 namespace GEO {
 
@@ -147,6 +148,7 @@ public:
     expansion(index_t capa) :
         length_(0),
         capacity_(capa) {
+        //geo_debug_assert( capa < std::numeric_limits<index_t>::max() );
     }
 
 #ifdef CPPCHECK
@@ -154,10 +156,14 @@ public:
     // of alloca() is passed to the placement syntax
     // of operator new.
 expansion& new_expansion_on_stack(index_t capa);
-#else
-#define new_expansion_on_stack(capa)                           \
+#elif 1
+#define new_expansion_on_stack(capa)       \
 (new (alloca(expansion::bytes(capa)))expansion(capa))
-//(new expansion(capa))
+#else
+// this is not a good idea to use because I still need to implement a way to free the memory
+#error "should not use! implement expansion memory freeing first.."
+#define new_expansion_on_stack(capa)       \
+(new (malloc(expansion::bytes(capa))) expansion(capa))
 #endif
 
     static expansion* new_expansion_on_heap(index_t capa);
@@ -472,6 +478,13 @@ expansion& new_expansion_on_stack(index_t capa);
             os << i << ':' << x_[i] << ' ';
         }
         return os << std::endl;
+    }
+
+    void show() const {
+        for(index_t i = 0; i < length(); ++i) {
+          printf(" %lu : %g ",i,x_[i]);
+        }
+        printf("\n");
     }
 
 protected:

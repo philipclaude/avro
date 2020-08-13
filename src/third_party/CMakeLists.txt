@@ -10,10 +10,6 @@ add_definitions( -DTRILIBRARY )
 add_source_directories( TRIANGLE_SOURCES "triangle source" triangle )
 set_source_files_properties( ${TRIANGLE_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 
-add_source_directories( TE_SOURCES "tiny expr source" tinyexpr )
-set_source_files_properties( ${TE_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
-include_directories( tinyexpr )
-
 add_source_directories( JSON_SOURCES "json source" json )
 set_source_files_properties( ${JSON_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( json )
@@ -86,4 +82,4 @@ endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TE_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${NNSEARCH_SOURCES} )
+add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${NNSEARCH_SOURCES} )

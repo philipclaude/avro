@@ -29,7 +29,7 @@ UT_TEST_CASE( test_simplex )
   // create random delaunay vertices
   Delaunay delaunay( dim );
   #if 1
-  index_t nb_points = 1e3;
+  index_t nb_points = 1e2;
   std::vector<real_t> x(dim,0.);
   for (index_t k=0;k<nb_points;k++)
   {
@@ -45,13 +45,11 @@ UT_TEST_CASE( test_simplex )
 
   std::vector<real_t> weights( delaunay.nb() , 0.0 );
   delaunay::LaguerreDiagram diagram( delaunay , domain , weights );
-  diagram.set_exact(true);
+  diagram.set_exact(false);
   diagram.compute();
 
-  //diagram.eval_objective();
-
   diagram.optimize_cvt();
-  diagram.optimize_otm();
+  //diagram.optimize_otm();
 
   graphics::Visualizer vis;
   vis.add_topology(diagram);

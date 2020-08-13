@@ -244,7 +244,10 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   {
     // set the centroid to the original seed if the cell volume is zero
     if (V[k]<1e-12)
+    {
+      V[k] = 0.0;
       centroids[k][d] = delaunay_[k][d];
+    }
     else
       centroids[k][d] /= V[k];
   }
@@ -271,7 +274,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   gnorm_w = std::sqrt( gnorm_w );
 
   // compute the CVT energy
-  ConicalProductQuadrature quadrature(number_,1);
+  ConicalProductQuadrature quadrature(number_,2);
   simplex_topology.element().set_basis( BasisFunctionCategory_Lagrange );
   quadrature.define();
   simplex_topology.element().load_quadrature(quadrature);
@@ -279,15 +282,17 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   typedef Integrand_Laguerre_Energy<real_t> Integrand_t;
   Integrand_t integrand(delaunay_,sites,parents,weight_,mass_);
 
+  t0 = clock();
   Functional<Integrand_t> f(integrand);
   f.integrate( simplex_topology );
+  real_t time_integrate = real_t( clock() - t0 )/real_t(CLOCKS_PER_SEC);
 
   real_t energy = f.value();
   for (index_t k=0;k<delaunay_.nb();k++)
     energy += weight_[k]*mass_[k];
 
-  printf("--> f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec, t_d = %g sec.\n",
-          energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_/ProcessCPU::maximum_concurrent_threads(),time_decompose);
+  printf("--> f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec, t_d = %g sec., t_i = %g sec.\n",
+          energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_/ProcessCPU::maximum_concurrent_threads(),time_decompose,time_integrate);
 
   return energy;
 }
@@ -394,9 +399,9 @@ LaguerreDiagram::optimize_cvt()
 	opt.set_min_objective( &nlopt_otm_objective , static_cast<void*>(&data) );
 
   // set some optimization parameters
-  opt.set_xtol_rel(1e-12);
-  opt.set_ftol_rel(1e-12);
-  opt.set_maxeval(10);
+  opt.set_xtol_rel(1e-6);
+  opt.set_ftol_rel(1e-6);
+  opt.set_maxeval(40);
   //opt.set_vector_storage(20);
 
   real_t f_opt;
@@ -415,10 +420,24 @@ LaguerreDiagram::optimize_otm()
   for (index_t k=0;k<n;k++)
   {
     weight_[k] = 0;
-    //delaunay_[k][0] -= 0.1;
   }
+
   mass_ = volume_;
   set_weights(weight_.data());
+
+  real_t extra = 0;
+  for (index_t k=0;k<10;k++)
+  {
+    extra += 9*mass_[k];
+    mass_[k] *= 10;
+  }
+
+  extra /= (mass_.size() - 10);
+  for (index_t k=10;k<n;k++)
+  {
+    mass_[k] -= extra;
+    //if (mass_[k] < 0) mass_[k] += extra;
+  }
 
   std::vector<real_t> x(weight_.begin(),weight_.end());
 

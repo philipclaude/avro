@@ -291,7 +291,8 @@ Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
     case 5:
       // this vertex is the intersection of four bisectors with a pentatope (p0-p1-p2-p3-p4) of the topology
       result = GEO::PCK::side5_SOS(zi,site_[0],site_[1],site_[2],site_[3],zj,simplex_[0],simplex_[1],simplex_[2],simplex_[3],simplex_[4],dim_);
-      avro_assert( result!=GEO::ZERO );
+			if (result == GEO::ZERO) return result;
+      //avro_assert( result!=GEO::ZERO );
       break;
     default:
       printf("more predicates needed for %d-simplices!",(int)simplex_.size());

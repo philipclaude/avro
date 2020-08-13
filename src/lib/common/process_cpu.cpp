@@ -52,6 +52,12 @@ namespace ProcessCPU
       pthread_mutex_init(&mutex_,0);
       pthread_attr_init(&attr_);
       pthread_attr_setdetachstate(&attr_,PTHREAD_CREATE_JOINABLE);
+
+      size_t stksize;
+      pthread_attr_t attribute;
+      pthread_attr_getstacksize(&attribute, &stksize);
+      printf("stack size = %lu\n",stksize);
+      //pthread_attr_setstacksize(&attribute,1024);
     }
 
     std::string name() const { return "PThread"; }
