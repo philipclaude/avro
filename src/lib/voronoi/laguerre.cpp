@@ -12,6 +12,8 @@
 #include "voronoi/laguerre.h"
 #include "voronoi/voronoi_cell.h"
 
+#include <HLBFGS/HLBFGS.h>
+
 #include <tinymat/types/SurrealS.h>
 #include <tinymat/types/SurrealD.h>
 
@@ -380,6 +382,59 @@ nlopt_otm_objective( unsigned n , const double* x , double* grad, void* data0 )
   return energy;
 }
 
+#define OPTIMIZER_NLOPT 0
+LaguerreDiagram* __laguerre__ = nullptr;
+int __mode__ = -1;
+
+void hlbfgs_otm_objective(int N, double* x, double *prev_x, double* f, double* g)
+{
+  avro_assert( __laguerre__ != nullptr );
+  avro_assert( __mode__ >= 0 );
+  LaguerreDiagram& laguerre = *__laguerre__;
+  int mode = __mode__;
+
+  if (mode == 0)
+    laguerre.set_delaunay(x,laguerre.points().dim());
+  else if (mode == 1)
+    laguerre.set_weights(x);
+  else
+    avro_assert_not_reached;
+
+  // recompute the voronoi diagram
+  laguerre.compute();
+
+  laguerre.clear_decomposition();
+
+  // compute the energy and gradients
+  std::vector<real_t> dE_dZ,dE_dW,volumes;
+  real_t energy = laguerre.eval_objective( dE_dZ , dE_dW , volumes );
+  if (g != nullptr)
+  {
+    if (mode == 0)
+    {
+      // cvt mode
+      for (index_t k=0;k<dE_dZ.size();k++)
+        g[k] = dE_dZ[k];
+    }
+    else if (mode == 1)
+    {
+      energy *= -1.0;
+
+      // otm mode
+      for (index_t k=0;k<dE_dW.size();k++)
+        g[k] = -dE_dW[k];
+    }
+    else
+      avro_assert_not_reached;
+  }
+  laguerre.set_volumes(volumes);
+
+  *f = energy;
+}
+
+void newiteration(int iter, int call_iter, double *x, double* f, double *g,  double* gnorm)
+{}
+
 void
 LaguerreDiagram::optimize_cvt()
 {
@@ -391,6 +446,7 @@ LaguerreDiagram::optimize_cvt()
   for (index_t d=0;d<dim;d++)
     x[k*dim+d] = delaunay_(k,d);
 
+  #if OPTIMIZER_NLOPT
   // setup the optimizer
   nlopt::opt opt( nlopt::LD_LBFGS , n );
   nlopt_data_cvt data = {*this,0,1,0};
@@ -399,9 +455,9 @@ LaguerreDiagram::optimize_cvt()
 	opt.set_min_objective( &nlopt_otm_objective , static_cast<void*>(&data) );
 
   // set some optimization parameters
-  opt.set_xtol_rel(1e-6);
-  opt.set_ftol_rel(1e-6);
-  opt.set_maxeval(40);
+  opt.set_xtol_rel(1e-12);
+  opt.set_ftol_rel(1e-12);
+  opt.set_maxeval(20);
   //opt.set_vector_storage(20);
 
   real_t f_opt;
@@ -409,6 +465,26 @@ LaguerreDiagram::optimize_cvt()
   result = opt.optimize(x,f_opt);
   std::string desc = nloptResultDescription(result);
   printf("nlopt result: %s\n",desc.c_str());
+  #else
+  __laguerre__ = this;
+  __mode__ = 0;
+  double parameter[20];
+  int info[20];
+  int T = 0;
+  int M = 7;
+  int num_iter = 20;
+  bool with_hessian = false;
+
+  //initialize
+  INIT_HLBFGS(parameter, info);
+  info[4] = num_iter;
+  info[6] = T;
+  info[7] = with_hessian ? 1:0;
+  info[10] = 0;
+  info[11] = 1;
+
+  HLBFGS(n, M, x.data() , hlbfgs_otm_objective , 0, HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
+  #endif
 }
 
 void
@@ -426,10 +502,11 @@ LaguerreDiagram::optimize_otm()
   set_weights(weight_.data());
 
   real_t extra = 0;
+  index_t f = 2;
   for (index_t k=0;k<10;k++)
   {
-    extra += 9*mass_[k];
-    mass_[k] *= 10;
+    extra += (f - 1)*mass_[k];
+    mass_[k] *= f;
   }
 
   extra /= (mass_.size() - 10);
@@ -442,6 +519,7 @@ LaguerreDiagram::optimize_otm()
   std::vector<real_t> x(weight_.begin(),weight_.end());
 
   // setup the optimizer
+  #if OPTIMIZER_NLOPT
   nlopt::opt opt( nlopt::LD_LBFGS , n );
   nlopt_data_cvt data = {*this,0,1,1};
 
@@ -465,6 +543,27 @@ LaguerreDiagram::optimize_otm()
   result = opt.optimize(x,f_opt);
   std::string desc = nloptResultDescription(result);
   printf("nlopt result: %s\n",desc.c_str());
+  #else
+
+  __laguerre__ = this;
+  __mode__ = 1;
+  double parameter[20];
+  int info[20];
+  int T = 0;
+  int M = 7;
+  int num_iter = 20;
+  bool with_hessian = false;
+
+  //initialize
+  INIT_HLBFGS(parameter, info);
+  info[4] = num_iter;
+  info[6] = T;
+  info[7] = with_hessian ? 1:0;
+  info[10] = 0;
+  info[11] = 1;
+
+  HLBFGS(n, M, x.data() , hlbfgs_otm_objective , 0, HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
+  #endif
 }
 
 } // delaunay
