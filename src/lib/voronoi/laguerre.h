@@ -63,6 +63,7 @@ private:
 
   Topology<Simplex> decomposition_;
   Points decomposition_points_;
+  Topology<Simplex> facets_;
 };
 
 } // delaunay

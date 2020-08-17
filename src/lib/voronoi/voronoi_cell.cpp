@@ -7,8 +7,6 @@
 
 #include <csignal>
 
-#define SAFE_HASH 1
-
 bool __check_capacity__ = true;
 
 namespace avro
@@ -186,11 +184,15 @@ VoronoiCell::compute_simplex()
 {
   avro_assert( facets_ != nullptr );
 
+  // the bisectors need to be cleared everytime we reclip
+  bisector_.clear();
+  ids_.clear();
+
+  // clip the voronoi cell for every simplex in the domain
   for (index_t k=0;k<domain_.nb();k++)
   {
+    // the voronoi vertices need to be cleared everytime we create a new polytope
     vertex_.clear();
-    bisector_.clear();
-    ids_.clear();
 
     // create the initial points
     polytope_ = linspace(domain_.nv(k));
@@ -278,7 +280,7 @@ VoronoiCell::get_bisector( int b , index_t& p0 , index_t& p1 ) const
 {
   std::map<int,Bisector>::const_iterator it;
   it = ids_.find(b);
-  avro_assert( it != ids_.end() );
+  avro_assert_msg( it != ids_.end() , "bisector %d not found" , b );
   p0 = it->second.p0;
   p1 = it->second.p1;
 }
@@ -287,12 +289,7 @@ void
 VoronoiCell::clip_by_bisector( index_t j , index_t bj )
 {
   // retrieve the bisector
-  #if SAFE_HASH
-  //int b = delaunay_.bisector( 0 , j ); // local retrieval
   int b = add_bisector( site_ , bj );
-  #else
-  int b = delaunay_.bisector( site_ , bj );
-  #endif
 
   // initialize the clipped polytope
   qpolytope_.clear();
@@ -313,7 +310,6 @@ VoronoiCell::clip_by_bisector( index_t j , index_t bj )
 
   // the current polytope becomes the clipped one
   polytope_.assign( qpolytope_.begin() , qpolytope_.end() );
-  //polytope_ = q;
   uniquify(polytope_);
   for (index_t ii=0;ii<polytope_.size();ii++)
     vertex_[ polytope_[ii] ].setBaseSite( delaunay_[site_] );
@@ -326,13 +322,7 @@ VoronoiCell::clip_edge( const index_t e0 , const index_t e1 , const int b , std:
   Vertex& v1 = vertex_[e1];
 
   index_t pi,pj;
-  delaunay_.seeds(b,pi,pj);
-
-  #if SAFE_HASH
-  //pi = neighbours_(site_,pi);
-  //pj = neighbours_(site_,pj);
   get_bisector( b , pi , pj );
-  #endif
 
   const real_t* zi = delaunay_[site_];
   const real_t* zj;
@@ -365,13 +355,6 @@ VoronoiCell::clip_edge( const index_t e0 , const index_t e1 , const int b , std:
     v2.setBaseSite(delaunay_[site_]);
     v2.intersectSymbolic( &v0 , &v1 , delaunay_ );
     v2.setSites( delaunay_ , ids_ );
-
-    const std::vector<const real_t*>& sites = v2.sites();
-    for (index_t s=0;s<sites.size();s++)
-    {
-      //avro_assert( sites[s] != zj );
-      if (sites[s] == zj) printf("conflict %p\n",(void*)zj);
-    }
 
     // this vertex lies exactly on the slicing bisector
     v2.addBisector( b );
@@ -524,6 +507,16 @@ VoronoiCell::generate_simplices()
     avro_implement;
 }
 
+void
+VoronoiCell::print() const
+{
+  std::map<Bisector,int>::const_iterator it;
+  for (it=bisector_.begin();it!=bisector_.end();++it)
+  {
+    printf("bisector (%lu,%lu) with id %d\n",it->first.p0,it->first.p1,it->second);
+  }
+}
+
 VoronoiDiagram::VoronoiDiagram( Delaunay& delaunay , const TopologyBase& domain , bool simplex ) :
   Topology<Polytope>(points_,domain.number()),
   points_(delaunay.dim()),
@@ -599,6 +592,8 @@ VoronoiDiagram::compute( bool exact )
   time_voronoi_ = 0;
   real_t time_decompose = 0;
 
+  std::map<Bisector,int> bisectors;
+
   // accumulate the result
   sites_.clear();
   for (index_t k=0;k<cells_.size();k++)
@@ -631,9 +626,19 @@ VoronoiDiagram::compute( bool exact )
     for (index_t j=0;j<vf.nb();j++)
     {
       std::vector<int> f = vf.get(j);
+      for (index_t i=0;i<f.size();i++)
+      {
+        if (f[i] < 0) continue; // original mesh facets are already in global numbering
+        index_t p0,p1;
+        delaunay_.seeds(f[i],p0,p1);
+        cell.get_bisector( f[i] , p0 , p1 );
+        Bisector b(p0,p1);
+        if (bisectors.find(b) == bisectors.end())
+          bisectors.insert( {b,bisectors.size()} );
+        f[i] = bisectors.at(b);
+      }
       points_.incidence().add( f.data() , f.size() );
     }
-
   }
 
   printf("--> timing: neighbours (%3.4g sec.), clipping (%3.4g sec.), decompose (%3.4g sec.)\n",time_neighbours_,time_voronoi_,time_decompose);

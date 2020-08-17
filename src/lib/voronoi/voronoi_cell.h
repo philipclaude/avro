@@ -44,6 +44,10 @@ public:
 
   bool incomplete() const { return incomplete_; }
 
+  void get_bisector( int b , index_t& p0 , index_t& p1 ) const;
+
+  void print() const;
+
 private:
   void initialize_polytope();
   void initialize_simplex();
@@ -57,7 +61,6 @@ private:
   bool security_radius_reached( index_t bj ) const;
 
   int add_bisector( index_t p0 , index_t p1 );
-  void get_bisector( int b , index_t& p0 , index_t& p1 ) const;
 
   const index_t site_;
   Points points_;

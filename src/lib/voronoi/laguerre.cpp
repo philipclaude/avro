@@ -80,7 +80,8 @@ LaguerreDiagram::LaguerreDiagram( const Points& sites , const Topology<Simplex>&
   exact_(true),
   diagram_(nullptr),
   decomposition_(decomposition_points_,domain.number()),
-  decomposition_points_( points_.dim() )
+  decomposition_points_( points_.dim() ),
+  facets_(points_,domain.number()-1)
 {
   avro_assert( sites.nb() > 0 );
   coord_t dim = sites.dim();
@@ -137,6 +138,7 @@ LaguerreDiagram::compute()
   points_.clear();
   points_.set_dim(dim);
   clear();
+  facets_.clear();
 
   // copy the points, removing the extra coordinate (in dim+1)
   for (index_t k=0;k<diagram_->points().nb();k++)
@@ -149,6 +151,16 @@ LaguerreDiagram::compute()
   sites_ = diagram_->sites();
 
   avro_assert( sites_.size() == nb() );
+
+  // calculate the set of all bisectors
+  std::set<int> bisectors;
+  for (index_t k=0;k<points_.nb();k++)
+  {
+    std::vector<int> b = points_.incidence().get(k);
+    for (index_t j=0;j<b.size();j++)
+      bisectors.insert( b[j] );
+  }
+  printf("there are %lu bisectors\n",bisectors.size());
 }
 
 real_t
@@ -268,7 +280,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
       gnorm_x += std::pow(dE_dZ[k*dim+d],2);
     }
 
-    dE_dW[k] = -V[k] + mass_[k];
+    dE_dW[k] = mass_[k] -V[k];
     gnorm_w  += std::pow(dE_dW[k],2);
   }
 
@@ -382,7 +394,7 @@ nlopt_otm_objective( unsigned n , const double* x , double* grad, void* data0 )
   return energy;
 }
 
-#define OPTIMIZER_NLOPT 0
+#define OPTIMIZER_NLOPT 1
 LaguerreDiagram* __laguerre__ = nullptr;
 int __mode__ = -1;
 
@@ -502,7 +514,7 @@ LaguerreDiagram::optimize_otm()
   set_weights(weight_.data());
 
   real_t extra = 0;
-  index_t f = 2;
+  index_t f = 5;
   for (index_t k=0;k<10;k++)
   {
     extra += (f - 1)*mass_[k];
