@@ -231,7 +231,6 @@ VoronoiCell::compute_simplex()
     index_t j = 1;
     while (true)
     {
-      //index_t bj = neighbours_(site_,j);
       index_t bj = nn_[j];
       clip_by_bisector( j , bj );
 
@@ -574,7 +573,6 @@ VoronoiDiagram::compute( bool exact )
   index_t nb_trouble = 0;
   for (index_t k=0;k<cells_.size();k++)
     if (cells_[k]->incomplete()) nb_trouble++;
-  //printf("reclipping %lu troublemakers.\n",nb_trouble);
 
   for (index_t k=0;k<cells_.size();k++)
   {
@@ -596,6 +594,8 @@ VoronoiDiagram::compute( bool exact )
 
   // accumulate the result
   sites_.clear();
+  vertex2site_.clear();
+  vertices_.clear();
   for (index_t k=0;k<cells_.size();k++)
   {
     const VoronoiCell& cell = *cells_[k].get();
@@ -619,13 +619,36 @@ VoronoiDiagram::compute( bool exact )
 
     // add the points
     for (index_t j=0;j<cell.points().nb();j++)
+    {
+      vertex2site_.push_back( k );
       points_.create( cell.points()[j] );
+    }
 
     // add the vertex-to-facet information
     const Table<int>& vf = cell.element().incidence();
     for (index_t j=0;j<vf.nb();j++)
     {
       std::vector<int> f = vf.get(j);
+
+      SymbolicVertex v;
+      for (index_t j=0;j<f.size();j++)
+      {
+        if (f[j] < 0)
+        {
+          v.indices.push_back(f[j]); // ghost vertex
+          v.indices.push_back(k);
+          continue;
+        }
+        index_t pi,pj;
+        cell.get_bisector( f[j] , pi , pj );
+        v.indices.push_back(pi);
+        v.indices.push_back(pj);
+      }
+      uniquify( v.indices );
+      std::sort( v.indices.begin() , v.indices.end() );
+      avro_assert_msg( v.indices.size() == (number_+1) , "|v| = %lu" , v.indices.size() );
+      vertices_.push_back(v);
+
       for (index_t i=0;i<f.size();i++)
       {
         if (f[i] < 0) continue; // original mesh facets are already in global numbering
@@ -637,14 +660,18 @@ VoronoiDiagram::compute( bool exact )
           bisectors.insert( {b,bisectors.size()} );
         f[i] = bisectors.at(b);
       }
+
       points_.incidence().add( f.data() , f.size() );
     }
   }
+
+  bisectors_.clear();
+  for (std::map<Bisector,int>::const_iterator it=bisectors.begin();it!=bisectors.end();++it)
+    bisectors_.insert({it->second,it->first});
 
   printf("--> timing: neighbours (%3.4g sec.), clipping (%3.4g sec.), decompose (%3.4g sec.)\n",time_neighbours_,time_voronoi_,time_decompose);
 }
 
 } // delaunay
-
 
 } // avro

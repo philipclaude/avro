@@ -119,6 +119,53 @@ LaguerreDiagram::clear_decomposition()
   decomposition_.clear();
 }
 
+class VoronoiFacets : public Topology<Polytope>
+{
+public:
+  VoronoiFacets( Points& points , index_t number , const std::set<int>& bisectors , const std::map<SymbolicVertex,index_t>& symbolic ) :
+    Topology<Polytope>(points,number),
+    bisectors_(bisectors),
+    symbolic_(symbolic)
+  {
+  }
+
+  void extract()
+  {
+    std::vector< std::set<int> > bisector_vrep( bisectors_.size() );
+    std::map<int,index_t> bisector_index;
+    for (std::set<int>::const_iterator ib=bisectors_.begin();ib!=bisectors_.end();++ib)
+      bisector_index.insert( {*ib,bisector_index.size()} );
+
+    for (std::map<SymbolicVertex,index_t>::const_iterator iv=symbolic_.begin();iv!=symbolic_.end();++iv)
+    {
+      const SymbolicVertex& v = iv->first;
+      const std::vector<int>& b = v.indices;
+
+      for (index_t j=0;j<b.size();j++)
+      {
+        bisector_vrep[ bisector_index.at(b[j]) ].insert( iv->second );
+      }
+    }
+
+    for (index_t k=0;k<bisector_vrep.size();k++)
+    {
+      std::vector<index_t> facet( bisector_vrep[k].begin(),bisector_vrep[k].end() );
+      if (facet.size() == 0) continue;
+      add( facet.data(),facet.size() );
+    }
+
+    //Table<index_t>::print();
+    printf("found %lu facets\n",nb());
+  }
+
+private:
+  const std::set<int>& bisectors_;
+  const std::map<SymbolicVertex,index_t>& symbolic_;
+
+  std::vector<int> elemL_;
+  std::vector<int> elemR_;
+};
+
 void
 LaguerreDiagram::compute()
 {
@@ -128,6 +175,7 @@ LaguerreDiagram::compute()
   else
   {
     diagram_->clear();
+    diagram_->points().clear();
   }
   diagram_->compute(exact_);
 
@@ -152,15 +200,24 @@ LaguerreDiagram::compute()
 
   avro_assert( sites_.size() == nb() );
 
-  // calculate the set of all bisectors
+  // calculate the set of all bisectors and symbolic vertices
   std::set<int> bisectors;
+  std::map<SymbolicVertex,index_t> symbolic;
+  const std::vector<SymbolicVertex>& vertices = diagram_->vertices();
+  avro_assert( vertices.size() == points_.nb() );
   for (index_t k=0;k<points_.nb();k++)
   {
     std::vector<int> b = points_.incidence().get(k);
     for (index_t j=0;j<b.size();j++)
       bisectors.insert( b[j] );
+
+    const SymbolicVertex& v = vertices[k];
+    if (symbolic.find(v) == symbolic.end())
+      symbolic.insert({v,k});
   }
-  printf("there are %lu bisectors\n",bisectors.size());
+  printf("there are %lu unique voronoi vertices (total %lu) and %lu bisectors (%lu)\n",symbolic.size(),points_.nb(),bisectors.size(),diagram_->bisectors().size());
+  VoronoiFacets facets(points_,number_,bisectors,symbolic);
+  facets.extract();
 }
 
 real_t
@@ -306,7 +363,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
     energy += weight_[k]*mass_[k];
 
   printf("--> f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec, t_d = %g sec., t_i = %g sec.\n",
-          energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_/ProcessCPU::maximum_concurrent_threads(),time_decompose,time_integrate);
+          energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_,time_decompose,time_integrate);
 
   return energy;
 }

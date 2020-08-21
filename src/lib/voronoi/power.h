@@ -1,5 +1,5 @@
-#ifndef AVRO_LIB_VORONOI_LAGUERRE_H_
-#define AVRO_LIB_VORONOI_LAGUERRE_H_
+#ifndef AVRO_LIB_VORONOI_POWER_H_
+#define AVRO_LIB_VORONOI_POWER_H_
 
 #include "common/types.h"
 
