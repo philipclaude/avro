@@ -10,6 +10,9 @@
 #include "mesh/topology.h"
 
 #include "voronoi/delaunay.h"
+#include "voronoi/voronoi.h"
+
+class Lite_Sparse_Matrix;
 
 namespace avro
 {
@@ -18,21 +21,60 @@ namespace delaunay
 {
 
 class VoronoiDiagram;
+class PowerDiagram;
 
-class LaguerreDiagram : public Topology<Polytope>
+class PowerFacets : public Topology<Polytope>
 {
 public:
-  LaguerreDiagram( const Points& sites , const Topology<Simplex>& domain ,
+  PowerFacets( PowerDiagram& diagram );
+
+  void extract();
+  void compute_quantities();
+
+
+  void construct_laplacian();
+  void construct_gradient();
+  void construct_divergence();
+
+  void print() const;
+
+  const DOF<real_t>& bij() const { return bij_; }
+  const std::vector<real_t>& aij() const { return aij_; }
+  const std::map<index_t,Bisector>& indices() const { return indices_; }
+
+private:
+  PowerDiagram& diagram_;
+
+  std::vector<index_t> cellL_;
+  std::vector<int> cellR_;
+  std::vector<int> label_;
+
+  // information needed to construct the hessian
+  std::vector<real_t> aij_;
+  std::vector<real_t> lij_;
+  DOF<real_t> bij_;
+  std::map<index_t,Bisector> indices_;
+
+  std::set<int> bisectors_;
+  std::map<Bisector,index_t> bisector2facet_;
+  std::map<SymbolicVertex,index_t> symbolic_;
+  std::map<index_t,index_t> unique_vertex_;
+  std::vector<std::set<int>> neighbours_;
+};
+
+class PowerDiagram : public Topology<Polytope>
+{
+public:
+  PowerDiagram( const Points& sites , const Topology<Simplex>& domain ,
       const std::vector<real_t>& weights = std::vector<real_t>() );
 
   void set_target_mass( const std::vector<real_t>& mass );
-  void initialize();
   void compute();
+
   void optimize_cvt();
   void optimize_otm();
 
   real_t eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW , std::vector<real_t>& volumes );
-  real_t eval_objective();
 
   void set_exact( bool x ) { exact_ = x; }
 
@@ -41,6 +83,13 @@ public:
   void set_volumes( std::vector<real_t>& v ) { volume_ = v; }
 
   void clear_decomposition();
+
+  const VoronoiDiagram& diagram() const { return *diagram_.get(); }
+
+  index_t site( index_t k ) const { avro_assert( k < nb() && k < sites_.size() ); return sites_[k]; }
+  const Delaunay& delaunay() const { return delaunay_; }
+
+  void get_hessian( Lite_Sparse_Matrix& h ) const;
 
 private:
   Points points_;
@@ -63,7 +112,14 @@ private:
 
   Topology<Simplex> decomposition_;
   Points decomposition_points_;
-  Topology<Simplex> facets_;
+
+  PowerFacets facets_;
+
+
+  std::vector<double> diag_;
+  std::vector<double> values_;
+  std::vector<int> rowind_;
+  std::vector<int> colptr_;
 };
 
 } // delaunay

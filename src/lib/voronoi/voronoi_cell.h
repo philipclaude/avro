@@ -112,7 +112,7 @@ public:
   const VoronoiCell& cell( index_t k ) const { return *cells_[k].get(); }
 
   index_t vertex2site( index_t k ) const { return vertex2site_[k]; }
-  const std::vector<SymbolicVertex>& vertices() const { return vertices_; }
+  const std::vector<SymbolicVertex>& symbolic_vertices() const { return symbolic_vertices_; }
   const std::map<int,Bisector>& bisectors() const { return bisectors_; }
 
   real_t time_neighbours() const { return time_neighbours_; }
@@ -131,7 +131,7 @@ private:
   GEO::NearestNeighborSearch* nns_;
 
   std::vector<index_t> vertex2site_;
-  std::vector<SymbolicVertex> vertices_;
+  std::vector<SymbolicVertex> symbolic_vertices_;
   std::map<int,Bisector> bisectors_;
 
 };

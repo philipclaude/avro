@@ -9,10 +9,11 @@
 #include "numerics/integration.h"
 #include "numerics/nlopt_result.h"
 
-#include "voronoi/laguerre.h"
+#include "voronoi/power.h"
 #include "voronoi/voronoi_cell.h"
 
 #include <HLBFGS/HLBFGS.h>
+#include <HLBFGS/Lite_Sparse_Matrix.h>
 
 #include <tinymat/types/SurrealS.h>
 #include <tinymat/types/SurrealD.h>
@@ -26,13 +27,13 @@ namespace delaunay
 {
 
 template<typename _T>
-class Integrand_Laguerre_Energy : public Integrand<Integrand_Laguerre_Energy<_T>>
+class Integrand_Power_Energy : public Integrand<Integrand_Power_Energy<_T>>
 {
 public:
 
   typedef _T T;
 
-  Integrand_Laguerre_Energy( const Points& delaunay , const std::vector<index_t>& sites , const std::vector<index_t>& parents ,
+  Integrand_Power_Energy( const Points& delaunay , const std::vector<index_t>& sites , const std::vector<index_t>& parents ,
     const std::vector<T>& weights, const std::vector<real_t>& mass ) :
     delaunay_(delaunay),
     sites_(sites),
@@ -50,14 +51,12 @@ public:
     avro_assert_msg( k < parents_.size() , "elem = %lu, nb_parents = %lu", k , parents_.size() );
 
     index_t parent = k;
-    //index_t parent = parents_[k];
     index_t site = sites_[parent];
     avro_assert_msg( site < delaunay_.nb() , "elem = %lu, requested site %lu but nb_delaunay = %lu",k,site,delaunay_.nb());
     const real_t* z = delaunay_[ sites_[parent] ];
     T f = 0;
     for (coord_t d=0;d<delaunay_.dim()-1;d++)
       f += (z[d] - x[d])*(z[d] - x[d]);
-    f -= weights_[ sites_[parent] ];
     return f;
   }
 
@@ -69,7 +68,7 @@ public:
     const std::vector<real_t>& mass_;
 };
 
-LaguerreDiagram::LaguerreDiagram( const Points& sites , const Topology<Simplex>& domain , const std::vector<real_t>& weights ) :
+PowerDiagram::PowerDiagram( const Points& sites , const Topology<Simplex>& domain , const std::vector<real_t>& weights ) :
   Topology<Polytope>(points_,domain.number()),
   points_(sites.dim()),
   domain_points_(sites.dim()+1),
@@ -81,7 +80,7 @@ LaguerreDiagram::LaguerreDiagram( const Points& sites , const Topology<Simplex>&
   diagram_(nullptr),
   decomposition_(decomposition_points_,domain.number()),
   decomposition_points_( points_.dim() ),
-  facets_(points_,domain.number()-1)
+  facets_(*this)
 {
   avro_assert( sites.nb() > 0 );
   coord_t dim = sites.dim();
@@ -113,61 +112,196 @@ LaguerreDiagram::LaguerreDiagram( const Points& sites , const Topology<Simplex>&
 }
 
 void
-LaguerreDiagram::clear_decomposition()
+PowerDiagram::clear_decomposition()
 {
   decomposition_points_.clear();
   decomposition_.clear();
 }
 
-class VoronoiFacets : public Topology<Polytope>
-{
-public:
-  VoronoiFacets( Points& points , index_t number , const std::set<int>& bisectors , const std::map<SymbolicVertex,index_t>& symbolic ) :
-    Topology<Polytope>(points,number),
-    bisectors_(bisectors),
-    symbolic_(symbolic)
-  {
-  }
-
-  void extract()
-  {
-    std::vector< std::set<int> > bisector_vrep( bisectors_.size() );
-    std::map<int,index_t> bisector_index;
-    for (std::set<int>::const_iterator ib=bisectors_.begin();ib!=bisectors_.end();++ib)
-      bisector_index.insert( {*ib,bisector_index.size()} );
-
-    for (std::map<SymbolicVertex,index_t>::const_iterator iv=symbolic_.begin();iv!=symbolic_.end();++iv)
-    {
-      const SymbolicVertex& v = iv->first;
-      const std::vector<int>& b = v.indices;
-
-      for (index_t j=0;j<b.size();j++)
-      {
-        bisector_vrep[ bisector_index.at(b[j]) ].insert( iv->second );
-      }
-    }
-
-    for (index_t k=0;k<bisector_vrep.size();k++)
-    {
-      std::vector<index_t> facet( bisector_vrep[k].begin(),bisector_vrep[k].end() );
-      if (facet.size() == 0) continue;
-      add( facet.data(),facet.size() );
-    }
-
-    //Table<index_t>::print();
-    printf("found %lu facets\n",nb());
-  }
-
-private:
-  const std::set<int>& bisectors_;
-  const std::map<SymbolicVertex,index_t>& symbolic_;
-
-  std::vector<int> elemL_;
-  std::vector<int> elemR_;
-};
+PowerFacets::PowerFacets( PowerDiagram& diagram ) :
+  Topology<Polytope>(diagram.points(),diagram.number()-1),
+  diagram_(diagram),
+  bij_( diagram.points().dim() )
+{}
 
 void
-LaguerreDiagram::compute()
+PowerFacets::extract()
+{
+  // clear any existing information
+  bisectors_.clear();
+  symbolic_.clear();
+  unique_vertex_.clear();
+  label_.clear();
+  cellR_.clear();
+  cellL_.clear();
+  clear();
+
+  // calculate the set of all bisectors and symbolic vertices
+  const std::vector<SymbolicVertex>& vertices = diagram_.diagram().symbolic_vertices();
+  avro_assert( vertices.size() == points_.nb() );
+  for (index_t k=0;k<points_.nb();k++)
+  {
+    // retrieve all bisectors this point is on
+    std::vector<int> b = points_.incidence().get(k);
+    for (index_t j=0;j<b.size();j++)
+      bisectors_.insert( b[j] );
+
+    // associate this ver
+    const SymbolicVertex& v = vertices[k];
+    if (symbolic_.find(v) == symbolic_.end())
+    {
+      symbolic_.insert({v,k});
+      unique_vertex_.insert( {k,k} );
+    }
+    else
+      unique_vertex_.insert( {k,symbolic_.at(v) } );
+  }
+  printf("there are %lu unique voronoi vertices (total %lu) and %lu bisectors (%lu)\n",
+          symbolic_.size(),points_.nb(),bisectors_.size(),diagram_.diagram().bisectors().size());
+
+  std::vector<int> hrep;
+
+  std::map<ElementIndices,index_t> created;
+  ElementIndices facet;
+  for (index_t k=0;k<diagram_.nb();k++)
+  {
+    // extract the hrep of this cell
+    hrep.clear();
+    diagram_.element().hrep( diagram_(k) , diagram_.nv(k) , hrep );
+
+    // loop through the hrep
+    for (index_t j=0;j<hrep.size();j++)
+    {
+      // extract the vrep and determine unique entries
+      std::vector<index_t>& vrep = facet.indices;
+      vrep.clear();
+      diagram_.element().vrep( diagram_(k) , diagram_.nv(k) , hrep[j] , vrep );
+      for (index_t i=0;i<vrep.size();i++)
+        vrep[i] = unique_vertex_.at( vrep[i] );
+      std::sort( vrep.begin(),vrep.end());
+
+      // determine if this facet was already created
+      if (created.find(facet) != created.end())
+      {
+        // created: assign the right cell
+        cellR_[created.at(facet)] = k;
+        avro_assert( label_[created.at(facet)] == hrep[j] );
+      }
+      else
+      {
+        // not created: assign the left cell information
+        cellL_.push_back(k);
+        cellR_.push_back(-1);
+        label_.push_back(hrep[j]);
+        created.insert({facet,nb()});
+        add( vrep.data() , vrep.size() );
+      }
+    }
+  }
+  printf("extracted %lu facets\n",nb());
+  compute_quantities();
+}
+
+void
+PowerFacets::compute_quantities()
+{
+  bij_.clear();
+  aij_.clear();
+  neighbours_.clear();
+  neighbours_.resize( diagram_.delaunay().nb() );
+  indices_.clear();
+
+  // first determine how many quantities we need
+  std::map<index_t,Bisector> facet2bisector;
+  std::map<Bisector,index_t> bisector2facet;
+  std::set<Bisector> bisectors;
+  for (index_t k=0;k<nb();k++)
+  {
+    // skip interior domain facets
+    if (label_[k] < 0 && cellR_[k] >= 0) continue;
+    if (label_[k] < 0)
+    {
+      // this is a boundary facet
+      // we need to determine the site of the left element
+      avro_assert( cellR_[k] < 0 );
+
+      index_t pi = diagram_.site( cellL_[k] );
+      Bisector b(label_[k],pi);
+      if (bisectors.find(b) == bisectors.end()) bisectors.insert(b);
+      facet2bisector.insert({k,b});
+      bisector2facet.insert({b,k});
+      neighbours_[pi].insert(label_[k]);
+      continue;
+    }
+    const Bisector& b = diagram_.diagram().bisectors().at( label_[k] );
+    if (bisectors.find(b) == bisectors.end()) bisectors.insert(b);
+    facet2bisector.insert({k,b});
+    bisector2facet.insert({b,k});
+    neighbours_[b.p0].insert(b.p1);
+    neighbours_[b.p1].insert(b.p0);
+  }
+  printf("there are %lu cell boundaries\n",bisectors.size());
+  avro_assert( bisector2facet.size() == bisectors.size() );
+
+  std::map<index_t,index_t> facet2id;
+  std::map<index_t,index_t> id2facet;
+
+  aij_.resize( bisectors.size() );
+  std::vector<real_t> p0(points_.dim(),0.0);
+  std::map<Bisector,index_t>::iterator it;
+  for (it=bisector2facet.begin();it!=bisector2facet.end();++it)
+  {
+    index_t id = bij_.nb();
+    facet2id.insert( {it->second,id} );
+    id2facet.insert( {id,it->second} );
+    bij_.add( p0.data() , p0.size() );
+    aij_[id] = 0.;
+    indices_.insert( {id,it->first} );
+  }
+
+  std::vector<real_t> centroid(points_.dim());
+  for (it=bisector2facet.begin();it!=bisector2facet.end();++it)
+  {
+    const Bisector& b = it->first;
+    index_t facet = it->second;
+    index_t id = facet2id[facet];
+
+    real_t volume = 0.0;
+    if (number_ == 1)
+    {
+      // compute the volume of this facet
+      avro_assert( nv(facet) == 2 );
+      volume = numerics::distance( points_[operator()(facet,0)] , points_[operator()(facet,1)] , points_.dim() );
+      aij_[id] += volume;
+    }
+    else
+      avro_implement;
+
+    // compute the centroid of this facet
+    numerics::centroid( operator()(facet) , nv(facet) , points_ , centroid );
+
+    // add the contribution (we will divide by the total volume later)
+    for (index_t j=0;j<centroid.size();j++)
+      bij_[id][j] += volume*centroid[j];
+  }
+
+  for (index_t k=0;k<bij_.nb();k++)
+  for (index_t j=0;j<points_.dim();j++)
+    bij_[k][j] /= aij_[k];
+}
+
+void
+PowerFacets::print() const
+{
+  for (index_t k=0;k<nb();k++)
+  {
+    std::vector<index_t> f = get(k);
+    print_inline( f , "cellL = " + std::to_string(cellL_[k]) + ", cellR = " + std::to_string(cellR_[k]) + ", bisector = " + std::to_string(label_[k]) + " facet =" );
+  }
+}
+
+void
+PowerDiagram::compute()
 {
   // compute the voronoi diagram
   if (diagram_ == nullptr)
@@ -197,31 +331,13 @@ LaguerreDiagram::compute()
   }
   TopologyBase::copy( *diagram_.get() );
   sites_ = diagram_->sites();
-
   avro_assert( sites_.size() == nb() );
 
-  // calculate the set of all bisectors and symbolic vertices
-  std::set<int> bisectors;
-  std::map<SymbolicVertex,index_t> symbolic;
-  const std::vector<SymbolicVertex>& vertices = diagram_->vertices();
-  avro_assert( vertices.size() == points_.nb() );
-  for (index_t k=0;k<points_.nb();k++)
-  {
-    std::vector<int> b = points_.incidence().get(k);
-    for (index_t j=0;j<b.size();j++)
-      bisectors.insert( b[j] );
-
-    const SymbolicVertex& v = vertices[k];
-    if (symbolic.find(v) == symbolic.end())
-      symbolic.insert({v,k});
-  }
-  printf("there are %lu unique voronoi vertices (total %lu) and %lu bisectors (%lu)\n",symbolic.size(),points_.nb(),bisectors.size(),diagram_->bisectors().size());
-  VoronoiFacets facets(points_,number_,bisectors,symbolic);
-  facets.extract();
+  facets_.extract();
 }
 
 real_t
-LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW , std::vector<real_t>& V )
+PowerDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW , std::vector<real_t>& V )
 {
   // initialize size of centroids
   coord_t dim = points_.dim();
@@ -337,7 +453,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
       gnorm_x += std::pow(dE_dZ[k*dim+d],2);
     }
 
-    dE_dW[k] = mass_[k] -V[k];
+    dE_dW[k] = -(V[k] - mass_[k]);
     gnorm_w  += std::pow(dE_dW[k],2);
   }
 
@@ -350,7 +466,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   quadrature.define();
   simplex_topology.element().load_quadrature(quadrature);
 
-  typedef Integrand_Laguerre_Energy<real_t> Integrand_t;
+  typedef Integrand_Power_Energy<real_t> Integrand_t;
   Integrand_t integrand(delaunay_,sites,parents,weight_,mass_);
 
   t0 = clock();
@@ -360,7 +476,7 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
 
   real_t energy = f.value();
   for (index_t k=0;k<delaunay_.nb();k++)
-    energy += weight_[k]*mass_[k];
+    energy -= weight_[k]*(V[k] - mass_[k]);
 
   printf("--> f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec, t_d = %g sec., t_i = %g sec.\n",
           energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_,time_decompose,time_integrate);
@@ -368,23 +484,61 @@ LaguerreDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t
   return energy;
 }
 
+void
+PowerDiagram::get_hessian( Lite_Sparse_Matrix& h ) const
+{
+  h.begin_fill_entry();
+
+  // loop through all the facets
+  const std::vector<real_t> aij = facets_.aij();
+  const DOF<real_t>& bij = facets_.bij();
+  const std::map<index_t,Bisector>& bisectors = facets_.indices();
+
+  avro_assert( aij.size() == bij.nb() );
+  avro_assert( aij.size() == bisectors.size() );
+
+  std::vector<real_t> d( delaunay_.nb() , 0.0 );
+
+  for (index_t k=0;k<aij.size();k++)
+  {
+    const Bisector& b = bisectors.at(k);
+    avro_assert( b.p0 >= 0 );
+
+
+    if (b.p1 < 0)
+    {
+      // skip boundary facets (we apply neumann boundary conditions)
+      continue;
+    }
+
+    index_t r = b.p0;
+    index_t c = b.p1;
+
+    real_t lij = numerics::distance( delaunay_[r] , delaunay_[c] , delaunay_.dim() );
+    real_t eij = -0.5*aij[k]/lij;
+
+    h.fill_entry(r,c, eij );
+    h.fill_entry(c,r, eij );
+    d[r] += eij;
+    d[c] += eij;
+  }
+
+  for (index_t k=0;k<delaunay_.nb();k++)
+    h.fill_entry(k,k , d[k] );
+
+  h.end_fill_entry();
+}
+
 struct nlopt_data_cvt
 {
-	LaguerreDiagram& laguerre;
+	PowerDiagram& power;
 	index_t eval_count;
 	real_t objective;
   int mode; // 0 for cvt, 1 for otm
 };
 
-real_t
-LaguerreDiagram::eval_objective()
-{
-  std::vector<real_t> dE_dZ,dE_dW,volumes;
-  return eval_objective(dE_dZ,dE_dW,volumes);
-}
-
 void
-LaguerreDiagram::set_delaunay( const real_t* x , coord_t dim )
+PowerDiagram::set_delaunay( const real_t* x , coord_t dim )
 {
   for (index_t k=0;k<delaunay_.nb();k++)
   for (coord_t d=0;d<dim;d++)
@@ -392,7 +546,7 @@ LaguerreDiagram::set_delaunay( const real_t* x , coord_t dim )
 }
 
 void
-LaguerreDiagram::set_weights( const real_t* w )
+PowerDiagram::set_weights( const real_t* w )
 {
   for (index_t k=0;k<delaunay_.nb();k++)
     weight_[k] = w[k];
@@ -407,27 +561,26 @@ nlopt_otm_objective( unsigned n , const double* x , double* grad, void* data0 )
 {
   nlopt_data_cvt* data = (nlopt_data_cvt*)(data0);
 
-  LaguerreDiagram& laguerre = data->laguerre;
+  PowerDiagram& power = data->power;
 
   printf("iteration %lu:\n",data->eval_count);
   data->eval_count++;
 
   // set the coordinates of the delaunay points
   if (data->mode == 0)
-    laguerre.set_delaunay(x,laguerre.points().dim());
+    power.set_delaunay(x,power.points().dim());
   else if (data->mode == 1)
-    laguerre.set_weights(x);
+    power.set_weights(x);
   else
     avro_assert_not_reached;
 
   // recompute the voronoi diagram
-  laguerre.compute();
-
-  laguerre.clear_decomposition();
+  power.compute();
+  power.clear_decomposition();
 
   // compute the energy and gradients
   std::vector<real_t> dE_dZ,dE_dW,volumes;
-  real_t energy = laguerre.eval_objective( dE_dZ , dE_dW , volumes );
+  real_t energy = power.eval_objective( dE_dZ , dE_dW , volumes );
   if (grad != nullptr)
   {
     if (data->mode == 0)
@@ -447,36 +600,36 @@ nlopt_otm_objective( unsigned n , const double* x , double* grad, void* data0 )
     else
       avro_assert_not_reached;
   }
-  laguerre.set_volumes(volumes);
+  power.set_volumes(volumes);
   return energy;
 }
 
-#define OPTIMIZER_NLOPT 1
-LaguerreDiagram* __laguerre__ = nullptr;
+#define OPTIMIZER_NLOPT 0
+PowerDiagram* __power__ = nullptr;
+Lite_Sparse_Matrix* __h_matrix__ = nullptr;
 int __mode__ = -1;
 
 void hlbfgs_otm_objective(int N, double* x, double *prev_x, double* f, double* g)
 {
-  avro_assert( __laguerre__ != nullptr );
+  avro_assert( __power__ != nullptr );
   avro_assert( __mode__ >= 0 );
-  LaguerreDiagram& laguerre = *__laguerre__;
+  PowerDiagram& power = *__power__;
   int mode = __mode__;
 
   if (mode == 0)
-    laguerre.set_delaunay(x,laguerre.points().dim());
+    power.set_delaunay(x,power.points().dim());
   else if (mode == 1)
-    laguerre.set_weights(x);
+    power.set_weights(x);
   else
     avro_assert_not_reached;
 
   // recompute the voronoi diagram
-  laguerre.compute();
-
-  laguerre.clear_decomposition();
+  power.compute();
+  power.clear_decomposition();
 
   // compute the energy and gradients
   std::vector<real_t> dE_dZ,dE_dW,volumes;
-  real_t energy = laguerre.eval_objective( dE_dZ , dE_dW , volumes );
+  real_t energy = power.eval_objective( dE_dZ , dE_dW , volumes );
   if (g != nullptr)
   {
     if (mode == 0)
@@ -496,16 +649,74 @@ void hlbfgs_otm_objective(int N, double* x, double *prev_x, double* f, double* g
     else
       avro_assert_not_reached;
   }
-  laguerre.set_volumes(volumes);
+  power.set_volumes(volumes);
 
   *f = energy;
+}
+
+void hlbfgs_otm_objective_hessian(int N, double* x, double *prev_x, double* f, double* g, HESSIAN_MATRIX& h)
+{
+  avro_assert( __power__ != nullptr );
+  avro_assert( __mode__ >= 0 );
+  PowerDiagram& power = *__power__;
+  int mode = __mode__;
+
+  if (mode == 0)
+    power.set_delaunay(x,power.points().dim());
+  else if (mode == 1)
+    power.set_weights(x);
+  else
+    avro_assert_not_reached;
+
+  // recompute the voronoi diagram
+  power.compute();
+  power.clear_decomposition();
+
+  static bool first = true;
+
+  // compute the energy and gradients
+  std::vector<real_t> dE_dZ,dE_dW,volumes;
+  real_t energy = power.eval_objective( dE_dZ , dE_dW , volumes );
+  if (g != nullptr)
+  {
+    if (mode == 0)
+    {
+      // cvt mode
+      for (index_t k=0;k<dE_dZ.size();k++)
+        g[k] = dE_dZ[k];
+    }
+    else if (mode == 1)
+    {
+      // otm mode: energy is concave so make this a minimization problem
+      energy *= -1.0;
+      for (index_t k=0;k<dE_dW.size();k++)
+        g[k] = -dE_dW[k];
+
+      // add the hessian
+      if (__h_matrix__ != nullptr) delete __h_matrix__;
+      __h_matrix__ = new Lite_Sparse_Matrix(N,N,SYM_BOTH,CCS,FORTRAN_TYPE,true);
+      power.get_hessian(*__h_matrix__);
+
+      h.set_diag(__h_matrix__->get_diag());
+      h.set_values(__h_matrix__->get_values());
+      h.set_rowind(__h_matrix__->get_rowind());
+      h.set_colptr(__h_matrix__->get_colptr());
+      h.set_nonzeros(__h_matrix__->get_nonzero());
+    }
+    else
+      avro_assert_not_reached;
+  }
+  power.set_volumes(volumes);
+
+  *f = energy;
+  first = false;
 }
 
 void newiteration(int iter, int call_iter, double *x, double* f, double *g,  double* gnorm)
 {}
 
 void
-LaguerreDiagram::optimize_cvt()
+PowerDiagram::optimize_cvt()
 {
   coord_t dim = points_.dim();
   index_t n = delaunay_.nb()*dim;
@@ -535,11 +746,11 @@ LaguerreDiagram::optimize_cvt()
   std::string desc = nloptResultDescription(result);
   printf("nlopt result: %s\n",desc.c_str());
   #else
-  __laguerre__ = this;
+  __power__ = this;
   __mode__ = 0;
   double parameter[20];
   int info[20];
-  int T = 0;
+  int T = 1;
   int M = 7;
   int num_iter = 20;
   bool with_hessian = false;
@@ -557,7 +768,7 @@ LaguerreDiagram::optimize_cvt()
 }
 
 void
-LaguerreDiagram::optimize_otm()
+PowerDiagram::optimize_otm()
 {
   index_t n = weight_.size();
 
@@ -614,24 +825,29 @@ LaguerreDiagram::optimize_otm()
   printf("nlopt result: %s\n",desc.c_str());
   #else
 
-  __laguerre__ = this;
+  __power__ = this;
   __mode__ = 1;
   double parameter[20];
   int info[20];
   int T = 0;
   int M = 7;
   int num_iter = 20;
-  bool with_hessian = false;
+  bool with_hessian = true;
 
-  //initialize
+  // initialize
   INIT_HLBFGS(parameter, info);
   info[4] = num_iter;
   info[6] = T;
+  info[5] = 0; // verbose = 1
   info[7] = with_hessian ? 1:0;
   info[10] = 0;
   info[11] = 1;
 
-  HLBFGS(n, M, x.data() , hlbfgs_otm_objective , 0, HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
+  if (with_hessian)
+    HLBFGS(n, M, x.data() , hlbfgs_otm_objective , hlbfgs_otm_objective_hessian, HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
+  else
+    HLBFGS(n, M, x.data() , hlbfgs_otm_objective , 0 , HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
+  if (__h_matrix__ != nullptr) delete __h_matrix__;
   #endif
 }
 

@@ -7,7 +7,7 @@
 #include "library/ckf.h"
 
 #include "voronoi/delaunay.h"
-#include "voronoi/laguerre.h"
+#include "voronoi/power.h"
 #include "voronoi/voronoi_cell.h"
 
 using namespace avro;
@@ -16,8 +16,6 @@ UT_TEST_SUITE( laguerre_test_suite )
 
 UT_TEST_CASE( test_simplex )
 {
-//  return;
-
   GEO::PCK::initialize();
 
   coord_t number = 2;
@@ -29,7 +27,7 @@ UT_TEST_CASE( test_simplex )
   // create random delaunay vertices
   Delaunay delaunay( dim );
   #if 1
-  index_t nb_points = 1e3;
+  index_t nb_points = 1e4;
   std::vector<real_t> x(dim,0.);
   for (index_t k=0;k<nb_points;k++)
   {
@@ -44,12 +42,14 @@ UT_TEST_CASE( test_simplex )
   #endif
 
   std::vector<real_t> weights( delaunay.nb() , 0.0 );
-  delaunay::LaguerreDiagram diagram( delaunay , domain , weights );
-  diagram.set_exact(false);
+  delaunay::PowerDiagram diagram( delaunay , domain , weights );
+  diagram.set_exact(true);
   diagram.compute();
 
   diagram.optimize_cvt();
-  //diagram.optimize_otm();
+
+  printf("optimizing transport map:\n");
+  diagram.optimize_otm();
 
   graphics::Visualizer vis;
   vis.add_topology(diagram);

@@ -560,7 +560,7 @@ VoronoiDiagram::compute( bool exact )
     cells_[k]->set_facets( facets.get() );
   }
 
-  #if 1
+  #if 0
   __check_capacity__ = false;
   ProcessCPU::parallel_for(
     parallel_for_member_callback( this , &thisclass::clip ),
@@ -590,12 +590,11 @@ VoronoiDiagram::compute( bool exact )
   time_voronoi_ = 0;
   real_t time_decompose = 0;
 
-  std::map<Bisector,int> bisectors;
-
   // accumulate the result
   sites_.clear();
   vertex2site_.clear();
-  vertices_.clear();
+  symbolic_vertices_.clear();
+  std::map<Bisector,int> bisectors;
   for (index_t k=0;k<cells_.size();k++)
   {
     const VoronoiCell& cell = *cells_[k].get();
@@ -604,7 +603,7 @@ VoronoiDiagram::compute( bool exact )
     time_voronoi_    += cell.time_clip() / ProcessCPU::maximum_concurrent_threads();
     time_decompose   += cell.time_decompose() / ProcessCPU::maximum_concurrent_threads();
 
-    // cells could be submerged
+    // cells could be submerged for weighted sites
     if (cell.nb() == 0) continue;
 
     // add the cells
@@ -647,13 +646,18 @@ VoronoiDiagram::compute( bool exact )
       uniquify( v.indices );
       std::sort( v.indices.begin() , v.indices.end() );
       avro_assert_msg( v.indices.size() == (number_+1) , "|v| = %lu" , v.indices.size() );
-      vertices_.push_back(v);
+      symbolic_vertices_.push_back(v);
 
       for (index_t i=0;i<f.size();i++)
       {
-        if (f[i] < 0) continue; // original mesh facets are already in global numbering
+        if (f[i] < 0)
+        {
+          //Bisector b(f[i],k);
+          //avro_assert( bisectors.find(b) == bisectors.end() );
+          //bisectors.insert({b,bisectors.size()});
+          continue; // original mesh facets are already in global numbering
+        }
         index_t p0,p1;
-        delaunay_.seeds(f[i],p0,p1);
         cell.get_bisector( f[i] , p0 , p1 );
         Bisector b(p0,p1);
         if (bisectors.find(b) == bisectors.end())

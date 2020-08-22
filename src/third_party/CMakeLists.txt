@@ -65,6 +65,8 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/st
 include_directories(tinymat)
 
 add_source_directories(HLBFGS_SOURCES "HLBFGS" HLBFGS )
+set_source_files_properties( ${HLBFGS_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
+
 add_source_directories(OPENNL_SOURCES "OpenNL" OpenNL )
 
 

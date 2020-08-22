@@ -47,8 +47,8 @@ public:
       p1 = q0;
     }
   }
-  index_t p0;
-  index_t p1;
+  int p0;
+  int p1;
 };
 
 // needed to create a set/map of elements
