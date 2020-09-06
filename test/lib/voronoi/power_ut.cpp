@@ -27,7 +27,7 @@ UT_TEST_CASE( test_simplex )
   // create random delaunay vertices
   Delaunay delaunay( dim );
   #if 1
-  index_t nb_points = 1e4;
+  index_t nb_points = 1e2;
   std::vector<real_t> x(dim,0.);
   for (index_t k=0;k<nb_points;k++)
   {

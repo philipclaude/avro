@@ -560,7 +560,7 @@ VoronoiDiagram::compute( bool exact )
     cells_[k]->set_facets( facets.get() );
   }
 
-  #if 0
+  #if 1
   __check_capacity__ = false;
   ProcessCPU::parallel_for(
     parallel_for_member_callback( this , &thisclass::clip ),
@@ -672,8 +672,7 @@ VoronoiDiagram::compute( bool exact )
   bisectors_.clear();
   for (std::map<Bisector,int>::const_iterator it=bisectors.begin();it!=bisectors.end();++it)
     bisectors_.insert({it->second,it->first});
-
-  printf("--> timing: neighbours (%3.4g sec.), clipping (%3.4g sec.), decompose (%3.4g sec.)\n",time_neighbours_,time_voronoi_,time_decompose);
+  //printf("--> timing: neighbours (%3.4g sec.), clipping (%3.4g sec.), decompose (%3.4g sec.)\n",time_neighbours_,time_voronoi_,time_decompose);
 }
 
 } // delaunay

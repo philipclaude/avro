@@ -20,6 +20,8 @@
 
 #include <nlopt.hpp>
 
+#include <iomanip>
+
 namespace avro
 {
 
@@ -156,8 +158,8 @@ PowerFacets::extract()
     else
       unique_vertex_.insert( {k,symbolic_.at(v) } );
   }
-  printf("there are %lu unique voronoi vertices (total %lu) and %lu bisectors (%lu)\n",
-          symbolic_.size(),points_.nb(),bisectors_.size(),diagram_.diagram().bisectors().size());
+  /*printf("there are %lu unique voronoi vertices (total %lu) and %lu bisectors (%lu)\n",
+          symbolic_.size(),points_.nb(),bisectors_.size(),diagram_.diagram().bisectors().size());*/
 
   std::vector<int> hrep;
 
@@ -198,7 +200,6 @@ PowerFacets::extract()
       }
     }
   }
-  printf("extracted %lu facets\n",nb());
   compute_quantities();
 }
 
@@ -240,7 +241,6 @@ PowerFacets::compute_quantities()
     neighbours_[b.p0].insert(b.p1);
     neighbours_[b.p1].insert(b.p0);
   }
-  printf("there are %lu cell boundaries\n",bisectors.size());
   avro_assert( bisector2facet.size() == bisectors.size() );
 
   std::map<index_t,index_t> facet2id;
@@ -262,7 +262,6 @@ PowerFacets::compute_quantities()
   std::vector<real_t> centroid(points_.dim());
   for (it=bisector2facet.begin();it!=bisector2facet.end();++it)
   {
-    const Bisector& b = it->first;
     index_t facet = it->second;
     index_t id = facet2id[facet];
 
@@ -300,6 +299,41 @@ PowerFacets::print() const
   }
 }
 
+class Particles : public Topology<Polytope>
+{
+public:
+  Particles( const PowerDiagram& power_diagram )
+  {
+    extract(power_diagram);
+  }
+
+  // extraction
+  void extract(const PowerDiagram& power_diagram , bool unique_vertices=true )
+  {
+    clear();
+
+    // construct the list of bisectors and symbolic vertices
+
+    // create the vertices (option to be unique based on the symbolic info)
+
+    // add the cells, carefully treating vertices on mesh facets
+
+  }
+
+  void clear()
+  {
+    Topology<Polytope>::clear();
+    points_.clear();
+    symbolic_.clear();
+    bisectors_.clear();
+  }
+
+private:
+  Points points_;
+  std::vector<SymbolicVertex> symbolic_;
+  std::map<int,Bisector> bisectors_;
+};
+
 void
 PowerDiagram::compute()
 {
@@ -335,6 +369,10 @@ PowerDiagram::compute()
 
   facets_.extract();
 }
+
+
+index_t __iter__ = 0;
+int __mode__ = -1;
 
 real_t
 PowerDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& dE_dW , std::vector<real_t>& V )
@@ -478,8 +516,21 @@ PowerDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& 
   for (index_t k=0;k<delaunay_.nb();k++)
     energy -= weight_[k]*(V[k] - mass_[k]);
 
-  printf("--> f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec, t_d = %g sec., t_i = %g sec.\n",
-          energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_,time_decompose,time_integrate);
+  //printf("--> f = %1.3e, |g_x| = %1.3e, |g_w| = %1.3e: t_n = %g sec. t_v = %g sec\n",
+  //        energy,gnorm_x,gnorm_w,time_neighbours_,time_voronoi_);
+
+  UNUSED(time_integrate);
+  UNUSED(time_decompose);
+
+  real_t gnorm = (__mode__ == 0) ? gnorm_x : gnorm_w;
+
+  std::cout <<
+  std::setw(6) << std::left << __iter__++ << "|" <<
+  std::setprecision(4) << std::left << std::scientific << std::fabs(energy) << "|" <<
+  std::setprecision(4) << std::left << std::scientific << gnorm << "|" <<
+  std::setw(11) << std::right << std::fixed << time_voronoi_ << "|" <<
+  std::setw(11) << std::right << std::fixed << time_neighbours_ <<
+  std::endl;
 
   return energy;
 }
@@ -563,7 +614,7 @@ nlopt_otm_objective( unsigned n , const double* x , double* grad, void* data0 )
 
   PowerDiagram& power = data->power;
 
-  printf("iteration %lu:\n",data->eval_count);
+  //printf("iteration %lu:\n",data->eval_count);
   data->eval_count++;
 
   // set the coordinates of the delaunay points
@@ -604,10 +655,9 @@ nlopt_otm_objective( unsigned n , const double* x , double* grad, void* data0 )
   return energy;
 }
 
-#define OPTIMIZER_NLOPT 0
+#define OPTIMIZER_NLOPT 1
 PowerDiagram* __power__ = nullptr;
 Lite_Sparse_Matrix* __h_matrix__ = nullptr;
-int __mode__ = -1;
 
 void hlbfgs_otm_objective(int N, double* x, double *prev_x, double* f, double* g)
 {
@@ -672,8 +722,6 @@ void hlbfgs_otm_objective_hessian(int N, double* x, double *prev_x, double* f, d
   power.compute();
   power.clear_decomposition();
 
-  static bool first = true;
-
   // compute the energy and gradients
   std::vector<real_t> dE_dZ,dE_dW,volumes;
   real_t energy = power.eval_objective( dE_dZ , dE_dW , volumes );
@@ -709,7 +757,6 @@ void hlbfgs_otm_objective_hessian(int N, double* x, double *prev_x, double* f, d
   power.set_volumes(volumes);
 
   *f = energy;
-  first = false;
 }
 
 void newiteration(int iter, int call_iter, double *x, double* f, double *g,  double* gnorm)
@@ -718,6 +765,11 @@ void newiteration(int iter, int call_iter, double *x, double* f, double *g,  dou
 void
 PowerDiagram::optimize_cvt()
 {
+  __iter__ = 0;
+  printf("-----------------------------------------------------\n");
+  printf("%5s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_knn (s) ");
+  printf("-----------------------------------------------------\n");
+
   coord_t dim = points_.dim();
   index_t n = delaunay_.nb()*dim;
 
@@ -770,6 +822,11 @@ PowerDiagram::optimize_cvt()
 void
 PowerDiagram::optimize_otm()
 {
+  __iter__ = 0;
+  printf("-----------------------------------------------------\n");
+  printf("%5s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_knn (s) ");
+  printf("-----------------------------------------------------\n");
+
   index_t n = weight_.size();
 
   mass_.resize( n , real_t(1.0/weight_.size()) );
@@ -781,19 +838,15 @@ PowerDiagram::optimize_otm()
   mass_ = volume_;
   set_weights(weight_.data());
 
-  real_t extra = 0;
-  index_t f = 5;
-  for (index_t k=0;k<10;k++)
+  for (index_t k=0;k<n;k++)
   {
-    extra += (f - 1)*mass_[k];
-    mass_[k] *= f;
-  }
-
-  extra /= (mass_.size() - 10);
-  for (index_t k=10;k<n;k++)
-  {
-    mass_[k] -= extra;
-    //if (mass_[k] < 0) mass_[k] += extra;
+    for (coord_t d=0;d<delaunay_.dim();d++)
+    {
+      real_t vd = random_within(-0.01,0.01);
+      real_t xd = delaunay_[k][d] + vd;
+      if (xd < 0 || xd > 1) continue;
+      delaunay_[k][d] += vd;
+    }
   }
 
   std::vector<real_t> x(weight_.begin(),weight_.end());
@@ -836,9 +889,11 @@ PowerDiagram::optimize_otm()
 
   // initialize
   INIT_HLBFGS(parameter, info);
+  parameter[5] = 1e-12;
+  info[3] = 1;
   info[4] = num_iter;
   info[6] = T;
-  info[5] = 0; // verbose = 1
+  info[5] = 1; // verbose = 1
   info[7] = with_hessian ? 1:0;
   info[10] = 0;
   info[11] = 1;
@@ -850,6 +905,50 @@ PowerDiagram::optimize_otm()
   if (__h_matrix__ != nullptr) delete __h_matrix__;
   #endif
 }
+
+/*
+------------------------------------------------------------------------------------
+HLBFGS reference: https://xueyuhanlang.github.io/software/HLBFGS/
+------------------------------------------------------------------------------------
+Entry	        Default value	Meaning
+------------------------------------------------------------------------------------
+PARAMETER[0]	1.0e-4	      function tolerance used in line-search
+PARAMETER[1]	1.0e-16	      variable tolerance used in line-search
+PARAMETER[2]	0.9	          gradient tolerance used in line-search
+PARAMETER[3]	1.0e-20	      stpmin used in line-search
+PARAMETER[4]	1.0e+20	      stpmax used in line-search
+PARAMETER[5]	1.0e-9	      the stop criterion ( ||G||/max(1,||X||) < PARAMETER[5] )
+PARAMETER[6]	1.0e-10	      the stop criterion ( ||G|| < PARAMETER[6] )
+------------------------------------------------------------------------------------
+INFO[0]	      20	          the max number of evaluation in line-search
+INFO[1]	      0	            the total number of evalfunc calls
+INFO[2]	      0	            the current number of iterations
+INFO[3]	      0	            the lbfgs strategy. 0: standard, 1: M1QN3 strategy[8](recommended).
+INFO[4]	      100000	      the max number of iterations
+INFO[5]	      1	            1: print message, 0: do nothing
+INFO[6]	      10	          T: the update interval of Hessian. (typical choices: 0-200)
+INFO[7]	      0	            0: without hessian, 1: with accurate hessian
+INFO[8]	      15	          icfs parameter
+INFO[9]	      0	            0: classical line-search; 1: modified line-search (it is not useful in practice)
+INFO[10]	    0	            0: Disable preconditioned CG; 1: Enable preconditioned CG
+INFO[11]	    1	            0 or 1 defines different methods for choosing beta in CG.
+INFO[12]	    1	            internal usage. 0: only update the diag in USER_DEFINED_HLBFGS_UPDATE_H; 1: default.
+------------------------------------------------------------------------------------
+In general the users only need to specify the values of INFO[3,4,5,6,7,10]. For different optimization methods, please check the following table.
+------------------------------------------------------------------------------------
+Method	                                          Setting
+------------------------------------------------------------------------------------
+Gradient Decent	                                  M=0, INFO[7]=0, INFO[10]=0
+Conjugate Gradient	                              M=0, INFO[7]=0, INFO[10]=1
+Newton's method	                                  M=0, INFO[6]=0, INFO[7]=1, INFO[10]=0
+L-BFGS	                                          M>=1, INFO[3]=0, INFO[7]=0, INFO[10]=0
+M1QN3	                                            M>=1, INFO[3]=1, INFO[7]=0, INFO[10]=0
+Preconditioned L-BFGS	                            M>=1, INFO[3]=0, INFO[6]=T>=0, INFO[7]=1, INFO[10]=0
+Preconditioned M1QN3                             	M>=1, INFO[3]=1, INFO[6]=T>=0, INFO[7]=1, INFO[10]=0
+Preconditioned Conjugate Gradient without Hessian	M>=1, INFO[3]=0 or 1, INFO[7]=0, INFO[10]=1
+Preconditioned Conjugate Gradient with Hessian	  M>=1, INFO[3]=0 or 1, INFO[6]=T>=0, INFO[7]=1, INFO[10]=1
+------------------------------------------------------------------------------------
+*/
 
 } // delaunay
 
