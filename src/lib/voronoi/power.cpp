@@ -302,10 +302,7 @@ PowerFacets::print() const
 class Particles : public Topology<Polytope>
 {
 public:
-  Particles( const PowerDiagram& power_diagram )
-  {
-    extract(power_diagram);
-  }
+  Particles( const PowerDiagram& power_diagram );
 
   // extraction
   void extract(const PowerDiagram& power_diagram , bool unique_vertices=true )

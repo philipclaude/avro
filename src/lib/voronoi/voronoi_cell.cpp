@@ -512,7 +512,7 @@ VoronoiCell::print() const
   std::map<Bisector,int>::const_iterator it;
   for (it=bisector_.begin();it!=bisector_.end();++it)
   {
-    printf("bisector (%lu,%lu) with id %d\n",it->first.p0,it->first.p1,it->second);
+    printf("bisector (%d,%lu) with id %lu\n",it->first.p0,it->first.p1,it->second);
   }
 }
 
@@ -645,7 +645,7 @@ VoronoiDiagram::compute( bool exact )
       }
       uniquify( v.indices );
       std::sort( v.indices.begin() , v.indices.end() );
-      avro_assert_msg( v.indices.size() == (number_+1) , "|v| = %lu" , v.indices.size() );
+      avro_assert_msg( v.indices.size() == index_t(number_+1) , "|v| = %lu" , v.indices.size() );
       symbolic_vertices_.push_back(v);
 
       for (index_t i=0;i<f.size();i++)
