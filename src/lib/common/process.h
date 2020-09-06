@@ -87,6 +87,8 @@ namespace ProcessMPI
   void initialize();
   void terminate();
 
+  std::string manager_name();
+
   index_t nb_processes();
   index_t rank();
 

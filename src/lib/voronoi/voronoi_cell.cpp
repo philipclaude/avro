@@ -512,7 +512,7 @@ VoronoiCell::print() const
   std::map<Bisector,int>::const_iterator it;
   for (it=bisector_.begin();it!=bisector_.end();++it)
   {
-    printf("bisector (%d,%lu) with id %lu\n",it->first.p0,it->first.p1,it->second);
+    printf("bisector (%d,%d) with id %d\n",it->first.p0,it->first.p1,it->second);
   }
 }
 

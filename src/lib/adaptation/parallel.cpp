@@ -1608,7 +1608,7 @@ AdaptationManager<type>::adapt()
     try
     {
       // do the adaptation!
-      clock_t t0,t1;
+      clock_t t0 = 0,t1;
       if (rank_ == 0)
       {
         printf("--> adapting mesh!\n");
