@@ -390,10 +390,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
                 pass,filter.nb_long(),filter.minlength(),filter.maxlength(),
                 filter.nb_candidates());
 
-    // build the kd-tree search structure only if we need to check the
-    // distance to the nearest neighbours
-    filter.buildTree();
-
     // insert the points
     std::unordered_set<index_t> removed;
     std::unordered_set<index_t> flagged;

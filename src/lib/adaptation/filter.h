@@ -37,7 +37,6 @@ public:
                         const real_t s , const real_t* x ,
                         Entity * e , const real_t* params );
   void accept( const index_t k , const index_t idx );
-  void buildTree();
 
   index_t edge( const index_t k , const coord_t p )
   {
@@ -81,10 +80,6 @@ private:
   std::vector<real_t> s_;
   std::vector<index_t> candidates_;
   std::vector<int> idx_;
-
-  // kdtree search structure
-  std::shared_ptr<PointCloud> cloud_;
-  std::shared_ptr<KdTreeNd> tree_;
 
   real_t lmin_,lmax_;
   index_t nb_long_;

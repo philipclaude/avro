@@ -15,8 +15,6 @@
 
 #include "mesh/topology.h"
 
-#include "common/kdtree.h"
-
 #include <algorithm>
 
 namespace avro
@@ -233,15 +231,6 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
       params[1] = Points::INFTY;
     }
   }
-}
-
-void
-Filter::buildTree()
-{
-  // setup the kdtree
-  cloud_ = std::make_shared<PointCloud>(*this);
-  tree_ = initializeKdTree(*cloud_);
-  tree_->build();
 }
 
 void
