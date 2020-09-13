@@ -21,9 +21,6 @@ template<typename type> class Topology;
 class Simplex;
 template<typename type> class MetricField;
 
-class PointCloud;
-class KdTreeNd;
-
 template<typename type> class Insert;
 
 class Filter : public Points
