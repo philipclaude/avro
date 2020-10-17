@@ -59,7 +59,6 @@ UT_TEST_CASE(filter3d)
   MetricAttachment attachment(analytic,cube.points());
   MetricField<Simplex> metric(cube,attachment);
   filter.generateCandidates( cube , metric , 2. , inserter );
-  filter.buildTree();
 
   printf("nb insertion candidates = %lu\n",filter.nb_candidates());
 
