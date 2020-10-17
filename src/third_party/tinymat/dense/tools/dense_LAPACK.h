@@ -9,6 +9,7 @@
 // Note that none of the LAPACKE functions should be used other than with testing.
 // LAPACKE causes problems linking with the OS X Accelerate library.
 
+#define DLA_LAPACK
 #ifdef DLA_LAPACK
 
 #ifdef LAPACK_ACCELERATE

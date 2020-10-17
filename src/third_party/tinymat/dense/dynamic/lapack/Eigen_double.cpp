@@ -8,11 +8,11 @@
 
 //Instantiate Eigen value routines for double precision
 
-#ifdef DLA_LAPACK
+//#ifdef DLA_LAPACK
 
 #include "Eigen_impl.h"
 
-namespace tinymat 
+namespace tinymat
 {
 namespace DLA
 {
@@ -20,4 +20,4 @@ template struct LAPACK_Eigen<double>;
 }
 }
 
-#endif
+//#endif

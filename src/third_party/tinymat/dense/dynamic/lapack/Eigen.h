@@ -10,14 +10,14 @@
 
 //Lapack eigen value/vector interface for dense.
 
-namespace tinymat 
+namespace tinymat
 {
 namespace DLA
 {
   template<class T>
   struct LAPACK_Eigen
   {
-    static void Value( MatrixDView<T>& A, VectorDView<T>& wr, VectorDView<T>& wi );
+    static void Value( const MatrixDView<T>& A, VectorDView<T>& wr, VectorDView<T>& wi );
     static void Vectors( MatrixDView<T>& A, MatrixDView<T>& vl, MatrixDView<T>& vr );
     static void System( MatrixDView<T>& A, VectorDView<T>& wr, VectorDView<T>& wi,
                                            MatrixDView<T>& vl, MatrixDView<T>& vr );
@@ -25,7 +25,7 @@ namespace DLA
 
   template< class T >
   inline void
-  EigenValues( MatrixDView<T>& A, VectorDView<T>& wr, VectorDView<T>& wi )
+  EigenValues( const MatrixDView<T>& A, VectorDView<T>& wr, VectorDView<T>& wi )
   {
     LAPACK_Eigen<T>::Value(A, wr, wi);
   }
@@ -44,7 +44,7 @@ namespace DLA
     LAPACK_Eigen<T>::System(A, wr, wi, vl, vr);
   }
 
-} //namespace tinymat 
+} //namespace tinymat
 } //namespace DLA
 
 #endif //LAPACK_EIGEN_H

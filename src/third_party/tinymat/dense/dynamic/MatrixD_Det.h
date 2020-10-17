@@ -10,6 +10,8 @@
 #include "tools/SANSException.h"
 #include "MatrixD_Type.h"
 
+#include "lapack/Eigen.h"
+
 #include <assert.h>
 
 namespace tinymat
@@ -19,6 +21,19 @@ namespace DLA
 
 namespace MatrixDdet
 {
+  template< class T >
+  inline T
+  detNxN(const MatrixDView<T>& M)
+  {
+    // get the eigenvalues
+    VectorD<T> wr(M.m()),wi(M.m());
+    EigenValues(M,wr,wi);
+    T d(1.0);
+    for (int i=0;i<M.m();i++)
+      d = d *wr(i);
+    return d;
+  }
+
   template< class T >
   inline T
   det2x2(const MatrixDView<T>& M)
@@ -126,23 +141,25 @@ namespace MatrixDdet
 }
 
 //=============================================================================
-  //Function to forward the call to the appropriate determinant calculation
+  // forward the call to the appropriate determinant calculation
   template< class T >
   inline T
   Det(const MatrixDView<T>& Matrix)
   {
     if ( Matrix.m() == 1 && Matrix.n() == 1 )
       return Matrix(0,0);
-    if ( Matrix.m() == 2 && Matrix.n() == 2 )
+    else if ( Matrix.m() == 2 && Matrix.n() == 2 )
       return MatrixDdet::det2x2< T >( Matrix );
-    if ( Matrix.m() == 3 && Matrix.n() == 3 )
+    else if ( Matrix.m() == 3 && Matrix.n() == 3 )
       return MatrixDdet::det3x3< T >( Matrix );
-    if ( Matrix.m() == 4 && Matrix.n() == 4 )
+    else if ( Matrix.m() == 4 && Matrix.n() == 4 )
       return MatrixDdet::det4x4< T >( Matrix );
-    if ( Matrix.m() == 5 && Matrix.n() == 5 )
+    else if ( Matrix.m() == 5 && Matrix.n() == 5 )
       return MatrixDdet::det5x5< T >( Matrix );
-    if ( Matrix.m() == 6 && Matrix.n() == 6 )
+    else if ( Matrix.m() == 6 && Matrix.n() == 6 )
       return MatrixDdet::det6x6< T >( Matrix );
+    else if ( Matrix.m() == Matrix.n() )
+      return MatrixDdet::detNxN< T >( Matrix );
 
     printf("unsupported matrix size %d x %d\n",Matrix.m(),Matrix.n());
     assert(false);

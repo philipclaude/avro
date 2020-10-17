@@ -12,7 +12,7 @@
 #include "Eigen.h"
 #include "tools/SANSException.h"
 
-#ifdef DLA_LAPACK
+//#ifdef DLA_LAPACK
 
 #include <vector>
 
@@ -24,7 +24,7 @@
 //Eigen value/vector routines. The lapack routines for single/double are defined in
 //as part of the explicit instantiation in the .cpp files
 
-namespace tinymat 
+namespace tinymat
 {
 namespace DLA
 {
@@ -33,7 +33,7 @@ namespace DLA
 // wr is the real part of the eigen values
 // wi is the imaginary part of the eigen values
 template<class T>
-void LAPACK_Eigen<T>::Value( MatrixDView<T>& A, VectorDView<T>& wr, VectorDView<T>& wi )
+void LAPACK_Eigen<T>::Value( const MatrixDView<T>& A, VectorDView<T>& wr, VectorDView<T>& wi )
 {
   SANS_ASSERT( A.m() == A.n()  );
   SANS_ASSERT( A.m() == wr.m() );
@@ -55,7 +55,7 @@ void LAPACK_Eigen<T>::Value( MatrixDView<T>& A, VectorDView<T>& wr, VectorDView<
   std::vector<T> work( lwork );
   int INFO;
 
-  LAPACK_GEEV(&jobvl,&jobvr,&m,&A(0,0),&stride,&wr[0],&wi[0],vl,&ldvl,vr,&ldvr,&work[0],&lwork,&INFO);
+  LAPACK_GEEV(&jobvl,&jobvr,&m,const_cast<T*>(&A(0,0)),&stride,&wr[0],&wi[0],vl,&ldvl,vr,&ldvr,&work[0],&lwork,&INFO);
 
   SANS_ASSERT_MSG( INFO == 0, "INFO == %d", INFO );
 }
@@ -158,7 +158,7 @@ void LAPACK_Eigen<T>::System( MatrixDView<T>& A, VectorDView<T>& wr, VectorDView
   SANS_ASSERT_MSG( INFO == 0, "INFO == %d", INFO );
 }
 
-} //namespace tinymat 
+} //namespace tinymat
 } //namespace DLA
 
-#endif
+//#endif
