@@ -26,8 +26,8 @@ public:
                const TopologyBase& domin , bool exact , bool simplex ,
                GEO::NearestNeighborSearch* nns=nullptr , index_t nb_nns=0 );
 
-  void initialize();
-  void compute();
+  void initialize( const std::vector<index_t>& E = std::vector<index_t>() );
+  void compute(const std::vector<index_t>& E = std::vector<index_t>());
 
   void set_facets( RVDFacets* facets ) { facets_ = facets; }
 
@@ -49,7 +49,7 @@ public:
   void print() const;
 
 private:
-  void initialize_polytope();
+  void initialize_polytope( const std::vector<index_t>& E );
   void initialize_simplex();
   void compute_polytope();
   void compute_simplex();
@@ -57,7 +57,7 @@ private:
   void enlarge_neighbours();
 
   void clip_by_bisector( index_t j , index_t bj );
-  void clip_edge( index_t e0 , index_t e1 , const int b , std::vector<index_t>& q );
+  int  clip_edge( index_t e0 , index_t e1 , const int b , std::vector<index_t>& q ,int& q0, int& q1  );
   bool security_radius_reached( index_t bj ) const;
 
   int add_bisector( index_t p0 , index_t p1 );
@@ -93,6 +93,10 @@ private:
 
   bool incomplete_;
 
+  std::vector<index_t> pedges_;
+  std::vector<index_t> qedges_;
+  std::vector<index_t> qplane_;
+
 };
 
 class VoronoiDiagram : public Topology<Polytope>
@@ -105,7 +109,7 @@ public:
   void compute( bool exact );
   void clip( const index_t k )
   {
-    cells_[k]->compute();
+    cells_[k]->compute(domain_edges_);
   }
 
   const std::vector<index_t>& sites() const { return sites_; }
@@ -133,6 +137,8 @@ private:
   std::vector<index_t> vertex2site_;
   std::vector<SymbolicVertex> symbolic_vertices_;
   std::map<int,Bisector> bisectors_;
+
+  std::vector<index_t> domain_edges_;
 
 };
 

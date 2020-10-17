@@ -56,7 +56,7 @@ VoronoiCell::VoronoiCell( index_t site , const Delaunay& delaunay , const Neares
 {}
 
 void
-VoronoiCell::initialize()
+VoronoiCell::initialize( const std::vector<index_t>& E )
 {
   clear();
   points_.clear();
@@ -64,11 +64,11 @@ VoronoiCell::initialize()
   simplex_points_.clear();
 
   if (simplex_) initialize_simplex();
-  else initialize_polytope();
+  else initialize_polytope(E);
 }
 
 void
-VoronoiCell::initialize_polytope()
+VoronoiCell::initialize_polytope( const std::vector<index_t>& E )
 {
   // create the initial points
   vertex_.resize( domain_.nv(0) );
@@ -85,6 +85,28 @@ VoronoiCell::initialize_polytope()
 
   avro_assert( domain_.nb() == 1 );
   polytope_ = linspace(domain_.nv(0));
+
+  // initialize the edges
+  if (E.size() != 0)
+  {
+    pedges_ = E;
+  }
+  else
+  {
+    pedges_.clear();
+    for (index_t ii=0;ii<polytope_.size();ii++)
+    for (index_t jj=ii+1;jj<polytope_.size();jj++)
+    {
+      index_t e0 = polytope_[ii];
+      index_t e1 = polytope_[jj];
+      if (element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) )
+      {
+        // clip the edge and save the result into q
+        pedges_.push_back(e0);
+        pedges_.push_back(e1);
+      }
+    }
+  }
 }
 
 void
@@ -107,7 +129,7 @@ VoronoiCell::enlarge_neighbours()
 }
 
 void
-VoronoiCell::compute()
+VoronoiCell::compute( const std::vector<index_t>& E )
 {
   time_neighbours_ = 0;
   time_clip_       = 0;
@@ -115,7 +137,7 @@ VoronoiCell::compute()
 
   incomplete_ = false;
 
-  initialize();
+  initialize(E);
   if (nns_ != nullptr)
   {
     std::vector<double> dist2(nn_.size(),0.0);
@@ -155,17 +177,26 @@ void
 VoronoiCell::compute_polytope()
 {
   index_t j = 1;
+  index_t nb_clip = 0;
   while (true)
   {
+    if (j == nn_.size())
+    {
+      // max nearest neighbours
+      enlarge_neighbours();
+    }
+
     //index_t bj = neighbours_(site_,j);
     index_t bj = nn_[j];
     clip_by_bisector( j , bj );
+    nb_clip++;
     if (incomplete_) break;
 
     if (security_radius_reached(bj)) break;
     j++;
     if (j == delaunay_.nb()) break;
   }
+  //printf("nb_clip = %lu, nb_vert = %lu\n",nb_clip,polytope_.size());
 
   // add the points
   for (index_t j=0;j<polytope_.size();j++)
@@ -292,8 +323,13 @@ VoronoiCell::clip_by_bisector( index_t j , index_t bj )
 
   // initialize the clipped polytope
   qpolytope_.clear();
+  qedges_.clear();
+  qplane_.clear();
 
   // retrieve the edges
+  // this needs to be improved
+  #if 0
+  int q0,q1;
   for (index_t ii=0;ii<polytope_.size();ii++)
   for (index_t jj=ii+1;jj<polytope_.size();jj++)
   {
@@ -302,21 +338,62 @@ VoronoiCell::clip_by_bisector( index_t j , index_t bj )
     if (element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) )
     {
       // clip the edge and save the result into q
-      clip_edge(e0,e1,b,qpolytope_);
+      clip_edge(e0,e1,b,qpolytope_,q0,q1);
       if (incomplete_) return;
     }
   }
+  #else
+  for (index_t i=0;i<pedges_.size()/2;i++)
+  {
+    // retrieve edge indices
+    index_t e0 = pedges_[2*i];
+    index_t e1 = pedges_[2*i+1];
+
+    avro_assert( element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) );
+
+    int q0 = -1,q1 = -1;
+    int qs = clip_edge(e0,e1,b,qpolytope_,q0,q1);
+
+    //printf("clipped edge (%lu,%lu) -> (%d,%d), qs = %d\n",e0,e1,q0,q1,qs);
+    if (q0 < 0 || q1 < 0) continue;
+
+    qedges_.push_back( q0 );
+    qedges_.push_back( q1 );
+
+    if (qs >= 0) qplane_.push_back(qs);
+
+    if (incomplete_) return;
+  }
+
+  // go back through the new vertices and determine the edges
+  #if 0
+  for (index_t ii=0;ii<qplane_.size();ii++)
+  for (index_t jj=ii+1;jj<qplane_.size();jj++)
+  {
+    index_t e0 = qplane_[ii];
+    index_t e1 = qplane_[jj];
+    if (element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) )
+    {
+      qedges_.push_back(e0);
+      qedges_.push_back(e1);
+    }
+  }
+  #endif
+
+  #endif
 
   // the current polytope becomes the clipped one
   polytope_.assign( qpolytope_.begin() , qpolytope_.end() );
+  pedges_.assign( qedges_.begin() , qedges_.end() );
   uniquify(polytope_);
   for (index_t ii=0;ii<polytope_.size();ii++)
     vertex_[ polytope_[ii] ].setBaseSite( delaunay_[site_] );
 }
 
-void
-VoronoiCell::clip_edge( const index_t e0 , const index_t e1 , const int b , std::vector<index_t>& q )
+int
+VoronoiCell::clip_edge( const index_t e0 , const index_t e1 , const int b , std::vector<index_t>& q , int& q0, int& q1 )
 {
+  int on_bisector = -1;
   Vertex& v0 = vertex_[e0];
   Vertex& v1 = vertex_[e1];
 
@@ -341,7 +418,7 @@ VoronoiCell::clip_edge( const index_t e0 , const index_t e1 , const int b , std:
   if (side1 == GEO::ZERO || side2 == GEO::ZERO)
   {
     incomplete_ = true;
-    return;
+    return on_bisector;
   }
 
   avro_assert( side1!=GEO::ZERO && side2!=GEO::ZERO );
@@ -370,11 +447,19 @@ VoronoiCell::clip_edge( const index_t e0 , const index_t e1 , const int b , std:
     vertex_.emplace_back(v2);
 
     if (side1==GEO::POSITIVE)
+    {
       q.push_back( e0 );
+      q0 = e0;
+    }
     else
+    {
       q.push_back( e1 );
+      q0 = e1;
+    }
 
     q.push_back(vs);
+    q1 = vs;
+    on_bisector = vs;
 
     avro_assert( v2.number() == domain_.number() );
     avro_assert( vertex_[vs].number() == domain_.number() );
@@ -388,12 +473,19 @@ VoronoiCell::clip_edge( const index_t e0 , const index_t e1 , const int b , std:
       // both points are in the voronoi cell
       q.push_back( e0 );
       q.push_back( e1 );
+
+      q0 = e0;
+      q1 = e1;
     }
     else
     {
       // both points are outside the voronoi cell
+      q0 = -1;
+      q1 = -1;
     }
   }
+
+  return on_bisector;
 }
 
 bool
@@ -533,8 +625,12 @@ VoronoiDiagram::compute( bool exact )
   if (simplex_)
     facets = std::make_shared<RVDFacets>( static_cast<const Topology<Simplex>&>(domain_) );
 
+  domain_edges_.clear();
+  if (!simplex_)
+    domain_.get_edges(domain_edges_);
+
   real_t t0 = clock();
-  index_t nb_nns = 20;
+  index_t nb_nns = 50;
   if (delaunay_.nb() < nb_nns) nb_nns = delaunay_.nb();
   NearestNeighbours neighbours(delaunay_,nb_nns);
 
@@ -586,6 +682,8 @@ VoronoiDiagram::compute( bool exact )
     cells_[k]->compute();
   }
   #endif
+
+  printf("done\n");
 
   time_voronoi_ = 0;
   real_t time_decompose = 0;
