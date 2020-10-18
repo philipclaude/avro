@@ -211,6 +211,7 @@ Polytope::is_edge( const std::vector<int>& b0 , const std::vector<int>& b1 ) con
   {
     if (Set::contains(b0[k],b1)>-1)
       count++;
+    if (count==number_) return false;
   }
   if (fullmesh_)
     return count>=index_t(number_-1);

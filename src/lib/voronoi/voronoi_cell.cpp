@@ -366,7 +366,7 @@ VoronoiCell::clip_by_bisector( index_t j , index_t bj )
   }
 
   // go back through the new vertices and determine the edges
-  #if 0
+  #if 1
   for (index_t ii=0;ii<qplane_.size();ii++)
   for (index_t jj=ii+1;jj<qplane_.size();jj++)
   {
