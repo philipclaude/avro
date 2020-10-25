@@ -5,6 +5,12 @@
 #include "voronoi/delaunay.h"
 #include "voronoi/voronoi_cell.h"
 
+extern "C"
+{
+#include <qhull/libqhull/libqhull.h>
+#include <qhull/libqhull/geom.h>
+}
+
 #include <csignal>
 
 bool __check_capacity__ = true;
@@ -14,6 +20,32 @@ namespace avro
 
 namespace delaunay
 {
+
+#if 0
+real_t
+get_volume_qhull( const Points& points , const std::vector<index_t>& cell )
+{
+  const index_t np = cell.size();
+  const coord_t dim = points.dim();
+
+  std::vector<coordT> coordinates(np*dim);
+
+  index_t i = 0;
+  for (index_t k=0;k<np;k++)
+  for (coord_t d=0;d<dim;d++)
+    coordinates[i++] = points[cell[k]][d];
+
+  char flags[25];
+  sprintf (flags, "qhull s FA Q12");
+
+  qh_new_qhull(dim, np , coordinates.data() , 0, flags, NULL, NULL);
+  qh_getarea(qh facet_list);
+  real_t volume  = (qh totvol);
+  qh_freeqhull(!qh_ALL);
+
+  return volume;
+}
+#endif
 
 // needed to create a set/map of elements
 bool
@@ -683,7 +715,7 @@ VoronoiDiagram::compute( bool exact )
   }
   #endif
 
-  printf("done\n");
+  //printf("done\n");
 
   time_voronoi_ = 0;
   real_t time_decompose = 0;
@@ -709,9 +741,15 @@ VoronoiDiagram::compute( bool exact )
     {
       sites_.push_back( k );
       std::vector<index_t> polytope = cell.get(j);
+
+      // compute the volume (in serial because qhull is not thread-safe)
+      //real_t vol = get_volume_qhull( cell.points() , polytope );
+      //printf("vol = %g\n",vol);
+
       for (index_t i=0;i<polytope.size();i++)
         polytope[i] += points_.nb();
       add( polytope.data() , polytope.size() );
+
     }
 
     // add the points

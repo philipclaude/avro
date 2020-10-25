@@ -64,6 +64,9 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/st
 
 include_directories(tinymat)
 
+add_source_directories( QHULL_SOURCES "QHULL" qhull/libqhull )
+include_directories( qhull )
+
 add_source_directories(HLBFGS_SOURCES "HLBFGS" HLBFGS )
 set_source_files_properties( ${HLBFGS_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 
@@ -84,4 +87,4 @@ endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${NNSEARCH_SOURCES} ${HLBFGS_SOURCES} )
+add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${NNSEARCH_SOURCES} ${HLBFGS_SOURCES} ${QHULL_SOURCES} )

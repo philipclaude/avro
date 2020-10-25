@@ -11,109 +11,162 @@
 #include "voronoi/delaunay.h"
 #include "voronoi/voronoi_cell.h"
 
+#include <json/json.hpp>
+
+#include <fstream>
+
 using namespace avro;
 
 UT_TEST_SUITE( voronoi_cell_test_suite )
 
 UT_TEST_CASE( test_nd )
 {
-  coord_t number = 3;
-  coord_t dim = number;
-  index_t nb_points = std::pow( 2 , 10 );
-  printf("nb_points = %lu\n",nb_points);
+  coord_t numberL = 2;
+  coord_t numberH = 2;
+  coord_t powerL = 4;
+  coord_t powerH = 6;
+  bool generate_mode = true;
 
-  // create a CKF triangulation with only 2 points in each direction
-  std::vector<index_t> dims(number,2);
-  CKF_Triangulation ckf(dims);
-
-  // compute the facets of the mesh
-  Facets facets(ckf);
-  facets.compute();
-
-  // determine which facets are on a common hyperplane
-  std::vector<std::vector<int>> v2b( ckf.points().nb() );
-  std::vector<index_t> f(number);
-  std::vector<real_t*> x(number);
-  std::vector<real_t> n(dim);
-  std::vector<real_t> c(dim);
-  for (index_t k=0;k<facets.nb();k++)
+  for (coord_t number = numberL; number <= numberH; number++)
   {
-    if (!facets.boundary(k)) continue;
-    facets.retrieve(k,f);
+    coord_t dim = number;
 
-    // retrieve the facet points
-    for (index_t j=0;j<number;j++)
-      x[j] = ckf.points()[ f[j] ];
+    // create a CKF triangulation with only 2 points in each direction
+    std::vector<index_t> dims(number,2);
+    CKF_Triangulation ckf(dims);
 
-    // compute the normal to the facet
-    numerics::normal( x , n.data() , dim );
+    // compute the facets of the mesh
+    Facets facets(ckf);
+    facets.compute();
 
-    // which direction is this in?
-    coord_t dir = 0;
-    for (coord_t d=0;d<dim;d++)
+    // determine which facets are on a common hyperplane
+    std::vector<std::vector<int>> v2b( ckf.points().nb() );
+    std::vector<index_t> f(number);
+    std::vector<real_t*> x(number);
+    std::vector<real_t> n(dim);
+    std::vector<real_t> c(dim);
+    for (index_t k=0;k<facets.nb();k++)
     {
-      if (fabs( fabs(n[d])-1.0) < 1e-8)
+      if (!facets.boundary(k)) continue;
+      facets.retrieve(k,f);
+
+      // retrieve the facet points
+      for (index_t j=0;j<number;j++)
+        x[j] = ckf.points()[ f[j] ];
+
+      // compute the normal to the facet
+      numerics::normal( x , n.data() , dim );
+
+      // which direction is this in?
+      coord_t dir = 0;
+      for (coord_t d=0;d<dim;d++)
       {
-        dir = d;
-        break;
+        if (fabs( fabs(n[d])-1.0) < 1e-8)
+        {
+          dir = d;
+          break;
+        }
+      }
+
+      // are we at 0 or 1?
+      numerics::centroid( f.data() , f.size() , ckf.points() , c );
+      bool zero = true;
+      if (fabs(c[dir]) > 1e-8)
+      {
+        avro_assert( fabs(c[dir] -1.0) < 1e-8 );
+        zero = false;
+      }
+
+      // determine which plane this corresponds to
+      int b;
+      if (zero) b = - dir - 1;
+      else b = - dim - dir - 1;
+
+      // let each vertex know it is on this bisector
+      for (coord_t d=0;d<f.size();d++)
+      {
+        v2b[f[d]].push_back( b );
       }
     }
 
-    // are we at 0 or 1?
-    numerics::centroid( f.data() , f.size() , ckf.points() , c );
-    bool zero = true;
-    if (fabs(c[dir]) > 1e-8)
+    // set the incidence relations
+    for (index_t k=0;k<ckf.points().nb();k++)
     {
-      avro_assert( fabs(c[dir] -1.0) < 1e-8 );
-      zero = false;
+      uniquify( v2b[k] );
+      ckf.points().incidence().add( v2b[k].data() , v2b[k].size() );
     }
 
-    // determine which plane this corresponds to
-    int b;
-    if (zero) b = - dir - 1;
-    else b = - dim - dir - 1;
+    //ckf.points().incidence().print();
 
-    // let each vertex know it is on this bisector
-    for (coord_t d=0;d<f.size();d++)
+    // create the polytopal topology
+    Topology<Polytope> domain(ckf.points(),number);
+
+    std::vector<index_t> cube = linspace( std::pow(2,dim) );
+    print_inline(cube);
+    domain.add( cube.data() , cube.size() );
+    for (coord_t power = powerL; power <= powerH; power++)
     {
-      v2b[f[d]].push_back( b );
+      index_t nb_points = std::pow( 2 , power );
+      printf("dim = %u, nb_points = %lu\n",dim,nb_points);
+
+
+
+      // create random delaunay vertices
+      Delaunay delaunay( dim );
+      std::vector<real_t> p(dim,0.);
+      for (index_t k=0;k<nb_points;k++)
+      {
+        for (index_t d=0;d<dim;d++)
+          p[d] = random_within(0.,1.);
+        delaunay.create(p.data());
+      }
+
+      index_t nb_iter = 20;
+      for (index_t iter = 0; iter <= nb_iter; iter++)
+      {
+        delaunay::VoronoiDiagram diagram( delaunay , domain );
+        diagram.compute(false);
+
+        for (index_t k=0;k<diagram.nb();k++)
+        {
+          real_t dmin =  1e20;
+          real_t dmax = -1e20;
+
+          // approximate the centroid
+          std::vector<real_t> c( dim , 0.0 );
+          for (index_t j=0;j<diagram.nv(k);j++)
+          {
+            real_t r = numerics::distance( diagram.points()[ diagram(k,j) ] , delaunay[k] , dim );
+            if (r < dmin) r = dmin;
+            if (r > dmax) r = dmax;
+            for (coord_t d=0;d<dim;d++)
+              c[d] += r*diagram.points()[ diagram(k,j) ][d];
+          }
+
+          for (coord_t d=0;d<dim;d++)
+            delaunay[k][d] = (c[d] / diagram.nv(k)) / dmax;
+        }
+
+        if (iter == nb_iter)
+        {
+
+          // save to a file
+          json J;
+          J["dim"] = dim;
+          J["nb"]  = delaunay.nb();
+          J["x"]   = delaunay.data();
+
+          std::ofstream output("samples-dim"+std::to_string(dim)+"-n"+std::to_string(delaunay.nb())+".json");
+          output << std::setw(4) << J << std::endl;
+
+          if (number > 3 || (nb_points >= 1e4) || generate_mode) continue;
+          graphics::Visualizer vis;
+          vis.add_topology(diagram);
+          vis.run();
+        }
+      } // loop over power
     }
-  }
-
-  // set the incidence relations
-  for (index_t k=0;k<ckf.points().nb();k++)
-  {
-    uniquify( v2b[k] );
-    ckf.points().incidence().add( v2b[k].data() , v2b[k].size() );
-  }
-
-  ckf.points().incidence().print();
-
-  // create the polytopal topology
-  Topology<Polytope> domain(ckf.points(),number);
-
-  std::vector<index_t> cube = linspace( std::pow(2,dim) );
-  print_inline(cube);
-  domain.add( cube.data() , cube.size() );
-
-  // create random delaunay vertices
-  Delaunay delaunay( dim );
-  std::vector<real_t> p(dim,0.);
-  for (index_t k=0;k<nb_points;k++)
-  {
-    for (index_t d=0;d<dim;d++)
-      p[d] = random_within(0.,1.);
-    delaunay.create(p.data());
-  }
-
-  delaunay::VoronoiDiagram diagram( delaunay , domain );
-  diagram.compute(false);
-
-  // option to visualize the voronoi diagram
-  if (number > 3 || nb_points >= 1e4) return;
-  graphics::Visualizer vis;
-  vis.add_topology(diagram);
-  vis.run();
+  } // loop over number
 
 }
 UT_TEST_CASE_END( test_nd )
