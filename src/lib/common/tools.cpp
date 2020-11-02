@@ -37,7 +37,7 @@ int
 random_within( const int lo , const int hi )
 {
 	real_t s = (real_t)rand()/(real_t) RAND_MAX;
-	return lo +floor(s)*(hi -lo);
+	return lo +s*(hi -lo);
 }
 
 

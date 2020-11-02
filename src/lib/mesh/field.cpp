@@ -136,10 +136,10 @@ Field<Simplex,T>::build()
       for (index_t j=0;j<element_.nb_basis();j++)
         dof[j] = n++;
       Table<index_t>::add( dof.data() , dof.size() );
-      const std::vector<index_t>& idx = Table<index_t>::data();
-      index_t nb_dof = * std::max_element( idx.begin() , idx.end() ) +1;
-      this->allocate( nb_dof );
     }
+    const std::vector<index_t>& idx = Table<index_t>::data();
+    index_t nb_dof = * std::max_element( idx.begin() , idx.end() ) +1;
+    this->allocate( nb_dof );
   }
   else
     avro_assert_not_reached;

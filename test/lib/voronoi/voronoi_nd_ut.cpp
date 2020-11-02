@@ -21,11 +21,11 @@ UT_TEST_SUITE( voronoi_cell_test_suite )
 
 UT_TEST_CASE( test_nd )
 {
-  coord_t numberL = 2;
-  coord_t numberH = 2;
-  coord_t powerL = 4;
-  coord_t powerH = 6;
-  bool generate_mode = true;
+  coord_t numberL = 4;
+  coord_t numberH = 4;
+  coord_t powerL = 12;
+  coord_t powerH = 14;
+  bool generate_mode = false;
 
   for (coord_t number = numberL; number <= numberH; number++)
   {
@@ -151,13 +151,21 @@ UT_TEST_CASE( test_nd )
         {
 
           // save to a file
+          #if 0
           json J;
           J["dim"] = dim;
           J["nb"]  = delaunay.nb();
-          J["x"]   = delaunay.data();
+
+          std::vector<real_t> x( delaunay.nb() * delaunay.dim() );
+          index_t i = 0;
+          for (index_t k=0;k<delaunay.nb();k++)
+          for (index_t d=0;d<delaunay.dim();d++)
+            x[i++] = delaunay[k][d];
+          J["x"] = x;
 
           std::ofstream output("samples-dim"+std::to_string(dim)+"-n"+std::to_string(delaunay.nb())+".json");
           output << std::setw(4) << J << std::endl;
+          #endif
 
           if (number > 3 || (nb_points >= 1e4) || generate_mode) continue;
           graphics::Visualizer vis;

@@ -96,7 +96,6 @@ private:
   std::vector<index_t> pedges_;
   std::vector<index_t> qedges_;
   std::vector<index_t> qplane_;
-
 };
 
 class VoronoiDiagram : public Topology<Polytope>
