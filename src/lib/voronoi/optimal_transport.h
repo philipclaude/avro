@@ -4,6 +4,7 @@
 #include "element/polytope.h"
 
 #include "mesh/topology.h"
+#include "numerics/integration.h"
 
 #include "voronoi/voronoi.h"
 
@@ -71,13 +72,19 @@ public:
   DensityMeasure() {}
   virtual ~DensityMeasure() {}
 
-  virtual real_t evaluate( index_t elem , real_t* p ) const = 0;
+  virtual real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const = 0;
 };
 
 class DensityMeasure_Uniform : public DensityMeasure
 {
 public:
-  real_t evaluate( index_t elem , real_t* p ) const { return 1.0; }
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const { return 1.0; }
+};
+
+class DensityMeasure_Example : public DensityMeasure
+{
+public:
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const { return x[0]*x[0]; }
 };
 
 template<typename type>
@@ -88,7 +95,7 @@ public:
     field_(field)
   {}
 
-  real_t evaluate( index_t elem , real_t* p ) const
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* p ) const
   {
     // look up the value using the field, with an initial guess of elem for the search
     avro_implement;
@@ -262,6 +269,71 @@ private:
   real_t time_voronoi_;
 };
 
+class TriangulationCells : public Field<Simplex,real_t>
+{
+public:
+  TriangulationCells( delaunay::IntegrationSimplices& t ) :
+    Field<Simplex,real_t>(t,0,DISCONTINUOUS)
+  {
+    this->build();
+    this->element().set_basis( BasisFunctionCategory_Lagrange );
+    for (index_t k=0;k<t.nb();k++)
+    {
+      this->value(k) = t.simplex2site(k);
+    }
+  }
+
+  index_t nb_rank() const { return 1; }
+
+  std::vector<std::string> ranknames() const
+   {std::vector<std::string> result; result.push_back("cells"); return result;}
+};
+
+class TriangulationElements : public Field<Simplex,real_t>
+{
+public:
+  TriangulationElements( delaunay::IntegrationSimplices& t ) :
+    Field<Simplex,real_t>(t,0,DISCONTINUOUS)
+  {
+    this->build();
+    this->element().set_basis( BasisFunctionCategory_Lagrange );
+    for (index_t k=0;k<t.nb();k++)
+    {
+      this->value(k) = t.simplex2elem(k);
+    }
+  }
+
+  index_t nb_rank() const { return 1; }
+
+  std::vector<std::string> ranknames() const
+   {std::vector<std::string> result; result.push_back("elems"); return result;}
+};
+
+class Integrand_Transport_Energy : public Integrand<Integrand_Transport_Energy>
+{
+public:
+
+  typedef real_t T;
+
+  Integrand_Transport_Energy( const Points& delaunay , const IntegrationSimplices& simplices , const DensityMeasure& density , coord_t dim) :
+    delaunay_(delaunay),
+    simplices_(simplices),
+    density_(density),
+    dim_(dim)
+  {}
+
+  bool needs_solution() const { return false; }
+  bool needs_gradient() const { return false; }
+  bool needs_hessian() const { return false; }
+
+  T operator()( index_t k , const real_t* xref , const real_t* x ) const;
+
+private:
+  const Points& delaunay_;
+  const IntegrationSimplices& simplices_;
+  const DensityMeasure& density_;
+  coord_t dim_;
+};
 
 template<typename type>
 class SemiDiscreteOptimalTransport
@@ -269,16 +341,29 @@ class SemiDiscreteOptimalTransport
 public:
   SemiDiscreteOptimalTransport( const Topology<type>& domain , const DensityMeasure& density );
 
+  void set_exact( bool x ) { exact_ = x; }
+
   void sample( index_t nb_samples );
   void optimize_points( index_t nb_iter );
   void optimize_weights( index_t nb_iter );
+
+  void compute_laguerre();
+  void evaluate();
+
+  void set_delaunay();
+  void set_weights();
+
+  Delaunay& delaunay() { return delaunay_; }
+  IntegrationSimplices& simplices() { return simplices_; }
 
 private:
   const Topology<type>& domain_;
   const DensityMeasure& density_;
 
-  std::vector<int> point2elem_; // element containing dirac masses
-  std::shared_ptr<LaguerreDiagram<type>> diagram_;
+  Delaunay delaunay_;
+  LaguerreDiagram<type> diagram_;
+  IntegrationSimplices simplices_;
+  bool exact_;
 };
 
 } // delaunay

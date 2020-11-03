@@ -193,15 +193,16 @@ public:
 
   template<typename type>
   void
-  integrate( const Topology<type>& topology )
+  integrate( const Topology<type>& topology , T* values=nullptr )
   {
     ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.element() );
 //    #pragma omp parallel for
     for (index_t k=0;k<topology.nb();k++)
     {
-      T df = 0;
+      T df = T(0);
       elem.integrate( k , integrand_ , df );
       functional_ += df;
+      if (values != nullptr) values[k] = df;
     }
   }
 

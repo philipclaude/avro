@@ -1,6 +1,9 @@
 #include "common/parallel_for.h"
 
+#include "element/quadrature.h"
+
 #include "numerics/geometry.h"
+#include "numerics/integration_rank.h"
 
 #include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
@@ -657,6 +660,9 @@ LaguerreCellBase<type>::generate_simplices()
   }
   else
     avro_implement;
+
+  // orient the simplices so they all have a positive volume
+  simplices_.orient();
 }
 
 template<typename type>
@@ -816,11 +822,161 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
   //printf("--> timing: neighbours (%3.4g sec.), clipping (%3.4g sec.), decompose (%3.4g sec.)\n",time_neighbours_,time_voronoi_,time_decompose);
 }
 
+real_t
+Integrand_Transport_Energy::operator()( index_t k , const real_t* xref , const real_t* x ) const
+{
+  avro_assert_msg( k < simplices_.nb() , "elem = %lu, nb_simplices = %lu", k , simplices_.nb() );
+
+  // retrieve the delaunay site and coordinate
+  index_t site = simplices_.simplex2site(k);
+  avro_assert_msg( site < delaunay_.nb() , "elem = %lu, requested site %lu but nb_delaunay = %lu",k,site,delaunay_.nb());
+  const real_t* z = delaunay_[site];
+
+  // evaluate the density
+  real_t rho = density_.evaluate( k , xref , x );
+
+  T f = 0;
+  for (coord_t d=0;d<dim_;d++)
+    f += rho*(z[d] - x[d])*(z[d] - x[d]);
+  return f;
+}
+
+class Integrand_Mass : public Integrand<Integrand_Mass>
+{
+public:
+
+  typedef real_t T;
+
+  Integrand_Mass(const DensityMeasure& density) :
+    density_(density)
+  {}
+
+  bool needs_solution() const { return false; }
+  bool needs_gradient() const { return false; }
+  bool needs_hessian() const { return false; }
+
+  T operator()( index_t k , const real_t* xref , const real_t* x ) const
+  {
+    return density_.evaluate(k,xref,x);
+  }
+
+private:
+  const DensityMeasure& density_;
+};
+
+class Integrand_Moment : public Integrand<Integrand_Moment>
+{
+public:
+
+  typedef real_t T;
+
+  Integrand_Moment(coord_t dim, const DensityMeasure& density) :
+    dim_(dim),
+    density_(density)
+  {}
+
+  bool needs_solution() const { return false; }
+  bool needs_gradient() const { return false; }
+  bool needs_hessian() const { return false; }
+
+  T operator()( index_t k , const real_t* xref , const real_t* x , std::vector<T>& I ) const
+  {
+    real_t rho = density_.evaluate(k,xref,x);
+    for (index_t r = 0; r < dim_; r++)
+      I[r] += rho*x[r];
+    return 1.0;
+  }
+
+private:
+  coord_t dim_;
+  const DensityMeasure& density_;
+};
+
+template<typename type>
+SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology<type>& domain , const DensityMeasure& density ) :
+  domain_(domain),
+  density_(density),
+  delaunay_(domain.points().dim()),
+  diagram_(delaunay_,domain_),
+  simplices_(domain.number()),
+  exact_(false)
+{}
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::sample( index_t nb_samples )
+{
+  coord_t dim = domain_.points().dim();
+
+  // create samples in a dim+1 space, but leave the last dimension as 0
+  for (index_t k=0;k<nb_samples;k++)
+  {
+    std::vector<real_t> p(dim,0.);
+    for (coord_t d = 0; d < dim; d++)
+      p[d] = random_within(0.0,1.0);
+    delaunay_.create(p.data());
+  }
+}
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::compute_laguerre()
+{
+  // compute the laguerre diagram along with the integration simplices
+  diagram_.clear();
+  diagram_.points().clear();
+  simplices_.clear();
+  diagram_.compute(exact_,&simplices_);
+}
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::evaluate()
+{
+  coord_t number = domain_.number();
+  coord_t dim = domain_.points().dim();
+
+  // compute the laguerre diagram
+  compute_laguerre();
+
+  // compute the CVT energy
+  ConicalProductQuadrature quadrature(number,4);
+  simplices_.element().set_basis( BasisFunctionCategory_Lagrange );
+  quadrature.define();
+  simplices_.element().load_quadrature(quadrature);
+
+  // integrate
+  typedef delaunay::Integrand_Transport_Energy Integrand_t;
+  Integrand_t integrand(delaunay_,simplices_,density_,dim);
+  Functional<Integrand_t> f(integrand);
+  f.integrate(simplices_);
+  real_t energy = f.value();
+  printf("energy = %g\n",energy);
+
+  typedef delaunay::Integrand_Mass Integrand_Mass_t;
+  Integrand_Mass_t integrandm(density_);
+  Functional<Integrand_Mass_t> fm(integrandm);
+  std::vector<real_t> masses(simplices_.nb());
+  fm.integrate(simplices_,masses.data());
+  real_t mass = fm.value();
+  printf("mass = %g\n",mass);
+
+  typedef delaunay::Integrand_Moment Integrand_Moment_t;
+  Integrand_Moment_t integrandxm(dim,density_);
+  Functional_Ranked<Integrand_Moment_t> fxm(integrandxm,dim);
+  std::vector<real_t> moments( dim * simplices_.nb() );
+  fxm.integrate(simplices_,moments.data());
+
+  std::vector<real_t> moment = fxm.value();
+  print_inline( moment , "moment" );
+}
 
 template class LaguerreCellBase<Simplex>;
 template class LaguerreCellBase<Polytope>;
 template class LaguerreDiagram<Simplex>;
 template class LaguerreDiagram<Polytope>;
+template class SemiDiscreteOptimalTransport<Simplex>;
+template class SemiDiscreteOptimalTransport<Polytope>;
 
 } // delaunay
 
