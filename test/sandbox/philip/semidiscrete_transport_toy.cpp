@@ -25,7 +25,7 @@ UT_TEST_CASE( test1 )
   coord_t dim = number;
   CubeDomain<type> domain(dim,10);
 
-  delaunay::DensityMeasure_Uniform density;
+  delaunay::DensityMeasure_Example density;
 
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,density);
   transport.sample( nb_points );

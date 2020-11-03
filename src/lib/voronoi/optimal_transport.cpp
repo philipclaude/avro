@@ -883,7 +883,7 @@ public:
   {
     real_t rho = density_.evaluate(k,xref,x);
     for (index_t r = 0; r < dim_; r++)
-      I[r] += rho*x[r];
+      I[r] = rho*x[r];
     return 1.0;
   }
 
@@ -945,7 +945,7 @@ SemiDiscreteOptimalTransport<type>::evaluate()
   quadrature.define();
   simplices_.element().load_quadrature(quadrature);
 
-  // integrate
+  // get the energy
   typedef delaunay::Integrand_Transport_Energy Integrand_t;
   Integrand_t integrand(delaunay_,simplices_,density_,dim);
   Functional<Integrand_t> f(integrand);
@@ -953,6 +953,7 @@ SemiDiscreteOptimalTransport<type>::evaluate()
   real_t energy = f.value();
   printf("energy = %g\n",energy);
 
+  // get the masses
   typedef delaunay::Integrand_Mass Integrand_Mass_t;
   Integrand_Mass_t integrandm(density_);
   Functional<Integrand_Mass_t> fm(integrandm);
@@ -961,6 +962,7 @@ SemiDiscreteOptimalTransport<type>::evaluate()
   real_t mass = fm.value();
   printf("mass = %g\n",mass);
 
+  // get the moments
   typedef delaunay::Integrand_Moment Integrand_Moment_t;
   Integrand_Moment_t integrandxm(dim,density_);
   Functional_Ranked<Integrand_Moment_t> fxm(integrandxm,dim);
@@ -969,6 +971,8 @@ SemiDiscreteOptimalTransport<type>::evaluate()
 
   std::vector<real_t> moment = fxm.value();
   print_inline( moment , "moment" );
+
+  
 }
 
 template class LaguerreCellBase<Simplex>;
