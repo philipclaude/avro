@@ -84,6 +84,7 @@ LaguerreCell<Polytope>::initialize()
   avro_assert( domain_.nb() == 1 );
 
   // create the initial points
+  vertex_.clear();
   vertex_.resize( domain_.nv(elem_) );
   for (index_t j=0;j<domain_.nv(elem_);j++)
   {
@@ -99,7 +100,7 @@ LaguerreCell<Polytope>::initialize()
   polytope_ = linspace(domain_.nv(elem_));
 
   // initialize the edges
-  if (domain_edges_.size() != 0)
+  if (domain_edges_.size())
   {
     pedges_ = domain_edges_;
   }
@@ -186,9 +187,6 @@ LaguerreCell<Polytope>::clip()
   add( polytope_.data() , polytope_.size() );
   cell2elem_.push_back(0);
   cell2site_.push_back(site_);
-
-  // TODO add information as to which delaunay seed this correpsonds to (even though it's obvious)
-  // it's needed for the LaguerreDiagram
 }
 
 // SIMPLEX LAGUERRE CELLS
@@ -415,8 +413,6 @@ LaguerreCellBase<type>::clip_by_bisector( index_t j , index_t bj )
 
     int q0 = -1,q1 = -1;
     int qs = clip_edge(e0,e1,b,qpolytope_,q0,q1);
-
-    //printf("clipped edge (%lu,%lu) -> (%d,%d), qs = %d\n",e0,e1,q0,q1,qs);
     if (q0 < 0 || q1 < 0) continue;
 
     qedges_.push_back( q0 );
@@ -687,11 +683,10 @@ void
 LaguerreDiagram<Simplex>::create( bool exact , index_t nb_nns )
 {
   // create a cell for every simplex in the mesh
-  cells_.resize( domain_.nb() );
+  cells_.resize( domain_.nb() , nullptr );
   for (index_t k=0;k<domain_.nb();k++)
   {
-    if (cells_[k] == nullptr || neighbour_search_ == nullptr)
-      cells_[k] = std::make_shared<LaguerreCell<Simplex>>(k,delaunay_,*neighbour_search_,domain_,domain_facets_.get(),exact,nb_nns);
+    cells_[k] = std::make_shared<LaguerreCell<Simplex>>(k,delaunay_,*neighbour_search_,domain_,domain_facets_.get(),exact,nb_nns);
     cells_[k]->set_facets( domain_facets_.get() );
     cells_[k]->set_edges( domain_edges_ );
   }
@@ -702,7 +697,7 @@ void
 LaguerreDiagram<Polytope>::create( bool exact , index_t nb_nns )
 {
   // create a cell for every delaunay vertex
-  cells_.resize( delaunay_.nb() );
+  cells_.resize( delaunay_.nb() , nullptr );
   for (index_t k=0;k<delaunay_.nb();k++)
   {
     if (cells_[k] == nullptr || neighbour_search_ == nullptr)
@@ -971,8 +966,6 @@ SemiDiscreteOptimalTransport<type>::evaluate()
 
   std::vector<real_t> moment = fxm.value();
   print_inline( moment , "moment" );
-
-  
 }
 
 template class LaguerreCellBase<Simplex>;

@@ -20,7 +20,7 @@ UT_TEST_CASE( test1 )
   typedef Polytope type;
   //typedef Simplex type;
   coord_t number = 2;
-  index_t nb_points = 1e4;
+  index_t nb_points = 1e3;
 
   coord_t dim = number;
   CubeDomain<type> domain(dim,10);
@@ -30,7 +30,13 @@ UT_TEST_CASE( test1 )
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,density);
   transport.sample( nb_points );
 
-  transport.evaluate();
+  for (index_t i = 0; i < 10; i++)
+  {
+    transport.evaluate();
+    //if (i > 0) transport.delaunay().print();
+  }
+
+  //return;
 
   delaunay::IntegrationSimplices& triangulation = transport.simplices();
   std::shared_ptr<delaunay::TriangulationCells> tc = std::make_shared<delaunay::TriangulationCells>(triangulation);
