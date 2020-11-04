@@ -24,9 +24,9 @@ class RVDFacets;
 class IntegrationSimplices : public Topology<Simplex>
 {
 public:
-  IntegrationSimplices( coord_t number ) :
+  IntegrationSimplices( coord_t number , coord_t dim ) :
     Topology<Simplex>(points_,number),
-    points_(number)
+    points_(dim)
   {}
 
   void add_simplex( const std::vector<index_t>& simplex , index_t elem , index_t site )
@@ -78,7 +78,13 @@ public:
 class DensityMeasure_Uniform : public DensityMeasure
 {
 public:
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const { return 1.0; }
+  DensityMeasure_Uniform( real_t rho = 1.0 ) :
+    rho_(rho)
+  {}
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const { return rho_; }
+
+private:
+  real_t rho_;
 };
 
 class DensityMeasure_Example : public DensityMeasure
@@ -217,8 +223,7 @@ private:
 
 private:
   index_t elem_;
-  std::vector<bool>    clipped_;
-  std::vector<index_t> seed_;
+  std::vector<bool> clipped_;
 };
 
 
@@ -339,31 +344,46 @@ template<typename type>
 class SemiDiscreteOptimalTransport
 {
 public:
-  SemiDiscreteOptimalTransport( const Topology<type>& domain , const DensityMeasure& density );
+  SemiDiscreteOptimalTransport( const Topology<type>& domain , DensityMeasure* density=nullptr );
 
+  void set_density( DensityMeasure* density ) { density_ = density; }
   void set_exact( bool x ) { exact_ = x; }
 
   void sample( index_t nb_samples );
-  void optimize_points( index_t nb_iter );
-  void optimize_weights( index_t nb_iter );
+  void optimize_points( index_t nb_iter=10 );
+  void optimize_weights( index_t nb_iter=10 );
+  void stochastic_gradient_descent();
+  void optimize_points_lloyd( index_t nb_iter=10 );
 
   void compute_laguerre();
-  void evaluate();
+  real_t evaluate( index_t iter , index_t mode , real_t* dc_dx=nullptr , real_t* dc_dw=nullptr );
 
-  void set_delaunay();
-  void set_weights();
+  void set_delaunay( const real_t* x , coord_t dim );
+  void set_weights( const real_t* w );
 
+  const Topology<type>& domain() const { return domain_; }
   Delaunay& delaunay() { return delaunay_; }
   IntegrationSimplices& simplices() { return simplices_; }
+  LaguerreDiagram<type>& diagram() { return diagram_; }
+
+  std::vector<real_t>& mass() { return mass_; }
+  const std::vector<real_t>& mass() const { return mass_; }
+  void set_nu( const std::vector<real_t>& nu ) { nu_ = nu; }
+  std::vector<real_t>& nu() { return nu_; }
 
 private:
   const Topology<type>& domain_;
-  const DensityMeasure& density_;
+  DensityMeasure* density_;
 
   Delaunay delaunay_;
   LaguerreDiagram<type> diagram_;
   IntegrationSimplices simplices_;
   bool exact_;
+
+  std::vector<real_t> nu_; // the target mass
+  std::vector<real_t> weight_; // the weight on each voronoi cell
+  std::vector<real_t> mass_;
+  std::vector<real_t> centroid_;
 };
 
 } // delaunay

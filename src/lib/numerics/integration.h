@@ -11,6 +11,7 @@
 #define avro_LIB_NUMERICS_INTEGRATION_H_
 
 #include "common/error.h"
+#include "common/parallel_for.h"
 #include "common/types.h"
 
 #include "mesh/dof.h"
@@ -99,8 +100,10 @@ private:
   Functor functor_;
 };
 
+class ElementIntegralBase {};
+
 template<typename type,typename T>
-class ElementIntegral
+class ElementIntegral : public ElementIntegralBase
 {
 public:
   ElementIntegral( const Topology<type>& topology , const DOF<T>& dof,
@@ -184,6 +187,7 @@ class Functional
 {
 private:
   typedef typename Integrand::T T;
+  typedef Functional thisclass;
 
 public:
   Functional( const Integrand& integrand ) :
@@ -192,11 +196,32 @@ public:
   {}
 
   template<typename type>
+  Functional( const Integrand& integrand , const Topology<type>& topology ) :
+    integrand_(integrand),
+    functional_(0)
+  {
+    integrators_.resize( topology.nb() );
+    for (index_t k = 0; k < topology.nb(); k++)
+      integrators_[k] = std::make_shared<ElementIntegral<type,T>>(topology,topology.points(),topology,topology.element());
+  }
+
+  template<typename type>
+  void
+  integrate_element( index_t k )
+  {
+    ElementIntegral<type,T>& elem = static_cast<ElementIntegral<type,T>&>(*integrators_[k].get());
+    T df = T(0);
+    elem.integrate( k , integrand_ , df );
+    values_[k] = df;
+  }
+
+  template<typename type>
   void
   integrate( const Topology<type>& topology , T* values=nullptr )
   {
+    #if 0
     ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.element() );
-//    #pragma omp parallel for
+    //#pragma omp parallel for
     for (index_t k=0;k<topology.nb();k++)
     {
       T df = T(0);
@@ -204,6 +229,18 @@ public:
       functional_ += df;
       if (values != nullptr) values[k] = df;
     }
+    #else
+    values_.clear();
+    values_.resize( topology.nb() );
+    ProcessCPU::parallel_for(
+      parallel_for_member_callback( this , &thisclass::integrate_element<type> ),
+      0,values_.size() );
+    for (index_t k = 0; k < values_.size(); k++)
+    {
+      functional_ += values_[k];
+      if (values != nullptr) values[k] = values_[k];
+    }
+    #endif
   }
 
   template<typename type>
@@ -226,9 +263,61 @@ public:
 
 private:
   const Integrand& integrand_;
+  std::vector<T> values_;
   T functional_;
-
+  std::vector<std::shared_ptr<ElementIntegralBase>> integrators_;
 };
+
+#if 0
+template<typename Integrand,typename type>
+class Functional
+{
+private:
+  typedef typename Integrand::T T;
+  typedef Functional_typed thisclass;
+
+public:
+  Functional_typed( const Integrand& integrand ) :
+    integrand_(integrand),
+    functional_(0),
+    topology_(nullptr)
+  {}
+
+  void
+  integrate( const Topology<type>& topology , T* values=nullptr )
+  {
+    #if 0
+    ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.element() );
+    //#pragma omp parallel for
+    for (index_t k=0;k<topology.nb();k++)
+    {
+      T df = T(0);
+      elem.integrate( k , integrand_ , df );
+      functional_ += df;
+      if (values != nullptr) values[k] = df;
+    }
+    #else
+    values_.clear();
+    values_.resize( topology.nb() );
+
+    // initialize the element integrals
+
+    ProcessCPU::parallel_for(
+      parallel_for_member_callback( this , &thisclass::integrate_element ),
+      0,values_.size() );
+    #endif
+  }
+
+  T value() const { return functional_; }
+
+private:
+  const Integrand& integrand_;
+  std::vector<T> values_;
+  T functional_;
+  const Topology<type>& topology_;
+};
+#endif
+
 
 } // avro
 

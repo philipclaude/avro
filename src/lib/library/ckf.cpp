@@ -287,16 +287,24 @@ CKF_Triangulation::generate()
 
 
 template<>
-CubeDomain<Simplex>::CubeDomain( coord_t dim , index_t n ) :
-  Topology<Simplex>(points_,dim),
+CubeDomain<Simplex>::CubeDomain( coord_t number , coord_t dim , index_t n ) :
+  Topology<Simplex>(points_,number),
   points_(dim)
 {
-  coord_t number = dim;
   std::vector<index_t> dims(number,n);
   CKF_Triangulation ckf(dims);
 
   // copy the points and elements from the ckf triangulation
-  ckf.points().copy( points_ );
+  avro_assert( dim >= number );
+  avro_assert( ckf.points().dim() == number );
+  std::vector<real_t> p(dim,0.0);
+  for (index_t k = 0; k < ckf.points().nb(); k++)
+  {
+    // copy the points, any additional coordinates will be zero
+    for (coord_t d = 0; d < ckf.points().dim(); d++)
+      p[d] = ckf.points()[k][d];
+    points_.create( p.data() );
+  }
   TopologyBase::copy( ckf );
 
   // compute the neighbours
@@ -306,12 +314,10 @@ CubeDomain<Simplex>::CubeDomain( coord_t dim , index_t n ) :
 
 
 template<>
-CubeDomain<Polytope>::CubeDomain( coord_t dim , index_t n0 ) :
-  Topology<Polytope>(points_,dim),
+CubeDomain<Polytope>::CubeDomain( coord_t number , coord_t dim , index_t n0 ) :
+  Topology<Polytope>(points_,number),
   points_(dim)
 {
-  coord_t number = dim;
-
   // create a CKF triangulation with only 2 points in each direction
   std::vector<index_t> dims(number,2);
   CKF_Triangulation ckf(dims);
@@ -324,8 +330,8 @@ CubeDomain<Polytope>::CubeDomain( coord_t dim , index_t n0 ) :
   std::vector<std::vector<int>> v2b( ckf.points().nb() );
   std::vector<index_t> f(number);
   std::vector<real_t*> x(number);
-  std::vector<real_t> n(dim);
-  std::vector<real_t> c(dim);
+  std::vector<real_t> n(number);
+  std::vector<real_t> c(number);
   for (index_t k=0;k<facets.nb();k++)
   {
     if (!facets.boundary(k)) continue;
@@ -336,11 +342,11 @@ CubeDomain<Polytope>::CubeDomain( coord_t dim , index_t n0 ) :
       x[j] = ckf.points()[ f[j] ];
 
     // compute the normal to the facet
-    numerics::normal( x , n.data() , dim );
+    numerics::normal( x , n.data() , number );
 
     // which direction is this in?
     coord_t dir = 0;
-    for (coord_t d=0;d<dim;d++)
+    for (coord_t d=0;d<number;d++)
     {
       if (fabs( fabs(n[d])-1.0) < 1e-8)
       {
@@ -361,7 +367,7 @@ CubeDomain<Polytope>::CubeDomain( coord_t dim , index_t n0 ) :
     // determine which plane this corresponds to
     int b;
     if (zero) b = - dir - 1;
-    else b = - dim - dir - 1;
+    else b = - number - dir - 1;
 
     // let each vertex know it is on this bisector
     for (coord_t d=0;d<f.size();d++)
@@ -371,7 +377,16 @@ CubeDomain<Polytope>::CubeDomain( coord_t dim , index_t n0 ) :
   }
 
   // copy the points from the ckf triangulation
-  ckf.points().copy( points_ );
+  avro_assert( dim >= number );
+  avro_assert( ckf.points().dim() == number );
+  std::vector<real_t> p(dim,0.0);
+  for (index_t k = 0; k < ckf.points().nb(); k++)
+  {
+    // copy the points, any additional coordinates will be zero
+    for (coord_t d = 0; d < ckf.points().dim(); d++)
+      p[d] = ckf.points()[k][d];
+    points_.create( p.data() );
+  }
 
   // set the incidence relations
   for (index_t k=0;k<ckf.points().nb();k++)
@@ -380,7 +395,7 @@ CubeDomain<Polytope>::CubeDomain( coord_t dim , index_t n0 ) :
     points_.incidence().add( v2b[k].data() , v2b[k].size() );
   }
 
-  std::vector<index_t> cube = linspace( std::pow(2,dim) );
+  std::vector<index_t> cube = linspace( std::pow(2,number) );
   add( cube.data() , cube.size() );
 }
 

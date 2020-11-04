@@ -117,6 +117,7 @@ Polytope::vrep( const index_t* v , index_t nv , const int facet , std::vector<in
 std::vector<index_t>
 Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Polytope>& decomposition , index_t parent , std::set<int>& h ) const
 {
+  if (nv <= number_) return {};
   std::vector<index_t> simplex_idx;
   if (number_<=1)
   {

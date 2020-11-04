@@ -4,10 +4,15 @@
 
 #include "numerics/geometry.h"
 #include "numerics/integration_rank.h"
+#include "numerics/nlopt_result.h"
 
 #include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 #include "voronoi/voronoi_cell.h"
+
+#include <nlopt.hpp>
+
+#include <iomanip>
 
 namespace avro
 {
@@ -27,7 +32,7 @@ LaguerreCellBase<type>::LaguerreCellBase( const Delaunay& delaunay, GEO::Nearest
   exact_(exact),
   site_(delaunay.nb()),
   domain_facets_(nullptr),
-  simplices_(domain.number())
+  simplices_(domain.number(),domain.number())
 {}
 
 template<typename type>
@@ -100,7 +105,7 @@ LaguerreCell<Polytope>::initialize()
   polytope_ = linspace(domain_.nv(elem_));
 
   // initialize the edges
-  if (domain_edges_.size())
+  if (domain_edges_.size() > 0)
   {
     pedges_ = domain_edges_;
   }
@@ -145,7 +150,7 @@ LaguerreCell<Polytope>::compute()
 
   // option to decompose the simplices
   t0 = clock();
-  if (number_ < 4) generate_simplices();
+  if (number_ < 5) generate_simplices();
   time_decompose_ = real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 }
 
@@ -308,7 +313,6 @@ LaguerreCell<Simplex>::clip( index_t i )
     for (index_t j=0;j<polytope_.size();j++)
       polytope_[j] += nb_points;
     add( polytope_.data() , polytope_.size() );
-    seed_.push_back(site_);
     cell2elem_.push_back(elem_);
     cell2site_.push_back(site_);
   }
@@ -359,7 +363,7 @@ LaguerreCell<Simplex>::compute()
 
   // option to decompose the simplices
   t0 = clock();
-  if (number_ < 4) generate_simplices();
+  if (number_ < 5) generate_simplices();
   time_decompose_ = real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 }
 
@@ -574,8 +578,6 @@ LaguerreCellBase<type>::generate_simplices()
   for (index_t j = 0; j < points_.nb(); j++)
     simplices_.add_point( points_[j] , point2elem_[j] , point2site_[j] );
 
-  points_.copy( simplices_.points() );
-
   std::vector<real_t> xc(dim,0.);
   std::vector<int> facets;
   std::vector<index_t> simplex(number_+1);
@@ -619,7 +621,7 @@ LaguerreCellBase<type>::generate_simplices()
       numerics::centroid( (*this)(k) , nv(k) , points_ , xc );
       simplices_.add_point( xc.data() , cell2elem_[k] , cell2site_[k] );
 
-      // get the hrep of this polygon
+      // get the hrep of this polyhedron
       element().hrep( (*this)(k) ,  nv(k) , facets );
 
       for (index_t j=0;j<facets.size();j++)
@@ -631,7 +633,7 @@ LaguerreCellBase<type>::generate_simplices()
         // compute the centroid of the facet
         index_t idf = simplices_.points().nb();
         numerics::centroid( vf.data() , vf.size() , points_ , xf );
-        simplices_.add_point( xf.data() , 0 , 0 );
+        simplices_.add_point( xf.data() , cell2elem_[k] , cell2site_[k] );
 
         // retrieve the edges
         std::vector<int> edges;
@@ -650,6 +652,73 @@ LaguerreCellBase<type>::generate_simplices()
           simplex[2] = idf;
           simplex[3] = idc;
           simplices_.add_simplex( simplex , cell2elem_[k] , cell2site_[k] );
+        }
+      }
+    }
+  }
+  else if (number_ == 4)
+  {
+    // add a point for centroid of each polyhedron
+    std::vector<real_t> xp(dim,0.0);
+    std::vector<real_t> xf(dim,0.0);
+    std::vector<int> h_poly;
+    for (index_t k=0;k<nb();k++)
+    {
+      // compute the centroid of this polytope
+      index_t idc = simplices_.points().nb();
+      numerics::centroid( (*this)(k) , nv(k) , points_ , xc );
+      simplices_.add_point( xc.data() , cell2elem_[k] , cell2site_[k] );
+
+      // get the hrep of this polytope
+      element().hrep( (*this)(k) ,  nv(k) , h_poly );
+
+      // loop through every polyhedron
+      for (index_t j=0;j<h_poly.size();j++)
+      {
+        // get the points with this bisector
+        std::vector<index_t> v_poly;
+        element().vrep( (*this)(k) , nv(k) , h_poly[j] , v_poly );
+
+        // compute the centroid of the polyhedron
+        index_t idp = simplices_.points().nb();
+        numerics::centroid( v_poly.data() , v_poly.size() , points_ , xp );
+        simplices_.add_point( xp.data() , cell2elem_[k] , cell2site_[k] );
+
+        // retrieve the face bisectors
+        std::vector<int> h_face;
+        element().hrep( v_poly.data() , v_poly.size() , h_face );
+        for (index_t f = 0; f < h_face.size(); f++)
+        {
+          // skip if this is the current bisector of the polytope
+          if (h_face[f] == h_poly[j]) continue;
+
+          std::vector<index_t> v_face;
+          element().vrep( v_poly.data() , v_poly.size() , h_face[f] , v_face );
+
+          // compute the centroid of this face
+          index_t idf = simplices_.points().nb();
+          numerics::centroid( v_face.data() , v_face.size() , points_ , xf );
+          simplices_.add_point( xf.data() , cell2elem_[k] , cell2site_[k] );
+
+          // retrieve the edges
+          std::vector<int> h_edge;
+          element().hrep( v_face.data() , v_face.size() , h_edge );
+          for (index_t e = 0; e < h_edge.size(); e++)
+          {
+            // skip if this is any of the bisectors we have already visited
+            if (h_edge[e] == h_poly[j] || h_edge[e] == h_face[f]) continue;
+
+            std::vector<index_t> v_edge;
+            element().vrep( v_face.data() , v_face.size() , h_edge[e] , v_edge );
+            if (v_edge.size() != 2) continue;
+
+            simplex[0] = v_edge[0];
+            simplex[1] = v_edge[1];
+            simplex[2] = idf;
+            simplex[3] = idp;
+            simplex[4] = idc;
+            simplices_.add_simplex( simplex , cell2elem_[k] , cell2site_[k] );
+          }
         }
       }
     }
@@ -888,12 +957,12 @@ private:
 };
 
 template<typename type>
-SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology<type>& domain , const DensityMeasure& density ) :
+SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology<type>& domain , DensityMeasure* density ) :
   domain_(domain),
   density_(density),
   delaunay_(domain.points().dim()),
   diagram_(delaunay_,domain_),
-  simplices_(domain.number()),
+  simplices_(domain.number(),domain.number()),
   exact_(false)
 {}
 
@@ -904,13 +973,16 @@ SemiDiscreteOptimalTransport<type>::sample( index_t nb_samples )
   coord_t dim = domain_.points().dim();
 
   // create samples in a dim+1 space, but leave the last dimension as 0
+  delaunay_.clear();
   for (index_t k=0;k<nb_samples;k++)
   {
     std::vector<real_t> p(dim,0.);
-    for (coord_t d = 0; d < dim; d++)
+    for (coord_t d = 0; d < domain_.number(); d++)
       p[d] = random_within(0.0,1.0);
     delaunay_.create(p.data());
   }
+  nu_.resize( delaunay_.nb() , 0.0 );
+  weight_.resize( delaunay_.nb() , 0.0 );
 }
 
 template<typename type>
@@ -924,48 +996,309 @@ SemiDiscreteOptimalTransport<type>::compute_laguerre()
   diagram_.compute(exact_,&simplices_);
 }
 
-template<typename type>
-void
-SemiDiscreteOptimalTransport<type>::evaluate()
+real_t
+calculate_norm( const real_t* x , index_t nb )
 {
+  real_t n = 0.0;
+  for (index_t k = 0; k < nb; k++)
+    n += x[k]*x[k];
+  return std::sqrt(n);
+}
+
+template<typename type>
+real_t
+SemiDiscreteOptimalTransport<type>::evaluate( index_t iter , index_t mode , real_t* dc_dx , real_t* dc_dw )
+{
+  avro_assert( density_ != nullptr );
+  clock_t t0;
+  real_t time_integrate = 0.0;
+
   coord_t number = domain_.number();
-  coord_t dim = domain_.points().dim();
+  coord_t dim = domain_.number();
 
   // compute the laguerre diagram
   compute_laguerre();
 
-  // compute the CVT energy
-  ConicalProductQuadrature quadrature(number,4);
+  // define the integration rules
+  ConicalProductQuadrature quadrature(number,2);
   simplices_.element().set_basis( BasisFunctionCategory_Lagrange );
   quadrature.define();
   simplices_.element().load_quadrature(quadrature);
 
-  // get the energy
-  typedef delaunay::Integrand_Transport_Energy Integrand_t;
-  Integrand_t integrand(delaunay_,simplices_,density_,dim);
-  Functional<Integrand_t> f(integrand);
-  f.integrate(simplices_);
-  real_t energy = f.value();
-  printf("energy = %g\n",energy);
-
   // get the masses
+  t0 = clock();
   typedef delaunay::Integrand_Mass Integrand_Mass_t;
-  Integrand_Mass_t integrandm(density_);
-  Functional<Integrand_Mass_t> fm(integrandm);
+  Integrand_Mass_t integrandm(*density_);
+  Functional<Integrand_Mass_t> fm(integrandm,simplices_);
   std::vector<real_t> masses(simplices_.nb());
   fm.integrate(simplices_,masses.data());
-  real_t mass = fm.value();
-  printf("mass = %g\n",mass);
+  time_integrate += real_t( clock() - t0 )/real_t(CLOCKS_PER_SEC);
 
   // get the moments
+  t0 = clock();
   typedef delaunay::Integrand_Moment Integrand_Moment_t;
-  Integrand_Moment_t integrandxm(dim,density_);
-  Functional_Ranked<Integrand_Moment_t> fxm(integrandxm,dim);
+  Integrand_Moment_t integrandxm(dim,*density_);
+  Functional_Ranked<Integrand_Moment_t> fxm(integrandxm,dim,simplices_);
   std::vector<real_t> moments( dim * simplices_.nb() );
   fxm.integrate(simplices_,moments.data());
+  time_integrate += real_t( clock() - t0 )/real_t(CLOCKS_PER_SEC);
 
-  std::vector<real_t> moment = fxm.value();
-  print_inline( moment , "moment" );
+  // first compute the mass of each voronoi cell
+  mass_.clear();
+  mass_.resize( delaunay_.nb() , 0.0 );
+  for (index_t k = 0; k < simplices_.nb(); k++)
+  {
+    index_t s = simplices_.simplex2site(k);
+    mass_[s] += masses[k];
+  }
+
+  if (dc_dx != nullptr)
+  {
+    // compute the and center of mass of each voronoi cell
+    centroid_.clear();
+    centroid_.resize( delaunay_.nb()*dim , 0.0 );
+    for (index_t k = 0; k < simplices_.nb(); k++)
+    {
+      index_t s  = simplices_.simplex2site(k);
+      for (coord_t d = 0; d < dim; d++)
+        centroid_[ s*dim + d ] += moments[ k*dim + d];
+    }
+
+    // compute the centroid and gradient
+    for (index_t k = 0; k < delaunay_.nb(); k++)
+    for (coord_t d = 0; d < dim; d++)
+    {
+      // if weights are too high, some cells could be submerged which gives a zero volume
+      if (mass_[k] < 1e-12) centroid_[k*dim+d] = delaunay_[k][d];
+      else
+        centroid_[k*dim+d] /= mass_[k];
+      dc_dx[ k*dim + d] = 2.0*mass_[k]*( delaunay_[k][d] - centroid_[k*dim+d] );
+    }
+  }
+
+  if (dc_dw != nullptr)
+  {
+    // compute the gradient of the transport map
+    for (index_t k = 0; k < delaunay_.nb(); k++)
+      dc_dw[k] = nu_[k] - mass_[k];
+  }
+
+  // get the energy
+  t0 = clock();
+  typedef delaunay::Integrand_Transport_Energy Integrand_t;
+  Integrand_t integrand(delaunay_,simplices_,*density_,dim);
+  Functional<Integrand_t> f(integrand,simplices_);
+  f.integrate(simplices_);
+  real_t energy = f.value();
+  time_integrate += real_t( clock() - t0 )/real_t(CLOCKS_PER_SEC);
+
+  // add te contribution from the weights and dirac masses
+  for (index_t k=0;k<delaunay_.nb();k++)
+    energy += weight_[k]*(nu_[k] - mass_[k]);
+
+  // calculate the norm of the gradient and report convergence criteria
+  real_t gnorm;
+  if (mode == 0)
+    gnorm = calculate_norm(dc_dx,delaunay_.nb()*dim);
+  else
+    gnorm = calculate_norm(dc_dw,delaunay_.nb());
+
+
+  time_integrate /= ProcessCPU::maximum_concurrent_threads();
+
+  std::cout <<
+  std::setw(6) << std::left << iter << "|" <<
+  std::setprecision(4) << std::left << std::scientific << std::fabs(energy) << "|" <<
+  std::setprecision(4) << std::left << std::scientific << gnorm << "|" <<
+  std::setw(11) << std::right << std::fixed << diagram_.time_voronoi() << "|" <<
+  std::setw(11) << std::right << std::fixed << diagram_.time_neighbours() <<
+  std::setw(11) << std::right << std::fixed << diagram_.time_decompose() <<
+  std::setw(11) << std::right << std::fixed << time_integrate <<
+  std::endl;
+
+  return energy;
+}
+
+template<typename type>
+struct nlopt_data_optimal_transport
+{
+	SemiDiscreteOptimalTransport<type>& transport;
+	index_t eval_count;
+	real_t objective;
+  int mode; // 0 for coordinates , 1 for weights
+};
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::set_delaunay( const real_t* x , coord_t dim )
+{
+  for (index_t k=0;k<delaunay_.nb();k++)
+  for (coord_t d=0;d<dim;d++)
+    delaunay_[k][d] = x[k*dim+d];
+}
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::set_weights( const real_t* w )
+{
+  for (index_t k=0;k<delaunay_.nb();k++)
+    weight_[k] = w[k];
+  coord_t dim = delaunay_.dim() -1;
+  real_t wm = * std::max_element( weight_.begin() , weight_.end() );
+  for (index_t k=0;k<weight_.size();k++)
+    delaunay_[k][dim] = std::sqrt( std::max( wm - weight_[k] , 0.0 ) );
+}
+
+template<typename type>
+double
+nlopt_transport_objective( unsigned n , const double* x , double* grad, void* data0 )
+{
+  nlopt_data_optimal_transport<type>* data = (nlopt_data_optimal_transport<type>*)(data0);
+
+  SemiDiscreteOptimalTransport<type>& transport = data->transport;
+  data->eval_count++;
+
+  // set the coordinates of the delaunay points
+  if (data->mode == 0)
+    transport.set_delaunay(x,transport.domain().number());
+  else if (data->mode == 1)
+    transport.set_weights(x);
+  else
+    avro_assert_not_reached;
+
+  // recompute the voronoi diagram
+  transport.compute_laguerre();
+
+  index_t nb_points = transport.delaunay().nb();
+  coord_t dim = transport.domain().number();
+
+  // compute the energy and gradients
+  std::vector<real_t> dE_dZ(nb_points*dim),dE_dW(nb_points);
+  real_t energy = transport.evaluate( data->eval_count , data->mode , dE_dZ.data() , dE_dW.data() );
+  if (grad != nullptr)
+  {
+    if (data->mode == 0)
+    {
+      // cvt mode
+      for (index_t k=0;k<dE_dZ.size();k++)
+        grad[k] = dE_dZ[k];
+    }
+    else if (data->mode == 1)
+    {
+      // otm mode: flip the sign to make it convex
+      energy *= -1.0;
+      for (index_t k=0;k<dE_dW.size();k++)
+        grad[k] = -dE_dW[k];
+    }
+    else
+      avro_assert_not_reached;
+  }
+
+  return energy;
+}
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
+{
+  printf("-----------------------------------------------------\n");
+  printf("%5s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_knn (s) ");
+  printf("-----------------------------------------------------\n");
+
+  coord_t dim = domain_.number();
+  index_t n = delaunay_.nb()*dim;
+
+  std::vector<real_t> x(n);
+  for (index_t k=0;k<delaunay_.nb();k++)
+  for (index_t d=0;d<dim;d++)
+    x[k*dim+d] = delaunay_(k,d);
+
+  // setup the optimizer
+  nlopt::opt opt( nlopt::LD_LBFGS , n );
+  nlopt_data_optimal_transport<type> data = {*this,0,1,0};
+
+	// set the objective function
+	opt.set_min_objective( &nlopt_transport_objective<type> , static_cast<void*>(&data) );
+
+  // set some optimization parameters
+  opt.set_xtol_rel(1e-12);
+  opt.set_ftol_rel(1e-12);
+  opt.set_maxeval(nb_iter);
+
+  real_t f_opt;
+  nlopt::result result = nlopt::result::SUCCESS;
+  result = opt.optimize(x,f_opt);
+  std::string desc = nloptResultDescription(result);
+  printf("nlopt result: %s\n",desc.c_str());
+}
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::optimize_points_lloyd( index_t nb_iter )
+{
+  printf("---------------------------------------------------------------------------\n");
+  printf("%5s|%10s|%10s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_nn (s) " , " t_tri (s) " , " t_int (s) ");
+  printf("---------------------------------------------------------------------------\n");
+
+  coord_t dim = domain_.number();
+  index_t n = delaunay_.nb()*dim;
+
+  centroid_.clear();
+  centroid_.resize(n);
+  for (index_t k=0;k<delaunay_.nb();k++)
+  for (index_t d=0;d<dim;d++)
+    centroid_[k*dim+d] = delaunay_(k,d);
+
+  for (index_t iter = 0; iter < nb_iter ; iter++)
+  {
+    // set the current delaunay vertices
+    set_delaunay( centroid_.data() , dim );
+
+    // evaluate the voronoi diagram for these points
+    std::vector<real_t> dc_dx(n); // not used
+    evaluate( iter , 0 , dc_dx.data() , nullptr );
+  }
+
+}
+
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
+{
+  printf("-----------------------------------------------------\n");
+  printf("%5s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_knn (s) ");
+  printf("-----------------------------------------------------\n");
+
+  index_t n = delaunay_.nb();
+  std::vector<real_t> x(n);
+  for (index_t k=0;k<delaunay_.nb();k++)
+    x[k] = weight_[k];
+
+  // setup the optimizer
+  nlopt::opt opt( nlopt::LD_LBFGS , n );
+  nlopt_data_optimal_transport<type> data = {*this,0,1,1};
+
+	// set the objective function
+	opt.set_min_objective( &nlopt_transport_objective<type> , static_cast<void*>(&data) );
+
+  // set some optimization parameters
+  opt.set_xtol_rel(1e-12);
+  opt.set_ftol_rel(1e-12);
+  opt.set_maxeval(nb_iter);
+
+  // set the lower and upper bounds on the weights
+  std::vector<real_t> lower_bound( n , 0.0 );
+  std::vector<real_t> upper_bound( n ,  1e10 );
+  opt.set_lower_bounds(lower_bound);
+  opt.set_upper_bounds(upper_bound);
+
+
+  real_t f_opt;
+  nlopt::result result = nlopt::result::SUCCESS;
+  result = opt.optimize(x,f_opt);
+  std::string desc = nloptResultDescription(result);
+  printf("nlopt result: %s\n",desc.c_str());
 }
 
 template class LaguerreCellBase<Simplex>;

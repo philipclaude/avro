@@ -41,7 +41,7 @@ template<typename type>
 class CubeDomain : public Topology<type>
 {
 public:
-  CubeDomain( coord_t dim , index_t n=10 );
+  CubeDomain( coord_t number , coord_t dim , index_t n=10 );
 
 private:
   Points points_;
