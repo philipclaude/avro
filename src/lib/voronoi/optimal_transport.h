@@ -349,11 +349,13 @@ public:
   void set_density( DensityMeasure* density ) { density_ = density; }
   void set_exact( bool x ) { exact_ = x; }
 
+  // applications
   void sample( index_t nb_samples );
   void optimize_points( index_t nb_iter=10 );
   void optimize_weights( index_t nb_iter=10 );
-  void stochastic_gradient_descent();
+  void stochastic_gradient_descent( index_t nb_iter=10 );
   void optimize_points_lloyd( index_t nb_iter=10 );
+  void generate_bluenoise();
 
   void compute_laguerre();
   real_t evaluate( index_t iter , index_t mode , real_t* dc_dx=nullptr , real_t* dc_dw=nullptr );
@@ -370,6 +372,8 @@ public:
   const std::vector<real_t>& mass() const { return mass_; }
   void set_nu( const std::vector<real_t>& nu ) { nu_ = nu; }
   std::vector<real_t>& nu() { return nu_; }
+
+  void start();
 
 private:
   const Topology<type>& domain_;

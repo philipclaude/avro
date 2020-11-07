@@ -29,18 +29,20 @@ UT_TEST_CASE( test1 )
 {
   typedef Polytope type;
   //typedef Simplex type;
-  coord_t number = 3;
-  index_t nb_points = 1e4;
+  coord_t number = 2;
+  index_t nb_points = 1e2;
 
-  coord_t dim = 5;
-  CubeDomain<type> domain(number,dim,3);
+  coord_t dim = 3;
+  CubeDomain<type> domain(number,dim,2);
 
   delaunay::DensityMeasure_Uniform density(1.0);
   DensityMeasure_Test density2;
 
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density);
   transport.sample( nb_points );
-  transport.optimize_points_lloyd(10);
+
+  #if 0
+  transport.optimize_points(30);
 
   std::vector<real_t> m = transport.mass();
   real_t m_total = 0.0;
@@ -51,8 +53,8 @@ UT_TEST_CASE( test1 )
   printf("mass properties: min = %g, max = %g, total = %g\n",m_min,m_max,m_total);
 
   // set the mass to the current mass
-  #if 0
-  std::vector<real_t> mass( nb_points , 1e-4 );
+  #if 1
+  std::vector<real_t> mass( nb_points , 1.0/nb_points );
   #else
   std::vector<real_t>& mass = transport.mass();
   mass[0] *= 10;
@@ -60,9 +62,31 @@ UT_TEST_CASE( test1 )
   transport.set_nu( mass );
 
   // optimize the weights
-  transport.set_density( &density );
-  transport.optimize_weights(25);
+  //transport.set_density( &density2 );
+  //transport.optimize_weights(30);
+  #else
+  transport.generate_bluenoise();
 
+  json J;
+  std::vector<real_t> radius( transport.delaunay().nb() );
+  std::vector<real_t> x( transport.delaunay().nb()*number );
+  std::vector<real_t> center(number,0.5);
+  index_t i = 0;
+  for (index_t k = 0; k < transport.delaunay().nb(); k++)
+  {
+    radius[k] = numerics::distance( center.data() , transport.delaunay()[k] , number );
+    for (coord_t d = 0; d < number; d++)
+      x[i++] = transport.delaunay()[k][d];
+  }
+  J["r"] = radius;
+  J["x"] = x;
+
+  std::ofstream output("bluenoise-dim"+std::to_string(number)+"-n"+std::to_string(transport.delaunay().nb())+".json");
+  output << std::setw(4) << J << std::endl;
+
+  #endif
+
+  if (number > 3 || (nb_points >= 1e6)) return;
   delaunay::IntegrationSimplices& triangulation = transport.simplices();
   std::shared_ptr<delaunay::TriangulationCells> tc = std::make_shared<delaunay::TriangulationCells>(triangulation);
   triangulation.fields().make("c",tc);
@@ -70,7 +94,6 @@ UT_TEST_CASE( test1 )
   std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
   triangulation.fields().make("e",te);
 
-  if (number > 3 || (nb_points >= 1e6)) return;
   graphics::Visualizer vis;
   library::Plot<Simplex> point_plot(transport.delaunay());
 

@@ -74,6 +74,8 @@ template<typename type> class Application;
 template<typename T> struct GLFW_Interface;
 struct Web_Interface;
 
+#ifdef AVRO_WITH_GL
+
 template<typename API_t>
 class Application<GLFW_Interface<API_t>> : public ApplicationBase
 {
@@ -94,6 +96,8 @@ protected:
   std::vector<GLFW_Window*> window_;
   bool restart_;
 };
+
+#endif
 
 template<>
 class Application<Web_Interface> : public ApplicationBase
@@ -122,6 +126,8 @@ protected:
 private:
   void connect_client();
 };
+
+#ifdef AVRO_WITH_GL
 
 class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
 {
@@ -158,6 +164,24 @@ public:
 private:
   std::shared_ptr<Widget> toolbar_;
 };
+
+#else
+
+class Visualizer
+{
+public:
+  Visualizer() {}
+
+  void add_topology( const TopologyBase& topology )
+  {}
+
+  void run()
+  {
+    printf("graphics not supported");
+  }
+};
+
+#endif
 
 class WebVisualizer : public Application<Web_Interface>
 {

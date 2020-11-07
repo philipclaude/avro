@@ -582,6 +582,10 @@ LaguerreCellBase<type>::generate_simplices()
   std::vector<int> facets;
   std::vector<index_t> simplex(number_+1);
 
+  std::vector<index_t> vf;
+  std::vector<int> edges;
+  std::vector<index_t> ve;
+
   if (number_ == 2)
   {
     // add a point for the centroid of each polygon and triangulate
@@ -598,7 +602,7 @@ LaguerreCellBase<type>::generate_simplices()
       for (index_t j=0;j<facets.size();j++)
       {
         // get the points with this bisector
-        std::vector<index_t> vf;
+        vf.clear();
         element().vrep( (*this)(k) , nv(k) , facets[j] , vf );
         avro_assert( vf.size() == 2 ); // for polygons
 
@@ -614,7 +618,6 @@ LaguerreCellBase<type>::generate_simplices()
   {
     // add a point for the centroid of each polygon and triangulate
     std::vector<real_t> xf(dim,0.);
-    std::vector<index_t> edges;
     for (index_t k=0;k<nb();k++)
     {
       index_t idc = simplices_.points().nb();
@@ -627,7 +630,7 @@ LaguerreCellBase<type>::generate_simplices()
       for (index_t j=0;j<facets.size();j++)
       {
         // get the points with this bisector
-        std::vector<index_t> vf;
+        vf.clear();
         element().vrep( (*this)(k) , nv(k) , facets[j] , vf );
 
         // compute the centroid of the facet
@@ -636,13 +639,13 @@ LaguerreCellBase<type>::generate_simplices()
         simplices_.add_point( xf.data() , cell2elem_[k] , cell2site_[k] );
 
         // retrieve the edges
-        std::vector<int> edges;
+        edges.clear();
         element().hrep( vf.data() , vf.size() , edges );
         for (index_t e=0;e<edges.size();e++)
         {
           if (edges[e] == facets[j]) continue;
 
-          std::vector<index_t> ve;
+          ve.clear();
           element().vrep( vf.data() , vf.size() , edges[e] , ve );
           if (ve.size() != 2) continue;
           avro_assert_msg( ve.size() == 2 , "|ve| = %lu" , ve.size() );
@@ -662,6 +665,12 @@ LaguerreCellBase<type>::generate_simplices()
     std::vector<real_t> xp(dim,0.0);
     std::vector<real_t> xf(dim,0.0);
     std::vector<int> h_poly;
+    std::vector<index_t> v_poly;
+    std::vector<int> h_face;
+    std::vector<index_t> v_face;
+    std::vector<int> h_edge;
+    std::vector<index_t> v_edge;
+
     for (index_t k=0;k<nb();k++)
     {
       // compute the centroid of this polytope
@@ -670,13 +679,14 @@ LaguerreCellBase<type>::generate_simplices()
       simplices_.add_point( xc.data() , cell2elem_[k] , cell2site_[k] );
 
       // get the hrep of this polytope
+      h_poly.clear();
       element().hrep( (*this)(k) ,  nv(k) , h_poly );
 
       // loop through every polyhedron
       for (index_t j=0;j<h_poly.size();j++)
       {
         // get the points with this bisector
-        std::vector<index_t> v_poly;
+        v_poly.clear();
         element().vrep( (*this)(k) , nv(k) , h_poly[j] , v_poly );
 
         // compute the centroid of the polyhedron
@@ -685,14 +695,14 @@ LaguerreCellBase<type>::generate_simplices()
         simplices_.add_point( xp.data() , cell2elem_[k] , cell2site_[k] );
 
         // retrieve the face bisectors
-        std::vector<int> h_face;
+        h_face.clear();
         element().hrep( v_poly.data() , v_poly.size() , h_face );
         for (index_t f = 0; f < h_face.size(); f++)
         {
           // skip if this is the current bisector of the polytope
           if (h_face[f] == h_poly[j]) continue;
 
-          std::vector<index_t> v_face;
+          v_face.clear();
           element().vrep( v_poly.data() , v_poly.size() , h_face[f] , v_face );
 
           // compute the centroid of this face
@@ -701,14 +711,14 @@ LaguerreCellBase<type>::generate_simplices()
           simplices_.add_point( xf.data() , cell2elem_[k] , cell2site_[k] );
 
           // retrieve the edges
-          std::vector<int> h_edge;
+          h_edge.clear();
           element().hrep( v_face.data() , v_face.size() , h_edge );
           for (index_t e = 0; e < h_edge.size(); e++)
           {
             // skip if this is any of the bisectors we have already visited
             if (h_edge[e] == h_poly[j] || h_edge[e] == h_face[f]) continue;
 
-            std::vector<index_t> v_edge;
+            v_edge.clear();
             element().vrep( v_face.data() , v_face.size() , h_edge[e] , v_edge );
             if (v_edge.size() != 2) continue;
 
@@ -1199,12 +1209,17 @@ nlopt_transport_objective( unsigned n , const double* x , double* grad, void* da
 
 template<typename type>
 void
+SemiDiscreteOptimalTransport<type>::start()
+{
+  printf("---------------------------------------------------------------------------\n");
+  printf("%5s|%10s|%10s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_nn (s) " , " t_tri (s) " , " t_int (s) ");
+  printf("---------------------------------------------------------------------------\n");
+}
+
+template<typename type>
+void
 SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
 {
-  printf("-----------------------------------------------------\n");
-  printf("%5s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_knn (s) ");
-  printf("-----------------------------------------------------\n");
-
   coord_t dim = domain_.number();
   index_t n = delaunay_.nb()*dim;
 
@@ -1227,6 +1242,7 @@ SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
 
   real_t f_opt;
   nlopt::result result = nlopt::result::SUCCESS;
+  start();
   result = opt.optimize(x,f_opt);
   std::string desc = nloptResultDescription(result);
   printf("nlopt result: %s\n",desc.c_str());
@@ -1236,10 +1252,6 @@ template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::optimize_points_lloyd( index_t nb_iter )
 {
-  printf("---------------------------------------------------------------------------\n");
-  printf("%5s|%10s|%10s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_nn (s) " , " t_tri (s) " , " t_int (s) ");
-  printf("---------------------------------------------------------------------------\n");
-
   coord_t dim = domain_.number();
   index_t n = delaunay_.nb()*dim;
 
@@ -1249,6 +1261,7 @@ SemiDiscreteOptimalTransport<type>::optimize_points_lloyd( index_t nb_iter )
   for (index_t d=0;d<dim;d++)
     centroid_[k*dim+d] = delaunay_(k,d);
 
+  start();
   for (index_t iter = 0; iter < nb_iter ; iter++)
   {
     // set the current delaunay vertices
@@ -1266,10 +1279,6 @@ template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
 {
-  printf("-----------------------------------------------------\n");
-  printf("%5s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_knn (s) ");
-  printf("-----------------------------------------------------\n");
-
   index_t n = delaunay_.nb();
   std::vector<real_t> x(n);
   for (index_t k=0;k<delaunay_.nb();k++)
@@ -1293,13 +1302,80 @@ SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
   opt.set_lower_bounds(lower_bound);
   opt.set_upper_bounds(upper_bound);
 
-
   real_t f_opt;
   nlopt::result result = nlopt::result::SUCCESS;
+  start();
   result = opt.optimize(x,f_opt);
   std::string desc = nloptResultDescription(result);
   printf("nlopt result: %s\n",desc.c_str());
 }
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::generate_bluenoise()
+{
+
+  // optimize the points
+  optimize_points(20);
+
+  // compute the target mass
+  real_t m_total = 0.0;
+  for (index_t k = 0; k < mass_.size(); k++)
+    m_total += mass_[k];
+  nu_.clear();
+  nu_.resize( delaunay_.nb() , m_total/delaunay_.nb() );
+
+  // generate blue noise
+  for (index_t iter = 0; iter < 5; iter++)
+  {
+    // compute the transport map
+    optimize_weights(10);
+
+    // optimize the points
+    optimize_points(10);
+  }
+}
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::stochastic_gradient_descent( index_t nb_iter )
+{
+
+  start();
+
+  index_t n = delaunay_.nb();
+  coord_t dim = domain_.number();
+
+  // initialize the gradient
+  std::vector<real_t> f(n, 0.0);
+  std::vector<real_t> dE_dw( n ,0.0 );
+  std::vector<real_t> a( n , 1.0 );
+  for (index_t iter = 0; iter < nb_iter; iter++)
+  {
+
+    // sample the density measure
+    std::vector<real_t> y(dim,0.0);
+
+    // determine which laguerre cell contains y
+    index_t i = 0;
+
+    // update the gradient
+    dE_dw = a;
+    dE_dw[i] -= 1.0;
+
+    real_t l0 = 10.0;
+    real_t tau = 0.1/( 1.0 + iter/l0 );
+
+    f[i] += tau*dE_dw[i];
+
+    // set the weights and re-evaluate
+    set_weights( a.data() );
+    evaluate( iter , 0 , nullptr , nullptr );
+
+  }
+
+}
+
 
 template class LaguerreCellBase<Simplex>;
 template class LaguerreCellBase<Polytope>;

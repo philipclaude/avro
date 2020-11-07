@@ -39,6 +39,8 @@ namespace avro
 namespace graphics
 {
 
+#ifdef AVRO_WITH_GL
+
 ShaderProgram::ShaderProgram( const std::string& name ) :
   handle_(-1),
   linked_(false),
@@ -519,6 +521,8 @@ ShaderLibrary::create()
 
   // TODO the rest of the shaders...
 }
+
+#endif
 
 } // graphics
 

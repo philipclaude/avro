@@ -1,5 +1,6 @@
 #include "graphics/clipping.h"
 #include "graphics/gl.h"
+#include "graphics/manager.h"
 #include "graphics/math.h"
 
 #include "library/ckf.h"

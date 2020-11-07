@@ -24,7 +24,8 @@ option(RUN_WITH_MPI "run with mpi. might be difficult to debug with mpirun" fals
 option(avro_WITH_FPG "compile FPG needed to make new predicates" false)
 option(avro_NO_ESP "ESP is not available, so we will use internal wv and egads-lite" false )
 set(avro_TEST_DATA "data/" CACHE STRING "location for avro test files relative to test/" )
-set(avro_WITH_GL "option to compile OpenGL-based visualizer (along with WebGL-based one)" true)
+option(avro_WITH_GL "option to compile OpenGL-based visualizer (along with WebGL-based one)" true)
+option(avro_LITE "option to compile a lite version of avro" false )
 
 set(avro_CPU_THREAD_MANAGER "cpp11" CACHE STRING "type of cpu threading environment to use [openmp, cpp11, pthread, emp]")
 set(avro_GPU_THREAD_MANAGER "none" CACHE STRING "type of gpu threading environment to use [opencl,cuda]")
@@ -36,6 +37,14 @@ endif()
 
 # avro requires the c++11 standard
 set(CMAKE_CXX_STANDARD 11)
+
+# overwrite anything for a lite version
+if (${avro_LITE})
+  message( STATUS "enabled lite version of avro" )
+  set( AVRO_NO_ESP true )
+  set( AVRO_WITH_MPI false )
+  set( avro_WITH_GL false )
+endif()
 
 # required dependencies
 include(cmake/FindLAPACK.cmake)

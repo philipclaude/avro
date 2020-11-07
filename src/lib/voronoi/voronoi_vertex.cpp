@@ -307,7 +307,7 @@ Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
 GEO::Sign
 Vertex::side_meshless(const real_t *zi , const real_t *zj , const bool exact )
 {
-  GEO::Sign result;
+  GEO::Sign result = GEO::ZERO;
 
   // fast version
   if (!exact)

@@ -14,36 +14,48 @@ add_source_directories( JSON_SOURCES "json source" json )
 set_source_files_properties( ${JSON_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( json )
 
-if (avro_BUILTIN_GLFW)
-	add_subdirectory( glfw )
-	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
-	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
-	set_target_properties( glfw PROPERTIES COMPILE_FLAGS "-w" )
+if (avro_WITH_GL)
+	if (avro_BUILTIN_GLFW)
+		add_subdirectory( glfw )
+		set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
+		include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glfw/include )
+		set_target_properties( glfw PROPERTIES COMPILE_FLAGS "-w" )
+	endif()
+
+	add_source_directories( IMGUI_SOURCES "imgui source" imgui )
+	add_source_directories( IMGUI_SOURCES "imgui source" imgui/GL )
+	set_source_files_properties( ${IMGUI_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" IMGUI_IMPL_OPENGL_LOADER_GLAD )
+	include_directories( imgui )
+
+
+	set( GLAD_SOURCES )
+	if (avro_WITH_GL)
+		add_source_directories( GLAD_SOURCES "glad source" glad/src )
+		set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
+		include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
+	endif()
+else()
+	set( IMGUI_SOURCES )
 endif()
 
-add_source_directories( IMGUI_SOURCES "imgui source" imgui )
-add_source_directories( IMGUI_SOURCES "imgui source" imgui/GL )
-set_source_files_properties( ${IMGUI_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" IMGUI_IMPL_OPENGL_LOADER_GLAD )
-include_directories( imgui )
-
+# nearest neighbours
 add_source_directories( NNSEARCH_SOURCES "nnsearch" nnsearch )
 
-set( GLAD_SOURCES )
-if (avro_WITH_GL)
-	add_source_directories( GLAD_SOURCES "glad source" glad/src )
-	set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
-	include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/glad/include )
-endif()
-
+# libmeshb
 add_source_directories( MESHB_SOURCES "gmf source" libmeshb )
 set_source_files_properties( ${MESHB_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( libmeshb )
 
-add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5 )
-add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/GEOM )
-add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/MinCost )
-set_source_files_properties( ${BLOSSOM_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
-include_directories( blossom5 )
+# blossom
+if (NOT avro_LITE)
+	add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5 )
+	add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/GEOM )
+	add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/MinCost )
+	set_source_files_properties( ${BLOSSOM_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
+	include_directories( blossom5 )
+else()
+	set( BLOSSOM_SOURCES )
+endif()
 
 # tinymat
 add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat )
@@ -64,8 +76,8 @@ add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/st
 
 include_directories(tinymat)
 
-add_source_directories( QHULL_SOURCES "QHULL" qhull/libqhull )
-include_directories( qhull )
+#add_source_directories( QHULL_SOURCES "QHULL" qhull/libqhull )
+#include_directories( qhull )
 
 add_source_directories(HLBFGS_SOURCES "HLBFGS" HLBFGS )
 set_source_files_properties( ${HLBFGS_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
