@@ -70,7 +70,8 @@ if( CMAKE_COMPILER_IS_GNUCXX )
     set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -pg" )
   endif()
 
-elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
+#elseif( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
+elseif( ${CMAKE_CXX_COMPILER_ID} MATCHES "Intel" )
   #
   # === intel compiler flags
   #
