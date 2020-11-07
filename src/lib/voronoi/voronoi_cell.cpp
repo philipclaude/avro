@@ -7,8 +7,8 @@
 
 extern "C"
 {
-#include <qhull/libqhull/libqhull.h>
-#include <qhull/libqhull/geom.h>
+//#include <qhull/libqhull/libqhull.h>
+//#include <qhull/libqhull/geom.h>
 }
 
 #include <csignal>

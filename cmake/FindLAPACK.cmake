@@ -1,9 +1,17 @@
-
+set( BLAS_LIBRARIES blas )
 if( APPLE )
     # OSX provides the lapack library in the Accelerate framewwork
     find_library(LAPACK_LIBRARIES NAMES Accelerate )
     find_path(LAPACKE_INCLUDE_DIRS Accelerate/Accelerate.h)
     add_definitions( -DLAPACK_ACCELERATE )
 else() 
-    find_library( LAPACK_LIBRARIES NAMES lapack )
+    #find_library( LAPACK_LIBRARIES NAMES lapack )
+    
+    find_package( lapack QUIET )
+    if (NOT ${lapack_FOUND})
+	message(STATUS "lapack not found")
+	set( LAPACK_LIBRARIES )
+        set( BLAS_LIBRARIES  )
+	add_definitions(-DAVRO_NO_LAPACK)
+    endif()
 endif()

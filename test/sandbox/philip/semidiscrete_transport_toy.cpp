@@ -13,6 +13,7 @@
 #include "voronoi/optimal_transport.h"
 
 #include <fstream>
+#include <iomanip>
 
 UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 
@@ -27,8 +28,8 @@ public:
 
 UT_TEST_CASE( test1 )
 {
-  typedef Polytope type;
-  //typedef Simplex type;
+  //typedef Polytope type;
+  typedef Simplex type;
   coord_t number = 2;
   index_t nb_points = 1e2;
 
