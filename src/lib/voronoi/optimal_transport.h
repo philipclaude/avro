@@ -133,6 +133,8 @@ public:
 
   void get_bisector( int b , index_t& p0 , index_t& p1 ) const;
 
+  index_t cell2site( index_t j ) const { return cell2site_[j]; }
+
   real_t time_neighbours() const { return time_neighbours_; }
   real_t time_clip() const { return time_clip_; }
   real_t time_decompose() const { return time_decompose_; }
