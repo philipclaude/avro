@@ -3,6 +3,7 @@
 
 #include "common/parallel_for.h"
 
+#include "library/meshb.h"
 #include "numerics/linear_algebra.h"
 
 #include "voronoi/optimal_transport.h"
@@ -12,6 +13,8 @@ typedef void VOID;
 #define TETLIBRARY
 #include <tetgen1.5.0/tetgen.h>
 
+#include <iomanip>
+#include <fstream>
 
 namespace avro
 {
@@ -297,8 +300,25 @@ public:
     }
   }
 
+  void save( const std::string& prefix )
+  {
+    // export the mesh
+    library::meshb writer;
+    writer.open( 3 , prefix + "_tet.mesh" );
+    writer.write( uvw_ );
+    std::vector<index_t> refs( tetrahedra_.nb() , 0 );
+    writer.write( tetrahedra_ , refs );
+    writer.close();
+
+    // export the sites
+    json J;
+    J["field"] = tet2site_;
+    std::ofstream output(prefix+"_sites.json");
+    output << std::setw(4) << J << std::endl;
+  }
+
   const Topology<Simplex>& tetrahedra() const { return tetrahedra_; }
-  Topology<Simplex>& tetrahedra() { return tetrahedra_; }  
+  Topology<Simplex>& tetrahedra() { return tetrahedra_; }
   const std::vector<index_t>& tet2site() const { return tet2site_; }
 
 private:

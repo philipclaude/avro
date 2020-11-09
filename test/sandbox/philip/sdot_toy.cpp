@@ -64,12 +64,13 @@ UT_TEST_CASE( test1 )
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density2);
   transport.sample( nb_points );
 
-  transport.optimize_points(20);
+  transport.optimize_points(1);
 
   HyperSlice<type> slice(transport.diagram());
 
   std::vector<real_t> center(number,0.001);
   slice.compute( center , 0 );
+  slice.save( "tmp/sdot-dim4-1000" );
 
   delaunay::IntegrationSimplices& triangulation = transport.simplices();
   std::shared_ptr<delaunay::TriangulationCells> tc = std::make_shared<delaunay::TriangulationCells>(triangulation);
