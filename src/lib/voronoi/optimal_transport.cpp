@@ -1326,7 +1326,7 @@ SemiDiscreteOptimalTransport<type>::generate_bluenoise()
   nu_.resize( delaunay_.nb() , m_total/delaunay_.nb() );
 
   // generate blue noise
-  for (index_t iter = 0; iter < 5; iter++)
+  for (index_t iter = 0; iter < 10; iter++)
   {
     // compute the transport map
     optimize_weights(10);

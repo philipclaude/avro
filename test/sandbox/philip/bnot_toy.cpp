@@ -31,7 +31,7 @@ UT_TEST_CASE( test1 )
   //typedef Polytope type;
   typedef Simplex type;
   coord_t number = 2;
-  index_t nb_points = 1e2;
+  index_t nb_points = 1e3;
 
   coord_t dim = 3;
   CubeDomain<type> domain(number,dim,2);
@@ -42,30 +42,6 @@ UT_TEST_CASE( test1 )
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density);
   transport.sample( nb_points );
 
-  #if 0
-  transport.optimize_points(30);
-
-  std::vector<real_t> m = transport.mass();
-  real_t m_total = 0.0;
-  for (index_t j = 0; j < m.size() ; j++)
-    m_total += m[j];
-  real_t m_min = * std::min_element( m.begin() , m.end() );
-  real_t m_max = * std::max_element( m.begin() , m.end() );
-  printf("mass properties: min = %g, max = %g, total = %g\n",m_min,m_max,m_total);
-
-  // set the mass to the current mass
-  #if 1
-  std::vector<real_t> mass( nb_points , 1.0/nb_points );
-  #else
-  std::vector<real_t>& mass = transport.mass();
-  mass[0] *= 10;
-  #endif
-  transport.set_nu( mass );
-
-  // optimize the weights
-  //transport.set_density( &density2 );
-  //transport.optimize_weights(30);
-  #else
   transport.generate_bluenoise();
 
   json J;
@@ -82,10 +58,21 @@ UT_TEST_CASE( test1 )
   J["r"] = radius;
   J["x"] = x;
 
-  std::ofstream output("bluenoise-dim"+std::to_string(number)+"-n"+std::to_string(transport.delaunay().nb())+".json");
+  std::ofstream output("tmp/bluenoise-dim"+std::to_string(number)+"-n"+std::to_string(transport.delaunay().nb())+".json");
   output << std::setw(4) << J << std::endl;
 
-  #endif
+  if (number == 2)
+  {
+    std::string filename = "bluenoise-dim"+std::to_string(number)+"-n"+std::to_string(transport.delaunay().nb())+".txt";
+    FILE* fid = fopen(filename.c_str(),"w");
+    fprintf(fid,"%lu\n",transport.delaunay().nb());
+    for (index_t k = 0; k < transport.delaunay().nb(); k++)
+    {
+      fprintf(fid,"%.12e %.12e\n",transport.delaunay()[k][0],transport.delaunay()[k][1]);
+    }
+    fclose(fid);
+
+  }
 
   if (number > 3 || (nb_points >= 1e6)) return;
   delaunay::IntegrationSimplices& triangulation = transport.simplices();

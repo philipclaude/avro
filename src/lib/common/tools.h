@@ -206,13 +206,6 @@ template<typename type>
 static void
 print_value( const type& x );
 
-template<>
-inline void
-print_value( const bool& x )
-{
-  if (x) printf("true ");
-  else printf("false ");
-}
 
 template<>
 inline void
@@ -248,6 +241,14 @@ inline void
 print_value( const float& x )
 {
   printf("%g ",x);
+}
+
+template<>
+inline void
+print_value( const bool& x )
+{
+  if (x) printf("T ");
+  else printf("F ");
 }
 
 template<>
