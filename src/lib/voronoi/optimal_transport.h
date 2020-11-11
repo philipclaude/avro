@@ -48,6 +48,8 @@ public:
   index_t point2elem( index_t k ) const { return point2elem_[k]; }
   index_t point2site( index_t k ) const { return point2site_[k]; }
 
+  const std::vector<index_t>& simplex2site() const { return simplex2site_; }
+
   void clear()
   {
     Topology<Simplex>::clear();
@@ -342,8 +344,21 @@ private:
   coord_t dim_;
 };
 
+
+class OptimalTransportBase
+{
+public:
+  virtual real_t transport_objective( index_t n , const real_t* x , real_t* grad ) = 0;
+  virtual ~OptimalTransportBase() {}
+
+  index_t& iteration() { return iteration_; }
+
+protected:
+  index_t iteration_;
+};
+
 template<typename type>
-class SemiDiscreteOptimalTransport
+class SemiDiscreteOptimalTransport : public OptimalTransportBase
 {
 public:
   SemiDiscreteOptimalTransport( const Topology<type>& domain , DensityMeasure* density=nullptr );
@@ -360,7 +375,8 @@ public:
   void generate_bluenoise();
 
   void compute_laguerre();
-  real_t evaluate( index_t iter , index_t mode , real_t* dc_dx=nullptr , real_t* dc_dw=nullptr );
+  real_t evaluate( real_t* dc_dx=nullptr , real_t* dc_dw=nullptr );
+  real_t transport_objective( index_t n , const real_t* x , real_t* grad );
 
   void set_delaunay( const real_t* x , coord_t dim );
   void set_weights( const real_t* w );
@@ -376,6 +392,7 @@ public:
   std::vector<real_t>& nu() { return nu_; }
 
   void start();
+  int mode() const { return mode_; }
 
 private:
   const Topology<type>& domain_;
@@ -385,11 +402,14 @@ private:
   LaguerreDiagram<type> diagram_;
   IntegrationSimplices simplices_;
   bool exact_;
+  int mode_;
 
   std::vector<real_t> nu_; // the target mass
   std::vector<real_t> weight_; // the weight on each voronoi cell
   std::vector<real_t> mass_;
   std::vector<real_t> centroid_;
+
+  bool print_;
 };
 
 } // delaunay

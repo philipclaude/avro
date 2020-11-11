@@ -19,38 +19,10 @@
 
 UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 
-class DensityMeasure_Test : public delaunay::DensityMeasure
-{
-public:
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
-    return 1e1*( 1 + sin(2*M_PI*x[0])*sin(2*M_PI*x[1]) );
-  }
-};
-
-class SliceSites : public Field<Simplex,real_t>
-{
-public:
-  SliceSites( Topology<Simplex>& slice , const std::vector<index_t>& sites ) :
-    Field<Simplex,real_t>(slice,0,DISCONTINUOUS)
-  {
-    this->build();
-    this->element().set_basis( BasisFunctionCategory_Lagrange );
-    for (index_t k=0;k<slice.nb();k++)
-    {
-      this->value(k) = sites[k];
-    }
-  }
-
-  index_t nb_rank() const { return 1; }
-
-  std::vector<std::string> ranknames() const
-   {std::vector<std::string> result; result.push_back("sites"); return result;}
-};
-
 UT_TEST_CASE( test1 )
 {
-  std::string prefix = "tmp/sdot-dim4-1000";
+  std::string prefix = "/Users/pcaplan/Dropbox/Codes/mach-II/avro/test/tmp/sdot-dim3-10000";
+
   library::meshb mesh( prefix+"_tet.mesh");
   std::ifstream field( prefix+"_sites.json");
   json J = json::parse(field);
@@ -62,7 +34,7 @@ UT_TEST_CASE( test1 )
 
   graphics::Visualizer vis;
   vis.add_topology(tet);
-  
+
   vis.run();
 }
 UT_TEST_CASE_END( test1 )

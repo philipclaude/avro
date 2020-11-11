@@ -336,6 +336,26 @@ private:
   std::vector<index_t> tet2site_;
 };
 
+class SliceSites : public Field<Simplex,real_t>
+{
+public:
+  SliceSites( Topology<Simplex>& slice , const std::vector<index_t>& sites ) :
+    Field<Simplex,real_t>(slice,0,DISCONTINUOUS)
+  {
+    this->build();
+    this->element().set_basis( BasisFunctionCategory_Lagrange );
+    for (index_t k=0;k<slice.nb();k++)
+    {
+      this->value(k) = sites[k];
+    }
+  }
+
+  index_t nb_rank() const { return 1; }
+
+  std::vector<std::string> ranknames() const
+   {std::vector<std::string> result; result.push_back("sites"); return result;}
+};
+
 }
 
 #endif

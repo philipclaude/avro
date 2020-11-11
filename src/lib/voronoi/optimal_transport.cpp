@@ -11,6 +11,7 @@
 #include "voronoi/voronoi_cell.h"
 
 #include <nlopt.hpp>
+#include <HLBFGS/HLBFGS.h>
 
 #include <iomanip>
 
@@ -152,6 +153,8 @@ LaguerreCell<Polytope>::compute()
   t0 = clock();
   if (number_ < 5) generate_simplices();
   time_decompose_ = real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
+
+  vertex_.clear();
 }
 
 void
@@ -851,6 +854,8 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
     // cells could be submerged for weighted sites
     if (cell.nb() == 0) continue;
 
+    #if 1 // turn off for lower memory usage
+
     // add the cells
     for (index_t j=0;j<cell.nb();j++)
     {
@@ -875,6 +880,7 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
       std::vector<int> f = vf.get(j);
       points_.incidence().add( f.data() , f.size() );
     }
+    #endif
 
     // option to add the triangulation data
     if (triangulation == nullptr) continue;
@@ -973,7 +979,8 @@ SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology
   delaunay_(domain.points().dim()),
   diagram_(delaunay_,domain_),
   simplices_(domain.number(),domain.number()),
-  exact_(false)
+  exact_(false),
+  print_(true)
 {}
 
 template<typename type>
@@ -1017,7 +1024,7 @@ calculate_norm( const real_t* x , index_t nb )
 
 template<typename type>
 real_t
-SemiDiscreteOptimalTransport<type>::evaluate( index_t iter , index_t mode , real_t* dc_dx , real_t* dc_dw )
+SemiDiscreteOptimalTransport<type>::evaluate( real_t* dc_dx , real_t* dc_dw )
 {
   avro_assert( density_ != nullptr );
   clock_t t0;
@@ -1108,23 +1115,28 @@ SemiDiscreteOptimalTransport<type>::evaluate( index_t iter , index_t mode , real
 
   // calculate the norm of the gradient and report convergence criteria
   real_t gnorm;
-  if (mode == 0)
+  if (mode_ == 0)
     gnorm = calculate_norm(dc_dx,delaunay_.nb()*dim);
   else
     gnorm = calculate_norm(dc_dw,delaunay_.nb());
 
 
   time_integrate /= ProcessCPU::maximum_concurrent_threads();
+  real_t mass_min = * std::min_element( mass_.begin() , mass_.end() );
 
-  std::cout <<
-  std::setw(6) << std::left << iter << "|" <<
-  std::setprecision(4) << std::left << std::scientific << std::fabs(energy) << "|" <<
-  std::setprecision(4) << std::left << std::scientific << gnorm << "|" <<
-  std::setw(11) << std::right << std::fixed << diagram_.time_voronoi() << "|" <<
-  std::setw(11) << std::right << std::fixed << diagram_.time_neighbours() <<
-  std::setw(11) << std::right << std::fixed << diagram_.time_decompose() <<
-  std::setw(11) << std::right << std::fixed << time_integrate <<
-  std::endl;
+  if (print_)
+  {
+    std::cout <<
+    std::setw(6) << std::left << iteration_ << "|" <<
+    std::setprecision(4) << std::left << std::scientific << std::fabs(energy) << "|" <<
+    std::setprecision(4) << std::left << std::scientific << gnorm << "|" <<
+    std::setw(11) << std::right << std::fixed << diagram_.time_voronoi() << "|" <<
+    std::setw(11) << std::right << std::fixed << diagram_.time_neighbours() <<
+    std::setw(11) << std::right << std::fixed << diagram_.time_decompose() <<
+    std::setw(11) << std::right << std::fixed << time_integrate << "|" <<
+    std::setprecision(4) << std::left << std::scientific << mass_min <<
+    std::endl;
+  }
 
   return energy;
 }
@@ -1160,40 +1172,35 @@ SemiDiscreteOptimalTransport<type>::set_weights( const real_t* w )
 }
 
 template<typename type>
-double
-nlopt_transport_objective( unsigned n , const double* x , double* grad, void* data0 )
+real_t
+SemiDiscreteOptimalTransport<type>::transport_objective( index_t n , const double* x , double* grad )
 {
-  nlopt_data_optimal_transport<type>* data = (nlopt_data_optimal_transport<type>*)(data0);
-
-  SemiDiscreteOptimalTransport<type>& transport = data->transport;
-  data->eval_count++;
-
   // set the coordinates of the delaunay points
-  if (data->mode == 0)
-    transport.set_delaunay(x,transport.domain().number());
-  else if (data->mode == 1)
-    transport.set_weights(x);
+  if (mode_ == 0)
+    set_delaunay(x,domain_.number());
+  else if (mode_ == 1)
+    set_weights(x);
   else
     avro_assert_not_reached;
 
   // recompute the voronoi diagram
-  transport.compute_laguerre();
+  compute_laguerre();
 
-  index_t nb_points = transport.delaunay().nb();
-  coord_t dim = transport.domain().number();
+  index_t nb_points = delaunay_.nb();
+  coord_t dim = domain_.number();
 
   // compute the energy and gradients
   std::vector<real_t> dE_dZ(nb_points*dim),dE_dW(nb_points);
-  real_t energy = transport.evaluate( data->eval_count , data->mode , dE_dZ.data() , dE_dW.data() );
+  real_t energy = evaluate( dE_dZ.data() , dE_dW.data() );
   if (grad != nullptr)
   {
-    if (data->mode == 0)
+    if (mode_ == 0)
     {
       // cvt mode
       for (index_t k=0;k<dE_dZ.size();k++)
         grad[k] = dE_dZ[k];
     }
-    else if (data->mode == 1)
+    else if (mode_ == 1)
     {
       // otm mode: flip the sign to make it convex
       energy *= -1.0;
@@ -1203,23 +1210,51 @@ nlopt_transport_objective( unsigned n , const double* x , double* grad, void* da
     else
       avro_assert_not_reached;
   }
-
   return energy;
+}
+
+template<typename type>
+double
+nlopt_transport_objective( unsigned n , const double* x , double* grad, void* data0 )
+{
+  nlopt_data_optimal_transport<type>* data = (nlopt_data_optimal_transport<type>*)(data0);
+  SemiDiscreteOptimalTransport<type>& transport = data->transport;
+  transport.iteration()++;
+  return transport.transport_objective( n , x , grad );
+}
+
+#define OPTIMIZER_NLOPT 0
+#define OPTIMIZER_HLBFGS 1
+OptimalTransportBase* __transport__ = nullptr;
+
+static void
+newiteration(int iter, int call_iter, double *x, double* f, double *g,  double* gnorm)
+{}
+
+void
+hlbfgs_transport_objective(int N, double* x, double *prev_x, double* f, double* g)
+{
+  avro_assert( __transport__ != nullptr );
+  OptimalTransportBase* transport = static_cast<OptimalTransportBase*>(__transport__);
+  transport->iteration()++;
+  *f = transport->transport_objective(index_t(N),x,g);
 }
 
 template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::start()
 {
-  printf("---------------------------------------------------------------------------\n");
-  printf("%5s|%10s|%10s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_nn (s) " , " t_tri (s) " , " t_int (s) ");
-  printf("---------------------------------------------------------------------------\n");
+  printf("--------------------------------------------------------------------------------------\n");
+  printf("%5s|%10s|%10s|%10s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_nn (s) " , " t_tri (s) " , " t_int (s) ", " min(m) ");
+  printf("--------------------------------------------------------------------------------------\n");
+  iteration_ = 0;
 }
 
 template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
 {
+  mode_ = 0;
   coord_t dim = domain_.number();
   index_t n = delaunay_.nb()*dim;
 
@@ -1229,6 +1264,7 @@ SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
     x[k*dim+d] = delaunay_(k,d);
 
   // setup the optimizer
+  #if 1 // OPTIMIZER_NLOPT
   nlopt::opt opt( nlopt::LD_LBFGS , n );
   nlopt_data_optimal_transport<type> data = {*this,0,1,0};
 
@@ -1246,12 +1282,38 @@ SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
   result = opt.optimize(x,f_opt);
   std::string desc = nloptResultDescription(result);
   printf("nlopt result: %s\n",desc.c_str());
+
+  #else
+
+  double parameter[20];
+  int info[20];
+  int T = 0;
+  int M = 7;
+  bool with_hessian = false;
+
+  // initialize
+  INIT_HLBFGS(parameter, info);
+  parameter[5] = 1e-12;
+  info[3] = 1;
+  info[4] = nb_iter;
+  info[6] = T;
+  info[5] = 1; // verbose = 1
+  info[7] = with_hessian ? 1 : 0;
+  info[10] = 0;
+  info[11] = 1;
+
+  __transport__ = this;
+  start();
+  HLBFGS(n, M, x.data() , hlbfgs_transport_objective , 0 , HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
+
+  #endif
 }
 
 template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::optimize_points_lloyd( index_t nb_iter )
 {
+  mode_ = 0;
   coord_t dim = domain_.number();
   index_t n = delaunay_.nb()*dim;
 
@@ -1262,27 +1324,28 @@ SemiDiscreteOptimalTransport<type>::optimize_points_lloyd( index_t nb_iter )
     centroid_[k*dim+d] = delaunay_(k,d);
 
   start();
-  for (index_t iter = 0; iter < nb_iter ; iter++)
+  for (iteration_ = 0; iteration_ < nb_iter ; iteration_++)
   {
     // set the current delaunay vertices
     set_delaunay( centroid_.data() , dim );
 
     // evaluate the voronoi diagram for these points
     std::vector<real_t> dc_dx(n); // not used
-    evaluate( iter , 0 , dc_dx.data() , nullptr );
+    evaluate( dc_dx.data() , nullptr );
   }
-
 }
-
 
 template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
 {
+  mode_ = 1;
   index_t n = delaunay_.nb();
   std::vector<real_t> x(n);
   for (index_t k=0;k<delaunay_.nb();k++)
     x[k] = weight_[k];
+
+  #if OPTIMIZER_NLOPT
 
   // setup the optimizer
   nlopt::opt opt( nlopt::LD_LBFGS , n );
@@ -1308,13 +1371,99 @@ SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
   result = opt.optimize(x,f_opt);
   std::string desc = nloptResultDescription(result);
   printf("nlopt result: %s\n",desc.c_str());
+
+  #elif OPTIMIZER_HLBFGS
+
+  double parameter[20];
+  int info[20];
+  int T = 0;
+  int M = 7;
+  bool with_hessian = false;
+
+  // initialize
+  INIT_HLBFGS(parameter, info);
+  parameter[5] = 1e-12;
+  info[3] = 1;
+  info[4] = nb_iter;
+  info[6] = T;
+  info[5] = 1; // verbose = 1
+  info[7] = with_hessian ? 1 : 0;
+  info[10] = 0;
+  info[11] = 1;
+
+  __transport__ = this;
+  start();
+  HLBFGS(n, M, x.data() , hlbfgs_transport_objective , 0 , HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
+
+  #else
+
+  start();
+  std::vector<real_t> gradient( n , 0. );
+  std::vector<real_t> gradient0( n , 0. );
+  std::vector<real_t> direction( n , 0 );
+  bool bfgs = false;
+
+  for (iteration_ = 0; iteration_ < nb_iter; iteration_++)
+  {
+    // compute the gradient
+    std::vector<real_t> dc_dw(n);
+    real_t f0 = transport_objective( n , x.data() , dc_dw.data() );
+
+    // determine the descent direction
+    for (index_t i = 0; i < n; i++)
+    {
+      gradient[i] = dc_dw[i];
+      direction[i] = -gradient[i];
+    }
+
+    // option for bfgs udate
+    if (bfgs)
+    {
+      avro_implement;
+    }
+    real_t mass_min0 = * std::min_element( mass_.begin() , mass_.end() );
+
+    real_t alpha = 1.0;
+    std::vector<real_t> x0( x.begin() , x.end() );
+    real_t gnorm0 = calculate_norm( gradient.data() , n );
+    real_t c1 = 1e-4;
+
+    // perform a line search on the optimization direction
+    index_t nb_linesearch = 0;
+    while (true)
+    {
+      // update the weights in the descent direction
+      for (index_t i = 0; i < n; i++)
+        x[i] = x0[i] + alpha*direction[i];
+
+      print_ = false;
+      real_t f = transport_objective( n , x.data() , dc_dw.data() );
+      real_t gnorm = calculate_norm( dc_dw.data() , n );
+      print_ = true;
+
+      real_t pg = 0.0;
+      for (index_t i = 0; i < n; i++)
+        pg += direction[i]*dc_dw[i];
+
+      // determine the minimum mass
+      real_t mass_min = * std::min_element( mass_.begin() , mass_.end() );
+      if (mass_min > 1e-12 && f < f0 + c1*alpha*pg) break;
+      //if (mass_min > 1e-12 && gnorm <= (1-.5*alpha)*gnorm0) break;
+      alpha = 0.8*alpha;
+
+      //printf("\t -> linesearch %lu, alpha = %g, gnorm = %g, gnorm0 = %g, mass_min = %g\n",nb_linesearch,alpha,gnorm,gnorm0,mass_min);
+
+      nb_linesearch++;
+    }
+  }
+
+  #endif
 }
 
 template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::generate_bluenoise()
 {
-
   // optimize the points
   optimize_points(20);
 
@@ -1342,6 +1491,7 @@ SemiDiscreteOptimalTransport<type>::stochastic_gradient_descent( index_t nb_iter
 {
 
   start();
+  mode_ = 0;
 
   index_t n = delaunay_.nb();
   coord_t dim = domain_.number();
@@ -1350,9 +1500,8 @@ SemiDiscreteOptimalTransport<type>::stochastic_gradient_descent( index_t nb_iter
   std::vector<real_t> f(n, 0.0);
   std::vector<real_t> dE_dw( n ,0.0 );
   std::vector<real_t> a( n , 1.0 );
-  for (index_t iter = 0; iter < nb_iter; iter++)
+  for (iteration_ = 0; iteration_ < nb_iter; iteration_++)
   {
-
     // sample the density measure
     std::vector<real_t> y(dim,0.0);
 
@@ -1364,14 +1513,13 @@ SemiDiscreteOptimalTransport<type>::stochastic_gradient_descent( index_t nb_iter
     dE_dw[i] -= 1.0;
 
     real_t l0 = 10.0;
-    real_t tau = 0.1/( 1.0 + iter/l0 );
+    real_t tau = 0.1/( 1.0 + iteration_/l0 );
 
     f[i] += tau*dE_dw[i];
 
     // set the weights and re-evaluate
     set_weights( a.data() );
-    evaluate( iter , 0 , nullptr , nullptr );
-
+    evaluate( nullptr , nullptr );
   }
 
 }

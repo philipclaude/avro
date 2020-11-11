@@ -28,10 +28,10 @@ public:
 
 UT_TEST_CASE( test1 )
 {
-  //typedef Polytope type;
-  typedef Simplex type;
+  typedef Polytope type;
+  //typedef Simplex type;
   coord_t number = 2;
-  index_t nb_points = 1e3;
+  index_t nb_points = 1e4;
 
   coord_t dim = 3;
   CubeDomain<type> domain(number,dim,2);

@@ -19,53 +19,23 @@
 
 UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 
-class DensityMeasure_Test : public delaunay::DensityMeasure
+class DensityMeasure_Gaussian : public delaunay::DensityMeasure
 {
 public:
   real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
   {
-    //return .1 + 100*x[0]*x[0];
     return 1e1*( 1 + sin(2*M_PI*x[0])*sin(2*M_PI*x[1]) );
   }
-};
-
-class DensityMeasure_Shock : public delaunay::DensityMeasure
-{
-public:
-  DensityMeasure_Shock( coord_t dim ) :
-    dim_(dim)
-  {
-    k0_ = 10.0;
-    k1_ = 10.0;
-    vs_ = 0.7;
-    r0_ = 0.4;
-    alpha_ = 1.0;
-  }
-
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
-    real_t rt = r0_ + vs_*x[dim_-1];
-    real_t x2 = 0.0;
-    for (coord_t d = 0; d < dim_-1; d++)
-    {
-      x2 += x[d]*x[d];
-    }
-    x2 = std::sqrt(x2);
-    return 1.0 + k0_*std::exp( -alpha_*x[dim_-1] )*std::exp( -k1_*(rt-x2)*(rt-x2) );
-  }
-private:
-  coord_t dim_;
-  real_t k0_,k1_,vs_,r0_,alpha_;
 };
 
 UT_TEST_CASE( test1 )
 {
   typedef Polytope type;
   //typedef Simplex type;
-  coord_t number = 2;
-  index_t nb_points = 1e2;
+  coord_t number = 4;
+  index_t nb_points = 2e4;
 
-  coord_t dim = 3;
+  coord_t dim = 4;
   CubeDomain<type> domain(number,dim,2);
 
   delaunay::DensityMeasure_Uniform density(1.0);
@@ -74,33 +44,22 @@ UT_TEST_CASE( test1 )
 
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density3);
   transport.sample( nb_points );
-
   transport.optimize_points(50);
 
-  const std::vector<real_t>& mass = transport.mass();
-  real_t mass_total = 0.0;
-  for (index_t k = 0; k < mass.size(); k++)
-    mass_total += mass[k];
-  real_t mass_min = * std::min_element( mass.begin() , mass.end() );
-  real_t mass_max = * std::max_element( mass.begin() , mass.end() );
-  printf("total mass = %g, min = %g, max = %g, average = %g\n",mass_total,mass_min,mass_max,mass_total/real_t(nb_points));
-  std::vector<real_t> nu( nb_points , mass_total / real_t(nb_points) );
-  transport.set_nu( nu );
-  transport.optimize_weights(300);
-
   HyperSlice<type> slice(transport.diagram());
+
   delaunay::IntegrationSimplices& triangulation = transport.simplices();
   if (number == 4)
   {
     std::vector<real_t> center(number,0.001);
     slice.compute( center , 0 );
-    slice.save( "tmp/sdot-dim4-10000" );
+    slice.save( "tmp/sdot-dim2-10000" );
   }
   else if (number == 3)
   {
     // export the mesh
     library::meshb writer;
-    writer.open( 3 , "tmp/sdot-dim3-100000_tet.mesh" );
+    writer.open( 3 , "tmp/sdot-dim3-10000_tet.mesh" );
     writer.write( triangulation.points() );
     std::vector<index_t> refs( triangulation.nb() , 0 );
     writer.write( triangulation , refs );
@@ -109,7 +68,7 @@ UT_TEST_CASE( test1 )
     // export the sites
     json J;
     J["field"] = triangulation.simplex2site();
-    std::ofstream output("tmp/sdot-dim3-100000_sites.json");
+    std::ofstream output("tmp/sdot-dim3-10000_sites.json");
     output << std::setw(4) << J << std::endl;
   }
 
@@ -129,9 +88,9 @@ UT_TEST_CASE( test1 )
   }
   else
   {
-    //vis.add_topology(triangulation);
-    vis.add_topology(point_plot);
-    vis.add_topology(transport.diagram());
+    vis.add_topology(triangulation);
+    //vis.add_topology(point_plot);
+    //vis.add_topology(transport.diagram());
   }
   vis.run();
 }
