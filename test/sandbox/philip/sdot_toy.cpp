@@ -12,6 +12,7 @@
 #include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
+#include "measures.h"
 #include "visualize.h"
 
 #include <fstream>
@@ -19,65 +20,37 @@
 
 UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 
-class DensityMeasure_Test : public delaunay::DensityMeasure
-{
-public:
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
-    //return .1 + 100*x[0]*x[0];
-    return 1e1*( 1 + sin(2*M_PI*x[0])*sin(2*M_PI*x[1]) );
-  }
-};
-
-class DensityMeasure_Shock : public delaunay::DensityMeasure
-{
-public:
-  DensityMeasure_Shock( coord_t dim ) :
-    dim_(dim)
-  {
-    k0_ = 10.0;
-    k1_ = 10.0;
-    vs_ = 0.7;
-    r0_ = 0.4;
-    alpha_ = 1.0;
-  }
-
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
-    real_t rt = r0_ + vs_*x[dim_-1];
-    real_t x2 = 0.0;
-    for (coord_t d = 0; d < dim_-1; d++)
-    {
-      x2 += x[d]*x[d];
-    }
-    x2 = std::sqrt(x2);
-    return 1.0 + k0_*std::exp( -alpha_*x[dim_-1] )*std::exp( -k1_*(rt-x2)*(rt-x2) );
-  }
-private:
-  coord_t dim_;
-  real_t k0_,k1_,vs_,r0_,alpha_;
-};
-
 UT_TEST_CASE( test1 )
 {
   typedef Polytope type;
   //typedef Simplex type;
   coord_t number = 2;
-  index_t nb_points = 1e2;
+  index_t nb_points = 1e3;
 
   coord_t dim = 3;
   CubeDomain<type> domain(number,dim,2);
 
   delaunay::DensityMeasure_Uniform density(1.0);
-  DensityMeasure_Test density2;
+  DensityMeasure_Sin density2;
   DensityMeasure_Shock density3(number);
 
-  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density3);
+  tinymat::DLA::VectorD<real_t> mu = {.6,.9};
+  numerics::SymMatrixD<real_t> sigma(number,number);
+  sigma = 0;
+  sigma(0,0) = 0.07;
+  sigma(1,1) = 0.09;
+
+  std::cout << sigma << std::endl;
+
+  DensityMeasure_Gaussian density4(mu,sigma);
+
+  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density4);
   transport.sample( nb_points );
 
-  transport.optimize_points(50);
+  transport.optimize_points(100);
 
   const std::vector<real_t>& mass = transport.mass();
+
   real_t mass_total = 0.0;
   for (index_t k = 0; k < mass.size(); k++)
     mass_total += mass[k];
@@ -86,7 +59,15 @@ UT_TEST_CASE( test1 )
   printf("total mass = %g, min = %g, max = %g, average = %g\n",mass_total,mass_min,mass_max,mass_total/real_t(nb_points));
   std::vector<real_t> nu( nb_points , mass_total / real_t(nb_points) );
   transport.set_nu( nu );
-  transport.optimize_weights(300);
+  transport.optimize_weights(100);
+
+  const std::vector<real_t>& massf = transport.mass();
+  mass_total = 0.0;
+  for (index_t k = 0; k < massf.size(); k++)
+    mass_total += massf[k];
+  mass_min = * std::min_element( massf.begin() , massf.end() );
+  mass_max = * std::max_element( massf.begin() , massf.end() );
+  printf("total mass = %g, min = %g, max = %g, average = %g\n",mass_total,mass_min,mass_max,mass_total/real_t(nb_points));
 
   HyperSlice<type> slice(transport.diagram());
   delaunay::IntegrationSimplices& triangulation = transport.simplices();

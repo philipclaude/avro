@@ -180,7 +180,7 @@ inverse( MatrixD<T>& M )
 
 template<typename T>
 inline SymMatrixD<T>
-inverse( SymMatrixD<T>& M )
+inverse( const SymMatrixD<T>& M )
 {
 	T idetM = 1./determinant(M);
 

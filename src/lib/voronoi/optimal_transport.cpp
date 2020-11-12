@@ -1361,7 +1361,7 @@ SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
 
   // set the lower and upper bounds on the weights
   std::vector<real_t> lower_bound( n , 0.0 );
-  std::vector<real_t> upper_bound( n ,  1e10 );
+  std::vector<real_t> upper_bound( n ,  1e6 );
   opt.set_lower_bounds(lower_bound);
   opt.set_upper_bounds(upper_bound);
 
@@ -1449,7 +1449,7 @@ SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
       real_t mass_min = * std::min_element( mass_.begin() , mass_.end() );
       if (mass_min > 1e-12 && f < f0 + c1*alpha*pg) break;
       //if (mass_min > 1e-12 && gnorm <= (1-.5*alpha)*gnorm0) break;
-      alpha = 0.8*alpha;
+      alpha *= 0.5;
 
       //printf("\t -> linesearch %lu, alpha = %g, gnorm = %g, gnorm0 = %g, mass_min = %g\n",nb_linesearch,alpha,gnorm,gnorm0,mass_min);
 
