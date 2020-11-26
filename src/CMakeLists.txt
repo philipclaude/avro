@@ -44,7 +44,7 @@ include_directories( ${THIRD_PARTY_INCLUDE_DIRS} )
 
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
-include_directories( third_party/numpack )
+include_directories( third_party/tinymat )
 
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )
@@ -52,12 +52,12 @@ include_directories( third_party/numpack )
 if (AVRO_NO_ESP)
   set( ESP_LIBRARIES )
   set (OCC_LIBRARIES )
-  include_directories( third_party/eglite )
+  include_directories( third_party/egads )
   include_directories( third_party/wv )
   add_definitions( -DAVRO_NO_ESP )
 endif()
 
-set(avro_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} ${MPI_LIBRARIES} ${PARMETIS_LIBRARIES} ${SUITESPARSE_LIBRARIES} dl blas z )
+set(avro_EXTERNAL_LIBRARIES ${ESP_LIBRARIES} ${OCC_LIBRARIES} ${LAPACK_LIBRARIES} ${NLOPT_LIBRARIES} ${MPI_LIBRARIES} ${PARMETIS_LIBRARIES} ${SUITESPARSE_LIBRARIES} dl ${BLAS_LIBRARIES} z )
 if (avro_WITH_OPENMP)
   set( avro_EXTERNAL_LIBRARIES ${avro_EXTERNAL_LIBRARIES} ${OPENMP_LINK_FLAG} )
 endif()

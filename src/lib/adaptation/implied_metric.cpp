@@ -20,8 +20,8 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/nlopt_result.h"
 
-#include <numpack/types/SurrealS.h>
-#include <numpack/types/PromoteSurreal.h>
+#include <tinymat/types/SurrealS.h>
+#include <tinymat/types/PromoteSurreal.h>
 
 #include <nlopt.hpp>
 
@@ -94,7 +94,7 @@ ElementImpliedMetric<type>::compute( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
   J_ = J0_*Jeq_;
-  numerics::SymMatrixD<real_t> JJt = J_*numpack::Transpose(J_);
+  numerics::SymMatrixD<real_t> JJt = J_*tinymat::Transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -107,7 +107,7 @@ ElementImpliedMetric<type>::compute( const Points& points , const index_t* v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  numerics::SymMatrixD<real_t> JJt = J_*numpack::Transpose(J_);
+  numerics::SymMatrixD<real_t> JJt = J_*tinymat::Transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -121,7 +121,7 @@ ElementImpliedMetric<type>::inverse( const Points& points , const index_t *v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  M_ = J_*numpack::Transpose(J_); // no inverse
+  M_ = J_*tinymat::Transpose(J_); // no inverse
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
     this->operator()(i,j) = M_(i,j);
@@ -399,8 +399,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
 
     // get the edge length squared
     numerics::VectorD<real_t> e( DIM , dx.data() );
-    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);//numpack::Transpose(e)*nodalMetric[p]*e;
-    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);//numpack::Transpose(e)*nodalMetric[q]*e;
+    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);//tinymat::Transpose(e)*nodalMetric[p]*e;
+    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);//tinymat::Transpose(e)*nodalMetric[q]*e;
     lni = sqrt(lni);
     lnj = sqrt(lnj);
 

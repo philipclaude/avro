@@ -35,6 +35,8 @@ public:
     return neighbours_.nv(k);
   }
 
+  index_t knear() const { return knear_; }
+
   void print() const;
 
 private:

@@ -10,8 +10,8 @@ namespace avro
 
 template<typename type>
 Topology_Spacetime<type>::Topology_Spacetime( const Topology<type>& topology ) :
-  Topology<type>(mesh_.points(),3),
-  mesh_(3,3),
+  Topology<type>(points_,3),
+  points_(3),
   topology_(topology)
 {
   // setup the child topologies
@@ -28,10 +28,9 @@ Topology_Spacetime<type>::Topology_Spacetime( const Topology<type>& topology ) :
   std::set<Entity*>::iterator it;
   for (it=entities.begin();it!=entities.end();it++)
   {
-    std::shared_ptr<Topology<type>> t = std::make_shared<Topology<type>>(mesh_.points(),3);
+    std::shared_ptr<Topology<type>> t = std::make_shared<Topology<type>>(points_,3);
     entity2topology_.insert( {*it,t.get()} );
     this->add_child(t);
-    mesh_.add(t);
   }
 }
 
@@ -67,7 +66,7 @@ Topology_Spacetime<type>::extract()
     for (it=vertices.begin();it!=vertices.end();it++)
     {
       // create a vertex for this one
-      index_t idx = mesh_.points().nb();
+      index_t idx = points_.nb();
 
       Entity* ep = topology_.points().entity(*it);
       avro_assert( ep==entity || entity->above(ep) );
@@ -76,8 +75,8 @@ Topology_Spacetime<type>::extract()
       std::vector<real_t> U( 3 );
       entity->inverse( X , U );
 
-      mesh_.points().create( U.data() );
-      mesh_.points().set_entity( idx , entity );
+      points_.create( U.data() );
+      points_.set_entity( idx , entity );
       identifier.insert( {*it,idx} );
     }
 
@@ -99,9 +98,9 @@ Topology_Spacetime<type>::write( const std::string& filename )
   library::meshb writer;
 
   writer.open( 3 , filename );
-  writer.write( mesh_.points() );
+  writer.write( points_ );
 
-  Topology<type> topology( mesh_.points() , 3 );
+  Topology<type> topology( points_ , 3 );
   std::vector<index_t> refs;
   for (index_t j=0;j<this->nb_children();j++)
   {
@@ -121,7 +120,7 @@ template<typename type>
 void
 Topology_Spacetime<type>::clear()
 {
-  mesh_.points().clear();
+  points_.clear();
   for (index_t k=0;k<this->nb_children();k++)
       this->child(k).clear();
 }

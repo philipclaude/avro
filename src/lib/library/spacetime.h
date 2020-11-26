@@ -26,7 +26,7 @@ public:
   void clear();
 
 private:
-  Mesh mesh_;
+  Points points_;
   const Topology<type>& topology_;
   //Topology<type> slice_;
   std::map<Entity*,Topology<type>*> entity2topology_;

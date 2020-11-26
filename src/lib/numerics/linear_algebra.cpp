@@ -13,6 +13,31 @@
 #include <algorithm>
 #include <vector>
 
+#ifdef AVRO_NO_LAPACK
+extern "C" 
+{
+void dgesv_(int *N, int *NRHS, double *A, int *LDA, int *IPIV,double *B, int *LDB, int *INFO)
+{
+avro_assert_not_reached;
+}
+
+extern "C" void dgesvd_( char *jobu , char* jobvt , int *m , int *n , double *A , int* lda , double *s , double *u , int* ldu , double *vt , int* ldvt, double* work , int* lwork , int* info )
+{
+avro_assert_not_reached;
+}
+
+extern "C"
+void dgeev_( char* jobvl, char* jobvr, int* n, double* a,
+                   int* lda, double* wr, double* wi, double* vl,
+                   int* ldvl, double* vr, int* ldvr, double* work,
+                   int* lwork, int *info )
+{
+  avro_assert_not_reached;
+}
+
+}
+#endif
+
 namespace avro
 {
 
@@ -57,7 +82,11 @@ kernel( const MatrixD<real_t>& A , MatrixD<real_t>& K )
 		tdata[j*m+i] = A(i,j);
 
   // perform the svd
+        #ifdef AVRO_NO_LAPACK
+        avro_assert_not_reached;
+        #else
 	dgesvd_( &jobu , &jobvt , &M , &N , tdata.data() , &lda , S.data() , U.data() , &ldu , VT.data() , &ldvt , work.data() , &lwork , &info );
+	#endif
 
 	// now we analyze the result to get the nullspace
 	std::vector<double> s;
@@ -126,7 +155,11 @@ range( const MatrixD<real_t>& A , MatrixD<real_t>& U0 )
     tdata[j*m+i] = A(i,j);
 
   // perform the svd
+  #ifndef AVRO_NO_LAPACK
+  avro_assert_not_reached;
+  #else
   dgesvd_( &jobu , &jobvt , &M , &N , tdata.data() , &lda , S.data() , U.data() , &ldu , VT.data() , &ldvt , work.data() , &lwork , &info );
+  #endif
 
   // analyze the singular values to determine the rank
   std::vector<double> s;

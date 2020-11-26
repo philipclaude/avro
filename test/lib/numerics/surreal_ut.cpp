@@ -7,8 +7,8 @@
 
 #include "common/types.h"
 
-#include <numpack/types/SurrealD.h>
-#include <numpack/types/SurrealS.h>
+#include <tinymat/types/SurrealD.h>
+#include <tinymat/types/SurrealS.h>
 
 template<typename type>
 type

@@ -14,15 +14,15 @@
 
 #include "numerics/matrix.h"
 
-#include <numpack/dense/dynamic/MatrixD_Det.h>
-#include <numpack/dense/dynamic/MatrixD_Diag.h>
-#include <numpack/dense/dynamic/Eigen.h>
-//#include <numpack/dense/InverseLU.h>
-#include <numpack/dense/InverseLUP.h>
-#include <numpack/Transpose.h>
+#include <tinymat/dense/dynamic/MatrixD_Det.h>
+#include <tinymat/dense/dynamic/MatrixD_Diag.h>
+#include <tinymat/dense/dynamic/Eigen.h>
+//#include <tinymat/dense/InverseLU.h>
+#include <tinymat/dense/InverseLUP.h>
+#include <tinymat/Transpose.h>
 
-#include <numpack/types/SurrealD.h>
-#include <numpack/types/SurrealS.h>
+#include <tinymat/types/SurrealD.h>
+#include <tinymat/types/SurrealS.h>
 
 #include <cmath>
 
@@ -44,22 +44,22 @@ template<typename type>
 type
 determinant( const MatrixD<type>& A )
 {
-  return numpack::DLA::Det(A);
+  return tinymat::DLA::Det(A);
 }
 
 template<typename type>
 type
 determinant( const SymMatrixD<type>& A )
 {
-  return numpack::DLA::Det(A);
+  return tinymat::DLA::Det(A);
 }
 
 template< class T >
-inline numpack::DLA::MatrixSymD<T>
-powm(const numpack::DLA::MatrixSymD<T>& A , real_t p )
+inline tinymat::DLA::MatrixSymD<T>
+powm(const tinymat::DLA::MatrixSymD<T>& A , real_t p )
 {
   // compute the eigensystem with normalized eigenvectors
-  numpack::DLA::EigenSystemPair<T> LE(A);
+  tinymat::DLA::EigenSystemPair<T> LE(A);
 
   // compute the power of the eigenvalues
   for (int i = 0; i < A.m(); i++ )
@@ -70,11 +70,11 @@ powm(const numpack::DLA::MatrixSymD<T>& A , real_t p )
 }
 
 template< class T >
-inline numpack::DLA::MatrixSymD<T>
-logm(const numpack::DLA::MatrixSymD<T>& A)
+inline tinymat::DLA::MatrixSymD<T>
+logm(const tinymat::DLA::MatrixSymD<T>& A)
 {
   // compute the eigensystem with normalized eigenvectors
-  numpack::DLA::EigenSystemPair<T> LE(A);
+  tinymat::DLA::EigenSystemPair<T> LE(A);
 
   // compute the log of the eigenvalues
   for (int i = 0; i < A.m(); i++ )
@@ -85,11 +85,11 @@ logm(const numpack::DLA::MatrixSymD<T>& A)
 }
 
 template< class T >
-inline numpack::DLA::MatrixSymD<T>
-expm(const numpack::DLA::MatrixSymD<T>& A)
+inline tinymat::DLA::MatrixSymD<T>
+expm(const tinymat::DLA::MatrixSymD<T>& A)
 {
   // compute the eigensystem with normalized eigenvectors
-  numpack::DLA::EigenSystemPair<T> LE(A);
+  tinymat::DLA::EigenSystemPair<T> LE(A);
 
   // compute the log of the eigenvalues
   for (int i = 0; i < A.m(); i++ )
@@ -100,11 +100,11 @@ expm(const numpack::DLA::MatrixSymD<T>& A)
 }
 
 template< class T >
-inline numpack::DLA::MatrixSymD<T>
-sqrtm(const numpack::DLA::MatrixSymD<T>& A)
+inline tinymat::DLA::MatrixSymD<T>
+sqrtm(const tinymat::DLA::MatrixSymD<T>& A)
 {
   // compute the eigensystem with normalized eigenvectors
-  numpack::DLA::EigenSystemPair<T> LE(A);
+  tinymat::DLA::EigenSystemPair<T> LE(A);
 
   // compute the log of the eigenvalues
   for (int i = 0; i < A.m(); i++ )
@@ -180,7 +180,7 @@ inverse( MatrixD<T>& M )
 
 template<typename T>
 inline SymMatrixD<T>
-inverse( SymMatrixD<T>& M )
+inverse( const SymMatrixD<T>& M )
 {
 	T idetM = 1./determinant(M);
 

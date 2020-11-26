@@ -56,7 +56,7 @@ UT_TEST_CASE(inverse_tests)
   for (index_t n=1;n<=4;n++)
   {
     numerics::SymMatrixD<real_t> I(n);
-    I = numpack::DLA::Identity();
+    I = tinymat::DLA::Identity();
 
     for (index_t k=0;k<ntests;k++)
     {

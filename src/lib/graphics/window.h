@@ -30,6 +30,8 @@ namespace graphics
 class SceneGraph;
 class Interface;
 
+#ifdef AVRO_WITH_GL
+
 class GLFW_Window
 {
 public:
@@ -121,6 +123,8 @@ private:
 
   index_t fps_;
 };
+
+#endif
 
 } // graphics
 

@@ -79,12 +79,18 @@ Application<Web_Interface>::send( const std::string& response ) const
 void
 Application<Web_Interface>::save_eps()
 {
+  #ifdef AVRO_WITH_GL
   // first set the transformation to the scene
   OpenGL_Manager manager_gl;
   scene_->write(manager_gl);
   TransformFeedbackResult feedback;
   manager_gl.draw(*scene_.get(),&feedback);
+  #else
+  avro_assert_not_reached;
+  #endif
 }
+
+#ifdef AVRO_WITH_GL
 
 template<typename API_t>
 Application<GLFW_Interface<API_t>>::Application() :
@@ -222,6 +228,8 @@ Visualizer::Visualizer()
 
 template class Application<GLFW_Interface<OpenGL_Manager>>;
 template class Application<GLFW_Interface<Vulkan_Manager>>;
+
+#endif // AVRO_WITH_GL
 
 } // graphics
 

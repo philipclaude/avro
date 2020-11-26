@@ -23,6 +23,8 @@ namespace graphics
 
 class SceneGraph;
 
+#ifdef AVRO_WITH_GL
+
 enum GLSLShaderType
 {
   VERTEX, FRAGMENT, GEOMETRY,
@@ -111,6 +113,8 @@ private:
   // store all the shaders
   std::map<std::string,ShaderProgram> shaders_;
 };
+
+#endif
 
 } // graphics
 

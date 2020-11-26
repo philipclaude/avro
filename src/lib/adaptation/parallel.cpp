@@ -13,6 +13,7 @@
 #include "graphics/application.h"
 
 #include "library/meshb.h"
+#include "library/metric.h"
 #include "library/spacetime.h"
 
 #include "mesh/boundary.h"
@@ -125,13 +126,21 @@ check_geometry( const Points& points )
 template<typename type>
 AdaptationManager<type>::AdaptationManager( const Topology<type>& topology , const std::vector<VertexMetric>& metrics , AdaptationParameters& params ) :
   params_(params),
-  topology_( topology.points().dim() , topology.points().udim() , topology.number() )
+  topology_( topology.points().dim() , topology.points().udim() , topology.number() ),
+  analytic_(nullptr)
 {
   // save some mpi stuff
   rank_ = mpi::rank();
 
   // initialize our working topology (may require partitioning)
   initialize(topology,metrics);
+}
+
+template<typename type>
+void
+AdaptationManager<type>::set_analytic( library::MetricField_Analytic* analytic )
+{
+  analytic_ = analytic;
 }
 
 template<typename type>
@@ -1594,6 +1603,12 @@ AdaptationManager<type>::adapt()
     topology_.points().copy(mesh.points());
     Mesh mesh_out(number,dim);
 
+    if (analytic_)
+    {
+      for (index_t k=0;k<topology_.points().nb();k++)
+        metrics_[k] = (*analytic_)( topology_.points()[k] );
+    }
+
     // option to write out the input mesh (for debugging)
     library::meshb writer;
     if (number<4)
@@ -1604,11 +1619,12 @@ AdaptationManager<type>::adapt()
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
     if (pass > 0) params_.limit_metric() = false;
+    if (analytic_ != nullptr) params_.limit_metric() = true;
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     try
     {
       // do the adaptation!
-      clock_t t0,t1;
+      clock_t t0 = 0,t1;
       if (rank_ == 0)
       {
         printf("--> adapting mesh!\n");

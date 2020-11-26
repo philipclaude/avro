@@ -15,7 +15,7 @@
 namespace avro
 {
 
-static std::string
+inline std::string
 nloptResultDescription(nlopt::result resultcode)
 {
   switch (resultcode)

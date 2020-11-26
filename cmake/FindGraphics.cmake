@@ -2,6 +2,11 @@ if (avro_WITH_GL)
 
   include(FindOpenGL CONFIG)
 
+  set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+  set(CMAKE_HAVE_THREADS_LIBRARY 1)
+  set(CMAKE_USE_WIN32_THREADS_INIT 0)
+  set(CMAKE_USE_PTHREADS_INIT 1)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
 
   find_package(glfw QUIET)
 
@@ -16,8 +21,10 @@ if (avro_WITH_GL)
   if (APPLE)
     find_library(COCOA_LIBRARY Cocoa)
   endif()
+
+  add_definitions( -DAVRO_WITH_GL )
 else()
-  message( "defaulting to only supporting webviewer")
+  message( STATUS "only supporting WebViewer")
 endif()
 
 #find_package(GLM CONFIG REQUIRED)

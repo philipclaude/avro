@@ -27,6 +27,8 @@ public:
   virtual index_t nb_processes() = 0;
   virtual index_t rank() = 0;
 
+  virtual std::string name() const = 0;
+
   virtual void main_begin( Thread& thread ) = 0;
   virtual void worker_do( Thread& thread ) = 0;
   virtual void main_end( Thread& thread) = 0;
@@ -50,6 +52,8 @@ public:
   index_t nb_processes() { return 1; }
   index_t rank() { return 0; }
 
+  std::string name() const { return "Serial"; }
+
   void main_begin( Thread& thread ) { thread.run(); }
   void worker_do( Thread& thread ) { thread.run(); }
   void main_end( Thread& thread) { thread.run(); }
@@ -64,8 +68,9 @@ public:
   MPITaskManager() :
     comm_(mpi::communicator::world),
     instance_(0,NULL)
-  {
-  }
+  {}
+
+  std::string name() const { return "MPI"; }
 
   index_t nb_processes()
   {
@@ -133,6 +138,12 @@ void
 main_begin( Thread& thread )
 {
   task_manager_->main_begin(thread);
+}
+
+std::string
+manager_name()
+{
+  return task_manager_->name();
 }
 
 void

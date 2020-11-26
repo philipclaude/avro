@@ -15,8 +15,6 @@ add_test_files( TEST_FILES "ut" bin )
 
 # sandbox files should have _toy.cpp
 add_test_files( SBX_FILES "toy" sandbox/philip )
-add_test_files( SBX_FILES "toy" sandbox/hannah )
-add_test_files( SBX_FILES "toy" sandbox/paul )
 
 set( unit_skip mesh/delaunay/vertex_ut.cpp )
 
@@ -30,14 +28,15 @@ target_link_libraries( ut_common_lib avro_shared )
 # needed for the directory class definitions
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src/third_party)
-include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/numpack )
+include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/tinymat )
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
+include_directories(${CMAKE_SOURCE_DIR}/src/third_party/qhull )
 
 if (AVRO_NO_ESP)
   set( ESP_LIBRARIES )
   set( OCC_LIBRARIES )
-  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/eglite )
+  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/egads )
   include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/wv )
   add_definitions( -DAVRO_NO_ESP )
 endif()

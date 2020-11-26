@@ -70,6 +70,12 @@ public:
   void allocate( index_t n )
     { data_.allocate(n); }
 
+  index_t& index( index_t i , index_t j )
+    { return Table<index_t>::operator()(i,j); }
+
+  index_t index( index_t i , index_t j ) const
+    { return Table<index_t>::operator()(i,j); }
+
   T& operator()( index_t i , index_t j )
     { return *data_[Table<index_t>::operator()(i,j)]; }
 

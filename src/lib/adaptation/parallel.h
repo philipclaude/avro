@@ -14,6 +14,11 @@
 namespace avro
 {
 
+namespace library
+{
+class MetricField_Analytic;
+}
+
 template<typename type> class Topology;
 
 typedef numerics::SymMatrixD<real_t> VertexMetric;
@@ -27,6 +32,8 @@ class AdaptationManager
 {
 public:
   AdaptationManager( const Topology<type>& topology , const std::vector<VertexMetric>& metric , AdaptationParameters& params );
+
+  void set_analytic( library::MetricField_Analytic* analytic );
 
   // extracts the topology into the working topology (partitions if necessary)
   void initialize( const Topology<type>& topology , const std::vector<VertexMetric>& metrics );
@@ -74,6 +81,8 @@ private:
   std::set<std::pair<index_t,index_t>> pairs_;
 
   std::vector<index_t> crust_;
+
+  library::MetricField_Analytic* analytic_;
 };
 
 } // avro

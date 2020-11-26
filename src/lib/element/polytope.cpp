@@ -117,9 +117,11 @@ Polytope::vrep( const index_t* v , index_t nv , const int facet , std::vector<in
 std::vector<index_t>
 Polytope::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Polytope>& decomposition , index_t parent , std::set<int>& h ) const
 {
+  if (nv <= number_) return {};
   std::vector<index_t> simplex_idx;
   if (number_<=1)
   {
+    if ( nv != index_t(number_+1) ) return {}; // TODO is there a bug somewhere with inexact voronoi diagrams?
     avro_assert_msg( nv == index_t(number_+1) , "nv = %lu , number = %u" , nv , number_ );
     index_t idx = decomposition.add_simplex( number_ , v , parent );
     simplex_idx.push_back(idx);
@@ -210,6 +212,7 @@ Polytope::is_edge( const std::vector<int>& b0 , const std::vector<int>& b1 ) con
   {
     if (Set::contains(b0[k],b1)>-1)
       count++;
+    if (count==number_) return false;
   }
   if (fullmesh_)
     return count>=index_t(number_-1);

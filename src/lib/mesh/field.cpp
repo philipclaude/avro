@@ -136,10 +136,10 @@ Field<Simplex,T>::build()
       for (index_t j=0;j<element_.nb_basis();j++)
         dof[j] = n++;
       Table<index_t>::add( dof.data() , dof.size() );
-      const std::vector<index_t>& idx = Table<index_t>::data();
-      index_t nb_dof = * std::max_element( idx.begin() , idx.end() ) +1;
-      this->allocate( nb_dof );
     }
+    const std::vector<index_t>& idx = Table<index_t>::data();
+    index_t nb_dof = * std::max_element( idx.begin() , idx.end() ) +1;
+    this->allocate( nb_dof );
   }
   else
     avro_assert_not_reached;
@@ -222,6 +222,20 @@ __at_rank__( Entity* const& entity , index_t r )
   return real_t(entity->identifier());
 }
 
+template<>
+real_t
+__at_rank__( const SurrealS<1,real_t>& x , index_t r )
+{
+  return x.value();
+}
+
+template<>
+real_t
+__at_rank__( const SurrealD& x , index_t r )
+{
+  return x.value();
+}
+
 template class FieldBase<Metric>;
 
 template class Field< Simplex , real_t >;
@@ -234,5 +248,8 @@ template class Field< Simplex , Entity* >;
 template class Field< Simplex , numerics::SymMatrixD<real_t> >;
 
 template class Field< Simplex , Metric >;
+
+template class Field< Simplex , SurrealS<1,real_t> >;
+template class Field< Simplex , SurrealD >;
 
 } // avro

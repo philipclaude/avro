@@ -30,6 +30,8 @@ namespace avro
 namespace graphics
 {
 
+#ifdef AVRO_WITH_GL
+
 bool
 load_ppm( const std::string& filename , GLFWimage& image )
 {
@@ -560,6 +562,8 @@ GLFW_Window::create_scene()
   scene_.push_back(std::make_shared<SceneGraph>());
   return id;
 }
+
+#endif
 
 } // graphics
 

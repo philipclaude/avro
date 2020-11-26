@@ -30,6 +30,8 @@ namespace avro
 namespace graphics
 {
 
+#ifdef AVRO_WITH_GL
+
 Widget::Widget( GLFW_Window& window ) :
   window_(window),
   context_(window.interface().context()),
@@ -679,6 +681,8 @@ Toolbar::end_draw() const
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   #endif
 }
+
+#endif // AVRO_WITH_GL
 
 } // graphics
 

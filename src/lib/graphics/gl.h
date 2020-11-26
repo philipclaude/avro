@@ -14,6 +14,8 @@
 #include "common/tools.h"
 #include "common/types.h"
 
+#ifdef AVRO_WITH_GL
+
 #include <glad/include/glad/glad.h>
 #define GLFW_INCLUDE_NONE
 
@@ -209,5 +211,7 @@ private:
 } // graphics
 
 } // avro
+
+#endif // AVRO_WITH_GL
 
 #endif
