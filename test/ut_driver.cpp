@@ -24,6 +24,7 @@ main()
   initialize_avro();
 
   // initialize the distributed/shared memory task/thread managers
+  /*
   #ifdef AVRO_MPI
   ProcessMPI::initialize();
   #endif
@@ -34,6 +35,7 @@ main()
   exactinit(1,0,0,10,10,10);
   exactinit();
   GEO::PCK::initialize();
+  */
 
   #ifdef STDOUT_REDIRECT
   FILE *fid = fopen(STDOUT_REDIRECT,"w");
