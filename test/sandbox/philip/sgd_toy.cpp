@@ -12,21 +12,13 @@
 #include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
+#include "measures.h"
 #include "visualize.h"
 
 #include <fstream>
 #include <iomanip>
 
 UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
-
-class DensityMeasure_Gaussian : public delaunay::DensityMeasure
-{
-public:
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
-    return 1e1*( 1 + sin(2*M_PI*x[0])*sin(2*M_PI*x[1]) );
-  }
-};
 
 UT_TEST_CASE( test1 )
 {
@@ -39,7 +31,7 @@ UT_TEST_CASE( test1 )
   CubeDomain<type> domain(number,dim,2);
 
   delaunay::DensityMeasure_Uniform density(1.0);
-  DensityMeasure_Test density2;
+  DensityMeasure_Sin density2;
   DensityMeasure_Shock density3(number);
 
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density3);
