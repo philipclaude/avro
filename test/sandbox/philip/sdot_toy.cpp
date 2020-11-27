@@ -24,21 +24,28 @@ UT_TEST_CASE( test1 )
 {
   typedef Polytope type;
   //typedef Simplex type;
-  coord_t number = 2;
-  index_t nb_points = 1e3;
+  coord_t number = 4;
+  index_t nb_points = 1e2;
 
-  coord_t dim = 3;
+  coord_t dim = number+1;
   CubeDomain<type> domain(number,dim,2);
 
   delaunay::DensityMeasure_Uniform density(1.0);
   DensityMeasure_Sin density2;
   DensityMeasure_Shock density3(number);
 
-  tinymat::DLA::VectorD<real_t> mu = {.6,.9};
+  tinymat::DLA::VectorD<real_t> mu(number);
   numerics::SymMatrixD<real_t> sigma(number,number);
   sigma = 0;
   sigma(0,0) = 0.07;
   sigma(1,1) = 0.09;
+  sigma(0,1) = 0;
+
+  for (coord_t d = 0; d < number; d++)
+  {
+    mu(d) = 0.5;
+    sigma(d,d) = 0.05;
+  }
 
   std::cout << sigma << std::endl;
 
@@ -47,7 +54,7 @@ UT_TEST_CASE( test1 )
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density4);
   transport.sample( nb_points );
 
-  transport.optimize_points(100);
+  transport.optimize_points_lloyd(1);
 
   const std::vector<real_t>& mass = transport.mass();
 

@@ -200,6 +200,13 @@ public:
     integrand_(integrand),
     functional_(0)
   {
+    initialize(topology);
+  }
+
+  template<typename type>
+  void
+  initialize( const Topology<type>& topology )
+  {
     integrators_.resize( topology.nb() );
     for (index_t k = 0; k < topology.nb(); k++)
       integrators_[k] = std::make_shared<ElementIntegral<type,T>>(topology,topology.points(),topology,topology.element());
@@ -221,7 +228,6 @@ public:
   {
     #if 0
     ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.element() );
-    //#pragma omp parallel for
     for (index_t k=0;k<topology.nb();k++)
     {
       T df = T(0);
@@ -230,6 +236,7 @@ public:
       if (values != nullptr) values[k] = df;
     }
     #else
+    if (integrators_.size() != topology.nb() ) initialize(topology);
     values_.clear();
     values_.resize( topology.nb() );
     ProcessCPU::parallel_for(

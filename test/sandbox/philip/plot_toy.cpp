@@ -21,7 +21,7 @@ UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 
 UT_TEST_CASE( test1 )
 {
-  std::string prefix = "/Users/pcaplan/Dropbox/Codes/mach-II/avro/test/tmp/sdot-dim3-10000";
+  std::string prefix = "/Users/pcaplan/Dropbox/Codes/mach-II/avro/test/tmp/sdot-dim4-10000";
 
   library::meshb mesh( prefix+"_tet.mesh");
   std::ifstream field( prefix+"_sites.json");

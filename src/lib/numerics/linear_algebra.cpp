@@ -7,6 +7,8 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
+#include "common/tools.h"
+
 #include "numerics/lapack.h"
 #include "numerics/linear_algebra.h"
 
@@ -14,7 +16,7 @@
 #include <vector>
 
 #ifdef AVRO_NO_LAPACK
-extern "C" 
+extern "C"
 {
 void dgesv_(int *N, int *NRHS, double *A, int *LDA, int *IPIV,double *B, int *LDB, int *INFO)
 {
@@ -156,6 +158,11 @@ range( const MatrixD<real_t>& A , MatrixD<real_t>& U0 )
 
   // perform the svd
   #ifndef AVRO_NO_LAPACK
+  UNUSED(jobu);
+  UNUSED(jobvt);
+  UNUSED(lda);
+  UNUSED(ldu);
+  UNUSED(ldvt);
   avro_assert_not_reached;
   #else
   dgesvd_( &jobu , &jobvt , &M , &N , tdata.data() , &lda , S.data() , U.data() , &ldu , VT.data() , &ldvt , work.data() , &lwork , &info );

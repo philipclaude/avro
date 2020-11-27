@@ -116,7 +116,7 @@ public:
         tinymat::DLA::VectorD<real_t> xu(3);
         xu = B_* (At_*xs );
 
-        for (index_t d = 0; d < xu.size(); d++)
+        for (coord_t d = 0; d < xu.size(); d++)
           polyhedron.push_back( xu(d) );
       }
 
@@ -141,7 +141,7 @@ public:
 
       // add the tetrahedra
       index_t nb_points = points_.nb();
-      for (index_t j = 0; j < output.numberoftetrahedra; j++)
+      for (index_t j = 0; j < (index_t)output.numberoftetrahedra; j++)
       {
         std::vector<index_t> tet( output.tetrahedronlist+4*j , output.tetrahedronlist+4*(j+1) );
         for (index_t d = 0; d < 4; d++)
