@@ -12,6 +12,11 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
 
+#include "json/json.hpp"
+
+#include <fstream>
+#include <iomanip>
+
 namespace avro
 {
 
@@ -193,6 +198,58 @@ Controls::mouse_move(int x, int y)
 void
 Controls::key_down(int key)
 {
+  if (key == 77 /*GLFW_KEY_M*/)
+  {
+    std::cout << glm::to_string(model_view_projection_) << std::endl;
+    std::cout << glm::to_string(ui_matrix_) << std::endl;
+
+    nlohmann::json J;
+    std::vector<real_t> mvp(16);
+    std::vector<real_t> ui(16);
+    int k = 0;
+    for (coord_t i = 0; i < 4; i++)
+    for (coord_t j = 0; j < 4; j++)
+    {
+      mvp[k] = model_view_projection_[i][j];
+      ui[k++]  = ui_matrix_[i][j];
+    }
+    J["mvp"] = mvp;
+    J["ui"] = ui;
+    J["scale"] = scale_;
+    std::ofstream output("view.json");
+    output << std::setw(4) << J << std::endl;
+    output.close();
+
+    // TODO write perspective, but this should always be the same
+
+  }
+}
+
+void
+Controls::load( const std::string& filename )
+{
+  std::fstream file;
+  file.open(filename);
+  avro_assert( file.is_open() );
+  std::stringstream s;
+  s << file.rdbuf();
+
+  nlohmann::json J = nlohmann::json::parse( s.str().c_str() );
+
+  std::vector<real_t> mvp = J.at("mvp");
+  std::vector<real_t> ui = J.at("ui");
+  scale_ = J.at("scale");
+
+  int k = 0;
+  for (coord_t i = 0; i < 4; i++)
+  for (coord_t j = 0; j < 4; j++)
+  {
+    model_view_projection_[i][j] = mvp[k];
+    ui_matrix_[i][j] = ui[k++];
+  }
+
+  std::cout << glm::to_string(model_view_projection_) << std::endl;
+  std::cout << glm::to_string(ui_matrix_) << std::endl;
 
 }
 

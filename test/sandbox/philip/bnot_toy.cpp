@@ -31,13 +31,12 @@ UT_TEST_CASE( test1 )
   typedef Polytope type;
   //typedef Simplex type;
   coord_t number = 2;
-  index_t nb_points = 1e4;
+  index_t nb_points = 1e3;
 
-  coord_t dim = 3;
+  coord_t dim = number+1;
   CubeDomain<type> domain(number,dim,2);
 
   delaunay::DensityMeasure_Uniform density(1.0);
-  DensityMeasure_Test density2;
 
   delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density);
   transport.sample( nb_points );
@@ -45,18 +44,17 @@ UT_TEST_CASE( test1 )
   transport.generate_bluenoise();
 
   json J;
-  std::vector<real_t> radius( transport.delaunay().nb() );
   std::vector<real_t> x( transport.delaunay().nb()*number );
-  std::vector<real_t> center(number,0.5);
+  std::vector<real_t> w( transport.delaunay().nb() );
   index_t i = 0;
   for (index_t k = 0; k < transport.delaunay().nb(); k++)
   {
-    radius[k] = numerics::distance( center.data() , transport.delaunay()[k] , number );
     for (coord_t d = 0; d < number; d++)
       x[i++] = transport.delaunay()[k][d];
   }
-  J["r"] = radius;
   J["x"] = x;
+  J["w"] = transport.weights();
+  J["m"] = transport.mass();
 
   std::ofstream output("tmp/bluenoise-dim"+std::to_string(number)+"-n"+std::to_string(transport.delaunay().nb())+".json");
   output << std::setw(4) << J << std::endl;
@@ -86,7 +84,7 @@ UT_TEST_CASE( test1 )
   library::Plot<Simplex> point_plot(transport.delaunay());
 
   vis.add_topology(triangulation);
-  vis.add_topology(point_plot);
+  //vis.add_topology(point_plot);
   //vis.add_topology(transport.diagram());
   vis.run();
 }

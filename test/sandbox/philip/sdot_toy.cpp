@@ -23,38 +23,36 @@ UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 UT_TEST_CASE( test1 )
 {
   typedef Polytope type;
-  //typedef Simplex type;
   coord_t number = 4;
-  index_t nb_points = 1e2;
+  index_t nb_points = 1e1;
 
   coord_t dim = number+1;
   CubeDomain<type> domain(number,dim,2);
 
   delaunay::DensityMeasure_Uniform density(1.0);
-  DensityMeasure_Sin density2;
-  DensityMeasure_Shock density3(number);
+  DensityMeasure_Shock density2(number);
+  DensityMeasure_Sphere density4(number);
+  DensityMeasure_Cone density5(number);
 
+  // gaussian
   tinymat::DLA::VectorD<real_t> mu(number);
   numerics::SymMatrixD<real_t> sigma(number,number);
   sigma = 0;
-  sigma(0,0) = 0.07;
-  sigma(1,1) = 0.09;
-  sigma(0,1) = 0;
-
   for (coord_t d = 0; d < number; d++)
   {
     mu(d) = 0.5;
-    sigma(d,d) = 0.05;
+    sigma(d,d) = 0.02;
   }
+  DensityMeasure_Gaussian density3(mu,sigma);
 
-  std::cout << sigma << std::endl;
-
-  DensityMeasure_Gaussian density4(mu,sigma);
-
-  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density4);
+  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density3);
+  transport.save_every( 1e10 , "tmp/void" );
   transport.sample( nb_points );
 
-  transport.optimize_points_lloyd(1);
+  transport.weight_max() = 1e1;
+  transport.quad_order() = 5;
+
+  transport.optimize_points(100);
 
   const std::vector<real_t>& mass = transport.mass();
 
@@ -109,6 +107,9 @@ UT_TEST_CASE( test1 )
 
   graphics::Visualizer vis;
   library::Plot<Simplex> point_plot(transport.delaunay());
+  for (index_t k = 0; k < point_plot.points().nb(); k++)
+  for (coord_t d = number; d < point_plot.points().dim(); d++)
+    point_plot.points()[k][d] = 0.0;
   if (number == 4)
   {
     std::shared_ptr<SliceSites> ts = std::make_shared<SliceSites>(slice.tetrahedra(),slice.tet2site());
@@ -117,9 +118,9 @@ UT_TEST_CASE( test1 )
   }
   else
   {
-    //vis.add_topology(triangulation);
+    vis.add_topology(triangulation);
     vis.add_topology(point_plot);
-    vis.add_topology(transport.diagram());
+    //vis.add_topology(transport.diagram());
   }
   vis.run();
 }

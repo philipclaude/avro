@@ -26,6 +26,50 @@ public:
   }
 };
 
+class DensityMeasure_Sphere : public delaunay::DensityMeasure
+{
+public:
+  DensityMeasure_Sphere( coord_t dim ) :
+    dim_(dim)
+  {}
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
+  {
+    real_t rho = 1.0;
+    for (coord_t d = 0; d < dim_; d++)
+      rho += 100.0*(x[d] - 0.5)*(x[d] - 0.5);
+    return rho;
+  }
+private:
+  coord_t dim_;
+};
+
+class DensityMeasure_Cone : public delaunay::DensityMeasure
+{
+public:
+  DensityMeasure_Cone( coord_t dim ) :
+    dim_(dim)
+  {}
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
+  {
+    real_t r2 = 0.0;
+    for (coord_t d = 0; d < dim_-1; d++)
+      r2 += x[d]*x[d];
+    real_t r = std::sqrt(r2);
+    real_t t = x[dim_-1];
+    real_t a = 1.0;
+    real_t b = r0 - r1;
+    real_t c = -r0;
+    real_t d = std::abs( a*r + b*t + c ) / std::sqrt( a*a + b*b );
+    real_t rho = 100.0/(d*d + 1e-3);
+    return rho;
+  }
+private:
+  coord_t dim_;
+  const real_t r0 = 0.4;
+  const real_t r1 = 0.7;
+};
+
+
 class DensityMeasure_Shock : public delaunay::DensityMeasure
 {
 public:
@@ -33,10 +77,10 @@ public:
     dim_(dim)
   {
     k0_ = 10.0;
-    k1_ = 10.0;
+    k1_ = 1000.0;
     vs_ = 0.7;
     r0_ = 0.4;
-    alpha_ = 1.0;
+    alpha_ = 1e-3;
   }
 
   real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
@@ -48,11 +92,12 @@ public:
       x2 += x[d]*x[d];
     }
     x2 = std::sqrt(x2);
-    return 1.0 + k0_*std::exp( -alpha_*x[dim_-1] )*std::exp( -k1_*(rt-x2)*(rt-x2) );
+    return 1e0 + k0_*std::exp( -alpha_*x[dim_-1] )*std::exp( -k1_*(rt-x2)*(rt-x2) );
   }
 private:
   coord_t dim_;
   real_t k0_,k1_,vs_,r0_,alpha_;
+
 };
 
 class DensityMeasure_Gaussian : public delaunay::DensityMeasure

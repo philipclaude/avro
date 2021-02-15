@@ -52,6 +52,8 @@ public:
 
   void save_eps( const std::string& filename );
 
+  bool& changed() { return updated_; }
+
   void begin_draw();
   void draw_interface() const;
   void write_axes();

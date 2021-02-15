@@ -53,7 +53,7 @@ protected:
 
   virtual ~ApplicationBase() {}
 
-  virtual void run() = 0;
+  virtual void run( const std::string& view ) = 0;
 
   void focus_scenes();
 
@@ -83,7 +83,7 @@ public:
   Application();
 
   void initialize();
-  void run();
+  void run( const std::string& view=std::string() );
 
   bool& restart() { return restart_; }
 
@@ -112,7 +112,7 @@ public:
     scene_->set_colormap( &colormap_ );
   }
 
-  void run();
+  void run( const std::string& view=std::string() );
   void save_eps();
 
   void receive( const std::string& text );

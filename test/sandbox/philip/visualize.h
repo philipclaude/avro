@@ -2,6 +2,7 @@
 #define AVRO_SANDBOX_SDOT_VISUALIZE_H_
 
 #include "common/parallel_for.h"
+#include "common/set.h"
 
 #include "library/meshb.h"
 #include "numerics/linear_algebra.h"
@@ -88,6 +89,8 @@ public:
         }
       }
 
+      Table<int> incidence(TableLayout_Jagged);
+
       // compute the intersection point of every edge
       for (index_t i = 0; i < edges.size()/2; i++)
       {
@@ -118,6 +121,14 @@ public:
 
         for (coord_t d = 0; d < xu.size(); d++)
           polyhedron.push_back( xu(d) );
+
+        // add the incidence relations for this point (to extract edges)
+        std::vector<int> b0 = polytope.points().incidence().get(e0);
+        std::vector<int> b1 = polytope.points().incidence().get(e1);
+
+        std::vector<int> bu;
+        Set::intersection( b0 , b1 , bu );
+        incidence.add( bu.data() , bu.size() );
       }
 
       // compute the tetrahedralization of the polyhedron
@@ -139,6 +150,8 @@ public:
         printf("there was an error with tetgen :(\n");
       }
 
+      Polytope element(3,1,incidence);
+
       // add the tetrahedra
       index_t nb_points = points_.nb();
       for (index_t j = 0; j < (index_t)output.numberoftetrahedra; j++)
@@ -153,10 +166,24 @@ public:
       // add the points
       for (index_t j = 0; j < polyhedron.size() / 3; j++)
         points_.create( &polyhedron[3*j] );
+
+      avro_assert( polyhedron.size() / 3 == incidence.nb() );
+      for (index_t j = 0; j < incidence.nb(); j++)
+      for (index_t i = j+1; i < incidence.nb(); i++)
+      {
+        if (element.is_edge( i , j ) )
+        {
+          // add this edge
+          edges_.push_back(i);
+          edges_.push_back(j);
+        }
+      }
     }
   }
 
   index_t tet2site( index_t j ) const { return tet2site_[j]; }
+
+  const std::vector<index_t>& edges() const { return edges_; }
 
 private:
   const LaguerreDiagram<type>& diagram_;
@@ -170,6 +197,8 @@ private:
   const tinymat::DLA::MatrixD<real_t>& At_;
 
   std::vector<index_t> tet2site_;
+
+  std::vector<index_t> edges_;
 };
 
 template<typename type>
@@ -183,6 +212,7 @@ public:
     dim_(diagram.number()), // not dim because they could be embedded in dim+1 for sdot
     uvw_(3),
     tetrahedra_(uvw_,3),
+    edges_(uvw_,1),
     normal_(dim_,0)
   {}
 
@@ -295,6 +325,15 @@ public:
         tet2site_.push_back( cell.tet2site(j) );
       }
 
+      const std::vector<index_t>& edges = cell.edges();
+      for (index_t j = 0; j < edges.size() / 2; j++)
+      {
+        index_t e0 = edges[2*j] + nb_points;
+        index_t e1 = edges[2*j+1] + nb_points;
+        index_t e[2] = {e0,e1};
+        edges_.add( e , 2 );
+      }
+
       for (index_t j = 0; j < cell.points().nb(); j++)
         uvw_.create( cell.points()[j] );
     }
@@ -320,12 +359,14 @@ public:
   const Topology<Simplex>& tetrahedra() const { return tetrahedra_; }
   Topology<Simplex>& tetrahedra() { return tetrahedra_; }
   const std::vector<index_t>& tet2site() const { return tet2site_; }
+  const Topology<Simplex>& edges() const { return edges_; }
 
 private:
   const LaguerreDiagram<type>& diagram_;
   coord_t dim_;
   Points uvw_;
   Topology<Simplex> tetrahedra_;
+  Topology<Simplex> edges_;
 
   std::vector<bool> clipped_;
   std::vector<std::shared_ptr<ClippedCell<type>>> cells_;

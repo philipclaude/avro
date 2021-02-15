@@ -129,7 +129,7 @@ Application<GLFW_Interface<API_t>>::initialize()
 
 template<typename API_t>
 void
-Application<GLFW_Interface<API_t>>::run()
+Application<GLFW_Interface<API_t>>::run( const std::string& view )
 {
   if (!restart_)
   {
@@ -161,6 +161,13 @@ Application<GLFW_Interface<API_t>>::run()
   double last_frame_time = 0;   // number of seconds since the last frame
   UNUSED(last_update_time);
 
+
+  if (!view.empty())
+  {
+    printf("load view..\n");
+    window_[0]->controls().load(view);
+  }
+
    // start the rendering loop
    bool done = false;
    while (!done)
@@ -174,6 +181,9 @@ Application<GLFW_Interface<API_t>>::run()
        // draw frame
        for (index_t k=0;k<window_.size();k++)
        {
+
+         //if (!window_[k]->changed()) continue;
+
          window_[k]->begin_draw();
 
          if (!restart_)

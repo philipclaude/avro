@@ -12,7 +12,10 @@
 
 #include <nlopt.hpp>
 #include <HLBFGS/HLBFGS.h>
+#include "liblbfgs/lbfgs.h"
+#include "json/json.hpp"
 
+#include <fstream>
 #include <iomanip>
 
 namespace avro
@@ -179,6 +182,7 @@ LaguerreCell<Polytope>::clip()
     if (security_radius_reached(bj)) break;
     j++;
     if (j == delaunay_.nb()) break;
+    //if (polytope_.size() <= number_) break;
   }
 
   // add the points
@@ -900,6 +904,44 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
       triangulation->add_point( tk.points()[j] , tk.point2elem(j) , tk.point2site(j) );
   }
   //printf("--> timing: neighbours (%3.4g sec.), clipping (%3.4g sec.), decompose (%3.4g sec.)\n",time_neighbours_,time_voronoi_,time_decompose);
+  compute_neighbour_properties();
+}
+
+template<typename type>
+void
+LaguerreDiagram<type>::compute_neighbour_properties()
+{
+  neighbour_counts_.clear();
+  neighbour_counts_.resize( delaunay_.nb() , 0 );
+
+  std::vector<int> hrep;
+  for (index_t k = 0; k < cells_.size(); k++)
+  {
+    for (index_t j = 0; j < cells_[k]->nb(); j++)
+    {
+      hrep.clear();
+      cells_[k]->element().hrep( (*cells_[k])(j) , cells_[k]->nv(j) , hrep );
+
+      index_t count = 0;
+      index_t site = cells_[k]->cell2site(j);
+      for (index_t i = 0; i < hrep.size(); i++)
+      {
+        //if (hrep[i] < 0) continue; // mesh facet
+
+        // decode the bisector associated with this?
+        count++;
+      }
+      neighbour_counts_[site] += count;
+    }
+  }
+
+  index_t total_neighbours = 0;
+  for (index_t k = 0; k < cells_.size(); k++)
+    total_neighbours += neighbour_counts_[k];
+
+  average_neighbours_ = real_t(total_neighbours) / real_t(cells_.size());
+  minimum_neighbours_ = * std::min_element( neighbour_counts_.begin() , neighbour_counts_.end() );
+  maximum_neighbours_ = * std::max_element( neighbour_counts_.begin() , neighbour_counts_.end() );
 }
 
 real_t
@@ -980,7 +1022,9 @@ SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology
   diagram_(delaunay_,domain_),
   simplices_(domain.number(),domain.number()),
   exact_(false),
-  print_(true)
+  print_(true),
+  quad_order_(4),
+  weight_max_(1e6)
 {}
 
 template<typename type>
@@ -1037,7 +1081,7 @@ SemiDiscreteOptimalTransport<type>::evaluate( real_t* dc_dx , real_t* dc_dw )
   compute_laguerre();
 
   // define the integration rules
-  ConicalProductQuadrature quadrature(number,2);
+  ConicalProductQuadrature quadrature(number,quad_order_);
   simplices_.element().set_basis( BasisFunctionCategory_Lagrange );
   quadrature.define();
   simplices_.element().load_quadrature(quadrature);
@@ -1123,22 +1167,95 @@ SemiDiscreteOptimalTransport<type>::evaluate( real_t* dc_dx , real_t* dc_dw )
 
   time_integrate /= ProcessCPU::maximum_concurrent_threads();
   real_t mass_min = * std::min_element( mass_.begin() , mass_.end() );
+  real_t mass_max = * std::max_element( mass_.begin() , mass_.end() );
 
   if (print_)
   {
-    std::cout <<
-    std::setw(6) << std::left << iteration_ << "|" <<
-    std::setprecision(4) << std::left << std::scientific << std::fabs(energy) << "|" <<
-    std::setprecision(4) << std::left << std::scientific << gnorm << "|" <<
-    std::setw(11) << std::right << std::fixed << diagram_.time_voronoi() << "|" <<
-    std::setw(11) << std::right << std::fixed << diagram_.time_neighbours() <<
-    std::setw(11) << std::right << std::fixed << diagram_.time_decompose() <<
-    std::setw(11) << std::right << std::fixed << time_integrate << "|" <<
-    std::setprecision(4) << std::left << std::scientific << mass_min <<
-    std::endl;
+    printf("%6lu|%10.3e|%10.3e|%11.1e|%11.1e|%11.1e|%11.1e|%11.3e|%11.3e|%6lu|%6lu|%11.1e\n",
+      iteration_,
+      energy,
+      gnorm,
+      diagram_.time_voronoi(),
+      diagram_.time_neighbours(),
+      diagram_.time_decompose(),
+      time_integrate,
+      mass_min,
+      mass_max,
+      diagram_.minimum_neighbours(),
+      diagram_.maximum_neighbours(),
+      diagram_.average_neighbours()
+    );
   }
 
+  properties_.mass_min.push_back( mass_min );
+  properties_.mass_max.push_back( mass_max );
+  properties_.time_voronoi.push_back( diagram_.time_voronoi() );
+  properties_.time_neighbours.push_back( diagram_.time_neighbours() );
+  properties_.time_integration.push_back( time_integrate );
+  properties_.time_triangulation.push_back( diagram_.time_decompose() );
+  properties_.neighbours_average.push_back( diagram_.average_neighbours() );
+  properties_.neighbours_minimum.push_back( diagram_.minimum_neighbours() );
+  properties_.neighbours_maximum.push_back( diagram_.maximum_neighbours() );
+  properties_.energy.push_back( energy );
+  properties_.gradient.push_back( gnorm );
+  time_integrate_ = time_integrate;
+
+  if (iteration_ % save_every_ == 0) save_snapshot();
+
   return energy;
+}
+
+void
+SDOT_Properties::save( const std::string& filename ) const
+{
+  json J;
+  J["mass_min"] = mass_min;
+  J["mass_max"] = mass_max;
+  J["time_voronoi"] = time_voronoi;
+  J["time_neighbours"] = time_neighbours;
+  J["integration"] = time_integration;
+  J["triangulation"] = time_integration;
+  J["neighbours_average"] = neighbours_average;
+  J["neighbours_minimum"] = neighbours_minimum;
+  J["neighbours_maximum"] = neighbours_maximum;
+  J["energy"] = energy;
+  J["gradient"] = gradient;
+  std::ofstream output(filename);
+  output << std::setw(4) << J << std::endl;
+  output.close();
+}
+
+void
+SDOT_Snapshot::save( const std::string& filename ) const
+{
+  json J;
+  J["dim"] = dim;
+  J["points"] = points;
+  J["weights"] = weights;
+  J["neighbours"] = neighbours;
+  J["density"] = name;
+  J["mass"] = mass;
+  std::ofstream output(filename);
+  output << std::setw(4) << J << std::endl;
+  output.close();
+}
+
+template<typename type>
+void
+SemiDiscreteOptimalTransport<type>::save_snapshot()
+{
+  snapshot_.clear();
+  std::vector<real_t> coordinates(delaunay_.nb() * domain_.number());
+  for (index_t k = 0, j = 0 ; k < delaunay_.nb(); k++)
+  for (index_t d = 0; d < domain_.number(); d++)
+    coordinates[j++] = delaunay_[k][d];
+  snapshot_.dim = domain_.number();
+  snapshot_.points = coordinates;
+  snapshot_.weights = weight_;
+  snapshot_.neighbours = diagram_.neighbour_counts();
+  snapshot_.mass = mass_;
+  snapshot_.name = diagram_.name();
+  snapshot_.save(prefix_ + "-snapshot-iter-" + std::to_string(iteration_) + ".json" );
 }
 
 template<typename type>
@@ -1167,6 +1284,7 @@ SemiDiscreteOptimalTransport<type>::set_weights( const real_t* w )
     weight_[k] = w[k];
   coord_t dim = delaunay_.dim() -1;
   real_t wm = * std::max_element( weight_.begin() , weight_.end() );
+  //printf("setting dim = %u, wm = %g\n",dim,wm);
   for (index_t k=0;k<weight_.size();k++)
     delaunay_[k][dim] = std::sqrt( std::max( wm - weight_[k] , 0.0 ) );
 }
@@ -1223,8 +1341,9 @@ nlopt_transport_objective( unsigned n , const double* x , double* grad, void* da
   return transport.transport_objective( n , x , grad );
 }
 
-#define OPTIMIZER_NLOPT 0
-#define OPTIMIZER_HLBFGS 1
+#define OPTIMIZER_NLOPT 1
+#define OPTIMIZER_HLBFGS 0
+#define OPTIMIZER_LIBLBFGS 0
 OptimalTransportBase* __transport__ = nullptr;
 
 static void
@@ -1240,12 +1359,44 @@ hlbfgs_transport_objective(int N, double* x, double *prev_x, double* f, double* 
   *f = transport->transport_objective(index_t(N),x,g);
 }
 
+static lbfgsfloatval_t
+liblbfgs_evaluate(
+    void *instance,
+    const lbfgsfloatval_t *x,
+    lbfgsfloatval_t *g,
+    const int n,
+    const lbfgsfloatval_t step
+    )
+{
+  avro_assert( __transport__ != nullptr );
+  OptimalTransportBase* transport = static_cast<OptimalTransportBase*>(__transport__);
+  transport->iteration()++;
+  return transport->transport_objective(index_t(n),x,g);
+}
+
+static int
+liblbfgs_progress(
+    void *instance,
+    const lbfgsfloatval_t *x,
+    const lbfgsfloatval_t *g,
+    const lbfgsfloatval_t fx,
+    const lbfgsfloatval_t xnorm,
+    const lbfgsfloatval_t gnorm,
+    const lbfgsfloatval_t step,
+    int n,
+    int k,
+    int ls
+    )
+{
+    return 0;
+}
+
 template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::start()
 {
   printf("--------------------------------------------------------------------------------------\n");
-  printf("%5s|%10s|%10s|%10s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_nn (s) " , " t_tri (s) " , " t_int (s) ", " min(m) ");
+  printf("%5s|%10s|%10s|%10s|%10s|%10s|%10s|%10s\n","iter  "," energy "," gradient "," t_vor (s) "," t_knn (s) " , " t_tri (s) " , " t_int (s) ", " min(m) ");
   printf("--------------------------------------------------------------------------------------\n");
   iteration_ = 0;
 }
@@ -1254,6 +1405,8 @@ template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
 {
+  properties_.clear();
+
   mode_ = 0;
   coord_t dim = domain_.number();
   index_t n = delaunay_.nb()*dim;
@@ -1276,6 +1429,12 @@ SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
   opt.set_ftol_rel(1e-12);
   opt.set_maxeval(nb_iter);
 
+  // set the lower and upper bounds on the weights
+  std::vector<real_t> lower_bound( n , 0.0 );
+  std::vector<real_t> upper_bound( n ,  1.0 );
+  opt.set_lower_bounds(lower_bound);
+  opt.set_upper_bounds(upper_bound);
+
   real_t f_opt;
   nlopt::result result = nlopt::result::SUCCESS;
   start();
@@ -1293,7 +1452,7 @@ SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
 
   // initialize
   INIT_HLBFGS(parameter, info);
-  parameter[5] = 1e-12;
+  parameter[5] = 1e-16;
   info[3] = 1;
   info[4] = nb_iter;
   info[6] = T;
@@ -1307,12 +1466,16 @@ SemiDiscreteOptimalTransport<type>::optimize_points( index_t nb_iter )
   HLBFGS(n, M, x.data() , hlbfgs_transport_objective , 0 , HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
 
   #endif
+
+  save_snapshot();
 }
 
 template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::optimize_points_lloyd( index_t nb_iter )
 {
+  properties_.clear();
+
   mode_ = 0;
   coord_t dim = domain_.number();
   index_t n = delaunay_.nb()*dim;
@@ -1333,17 +1496,21 @@ SemiDiscreteOptimalTransport<type>::optimize_points_lloyd( index_t nb_iter )
     std::vector<real_t> dc_dx(n); // not used
     evaluate( dc_dx.data() , nullptr );
   }
+
+  save_snapshot();
 }
 
 template<typename type>
 void
 SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
 {
+  properties_.clear();
+
   mode_ = 1;
   index_t n = delaunay_.nb();
   std::vector<real_t> x(n);
   for (index_t k=0;k<delaunay_.nb();k++)
-    x[k] = weight_[k];
+    x[k] = 0.0;//mass_[k];//weight_[k];
 
   #if OPTIMIZER_NLOPT
 
@@ -1355,13 +1522,13 @@ SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
 	opt.set_min_objective( &nlopt_transport_objective<type> , static_cast<void*>(&data) );
 
   // set some optimization parameters
-  opt.set_xtol_rel(1e-12);
-  opt.set_ftol_rel(1e-12);
+  opt.set_xtol_rel(1e-16);
+  opt.set_ftol_rel(1e-16);
   opt.set_maxeval(nb_iter);
 
   // set the lower and upper bounds on the weights
   std::vector<real_t> lower_bound( n , 0.0 );
-  std::vector<real_t> upper_bound( n ,  1e6 );
+  std::vector<real_t> upper_bound( n ,  weight_max_ );
   opt.set_lower_bounds(lower_bound);
   opt.set_upper_bounds(upper_bound);
 
@@ -1394,6 +1561,29 @@ SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
   __transport__ = this;
   start();
   HLBFGS(n, M, x.data() , hlbfgs_transport_objective , 0 , HLBFGS_UPDATE_Hessian, newiteration, parameter, info);
+
+  #elif OPTIMIZER_LIBLBFGS
+
+  lbfgsfloatval_t fx;
+  lbfgsfloatval_t *x0 = lbfgs_malloc(n);
+  lbfgs_parameter_t param;
+
+  for (index_t i = 0; i < n; i++)
+    x0[i] = x[i];
+
+  // initialize
+  lbfgs_parameter_init(&param);
+  param.linesearch = LBFGS_LINESEARCH_BACKTRACKING_ARMIJO;
+  param.max_iterations = nb_iter;
+
+  // optimize!
+  __transport__ = this;
+  start();
+  int ret = lbfgs(n, x0, &fx, liblbfgs_evaluate, liblbfgs_progress, NULL, &param);
+
+  // report the result
+  printf("L-BFGS optimization terminated with status code = %d\n", ret);
+  lbfgs_free(x0);
 
   #else
 
@@ -1458,6 +1648,7 @@ SemiDiscreteOptimalTransport<type>::optimize_weights( index_t nb_iter )
   }
 
   #endif
+  save_snapshot();
 }
 
 template<typename type>
@@ -1465,7 +1656,7 @@ void
 SemiDiscreteOptimalTransport<type>::generate_bluenoise()
 {
   // optimize the points
-  optimize_points(20);
+  optimize_points(100);
 
   // compute the target mass
   real_t m_total = 0.0;
@@ -1474,14 +1665,26 @@ SemiDiscreteOptimalTransport<type>::generate_bluenoise()
   nu_.clear();
   nu_.resize( delaunay_.nb() , m_total/delaunay_.nb() );
 
+  printf("total mass = %g, target mass = %g\n",m_total,m_total/delaunay_.nb());
+
   // generate blue noise
-  for (index_t iter = 0; iter < 10; iter++)
+  for (index_t iter = 0; iter < 5; iter++)
   {
     // compute the transport map
-    optimize_weights(10);
+    //optimize_weights(10);
 
     // optimize the points
-    optimize_points(10);
+    //optimize_points_lloyd(1);
+  }
+
+  // generate blue noise
+  for (index_t iter = 0; iter < 5; iter++)
+  {
+    // compute the transport map
+    //optimize_weights(10);
+
+    // optimize the points
+  //  optimize_points(2);
   }
 }
 

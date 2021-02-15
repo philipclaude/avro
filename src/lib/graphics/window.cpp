@@ -372,7 +372,7 @@ GLFW_Window::draw_axes()
   params.transparency = 1.0;
   params.mvp = controls_.model_view_projection();
   //params.mvp = controls_.perspective()*controls_.rotation(); // will need full rotation matrix (not just incremental one)
-  params.lighting = 1.0;
+  params.lighting = -1.0;
   manager_.draw( "axes" , 1 , params );
 }
 
@@ -384,7 +384,7 @@ GLFW_Window::draw_plane(const real_t* focus)
   DrawingParameters params;
   params.transparency = 0.25;
   params.mvp = clip_controls_.model_view_projection();
-  params.lighting = 1.0;
+  params.lighting = -1.0;
   clip_plane_.plot( manager_,focus,controls_.model_view_projection() );
 }
 

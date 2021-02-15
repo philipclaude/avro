@@ -75,6 +75,11 @@ public:
   virtual ~DensityMeasure() {}
 
   virtual real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const = 0;
+
+  const std::string& name() const { return name_; }
+
+protected:
+  std::string name_;
 };
 
 class DensityMeasure_Uniform : public DensityMeasure
@@ -259,7 +264,15 @@ public:
   real_t time_neighbours() const { return time_neighbours_; }
   real_t time_voronoi() const { return time_voronoi_; }
 
+  index_t minimum_neighbours() const { return minimum_neighbours_; }
+  index_t maximum_neighbours() const { return maximum_neighbours_; }
+  real_t average_neighbours() const { return average_neighbours_; }
+  const std::vector<index_t>& neighbour_counts() const {return neighbour_counts_; }
+
 private:
+  void compute_neighbour_properties();
+  std::vector<index_t> neighbour_counts_;
+
   Points points_;                 // voronoi vertices
   Delaunay& delaunay_;            // delaunay vertices/voronoi sites/dirac masses
   const Topology<type>& domain_;  // background mesh
@@ -276,6 +289,10 @@ private:
   real_t time_decompose_;
   real_t time_neighbours_;
   real_t time_voronoi_;
+
+  index_t minimum_neighbours_;
+  index_t maximum_neighbours_;
+  real_t average_neighbours_;
 };
 
 class TriangulationCells : public Field<Simplex,real_t>
@@ -357,6 +374,53 @@ protected:
   index_t iteration_;
 };
 
+typedef struct
+{
+  std::vector<real_t> mass_min;
+  std::vector<real_t> mass_max;
+  std::vector<real_t> time_voronoi;
+  std::vector<real_t> time_neighbours;
+  std::vector<real_t> time_integration;
+  std::vector<real_t> time_triangulation;
+  std::vector<real_t> neighbours_average;
+  std::vector<index_t> neighbours_minimum;
+  std::vector<index_t> neighbours_maximum;
+  std::vector<real_t> energy;
+  std::vector<real_t> gradient;
+
+  void save( const std::string& filename ) const;
+  void clear()
+  {
+    mass_min.clear();
+    mass_max.clear();
+    time_voronoi.clear();
+    time_neighbours.clear();
+    time_integration.clear();
+    time_triangulation.clear();
+    neighbours_average.clear();
+    neighbours_maximum.clear();
+    energy.clear();
+    gradient.clear();
+  }
+} SDOT_Properties;
+
+typedef struct
+{
+  coord_t dim;
+  std::vector<real_t> weights;
+  std::vector<real_t> points;
+  std::vector<index_t> neighbours;
+  std::vector<real_t> mass;
+  std::string name;
+
+  void save( const std::string& filename ) const;
+  void clear()
+  {
+    weights.clear();
+    points.clear();
+  }
+} SDOT_Snapshot;
+
 template<typename type>
 class SemiDiscreteOptimalTransport : public OptimalTransportBase
 {
@@ -390,9 +454,24 @@ public:
   const std::vector<real_t>& mass() const { return mass_; }
   void set_nu( const std::vector<real_t>& nu ) { nu_ = nu; }
   std::vector<real_t>& nu() { return nu_; }
+  const std::vector<real_t>& weights() const { return weight_; }
 
   void start();
   int mode() const { return mode_; }
+  void set_mode( int x ) { mode_ = x; }
+
+  index_t& quad_order() { return quad_order_; }
+  real_t& weight_max() { return weight_max_; }
+  real_t time_integrate() const { return time_integrate_; }
+
+  const SDOT_Properties& properties() const { return properties_; }
+
+  void save_every( index_t x , const std::string& prefix )
+  {
+    save_every_ = x;
+    prefix_     = prefix;
+  }
+  void save_snapshot();
 
 private:
   const Topology<type>& domain_;
@@ -410,6 +489,14 @@ private:
   std::vector<real_t> centroid_;
 
   bool print_;
+  index_t quad_order_;
+  real_t weight_max_;
+  index_t save_every_;
+  std::string prefix_;
+
+  SDOT_Properties properties_;
+  SDOT_Snapshot snapshot_;
+  real_t time_integrate_;
 };
 
 } // delaunay
