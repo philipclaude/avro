@@ -13,6 +13,7 @@ add_source_directories(SOURCES "Source Files\\geometry-egads" lib/geometry/egads
 add_source_directories(SOURCES "Source Files\\geometry-psc" lib/geometry/psc)
 add_source_directories(SOURCES "Source Files\\graphics" lib/graphics)
 add_source_directories(SOURCES "Source Files\\library" lib/library)
+add_source_directories(SOURCES "Source Files\\math" lib/math)
 add_source_directories(SOURCES "Source Files\\mesh" lib/mesh)
 add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)

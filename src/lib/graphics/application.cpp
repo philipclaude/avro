@@ -151,71 +151,35 @@ Application<GLFW_Interface<API_t>>::run( const std::string& view )
     window_[k]->update_view();
   }
 
-
-  index_t fps = 120;
-  for (index_t k=0;k<window_.size();k++)
-    fps = std::min( fps , window_[k]->fps() );
-
-  const double spf = 1.0 / fps;
-  double last_update_time = 0;  // number of seconds since the last loop
-  double last_frame_time = 0;   // number of seconds since the last frame
-  UNUSED(last_update_time);
-
-
+  // option to load existing view
   if (!view.empty())
-  {
-    printf("load view..\n");
     window_[0]->controls().load(view);
+
+  // draw everything before entering the event loop
+  for (index_t k = 0; k < window_.size(); k++) {
+    window_[k]->draw();
+    window_[k]->draw(); // draw twice fo ImGui
   }
 
-   // start the rendering loop
+   // start the event loop
    bool done = false;
    while (!done)
    {
-
-     double now = glfwGetTime();
-
-     // this if-statement only executes once every 60th of a second
-     if ((now - last_frame_time) >= spf)
+     for (index_t k=0;k<window_.size();k++)
      {
-       // draw frame
-       for (index_t k=0;k<window_.size();k++)
+       window_[k]->poll(); // poll for events
+       if (window_[k]->should_close())
        {
-
-         //if (!window_[k]->changed()) continue;
-
-         window_[k]->begin_draw();
-
-         if (!restart_)
-         for (index_t j=0;j<window_[k]->nb_scene();j++)
-           manager_.draw(window_[k]->scene(j));
-
-         window_[k]->draw_axes();
-         window_[k]->draw_plane(focus_);
-
-         window_[k]->update_view();
-         window_[k]->end_draw();
-
-         if (window_[k]->should_close())
-         {
-           printf("window %lu requested close\n",k);
-           done = true;
-         }
-
+         printf("window %lu requested close\n",k);
+         done = true;
        }
+     }
 
-       if (restart_) break;
+     if (restart_) break;
 
-       // only set lastFrameTime when you actually draw something
-       last_frame_time = now;
-      }
-
-      #ifdef AVRO_HEADLESS_GRAPHICS
-      break;
-      #endif
-
-      // set lastUpdateTime every iteration
-      last_update_time = now;
+     #ifdef AVRO_HEADLESS_GRAPHICS
+     break;
+     #endif
    }
 
    if (restart_) run();
@@ -223,7 +187,7 @@ Application<GLFW_Interface<API_t>>::run( const std::string& view )
 
 Visualizer::Visualizer()
 {
-  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"avro 2.0 2020");
+  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"avro 2.0 2021");
   add_window( main_.get() );
   //add_window( &side_ );
 

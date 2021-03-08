@@ -62,6 +62,9 @@ public:
   void draw_colorbar(const Colormap& colormap,const real_t* ulim);
   void end_draw();
 
+  void draw();
+  void poll();
+
   index_t nb_scene() const { return scene_.size(); }
   SceneGraph& scene( index_t k ) { return *scene_[k].get(); }
   const SceneGraph& scene( index_t k ) const { return *scene_[k].get(); }

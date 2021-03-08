@@ -201,6 +201,7 @@ GLFW_Window::mouse_button_callback(int button,int action,int mods)
     if (!modify_clip_plane_)
       controls_.mouse_down(button,action,mods,(int)xpos,(int)ypos);
     clip_controls_.mouse_down(button,action,mods,(int)xpos,(int)ypos);
+    draw();
   }
 
   if (action == GLFW_RELEASE)
@@ -208,6 +209,7 @@ GLFW_Window::mouse_button_callback(int button,int action,int mods)
     if (!modify_clip_plane_)
       controls_.mouse_up();
     clip_controls_.mouse_up();
+    draw();
   }
 }
 
@@ -217,6 +219,7 @@ GLFW_Window::mouse_move_callback(double xpos, double ypos)
   if (!modify_clip_plane_)
     controls_.mouse_move((int)xpos,(int)ypos);
   clip_controls_.mouse_move((int)xpos,(int)ypos);
+  if (controls_.dragging || clip_controls_.dragging) draw();
 }
 
 void
@@ -225,6 +228,7 @@ GLFW_Window::mouse_scroll_callback(double xpos, double ypos)
   //if (!modify_clip_plane_)
   controls_.mouse_wheel(xpos,ypos);
   clip_controls_.mouse_wheel(xpos,ypos);
+  draw();
 }
 
 void
@@ -260,7 +264,6 @@ GLFW_Window::setup()
   // hide the mouse and enable unlimited mouvement
   //glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-  glfwPollEvents();
   glfwSetCursorPos(window_, width_/2, height_/2);
 
   glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -283,12 +286,16 @@ GLFW_Window::setup()
 }
 
 void
-GLFW_Window::begin_draw()
+GLFW_Window::poll()
 {
   make_current();
+  //glfwPollEvents(); // poll events better for animations
+  glfwWaitEvents();  // wait events better for drawing upon request
+}
 
-  glfwPollEvents();
-
+void
+GLFW_Window::begin_draw()
+{
   glClearColor (1.0, 1.0, 1.0, 0.0); // white
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -502,6 +509,21 @@ GLFW_Window::end_draw()
     clip_plane_.update();
   }
   updated_ = controls_.update();
+}
+
+void
+GLFW_Window::draw()
+{
+  begin_draw();
+
+  for (index_t j=0;j<nb_scene();j++)
+    manager_.draw(scene(j));
+
+  draw_axes();
+  //draw_plane(focus_);
+
+  update_view();
+  end_draw();
 }
 
 void
