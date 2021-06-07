@@ -30,6 +30,8 @@ namespace graphics
 class SceneGraph;
 class Interface;
 
+#ifdef AVRO_WITH_GL
+
 class GLFW_Window
 {
 public:
@@ -50,6 +52,8 @@ public:
 
   void save_eps( const std::string& filename );
 
+  bool& changed() { return updated_; }
+
   void begin_draw();
   void draw_interface() const;
   void write_axes();
@@ -57,6 +61,9 @@ public:
   void draw_plane(const real_t* focus);
   void draw_colorbar(const Colormap& colormap,const real_t* ulim);
   void end_draw();
+
+  void draw();
+  void poll();
 
   index_t nb_scene() const { return scene_.size(); }
   SceneGraph& scene( index_t k ) { return *scene_[k].get(); }
@@ -121,6 +128,8 @@ private:
 
   index_t fps_;
 };
+
+#endif
 
 } // graphics
 

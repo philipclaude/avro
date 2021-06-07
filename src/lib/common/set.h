@@ -23,7 +23,7 @@ namespace Set
 {
 
 template <typename T>
-int
+inline int
 contains( const T& x , const std::vector<T>& X )
 {
 	const index_t n = X.size();

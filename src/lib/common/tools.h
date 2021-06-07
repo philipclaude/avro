@@ -13,6 +13,8 @@
 #include "common/error.h"
 #include "common/types.h"
 
+#include <tinymat/types/SurrealS.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <sstream>
@@ -22,6 +24,8 @@
 
 namespace avro
 {
+
+void initialize_avro();
 
 #define UNUSED(x) (void)(x);
 
@@ -197,29 +201,11 @@ unique_label_skip( T* x , index_t n , index_t kskip )
   return unique_label(f);
 }
 
-inline void
-print_info()
-{
-
-  printf("\navro compiled with ");
-
-  if (__cplusplus == 201103L) printf("c++11");
-  else if (__cplusplus == 199711L ) printf("c++98");
-  else printf("pre-standard c++");
-  printf("\n");
-}
 
 template<typename type>
 static void
 print_value( const type& x );
 
-template<>
-inline void
-print_value( const bool& x )
-{
-  if (x) printf("true ");
-  else printf("false ");
-}
 
 template<>
 inline void
@@ -259,12 +245,27 @@ print_value( const float& x )
 
 template<>
 inline void
+print_value( const bool& x )
+{
+  if (x) printf("T ");
+  else printf("F ");
+}
+
+template<>
+inline void
 print_value( const std::vector<real_t>& x )
 {
   printf(" [ ");
   for (index_t j=0;j<x.size();j++)
     printf("%g ",x[j]);
   printf("] ");
+}
+
+template<>
+inline void
+print_value( const SurrealS<1,real_t>& x )
+{
+  printf(" (%g,%g) ",x.value(),x.deriv(0));
 }
 
 template<typename type>

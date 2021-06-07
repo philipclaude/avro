@@ -35,7 +35,7 @@ UT_TEST_CASE( test1 )
   #else
 
   // retrieve the number of sites (if random)
-  index_t nb_sites = 10;
+  index_t nb_sites = 1e2;
 
   std::vector<real_t> xmin( sites.dim() ,  1e20 );
   std::vector<real_t> xmax( sites.dim() , -1e20 );
@@ -61,7 +61,7 @@ UT_TEST_CASE( test1 )
   rvd.parallel() = true;
 
   //rvd.compute(true);
-  rvd.optimise(5);
+  rvd.optimise(10);
 
   graphics::Visualizer vis;
 

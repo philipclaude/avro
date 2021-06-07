@@ -8,6 +8,8 @@
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
 #include "library/ckf.h"
+#include "mesh/facets.h"
+#include "numerics/geometry.h"
 
 namespace avro
 {
@@ -281,6 +283,120 @@ CKF_Triangulation::generate()
 
   // orient the topology so the volumes are positive
   this->orient();
+}
+
+
+template<>
+CubeDomain<Simplex>::CubeDomain( coord_t number , coord_t dim , index_t n ) :
+  Topology<Simplex>(points_,number),
+  points_(dim)
+{
+  std::vector<index_t> dims(number,n);
+  CKF_Triangulation ckf(dims);
+
+  // copy the points and elements from the ckf triangulation
+  avro_assert( dim >= number );
+  avro_assert( ckf.points().dim() == number );
+  std::vector<real_t> p(dim,0.0);
+  for (index_t k = 0; k < ckf.points().nb(); k++)
+  {
+    // copy the points, any additional coordinates will be zero
+    for (coord_t d = 0; d < ckf.points().dim(); d++)
+      p[d] = ckf.points()[k][d];
+    points_.create( p.data() );
+  }
+  TopologyBase::copy( ckf );
+
+  // compute the neighbours
+  neighbours().compute();
+  inverse().build();
+}
+
+
+template<>
+CubeDomain<Polytope>::CubeDomain( coord_t number , coord_t dim , index_t n0 ) :
+  Topology<Polytope>(points_,number),
+  points_(dim)
+{
+  // create a CKF triangulation with only 2 points in each direction
+  std::vector<index_t> dims(number,2);
+  CKF_Triangulation ckf(dims);
+
+  // compute the facets of the mesh
+  Facets facets(ckf);
+  facets.compute();
+
+  // determine which facets are on a common hyperplane
+  std::vector<std::vector<int>> v2b( ckf.points().nb() );
+  std::vector<index_t> f(number);
+  std::vector<real_t*> x(number);
+  std::vector<real_t> n(number);
+  std::vector<real_t> c(number);
+  for (index_t k=0;k<facets.nb();k++)
+  {
+    if (!facets.boundary(k)) continue;
+    facets.retrieve(k,f);
+
+    // retrieve the facet points
+    for (index_t j=0;j<number;j++)
+      x[j] = ckf.points()[ f[j] ];
+
+    // compute the normal to the facet
+    numerics::normal( x , n.data() , number );
+
+    // which direction is this in?
+    coord_t dir = 0;
+    for (coord_t d=0;d<number;d++)
+    {
+      if (fabs( fabs(n[d])-1.0) < 1e-8)
+      {
+        dir = d;
+        break;
+      }
+    }
+
+    // are we at 0 or 1?
+    numerics::centroid( f.data() , f.size() , ckf.points() , c );
+    bool zero = true;
+    if (fabs(c[dir]) > 1e-8)
+    {
+      avro_assert( fabs(c[dir] -1.0) < 1e-8 );
+      zero = false;
+    }
+
+    // determine which plane this corresponds to
+    int b;
+    if (zero) b = - dir - 1;
+    else b = - number - dir - 1;
+
+    // let each vertex know it is on this bisector
+    for (coord_t d=0;d<f.size();d++)
+    {
+      v2b[f[d]].push_back( b );
+    }
+  }
+
+  // copy the points from the ckf triangulation
+  avro_assert( dim >= number );
+  avro_assert( ckf.points().dim() == number );
+  std::vector<real_t> p(dim,0.0);
+  for (index_t k = 0; k < ckf.points().nb(); k++)
+  {
+    // copy the points, any additional coordinates will be zero
+    for (coord_t d = 0; d < ckf.points().dim(); d++)
+      p[d] = ckf.points()[k][d];
+    points_.create( p.data() );
+  }
+
+  // set the incidence relations
+  for (index_t k=0;k<ckf.points().nb();k++)
+  {
+    uniquify( v2b[k] );
+    points_.incidence().add( v2b[k].data() , v2b[k].size() );
+  }
+
+  std::vector<index_t> cube = linspace( std::pow(2,number) );
+  add( cube.data() , cube.size() );
 }
 
 } // avro

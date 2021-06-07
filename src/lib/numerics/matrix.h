@@ -12,14 +12,14 @@
 
 #include <vector>
 
-#include <numpack/dense/dynamic/MatrixD.h>
-#include <numpack/dense/dynamic/MatrixSymD.h>
-#include <numpack/dense/dynamic/VectorD.h>
+#include <tinymat/dense/dynamic/MatrixD.h>
+#include <tinymat/dense/dynamic/MatrixSymD.h>
+#include <tinymat/dense/dynamic/VectorD.h>
 
-#include <numpack/dense/static/MatrixS.h>
-#include <numpack/dense/static/VectorS.h>
+#include <tinymat/dense/static/MatrixS.h>
+#include <tinymat/dense/static/VectorS.h>
 
-#include <numpack/dense/tools/Identity.h>
+#include <tinymat/dense/tools/Identity.h>
 
 namespace avro
 {
@@ -27,17 +27,17 @@ namespace avro
 namespace numerics
 {
 
-template<typename T> using MatrixD = numpack::DLA::MatrixD<T>;
-template<typename T> using SymMatrixD = numpack::DLA::MatrixSymD<T>;
+template<typename T> using MatrixD = tinymat::DLA::MatrixD<T>;
+template<typename T> using SymMatrixD = tinymat::DLA::MatrixSymD<T>;
 
-template<int M, int N, typename T> using MatrixS = numpack::DLA::MatrixS<M,N,T>;
-template<int M, typename T> using SymMatrixS = numpack::DLA::MatrixSymS<M,T>;
+template<int M, int N, typename T> using MatrixS = tinymat::DLA::MatrixS<M,N,T>;
+template<int M, typename T> using SymMatrixS = tinymat::DLA::MatrixSymS<M,T>;
 
-template<int M,typename T> using VectorS = numpack::DLA::VectorS<M,T>;
-template<typename T> using VectorD = numpack::DLA::VectorD<T>;
+template<int M,typename T> using VectorS = tinymat::DLA::VectorS<M,T>;
+template<typename T> using VectorD = tinymat::DLA::VectorD<T>;
 
-using Mat4f = numpack::DLA::MatrixS<4,4,float>;
-using Vec4f = numpack::DLA::VectorS<4,float>;
+using Mat4f = tinymat::DLA::MatrixS<4,4,float>;
+using Vec4f = tinymat::DLA::VectorS<4,float>;
 
 } // numerics
 

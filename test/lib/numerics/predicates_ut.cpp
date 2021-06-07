@@ -227,7 +227,7 @@ UT_TEST_CASE(side3_test)
       A(ii,1) = zk[ii] - zi[ii];
       A(ii,2) = zl[ii] - zi[ii];
     }
-    avro_assert( numpack::DLA::Det(A) != 0 );
+    avro_assert( tinymat::DLA::Det(A) != 0 );
 
     // loop through allocation permutations for the points to test SOS
     std::vector<int> perm(nsites);
@@ -341,7 +341,7 @@ UT_TEST_CASE(side4_test)
       A(ii,2) = zl[ii] - zi[ii];
       A(ii,3) = zm[ii] - zi[ii];
     }
-    avro_assert( numpack::DLA::Det(A) != 0 );
+    avro_assert( tinymat::DLA::Det(A) != 0 );
 
     // loop through allocation permutations for the points to test SOS
     std::vector<int> perm(nsites);
@@ -465,7 +465,7 @@ UT_TEST_CASE(side5_test)
       A(ii,3) = zm[ii] - zi[ii];
       A(ii,4) = zo[ii] - zi[ii];
     }
-    avro_assert( numpack::DLA::Det(A) > 0 );
+    avro_assert( tinymat::DLA::Det(A) > 0 );
 
     // loop through allocation permutations for the points to test SOS
     std::vector<int> perm(nsites);

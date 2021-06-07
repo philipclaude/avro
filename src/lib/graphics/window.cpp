@@ -30,6 +30,8 @@ namespace avro
 namespace graphics
 {
 
+#ifdef AVRO_WITH_GL
+
 bool
 load_ppm( const std::string& filename , GLFWimage& image )
 {
@@ -199,6 +201,7 @@ GLFW_Window::mouse_button_callback(int button,int action,int mods)
     if (!modify_clip_plane_)
       controls_.mouse_down(button,action,mods,(int)xpos,(int)ypos);
     clip_controls_.mouse_down(button,action,mods,(int)xpos,(int)ypos);
+    draw();
   }
 
   if (action == GLFW_RELEASE)
@@ -206,6 +209,7 @@ GLFW_Window::mouse_button_callback(int button,int action,int mods)
     if (!modify_clip_plane_)
       controls_.mouse_up();
     clip_controls_.mouse_up();
+    draw();
   }
 }
 
@@ -215,6 +219,7 @@ GLFW_Window::mouse_move_callback(double xpos, double ypos)
   if (!modify_clip_plane_)
     controls_.mouse_move((int)xpos,(int)ypos);
   clip_controls_.mouse_move((int)xpos,(int)ypos);
+  if (controls_.dragging || clip_controls_.dragging) draw();
 }
 
 void
@@ -223,6 +228,7 @@ GLFW_Window::mouse_scroll_callback(double xpos, double ypos)
   //if (!modify_clip_plane_)
   controls_.mouse_wheel(xpos,ypos);
   clip_controls_.mouse_wheel(xpos,ypos);
+  draw();
 }
 
 void
@@ -258,7 +264,6 @@ GLFW_Window::setup()
   // hide the mouse and enable unlimited mouvement
   //glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-  glfwPollEvents();
   glfwSetCursorPos(window_, width_/2, height_/2);
 
   glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -281,12 +286,16 @@ GLFW_Window::setup()
 }
 
 void
-GLFW_Window::begin_draw()
+GLFW_Window::poll()
 {
   make_current();
+  //glfwPollEvents(); // poll events better for animations
+  glfwWaitEvents();  // wait events better for drawing upon request
+}
 
-  glfwPollEvents();
-
+void
+GLFW_Window::begin_draw()
+{
   glClearColor (1.0, 1.0, 1.0, 0.0); // white
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -370,7 +379,7 @@ GLFW_Window::draw_axes()
   params.transparency = 1.0;
   params.mvp = controls_.model_view_projection();
   //params.mvp = controls_.perspective()*controls_.rotation(); // will need full rotation matrix (not just incremental one)
-  params.lighting = 1.0;
+  params.lighting = -1.0;
   manager_.draw( "axes" , 1 , params );
 }
 
@@ -382,7 +391,7 @@ GLFW_Window::draw_plane(const real_t* focus)
   DrawingParameters params;
   params.transparency = 0.25;
   params.mvp = clip_controls_.model_view_projection();
-  params.lighting = 1.0;
+  params.lighting = -1.0;
   clip_plane_.plot( manager_,focus,controls_.model_view_projection() );
 }
 
@@ -503,6 +512,21 @@ GLFW_Window::end_draw()
 }
 
 void
+GLFW_Window::draw()
+{
+  begin_draw();
+
+  for (index_t j=0;j<nb_scene();j++)
+    manager_.draw(scene(j));
+
+  draw_axes();
+  //draw_plane(focus_);
+
+  update_view();
+  end_draw();
+}
+
+void
 GLFW_Window::clip()
 {
   for (index_t k=0;k<scene_.size();k++)
@@ -560,6 +584,8 @@ GLFW_Window::create_scene()
   scene_.push_back(std::make_shared<SceneGraph>());
   return id;
 }
+
+#endif
 
 } // graphics
 

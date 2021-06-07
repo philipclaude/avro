@@ -153,7 +153,7 @@ ReferenceElement<Simplex>::precalculate()
   }
   else
   {
-    printf("warning: this is untested\n");
+    //printf("warning: this is untested\n");
     numerics::MatrixD<real_t> X(number_,number_+1);
     X = 0;
 

@@ -1,5 +1,6 @@
 #include "graphics/clipping.h"
 #include "graphics/gl.h"
+#include "graphics/manager.h"
 #include "graphics/math.h"
 
 #include "library/ckf.h"
@@ -173,6 +174,7 @@ ClippingPlane::plot( GraphicsManager& manager , const real_t* focus , const mat4
   DrawingParameters params;
   params.mvp = transformation;
   params.transparency = 0.25;
+  //params.lighting = -1;
   manager.draw("clip-plane",2,params);
 }
 

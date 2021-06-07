@@ -19,6 +19,8 @@
 #include "voronoi/delaunay.h"
 #include "voronoi/voronoi.h"
 
+#include <triangle/predicates.h>
+
 #include <cmath>
 
 namespace avro
@@ -53,8 +55,9 @@ Vertex::Vertex( const real_t* _x , const coord_t _dim ) :
 }
 
 Vertex::Vertex( const Vertex& v0 ) :
-	dim_( v0.dim() ) , x_( v0.x() ) , bisector_( v0.bisectors() ) ,
-	topology_( v0.topologies() ) , simplex_( v0.simplices() ) , site_( v0.sites() )
+	dim_( v0.dim() ) , number_(v0.number()), x_( v0.x() ) , bisector_( v0.bisectors() ) ,
+	topology_( v0.topologies() ) , simplex_( v0.simplices() ) ,
+	site_( v0.sites() )
 {
 }
 
@@ -67,13 +70,19 @@ Vertex::init()
 }
 
 void
+Vertex::addSite( const real_t* zj )
+{
+	site_.push_back(zj);
+}
+
+void
 Vertex::intersectSymbolic( const Vertex* v , const Vertex* v0 ,
 	const Delaunay& delaunay )
 {
 	intersectBisectors(v,v0);
-	intersectMeshes(v,v0);
+	//intersectMeshes(v,v0);
 	intersectSimplices(v,v0);
-	setSites(delaunay);
+	//setSites(delaunay);
 }
 
 void
@@ -119,6 +128,32 @@ Vertex::setSites( const Delaunay& delaunay )
 
 		// get the actual seed indices in the delaunay container
 		delaunay.seeds( bisector_[k] , Pi_i , Pi_j );
+
+		if ( delaunay[Pi_j]==z0_ )
+			site_.push_back( delaunay[Pi_i] );
+		else
+			site_.push_back( delaunay[Pi_j] );
+	}
+	uniquify(site_);
+}
+
+void
+Vertex::setSites( const Delaunay& delaunay , const std::map<int,Bisector>& B )
+{
+	index_t Pi_i, Pi_j;
+
+	site_.clear();
+
+	for (index_t k=0;k<bisector_.size();k++)
+	{
+		if (bisector_[k]<0) continue; // skip mesh facets
+
+		// get the actual seed indices in the delaunay container
+		std::map<int,Bisector>::const_iterator it = B.find(bisector_[k]);
+		avro_assert( it != B.end() );
+
+		Pi_i = it->second.p0;
+		Pi_j = it->second.p1;
 
 		if ( delaunay[Pi_j]==z0_ )
 			site_.push_back( delaunay[Pi_i] );
@@ -184,9 +219,7 @@ Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
   }
 
 	if (simplex_.size()!=site_.size()+1)
-	{
-		print("verror",true);
-	}
+		print("v",true);
 
   avro_assert_msg( simplex_.size()==site_.size()+1 ,
 	 								 "|s| = %lu, nb_sites = %lu",simplex_.size(),site_.size() );
@@ -206,7 +239,15 @@ Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
       break;
     case 3:
       // this vertex is the intersection of two bisectors with a triangle (p0-p1-p2) of the topology
-      result = GEO::PCK::side3_SOS(zi,site_[0],site_[1],zj,simplex_[0],simplex_[1],simplex_[2],dim_);
+			try
+			{
+      	result = GEO::PCK::side3_SOS(zi,site_[0],site_[1],zj,simplex_[0],simplex_[1],simplex_[2],dim_);
+			}
+			catch(...)
+			{
+				print("v",true);
+				avro_implement;
+			}
 			if (result==GEO::ZERO)
 			{
 				for (index_t k=0;k<site_.size();k++)
@@ -250,6 +291,50 @@ Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
     case 5:
       // this vertex is the intersection of four bisectors with a pentatope (p0-p1-p2-p3-p4) of the topology
       result = GEO::PCK::side5_SOS(zi,site_[0],site_[1],site_[2],site_[3],zj,simplex_[0],simplex_[1],simplex_[2],simplex_[3],simplex_[4],dim_);
+			if (result == GEO::ZERO) return result;
+      //avro_assert( result!=GEO::ZERO );
+      break;
+    default:
+      printf("more predicates needed for %d-simplices!",(int)simplex_.size());
+      avro_implement;
+  }
+
+  avro_assert( result!=GEO::ZERO );
+
+  return result;
+}
+
+GEO::Sign
+Vertex::side_meshless(const real_t *zi , const real_t *zj , const bool exact )
+{
+  GEO::Sign result = GEO::ZERO;
+
+  // fast version
+  if (!exact)
+  {
+    return sideFast( zi , zj );
+  }
+
+  avro_assert_msg( number_ == dim_ , "number = %u, dim = %u" , number_ , dim_ );
+	if (site_.size() != number_ ) return sideFast(zi,zj);
+
+  switch( number_ )
+  {
+    case 2:
+      // this vertex is the intersection of two bisectors with a triangle (p0-p1-p2) of the topology
+      //result = incircle(zi,site_[0],site_[1],zj);
+      avro_assert( result!=GEO::ZERO );
+      break;
+    case 3:
+      // this vertex is the intersection of three bisectors with a tetrahedron (p0-p1-p2-p3) of the topology
+			avro_implement;
+      //result = GEO::PCK::side4_3d_exact(zi,site_[0],site_[1],site_[2],zj,dim_);
+      avro_assert( result!=GEO::ZERO );
+      break;
+    case 4:
+      // this vertex is the intersection of four bisectors with a pentatope (p0-p1-p2-p3-p4) of the topology
+			avro_implement;
+      //result = GEO::PCK::side5_4d_exact(zi,site_[0],site_[1],site_[2],site_[3],zj,dim_);
       avro_assert( result!=GEO::ZERO );
       break;
     default:

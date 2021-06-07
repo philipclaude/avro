@@ -99,6 +99,9 @@ public:
   void set_entity( Entity* entity ) { entity_ = entity; }
   Entity* entity() { return entity_; }
 
+  bool fixed() const;
+  bool closed_boundary();
+
 protected:
   Topology<type>& topology_;
   bool node_removal_allowed_;

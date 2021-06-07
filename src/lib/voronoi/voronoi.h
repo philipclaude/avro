@@ -31,6 +31,57 @@ class Entity;
 namespace delaunay
 {
 
+class Bisector
+{
+public:
+  Bisector( index_t q0 , index_t q1 )
+  {
+    if (q0<q1)
+    {
+      p0 = q0;
+      p1 = q1;
+    }
+    else
+    {
+      p0 = q1;
+      p1 = q0;
+    }
+  }
+  int p0;
+  int p1;
+};
+
+// needed to create a set/map of elements
+bool operator==( const Bisector& bx , const Bisector& by );
+bool operator<( const Bisector& f , const Bisector& g );
+
+typedef struct
+{
+  std::vector<int> indices;
+} SymbolicVertex;
+
+// needed to create a set/map of elements
+inline bool
+operator==( const SymbolicVertex& fx , const SymbolicVertex& fy )
+{
+  // assumes fx and fy have the same topological dimension
+  // and that the indices are sorted
+  avro_assert( fx.indices.size()==fy.indices.size() );
+  for (index_t j=0;j<fx.indices.size();j++)
+    if (fx.indices[j]!=fy.indices[j])
+      return false;
+  return true;
+}
+
+// needed to create a map of elements
+inline bool
+operator<( const SymbolicVertex& f , const SymbolicVertex& g )
+{
+  // lexicographically compare the indices
+  return std::lexicographical_compare(f.indices.begin(), f.indices.end(),
+                                      g.indices.begin(), g.indices.end());
+}
+
 class Vertex
 {
   friend class VoronoiVertex_tester;
@@ -82,7 +133,7 @@ public:
   const real_t* simplex( const index_t k ) const { return simplex_[k]; }
 
   // site addition function
-  void addSite( const real_t* zj ) { site_.push_back(zj); }
+  void addSite( const real_t* zj );
   std::vector<const real_t*> sites() const { return site_; }
   const real_t* site( const index_t k ) const { return site_[k]; }
   index_t nb_sites() const { return site_.size(); }
@@ -95,6 +146,7 @@ public:
   void intersectMeshes( const Vertex* v0 , const Vertex* v1 );
   void intersectSimplices( const Vertex* v0 , const Vertex* v1 );
   void setSites( const Delaunay& delaunay );
+  void setSites( const Delaunay& delaunay , const std::map<int,Bisector>& B );
   void setBaseSite( const real_t* z0 ) { z0_ = z0; }
   void setDelaunaySite( const index_t k , const real_t* z )
     { (k==0) ? z0_ = z : site_[k-1] = z; }
@@ -102,6 +154,7 @@ public:
   // side query relative to a bisector
   GEO::Sign sideFast( const real_t* zi , const real_t *zj );
   GEO::Sign side( const real_t* zi , const real_t* zj , const bool exact = true );
+  GEO::Sign side_meshless( const real_t* zi , const real_t* zj , const bool exact = true );
 
   // print function
   void print( const std::string& pre , const bool symbolic=false ) const;

@@ -679,7 +679,7 @@ namespace GEO {
   #define expansion_det_1111_3x4(a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44) \
     new_expansion_on_stack(                                      \
         expansion::det_1111_3x4_capacity(a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44) \
-    )->assign_det_1111_3x4(a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44)
+    )->assign_det_1111_3x4(a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44) 
 
   #define expansion_sq_dist(a, b, dim)           \
       new_expansion_on_stack(                  \

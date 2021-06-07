@@ -72,15 +72,16 @@ Fields::id2name( const std::string& id ) const
 }
 
 template<typename T>
-FieldBase<T>::FieldBase( FieldType type , TableLayoutCategory category ) :
+FieldBase<T>::FieldBase( FieldType type , ElementBase& element , TableLayoutCategory category ) :
   Table<index_t>(category),
   data_(1),
-  type_(type)
+  type_(type),
+  element_(element)
 {}
 
 template<typename T>
 Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , FieldType type ) :
-  FieldBase<T>(type,TableLayout_Rectangular),
+  FieldBase<T>(type,element_,TableLayout_Rectangular),
   topology_(topology),
   element_(topology.number(),order)
 {
@@ -89,7 +90,7 @@ Field<Simplex,T>::Field( const Topology<Simplex>& topology , coord_t order , Fie
 
 template<typename T>
 Field<Polytope,T>::Field( Topology<Polytope>& topology , coord_t order , FieldType type ) :
-  FieldBase<T>(type),
+  FieldBase<T>(type,element_),
   topology_(topology),
   element_(topology,order,topology.points().incidence())
 {}
@@ -135,10 +136,10 @@ Field<Simplex,T>::build()
       for (index_t j=0;j<element_.nb_basis();j++)
         dof[j] = n++;
       Table<index_t>::add( dof.data() , dof.size() );
-      const std::vector<index_t>& idx = Table<index_t>::data();
-      index_t nb_dof = * std::max_element( idx.begin() , idx.end() ) +1;
-      this->allocate( nb_dof );
     }
+    const std::vector<index_t>& idx = Table<index_t>::data();
+    index_t nb_dof = * std::max_element( idx.begin() , idx.end() ) +1;
+    this->allocate( nb_dof );
   }
   else
     avro_assert_not_reached;
@@ -221,6 +222,20 @@ __at_rank__( Entity* const& entity , index_t r )
   return real_t(entity->identifier());
 }
 
+template<>
+real_t
+__at_rank__( const SurrealS<1,real_t>& x , index_t r )
+{
+  return x.value();
+}
+
+template<>
+real_t
+__at_rank__( const SurrealD& x , index_t r )
+{
+  return x.value();
+}
+
 template class FieldBase<Metric>;
 
 template class Field< Simplex , real_t >;
@@ -233,5 +248,8 @@ template class Field< Simplex , Entity* >;
 template class Field< Simplex , numerics::SymMatrixD<real_t> >;
 
 template class Field< Simplex , Metric >;
+
+template class Field< Simplex , SurrealS<1,real_t> >;
+template class Field< Simplex , SurrealD >;
 
 } // avro

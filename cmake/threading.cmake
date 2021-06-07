@@ -1,42 +1,24 @@
-
-
-
-if (NOT avro_USE_CPP11)
-  if (avro_CPU_THREADING STREQUAL "cpp11")
-    message( STATUS "cannot use cpp11 threads: setting emp" )
-    set( avro_CPU_THREADING "emp" )
-  endif()
-  if (NOT avro_SMART_PTR)
-    message( STATUS "using internal smart pointers since not cpp11 (shared_ptr)" )
-    set(avro_SMART_PTR true)
-  endif()
-endif()
-
 # always look for OpenMP
-include(cmake/FindOpenMP.cmake)
-if (NOT OPENMP_FOUND)
+if (avro_CPU_THREAD_MANAGER STREQUAL "openmp")
+  include(cmake/FindOpenMP.cmake)
+  if (NOT OPENMP_FOUND)
 
-  message( STATUS "OpenMP not found" )
-  set( avro_WITH_OPENMP FALSE )
-
-  if (avro_CPU_THREAD_MANAGER STREQUAL "openmp")
     # cannot use OpenMP as thread manager if it isn't found!
-    message( STATUS "OpenMP not found: defaulting to c++11 threads.")
+    set( avro_WITH_OPENMP false )
     set( avro_CPU_THREAD_MANAGER "cpp11" )
+    message( STATUS "OpenMP not found: defaulting to c++11 threads.")
+
+  else()
+
+    set( avro_CPU_THREAD_MANAGER "openmp" )
+    set( avro_WITH_OPENMP true )
+    message( STATUS "CPU thread manager = OpenMP.")
+    add_definitions(-Davro_CPU_THREAD_MANAGER_OPENMP)
+    
   endif()
 
 else()
-
-  # OpenMP was found, so let's use it!
-  add_definitions( -Davro_WITH_OPENMP )
-  set( avro_WITH_OPENMP TRUE )
-
-  # if CPU thread manager is openmp
-  if (avro_CPU_THREAD_MANAGER STREQUAL "openmp")
-    message( STATUS "CPU thread manager = OpenMP.")
-    add_definitions(-Davro_CPU_THREAD_MANAGER_OPENMP)
-  endif()
-
+  set( avro_WITH_OPENMP false )
 endif()
 
 if (avro_CPU_THREAD_MANAGER STREQUAL "cpp11")
@@ -51,7 +33,7 @@ if (avro_CPU_THREAD_MANAGER STREQUAL "pthread")
   add_definitions(-Davro_CPU_THREAD_MANAGER_PTHREAD)
 endif()
 
-if (avro_CPU_THREADING STREQUAL "emp")
+if (avro_CPU_THREAD_MANAGER STREQUAL "emp")
   # set the CPU thread manager as EMP threads
   message( STATUS "CPU thread manager = EMP (part of EngSketchPad).")
   add_definitions(-Davro_CPU_THREAD_MANAGER_EMP)

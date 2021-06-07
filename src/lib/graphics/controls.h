@@ -26,6 +26,8 @@ public:
 
   Controls( float fov , int width , int height , float znear=0.1f , float zfar=100.0f );
 
+  void load( const std::string& filename );
+
   void reset();
   bool update();
   void calculate_view();

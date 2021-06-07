@@ -3,21 +3,20 @@ add_subdirectory(third_party)
 # add the unit tests in the subdirectories
 add_test_files( TEST_FILES "ut" lib/adaptation )
 add_test_files( TEST_FILES "ut" lib/common )
+add_test_files( TEST_FILES "ut" lib/discretization )
 add_test_files( TEST_FILES "ut" lib/element )
 add_test_files( TEST_FILES "ut" lib/geometry )
 add_test_files( TEST_FILES "ut" lib/graphics )
 add_test_files( TEST_FILES "ut" lib/library )
+add_test_files( TEST_FILES "ut" lib/math )
 add_test_files( TEST_FILES "ut" lib/mesh )
-add_test_files( TEST_FILES "ut" lib/mesh/delaunay )
-add_test_files( TEST_FILES "ut" lib/mesh/frontal )
 add_test_files( TEST_FILES "ut" lib/numerics )
+add_test_files( TEST_FILES "ut" lib/simulation )
 add_test_files( TEST_FILES "ut" lib/voronoi )
 add_test_files( TEST_FILES "ut" bin )
 
 # sandbox files should have _toy.cpp
 add_test_files( SBX_FILES "toy" sandbox/philip )
-add_test_files( SBX_FILES "toy" sandbox/hannah )
-add_test_files( SBX_FILES "toy" sandbox/paul )
 
 set( unit_skip mesh/delaunay/vertex_ut.cpp )
 
@@ -31,20 +30,21 @@ target_link_libraries( ut_common_lib avro_shared )
 # needed for the directory class definitions
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src/third_party)
-include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/numpack )
+include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/tinymat )
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
+include_directories(${CMAKE_SOURCE_DIR}/src/third_party/qhull )
 
 if (AVRO_NO_ESP)
   set( ESP_LIBRARIES )
   set( OCC_LIBRARIES )
-  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/eglite )
+  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/egads )
   include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/wv )
   add_definitions( -DAVRO_NO_ESP )
 endif()
 
 set( MPI_TESTS lib_common_process_mpi_ut lib_mesh_partition_ut lib_adaptation_parallel_ut lib_adaptation_parmetis_ut )
-set( numprocs_unit 4 4 2 3 )
+set( numprocs_unit 4 4 4 3 )
 
 set( CHECK_TESTS )
 

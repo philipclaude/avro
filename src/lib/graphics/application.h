@@ -53,7 +53,7 @@ protected:
 
   virtual ~ApplicationBase() {}
 
-  virtual void run() = 0;
+  virtual void run( const std::string& view ) = 0;
 
   void focus_scenes();
 
@@ -74,6 +74,8 @@ template<typename type> class Application;
 template<typename T> struct GLFW_Interface;
 struct Web_Interface;
 
+#ifdef AVRO_WITH_GL
+
 template<typename API_t>
 class Application<GLFW_Interface<API_t>> : public ApplicationBase
 {
@@ -81,7 +83,7 @@ public:
   Application();
 
   void initialize();
-  void run();
+  void run( const std::string& view=std::string() );
 
   bool& restart() { return restart_; }
 
@@ -94,6 +96,8 @@ protected:
   std::vector<GLFW_Window*> window_;
   bool restart_;
 };
+
+#endif
 
 template<>
 class Application<Web_Interface> : public ApplicationBase
@@ -108,7 +112,7 @@ public:
     scene_->set_colormap( &colormap_ );
   }
 
-  void run();
+  void run( const std::string& view=std::string() );
   void save_eps();
 
   void receive( const std::string& text );
@@ -122,6 +126,8 @@ protected:
 private:
   void connect_client();
 };
+
+#ifdef AVRO_WITH_GL
 
 class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
 {
@@ -158,6 +164,24 @@ public:
 private:
   std::shared_ptr<Widget> toolbar_;
 };
+
+#else
+
+class Visualizer
+{
+public:
+  Visualizer() {}
+
+  void add_topology( const TopologyBase& topology )
+  {}
+
+  void run()
+  {
+    printf("graphics not supported");
+  }
+};
+
+#endif
 
 class WebVisualizer : public Application<Web_Interface>
 {

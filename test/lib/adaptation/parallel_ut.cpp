@@ -94,9 +94,9 @@ UT_TEST_CASE( test1 )
   #if 1
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
-  std::vector<index_t> dims(number,4);
+  std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
-  library::MetricField_UGAWG_Linear2 analytic;
+  library::MetricField_UGAWG_Linear analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
@@ -116,9 +116,10 @@ UT_TEST_CASE( test1 )
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
   library::Tesseract geometry(c,lengths);
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,5);
   CKF_Triangulation topology(dims);
-  library::MetricField_Uniform analytic(number,0.2);
+  //library::MetricField_Uniform analytic(number,0.25);
+  library::MetricField_Tesseract_Linear analytic;
   #endif
   topology.points().attach(geometry);
 
@@ -131,20 +132,21 @@ UT_TEST_CASE( test1 )
 
   params.partitioned() = false;
   params.balanced() = true; // assume load-balanced once the first partition is computed
-  params.curved() = true;
+  params.curved() = false;//true;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 2*number;
+  params.max_passes() = 4*number;
   params.swapout() = false;
   params.has_uv() = true;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
+  manager.set_analytic( &analytic );
 
   index_t rank = mpi::rank();
 
-  index_t niter = 10;
+  index_t niter = 5;
   for (index_t iter=0;iter<=niter;iter++)
   {
     params.adapt_iter() = iter;

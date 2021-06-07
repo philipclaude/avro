@@ -269,7 +269,7 @@ RestrictedVoronoiSimplex::clipPolytope( index_t j )
   // initialize the clipped polytope
   std::vector<index_t> q;
 
-  // retrieve the edges using the 
+  // retrieve the edges using the
   for (index_t ii=0;ii<polytope_.size();ii++)
   for (index_t jj=ii+1;jj<polytope_.size();jj++)
   {
@@ -337,6 +337,7 @@ RestrictedVoronoiSimplex::clipEdge( const index_t e0 , const index_t e1 ,
     // perform the symbolic intersection of the bisectors, simplices, meshes
     v2.setBaseSite(delaunay_[site_]);
     v2.intersectSymbolic( &v0 , &v1 , delaunay_ );
+    v2.setSites( delaunay_ );
 
     // this vertex lies exactly on the slicing bisector
     v2.addBisector( b );

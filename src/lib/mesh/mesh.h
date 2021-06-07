@@ -46,6 +46,7 @@ public:
   Topology<type>&
   retrieve( index_t k )
   {
+    avro_assert_msg( k < nb_topologies() , "requested topology %lu of %lu" , k , nb_topologies() );
     avro_assert_msg( topology_[k]->type_name() == type::type_name()  ,
       "requested topology of type %s but have %s" , topology_[k]->type_name().c_str() , type::type_name().c_str() );
     return static_cast<Topology<type>&>(*topology_[k].get());
@@ -55,6 +56,7 @@ public:
   const Topology<type>&
   retrieve( index_t k ) const
   {
+    avro_assert_msg( k < nb_topologies() , "requested topology %lu of %lu" , k , nb_topologies() );
     avro_assert_msg( topology_[k]->type_name() == type::type_name()  ,
       "requested topology of type %s but have %s" , topology_[k]->type_name().c_str() , type::type_name().c_str() );
     return static_cast<Topology<type>&>(*topology_[k].get());

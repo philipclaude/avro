@@ -20,6 +20,8 @@ namespace avro
 namespace graphics
 {
 
+#ifdef AVRO_WITH_GL
+
 int
 checkOpenGLError(const char* file, int line)
 {
@@ -588,6 +590,8 @@ OpenGL_Manager::draw( const std::string& name , coord_t number , const DrawingPa
 
   GL_CALL( glBindVertexArray(0) );
 }
+
+#endif
 
 } // graphics
 

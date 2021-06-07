@@ -19,13 +19,13 @@ endif()
 
 # default options
 option(avro_STATIC_LINK_CXX "statically link to c++ libraries (probably because you're using voyager)" false)
-option(avro_SMART_PTR "use internal smart pointer (smartypants) for memory management" false )
 option(AVRO_WITH_MPI "compile for distributed computing support" false)
 option(RUN_WITH_MPI "run with mpi. might be difficult to debug with mpirun" false)
 option(avro_WITH_FPG "compile FPG needed to make new predicates" false)
 option(avro_NO_ESP "ESP is not available, so we will use internal wv and egads-lite" false )
 set(avro_TEST_DATA "data/" CACHE STRING "location for avro test files relative to test/" )
-set(avro_WITH_GL "option to compile OpenGL-based visualizer (along with WebGL-based one)" true)
+option(avro_WITH_GL "option to compile OpenGL-based visualizer (along with WebGL-based one)" true)
+option(avro_LITE "option to compile a lite version of avro" false )
 
 set(avro_CPU_THREAD_MANAGER "cpp11" CACHE STRING "type of cpu threading environment to use [openmp, cpp11, pthread, emp]")
 set(avro_GPU_THREAD_MANAGER "none" CACHE STRING "type of gpu threading environment to use [opencl,cuda]")
@@ -38,9 +38,12 @@ endif()
 # avro requires the c++11 standard
 set(CMAKE_CXX_STANDARD 11)
 
-# option to use internal smart pointer implementation
-if (avro_SMART_PTR)
-	add_definitions(-Davro_SMART_PTR)
+# overwrite anything for a lite version
+if (${avro_LITE})
+  message( STATUS "enabled lite version of avro" )
+  set( AVRO_NO_ESP true )
+  set( AVRO_WITH_MPI false )
+  set( avro_WITH_GL false )
 endif()
 
 # required dependencies
@@ -77,8 +80,6 @@ if (AVRO_WITH_MPI)
   get_dependency(PARMETIS)
   include_directories( SYSTEM ${PARMETIS_INCLUDE_DIRS} )
   list( APPEND avro_EXTERNAL_LIBRARIES ${PARMETIS_LIBRARIES} )
-
-  #include(cmake/FindZoltan.cmake)
 else()
   macro( RUN_WITH_MPIEXEC )
   endmacro()

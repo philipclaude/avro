@@ -38,7 +38,7 @@ Application<Web_Interface>::connect_client()
 }
 
 void
-Application<Web_Interface>::run()
+Application<Web_Interface>::run( const std::string& view )
 {
   focus_scenes();
   write();

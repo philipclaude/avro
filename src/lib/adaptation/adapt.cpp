@@ -143,6 +143,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // initialize the metric-conformity properties
   Properties properties( mesh_topology , metric );
 
+  if (topology.nb() == 0) goto done;
+
   // collapse short edges in the mesh without swapping upon rejection
   properties.print( "pre-collapse" );
   adaptation.collapse_edges(false,swapout); // no lmax limit, swapout
@@ -254,11 +256,15 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
 done:
 
   // compute the final properties and dump to file
-  properties.compute( mesh_topology , metric );
-  properties.print("final metric conformity" );
-  if (params.write_conformity())
-    properties.dump( params.directory()+
-                     "/properties_"+stringify(params.adapt_iter())+".json");
+  if ( mesh_topology.nb() > 0 )
+  {
+    properties.compute( mesh_topology , metric );
+    properties.print("final metric conformity" );
+    if (params.write_conformity())
+      properties.dump( params.directory()+
+                       "/properties_"+stringify(params.adapt_iter())+".json");
+  }
+  else avro_implement;
 
  // copy back into the original mesh
  topology.TopologyBase::copy( mesh_topology );
@@ -347,7 +353,14 @@ adapt( AdaptationProblem& problem )
   Topology<type>& topology = mesh.retrieve<type>(0);
   if (topology.nb()==0)
   {
-    printf("there are no elements?");
+    printf("there are no elements?\n");
+    std::shared_ptr<Topology<type>> ptopology_out =
+                 std::make_shared<Topology<type>>( problem.mesh_out.points() ,
+                                                   topology.number() );
+    problem.mesh_out.add(ptopology_out);
+    Topology<type>& topology_out = problem.mesh_out.retrieve<type>(0);
+    topology.points().copy( problem.mesh_out.points() );
+    topology_out.TopologyBase::copy( topology );
     return 0;
   }
 
@@ -425,7 +438,11 @@ adapt( AdaptationProblem& problem )
   avro_assert( field.check () );
 
   if (params.limit_metric())
+  {
+    // option to limit the metric field from the current mesh-implied metric
+    // any problematic vertices will be fixed
     field.limit(mesh_topology,2.0);
+  }
 
   // create a discrete metric with the input topology
   // and pass in the interpolator (null if not provided)
@@ -512,6 +529,8 @@ adapt( AdaptationProblem& problem )
     clearerr(stdout);
     fsetpos(stdout,&pos);
   }
+
+  avro_assert( problem.mesh_out.nb_topologies() == 1 );
 
   return result;
 }

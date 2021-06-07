@@ -10,12 +10,13 @@ PKG_CHECK_MODULES(NLOPT QUIET libnlopt)
 IF ( NLOPT_FOUND )
     SET(NLOPT_DEFINITIONS ${NLOPT_CFLAGS_OTHER})
 ELSE()
-    FIND_PATH(NLOPT_INCLUDE_DIRS nlopt.h
-          HINTS $ENV{NLOPT_DIR}/include
+	message(STATUS $ENV{NLOPT_DIR} )
+    FIND_PATH(NLOPT_INCLUDE_DIRS nlopt.hpp
+          HINTS $ENV{NLOPT_DIR}
           PATH_SUFFIXES nlopt )
 
     FIND_LIBRARY(NLOPT_LIBRARIES NAMES nlopt nlopt_cxx
-             HINTS $ENV{NLOPT_DIR}/lib )
+             HINTS $ENV{NLOPT_DIR} )
 ENDIF()
 
 INCLUDE(FindPackageHandleStandardArgs)

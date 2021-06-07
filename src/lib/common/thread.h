@@ -53,6 +53,8 @@ class ThreadManager
 {
 public:
 
+  virtual std::string name() const = 0;
+
   // run threads from a group of threads defining a common task
   virtual void
   runThreads( ThreadGroup& threads )
@@ -111,6 +113,9 @@ public:
     for (index_t i=0;i<threads.size();i++)
       threads[i]->run();
   }
+
+  std::string name() const { return "serial"; }
+
   index_t maxConcurrentThreads() { return 1; }
 
   // nothing to do upon entry/exit of critical sections

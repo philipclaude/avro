@@ -15,12 +15,15 @@
 
 #include "numerics/geometry.h"
 
+#include <functional>
+
 namespace avro
 {
 
 int
 Delaunay::bisector( const index_t i , const index_t j ) const
 {
+	//printf("hash = %d\n",std::hash<std::pair<index_t,index_t>>({i,j}));
 	// ensure the same bisector label is used for both sides
 	if (i<j)
 		return i +j*nb();
@@ -30,6 +33,7 @@ Delaunay::bisector( const index_t i , const index_t j ) const
 void
 Delaunay::seeds( const int b , index_t& i , index_t& j ) const
 {
+	avro_assert( b>=0 );
 	j = (index_t) b/nb();
 	i = b -j*nb();
 }
@@ -51,5 +55,7 @@ Delaunay::closest( const real_t* x ) const
 	}
 	return index_t(k0);
 }
+
+
 
 }

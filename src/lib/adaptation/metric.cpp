@@ -97,8 +97,8 @@ geometric_interpolation( const numerics::SymMatrixD<real_t>& m0,
 	                       const numerics::SymMatrixD<real_t>& m1,
 											   const numerics::VectorD<real_t>& edge )
 {
-	real_t l0_sqr = quadratic_form(m0,edge);//numpack::Transpose(edge)*m0*edge;
-	real_t l1_sqr = quadratic_form(m1,edge);//numpack::Transpose(edge)*m1*edge;
+	real_t l0_sqr = quadratic_form(m0,edge);//tinymat::Transpose(edge)*m0*edge;
+	real_t l1_sqr = quadratic_form(m1,edge);//tinymat::Transpose(edge)*m1*edge;
 	real_t l0 = std::sqrt( l0_sqr );
 	real_t l1 = std::sqrt( l1_sqr );
 	real_t lm,r;
@@ -279,7 +279,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 
 		// get the edge vector and compute the length using the metric with maximum determinant
 		topology_.element().edge_vector( attachment_.points() , V[p0] , V[p1] , e.data() , entity );
-		//lj = numpack::Transpose(e)*M*e;
+		//lj = tinymat::Transpose(e)*M*e;
 		lj = quadratic_form( M , e );
 
 		// add the contribution to the denominator

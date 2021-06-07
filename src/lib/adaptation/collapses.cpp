@@ -280,7 +280,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
     return false;
   }
 
-  // check if all produce elements have a positive determinant of implied metric
+  // check if all produced elements have a positive determinant of implied metric
   if (!this->positive_implied_metrics())
     return false;
 
@@ -501,6 +501,12 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
       // make sure the quality does not globally degrade
       real_t qwc = worst_quality( collapser_ , metric_ );
       if (qwc<Q0)
+      {
+        edge++;
+        continue;
+      }
+
+      if (!collapser_.closed_boundary())
       {
         edge++;
         continue;

@@ -38,6 +38,8 @@ void
 Properties::compute( const Topology<type>& topology ,
                      MetricField<type>& metric )
 {
+  if (topology.nb() == 0) return;
+
   // evaluate the edge lengths
   metric.lengths( topology , length_ );
 

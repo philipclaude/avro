@@ -16,9 +16,10 @@ ut_pre(int argc, char** argv)
   UNUSED(argc);
   UNUSED(argv);
 
-  print_info();
+  initialize_avro();
 
   // initialize the distributed/shared memory task/thread managers
+  /*
   #ifdef AVRO_MPI
   ProcessMPI::initialize();
   #endif
@@ -28,7 +29,7 @@ ut_pre(int argc, char** argv)
   // initialize the predicates
   exactinit(1,0,0,10,10,10);
   exactinit();
-  GEO::PCK::initialize();
+  GEO::PCK::initialize();*/
 }
 
 void

@@ -79,12 +79,18 @@ Application<Web_Interface>::send( const std::string& response ) const
 void
 Application<Web_Interface>::save_eps()
 {
+  #ifdef AVRO_WITH_GL
   // first set the transformation to the scene
   OpenGL_Manager manager_gl;
   scene_->write(manager_gl);
   TransformFeedbackResult feedback;
   manager_gl.draw(*scene_.get(),&feedback);
+  #else
+  avro_assert_not_reached;
+  #endif
 }
+
+#ifdef AVRO_WITH_GL
 
 template<typename API_t>
 Application<GLFW_Interface<API_t>>::Application() :
@@ -123,7 +129,7 @@ Application<GLFW_Interface<API_t>>::initialize()
 
 template<typename API_t>
 void
-Application<GLFW_Interface<API_t>>::run()
+Application<GLFW_Interface<API_t>>::run( const std::string& view )
 {
   if (!restart_)
   {
@@ -145,61 +151,35 @@ Application<GLFW_Interface<API_t>>::run()
     window_[k]->update_view();
   }
 
+  // option to load existing view
+  if (!view.empty())
+    window_[0]->controls().load(view);
 
-  index_t fps = 120;
-  for (index_t k=0;k<window_.size();k++)
-    fps = std::min( fps , window_[k]->fps() );
+  // draw everything before entering the event loop
+  for (index_t k = 0; k < window_.size(); k++) {
+    window_[k]->draw();
+    window_[k]->draw(); // draw twice fo ImGui
+  }
 
-  const double spf = 1.0 / fps;
-  double last_update_time = 0;  // number of seconds since the last loop
-  double last_frame_time = 0;   // number of seconds since the last frame
-  UNUSED(last_update_time);
-
-   // start the rendering loop
+   // start the event loop
    bool done = false;
    while (!done)
    {
-
-     double now = glfwGetTime();
-
-     // this if-statement only executes once every 60th of a second
-     if ((now - last_frame_time) >= spf)
+     for (index_t k=0;k<window_.size();k++)
      {
-       // draw frame
-       for (index_t k=0;k<window_.size();k++)
+       window_[k]->poll(); // poll for events
+       if (window_[k]->should_close())
        {
-         window_[k]->begin_draw();
-
-         if (!restart_)
-         for (index_t j=0;j<window_[k]->nb_scene();j++)
-           manager_.draw(window_[k]->scene(j));
-
-         window_[k]->draw_axes();
-         window_[k]->draw_plane(focus_);
-
-         window_[k]->update_view();
-         window_[k]->end_draw();
-
-         if (window_[k]->should_close())
-         {
-           printf("window %lu requested close\n",k);
-           done = true;
-         }
-
+         printf("window %lu requested close\n",k);
+         done = true;
        }
+     }
 
-       if (restart_) break;
+     if (restart_) break;
 
-       // only set lastFrameTime when you actually draw something
-       last_frame_time = now;
-      }
-
-      #ifdef AVRO_HEADLESS_GRAPHICS
-      break;
-      #endif
-
-      // set lastUpdateTime every iteration
-      last_update_time = now;
+     #ifdef AVRO_HEADLESS_GRAPHICS
+     break;
+     #endif
    }
 
    if (restart_) run();
@@ -207,7 +187,7 @@ Application<GLFW_Interface<API_t>>::run()
 
 Visualizer::Visualizer()
 {
-  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"avro 2.0 2020");
+  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"avro 2.0 2021");
   add_window( main_.get() );
   //add_window( &side_ );
 
@@ -222,6 +202,8 @@ Visualizer::Visualizer()
 
 template class Application<GLFW_Interface<OpenGL_Manager>>;
 template class Application<GLFW_Interface<Vulkan_Manager>>;
+
+#endif // AVRO_WITH_GL
 
 } // graphics
 

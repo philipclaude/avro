@@ -354,8 +354,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
   index_t pass = 0;
   bool done = false;
+  bool problem = false;
   printf("-> performing edge splits on edges with lt > %1.3f and dof_factor %g:\n",lt,dof_factor);
-  while (!done)
+  while (!done && !problem)
   {
     // anything beyond 20 passes is borderline ridiculous
     // the metric is probably way off from the current mesh
@@ -388,10 +389,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     printf("\t pass %lu: long = %lu, l = [%3.4f,%3.4f] -> insert %lu\n",
                 pass,filter.nb_long(),filter.minlength(),filter.maxlength(),
                 filter.nb_candidates());
-
-    // build the kd-tree search structure only if we need to check the
-    // distance to the nearest neighbours
-    filter.buildTree();
 
     // insert the points
     std::unordered_set<index_t> removed;
@@ -555,14 +552,16 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         }
       }
 
-      /*if (!inserter_.has_unique_elems())
+
+      if (!inserter_.closed_boundary())
       {
+        // it's going to be really hard to come back from something like this
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
-        nb_count_rejected++;
+        problem = true;
         continue;
-      }*/
+      }
 
       // apply the insertion into the topology
       topology_.apply(inserter_);

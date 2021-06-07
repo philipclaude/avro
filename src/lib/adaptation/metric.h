@@ -110,10 +110,10 @@ intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<re
   numerics::MatrixD<real_t> E(n,n);
   numerics::VectorD<real_t> P0(n);
 
-  numpack::DLA::EigenSystem(T,P0,E);
+  tinymat::DLA::EigenSystem(T,P0,E);
 
   numerics::MatrixD<real_t> P(n,n);
-  P = numpack::DLA::diag(P0);
+  P = tinymat::DLA::diag(P0);
 
   numerics::MatrixD<real_t> Pinv(n,n);
   Pinv = numerics::inverse(P);
@@ -123,8 +123,8 @@ intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<re
   {
     numerics::VectorD<real_t> e(n);
     e = P.col(d);
-    real_t h1 = 1./std::sqrt( e*X*numpack::Transpose(e) );
-    real_t h2 = 1./std::sqrt( e*Y*numpack::Transpose(e) );
+    real_t h1 = 1./std::sqrt( e*X*tinymat::Transpose(e) );
+    real_t h2 = 1./std::sqrt( e*Y*tinymat::Transpose(e) );
     real_t h = std::min(h1,h2);
 
     lambda(d) = 1./(h*h);
@@ -133,7 +133,7 @@ intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<re
   avro_implement; // this is not unit tested
 
   // construct the matrix from the eigendecomposition
-  return Pinv*numpack::DLA::diag(lambda)*numpack::Transpose(Pinv);
+  return Pinv*tinymat::DLA::diag(lambda)*tinymat::Transpose(Pinv);
 }
 
 class Metric : public numerics::SymMatrixD<real_t>

@@ -39,6 +39,8 @@ namespace avro
 namespace graphics
 {
 
+#ifdef AVRO_WITH_GL
+
 ShaderProgram::ShaderProgram( const std::string& name ) :
   handle_(-1),
   linked_(false),
@@ -512,13 +514,15 @@ ShaderLibrary::create()
   shader.setUniform( "wColor" , 1.0f );
   shader.setUniform( "bColor" , 0.0f );
   shader.setUniform( "wNormal" , 1.0f );
-  shader.setUniform( "wLight" , 1.0f );
+  shader.setUniform( "wLight" , -1.0f );
   shader.setUniform( "pointSize" , 2.0f );
   shader.setUniform( "picking" , 0 );
   shader.setUniform( "vbonum" , 0 );
 
   // TODO the rest of the shaders...
 }
+
+#endif
 
 } // graphics
 

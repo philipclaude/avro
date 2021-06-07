@@ -145,7 +145,7 @@ objFile::read()
       else
       {
         printf("bad token %s\n",token.c_str());
-        avro_assert_not_reached;
+        //avro_assert_not_reached;
       }
     }
     getline(file,line);
