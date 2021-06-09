@@ -1,64 +1,110 @@
-//
-// avro - Adaptive Voronoi Remesher
-//
-// Copyright 2017-2020, Philip Claude Caplan
-// All rights reserved
-//
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-//
-#ifndef avro_LIB_NUMERICS_VECTOR_H_
-#define avro_LIB_NUMERICS_VECTOR_H_
+#ifndef PYDG_NUMERICS_VECTOR_H_
+#define PYDG_NUMERICS_VECTOR_H_
 
+#include "common/error.h"
 #include "common/types.h"
+
+#include "numerics/matrix.h"
 
 #include <vector>
 
 namespace avro
 {
 
-namespace numerics
-{
-
-template<typename T>
-class Vector
+template<typename type>
+class vecd
 {
 public:
-  Vector( const std::vector<T>& x ) :
-    data_(x)
+  vecd(index_t m) :
+    m_(m),
+    data_(m)
   {}
 
-  Vector( index_t _nb ) :
-    data_(_nb,T(0))
-  {}
+  type& operator() (index_t i) {
+    avro_assert_msg( i < m_ , "attempt to access i = %lu but m = %lu" , i , m_ );
+    return data_[i];
+  }
 
-  T norm() const;
-  T dot( const Vector<T>& Y ) const;
+  const type& operator() (index_t i) const {
+    avro_assert_msg( i < m_ , "attempt to access i = %lu but m = %lu" , i , m_ );
+    return data_[i];
+  }
 
-  index_t nb() const { return data_.size(); }
+  // zero out the matrix
+  void zero() {
+    for (index_t i = 0; i < m_; i++)
+      data_[i] = 0;
+  }
 
-  T& operator[](const index_t k)
-    { return data_[k]; }
-  const T& operator[](const index_t k) const
-    { return data_[k]; }
+  index_t m() const { return m_; }
 
-  Vector<T> operator*(const T& a) const;
-  Vector<T>& operator*=(const T& a);
-
-  Vector<T> operator+(const Vector<T>& Y) const;
-  Vector<T>& operator+=(const Vector<T>& Y);
-
-  Vector<T> operator-(const Vector<T>& Y) const
-    { return operator+(Y*-1); }
-
+  void print() const {
+    printf("%s:\n",__PRETTY_FUNCTION__);
+    for (index_t i = 0; i < m_; i++)
+      std::cout << "(" + std::to_string(i) + "): " << (*this)(i) << std::endl;
+  }
 
 private:
-  std::vector<T> data_;
-
+  index_t m_;
+  std::vector<type> data_;
 };
 
-} // numerics
+template<index_t _M,typename type>
+class vecs : public mats<_M,1,type>
+{
+public:
+  static const index_t M = _M;
 
-} // avro
+private:
+  using mats<M,1,type>::data_;
+
+public:
+  vecs() {}
+  vecs( const type* data , index_t _m ) {
+    avro_assert( _m == M );
+    for (index_t i = 0; i < M; i++)
+      data_[i] = data[i];
+  }
+
+  vecs( int a ) {
+    for (index_t i = 0; i < M; i++)
+      data_[i] = a;
+  }
+
+  // assignment
+  template<typename S>
+  vecs<M,type>& operator= (const vecs<M,S>& b) {
+    for (index_t i = 0; i < M; i++)
+      (*this)(i) = b(i);
+    return *this;
+  }
+
+  vecs<M,type>& operator= (int a) {
+    for (index_t i = 0; i < M; i++)
+      data_[i] = a;
+    return *this;
+  }
+
+  type& operator() (index_t i) {
+    avro_assert( i < M );
+    return data_[i];
+  }
+
+  const type& operator() (index_t i) const {
+    avro_assert( i < M );
+    return data_[i];
+  }
+
+  void print() const {
+    printf("%s:\n",__PRETTY_FUNCTION__);
+    for (index_t i = 0; i < M; i++)
+      std::cout << "(" + std::to_string(i) + "): " << (*this)(i) << std::endl;
+  }
+};
+
+template<typename R,typename S,typename T,index_t M>
+T dot( const vecs<M,R>& u , const vecs<M,S>& v );
+
+} // pydg
 
 #endif

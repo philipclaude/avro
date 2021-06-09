@@ -36,9 +36,6 @@ template<int M, typename T> using SymMatrixS = tinymat::DLA::MatrixSymS<M,T>;
 template<int M,typename T> using VectorS = tinymat::DLA::VectorS<M,T>;
 template<typename T> using VectorD = tinymat::DLA::VectorD<T>;
 
-using Mat4f = tinymat::DLA::MatrixS<4,4,float>;
-using Vec4f = tinymat::DLA::VectorS<4,float>;
-
 } // numerics
 
 } // avro

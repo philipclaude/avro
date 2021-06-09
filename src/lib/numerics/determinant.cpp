@@ -1,18 +1,12 @@
-//
-// avro - Adaptive Voronoi Remesher
-//
-// Copyright 2017-2020, Philip Claude Caplan
-// All rights reserved
-//
+// avro: Adaptive Voronoi Remesher
+// Copyright 2017-2021, Philip Claude Caplan
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
-//
-#if 0
 
 #include "common/types.h"
 #include "common/error.h"
 
-#include "numerics/densmat.h"
+#include "numerics/matd.h"
 #include "numerics/dual.h"
 
 #include "numerics/surreal/config.h"
@@ -25,10 +19,9 @@ namespace avro
 namespace numerics
 {
 
-
 template<typename type>
 type
-determinant(const numerics::densMat<type>& X)
+determinant(const numerics::matd<type>& X)
 {
   avro_assert(X.m==X.n);
   if (X.m==1) return X(0,0);
@@ -112,13 +105,13 @@ determinant(const numerics::densMat<type>& X)
 // compiling takes really long with surreals
 template<>
 SurrealD
-determinant(const numerics::densMat<SurrealD>& X)
+determinant(const numerics::matd<SurrealD>& X)
 {
   avro_implement;
 }
 
 #define INST_DETERMINANT(X) \
-  template<> SurrealS<X> determinant(const numerics::densMat<SurrealS<X>>&) \
+  template<> SurrealS<X> determinant(const numerics::matd<SurrealS<X>>&) \
     { avro_implement; }
 
 #if USE_SURREAL
@@ -130,12 +123,9 @@ INST_DETERMINANT(6)
 INST_DETERMINANT(10)
 #endif
 
-template real determinant(const numerics::densMat<real>& X);
-template dual determinant(const numerics::densMat<dual>& X);
-
+template real_t determinant(const numerics::matd<real_t>& X);
+template dual   determinant(const numerics::matd<dual>& X);
 
 } // numerics
 
 } // avro
-
-#endif

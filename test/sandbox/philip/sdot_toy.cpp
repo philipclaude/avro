@@ -23,8 +23,8 @@ UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 UT_TEST_CASE( test1 )
 {
   typedef Polytope type;
-  coord_t number = 4;
-  index_t nb_points = 1e1;
+  coord_t number = 2;
+  index_t nb_points = 1e2;
 
   coord_t dim = number+1;
   CubeDomain<type> domain(number,dim,2);
@@ -45,7 +45,7 @@ UT_TEST_CASE( test1 )
   }
   DensityMeasure_Gaussian density3(mu,sigma);
 
-  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density3);
+  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density4);
   transport.save_every( 1e10 , "tmp/void" );
   transport.sample( nb_points );
 
@@ -107,9 +107,9 @@ UT_TEST_CASE( test1 )
 
   graphics::Visualizer vis;
   library::Plot<Simplex> point_plot(transport.delaunay());
-  for (index_t k = 0; k < point_plot.points().nb(); k++)
-  for (coord_t d = number; d < point_plot.points().dim(); d++)
-    point_plot.points()[k][d] = 0.0;
+  //for (index_t k = 0; k < point_plot.points().nb(); k++)
+  //for (coord_t d = number; d < point_plot.points().dim(); d++)
+  //  point_plot.points()[k][d] = 0.0;
   if (number == 4)
   {
     std::shared_ptr<SliceSites> ts = std::make_shared<SliceSites>(slice.tetrahedra(),slice.tet2site());
@@ -118,9 +118,9 @@ UT_TEST_CASE( test1 )
   }
   else
   {
-    vis.add_topology(triangulation);
+    //vis.add_topology(triangulation);
     vis.add_topology(point_plot);
-    //vis.add_topology(transport.diagram());
+    vis.add_topology(transport.diagram());
   }
   vis.run();
 }
