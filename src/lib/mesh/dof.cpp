@@ -31,7 +31,7 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
 	}
 	T = numerics::expm(T);
 
-  real_t d = numerics::determinant(T);
+  real_t d = numerics::det(T);
   if (d<=0 || std::isnan(d))
   {
     for (index_t k=0;k<nv;k++)

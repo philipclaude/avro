@@ -326,9 +326,8 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
     V(j,k) = x[ v[k] ][j];
 
   // set the least-squares portion of the system
-  numerics::SymMatrixD<real_t> A = transpose(V)*V;
-  numerics::MatrixD<real_t> B(nv+1,nv+1);
-  B = 0;
+  numerics::MatrixD<real_t> A = transpose(V)*V;
+  numerics::MatrixD<real_t> B(nv+1,nv+1); // initializes to zero
   for (index_t i=0;i<nv;i++)
   for (index_t j=0;j<nv;j++)
     B(i,j) = A(i,j);
@@ -341,11 +340,13 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   }
 
   // set the right-hand side
+  numerics::VectorD<real_t> w0 = transpose(V)*p;
   numerics::VectorD<real_t> b0(nv+1);
-  b0 = transpose(V)*p;
-  b0[nv] = 1.0;
+  for (index_t i = 0; i < nv; i++)
+    b0(i) = w0(i);
+  b0(nv) = 1.0;
 
-  if (numerics::determinant(B)==0.0)
+  if (numerics::det(B)==0.0)
   {
     return 1e20;
   }
@@ -359,7 +360,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   // because it holds the lagrange multiplier
   numerics::VectorD<real_t> alpha(nv);
   for (index_t i=0;i<nv;i++)
-    alpha(i) = b[i];
+    alpha(i) = b(i);
 
   // check if the barycentric coordinates are in the simplex
   bool outside = false;

@@ -13,7 +13,7 @@
 #include "common/error.h"
 #include "common/types.h"
 
-#include <tinymat/types/SurrealS.h>
+#include "numerics/surreal/SurrealS.h"
 
 #include <algorithm>
 #include <cstdio>

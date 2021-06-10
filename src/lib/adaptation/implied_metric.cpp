@@ -88,7 +88,7 @@ ElementImpliedMetric<type>::ElementImpliedMetric( const type& element ) :
   Jeq_(JacobianEquilateral<type>(element.number())),
   M_( element.number() , element.number() )
 {
-  detJeq_ = numerics::determinant(Jeq_);
+  detJeq_ = numerics::det(Jeq_);
 }
 
 template<typename type>
@@ -137,7 +137,7 @@ real_t
 ElementImpliedMetric<type>::determinant( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
-  real_t detJ0 = numerics::determinant(J0_);
+  real_t detJ0 = numerics::det(J0_);
   if (detJ0==0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
 }
@@ -147,7 +147,7 @@ real_t
 ElementImpliedMetric<type>::determinant( const Points& points , const index_t* v , const index_t nv )
 {
   element_.jacobian( v, nv, points , J0_ );
-  real_t detJ0 = numerics::determinant(J0_);
+  real_t detJ0 = numerics::det(J0_);
   if (detJ0==0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
 }
@@ -252,7 +252,7 @@ MeshImpliedMetric<type>::initialize()
     }
 
     nodalMetricSqrt_[k]    = numerics::sqrtm(this->data_[k]);
-    nodalMetricSqrtDet_[k] = numerics::determinant(nodalMetricSqrt_[k]);
+    nodalMetricSqrtDet_[k] = numerics::det(nodalMetricSqrt_[k]);
   }
 }
 
@@ -611,7 +611,7 @@ MeshImpliedMetric<type>::optimize()
       continue;
     }
 
-    real_t detm = numerics::determinant(this->data_[k]);
+    real_t detm = numerics::det(this->data_[k]);
     if (detm <= 0.0)
     {
       // forget about the step

@@ -14,6 +14,8 @@
 
 #include "numerics/matrix.h"
 
+#include "numerics/determinant.h"
+
 //#include <tinymat/dense/dynamic/MatrixD_Det.h>
 //#include <tinymat/dense/dynamic/MatrixD_Diag.h>
 //#include <tinymat/dense/dynamic/Eigen.h>
@@ -39,22 +41,6 @@ kernel( const MatrixD<type>& A , MatrixD<type>& K );
 template<typename type>
 int
 range( const MatrixD<type>& A , MatrixD<type>& U );
-
-template<typename type>
-type
-determinant( const MatrixD<type>& A )
-{
-  return det(A);
-  //return tinymat::DLA::Det(A);
-}
-
-template<typename type>
-type
-determinant( const SymMatrixD<type>& A )
-{
-  return det(A);
-  //return tinymat::DLA::Det(A);
-}
 
 /*
 
@@ -124,7 +110,7 @@ inline MatrixD<T>
 inverse( MatrixD<T>& M )
 {
 	avro_assert( M.m() == M.n() );
-	T idetM = 1./determinant(M);
+	T idetM = 1./det(M);
 
   MatrixD<T> Minv(M.m(),M.n());
 
@@ -187,7 +173,7 @@ template<typename T>
 inline SymMatrixD<T>
 inverse( const SymMatrixD<T>& M )
 {
-	T idetM = 1./determinant(M);
+	T idetM = 1./det(M);
 
   SymMatrixD<T> Minv(M.m(),M.n());
 

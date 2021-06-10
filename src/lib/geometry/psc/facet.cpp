@@ -73,7 +73,7 @@ Facet::build_basis()
   for (coord_t j=0;j<number_;j++)
     B_(i,j) = VtV(i,j);
 
-  real_t d = numerics::determinant(B_);
+  real_t d = numerics::det(B_);
   if (d == 0.)
   {
     printf("bad basis!\n");

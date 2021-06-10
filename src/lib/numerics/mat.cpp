@@ -1,3 +1,4 @@
+#include "symatd.h"
 #include "mat.hpp"
 #include "vec.h"
 
@@ -115,8 +116,8 @@ inverseLUP( const matd<T>& LU , const std::vector<index_t>& P , matd<real_t>& Ai
         Ainv(i,j) -= LU(i,k) * Ainv(k,j);
     }
 
-    for (int i = n-1; i >= 0; i--) {
-      for (int k = i+1; k < n; k++)
+    for (index_t i = n-1; i >= 0; i--) {
+      for (index_t k = i+1; k < n; k++)
         Ainv(i,j) -= LU(i,k)*Ainv(k,j);
       Ainv(i,j) /= LU(i,i);
     }
@@ -131,22 +132,6 @@ inverseLUP( const matd<T>& A , matd<T>& Ainv )
   std::vector<index_t> P(A.n()+1);
   decomposeLUP(A,LU,P);
   inverseLUP(LU,P,Ainv);
-}
-
-template<typename T>
-matd<T>
-operator* (const matd<T>& A, const matd<T>& B) {
-  avro_assert_msg( A.n() == B.m() , "bad matrix sizes" );
-  matd<T> C(A.m(),B.n());
-  for (index_t i = 0; i < A.m(); i++) {
-    for (index_t j = 0; j < B.n(); j++) {
-      T sum = 0;
-      for (index_t k = 0; k < A.n(); k++)
-        sum += A(i,k)*B(k,j);
-      C(i,j) = sum;
-    }
-  }
-  return C;
 }
 
 template<typename T>
@@ -173,9 +158,49 @@ transpose( const matd<T>& A ) {
   return At;
 }
 
+template<typename T>
+matd<T>
+diag( const vecd<T>& d ) {
+  matd<T> A( d.m() , d.m() ); // initializes to zero
+  for (index_t i = 0; i < d.m(); i++)
+    A(i,i) = d(i);
+  return A;
+}
+
 template void solveLUP( const matd<real_t>& , const vecd<real_t>& , vecd<real_t>& );
 template void inverseLUP( const matd<real_t>& , matd<real_t>& );
 template vecd<real_t> operator*( const matd<real_t>& , const vecd<real_t>& );
-template matd<real_t> operator*( const matd<real_t>& , const matd<real_t>& );
+
+#define INSTANTIATE_MUL(R,S) template numerics::symd< typename result_of<R,S>::type > numerics::operator*( const numerics::symd<R>& , const numerics::symd<S>& );
+INSTANTIATE_MUL( real_t , real_t )
+INSTANTIATE_MUL( SurrealS<1> , SurrealS<1> )
+INSTANTIATE_MUL( SurrealS<3> , SurrealS<3> )
+INSTANTIATE_MUL( SurrealS<6> , SurrealS<6> )
+INSTANTIATE_MUL( SurrealS<10> , SurrealS<10> )
+#undef INSTANTIATE_MUL
+
+#define INSTANTIATE_MULD(R,S) template matd< typename result_of<R,S>::type > operator*( const matd<R>& , const matd<S>& );
+INSTANTIATE_MULD( real_t , real_t )
+INSTANTIATE_MULD( SurrealS<1> , SurrealS<1> )
+INSTANTIATE_MULD( SurrealS<3> , SurrealS<3> )
+INSTANTIATE_MULD( SurrealS<6> , SurrealS<6> )
+INSTANTIATE_MULD( SurrealS<10> , SurrealS<10> )
+#undef INSTANTIATE_MULD
+
+#define INSTANTIATE_TRANSPOSE(T) template matd<T> transpose( const matd<T>& );
+INSTANTIATE_TRANSPOSE( real_t )
+INSTANTIATE_TRANSPOSE( SurrealS<1> )
+INSTANTIATE_TRANSPOSE( SurrealS<3> )
+INSTANTIATE_TRANSPOSE( SurrealS<6> )
+INSTANTIATE_TRANSPOSE( SurrealS<10> )
+#undef INSTANTIATE_TRANSPOSE
+
+#define INSTANTIATE_DIAG(T) template matd<T> diag( const vecd<T>& );
+INSTANTIATE_DIAG( real_t )
+INSTANTIATE_DIAG(  SurrealS<1> )
+INSTANTIATE_DIAG(  SurrealS<3> )
+INSTANTIATE_DIAG(  SurrealS<6> )
+INSTANTIATE_DIAG(  SurrealS<10> )
+#undef INSTANTIATE_DIAG
 
 } // avro

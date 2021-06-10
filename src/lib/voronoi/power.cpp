@@ -15,9 +15,6 @@
 #include <HLBFGS/HLBFGS.h>
 #include <HLBFGS/Lite_Sparse_Matrix.h>
 
-#include <tinymat/types/SurrealS.h>
-#include <tinymat/types/SurrealD.h>
-
 #include <nlopt.hpp>
 
 #include <iomanip>

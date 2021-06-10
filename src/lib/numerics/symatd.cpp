@@ -601,10 +601,10 @@ LogEuclidean<type>::interpolate( const std::vector<type>& alpha ,
 template class symd<real_t>;
 template class LogEuclidean<real_t>;
 
-template class symd<dual>;
-template class LogEuclidean<dual>;
+//template class symd<dual>;
+//template class LogEuclidean<dual>;
 
-#if 0 //USE_SURREAL
+#if USE_SURREAL
 template class symd<SurrealS<1>>;
 template class LogEuclidean<SurrealS<1>>;
 

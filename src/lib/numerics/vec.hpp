@@ -1,7 +1,30 @@
-#include "numerics/vector.h"
+#include "numerics/vec.h"
 
 namespace avro
 {
+
+template<typename R, typename S>
+vecd< typename result_of<R,S>::type >
+operator+ ( const vecd<R>& x , const vecd<S>& y ) {
+  typedef typename result_of<R,S>::type T;
+  avro_assert( x.m() == x.m() );
+  vecd<T> z( x.m() );
+  for (index_t i = 0; i < z.m(); i++)
+    z(i) = x(i) + y(i);
+  return z;
+}
+
+template<typename R, typename S>
+vecd< typename result_of<R,S>::type >
+operator- ( const vecd<R>& x , const vecd<S>& y ) {
+  typedef typename result_of<R,S>::type T;
+  avro_assert( x.m() == x.m() );
+  vecd<T> z( x.m() );
+  for (index_t i = 0; i < z.m(); i++)
+    z(i) = x(i) - y(i);
+  return z;
+}
+
 
 #define INSTANTIATE_VECADD(R,S,T) \
 template<index_t M> \
@@ -79,37 +102,37 @@ INSTANTIATE_VECDEC( real_t , real_t )
 
 INSTANTIATE_VECINC( vecs<2 COMMA real_t > , vecs<2 COMMA real_t> )
 INSTANTIATE_VECINC( vecs<3 COMMA real_t > , vecs<3 COMMA real_t> )
-INSTANTIATE_VECINC( SurrealS<1 COMMA real_t> , SurrealS<1 COMMA real_t> )
+INSTANTIATE_VECINC( SurrealS<1> , SurrealS<1> )
 
-INSTANTIATE_VECINC( SurrealS<2 COMMA real_t> , SurrealS<2 COMMA real_t> )
-INSTANTIATE_VECDEC( SurrealS<2 COMMA real_t> , SurrealS<2 COMMA real_t> )
-INSTANTIATE_VECDEC( SurrealS<2 COMMA real_t> , real_t )
+INSTANTIATE_VECINC( SurrealS<2> , SurrealS<2> )
+INSTANTIATE_VECDEC( SurrealS<2> , SurrealS<2> )
+INSTANTIATE_VECDEC( SurrealS<2> , real_t )
 
-INSTANTIATE_VECINC( SurrealS<3 COMMA real_t> , SurrealS<3 COMMA real_t> )
-INSTANTIATE_VECDEC( SurrealS<3 COMMA real_t> , SurrealS<3 COMMA real_t> )
-INSTANTIATE_VECDEC( SurrealS<3 COMMA real_t> , real_t )
+INSTANTIATE_VECINC( SurrealS<3> , SurrealS<3> )
+INSTANTIATE_VECDEC( SurrealS<3> , SurrealS<3> )
+INSTANTIATE_VECDEC( SurrealS<3> , real_t )
 
-INSTANTIATE_VECVECMUL( real_t , vecs< 2 COMMA SurrealS<2 COMMA real_t> > , vecs< 2 COMMA SurrealS<2 COMMA real_t> > )
-INSTANTIATE_VECVECMUL( real_t , vecs< 3 COMMA SurrealS<3 COMMA real_t> > , vecs< 3 COMMA SurrealS<3 COMMA real_t> > )
+INSTANTIATE_VECVECMUL( real_t , vecs< 2 COMMA SurrealS<2> > , vecs< 2 COMMA SurrealS<2> > )
+INSTANTIATE_VECVECMUL( real_t , vecs< 3 COMMA SurrealS<3> > , vecs< 3 COMMA SurrealS<3> > )
 
 INSTANTIATE_DOT( real_t , real_t , real_t )
-INSTANTIATE_DOT( SurrealS<1 COMMA real_t> , SurrealS<1 COMMA real_t> , SurrealS<1 COMMA real_t> )
+INSTANTIATE_DOT( SurrealS<1> , SurrealS<1> , SurrealS<1> )
 
-INSTANTIATE_DOT( real_t , SurrealS<1 COMMA real_t> , SurrealS<1 COMMA real_t> )
-INSTANTIATE_DOT( real_t , SurrealS<2 COMMA real_t> , SurrealS<2 COMMA real_t> )
-INSTANTIATE_DOT( real_t , SurrealS<3 COMMA real_t> , SurrealS<3 COMMA real_t> )
+INSTANTIATE_DOT( real_t , SurrealS<1> , SurrealS<1> )
+INSTANTIATE_DOT( real_t , SurrealS<2> , SurrealS<2> )
+INSTANTIATE_DOT( real_t , SurrealS<3> , SurrealS<3> )
 
-INSTANTIATE_DOT( real_t , vecs<2 COMMA SurrealS<2 COMMA real_t> > , vecs<2 COMMA SurrealS<2 COMMA real_t> > )
-INSTANTIATE_DOT( real_t , vecs<3 COMMA SurrealS<3 COMMA real_t> > , vecs<3 COMMA SurrealS<3 COMMA real_t> > )
+INSTANTIATE_DOT( real_t , vecs<2 COMMA SurrealS<2> > , vecs<2 COMMA SurrealS<2> > )
+INSTANTIATE_DOT( real_t , vecs<3 COMMA SurrealS<3> > , vecs<3 COMMA SurrealS<3> > )
 
 INSTANTIATE_VECSCAMUL_R( real_t , real_t , real_t )
 INSTANTIATE_VECSCAMUL_R( vecs<2 COMMA real_t> , real_t , vecs<2 COMMA real_t> )
 INSTANTIATE_VECSCAMUL_R( vecs<3 COMMA real_t> , real_t , vecs<3 COMMA real_t> )
 
 INSTANTIATE_VECSCAMUL_L( real_t , real_t , real_t )
-INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<1 COMMA real_t> , SurrealS<1 COMMA real_t> )
-INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<2 COMMA real_t> , SurrealS<2 COMMA real_t> )
-INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<3 COMMA real_t> , SurrealS<3 COMMA real_t> )
+INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<1> , SurrealS<1> )
+INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<2> , SurrealS<2> )
+INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<3> , SurrealS<3> )
 
 #undef COMMA
 

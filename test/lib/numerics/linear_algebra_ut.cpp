@@ -63,7 +63,7 @@ UT_TEST_CASE(inverse_tests)
       numerics::MatrixD<real_t> A(n,n);
       A = random_matrix(n);
 
-      if (std::fabs(numerics::determinant(A)<1e-12)) continue;
+      if (std::fabs(numerics::det(A)<1e-12)) continue;
 
       numerics::MatrixD<real_t> Ainv(n,n);
       Ainv = numerics::inverse(A);

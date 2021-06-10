@@ -21,6 +21,45 @@ matd<T>::get_row( index_t i , vecd<T>& row ) const {
     row(j) = (*this)(i,j);
 }
 
+template<typename R, typename S>
+matd< typename result_of<R,S>::type >
+operator* (const matd<R>& A, const matd<S>& B) {
+  typedef typename result_of<R,S>::type T;
+  avro_assert_msg( A.n() == B.m() , "bad matrix sizes" );
+  matd<T> C( A.m() , B.n() );
+  for (index_t i = 0; i < A.m(); i++) {
+    for (index_t j = 0; j < B.n(); j++) {
+      T sum = 0;
+      for (index_t k = 0; k < A.n(); k++)
+        sum += A(i,k)*B(k,j);
+      C(i,j) = sum;
+    }
+  }
+  return C;
+}
+
+namespace numerics {
+
+template<typename R, typename S>
+symd< typename result_of<R,S>::type >
+operator* (const symd<R>& A, const symd<S>& B) {
+  typedef typename result_of<R,S>::type T;
+  avro_assert_msg( A.n() == B.m() , "bad matrix sizes" );
+  symd<T> C( A.m() , B.n() );
+  for (index_t i = 0; i < A.m(); i++) {
+    for (index_t j = 0; j < B.n(); j++) {
+      T sum = 0;
+      for (index_t k = 0; k < A.n(); k++)
+        sum += A(i,k)*B(k,j);
+      C(i,j) = sum;
+    }
+  }
+  return C;
+}
+
+} // numerics
+
+
 #define INSTANTIATE_MATADD(R,S,T) \
 template<index_t M,index_t N> \
 mats<M,N,T> \
@@ -87,22 +126,6 @@ transpose( const mats<M,N,T>& A ) {
   for (index_t j = 0; j < N; j++)
     At(j,i) = A(i,j);
   return At;
-}
-
-template<typename T>
-T
-det( const matd<T>& A ) {
-  avro_assert( A.m() == A.n() );
-  if (A.m() == 1) return A(0,0);
-  if (A.m() == 2) {
-    return A(0,0)*A(1,1) - A(0,1)*A(1,0);
-  }
-  if (A.m() == 3) {
-    return A(0,0)*(A(2,2)*A(1,1)-A(2,1)*A(1,2))
-                    -A(1,0)*(A(2,2)*A(0,1)-A(2,1)*A(0,2))
-                    +A(2,0)*(A(1,2)*A(0,1)-A(1,1)*A(0,2));
-  }
-  avro_implement;
 }
 
 template<typename T>

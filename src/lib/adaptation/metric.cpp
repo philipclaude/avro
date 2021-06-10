@@ -574,7 +574,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		numerics::SymMatrixD<real_t> sqrt_M0 = numerics::sqrtm(mi);
 		numerics::SymMatrixD<real_t> mk = sqrt_M0*numerics::expm(s)*sqrt_M0;
 
-		real_t detm = numerics::determinant(mk);
+		real_t detm = numerics::det(mk);
 		if (detm <= 0.0)
 		{
 			// hack! revert to target metric...a pretty bad idea

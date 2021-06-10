@@ -101,7 +101,12 @@ public:
 	}
 
 	symd& operator=( const matd<type>& A ) {
-		avro_implement;
+		avro_assert( A.m() == A.n() );
+		allocate( A.m() );
+		// hopefully A is already symmetric
+		for (index_t i = 0; i < n_; i++)
+		for (index_t j = 0; j < n_; j++)
+			(*this)(i,j) = A(i,j);
 		return *this;
 	}
 
@@ -127,13 +132,12 @@ public:
 	std::pair< vecd<type>,matd<type> > eig() const;
 
 	type quadratic_form( const type* x ) const;
-  //type quadraticFormReal( real_t* x ) const;
 	type determinant() const;
 	void display( const std::string& title=std::string() ) const;
 	void matlabize( const std::string& title ) const;
 	void forunit( const std::string& title ) const;
 
-	void dump() const;
+	void dump() const { avro_implement; }
 
   bool check();
 
@@ -161,15 +165,15 @@ class AffineInvariant
 													 const std::vector<symd<type>>& tensors , symd<type>& T );
 };
 
-template<typename type> symd<type> expm( const symd<type>& M );
-template<typename type> symd<type> logm( const symd<type>& M );
-template<typename type> symd<type> powm( const symd<type>& M , real_t p );
-template<typename type> symd<type> sqrtm( const symd<type>& M );
+template<typename type> symd<type> expm( const symd<type>& M ) { return M.exp(); }
+template<typename type> symd<type> logm( const symd<type>& M ) { return M.log(); }
+template<typename type> symd<type> powm( const symd<type>& M , real_t p ) { return M.pow(p); }
+template<typename type> symd<type> sqrtm( const symd<type>& M ) { return M.sqrt(); }
 
 template<typename type> type det( const symd<type>& M );
 
 template<typename R, typename S>
-symd< typename result_of<R,S>::type> operator*( const symd<R>& A , const symd<S>& B );
+symd< typename result_of<R,S>::type > operator*( const symd<R>& A , const symd<S>& B );
 
 template<typename type> symd<type> inverse2( const symd<type>& M );
 

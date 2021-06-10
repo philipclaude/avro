@@ -16,13 +16,6 @@ namespace numerics
 {
 
 real_t
-eps( const real_t& x )
-{
-  // this is like matlab's eps function
-  return ::nextafter( x , x +1.0f ) -x;
-}
-
-real_t
 sum( const std::vector<real_t>& x )
 {
   // implements the Kahan sum of the values in a vector

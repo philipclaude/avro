@@ -16,7 +16,6 @@ namespace avro
 namespace numerics
 {
 
-real_t eps( const real_t& x );
 real_t sum( const std::vector<real_t>& x );
 real_t exactsum( const std::vector<real_t>& x );
 real_t naivesum( const std::vector<real_t>& x );

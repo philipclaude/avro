@@ -4,7 +4,10 @@
 #include "common/error.h"
 #include "common/types.h"
 
+#include "numerics/determinant.h"
 #include "numerics/surreal/SurrealS.h"
+
+#include <vector>
 
 namespace avro
 {
@@ -130,9 +133,9 @@ private:
 
 template<typename S,typename T> class result_of;
 
-template<index_t N> class result_of<real_t,SurrealS<N>> { public: typedef SurrealS<N> type; };
-template<index_t N> class result_of<SurrealS<N>,real_t> { public: typedef SurrealS<N> type; };
-template<index_t N> class result_of<SurrealS<N>,SurrealS<N>>  { public: typedef SurrealS<N> type; };
+template<int N> class result_of<real_t,SurrealS<N>> { public: typedef SurrealS<N> type; };
+template<int N> class result_of<SurrealS<N>,real_t> { public: typedef SurrealS<N> type; };
+template<int N> class result_of<SurrealS<N>,SurrealS<N>>  { public: typedef SurrealS<N> type; };
 template<> class result_of<real_t,real_t> { public: typedef real_t type; };
 
 template<index_t M,index_t N,typename T>
@@ -216,13 +219,12 @@ operator+ ( const mats<M,N,R>& A , const mats<M,N,R>& B ) {
 template<typename T> void solveLUP( const matd<T>& A , const vecd<T>& b , vecd<T>& x );
 template<typename T> void inverseLUP( const matd<T>& A , matd<T>& Ainv );
 template<typename T> vecd<T> operator* ( const matd<T>& A , const vecd<T>& x );
-template<typename T> matd<T> operator* ( const matd<T>& A , const matd<T>& B );
-template<typename T> matd<T> operator* ( const real_t a , const matd<T>& B );
+template<typename R,typename S> matd< typename result_of<R,S>::type > operator* ( const matd<R>& A , const matd<S>& B );
 template<typename T> matd<T> transpose( const matd<T>& A );
 
 template<index_t M,typename T> mats<M,M,T> inverse( const mats<M,M,T>& A );
 template<index_t M,typename T> T det( const mats<M,M,T>& A );
-template<typename T> T det( const matd<T>& A );
+//template<typename T> T det( const matd<T>& A ) { return determinant(A); }
 template<index_t M,typename T> T trace( const mats<M,M,T>& A );
 
 } // avro

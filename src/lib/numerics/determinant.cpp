@@ -7,6 +7,7 @@
 #include "common/error.h"
 
 #include "numerics/mat.h"
+#include "numerics/symatd.h"
 #include "numerics/dual.h"
 
 #include "numerics/surreal/config.h"
@@ -16,9 +17,12 @@
 namespace avro
 {
 
+namespace numerics
+{
+
 template<typename type>
 type
-determinant(const matd<type>& X)
+det(const matd<type>& X)
 {
   avro_assert(X.m()==X.n());
   if (X.m()==1) return X(0,0);
@@ -99,16 +103,45 @@ determinant(const matd<type>& X)
   avro_assert(false);
 }
 
+template<typename type>
+type
+det(const symd<type>& X)
+{
+  avro_assert(X.m()==X.n());
+  if (X.m()==1) return X(0,0);
+  if (X.m()==2) return X(1,1)*X(0,0)-X(0,1)*X(1,0);
+  if (X.m()==3) return X(0,0)*(X(2,2)*X(1,1)-X(2,1)*X(1,2))
+                    -X(1,0)*(X(2,2)*X(0,1)-X(2,1)*X(0,2))
+                    +X(2,0)*(X(1,2)*X(0,1)-X(1,1)*X(0,2));
+  type X1_1=X(0,0),X1_2=X(0,1),X1_3=X(0,2),X1_4=X(0,3);
+  type X2_1=X(1,0),X2_2=X(1,1),X2_3=X(1,2),X2_4=X(1,3);
+  type X3_1=X(2,0),X3_2=X(2,1),X3_3=X(2,2),X3_4=X(2,3);
+  type X4_1=X(3,0),X4_2=X(3,1),X4_3=X(3,2),X4_4=X(3,3);
+  if (X.m()==4)
+  {   return
+        X1_1*X2_2*X3_3*X4_4 - X1_1*X2_2*X3_4*X4_3 - X1_1*X2_3*X3_2*X4_4
+      + X1_1*X2_3*X3_4*X4_2 + X1_1*X2_4*X3_2*X4_3 - X1_1*X2_4*X3_3*X4_2
+      - X1_2*X2_1*X3_3*X4_4 + X1_2*X2_1*X3_4*X4_3 + X1_2*X2_3*X3_1*X4_4
+      - X1_2*X2_3*X3_4*X4_1 - X1_2*X2_4*X3_1*X4_3 + X1_2*X2_4*X3_3*X4_1
+      + X1_3*X2_1*X3_2*X4_4 - X1_3*X2_1*X3_4*X4_2 - X1_3*X2_2*X3_1*X4_4
+      + X1_3*X2_2*X3_4*X4_1 + X1_3*X2_4*X3_1*X4_2 - X1_3*X2_4*X3_2*X4_1
+      - X1_4*X2_1*X3_2*X4_3 + X1_4*X2_1*X3_3*X4_2 + X1_4*X2_2*X3_1*X4_3
+      - X1_4*X2_2*X3_3*X4_1 - X1_4*X2_3*X3_1*X4_2 + X1_4*X2_3*X3_2*X4_1;
+  }
+  printf("unsupported n = %d\n",int(X.m()));
+  avro_assert(false);
+}
+
 // compiling takes really long with surreals
 template<>
 SurrealD
-determinant(const matd<SurrealD>& X)
+det(const matd<SurrealD>& X)
 {
   avro_implement;
 }
 
 #define INST_DETERMINANT(X) \
-  template<> SurrealS<X> determinant(const matd<SurrealS<X>>&) \
+  template<> SurrealS<X> det(const matd<SurrealS<X>>&) \
     { avro_implement; }
 
 #if USE_SURREAL
@@ -120,7 +153,10 @@ INST_DETERMINANT(6)
 INST_DETERMINANT(10)
 #endif
 
-template real_t determinant(const matd<real_t>& X);
-template dual   determinant(const matd<dual>& X);
+template real_t det(const matd<real_t>& X);
+template real_t det(const symd<real_t>& X);
+template dual   det(const matd<dual>& X);
+
+} // numerics
 
 } // avro
