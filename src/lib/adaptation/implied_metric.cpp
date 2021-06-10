@@ -20,8 +20,11 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/nlopt_result.h"
 
-#include <tinymat/types/SurrealS.h>
-#include <tinymat/types/PromoteSurreal.h>
+//#include <tinymat/types/SurrealS.h>
+//#include <tinymat/types/PromoteSurreal.h>
+
+#include "numerics/surreal/SurrealS.h"
+
 
 #include <nlopt.hpp>
 
@@ -94,7 +97,8 @@ ElementImpliedMetric<type>::compute( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
   J_ = J0_*Jeq_;
-  numerics::SymMatrixD<real_t> JJt = J_*tinymat::Transpose(J_);
+  //numerics::SymMatrixD<real_t> JJt = J_*transpose(J_);
+  numerics::MatrixD<real_t> JJt = J_*transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -107,7 +111,8 @@ ElementImpliedMetric<type>::compute( const Points& points , const index_t* v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  numerics::SymMatrixD<real_t> JJt = J_*tinymat::Transpose(J_);
+  //numerics::SymMatrixD<real_t> JJt = J_*transpose(J_);
+  numerics::MatrixD<real_t> JJt = J_*transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -121,7 +126,7 @@ ElementImpliedMetric<type>::inverse( const Points& points , const index_t *v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  M_ = J_*tinymat::Transpose(J_); // no inverse
+  M_ = J_*transpose(J_); // no inverse
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
     this->operator()(i,j) = M_(i,j);
@@ -289,7 +294,7 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
 
       // arithmetic average sv to form sk
       for (index_t i=0;i<nrank;i++)
-        sk[k].data[i] += sv[ topology_(k,j) ].data[i]*one_over_nv;
+        sk[k].data(i) += sv[ topology_(k,j) ].data(i)*one_over_nv;
     }
 
     // compute the contribution from this element
@@ -310,7 +315,7 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
     {
       // zero out the derivative
       for (index_t i=0;i<nrank;i++)
-        dc_dS[k].data[i] = 0.0;
+        dc_dS[k].data(i) = 0.0;
 
       // add the contribution from the surrounding elements
       for (index_t j=0;j<v2e_[k].size();j++)
@@ -371,7 +376,7 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
   {
     MatrixSymSurrealVertex S = Svec[k];
     for (index_t i=0;i<nrank;i++)
-      S.data[i].deriv(i) = 1.0; // derivative with respect to its own value is 1
+      S.data(i).deriv(i) = 1.0; // derivative with respect to its own value is 1
 
     MatrixSymSurrealVertex sqrtM0 = nodalMetricSqrt_[k];
     nodalMetric[k] = sqrtM0*numerics::expm(S)*sqrtM0;
@@ -441,8 +446,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
     // store the gradients
     for (index_t i=0;i<nrank;i++)
     {
-      df_dS[p].data[i] += delUnity.deriv(i)/nb_edges;
-      df_dS[q].data[i] += delUnity.deriv(nrank+i)/nb_edges;
+      df_dS[p].data(i) += delUnity.deriv(i)/nb_edges;
+      df_dS[q].data(i) += delUnity.deriv(nrank+i)/nb_edges;
     }
   }
   return delta;
@@ -478,7 +483,7 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 	for (index_t k=0;k<topology.points().nb();k++)
 	{
 		for (index_t i=0;i<nrank;i++)
-			S[k].data[i] = x[k*nrank+i];
+			S[k].data(i) = x[k*nrank+i];
 	}
 
   // size the gradients if necessary
@@ -509,9 +514,9 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 		{
 			for (index_t i=0;i<nrank;i++)
 			{
-				grad[k*nrank+i] = dl_dS[k].data[i];
+				grad[k*nrank+i] = dl_dS[k].data(i);
         if (data->include_complexity)
-          grad[k*nrank+i] += 2*factor*(complexity/complexity0-1.0)*dc_dS[k].data[i]*(1./complexity0);
+          grad[k*nrank+i] += 2*factor*(complexity/complexity0-1.0)*dc_dS[k].data(i)*(1./complexity0);
 				gradnorm += pow(grad[k*nrank+i],2.);
 			}
 		}
@@ -595,7 +600,7 @@ MeshImpliedMetric<type>::optimize()
 
 		numerics::SymMatrixD<real_t> S( topology_.number() );
 		for (index_t i=0;i<nrank;i++)
-			S.data[i] = x[k*nrank+i];
+			S.data(i) = x[k*nrank+i];
 
     // assign the implied metric
     this->data_[k] = nodalMetricSqrt_[k]*numerics::expm(S)*nodalMetricSqrt_[k];

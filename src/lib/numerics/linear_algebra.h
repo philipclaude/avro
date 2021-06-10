@@ -14,15 +14,15 @@
 
 #include "numerics/matrix.h"
 
-#include <tinymat/dense/dynamic/MatrixD_Det.h>
-#include <tinymat/dense/dynamic/MatrixD_Diag.h>
-#include <tinymat/dense/dynamic/Eigen.h>
+//#include <tinymat/dense/dynamic/MatrixD_Det.h>
+//#include <tinymat/dense/dynamic/MatrixD_Diag.h>
+//#include <tinymat/dense/dynamic/Eigen.h>
 //#include <tinymat/dense/InverseLU.h>
-#include <tinymat/dense/InverseLUP.h>
-#include <tinymat/Transpose.h>
+//#include <tinymat/dense/InverseLUP.h>
+//#include <tinymat/Transpose.h>
 
-#include <tinymat/types/SurrealD.h>
-#include <tinymat/types/SurrealS.h>
+//#include <tinymat/types/SurrealD.h>
+//#include <tinymat/types/SurrealS.h>
 
 #include <cmath>
 
@@ -44,15 +44,19 @@ template<typename type>
 type
 determinant( const MatrixD<type>& A )
 {
-  return tinymat::DLA::Det(A);
+  return det(A);
+  //return tinymat::DLA::Det(A);
 }
 
 template<typename type>
 type
 determinant( const SymMatrixD<type>& A )
 {
-  return tinymat::DLA::Det(A);
+  return det(A);
+  //return tinymat::DLA::Det(A);
 }
+
+/*
 
 template< class T >
 inline tinymat::DLA::MatrixSymD<T>
@@ -113,6 +117,7 @@ sqrtm(const tinymat::DLA::MatrixSymD<T>& A)
   // return the symmetric matrix
   return LE;
 }
+*/
 
 template<typename T>
 inline MatrixD<T>

@@ -11,14 +11,9 @@
 namespace avro
 {
 
-namespace numerics
-{
-
 template<typename type> class matd;
 
 template<typename type> type determinant(const matd<type>& X);
-
-} // numerics
 
 } // avro
 

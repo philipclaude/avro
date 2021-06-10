@@ -11,8 +11,8 @@
 
 #include "graphics/math.h"
 
-#include <tinymat/dense/static/MatrixS_Transpose.h>
-#include <tinymat/Transpose.h>
+//#include <tinymat/dense/static/MatrixS_Transpose.h>
+//#include <tinymat/Transpose.h>
 
 namespace avro
 {

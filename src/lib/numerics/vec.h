@@ -4,7 +4,7 @@
 #include "common/error.h"
 #include "common/types.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 #include <vector>
 
@@ -20,6 +20,11 @@ public:
     data_(m)
   {}
 
+  vecd( index_t m , const type* x ) :
+    m_(m),
+    data_(x,x+m)
+  {}
+
   type& operator() (index_t i) {
     avro_assert_msg( i < m_ , "attempt to access i = %lu but m = %lu" , i , m_ );
     return data_[i];
@@ -27,6 +32,16 @@ public:
 
   const type& operator() (index_t i) const {
     avro_assert_msg( i < m_ , "attempt to access i = %lu but m = %lu" , i , m_ );
+    return data_[i];
+  }
+
+  type& operator[] (index_t i) {
+    avro_assert( i < m_ );
+    return data_[i];
+  }
+
+  const type& operator[] (index_t i) const {
+    avro_assert( i < m_ );
     return data_[i];
   }
 
@@ -43,6 +58,11 @@ public:
     for (index_t i = 0; i < m_; i++)
       std::cout << "(" + std::to_string(i) + "): " << (*this)(i) << std::endl;
   }
+
+  void dump() const { print(); }
+
+  type* data() { return data_.data(); }
+  const type* data() const { return data_.data(); }
 
 private:
   index_t m_;
@@ -95,6 +115,16 @@ public:
     return data_[i];
   }
 
+  type& operator[] (index_t i) {
+    avro_assert( i < M );
+    return data_[i];
+  }
+
+  const type& operator[] (index_t i) const {
+    avro_assert( i < M );
+    return data_[i];
+  }
+
   void print() const {
     printf("%s:\n",__PRETTY_FUNCTION__);
     for (index_t i = 0; i < M; i++)
@@ -104,6 +134,12 @@ public:
 
 template<typename R,typename S,typename T,index_t M>
 T dot( const vecs<M,R>& u , const vecs<M,S>& v );
+
+template<typename T> matd<T> diag( const vecd<T>& d );
+template<typename R,typename S> vecd< typename result_of<R,S>::type > operator-( const vecd<R>& x , const vecd<S>& y );
+template<typename R,typename S> vecd< typename result_of<R,S>::type > operator+( const vecd<R>& x , const vecd<S>& y );
+template<typename R,typename S> vecd< typename result_of<R,S>::type > operator*( const R& x , const vecd<S>& y );
+template<typename R,typename S> vecd< typename result_of<R,S>::type > operator*( const vecd<R>& x , const S& y );
 
 } // pydg
 

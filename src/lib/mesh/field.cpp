@@ -22,6 +22,7 @@
 #include "mesh/points.h"
 
 #include "numerics/matrix.h"
+#include "numerics/surreal/SurrealD.h"
 
 namespace avro
 {
@@ -224,7 +225,7 @@ __at_rank__( Entity* const& entity , index_t r )
 
 template<>
 real_t
-__at_rank__( const SurrealS<1,real_t>& x , index_t r )
+__at_rank__( const SurrealS<1>& x , index_t r )
 {
   return x.value();
 }
@@ -249,7 +250,7 @@ template class Field< Simplex , numerics::SymMatrixD<real_t> >;
 
 template class Field< Simplex , Metric >;
 
-template class Field< Simplex , SurrealS<1,real_t> >;
+template class Field< Simplex , SurrealS<1> >;
 template class Field< Simplex , SurrealD >;
 
 } // avro

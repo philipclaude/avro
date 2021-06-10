@@ -130,7 +130,7 @@ public:
     lambda[2] = 1./(hz*hz);
 
     numerics::SymMatrixD<real_t> m(3);
-    m = Q*tinymat::DLA::diag(lambda)*tinymat::Transpose(Q);
+    m = Q*diag(lambda)*transpose(Q);
 
     return m;
   }
@@ -176,7 +176,7 @@ public:
     lambda[2] = 1./(hz*hz);
 
     numerics::SymMatrixD<real_t> m(3);
-    m = Q*tinymat::DLA::diag(lambda)*tinymat::Transpose(Q);
+    m = Q*diag(lambda)*transpose(Q);
 
     return m;
   }
@@ -290,7 +290,7 @@ public:
   	L[2] = 1./(hphi*hphi);
   	L[3] = 1./(ht*ht);
 
-  	return Q*tinymat::DLA::diag(L)*tinymat::Transpose(Q);
+  	return Q*diag(L)*transpose(Q);
   }
 };
 

@@ -47,11 +47,11 @@ interp( const std::vector<type>& alpha ,
   {
     for (index_t k=0;k<tensors.size();k++)
     {
-      std::cout << tensors[k] << std::endl;
-      std::cout << numerics::logm(tensors[k]) << std::endl;
+      //std::cout << tensors[k] << std::endl;
+      //std::cout << numerics::logm(tensors[k]) << std::endl;
     }
     print_inline(alpha);
-    std::cout << T << std::endl;
+    //std::cout << T << std::endl;
     return false;
   }
   return true;
@@ -87,6 +87,7 @@ quadratic_form( const numerics::SymMatrixD<type>& M , const numerics::VectorD<re
 	return -1.;
 }
 
+#if 0
 inline numerics::SymMatrixD<real_t>
 intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<real_t>& y )
 {
@@ -123,8 +124,8 @@ intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<re
   {
     numerics::VectorD<real_t> e(n);
     e = P.col(d);
-    real_t h1 = 1./std::sqrt( e*X*tinymat::Transpose(e) );
-    real_t h2 = 1./std::sqrt( e*Y*tinymat::Transpose(e) );
+    real_t h1 = 1./std::sqrt( quadratic_form(X,e) );
+    real_t h2 = 1./std::sqrt( quadratic_form(Y,e) );
     real_t h = std::min(h1,h2);
 
     lambda(d) = 1./(h*h);
@@ -135,6 +136,7 @@ intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<re
   // construct the matrix from the eigendecomposition
   return Pinv*tinymat::DLA::diag(lambda)*tinymat::Transpose(Pinv);
 }
+#endif
 
 class Metric : public numerics::SymMatrixD<real_t>
 {
@@ -154,6 +156,13 @@ public:
     elem_(0),
     sqdet_(-1)
   {}
+
+  Metric( const numerics::SymMatrixD<real_t>& A ) :
+    Metric(A.m())
+  {
+    set(A);
+    calculate();
+  }
 
   void allocate( coord_t n )
   {
