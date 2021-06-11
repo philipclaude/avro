@@ -72,8 +72,8 @@ UT_TEST_CASE(adapt_test)
   params.curved() = true;
   params.limit_metric() = true;
 
-  index_t niter = 0;
-  for (index_t iter=0;iter<=niter;iter++)
+  index_t niter = 1;
+  for (index_t iter = 0; iter < niter; iter++)
   {
 
     params.adapt_iter() = iter;

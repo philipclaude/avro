@@ -68,12 +68,12 @@ Facet::build_basis()
   for (coord_t j=0;j<dim_;j++)
     V_(j,k) = basis_(j,k);
 
-  numerics::MatrixD<real_t> VtV = tinymat::Transpose(V_)*V_;
+  numerics::MatrixD<real_t> VtV = transpose(V_)*V_;
   for (coord_t i=0;i<number_;i++)
   for (coord_t j=0;j<number_;j++)
     B_(i,j) = VtV(i,j);
 
-  real_t d = numerics::determinant(B_);
+  real_t d = numerics::det(B_);
   if (d == 0.)
   {
     printf("bad basis!\n");
@@ -90,7 +90,7 @@ Facet::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
 {
   avro_assert( x.size() == dim_ );
   avro_assert( basis_.m() == dim_ );
-  avro_assert_msg( basis_.n() == number_ , "basis = %d x %d , number_ = %u, dim_ = %u" , basis_.m(),basis_.n(),number_,dim_ );
+  avro_assert_msg( basis_.n() == number_ , "basis = %lu x %lu , number_ = %u, dim_ = %u" , basis_.m(),basis_.n(),number_,dim_ );
 
   // set the last barycentric coordinate
   numerics::VectorD<real_t> u0(number_);
@@ -116,11 +116,14 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
 
   // compute right-hand-side of minimization statement
   numerics::VectorD<real_t> x0(x.size(),x.data());
-  numerics::VectorD<real_t> b = tinymat::Transpose(V_)*( x0 - x0_ );
+  numerics::VectorD<real_t> b = transpose(V_)*( x0 - x0_ );
 
   // solve VtV * alpha = Vt * (x - x0)
-  numerics::VectorD<real_t> alpha = tinymat::DLA::InverseLUP::Solve(B_,b);
-  avro_assert( alpha.m() == number_ );
+  //numerics::VectorD<real_t> alpha = tinymat::DLA::InverseLUP::Solve(B_,b);
+  //avro_assert( alpha.m() == number_ );
+
+  numerics::VectorD<real_t> alpha(number_);
+  solveLUP(B_,b,alpha);
 
   // compute the closest point y = V*alpha + x0
   numerics::VectorD<real_t> y = V_*alpha + x0_;

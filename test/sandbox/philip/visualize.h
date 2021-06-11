@@ -55,7 +55,7 @@ class ClippedCell : public Topology<Simplex>
 {
 public:
   ClippedCell( const LaguerreDiagram<type>& diagram , coord_t dim , index_t cell ,
-      const tinymat::DLA::MatrixD<real_t>& B , const tinymat::DLA::MatrixD<real_t>& At ) :
+      const numerics::MatrixD<real_t>& B , const numerics::MatrixD<real_t>& At ) :
     Topology<Simplex>(points_,3),
     diagram_(diagram),
     dim_(dim),
@@ -111,15 +111,15 @@ public:
         if (s < 0.0 || s > 1.0) continue;
 
         // compute the geomeetric intersection
-        tinymat::DLA::VectorD<real_t> xs(dim_);
+        numerics::VectorD<real_t> xs(dim_);
         for (coord_t d = 0; d < dim_; d++)
           xs(d) = polytope.points()[e0][d] + s*( polytope.points()[e1][d] - polytope.points()[e0][d] );
 
         // compute the uvw coordinates
-        tinymat::DLA::VectorD<real_t> xu(3);
+        numerics::VectorD<real_t> xu(3);
         xu = B_* (At_*xs );
 
-        for (coord_t d = 0; d < xu.size(); d++)
+        for (coord_t d = 0; d < xu.m(); d++)
           polyhedron.push_back( xu(d) );
 
         // add the incidence relations for this point (to extract edges)
@@ -193,8 +193,8 @@ private:
   index_t elem_; // which domain element?
   index_t site_; // which voronoi site does this correspond to?
 
-  const tinymat::DLA::MatrixD<real_t>& B_;
-  const tinymat::DLA::MatrixD<real_t>& At_;
+  const numerics::MatrixD<real_t>& B_;
+  const numerics::MatrixD<real_t>& At_;
 
   std::vector<index_t> tet2site_;
 
@@ -277,9 +277,9 @@ public:
 
 
     // precompute the transformation matrix
-    tinymat::DLA::MatrixD<real_t> A(4,3);
-    tinymat::DLA::MatrixD<real_t> At(3,4);
-    tinymat::DLA::MatrixD<real_t> B(3,3);
+    numerics::MatrixD<real_t> A(4,3);
+    numerics::MatrixD<real_t> At(3,4);
+    numerics::MatrixD<real_t> B(3,3);
 
     for (coord_t d = 0; d < 4; d++)
     {

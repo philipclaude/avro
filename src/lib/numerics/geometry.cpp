@@ -142,7 +142,7 @@ volume_nd( const std::vector<const real_t*>& x , const coord_t dim )
 
   real_t f = pow(-1.,n+1)/pow(2.,n);
   f /= pow( real_t(numerics::factorial(n)),2. );
-  real_t v = std::sqrt(fabs(f*numerics::determinant<real_t>(B)));
+  real_t v = std::sqrt(fabs(f*numerics::det<real_t>(B)));
   return v;
 }
 

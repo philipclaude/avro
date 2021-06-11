@@ -48,7 +48,7 @@ public:
     for (index_t j=0;j<rank();j++)
     {
       for (index_t i=0;i<phi.size();i++)
-        u[j] += (*this)( idx[i] , 0 )*phi[i];
+        u[j] = u[j] + (*this)( idx[i] , 0 )*phi[i];
     }
     return true;
   }

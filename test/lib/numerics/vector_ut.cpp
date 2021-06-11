@@ -16,7 +16,7 @@
 
 #include "common/types.h"
 
-#include "numerics/vector.h"
+#include "numerics/vec.h"
 
 using namespace avro;
 using namespace avro::numerics;
@@ -25,8 +25,8 @@ UT_TEST_SUITE(vector_suite)
 
 UT_TEST_CASE(test1)
 {
-  Vector<real_t> x( {1,2,3} );
-  Vector<real_t> y( {4,5,6} );
+  vecd<real_t> x( {1,2,3} );
+  vecd<real_t> y( {4,5,6} );
 
   x = x +y;
 
@@ -34,10 +34,10 @@ UT_TEST_CASE(test1)
   UT_ASSERT_EQUALS( x[1] , 7 );
   UT_ASSERT_EQUALS( x[2] , 9 );
 
-  Vector<real_t> z = y*3;
+  /*vecd<real_t> z = 3.0*y;
   UT_ASSERT_EQUALS( z[0] , 12 );
   UT_ASSERT_EQUALS( z[1] , 15 );
-  UT_ASSERT_EQUALS( z[2] , 18 );
+  UT_ASSERT_EQUALS( z[2] , 18 );*/
 
 
 }

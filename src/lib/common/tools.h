@@ -13,7 +13,7 @@
 #include "common/error.h"
 #include "common/types.h"
 
-#include <tinymat/types/SurrealS.h>
+#include "numerics/surreal/SurrealS.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -263,7 +263,7 @@ print_value( const std::vector<real_t>& x )
 
 template<>
 inline void
-print_value( const SurrealS<1,real_t>& x )
+print_value( const SurrealS<1>& x )
 {
   printf(" (%g,%g) ",x.value(),x.deriv(0));
 }

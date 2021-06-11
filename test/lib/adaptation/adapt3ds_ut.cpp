@@ -102,8 +102,8 @@ UT_TEST_CASE(test1)
   params.swapout() = false;
   //params.limit_metric() = true; // requires a little implementation first
 
-  index_t niter = 2;
-  for (index_t iter=0;iter<=niter;iter++)
+  index_t niter = 1;
+  for (index_t iter = 0; iter < niter; iter++)
   {
 
     params.adapt_iter() = iter;

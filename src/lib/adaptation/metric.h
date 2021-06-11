@@ -42,16 +42,16 @@ interp( const std::vector<type>& alpha ,
 	}
 	T = numerics::expm(T);
 
-  type d = numerics::determinant(T);
+  type d = numerics::det(T);
   if (d<=0 || std::isnan(d))
   {
     for (index_t k=0;k<tensors.size();k++)
     {
-      std::cout << tensors[k] << std::endl;
-      std::cout << numerics::logm(tensors[k]) << std::endl;
+      //std::cout << tensors[k] << std::endl;
+      //std::cout << numerics::logm(tensors[k]) << std::endl;
     }
     print_inline(alpha);
-    std::cout << T << std::endl;
+    //std::cout << T << std::endl;
     return false;
   }
   return true;
@@ -87,55 +87,6 @@ quadratic_form( const numerics::SymMatrixD<type>& M , const numerics::VectorD<re
 	return -1.;
 }
 
-inline numerics::SymMatrixD<real_t>
-intersect( const numerics::SymMatrixD<real_t>& x , const numerics::SymMatrixD<real_t>& y )
-{
-  coord_t n = x.n();
-
-  numerics::MatrixD<real_t> Z( n , n );
-  numerics::MatrixD<real_t> Xinv( n , n );
-  numerics::VectorD<real_t> lambda( n );
-
-  // compute inverse of current tensor
-  numerics::MatrixD<real_t> X(x);
-  numerics::MatrixD<real_t> Y(y);
-  Xinv = numerics::inverse(X);
-
-  // compute N = T^{-1} * tensors[k]
-  Z = Xinv*Y;
-
-  // compute eigenvectors of N
-  numerics::SymMatrixD<real_t> T(Z);
-
-  numerics::MatrixD<real_t> E(n,n);
-  numerics::VectorD<real_t> P0(n);
-
-  tinymat::DLA::EigenSystem(T,P0,E);
-
-  numerics::MatrixD<real_t> P(n,n);
-  P = tinymat::DLA::diag(P0);
-
-  numerics::MatrixD<real_t> Pinv(n,n);
-  Pinv = numerics::inverse(P);
-
-  // measure the length in direction of each eigenvector
-  for (coord_t d=0;d<n;d++)
-  {
-    numerics::VectorD<real_t> e(n);
-    e = P.col(d);
-    real_t h1 = 1./std::sqrt( e*X*tinymat::Transpose(e) );
-    real_t h2 = 1./std::sqrt( e*Y*tinymat::Transpose(e) );
-    real_t h = std::min(h1,h2);
-
-    lambda(d) = 1./(h*h);
-  }
-
-  avro_implement; // this is not unit tested
-
-  // construct the matrix from the eigendecomposition
-  return Pinv*tinymat::DLA::diag(lambda)*tinymat::Transpose(Pinv);
-}
-
 class Metric : public numerics::SymMatrixD<real_t>
 {
 public:
@@ -154,6 +105,13 @@ public:
     elem_(0),
     sqdet_(-1)
   {}
+
+  Metric( const numerics::SymMatrixD<real_t>& A ) :
+    Metric(A.m())
+  {
+    set(A);
+    calculate();
+  }
 
   void allocate( coord_t n )
   {
@@ -180,7 +138,7 @@ public:
   void calculate()
   {
     log_   = numerics::logm(*this);
-    real_t d = numerics::determinant(*this);
+    real_t d = numerics::det(*this);
     avro_assert_msg( d > 0. , "d = %g\n", d );
     sqdet_ = std::sqrt(d);
   }

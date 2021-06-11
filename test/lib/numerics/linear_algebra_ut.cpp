@@ -55,15 +55,15 @@ UT_TEST_CASE(inverse_tests)
 
   for (index_t n=1;n<=4;n++)
   {
-    numerics::SymMatrixD<real_t> I(n);
-    I = tinymat::DLA::Identity();
+    numerics::MatrixD<real_t> I(n,n);
+    I.eye();
 
     for (index_t k=0;k<ntests;k++)
     {
       numerics::MatrixD<real_t> A(n,n);
       A = random_matrix(n);
 
-      if (std::fabs(numerics::determinant(A)<1e-12)) continue;
+      if (std::fabs(numerics::det(A)<1e-12)) continue;
 
       numerics::MatrixD<real_t> Ainv(n,n);
       Ainv = numerics::inverse(A);

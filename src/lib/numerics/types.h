@@ -12,12 +12,14 @@
 
 #include "common/types.h"
 
-#include "tinymat/dense/dynamic/MatrixD.h"
-#include "tinymat/dense/dynamic/VectorD.h"
+//#include "tinymat/dense/dynamic/MatrixD.h"
+//#include "tinymat/dense/dynamic/VectorD.h"
+
 
 namespace avro
 {
 
+#if 0
 template<typename T>
 class Coord : public tinymat::DLA::VectorD<T>
 {
@@ -77,6 +79,8 @@ public:
     tinymat::DLA::MatrixD<T>(dim,dim)
   {}
 };
+
+#endif
 
 } // avro
 

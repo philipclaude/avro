@@ -3,6 +3,7 @@
 
 #include "numerics/linear_algebra.h"
 #include "voronoi/optimal_transport.h"
+#include "adaptation/metric.h" // for quadratic_form which should be moved
 
 namespace avro
 {
@@ -103,13 +104,13 @@ private:
 class DensityMeasure_Gaussian : public delaunay::DensityMeasure
 {
 public:
-  DensityMeasure_Gaussian( const tinymat::DLA::VectorD<real_t>& mu , const numerics::SymMatrixD<real_t>& sigma ) :
+  DensityMeasure_Gaussian( const numerics::VectorD<real_t>& mu , const numerics::SymMatrixD<real_t>& sigma ) :
     mu_(mu),
     sigma_(sigma),
     dim_(mu.m()),
     X_(dim_)
   {
-    detS_ = tinymat::DLA::Det(sigma_);
+    detS_ = numerics::det(sigma_);
     sigma_inv_ = numerics::inverse(sigma_);
     avro_assert( dim_ == sigma_.m() );
     avro_assert( dim_ == sigma_.n() );
@@ -117,21 +118,21 @@ public:
 
   real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
   {
-    tinymat::DLA::VectorD<real_t> X(dim_);
+    numerics::VectorD<real_t> X(dim_);
     for (coord_t d = 0; d < dim_; d++)
       X[d] = x[d] - mu_[d];
 
     real_t A = 1./std::sqrt( std::pow(2*M_PI,dim_)*detS_);
-    real_t exp = tinymat::Transpose(X)*sigma_inv_*X;
+    real_t exp = quadratic_form(sigma_inv_,X);//Transpose(X)*sigma_inv_*X;
     return A*std::exp(-0.5*exp);
   }
 
 private:
-  const tinymat::DLA::VectorD<real_t>& mu_;
+  const numerics::VectorD<real_t>& mu_;
   const numerics::SymMatrixD<real_t>& sigma_;
   numerics::SymMatrixD<real_t> sigma_inv_;
   coord_t dim_;
-  tinymat::DLA::VectorD<real_t> X_;
+  numerics::VectorD<real_t> X_;
   real_t detS_;
 };
 

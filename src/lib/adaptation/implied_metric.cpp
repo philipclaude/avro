@@ -20,8 +20,8 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/nlopt_result.h"
 
-#include <tinymat/types/SurrealS.h>
-#include <tinymat/types/PromoteSurreal.h>
+#include "numerics/surreal/SurrealS.h"
+
 
 #include <nlopt.hpp>
 
@@ -85,7 +85,7 @@ ElementImpliedMetric<type>::ElementImpliedMetric( const type& element ) :
   Jeq_(JacobianEquilateral<type>(element.number())),
   M_( element.number() , element.number() )
 {
-  detJeq_ = numerics::determinant(Jeq_);
+  detJeq_ = numerics::det(Jeq_);
 }
 
 template<typename type>
@@ -94,7 +94,8 @@ ElementImpliedMetric<type>::compute( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
   J_ = J0_*Jeq_;
-  numerics::SymMatrixD<real_t> JJt = J_*tinymat::Transpose(J_);
+  //numerics::SymMatrixD<real_t> JJt = J_*transpose(J_);
+  numerics::MatrixD<real_t> JJt = J_*transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -107,7 +108,8 @@ ElementImpliedMetric<type>::compute( const Points& points , const index_t* v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  numerics::SymMatrixD<real_t> JJt = J_*tinymat::Transpose(J_);
+  //numerics::SymMatrixD<real_t> JJt = J_*transpose(J_);
+  numerics::MatrixD<real_t> JJt = J_*transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -121,7 +123,7 @@ ElementImpliedMetric<type>::inverse( const Points& points , const index_t *v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  M_ = J_*tinymat::Transpose(J_); // no inverse
+  M_ = J_*transpose(J_); // no inverse
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
     this->operator()(i,j) = M_(i,j);
@@ -132,7 +134,7 @@ real_t
 ElementImpliedMetric<type>::determinant( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
-  real_t detJ0 = numerics::determinant(J0_);
+  real_t detJ0 = numerics::det(J0_);
   if (detJ0==0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
 }
@@ -142,7 +144,7 @@ real_t
 ElementImpliedMetric<type>::determinant( const Points& points , const index_t* v , const index_t nv )
 {
   element_.jacobian( v, nv, points , J0_ );
-  real_t detJ0 = numerics::determinant(J0_);
+  real_t detJ0 = numerics::det(J0_);
   if (detJ0==0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
 }
@@ -247,7 +249,7 @@ MeshImpliedMetric<type>::initialize()
     }
 
     nodalMetricSqrt_[k]    = numerics::sqrtm(this->data_[k]);
-    nodalMetricSqrtDet_[k] = numerics::determinant(nodalMetricSqrt_[k]);
+    nodalMetricSqrtDet_[k] = numerics::det(nodalMetricSqrt_[k]);
   }
 }
 
@@ -289,7 +291,7 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
 
       // arithmetic average sv to form sk
       for (index_t i=0;i<nrank;i++)
-        sk[k].data[i] += sv[ topology_(k,j) ].data[i]*one_over_nv;
+        sk[k].data(i) += sv[ topology_(k,j) ].data(i)*one_over_nv;
     }
 
     // compute the contribution from this element
@@ -310,7 +312,7 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
     {
       // zero out the derivative
       for (index_t i=0;i<nrank;i++)
-        dc_dS[k].data[i] = 0.0;
+        dc_dS[k].data(i) = 0.0;
 
       // add the contribution from the surrounding elements
       for (index_t j=0;j<v2e_[k].size();j++)
@@ -371,11 +373,10 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
   {
     MatrixSymSurrealVertex S = Svec[k];
     for (index_t i=0;i<nrank;i++)
-      S.data[i].deriv(i) = 1.0; // derivative with respect to its own value is 1
+      S.data(i).deriv(i) = 1.0; // derivative with respect to its own value is 1
 
-    MatrixSymSurrealVertex sqrtM0 = nodalMetricSqrt_[k];
-    nodalMetric[k] = sqrtM0*numerics::expm(S)*sqrtM0;
-
+    const MatrixSymSurrealVertex& sqrtM0 = nodalMetricSqrt_[k];
+    nodalMetric[k] = (numerics::expm(S)).sandwich(sqrtM0);
   }
 
   // compute the deviation for every edge
@@ -399,8 +400,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
 
     // get the edge length squared
     numerics::VectorD<real_t> e( DIM , dx.data() );
-    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);//tinymat::Transpose(e)*nodalMetric[p]*e;
-    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);//tinymat::Transpose(e)*nodalMetric[q]*e;
+    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);
+    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);
     lni = sqrt(lni);
     lnj = sqrt(lnj);
 
@@ -441,8 +442,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
     // store the gradients
     for (index_t i=0;i<nrank;i++)
     {
-      df_dS[p].data[i] += delUnity.deriv(i)/nb_edges;
-      df_dS[q].data[i] += delUnity.deriv(nrank+i)/nb_edges;
+      df_dS[p].data(i) += delUnity.deriv(i)/nb_edges;
+      df_dS[q].data(i) += delUnity.deriv(nrank+i)/nb_edges;
     }
   }
   return delta;
@@ -478,7 +479,7 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 	for (index_t k=0;k<topology.points().nb();k++)
 	{
 		for (index_t i=0;i<nrank;i++)
-			S[k].data[i] = x[k*nrank+i];
+			S[k].data(i) = x[k*nrank+i];
 	}
 
   // size the gradients if necessary
@@ -487,7 +488,7 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 	if (grad)
 	{
     numerics::SymMatrixD<real_t> zero(DIM);
-    zero = 0;
+    zero.zero(); // this shouldn't be necessary anymore
 		dl_dS.resize( topology.points().nb() , zero );
     dc_dS.resize( topology.points().nb() , zero );
 	}
@@ -509,9 +510,10 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 		{
 			for (index_t i=0;i<nrank;i++)
 			{
-				grad[k*nrank+i] = dl_dS[k].data[i];
+				grad[k*nrank+i] = dl_dS[k].data(i);
+        //dl_dS[k].display("dl_ds");
         if (data->include_complexity)
-          grad[k*nrank+i] += 2*factor*(complexity/complexity0-1.0)*dc_dS[k].data[i]*(1./complexity0);
+          grad[k*nrank+i] += 2*factor*(complexity/complexity0-1.0)*dc_dS[k].data(i)*(1./complexity0);
 				gradnorm += pow(grad[k*nrank+i],2.);
 			}
 		}
@@ -595,24 +597,28 @@ MeshImpliedMetric<type>::optimize()
 
 		numerics::SymMatrixD<real_t> S( topology_.number() );
 		for (index_t i=0;i<nrank;i++)
-			S.data[i] = x[k*nrank+i];
+			S.data(i) = x[k*nrank+i];
 
     // assign the implied metric
-    this->data_[k] = nodalMetricSqrt_[k]*numerics::expm(S)*nodalMetricSqrt_[k];
+    this->data_[k] = (numerics::expm(S)).sandwich(nodalMetricSqrt_[k]);
 
     if (k<topology_.points().nb_ghost())
     {
-      this->data_[k] = 0;
+      this->data_[k].zero();
       continue;
     }
 
-    real_t detm = numerics::determinant(this->data_[k]);
+    real_t detm = numerics::det(this->data_[k]);
     if (detm <= 0.0)
     {
+      printf("detm = %g\n",detm);
+
       // forget about the step
-      //this->data_[k].dump();
       this->data_[k] = nodalMetricSqrt_[k]*nodalMetricSqrt_[k];
 
+      printf("detm = %g! -> fixing ball of vertex %lu",detm,k);
+
+      // this will segfault if the inverse topology is not constructed
       std::vector<index_t> ball;
       topology_.inverse().ball( k , ball );
       for (index_t j=0;j<ball.size();j++)
@@ -620,6 +626,7 @@ MeshImpliedMetric<type>::optimize()
         topology_.points().set_fixed( topology_(ball[j],i) , true );
 
       printf("detm = %g! -> fixing ball of vertex %lu",detm,k);
+
     }
     //avro_assert_msg( detm > 0. , "detm = %g for vertex %lu",detm,k );
 	}

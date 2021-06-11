@@ -157,7 +157,7 @@ range( const MatrixD<real_t>& A , MatrixD<real_t>& U0 )
     tdata[j*m+i] = A(i,j);
 
   // perform the svd
-  #ifndef AVRO_NO_LAPACK
+  #ifdef AVRO_NO_LAPACK
   UNUSED(jobu);
   UNUSED(jobvt);
   UNUSED(lda);

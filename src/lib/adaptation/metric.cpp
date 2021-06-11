@@ -536,7 +536,6 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 	implied.initialize();
 	implied.optimize();
 
-
 	// go through the entries of the current field and limit them using the step
 	index_t nb_limited = 0;
 	for (index_t k=0;k<nb();k++)
@@ -548,7 +547,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		numerics::SymMatrixD<real_t> mt = this->operator[](k);
 
 		numerics::SymMatrixD<real_t> invsqrt_M0 = numerics::powm(mi,-0.5);
-		numerics::SymMatrixD<real_t> expS = invsqrt_M0*mt*invsqrt_M0;
+		numerics::SymMatrixD<real_t> expS = mt.sandwich( invsqrt_M0 );
 		numerics::SymMatrixD<real_t> s = numerics::logm(expS);
 
 		// limit the step
@@ -572,9 +571,10 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 
 		// compute the new metric from the step
 		numerics::SymMatrixD<real_t> sqrt_M0 = numerics::sqrtm(mi);
-		numerics::SymMatrixD<real_t> mk = sqrt_M0*numerics::expm(s)*sqrt_M0;
+		numerics::SymMatrixD<real_t> mk = (numerics::expm(s)).sandwich(sqrt_M0);
 
-		real_t detm = numerics::determinant(mk);
+
+		real_t detm = numerics::det(mk);
 		if (detm <= 0.0)
 		{
 			// hack! revert to target metric...a pretty bad idea

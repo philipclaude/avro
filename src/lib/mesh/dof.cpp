@@ -31,16 +31,16 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
 	}
 	T = numerics::expm(T);
 
-  real_t d = numerics::determinant(T);
+  real_t d = numerics::det(T);
   if (d<=0 || std::isnan(d))
   {
     for (index_t k=0;k<nv;k++)
     {
-      std::cout << (*this)( idx[k],0 ) << std::endl;
-      std::cout << numerics::logm( (*this)(idx[k],0)) << std::endl;
+      //std::cout << (*this)( idx[k],0 ) << std::endl;
+      //std::cout << numerics::logm( (*this)(idx[k],0)) << std::endl;
     }
     print_inline(phi);
-    std::cout << T << std::endl;
+    //std::cout << T << std::endl;
     return false;
   }
   pT->set(T);
