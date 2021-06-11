@@ -36,7 +36,6 @@ UT_TEST_CASE(test1)
   UT_ASSERT( contains(listing,"library"));
   UT_ASSERT( contains(listing,"regression"));
   //UT_ASSERT( contains(listing,"sandbox"));
-  UT_ASSERT( contains(listing,"third_party"));
   UT_ASSERT( contains(listing,"tmp"));
 
   UT_ASSERT( !contains(listing,"something-random") );
