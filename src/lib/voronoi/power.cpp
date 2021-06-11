@@ -426,7 +426,7 @@ PowerDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& 
     }
   }
   decomposition_.orient();
-  avro_assert( fabs(decomposition_.volume() - 1.0) < 1e-12 ); // for now until more complicated geometries are studied
+  //avro_assert_msg( fabs(decomposition_.volume() - 1.0) < 1e-12 , "vol = %g" , decomposition_.volume() ); // for now until more complicated geometries are studied
   index_t count = 0;
   simplices.resize( decomposition_.nb()*(number_+1) );
   for (index_t k=0;k<decomposition_.nb();k++)

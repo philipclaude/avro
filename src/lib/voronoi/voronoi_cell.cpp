@@ -200,7 +200,7 @@ VoronoiCell::compute( const std::vector<index_t>& E )
   time_clip_ += real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 
   t0 = clock();
-  if (number_<4)
+  if (number_<=4)
     generate_simplices();
   time_decompose_ = real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 }
