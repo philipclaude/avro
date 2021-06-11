@@ -39,7 +39,7 @@ public:
 
 protected:
   coord_t dim_;
-  numerics::MatrixD<real_t> basis_;
+  matd<real_t> basis_;
 };
 
 class Body : public avro::Body

@@ -68,8 +68,6 @@ operator- (const matd<R>& A, const matd<S>& B) {
   return C;
 }
 
-namespace numerics {
-
 template<typename R, typename S>
 symd< typename result_of<R,S>::type >
 operator* (const symd<R>& A, const symd<S>& B) {
@@ -86,9 +84,6 @@ operator* (const symd<R>& A, const symd<S>& B) {
   }
   return C;
 }
-
-} // numerics
-
 
 #define INSTANTIATE_MATADD(R,S,T) \
 template<index_t M,index_t N> \

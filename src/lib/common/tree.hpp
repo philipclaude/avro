@@ -113,14 +113,14 @@ Tree<Node_t>::get_children( std::vector<const Node_t*>& children ) const
 
 template<typename Node_t>
 void
-Tree<Node_t>::get_adjacency( numerics::MatrixD<int>& A ) const
+Tree<Node_t>::get_adjacency( matd<int>& A ) const
 {
   std::vector<const Node_t*> children;
   get_children(children);
   children.insert( children.begin() , derived() );
 
   A.resize( children.size() , children.size() );
-  A = 0;
+  A.zero();
   for (index_t i=0;i<children.size();i++)
   for (index_t j=0;j<children.size();j++)
   {

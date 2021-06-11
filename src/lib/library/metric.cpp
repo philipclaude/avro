@@ -34,7 +34,7 @@ template<typename type>
 int
 MetricField_UniformGeometry<type>::eval( const Points& points , index_t p , const std::vector<index_t>& guesses , Metric& mp )
 {
-  numerics::SymMatrixD<real_t> m(dim_);// = uniform_(points[p]);
+  symd<real_t> m(dim_);// = uniform_(points[p]);
   Entity* entity = points.entity(p);
   avro_assert_msg( entity!=nullptr , "entity is null for vertex %lu?" , p );
 
@@ -46,7 +46,7 @@ MetricField_UniformGeometry<type>::eval( const Points& points , index_t p , cons
   }
 
   // interpolate the metrics evaluated on each face
-  std::vector<numerics::SymMatrixD<real_t>> metrics;
+  std::vector<symd<real_t>> metrics;
   for (index_t k=0;k<entity->nb_parents();k++)
   {
     Entity* face = entity->parents(k);
@@ -69,7 +69,7 @@ MetricField_UniformGeometry<type>::eval_face( const Points& points , index_t p ,
 {
   avro_assert( entity->number()==2 );
 
-  numerics::SymMatrixD<real_t> m(dim_);
+  symd<real_t> m(dim_);
   real_t area,h;
   real_t range[4];
   int periodic;
@@ -97,7 +97,7 @@ MetricField_UniformGeometry<type>::eval_face( const Points& points , index_t p ,
 }
 
 template<typename type>
-numerics::SymMatrixD<real_t>
+symd<real_t>
 MetricField_UniformGeometry<type>::operator()( const Points& points , index_t p )
 {
   Metric m(dim_);

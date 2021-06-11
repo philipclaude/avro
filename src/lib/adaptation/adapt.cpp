@@ -345,7 +345,7 @@ adapt( AdaptationProblem& problem )
 
   // retrieve the background mesh and metric field
   Mesh& mesh = problem.mesh_in;
-  std::vector<numerics::SymMatrixD<real_t>>& fld = problem.fld;
+  std::vector<symd<real_t>>& fld = problem.fld;
 
   // extract the background topology
   avro_assert_msg( mesh.nb_topologies()==1 ,

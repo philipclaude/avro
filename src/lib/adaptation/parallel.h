@@ -21,7 +21,7 @@ class MetricField_Analytic;
 
 template<typename type> class Topology;
 
-typedef numerics::SymMatrixD<real_t> VertexMetric;
+typedef symd<real_t> VertexMetric;
 class AdaptationParameters;
 template<typename type> class Topology_Partition;
 class Mesh;

@@ -22,7 +22,7 @@
 //#include <tinymat/dense/tools/Identity.h>
 
 #include "numerics/mat.h"
-#include "numerics/symatd.h"
+#include "numerics/symd.h"
 
 namespace avro
 {

@@ -32,9 +32,9 @@ public:
   void evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const;
 
 private:
-  numerics::MatrixD<real_t> V_;
-  numerics::MatrixD<real_t> B_;
-  numerics::VectorD<real_t> x0_;
+  matd<real_t> V_;
+  matd<real_t> B_;
+  vecd<real_t> x0_;
 };
 
 } // PSC

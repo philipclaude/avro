@@ -7,7 +7,7 @@
 #include "common/error.h"
 
 #include "numerics/mat.h"
-#include "numerics/symatd.h"
+#include "numerics/symd.h"
 #include "numerics/dual.h"
 
 #include "numerics/surreal/config.h"

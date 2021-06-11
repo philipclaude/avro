@@ -34,7 +34,7 @@ public:
   {}
   virtual ~MetricField_Analytic() {}
 
-  virtual numerics::SymMatrixD<real_t> operator()( const real_t* x ) const = 0;
+  virtual symd<real_t> operator()( const real_t* x ) const = 0;
 
   coord_t dim() const { return dim_; }
 
@@ -55,9 +55,9 @@ public:
     h_(h)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
-    numerics::SymMatrixD<real_t> m(dim_);
+    symd<real_t> m(dim_);
 
     for (coord_t d=0;d<dim_;d++)
       m(d,d) = 1./(h_[d]*h_[d]);
@@ -75,9 +75,9 @@ public:
     MetricField_Analytic(3)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
-    numerics::SymMatrixD<real_t> m(dim_);
+    symd<real_t> m(dim_);
 
     real_t hx = 0.1;
     real_t hy = 0.1;
@@ -101,7 +101,7 @@ public:
     MetricField_Analytic(3)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
     real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
     real_t t = atan2( x[1] , x[0] );
@@ -111,7 +111,7 @@ public:
     real_t h0 = 1e-3;
     real_t hr = h0 +2.*(0.1 -h0)*fabs( r -0.5 );
 
-    numerics::MatrixD<real_t> Q(3,3);
+    matd<real_t> Q(3,3);
     Q(0,0) = cos(t);
     Q(0,1) = -sin(t);
     Q(0,2) = 0.0;
@@ -124,13 +124,13 @@ public:
     Q(2,1) = 0.0;
     Q(2,2) = 1.0;
 
-    numerics::VectorD<real_t> lambda(3);
+    vecd<real_t> lambda(3);
     lambda[0] = 1./(hr*hr);
     lambda[1] = 1./(ht*ht);
     lambda[2] = 1./(hz*hz);
 
-    numerics::MatrixD<real_t> M = Q* (diag(lambda)*transpose(Q));
-    numerics::SymMatrixD<real_t> m(3);
+    matd<real_t> M = Q* (diag(lambda)*transpose(Q));
+    symd<real_t> m(3);
     m.set(M);
     return m;
   }
@@ -144,7 +144,7 @@ public:
     MetricField_Analytic(3)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
     real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
     real_t t = atan2( x[1] , x[0] );
@@ -157,7 +157,7 @@ public:
   	if (d<0.) ht = 0.1;
   	else ht = d/40. +0.1*( 1. -d);
 
-    numerics::MatrixD<real_t> Q(3,3);
+    matd<real_t> Q(3,3);
     Q(0,0) = cos(t);
     Q(0,1) = -sin(t);
     Q(0,2) = 0.0;
@@ -170,12 +170,12 @@ public:
     Q(2,1) = 0.0;
     Q(2,2) = 1.0;
 
-    numerics::VectorD<real_t> lambda(3);
+    vecd<real_t> lambda(3);
     lambda[0] = 1./(hr*hr);
     lambda[1] = 1./(ht*ht);
     lambda[2] = 1./(hz*hz);
 
-    numerics::SymMatrixD<real_t> m(3);
+    symd<real_t> m(3);
     m = Q*diag(lambda)*transpose(Q);
 
     return m;
@@ -192,7 +192,7 @@ public:
     hmin_(hmin)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
     real_t hx = 100*hmin_;
     real_t hy = 100*hmin_;
@@ -200,7 +200,7 @@ public:
     real_t h0 = hmin_;
     real_t ht = h0 +2.*(hx -h0)*fabs( x[3] -0.5 );
 
-    numerics::SymMatrixD<real_t> m(4);
+    symd<real_t> m(4);
     m(0,0) = 1./(hx*hx);
     m(0,1) = 0.;
     m(0,2) = 0.;
@@ -224,7 +224,7 @@ public:
     MetricField_Analytic(4)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
     real_t eps = 0.001; // offset for singularity at origin
   	real_t X = x[0] +eps;
@@ -247,7 +247,7 @@ public:
   	real_t PHI = atan2(Y,X);
 
   	// eigenvectors are normal and tangents to the hypercone
-  	numerics::MatrixD<real_t> Q(4,4);
+  	matd<real_t> Q(4,4);
   	Q(0,0) =  sin(alpha)*cos(PHI)*sin(THETA);
   	Q(0,1) =  cos(PHI)*cos(THETA);
   	Q(0,2) = -sin(PHI);
@@ -275,7 +275,7 @@ public:
   	real_t delta = 0.1;
   	real_t ht = 0.5;
 
-  	numerics::VectorD<real_t> L(4);
+  	vecd<real_t> L(4);
   	real_t hrho = h0 +2*(hu-h0)*fabs(RHO-rho0);
   	real_t htheta = hu;
   	real_t hphi = hu;
@@ -303,12 +303,12 @@ public:
   int eval( const Points& points , index_t p , const std::vector<index_t>& guesses , Metric& mp ) override;
   int eval_face( const Points& points , index_t p , Entity* entity , Metric& mp );
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const override
+  symd<real_t> operator()( const real_t* x ) const override
   {
     avro_assert_not_reached;
   }
 
-  numerics::SymMatrixD<real_t> operator()( const Points& points , index_t p );
+  symd<real_t> operator()( const Points& points , index_t p );
 
 private:
   using FieldInterpolation<type,Metric>::analytic_;

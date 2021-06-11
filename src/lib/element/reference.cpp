@@ -154,8 +154,8 @@ ReferenceElement<Simplex>::precalculate()
   else
   {
     //printf("warning: this is untested\n");
-    numerics::MatrixD<real_t> X(number_,number_+1);
-    X = 0;
+    matd<real_t> X(number_,number_+1);
+    X.zero();
 
     for (coord_t i=0;i<number_;i++)
       X(i,i) = 1.;

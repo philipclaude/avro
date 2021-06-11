@@ -237,7 +237,7 @@ private:
   real_t delta_,delta_min_,delta_max_;
   index_t nb_parameter_tests_;
   index_t nb_parameter_rejections_;
-  numerics::SymMatrixD<real_t> M0_;
+  symd<real_t> M0_;
   real_t objective_;
 
   index_t nb_visibility_rejections_;
