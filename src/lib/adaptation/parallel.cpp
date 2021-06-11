@@ -23,7 +23,7 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 #include <time.h>
 #include <unistd.h>

@@ -10,7 +10,7 @@
 #include "unit_tester.hpp"
 
 #include "numerics/linear_algebra.h"
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 #include "numerics/predicates.h"
 #include "common/types.h"
 
@@ -220,7 +220,7 @@ UT_TEST_CASE(side3_test)
     zl[1] =  .21;
     zl[2] =  .5;
 
-    numerics::MatrixD<real_t> A(3,3);
+    matd<real_t> A(3,3);
     for (coord_t ii=0;ii<3;ii++)
     {
       A(ii,0) = zj[ii] - zi[ii];
@@ -333,7 +333,7 @@ UT_TEST_CASE(side4_test)
     zm[2] =  .5;
     zm[3] =  .5;
 
-    numerics::MatrixD<real_t> A(4,4);
+    matd<real_t> A(4,4);
     for (coord_t ii=0;ii<4;ii++)
     {
       A(ii,0) = zj[ii] - zi[ii];
@@ -456,7 +456,7 @@ UT_TEST_CASE(side5_test)
     zo[3] =  .5;
     zo[4] =  .5;
 
-    numerics::MatrixD<real_t> A(5,5);
+    matd<real_t> A(5,5);
     for (coord_t ii=0;ii<5;ii++)
     {
       A(ii,0) = zj[ii] - zi[ii];

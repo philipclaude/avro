@@ -12,19 +12,9 @@
 
 #include "common/error.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 #include "numerics/determinant.h"
-
-//#include <tinymat/dense/dynamic/MatrixD_Det.h>
-//#include <tinymat/dense/dynamic/MatrixD_Diag.h>
-//#include <tinymat/dense/dynamic/Eigen.h>
-//#include <tinymat/dense/InverseLU.h>
-//#include <tinymat/dense/InverseLUP.h>
-//#include <tinymat/Transpose.h>
-
-//#include <tinymat/types/SurrealD.h>
-//#include <tinymat/types/SurrealS.h>
 
 #include <cmath>
 
@@ -34,22 +24,35 @@ namespace avro
 namespace numerics
 {
 
-template<typename type>
-int
-kernel( const MatrixD<type>& A , MatrixD<type>& K );
+template<index_t M,typename T> mats<M,M,T> inverse( const mats<M,M,T>& A );
+template<index_t M,typename T> T det( const mats<M,M,T>& A );
+template<index_t M,typename T> T trace( const mats<M,M,T>& A );
+template<typename T> matd<T> transpose( const matd<T>& A );
 
-template<typename type>
-int
-range( const MatrixD<type>& A , MatrixD<type>& U );
+template<typename type> symd<type> expm( const symd<type>& M ) { return M.exp(); }
+template<typename type> symd<type> logm( const symd<type>& M ) { return M.log(); }
+template<typename type> symd<type> powm( const symd<type>& M , real_t p ) { return M.pow(p); }
+template<typename type> symd<type> sqrtm( const symd<type>& M ) { return M.sqrt(); }
+
+template<typename type> type det( const symd<type>& M );
+
+template<typename T> void solveLUP( const matd<T>& A , const vecd<T>& b , vecd<T>& x );
+template<typename T> void inverseLUP( const matd<T>& A , matd<T>& Ainv );
+
+template<typename type> int kernel( const matd<type>& A , matd<type>& K );
+
+template<typename type> int range( const matd<type>& A , matd<type>& U );
+
+template<typename T> matd<T> diag( const vecd<T>& d );
 
 template<typename T>
-inline MatrixD<T>
-inverse( MatrixD<T>& M )
+inline matd<T>
+inverse( matd<T>& M )
 {
 	avro_assert( M.m() == M.n() );
 	T idetM = 1./det(M);
 
-  MatrixD<T> Minv(M.m(),M.n());
+  matd<T> Minv(M.m(),M.n());
 
 	if (M.n()==1)
 	{
@@ -107,12 +110,12 @@ inverse( MatrixD<T>& M )
 }
 
 template<typename T>
-inline SymMatrixD<T>
-inverse( const SymMatrixD<T>& M )
+inline symd<T>
+inverse( const symd<T>& M )
 {
 	T idetM = 1./det(M);
 
-  SymMatrixD<T> Minv(M.m(),M.n());
+  symd<T> Minv(M.m(),M.n());
 
 	if (M.n()==1)
 	{

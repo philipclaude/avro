@@ -33,9 +33,9 @@ public:
     MetricField_Analytic(2)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
-    numerics::SymMatrixD<real_t> m(dim_);
+    symd<real_t> m(dim_);
 
     real_t H_ = 5.;
 		real_t f_ = 10.;
@@ -61,9 +61,9 @@ public:
     MetricField_Analytic(2)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
-    numerics::SymMatrixD<real_t> m(dim_);
+    symd<real_t> m(dim_);
 
     real_t hu = 0.1;
     real_t h0 = hu/100;

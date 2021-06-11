@@ -152,7 +152,6 @@ public:
 template<typename R,typename S,typename T,index_t M>
 T dot( const vecs<M,R>& u , const vecs<M,S>& v );
 
-template<typename T> matd<T> diag( const vecd<T>& d );
 template<typename R,typename S> vecd< typename result_of<R,S>::type > operator-( const vecd<R>& x , const vecd<S>& y );
 template<typename R,typename S> vecd< typename result_of<R,S>::type > operator+( const vecd<R>& x , const vecd<S>& y );
 template<typename R,typename S> vecd< typename result_of<R,S>::type > operator*( const R& x , const vecd<S>& y );

@@ -17,7 +17,7 @@
 #include "element/element.h"
 
 #include "numerics/functions.h"
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 #include "numerics/types.h"
 
 #include <map>

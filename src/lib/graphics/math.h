@@ -10,7 +10,7 @@
 #ifndef avro_LIB_GRAPHICS_MATH_H_
 #define avro_LIB_GRAPHICS_MATH_H_
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 #define USE_GLM 1
 

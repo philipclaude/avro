@@ -169,15 +169,6 @@ class AffineInvariant
 template<typename R, typename S>
 symd< typename result_of<R,S>::type > operator*( const symd<R>& A , const symd<S>& B );
 
-namespace numerics
-{
-template<typename type> symd<type> expm( const symd<type>& M ) { return M.exp(); }
-template<typename type> symd<type> logm( const symd<type>& M ) { return M.log(); }
-template<typename type> symd<type> powm( const symd<type>& M , real_t p ) { return M.pow(p); }
-template<typename type> symd<type> sqrtm( const symd<type>& M ) { return M.sqrt(); }
-
-template<typename type> type det( const symd<type>& M );
-}
 
 } // avro
 

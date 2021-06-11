@@ -77,7 +77,7 @@ UT_TEST_CASE(test1)
   topology.inverse().build();
 
   // create the metric field
-  std::vector<numerics::SymMatrixD<real_t>> fld;
+  std::vector<symd<real_t>> fld;
   for (index_t k=0;k<topology.points().nb();k++)
     fld.push_back( analytic( topology.points()[k] ) );
 

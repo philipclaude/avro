@@ -13,7 +13,7 @@
 #include "common/types.h"
 
 //#include "tinymat/dense/dynamic/MatrixD.h"
-//#include "tinymat/dense/dynamic/VectorD.h"
+//#include "tinymat/dense/dynamic/vecd<.h"
 
 
 namespace avro
@@ -21,18 +21,18 @@ namespace avro
 
 #if 0
 template<typename T>
-class Coord : public tinymat::DLA::VectorD<T>
+class Coord : public tinymat::DLA::vecd<T>
 {
 protected:
   Coord( coord_t dim ) :
-    tinymat::DLA::VectorD<T>(dim)
+    tinymat::DLA::vecd<T>(dim)
   {}
 
   Coord(real_t* x , coord_t dim ) :
-    tinymat::DLA::VectorD<T>(dim,x)
+    tinymat::DLA::vecd<T>(dim,x)
   {}
 
-  coord_t dim() const { return tinymat::DLA::VectorD<T>::m(); }
+  coord_t dim() const { return tinymat::DLA::vecd<T>::m(); }
 };
 
 class ParaCoord : public Coord<real_t> {};
@@ -53,30 +53,30 @@ public:
     this->operator()(dim) = 1.0;
   }
 
-  coord_t dim() const { return tinymat::DLA::VectorD<real_t>::m()-1; }
+  coord_t dim() const { return tinymat::DLA::vecd<real_t>::m()-1; }
 };
 
 template<typename T>
-class Gradient : public tinymat::DLA::VectorD<T>
+class Gradient : public tinymat::DLA::vecd<T>
 {
 public:
   Gradient( coord_t dim ) :
-    tinymat::DLA::VectorD<T>(dim)
+    tinymat::DLA::vecd<T>(dim)
   {}
 
   Gradient(real_t* x , coord_t dim ) :
-    tinymat::DLA::VectorD<T>(dim,x)
+    tinymat::DLA::vecd<T>(dim,x)
   {}
 
-  coord_t dim() const { return tinymat::DLA::VectorD<T>::m(); }
+  coord_t dim() const { return tinymat::DLA::vecd<T>::m(); }
 };
 
 template<typename T>
-class Hessian : public tinymat::DLA::MatrixD<T>
+class Hessian : public tinymat::DLA::matd<T>
 {
 public:
   Hessian( coord_t dim ) :
-    tinymat::DLA::MatrixD<T>(dim,dim)
+    tinymat::DLA::matd<T>(dim,dim)
   {}
 };
 

@@ -13,7 +13,7 @@
 #include "element/reference.h"
 
 #include "numerics/functions.h"
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 #include <cmath>
 

@@ -15,7 +15,7 @@
 #include "geometry/body.h"
 #include "geometry/entity.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 namespace avro
 {

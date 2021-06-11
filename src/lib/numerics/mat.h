@@ -230,14 +230,6 @@ template<typename R,typename S> matd< typename result_of<R,S>::type > operator* 
 template<typename R,typename S> matd< typename result_of<R,S>::type > operator+ ( const matd<R>& A , const matd<S>& B );
 template<typename R,typename S> matd< typename result_of<R,S>::type > operator- ( const matd<R>& A , const matd<S>& B );
 
-template<index_t M,typename T> mats<M,M,T> inverse( const mats<M,M,T>& A );
-template<index_t M,typename T> T det( const mats<M,M,T>& A );
-template<index_t M,typename T> T trace( const mats<M,M,T>& A );
-template<typename T> matd<T> transpose( const matd<T>& A );
-
-template<typename T> void solveLUP( const matd<T>& A , const vecd<T>& b , vecd<T>& x );
-template<typename T> void inverseLUP( const matd<T>& A , matd<T>& Ainv );
-
 } // avro
 
 #endif

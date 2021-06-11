@@ -21,7 +21,7 @@
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 #include "numerics/surreal/SurrealD.h"
 
 namespace avro

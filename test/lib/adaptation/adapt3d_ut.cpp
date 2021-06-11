@@ -79,7 +79,7 @@ UT_TEST_CASE(adapt_test)
     params.adapt_iter() = iter;
 
     // create the metric field
-    std::vector<numerics::SymMatrixD<real_t>> fld;
+    std::vector<symd<real_t>> fld;
     for (index_t k=0;k<pmesh->points().nb();k++)
       fld.push_back( analytic( pmesh->points()[k] ) );
 

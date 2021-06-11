@@ -15,7 +15,10 @@
 
 #include "mesh/field.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
+#include "numerics/symd.h"
+
+#include <vector>
 
 namespace avro
 {

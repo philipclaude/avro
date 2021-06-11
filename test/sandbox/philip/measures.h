@@ -104,7 +104,7 @@ private:
 class DensityMeasure_Gaussian : public delaunay::DensityMeasure
 {
 public:
-  DensityMeasure_Gaussian( const numerics::VectorD<real_t>& mu , const numerics::SymMatrixD<real_t>& sigma ) :
+  DensityMeasure_Gaussian( const vecd<real_t>& mu , const symd<real_t>& sigma ) :
     mu_(mu),
     sigma_(sigma),
     dim_(mu.m()),
@@ -118,7 +118,7 @@ public:
 
   real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
   {
-    numerics::VectorD<real_t> X(dim_);
+    vecd<real_t> X(dim_);
     for (coord_t d = 0; d < dim_; d++)
       X[d] = x[d] - mu_[d];
 
@@ -128,11 +128,11 @@ public:
   }
 
 private:
-  const numerics::VectorD<real_t>& mu_;
-  const numerics::SymMatrixD<real_t>& sigma_;
-  numerics::SymMatrixD<real_t> sigma_inv_;
+  const vecd<real_t>& mu_;
+  const symd<real_t>& sigma_;
+  symd<real_t> sigma_inv_;
   coord_t dim_;
-  numerics::VectorD<real_t> X_;
+  vecd<real_t> X_;
   real_t detS_;
 };
 

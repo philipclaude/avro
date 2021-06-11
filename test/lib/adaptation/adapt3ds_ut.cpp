@@ -109,7 +109,7 @@ UT_TEST_CASE(test1)
     params.adapt_iter() = iter;
 
     // create the metric field
-    std::vector<numerics::SymMatrixD<real_t>> fld;
+    std::vector<symd<real_t>> fld;
 //    #pragma omp parallel for
     for (index_t k=0;k<pmesh->points().nb();k++)
       fld.push_back( (*metric.get())( pmesh->points() , k ) );

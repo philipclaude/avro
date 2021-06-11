@@ -28,7 +28,7 @@ UT_TEST_CASE( test1 )
   MetricField_Tesseract_Linear tl;
   MetricField_Tesseract_Wave tw;
 
-  numerics::SymMatrixD<real_t> m;
+  symd<real_t> m;
   real_t x3[3] = {1,1,1};
 
   m = uniform1(x3);

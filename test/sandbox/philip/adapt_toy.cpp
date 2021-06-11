@@ -36,9 +36,9 @@ public:
     MetricField_Analytic(2)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
-    numerics::SymMatrixD<real_t> m(dim_);
+    symd<real_t> m(dim_);
 
     real_t H_ = 5.;
 		real_t f_ = 10.;
@@ -64,9 +64,9 @@ public:
     MetricField_Analytic(2)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
-    numerics::SymMatrixD<real_t> m(dim_);
+    symd<real_t> m(dim_);
 
     real_t hu = 0.1;
     real_t h0 = hu/100;
@@ -89,9 +89,9 @@ public:
     MetricField_Analytic(2)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
-    numerics::SymMatrixD<real_t> m(dim_);
+    symd<real_t> m(dim_);
 
     real_t c[2] = {0.5,0.5};
     real_t r = std::sqrt( (x[0]-c[0])*(x[0]-c[0]) + (x[1]-c[1])*(x[1]-c[1]) );
@@ -109,14 +109,14 @@ public:
 class MetricField_Gaussian : public MetricField_Analytic
 {
 public:
-  MetricField_Gaussian( const numerics::VectorD<real_t>& mu , const numerics::SymMatrixD<real_t>& sigma ) :
+  MetricField_Gaussian( const vecd<real_t>& mu , const symd<real_t>& sigma ) :
     MetricField_Analytic(mu.m()),
     density_(mu,sigma)
   {}
 
-  numerics::SymMatrixD<real_t> operator()( const real_t* x ) const
+  symd<real_t> operator()( const real_t* x ) const
   {
-    numerics::SymMatrixD<real_t> m(2);
+    symd<real_t> m(2);
     real_t rho = 5*density_.evaluate(0,nullptr,x);
     m(0,0) = rho*rho;
     m(0,1) = 0.;
@@ -143,8 +143,8 @@ UT_TEST_CASE( test1 )
   EGADS::Cube geometry(&context,lengths);
 
   // gaussian
-  numerics::VectorD<real_t> mu(number);
-  numerics::SymMatrixD<real_t> sigma(number,number);
+  vecd<real_t> mu(number);
+  symd<real_t> sigma(number,number);
   sigma = 0;
   for (coord_t d = 0; d < number; d++)
   {
@@ -184,7 +184,7 @@ UT_TEST_CASE( test1 )
     params.adapt_iter() = iter;
 
     // create the metric field
-    std::vector<numerics::SymMatrixD<real_t>> fld;
+    std::vector<symd<real_t>> fld;
     for (index_t k=0;k<pmesh->points().nb();k++)
       fld.push_back( analytic( pmesh->points()[k] ) );
 
