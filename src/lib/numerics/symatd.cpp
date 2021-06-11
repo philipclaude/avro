@@ -43,11 +43,15 @@ template<typename type>
 symd<type>::symd( const vecd<type>& lambda , const matd<type>& q ) :
   n_( lambda.m() )
 {
+	fromeig(lambda,q);
+
   // constructor from eigendecomposition
-  data_.resize( nb() );
+  //data_.resize( nb() );
   //std::fill( data_.begin() , data_.end() , 0. );
 
-	(*this) = q * diag(lambda) * transpose(q);
+	//(*this) = q * diag(lambda) * transpose(q);
+
+	//display();
 
 	/*
 	// compute L*q'
@@ -105,6 +109,16 @@ template symd<SurrealS<10>>::symd( const symd<real_t>& A );
 
 template<typename type>
 void
+symd<type>::set( const matd<type>& M ) {
+	n_ = M.m();
+	avro_assert( n_ == M.n() );
+	for (index_t i = 0; i < n_; i++)
+	for (index_t j = 0; j < n_; j++)
+		(*this)(i,j) = M(i,j);
+}
+
+template<typename type>
+void
 symd<type>::fromeig(const vecd<type>& lambda , const matd<type>& q )
 {
   n_ = lambda.m();
@@ -113,7 +127,8 @@ symd<type>::fromeig(const vecd<type>& lambda , const matd<type>& q )
   data_.resize( nb() );
   std::fill( data_.begin() , data_.end() , 0. );
 
-	(*this) = q * diag(lambda) * transpose(q);
+	matd<type> M = q * diag(lambda) * transpose(q);
+	set(M);
 
 	/*
   // compute L*q'
@@ -160,34 +175,6 @@ symd<type>::quadratic_form( const type* x ) const
   return f;
 }
 
-/*
-template<typename type>
-type
-symd<type>::quadraticFormReal( real_t* x ) const
-{
-  // computes the quadratic form x'*(this)*x
-
-  // y = (this)*x
-  std::vector<type> y(n_);
-  for (coord_t i=0;i<n_;i++) // loop through rows of (this)
-  {
-    y[i] = 0.;
-    for (coord_t j=0;j<n_;j++) // loop through colums of (this)
-    {
-      y[i] += operator()(i,j)*x[j];
-    }
-  }
-
-  // x' * y
-  type f = 0.;
-  for (coord_t i=0;i<n_;i++)
-  {
-    f += x[i]*y[i];
-  }
-  return f;
-}
-*/
-
 template<typename type>
 type
 symd<type>::determinant() const
@@ -216,7 +203,6 @@ symd<type>::determinant() const
       - X1_4*X2_2*X3_3*X4_1 - X1_4*X2_3*X3_1*X4_2 + X1_4*X2_3*X3_2*X4_1;
 }
 
-/*
 template<typename type>
 symd<type>
 symd<type>::sandwich( const symd<type>& B ) const
@@ -280,7 +266,6 @@ symd<type>::sandwich( const symd<type>& B ) const
 		avro_implement;
 	return C;
 }
-*/
 
 template<typename type>
 symd<type>
@@ -504,7 +489,7 @@ template<typename type>
 bool
 symd<type>::check()
 {
-  // check if the tensor is indeed symd be ensuring the eigenvalues are > 0
+  // check if the tensor is indeed symd by ensuring the eigenvalues are > 0
   std::pair< vecd<type>,matd<type> > E = eig();
   for (index_t k=0;k<E.first.m();k++)
   {
@@ -518,7 +503,11 @@ template<typename type>
 void
 symd<type>::display( const std::string& title ) const
 {
-	avro_assert_not_reached;
+	if (!title.empty()) printf("%s\n",title.c_str());
+	printf("%s:\n",__PRETTY_FUNCTION__);
+	for (index_t i = 0; i < n_; i++)
+		for (index_t j = 0; j < n_; j++)
+			std::cout << "(" + std::to_string(i) + "," + std::to_string(j) + "): " << (*this)(i,j) << std::endl;
 }
 
 template<typename type>

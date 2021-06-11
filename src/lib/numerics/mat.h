@@ -22,7 +22,7 @@ public:
   matd(index_t n) :
     m_(n),
     n_(n),
-    data_(n*n)
+    data_(n*n,0)
   {}
 
   matd() :
@@ -33,7 +33,7 @@ public:
   matd(index_t m,index_t n) :
     m_(m),
     n_(n),
-    data_(m*n)
+    data_(m*n,0)
   {}
 
   matd(const matd& A) :

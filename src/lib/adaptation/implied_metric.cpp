@@ -20,9 +20,6 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/nlopt_result.h"
 
-//#include <tinymat/types/SurrealS.h>
-//#include <tinymat/types/PromoteSurreal.h>
-
 #include "numerics/surreal/SurrealS.h"
 
 
@@ -378,9 +375,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
     for (index_t i=0;i<nrank;i++)
       S.data(i).deriv(i) = 1.0; // derivative with respect to its own value is 1
 
-    MatrixSymSurrealVertex sqrtM0 = nodalMetricSqrt_[k];
-    nodalMetric[k] = sqrtM0*numerics::expm(S)*sqrtM0;
-
+    const MatrixSymSurrealVertex& sqrtM0 = nodalMetricSqrt_[k];
+    nodalMetric[k] = (numerics::expm(S)).sandwich(sqrtM0);
   }
 
   // compute the deviation for every edge
@@ -404,8 +400,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
 
     // get the edge length squared
     numerics::VectorD<real_t> e( DIM , dx.data() );
-    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);//tinymat::Transpose(e)*nodalMetric[p]*e;
-    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);//tinymat::Transpose(e)*nodalMetric[q]*e;
+    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);
+    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);
     lni = sqrt(lni);
     lnj = sqrt(lnj);
 
@@ -492,7 +488,7 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 	if (grad)
 	{
     numerics::SymMatrixD<real_t> zero(DIM);
-    zero = 0;
+    zero.zero(); // this shouldn't be necessary anymore
 		dl_dS.resize( topology.points().nb() , zero );
     dc_dS.resize( topology.points().nb() , zero );
 	}
@@ -515,6 +511,7 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 			for (index_t i=0;i<nrank;i++)
 			{
 				grad[k*nrank+i] = dl_dS[k].data(i);
+        //dl_dS[k].display("dl_ds");
         if (data->include_complexity)
           grad[k*nrank+i] += 2*factor*(complexity/complexity0-1.0)*dc_dS[k].data(i)*(1./complexity0);
 				gradnorm += pow(grad[k*nrank+i],2.);
@@ -607,17 +604,21 @@ MeshImpliedMetric<type>::optimize()
 
     if (k<topology_.points().nb_ghost())
     {
-      this->data_[k] = 0;
+      this->data_[k].zero();
       continue;
     }
 
     real_t detm = numerics::det(this->data_[k]);
     if (detm <= 0.0)
     {
+      printf("detm = %g\n",detm);
+
       // forget about the step
-      //this->data_[k].dump();
       this->data_[k] = nodalMetricSqrt_[k]*nodalMetricSqrt_[k];
 
+      printf("detm = %g! -> fixing ball of vertex %lu",detm,k);
+
+      // this will segfault if the inverse topology is not constructed
       std::vector<index_t> ball;
       topology_.inverse().ball( k , ball );
       for (index_t j=0;j<ball.size();j++)
@@ -625,6 +626,7 @@ MeshImpliedMetric<type>::optimize()
         topology_.points().set_fixed( topology_(ball[j],i) , true );
 
       printf("detm = %g! -> fixing ball of vertex %lu",detm,k);
+
     }
     //avro_assert_msg( detm > 0. , "detm = %g for vertex %lu",detm,k );
 	}

@@ -53,6 +53,8 @@ public:
 			data_[k] = T.data(k);
 	}
 
+	void set( const matd<type>& M );
+
 	void zero() {
 		for (index_t i=0;i<nb();i++)
 			data_[i] = 0.;
@@ -127,6 +129,8 @@ public:
 	symd inv() const;
 	symd pow( real_t p ) const;
 	symd sqrt() const;
+
+	symd<type> sandwich( const symd<type>& B ) const;
 
 	// eigenvalues and eigenvectors
 	std::pair< vecd<type>,matd<type> > eig() const;
