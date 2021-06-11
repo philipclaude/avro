@@ -57,28 +57,6 @@ else()
 	set( BLOSSOM_SOURCES )
 endif()
 
-# tinymat
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat )
-# add_source_directories(NUMPACK_SOURCES "Source Files\\tinymat" tinymat/tools )
-#
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense )
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/tools )
-#
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/dynamic )
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/dynamic/Eigen )
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/dynamic/lapack )
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/dynamic/MatMul )
-#
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static )
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static/Eigen )
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static/MatMul )
-# add_source_directories(NUMPACK_SOURCES "Source Files\\numerics" tinymat/dense/static/SVD )
-#
-# include_directories(tinymat)
-
-#add_source_directories( QHULL_SOURCES "QHULL" qhull/libqhull )
-#include_directories( qhull )
-
 add_source_directories(HLBFGS_SOURCES "HLBFGS" HLBFGS )
 set_source_files_properties( ${HLBFGS_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 
