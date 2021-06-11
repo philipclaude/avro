@@ -129,9 +129,9 @@ public:
     lambda[1] = 1./(ht*ht);
     lambda[2] = 1./(hz*hz);
 
+    numerics::MatrixD<real_t> M = Q* (diag(lambda)*transpose(Q));
     numerics::SymMatrixD<real_t> m(3);
-    m = Q*diag(lambda)*transpose(Q);
-
+    m.set(M);
     return m;
   }
 };

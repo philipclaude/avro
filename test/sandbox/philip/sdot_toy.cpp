@@ -35,7 +35,7 @@ UT_TEST_CASE( test1 )
   DensityMeasure_Cone density5(number);
 
   // gaussian
-  tinymat::DLA::VectorD<real_t> mu(number);
+  numerics::VectorD<real_t> mu(number);
   numerics::SymMatrixD<real_t> sigma(number,number);
   sigma = 0;
   for (coord_t d = 0; d < number; d++)

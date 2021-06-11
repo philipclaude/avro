@@ -600,7 +600,7 @@ MeshImpliedMetric<type>::optimize()
 			S.data(i) = x[k*nrank+i];
 
     // assign the implied metric
-    this->data_[k] = nodalMetricSqrt_[k]*numerics::expm(S)*nodalMetricSqrt_[k];
+    this->data_[k] = (numerics::expm(S)).sandwich(nodalMetricSqrt_[k]);
 
     if (k<topology_.points().nb_ghost())
     {

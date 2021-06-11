@@ -109,8 +109,8 @@ public:
 class MetricField_Gaussian : public MetricField_Analytic
 {
 public:
-  MetricField_Gaussian( const tinymat::DLA::VectorD<real_t>& mu , const numerics::SymMatrixD<real_t>& sigma ) :
-    MetricField_Analytic(mu.n()),
+  MetricField_Gaussian( const numerics::VectorD<real_t>& mu , const numerics::SymMatrixD<real_t>& sigma ) :
+    MetricField_Analytic(mu.m()),
     density_(mu,sigma)
   {}
 
@@ -143,7 +143,7 @@ UT_TEST_CASE( test1 )
   EGADS::Cube geometry(&context,lengths);
 
   // gaussian
-  tinymat::DLA::VectorD<real_t> mu(number);
+  numerics::VectorD<real_t> mu(number);
   numerics::SymMatrixD<real_t> sigma(number,number);
   sigma = 0;
   for (coord_t d = 0; d < number; d++)

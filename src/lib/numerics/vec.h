@@ -28,6 +28,14 @@ public:
       data_[i] = x[i];
   }
 
+  vecd( const std::vector<type>& x ) :
+    m_(x.size()),
+    data_(m_)
+  {
+    for (index_t i = 0; i < m_; i++)
+      data_[i] = x[i];
+  }
+
   type& operator() (index_t i) {
     avro_assert_msg( i < m_ , "attempt to access i = %lu but m = %lu" , i , m_ );
     return data_[i];

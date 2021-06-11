@@ -38,6 +38,36 @@ operator* (const matd<R>& A, const matd<S>& B) {
   return C;
 }
 
+template<typename R, typename S>
+matd< typename result_of<R,S>::type >
+operator+ (const matd<R>& A, const matd<S>& B) {
+  typedef typename result_of<R,S>::type T;
+  avro_assert_msg( A.m() == B.m() , "bad matrix sizes" );
+  avro_assert_msg( A.n() == B.n() , "bad matrix sizes" );
+  matd<T> C( A.m() , A.n() );
+  for (index_t i = 0; i < C.m(); i++) {
+    for (index_t j = 0; j < C.n(); j++) {
+      C(i,j) = A(i,j) - B(i,j);
+    }
+  }
+  return C;
+}
+
+template<typename R, typename S>
+matd< typename result_of<R,S>::type >
+operator- (const matd<R>& A, const matd<S>& B) {
+  typedef typename result_of<R,S>::type T;
+  avro_assert_msg( A.m() == B.m() , "bad matrix sizes" );
+  avro_assert_msg( A.n() == B.n() , "bad matrix sizes" );
+  matd<T> C( A.m() , A.n() );
+  for (index_t i = 0; i < C.m(); i++) {
+    for (index_t j = 0; j < C.n(); j++) {
+      C(i,j) = A(i,j) - B(i,j);
+    }
+  }
+  return C;
+}
+
 namespace numerics {
 
 template<typename R, typename S>

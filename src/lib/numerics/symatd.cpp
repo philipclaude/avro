@@ -127,26 +127,27 @@ symd<type>::fromeig(const vecd<type>& lambda , const matd<type>& q )
   data_.resize( nb() );
   std::fill( data_.begin() , data_.end() , 0. );
 
-	matd<type> M = q * diag(lambda) * transpose(q);
+	#if 0
+	matd<type> M = q * (diag(lambda) * transpose(q));
 	set(M);
 
-	/*
+	#else
   // compute L*q'
-  matd<type> lqt;
-  lqt.copy(q,true); // true for transpose
+  matd<type> lqt(n_,n_);
+  lqt = transpose(q);
   for (index_t k=0;k<n_;k++)
   for (index_t j=0;j<n_;j++)
     lqt(k,j) *= lambda[k];
 
   // compute q * L * q'
   matd<type> S(n_,n_);
-  q.multiply(lqt,S);
+  S = q * lqt;
 
   // save the result
   for (index_t i=0;i<n_;i++)
   for (index_t j=0;j<n_;j++)
     operator()(i,j) = S(i,j);
-	*/
+	#endif
 }
 
 template<typename type>

@@ -187,6 +187,16 @@ INSTANTIATE_MULD( SurrealS<6> , SurrealS<6> )
 INSTANTIATE_MULD( SurrealS<10> , SurrealS<10> )
 #undef INSTANTIATE_MULD
 
+#define INSTANTIATE_OPD(R,S) \
+  template matd< typename result_of<R,S>::type > operator+( const matd<R>& , const matd<S>& ); \
+  template matd< typename result_of<R,S>::type > operator-( const matd<R>& , const matd<S>& );
+INSTANTIATE_OPD( real_t , real_t )
+INSTANTIATE_OPD( SurrealS<1> , SurrealS<1> )
+INSTANTIATE_OPD( SurrealS<3> , SurrealS<3> )
+INSTANTIATE_OPD( SurrealS<6> , SurrealS<6> )
+INSTANTIATE_OPD( SurrealS<10> , SurrealS<10> )
+#undef INSTANTIATE_OPD
+
 #define INSTANTIATE_TRANSPOSE(T) template matd<T> transpose( const matd<T>& );
 INSTANTIATE_TRANSPOSE( real_t )
 INSTANTIATE_TRANSPOSE( SurrealS<1> )
