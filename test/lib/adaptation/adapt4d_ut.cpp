@@ -38,7 +38,7 @@ UT_TEST_CASE(adapt_test)
   std::vector<real_t> x0(number,0.5);
 
   // parameters
-  library::MetricField_Tesseract_Linear analytic;
+  library::MetricField_Tesseract_Linear analytic(0.005);
 
   // geometry
   library::Tesseract body(x0,lens);

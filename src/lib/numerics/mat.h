@@ -83,6 +83,13 @@ public:
       data_[j] = x;
   }
 
+  void set( const matd<T>& A ) {
+    avro_assert( A.m() == m_ && A.n() == n_ );
+    for (index_t i = 0; i < m_; i++)
+    for (index_t j = 0; j < n_; j++)
+      (*this)(i,j) = A(i,j);
+  }
+
   void resize( index_t m , index_t n ) {
     m_ = m;
     n_ = n;

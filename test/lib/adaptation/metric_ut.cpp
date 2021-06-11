@@ -71,11 +71,11 @@ UT_TEST_CASE(Metric_tests_2d)
   UT_ASSERT_EQUALS( logm(0,1) , 0. );
   UT_ASSERT_EQUALS( logm(1,1) , 0. );
 
-  tinymat::DLA::MatrixD<real_t> q(n,n);
+  numerics::MatrixD<real_t> q(n,n);
   numerics::VectorD<real_t> lambda(n);
-  tinymat::DLA::EigenSystem(m,lambda,q);
+  numerics::eig(m,lambda,q);
 
-  numerics::MatrixD<real_t> m0 = q*tinymat::DLA::diag(lambda)*tinymat::Transpose(q);
+  numerics::MatrixD<real_t> m0 = q*diag(lambda)*transpose(q);
   m0.dump();
 
   UT_ASSERT_EQUALS( m0.m() , m.m() );
@@ -102,11 +102,11 @@ UT_TEST_CASE(Metric_tests_3d)
   m(1,2) = -0.6;
   m(2,2) = 2.3;
 
-  tinymat::DLA::MatrixD<real_t> q(n,n);
+  numerics::MatrixD<real_t> q(n,n);
   numerics::VectorD<real_t> lambda(n);
-  tinymat::DLA::EigenSystem(m,lambda,q);
+  numerics::eig(m,lambda,q);
 
-  numerics::SymMatrixD<real_t> m0 = q*tinymat::DLA::diag(lambda)*tinymat::Transpose(q);
+  numerics::SymMatrixD<real_t> m0 = q*diag(lambda)*transpose(q);
   m0.dump();
 
   for (index_t i=0;i<n;i++)
@@ -121,9 +121,8 @@ UT_TEST_CASE(Metric_tests_3d)
   m(1,2) = -0.4;
   m(2,2) = -1.3;
 
-  tinymat::DLA::EigenSystem(m,lambda,q);
-
-  m0 = q*tinymat::DLA::diag(lambda)*tinymat::Transpose(q);
+  numerics::eig(m,lambda,q);
+  m0 = q*diag(lambda)*transpose(q);
 
   for (index_t i=0;i<n;i++)
   for (index_t j=0;j<n;j++)
@@ -159,11 +158,11 @@ UT_TEST_CASE(tests_4d)
   m(2,3) = 1.56;
   m(3,3) = 1.71;
 
-  tinymat::DLA::MatrixD<real_t> q(n,n);
+  numerics::MatrixD<real_t> q(n,n);
   numerics::VectorD<real_t> lambda(n);
-  tinymat::DLA::EigenSystem(m,lambda,q);
+  numerics::eig(m,lambda,q);
 
-  numerics::SymMatrixD<real_t> m0 = q*tinymat::DLA::diag(lambda)*tinymat::Transpose(q);
+  numerics::SymMatrixD<real_t> m0 = q*diag(lambda)*transpose(q);
   m0.dump();
 
   for (index_t i=0;i<n;i++)

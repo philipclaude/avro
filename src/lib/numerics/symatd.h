@@ -141,7 +141,7 @@ public:
 	void matlabize( const std::string& title ) const;
 	void forunit( const std::string& title ) const;
 
-	void dump() const { avro_implement; }
+	void dump() const { display(); }
 
   bool check();
 
@@ -178,8 +178,6 @@ template<typename type> type det( const symd<type>& M );
 
 template<typename R, typename S>
 symd< typename result_of<R,S>::type > operator*( const symd<R>& A , const symd<S>& B );
-
-template<typename type> symd<type> inverse2( const symd<type>& M );
 
 
 } // numerics

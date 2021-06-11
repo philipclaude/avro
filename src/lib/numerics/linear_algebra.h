@@ -42,69 +42,6 @@ template<typename type>
 int
 range( const MatrixD<type>& A , MatrixD<type>& U );
 
-/*
-
-template< class T >
-inline tinymat::DLA::MatrixSymD<T>
-powm(const tinymat::DLA::MatrixSymD<T>& A , real_t p )
-{
-  // compute the eigensystem with normalized eigenvectors
-  tinymat::DLA::EigenSystemPair<T> LE(A);
-
-  // compute the power of the eigenvalues
-  for (int i = 0; i < A.m(); i++ )
-    LE.L[i] = ::pow(LE.L[i],p);
-
-  // return the symmetric matrix
-  return LE;
-}
-
-template< class T >
-inline tinymat::DLA::MatrixSymD<T>
-logm(const tinymat::DLA::MatrixSymD<T>& A)
-{
-  // compute the eigensystem with normalized eigenvectors
-  tinymat::DLA::EigenSystemPair<T> LE(A);
-
-  // compute the log of the eigenvalues
-  for (int i = 0; i < A.m(); i++ )
-    LE.L[i] = ::log(LE.L[i]);
-
-  // return the symmetric matrix
-  return LE;
-}
-
-template< class T >
-inline tinymat::DLA::MatrixSymD<T>
-expm(const tinymat::DLA::MatrixSymD<T>& A)
-{
-  // compute the eigensystem with normalized eigenvectors
-  tinymat::DLA::EigenSystemPair<T> LE(A);
-
-  // compute the log of the eigenvalues
-  for (int i = 0; i < A.m(); i++ )
-    LE.L[i] = ::exp(LE.L[i]);
-
-  // return the symmetric matrix
-  return LE;
-}
-
-template< class T >
-inline tinymat::DLA::MatrixSymD<T>
-sqrtm(const tinymat::DLA::MatrixSymD<T>& A)
-{
-  // compute the eigensystem with normalized eigenvectors
-  tinymat::DLA::EigenSystemPair<T> LE(A);
-
-  // compute the log of the eigenvalues
-  for (int i = 0; i < A.m(); i++ )
-    LE.L[i] = ::sqrt(LE.L[i]);
-
-  // return the symmetric matrix
-  return LE;
-}
-*/
-
 template<typename T>
 inline MatrixD<T>
 inverse( MatrixD<T>& M )
@@ -230,6 +167,22 @@ inverse( const SymMatrixD<T>& M )
 	else
 		avro_implement;
   return Minv;
+}
+
+template<typename T>
+inline
+std::pair< vecd<T> , matd<T> >
+eig( const symd<T>& m ) {
+  return m.eig();
+}
+
+template<typename T>
+inline
+void
+eig( const symd<T>& m , vecd<T>& L , matd<T>& Q ) {
+  std::pair< vecd<T> , matd<T> > decomp = m.eig();
+  L.set( decomp.first );
+  Q.set( decomp.second );
 }
 
 } // numerics
