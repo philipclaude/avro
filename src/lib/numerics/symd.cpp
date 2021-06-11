@@ -6,7 +6,7 @@
 #include "numerics/mat.h"
 #include "numerics/determinant.h"
 #include "numerics/dual.h"
-#include "numerics/symatd.h"
+#include "numerics/symd.h"
 
 #include "numerics/surreal/config.h"
 #include "numerics/surreal/SurrealD.h"
@@ -16,9 +16,6 @@
 #include <math.h>
 
 namespace avro
-{
-
-namespace numerics
 {
 
 template<typename type>
@@ -608,7 +605,5 @@ template class symd<SurrealS<10>>;
 template class LogEuclidean<SurrealS<10>>;
 
 #endif
-
-} // numerics
 
 } // avro

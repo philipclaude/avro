@@ -31,13 +31,13 @@ namespace avro
 {
 
 template<typename type>
-class JacobianEquilateral : public numerics::MatrixD<real_t>
+class JacobianEquilateral : public matd<real_t>
 {
 public:
   JacobianEquilateral( coord_t number ) :
-    numerics::MatrixD<real_t>(number,number)
+    matd<real_t>(number,number)
   {
-    numerics::MatrixD<real_t>& J = *this;
+    matd<real_t>& J = *this;
     if (number==1) J(0,0) = 1.0;
     else if (number==2)
     {
@@ -78,7 +78,7 @@ public:
 
 template<typename type>
 ElementImpliedMetric<type>::ElementImpliedMetric( const type& element ) :
-  numerics::SymMatrixD<real_t>(element.number()),
+  symd<real_t>(element.number()),
   element_(element),
   J_( element.number() , element.number() ),
   J0_( element.number() , element.number() ),
@@ -94,8 +94,8 @@ ElementImpliedMetric<type>::compute( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
   J_ = J0_*Jeq_;
-  //numerics::SymMatrixD<real_t> JJt = J_*transpose(J_);
-  numerics::MatrixD<real_t> JJt = J_*transpose(J_);
+  //symd<real_t> JJt = J_*transpose(J_);
+  matd<real_t> JJt = J_*transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -108,8 +108,8 @@ ElementImpliedMetric<type>::compute( const Points& points , const index_t* v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  //numerics::SymMatrixD<real_t> JJt = J_*transpose(J_);
-  numerics::MatrixD<real_t> JJt = J_*transpose(J_);
+  //symd<real_t> JJt = J_*transpose(J_);
+  matd<real_t> JJt = J_*transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -153,7 +153,7 @@ template<typename type>
 MeshImpliedMetric<type>::MeshImpliedMetric( const Topology<type>& topology ) :
   topology_(topology)
 {
-  numerics::SymMatrixD<real_t> zero( topology_.element().number() );
+  symd<real_t> zero( topology_.element().number() );
   this->resize( topology.points().nb() , zero );
   nodalMetricSqrt_.resize( topology_.points().nb() , zero );
   nodalMetricSqrtDet_.resize( topology_.points().nb() , 0. );
@@ -186,8 +186,8 @@ MeshImpliedMetric<type>::initialize()
   std::vector<real_t> alpha;
   std::vector<const real_t*> xj;
   std::vector<real_t> volk(topology_.nb());
-  std::vector<numerics::SymMatrixD<real_t>> metrics( topology_.nb() , numerics::SymMatrixD<real_t>(topology_.number()) );
-  std::vector<numerics::SymMatrixD<real_t>> mb;
+  std::vector<symd<real_t>> metrics( topology_.nb() , symd<real_t>(topology_.number()) );
+  std::vector<symd<real_t>> mb;
 
   // v0 is not used here, but for the local volume sum in the vertex loop
   topology_.get_volumes( volk );
@@ -197,7 +197,7 @@ MeshImpliedMetric<type>::initialize()
   {
     if (topology_.ghost(k))
     {
-      numerics::SymMatrixD<real_t> zero( topology_.element().number() );
+      symd<real_t> zero( topology_.element().number() );
       metrics[k] = zero;
       continue;
     }
@@ -256,8 +256,8 @@ MeshImpliedMetric<type>::initialize()
 template<typename type>
 template<int DIM>
 real_t
-MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& sv ,
-                               std::vector<numerics::SymMatrixD<real_t>>& dc_dS ,
+MeshImpliedMetric<type>::cost( const std::vector<symd<real_t>>& sv ,
+                               std::vector<symd<real_t>>& dc_dS ,
                                real_t& complexity0 ) const
 {
   // precompute volume
@@ -275,7 +275,7 @@ MeshImpliedMetric<type>::cost( const std::vector<numerics::SymMatrixD<real_t>>& 
     avro_assert( dc_dS.size()==topology_.points().nb() );
 
   // compute elemental step matrices and elemental costs
-  std::vector< numerics::SymMatrixD<real_t> > sk( topology_.nb() , numerics::SymMatrixD<real_t>(DIM) );
+  std::vector< symd<real_t> > sk( topology_.nb() , symd<real_t>(DIM) );
   std::vector<real_t> ck( topology_.nb() , 0. );
   real_t complexity = 0.0;
   for (index_t k=0;k<topology_.nb();k++)
@@ -352,12 +352,12 @@ smoothmaxC2(const T x, const T y, const real_t eps = 1e-2 )
 template<typename type>
 template<int DIM>
 real_t
-MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_t>>& Svec ,
-                                           std::vector<numerics::SymMatrixD<real_t>>& df_dS ) const
+MeshImpliedMetric<type>::deviation( const std::vector<symd<real_t>>& Svec ,
+                                           std::vector<symd<real_t>>& df_dS ) const
 {
   typedef SurrealS<DIM*(DIM+1)/2> SurrealClassVertex;
   typedef SurrealS<2*DIM*(DIM+1)/2> SurrealClassEdge;
-  typedef numerics::SymMatrixD<SurrealClassVertex> MatrixSymSurrealVertex;
+  typedef symd<SurrealClassVertex> MatrixSymSurrealVertex;
 
   index_t nrank = DIM*(DIM+1)/2;
 
@@ -399,7 +399,7 @@ MeshImpliedMetric<type>::deviation( const std::vector<numerics::SymMatrixD<real_
     topology_.element().edge_vector( topology_.points() , p , q , dx.data() , entity );
 
     // get the edge length squared
-    numerics::VectorD<real_t> e( DIM , dx.data() );
+    vecd<real_t> e( DIM , dx.data() );
     SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);
     SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);
     lni = sqrt(lni);
@@ -475,7 +475,7 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 	const index_t nrank = DIM*(DIM+1)/2;
 
   // fill in the step matrices
-	std::vector<numerics::SymMatrixD<real_t>> S( topology.points().nb() , numerics::SymMatrixD<real_t>(DIM) );
+	std::vector<symd<real_t>> S( topology.points().nb() , symd<real_t>(DIM) );
 	for (index_t k=0;k<topology.points().nb();k++)
 	{
 		for (index_t i=0;i<nrank;i++)
@@ -483,11 +483,11 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 	}
 
   // size the gradients if necessary
-	std::vector<numerics::SymMatrixD<real_t>> dl_dS;
-  std::vector<numerics::SymMatrixD<real_t>> dc_dS;
+	std::vector<symd<real_t>> dl_dS;
+  std::vector<symd<real_t>> dc_dS;
 	if (grad)
 	{
-    numerics::SymMatrixD<real_t> zero(DIM);
+    symd<real_t> zero(DIM);
     zero.zero(); // this shouldn't be necessary anymore
 		dl_dS.resize( topology.points().nb() , zero );
     dc_dS.resize( topology.points().nb() , zero );
@@ -595,7 +595,7 @@ MeshImpliedMetric<type>::optimize()
 	for (index_t k=0;k<topology_.points().nb();k++)
 	{
 
-		numerics::SymMatrixD<real_t> S( topology_.number() );
+		symd<real_t> S( topology_.number() );
 		for (index_t i=0;i<nrank;i++)
 			S.data(i) = x[k*nrank+i];
 

@@ -189,7 +189,7 @@ __at_rank__( const real_t& x , index_t r )
 
 template<>
 real_t
-__at_rank__( const numerics::SymMatrixD<real_t>& x , index_t r )
+__at_rank__( const symd<real_t>& x , index_t r )
 {
   avro_implement;
   return x(0,0);
@@ -199,7 +199,7 @@ template<>
 real_t
 __at_rank__( const Metric& x , index_t r )
 {
-  return __at_rank__<numerics::SymMatrixD<real_t>>(x,r);
+  return __at_rank__<symd<real_t>>(x,r);
 }
 
 template<>
@@ -246,7 +246,7 @@ template class Field< Simplex , std::vector<real_t> >;
 template class Field< Simplex , std::vector<index_t> >;
 
 template class Field< Simplex , Entity* >;
-template class Field< Simplex , numerics::SymMatrixD<real_t> >;
+template class Field< Simplex , symd<real_t> >;
 
 template class Field< Simplex , Metric >;
 

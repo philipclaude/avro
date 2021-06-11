@@ -210,11 +210,11 @@ Context::adapt( const std::vector<real_t>& m )
   avro_assert( nb_metric == points_->nb() );
 
   // save the metrics in the proper format
-  std::vector<numerics::SymMatrixD<real_t>> metric;
+  std::vector<symd<real_t>> metric;
   index_t count = 0;
   for (index_t k=0;k<nb_metric;k++)
   {
-    numerics::SymMatrixD<real_t> mk(number_);
+    symd<real_t> mk(number_);
     for (index_t i=0;i<number_;i++)
     for (index_t j=i;j<number_;j++)
       mk(i,j) = m[count++];

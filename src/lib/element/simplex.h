@@ -118,8 +118,8 @@ public:
   void physical_to_reference( const Points& points , const index_t* v , index_t nv , const real_t* x , real_t* x0 ) const;
 
   real_t jacobian( const std::vector<const real_t*>& x , coord_t dim ) const;
-  void   jacobian( const std::vector<const real_t*>& xk , numerics::MatrixD<real_t>& J ) const;
-  void   jacobian( const index_t* v , index_t nv , const Points& points , numerics::MatrixD<real_t>& J ) const;
+  void   jacobian( const std::vector<const real_t*>& xk , matd<real_t>& J ) const;
+  void   jacobian( const index_t* v , index_t nv , const Points& points , matd<real_t>& J ) const;
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;
   void get_triangle( const index_t* v , index_t nv , index_t itriangle , index_t* t ) const;
@@ -141,7 +141,7 @@ private:
   std::vector<index_t> full_edges_;
 
   // store the transformation matrix from a lagrange simplex
-  numerics::MatrixD<real_t> transformation_;
+  matd<real_t> transformation_;
 
   real_t vunit_;
   real_t vorth_;

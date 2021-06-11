@@ -1,4 +1,4 @@
-#include "symatd.h"
+#include "symd.h"
 #include "mat.hpp"
 #include "vec.h"
 
@@ -171,7 +171,7 @@ template void solveLUP( const matd<real_t>& , const vecd<real_t>& , vecd<real_t>
 template void inverseLUP( const matd<real_t>& , matd<real_t>& );
 template vecd<real_t> operator*( const matd<real_t>& , const vecd<real_t>& );
 
-#define INSTANTIATE_MUL(R,S) template numerics::symd< typename result_of<R,S>::type > numerics::operator*( const numerics::symd<R>& , const numerics::symd<S>& );
+#define INSTANTIATE_MUL(R,S) template symd< typename result_of<R,S>::type > operator*( const symd<R>& , const symd<S>& );
 INSTANTIATE_MUL( real_t , real_t )
 INSTANTIATE_MUL( SurrealS<1> , SurrealS<1> )
 INSTANTIATE_MUL( SurrealS<3> , SurrealS<3> )

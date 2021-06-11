@@ -30,8 +30,8 @@ template<typename type> class MetricEvaluator;
 template<typename type>
 bool
 interp( const std::vector<type>& alpha ,
-             const std::vector<numerics::SymMatrixD<type>>& tensors ,
-						 numerics::SymMatrixD<type>& T )
+             const std::vector<symd<type>>& tensors ,
+						 symd<type>& T )
 {
 	avro_assert( alpha.size()==tensors.size() );
 
@@ -59,7 +59,7 @@ interp( const std::vector<type>& alpha ,
 
 template<typename type>
 static type
-quadratic_form( const numerics::SymMatrixD<type>& M , const numerics::VectorD<real_t>& e )
+quadratic_form( const symd<type>& M , const vecd<real_t>& e )
 {
 	if (M.n()==2)
 	{
@@ -87,11 +87,11 @@ quadratic_form( const numerics::SymMatrixD<type>& M , const numerics::VectorD<re
 	return -1.;
 }
 
-class Metric : public numerics::SymMatrixD<real_t>
+class Metric : public symd<real_t>
 {
 public:
   Metric() :
-    numerics::SymMatrixD<real_t>(0),
+    symd<real_t>(0),
     number_(0),
     log_(0),
     elem_(0),
@@ -99,14 +99,14 @@ public:
   {}
 
   Metric( coord_t number ) :
-    numerics::SymMatrixD<real_t>(number),
+    symd<real_t>(number),
     number_(number),
     log_(number),
     elem_(0),
     sqdet_(-1)
   {}
 
-  Metric( const numerics::SymMatrixD<real_t>& A ) :
+  Metric( const symd<real_t>& A ) :
     Metric(A.m())
   {
     set(A);
@@ -115,15 +115,15 @@ public:
 
   void allocate( coord_t n )
   {
-    numerics::SymMatrixD<real_t>::allocate(n);
+    symd<real_t>::allocate(n);
     log_.allocate(n);
     number_ = n;
   }
 
-  numerics::SymMatrixD<real_t>& log(){ return log_; }
-  const numerics::SymMatrixD<real_t>& log() const { return log_; }
+  symd<real_t>& log(){ return log_; }
+  const symd<real_t>& log() const { return log_; }
 
-  void set( const numerics::SymMatrixD<real_t>& m0 )
+  void set( const symd<real_t>& m0 )
   {
     avro_assert( number_ == m0.m() && number_ == m0.n() );
     for (coord_t i=0;i<number_;i++)
@@ -145,7 +145,7 @@ public:
 
 private:
   coord_t number_;
-  numerics::SymMatrixD<real_t> log_; // logarithm of this metric
+  symd<real_t> log_; // logarithm of this metric
   index_t elem_; // element in some mesh containing this metric
   real_t sqdet_; // sqrt of determinant
 };
@@ -180,11 +180,11 @@ public:
     }
 	}
 
-  MetricAttachment( Points& points , const std::vector<numerics::SymMatrixD<real_t>>& metrics );
+  MetricAttachment( Points& points , const std::vector<symd<real_t>>& metrics );
 
   MetricAttachment( Points& points );
 
-	const numerics::SymMatrixD<real_t>& log( const index_t k ) const
+	const symd<real_t>& log( const index_t k ) const
     { return Array<Metric>::data_[k].log(); }
 	real_t sqdet( index_t k ) const
     { return Array<Metric>::data_[k].sqdet(); }
@@ -192,9 +192,9 @@ public:
   template<typename type> void set_cells( const Topology<type>& topology );
 
   void reset( MetricAttachment& fld );
-  void add( numerics::SymMatrixD<real_t>& tensor, index_t elem );
+  void add( symd<real_t>& tensor, index_t elem );
 
-	void assign( index_t p , const numerics::SymMatrixD<real_t>& M , index_t elem );
+	void assign( index_t p , const symd<real_t>& M , index_t elem );
   void remove( index_t k , bool recheck=true );
   bool check() const;
 
@@ -222,7 +222,7 @@ class MetricField : public Field<type,Metric>
 {
 public:
   MetricField( Topology<type>& topology , MetricAttachment& fld );
-	numerics::SymMatrixD<real_t>& operator() ( const Points& x , index_t v );
+	symd<real_t>& operator() ( const Points& x , index_t v );
 
 	real_t length( index_t n0 , index_t n1 ) const;
 	real_t length( const Points& v , index_t n0 , index_t n1 ) const

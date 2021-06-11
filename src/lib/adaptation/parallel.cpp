@@ -407,7 +407,7 @@ public:
     avro_assert_msg( N < 1000 , "this should only be used for debugging on small problems");
     if (mpi::rank() == 0)
     {
-      numerics::MatrixD<real_t> graph(N,N);
+      matd<real_t> graph(N,N);
 
       index_t n = 0;
       for (index_t k=0;k<xadj_.size()-1;k++)

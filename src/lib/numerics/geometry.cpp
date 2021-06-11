@@ -128,7 +128,7 @@ volume_nd( const std::vector<const real_t*>& x , const coord_t dim )
   // assume this is a simplex because there's no other way to compute it
   coord_t n = x.size() -1;
 
-  numerics::MatrixD<real_t> B(n+2,n+2);
+  matd<real_t> B(n+2,n+2);
   B(0,0) = 0;
   for (index_t i=1;i<index_t(n+2);i++)
   {
@@ -209,16 +209,15 @@ normal( const std::vector<real_t*>& x , real_t* n , const coord_t dim )
   avro_assert_msg( x.size()==dim , "|x| = %lu, dim = %u" , x.size() , dim );
 
   //numerics::densMat<double> A(dim-1,dim);
-  numerics::MatrixD<real_t> A(dim-1,dim);
-  //A.zeros();
-  A = 0;
+  matd<real_t> A(dim-1,dim);
+  A.zero();
 
   for (index_t k=0;k<index_t(dim-1);k++)
   for (index_t j=0;j<dim;j++)
     A(k,j) = x[k+1][j] -x[0][j];
 
   //numerics::densMat<double> K(dim-1,1);
-  numerics::MatrixD<real_t> K(dim-1,1);
+  matd<real_t> K(dim-1,1);
   int info = numerics::kernel(A,K);
   if (info!=0) A.dump();
   avro_assert_msg( info>=0 , " info = %d " , info );
@@ -239,15 +238,14 @@ orthogonal( const std::vector<real_t*>& x , real_t* n , const coord_t dim )
                     "|x| = %lu, dim = %u" , x.size() , dim );
 
   //numerics::densMat<double> A(dim-1,dim);
-  numerics::MatrixD<real_t> A(dim-1,dim);
-  //A.zeros();
-  A = 0;
+  matd<real_t> A(dim-1,dim);
+  A.zero();
 
   for (index_t k=0;k<index_t(dim-1);k++)
   for (index_t j=0;j<dim;j++)
     A(k,j) = x[k][j];
 
-  numerics::MatrixD<real_t> K(dim-1,1);
+  matd<real_t> K(dim-1,1);
   int info = numerics::kernel(A,K);
   if (info!=0) A.dump();
   avro_assert_msg( info>=0 , " info = %d " , info );

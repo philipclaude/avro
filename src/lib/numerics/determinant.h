@@ -13,10 +13,10 @@ namespace avro
 
 template<typename type> class matd;
 
+template <typename T> class symd;
+
 namespace numerics
 {
-
-template <typename T> class symd;
 
 template<typename type> type det(const matd<type>& X);
 template<typename type> type det(const symd<type>& X);

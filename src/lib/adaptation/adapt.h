@@ -27,7 +27,7 @@ template<typename type,typename T> class FieldInterpolation;
 struct AdaptationProblem
 {
   AdaptationProblem( Mesh& _mesh_in ,
-    std::vector<numerics::SymMatrixD<real_t>>& _fld,
+    std::vector<symd<real_t>>& _fld,
     AdaptationParameters& _params ,
     Mesh& _mesh_out ,
     FieldInterpolation<Simplex,Metric>* _interpolation=nullptr ) :
@@ -38,7 +38,7 @@ struct AdaptationProblem
       interpolation(_interpolation)
   {}
   Mesh& mesh_in; // also modified
-  std::vector<numerics::SymMatrixD<real_t>>& fld;
+  std::vector<symd<real_t>>& fld;
   AdaptationParameters& params;
   Mesh& mesh_out;
   FieldInterpolation<Simplex,Metric>* interpolation;

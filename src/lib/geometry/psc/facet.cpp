@@ -51,7 +51,7 @@ Facet::build_basis()
   avro_assert( nodes.size() > number_ );
 
   // store a set of vectors to compute a basis from
-  numerics::MatrixD<real_t> u(dim_,nodes.size()-1);
+  matd<real_t> u(dim_,nodes.size()-1);
   for (index_t k=1;k<nodes.size();k++)
   for (index_t j=0;j<dim_;j++)
     u(j,k-1) = (*nodes[k])(j) - (*nodes[0])(j);
@@ -68,7 +68,7 @@ Facet::build_basis()
   for (coord_t j=0;j<dim_;j++)
     V_(j,k) = basis_(j,k);
 
-  numerics::MatrixD<real_t> VtV = transpose(V_)*V_;
+  matd<real_t> VtV = transpose(V_)*V_;
   for (coord_t i=0;i<number_;i++)
   for (coord_t j=0;j<number_;j++)
     B_(i,j) = VtV(i,j);
@@ -93,7 +93,7 @@ Facet::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
   avro_assert_msg( basis_.n() == number_ , "basis = %lu x %lu , number_ = %u, dim_ = %u" , basis_.m(),basis_.n(),number_,dim_ );
 
   // set the last barycentric coordinate
-  numerics::VectorD<real_t> u0(number_);
+  vecd<real_t> u0(number_);
   for (coord_t d=0;d<number_;d++)
   {
     u0(d) = u[d];
@@ -115,18 +115,18 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   std::fill( u.begin() , u.end() , 1e20 );
 
   // compute right-hand-side of minimization statement
-  numerics::VectorD<real_t> x0(x.size(),x.data());
-  numerics::VectorD<real_t> b = transpose(V_)*( x0 - x0_ );
+  vecd<real_t> x0(x.size(),x.data());
+  vecd<real_t> b = transpose(V_)*( x0 - x0_ );
 
   // solve VtV * alpha = Vt * (x - x0)
-  //numerics::VectorD<real_t> alpha = tinymat::DLA::InverseLUP::Solve(B_,b);
+  //vecd<real_t> alpha = tinymat::DLA::InverseLUP::Solve(B_,b);
   //avro_assert( alpha.m() == number_ );
 
-  numerics::VectorD<real_t> alpha(number_);
+  vecd<real_t> alpha(number_);
   solveLUP(B_,b,alpha);
 
   // compute the closest point y = V*alpha + x0
-  numerics::VectorD<real_t> y = V_*alpha + x0_;
+  vecd<real_t> y = V_*alpha + x0_;
 
   real_t d = numerics::distance2( y.data() , x.data() , dim_ );
   if (d<1e-12)

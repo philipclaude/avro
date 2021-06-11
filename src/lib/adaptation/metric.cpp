@@ -84,7 +84,7 @@ MetricField<type>::reset( MetricAttachment& attachment )
 }
 
 template<typename type>
-numerics::SymMatrixD<real_t>&
+symd<real_t>&
 MetricField<type>::operator() ( const Points& points , index_t p )
 {
   avro_assert_msg( p<attachment_.nb() ,
@@ -93,9 +93,9 @@ MetricField<type>::operator() ( const Points& points , index_t p )
 }
 
 real_t
-geometric_interpolation( const numerics::SymMatrixD<real_t>& m0,
-	                       const numerics::SymMatrixD<real_t>& m1,
-											   const numerics::VectorD<real_t>& edge )
+geometric_interpolation( const symd<real_t>& m0,
+	                       const symd<real_t>& m1,
+											   const vecd<real_t>& edge )
 {
 	real_t l0_sqr = quadratic_form(m0,edge);//tinymat::Transpose(edge)*m0*edge;
 	real_t l1_sqr = quadratic_form(m1,edge);//tinymat::Transpose(edge)*m1*edge;
@@ -164,7 +164,7 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const
 	if (topology_.element().parameter()) dim = topology_.points().udim();
 	std::vector<real_t> edge0( dim );
 	topology_.element().edge_vector( attachment_.points() , n0 , n1 , edge0.data() , entity );
-	numerics::VectorD<real_t> edge(dim,edge0.data());
+	vecd<real_t> edge(dim,edge0.data());
   return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
 }
 
@@ -259,7 +259,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 	UNUSED(jmin);
 
 	// tensor with maximum determinant
-	const numerics::SymMatrixD<real_t>& M = attachment_[ V[idxM] ];
+	const symd<real_t>& M = attachment_[ V[idxM] ];
 
 	Entity* entity = nullptr;
 	if (topology_.element().parameter())
@@ -270,7 +270,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k )
 
 	// compute the edge lengths under m
   real_t l = 0.,lj;
-	numerics::VectorD<real_t> e(dim);
+	vecd<real_t> e(dim);
   for (index_t j=0;j<element.nb_edges();j++)
   {
 		// retrieve the local edge indices
@@ -455,7 +455,7 @@ MetricAttachment::MetricAttachment( Points& points ) :
 	points_(points)
 {}
 
-MetricAttachment::MetricAttachment( Points& points , const std::vector<numerics::SymMatrixD<real_t>>& metrics ) :
+MetricAttachment::MetricAttachment( Points& points , const std::vector<symd<real_t>>& metrics ) :
   number_(metrics[0].n()),
 	points_(points)
 {
@@ -543,12 +543,12 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		if (k < topology.points().nb_ghost()) continue;
 
 		// compute the step from the implied metric to the current metric
-		numerics::SymMatrixD<real_t> mi = implied[k];
-		numerics::SymMatrixD<real_t> mt = this->operator[](k);
+		symd<real_t> mi = implied[k];
+		symd<real_t> mt = this->operator[](k);
 
-		numerics::SymMatrixD<real_t> invsqrt_M0 = numerics::powm(mi,-0.5);
-		numerics::SymMatrixD<real_t> expS = mt.sandwich( invsqrt_M0 );
-		numerics::SymMatrixD<real_t> s = numerics::logm(expS);
+		symd<real_t> invsqrt_M0 = numerics::powm(mi,-0.5);
+		symd<real_t> expS = mt.sandwich( invsqrt_M0 );
+		symd<real_t> s = numerics::logm(expS);
 
 		// limit the step
 		bool limited = false;
@@ -570,8 +570,8 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href )
 		else continue;
 
 		// compute the new metric from the step
-		numerics::SymMatrixD<real_t> sqrt_M0 = numerics::sqrtm(mi);
-		numerics::SymMatrixD<real_t> mk = (numerics::expm(s)).sandwich(sqrt_M0);
+		symd<real_t> sqrt_M0 = numerics::sqrtm(mi);
+		symd<real_t> mk = (numerics::expm(s)).sandwich(sqrt_M0);
 
 
 		real_t detm = numerics::det(mk);
@@ -596,7 +596,7 @@ MetricAttachment::reset( MetricAttachment& fld )
 }
 
 void
-MetricAttachment::add( numerics::SymMatrixD<real_t>& tensor , index_t elem )
+MetricAttachment::add( symd<real_t>& tensor , index_t elem )
 {
 	Metric mk(number_);
 	mk.set(tensor);
@@ -606,7 +606,7 @@ MetricAttachment::add( numerics::SymMatrixD<real_t>& tensor , index_t elem )
 }
 
 void
-MetricAttachment::assign( index_t p , const numerics::SymMatrixD<real_t>& m0 , index_t elem )
+MetricAttachment::assign( index_t p , const symd<real_t>& m0 , index_t elem )
 {
 	for (index_t j=0;j<number_;j++)
 	for (index_t i=j;i<number_;i++)

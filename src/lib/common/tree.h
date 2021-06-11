@@ -64,7 +64,7 @@ public:
 
   void get_children( std::vector<Node_t*>& children );
   void get_children( std::vector<const Node_t*>& children ) const;
-  void get_adjacency( numerics::MatrixD<int>& A ) const;
+  void get_adjacency( matd<int>& A ) const;
   template <typename T> void get_children_typed( std::vector<const T*>& children ) const
   {
     static_assert( std::is_base_of<T,Node_t>::value , "bad types" );
@@ -94,7 +94,7 @@ Tree<Node_t>::copy( const Friend_t& tree )
   tree.get_children(children0);
   children0.insert( children0.begin() , &tree );
 
-  numerics::MatrixD<int> A;
+  matd<int> A;
   tree.get_adjacency(A);
 
   A.dump();

@@ -149,7 +149,7 @@ adapt( int nb_input , const char** inputs )
     std::shared_ptr<Mesh> pmesh_out = std::make_shared<Mesh>(mesh.points().dim(),mesh.number());
 
     // define the problem and adapt
-    std::vector<numerics::SymMatrixD<real_t>> metrics( pfld->nb() );
+    std::vector<symd<real_t>> metrics( pfld->nb() );
     for (index_t k=0;k<metrics.size();k++)
       metrics[k] = (*pfld)[k];
     AdaptationProblem problem = {*pmesh,metrics,params,*pmesh_out};

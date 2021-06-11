@@ -22,7 +22,7 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
 {
   avro_assert_msg( nv == phi.size() , "nv = %lu, |phi| = %lu" , nv , phi.size() );
 
-  numerics::SymMatrixD<real_t> T(*pT);
+  symd<real_t> T(*pT);
 
   T = 0;
   for (index_t k=0;k<nv;k++)
