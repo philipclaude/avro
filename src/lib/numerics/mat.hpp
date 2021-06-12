@@ -1,4 +1,5 @@
 #include "common/error.h"
+#include "numerics/linear_algebra.h"
 #include "numerics/mat.h"
 #include "numerics/vec.h"
 
@@ -143,6 +144,22 @@ mats<M,N,T> operator* ( const R& b , const mats<M,N,S>& A ) { \
   return C; \
 }
 
+#define INSTANTIATE_MATVECMUL( R , S ) \
+template<index_t M, index_t N> \
+vecs< M , typename result_of<R,S>::type > operator*( const mats<M,N,R>& A , const vecs<N,S>& b ) { \
+  typedef typename result_of<R,S>::type T; \
+  vecs<M,T> c; \
+  for (index_t i = 0; i < M; i++) { \
+    c(i) = 0; \
+    for (index_t j = 0; j < N; j++) \
+      c(i) += A(i,j) * b(j); \
+  } \
+  return c; \
+}
+
+namespace numerics
+{
+
 template<index_t M, index_t N, typename T>
 mats<N,M,T>
 transpose( const mats<M,N,T>& A ) {
@@ -163,8 +180,8 @@ template<typename T>
 T
 det( const mats<3,3,T>& A ) {
   return A(0,0)*(A(2,2)*A(1,1)-A(2,1)*A(1,2))
-                  -A(1,0)*(A(2,2)*A(0,1)-A(2,1)*A(0,2))
-                  +A(2,0)*(A(1,2)*A(0,1)-A(1,1)*A(0,2));
+                -A(1,0)*(A(2,2)*A(0,1)-A(2,1)*A(0,2))
+                +A(2,0)*(A(1,2)*A(0,1)-A(1,1)*A(0,2));
 }
 
 template<typename T>
@@ -179,6 +196,23 @@ inverse( const mats<2,2,T>& A ) {
   return Ainv;
 }
 
+template<index_t N, typename T>
+mats<N,N,T>
+inverse( const mats<N,N,T>& A ) {
+  matd<T> a(N,N);
+  for (index_t i = 0; i < N; i++)
+  for (index_t j = 0; j < N; j++)
+    a(i,j) = A(i,j);
+  matd<T> ai = numerics::inverse(a);
+  mats<N,N,T> Ai;
+  for (index_t i = 0; i < N; i++)
+  for (index_t j = 0; j < N; j++)
+    Ai(i,j) = ai(i,j);
+  return Ai;
+}
+
+} // numerics
+
 #define COMMA ,
 
 INSTANTIATE_MATADD( real_t , real_t , real_t )
@@ -189,8 +223,11 @@ INSTANTIATE_MATSUB( real_t , SurrealS<4> , SurrealS<4> )
 INSTANTIATE_MATSUB( SurrealS<4> , real_t , SurrealS<4> )
 
 INSTANTIATE_MATMUL( real_t , real_t , real_t )
+INSTANTIATE_MATMUL( float , float , float )
 INSTANTIATE_MATMUL( real_t , SurrealS<4> , SurrealS<4> )
 INSTANTIATE_MATMUL( SurrealS<4> , real_t , SurrealS<4> )
+
+INSTANTIATE_MATVECMUL( float , float )
 
 INSTANTIATE_MATSCAMUL_R( real_t , SurrealS<4> , SurrealS<4> )
 //INSTANTIATE_MATSCAMUL_R( real_t , real_t , SurrealS<4> )

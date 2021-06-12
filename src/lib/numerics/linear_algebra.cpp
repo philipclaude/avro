@@ -714,6 +714,7 @@ INSTANTIATE_DIAG(  SurrealS<10> )
   template matd<T> inverse( const matd<T>& ); \
   template symd<T> inverse( const symd<T>& );
 INSTANTIATE_INV( real_t )
+template matd<float> inverse( const matd<float>& );
 #undef INSTANTIATE_INV
 
 #define INSTANTIATE_EIG(T) \

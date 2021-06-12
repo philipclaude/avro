@@ -36,6 +36,16 @@ operator+ ( const vecs<M,R>& u , const vecs<M,S>& v ) { \
   return w; \
 }
 
+#define INSTANTIATE_VECSUB(R,S,T) \
+template<index_t M> \
+vecs<M,T> \
+operator- ( const vecs<M,R>& u , const vecs<M,S>& v ) { \
+  vecs<M,T> w; \
+  for (index_t i = 0; i < M; i++) \
+    w(i) = u(i) - v(i); \
+  return w; \
+}
+
 #define INSTANTIATE_VECINC(S,T) \
 template<index_t M> \
 vecs<M,T>& \
@@ -94,6 +104,9 @@ dot( const vecs<M,R>& u , const vecs<M,S>& v ) { \
 #define COMMA ,
 
 INSTANTIATE_VECADD( real_t , real_t , real_t )
+INSTANTIATE_VECADD( float , float , float )
+INSTANTIATE_VECSUB( real_t , real_t , real_t )
+INSTANTIATE_VECSUB( float , float , float )
 INSTANTIATE_VECADD( vecs<2 COMMA real_t> , vecs<2 COMMA real_t> , vecs<2 COMMA real_t> )
 INSTANTIATE_VECADD( vecs<3 COMMA real_t> , vecs<3 COMMA real_t> , vecs<3 COMMA real_t> )
 
@@ -126,10 +139,12 @@ INSTANTIATE_DOT( real_t , vecs<2 COMMA SurrealS<2> > , vecs<2 COMMA SurrealS<2> 
 INSTANTIATE_DOT( real_t , vecs<3 COMMA SurrealS<3> > , vecs<3 COMMA SurrealS<3> > )
 
 INSTANTIATE_VECSCAMUL_R( real_t , real_t , real_t )
+INSTANTIATE_VECSCAMUL_R( float , float , float )
 INSTANTIATE_VECSCAMUL_R( vecs<2 COMMA real_t> , real_t , vecs<2 COMMA real_t> )
 INSTANTIATE_VECSCAMUL_R( vecs<3 COMMA real_t> , real_t , vecs<3 COMMA real_t> )
 
 INSTANTIATE_VECSCAMUL_L( real_t , real_t , real_t )
+INSTANTIATE_VECSCAMUL_L( float , float , float )
 INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<1> , SurrealS<1> )
 INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<2> , SurrealS<2> )
 INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<3> , SurrealS<3> )

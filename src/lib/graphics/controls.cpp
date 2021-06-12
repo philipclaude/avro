@@ -9,8 +9,10 @@
 //
 #include "graphics/controls.h"
 
+#if USE_GLM
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
+#endif
 
 #include "json/json.hpp"
 
@@ -132,7 +134,7 @@ Controls::update()
       float transy = (cursory_ - starty_) / 256.0;
       if (transx!=0.0 || transy!=0.0)
       {
-        model_view_ = glm::translate( model_view_ , {transx,transy,0} );
+        model_view_ = glm::translate( model_view_ , {transx,transy,0.0f} );
         updated = true;
         translation_ = model_view_;
       }

@@ -32,6 +32,7 @@ namespace numerics
  *
  * =============================================================================
 \*/
+template<index_t M, index_t N,typename T> mats<N,M,T> transpose( const mats<M,N,T>& A );
 template<index_t M,typename T> T det( const mats<M,M,T>& A );
 template<index_t M,typename T> T trace( const mats<M,M,T>& A );
 template<index_t M,typename T> mats<M,M,T> inverse( const mats<M,M,T>& A );
