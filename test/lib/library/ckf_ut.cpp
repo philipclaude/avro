@@ -42,9 +42,12 @@ private:
 UT_TEST_CASE( test_constant_dims )
 {
 
-  for (coord_t dim=2;dim<=4;dim++)
+  for (coord_t dim=2;dim<=8;dim++)
   {
-    for (index_t n=2;n<=8;n+=2)
+    printf("dim = %u\n",dim);
+    index_t nmax = 8;
+    if (dim > 4) nmax = 2;
+    for (index_t n=2;n<=nmax;n+=2)
     {
       std::vector<index_t> dims(dim,n);
 
@@ -62,11 +65,11 @@ UT_TEST_CASE_END( test_constant_dims )
 UT_TEST_CASE( test_different_dims )
 {
 
-  for (coord_t dim=2;dim<=4;dim++)
+  for (coord_t dim=2;dim<=8;dim++)
   {
     printf("dim = %u\n",dim);
     index_t nmax = 8;
-    if (dim > 4) nmax = 5;
+    if (dim > 4) nmax = 2;
     for (index_t n=2;n<=nmax;n+=2)
     {
       std::vector<index_t> dims(dim,n);

@@ -239,7 +239,7 @@ MeshImpliedMetric<type>::initialize()
     // compute the weighted average
     try
     {
-      interp( alpha , mb , this->data_[k] );
+      this->data_[k] = numerics::interp( alpha , mb );
     }
     catch(...)
     {
@@ -400,8 +400,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<symd<real_t>>& Svec ,
 
     // get the edge length squared
     vecd<real_t> e( DIM , dx.data() );
-    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);
-    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);
+    SurrealClassVertex lni = numerics::quadratic_form(nodalMetric[p],e);
+    SurrealClassVertex lnj = numerics::quadratic_form(nodalMetric[q],e);
     lni = sqrt(lni);
     lnj = sqrt(lnj);
 

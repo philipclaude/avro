@@ -16,6 +16,7 @@
 namespace avro
 {
 
+// forward declarations
 template<index_t M, index_t N,typename T> class mats;
 template<typename type> class matd;
 template <typename T> class symd;
@@ -49,7 +50,9 @@ template<typename T> matd<T> diag( const vecd<T>& d );
 template<typename T> void    solveLUP( const matd<T>& A , const vecd<T>& b , vecd<T>& x );
 template<typename T> void    inverseLUP( const matd<T>& A , matd<T>& Ainv );
 template<typename T> matd<T> inverse( const matd<T>& M );
-template<typename type> type det(const matd<type>& X);
+template<typename T> T det(const matd<T>& A);
+template<typename T> void eign( const matd<T>& A , vecd<T>& L , matd<T>& Q );
+template<typename T> void eign( const matd<T>& A , vecd<T>& L );
 
 /*\
  * =============================================================================
@@ -66,6 +69,8 @@ template<typename type> type       det( const symd<type>& M );
 template<typename T> symd<T>       inverse( const symd<T>& M );
 template<typename T> void eig( const symd<T>& m , vecd<T>& L , matd<T>& Q );
 template<typename T> std::pair< vecd<T> , matd<T> > eig( const symd<T>& m );
+template<typename T> symd<T> interp( const std::vector<real_t>& alpha , const std::vector<symd<T>>& tensors);
+template<typename type> type quadratic_form( const symd<type>& M , const vecd<real_t>& e );
 
 } // numerics
 

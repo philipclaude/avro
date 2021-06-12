@@ -40,6 +40,17 @@ extern "C" void DGETRF( int* M , int* N , double *A , int* LDA , int* IPIV , int
 extern "C" void dgesvd_( char *jobu , char* jobvt , int *m , int *n , double *A , int* lda , double *s , double *u , int* ldu , double *vt , int* ldvt, double* work , int* lwork , int* info );
 extern "C" void DGESVD( char *jobu , char* jobvt , int *m , int *n , double *A , int* lda , double *s , double *u , int* ldu , double *vt , int* ldvt, double* work , int* lwork , int* info );
 
+// SVD
+extern "C" void dgeev_( char* jobvl, char* jobvr, int* n, double* a,
+                   int* lda, double* wr, double* wi, double* vl,
+                   int* ldvl, double* vr, int* ldvr, double* work,
+                   int* lwork, int *info );
+extern "C" void DGEEV( char* jobvl, char* jobvr, int* n, double* a,
+                   int* lda, double* wr, double* wi, double* vl,
+                   int* ldvl, double* vr, int* ldvr, double* work,
+                   int* lwork, int *info );
+
+
 } // numerics
 
 } // avro

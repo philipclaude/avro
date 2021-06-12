@@ -123,7 +123,7 @@ public:
       X[d] = x[d] - mu_[d];
 
     real_t A = 1./std::sqrt( std::pow(2*M_PI,dim_)*detS_);
-    real_t exp = quadratic_form(sigma_inv_,X);//Transpose(X)*sigma_inv_*X;
+    real_t exp = numerics::quadratic_form(sigma_inv_,X);
     return A*std::exp(-0.5*exp);
   }
 

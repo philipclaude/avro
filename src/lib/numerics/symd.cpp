@@ -20,8 +20,7 @@ namespace avro
 
 template<typename type>
 symd<type>::symd( const coord_t _n ) :
-	n_(_n)
-{
+	n_(_n) {
 	// constructor from size
 	data_.resize( nb() );
 	std::fill( data_.begin() , data_.end() , 0. );
@@ -29,8 +28,7 @@ symd<type>::symd( const coord_t _n ) :
 
 template<typename type>
 symd<type>::symd( const std::vector<type>& _data ) :
-  data_(_data)
-{
+  data_(_data) {
   // constructor from matrix data itself
   index_t m = data_.size();
   n_ = ( -1 +::sqrt( 8*m +1 ) )/2;
@@ -38,21 +36,18 @@ symd<type>::symd( const std::vector<type>& _data ) :
 
 template<typename type>
 symd<type>::symd( const vecd<type>& lambda , const matd<type>& q ) :
-  n_( lambda.m() )
-{
-	fromeig(lambda,q);
+  n_( lambda.m() ) {
+	from_eig(lambda,q);
 }
 
 template<typename type>
 symd<type>::symd( const std::pair< vecd<type> , matd<type> >& decomp ) :
   symd( decomp.first , decomp.second )
-{
-}
+{}
 
 template<typename type>
 symd<type>::symd( const matd<type>& M ) :
-  n_(M.n())
-{
+  n_(M.n()) {
   avro_assert( M.m() == M.n() );
   data_.resize(nb());
   for (index_t i=0;i<n_;i++)
@@ -63,20 +58,12 @@ symd<type>::symd( const matd<type>& M ) :
 template<typename type>
 template<typename typeR>
 symd<type>::symd( const symd<typeR>& A ) :
-	n_(A.n())
-{
+	n_(A.n()) {
 	data_.resize(nb());
 	for (index_t i=0;i<n_;i++)
 	for (index_t j=0;j<n_;j++)
 		operator()(i,j) = type(A(i,j));
 }
-
-#if USE_SURREAL
-template symd<SurrealS<1>>::symd( const symd<real_t>& A );
-template symd<SurrealS<3>>::symd( const symd<real_t>& A );
-template symd<SurrealS<6>>::symd( const symd<real_t>& A );
-template symd<SurrealS<10>>::symd( const symd<real_t>& A );
-#endif
 
 template<typename type>
 void
@@ -90,61 +77,13 @@ symd<type>::set( const matd<type>& M ) {
 
 template<typename type>
 void
-symd<type>::fromeig(const vecd<type>& lambda , const matd<type>& q )
+symd<type>::from_eig(const vecd<type>& lambda , const matd<type>& q )
 {
-  n_ = lambda.m();
-
   // constructor from eigendecomposition
+	n_ = lambda.m();
   data_.resize( nb() );
-  std::fill( data_.begin() , data_.end() , 0. );
-
-	#if 0
-	matd<type> M = q * (diag(lambda) * numerics::transpose(q));
+	matd<type> M = q * (numerics::diag(lambda) * numerics::transpose(q));
 	set(M);
-
-	#else
-  // compute L*q'
-  matd<type> lqt(n_,n_);
-  lqt = numerics::transpose(q);
-  for (index_t k=0;k<n_;k++)
-  for (index_t j=0;j<n_;j++)
-    lqt(k,j) *= lambda[k];
-
-  // compute q * L * q'
-  matd<type> S(n_,n_);
-  S = q * lqt;
-
-  // save the result
-  for (index_t i=0;i<n_;i++)
-  for (index_t j=0;j<n_;j++)
-    operator()(i,j) = S(i,j);
-	#endif
-}
-
-template<typename type>
-type
-symd<type>::quadratic_form( const type* x ) const
-{
-  // computes the quadratic form x'*(this)*x
-
-  // y = (this)*x
-  std::vector<type> y(n_);
-  for (coord_t i=0;i<n_;i++) // loop through rows of (this)
-  {
-    y[i] = 0.;
-    for (coord_t j=0;j<n_;j++) // loop through colums of (this)
-    {
-      y[i] += operator()(i,j)*x[j];
-    }
-  }
-
-  // x' * y
-  type f = 0.;
-  for (coord_t i=0;i<n_;i++)
-  {
-    f += x[i]*y[i];
-  }
-  return f;
 }
 
 template<typename type>
@@ -237,8 +176,7 @@ symd<type>::__eig2__() const
   d[0] = 0.5*(trm -sqDelta);
 
   real_t tol = 1e-12;
-  if (sqDelta < tol )
-  {
+  if (sqDelta < tol) {
     d[1] = d[0];
     Q(0,0) = 1.;
     Q(0,1) = 0.;
@@ -251,14 +189,13 @@ symd<type>::__eig2__() const
   Q(0,1) = (d[0] -data_[0]);
   vnorm = ::sqrt( Q(0,0)*Q(0,0) +Q(0,1)*Q(0,1) );
 
-  if (vnorm<tol)
+  if (vnorm < tol)
   {
     Q(0,0) = (d[0] -data_[2]);
     Q(0,1) = data_[1];
     vnorm = ::sqrt( Q(0,0)*Q(0,0) +Q(0,1)*Q(0,1) );
   }
-
-  avro_assert( vnorm>tol );
+  avro_assert( vnorm > tol );
 
   vnorm = 1./vnorm;
   Q(0,0) *= vnorm;
@@ -276,8 +213,7 @@ symd<type>::__eig2__() const
 
 template<typename type>
 std::pair< vecd<type>,matd<type> >
-symd<type>::__eigivens__() const
-{
+symd<type>::__eigivens__() const {
   vecd<type> L(n_);
   matd<type> E(n_,n_);
 
@@ -300,42 +236,36 @@ symd<type>::__eigivens__() const
     sd += fabs(L[i]);
   sd = sd*sd;
 
-  for (index_t iter=0;iter<50;iter++)
-  {
+  for (index_t iter = 0; iter < 50; iter++) {
     // test for convergence
     so = 0.;
-    for (coord_t p=0;p<n_;p++)
-      for (coord_t q=p+1;q<n_;q++)
+    for (coord_t p = 0; p < n_; p++)
+      for (coord_t q = p+1; q < n_; q++)
         so += fabs(A(p,q));
 
-    if (so==0.)
+    if (so == 0.0)
       return std::make_pair(L,E);
 
-    if (iter<4)
+    if (iter < 4)
       thresh = 0.2*so/type(n_*n_);
     else
       thresh = 0.;
 
     // sweep
-    for (coord_t p=0;p<n_;p++)
-    {
-      for (int q=p+1;q<n_;q++)
-      {
+    for (coord_t p = 0; p < n_; p++) {
+      for (int q = p+1; q < n_; q++) {
         g = 100.*fabs(A(p,q));
         if (iter>4 && fabs(L[p])+g == fabs(L[p]) && fabs(L[q])+g==fabs(L[q]))
           A(p,q) = 0.;
-        else if (fabs(A(p,q)) > thresh)
-        {
+        else if (fabs(A(p,q)) > thresh) {
           // calculate Jacobi transformation
           h = L[q] -L[p];
-          if (fabs(h)+g==fabs(h))
-          {
+          if (fabs(h)+g == fabs(h)) {
             t = A(p,q)/h;
           }
-          else
-          {
+          else {
             theta = 0.5*h/A(p,q);
-            if (theta<0.)
+            if (theta < 0.0)
               t = -1./( ::sqrt(1. +theta*theta) -theta );
             else
               t = 1./( ::sqrt(1. +theta*theta) +theta );
@@ -348,30 +278,26 @@ symd<type>::__eigivens__() const
           A(p,q) = 0.;
           L[p] -= z;
           L[q] += z;
-          for (coord_t r=0;r<p;r++)
-          {
+          for (coord_t r = 0; r < p; r++) {
             t = A(r,p);
             A(r,p) = c*t -s*A(r,q);
             A(r,q) = s*t +c*A(r,q);
           }
 
-          for (coord_t r=p+1;r<q;r++)
-          {
+          for (coord_t r = p+1 ; r < q; r++) {
             t = A(p,r);
             A(p,r) = c*t -s*A(r,q);
             A(r,q) = s*t +c*A(r,q);
           }
 
-          for (coord_t r=q+1;r<n_;r++)
-          {
+          for (coord_t r = q+1; r < n_; r++) {
             t = A(p,r);
             A(p,r) = c*t -s*A(q,r);
             A(q,r) = s*t +c*A(q,r);
           }
 
           // update eigenvectors
-          for (coord_t r=0;r<n_;r++)
-          {
+          for (coord_t r=0;r<n_;r++) {
             t = E(r,p);
             E(r,p) = c*t -s*E(r,q);
             E(r,q) = s*t +c*E(r,q);
@@ -383,16 +309,13 @@ symd<type>::__eigivens__() const
 
 	printf("givens rotation failed :(\n");
 	display();
-
 	avro_assert_not_reached;
-
   return std::make_pair(L,E);
 }
 
 template<typename type>
 void
-symd<type>::display( const std::string& title ) const
-{
+symd<type>::display( const std::string& title ) const {
 	if (!title.empty()) printf("%s\n",title.c_str());
 	printf("%s:\n",__PRETTY_FUNCTION__);
 	for (index_t i = 0; i < n_; i++)
@@ -402,13 +325,13 @@ symd<type>::display( const std::string& title ) const
 
 template<typename type>
 void
-symd<type>::matlabize( const std::string& title ) const {
+symd<type>::for_matlab( const std::string& title ) const {
 	avro_assert_not_reached;
 }
 
 template<typename type>
 void
-symd<type>::forunit( const std::string& title ) const {
+symd<type>::for_unit( const std::string& title ) const {
 	avro_assert_not_reached;
 }
 
@@ -428,7 +351,7 @@ symd<real_t>::display( const std::string& title ) const {
 
 template<>
 void
-symd<real_t>::matlabize( const std::string& title ) const {
+symd<real_t>::for_matlab( const std::string& title ) const {
 	if (!title.empty()) printf("%s = [",title.c_str());
   else printf("A = [");
   for (index_t i = 0; i < n_; i++)
@@ -449,44 +372,23 @@ symd<real_t>::matlabize( const std::string& title ) const {
 
 template<>
 void
-symd<real_t>::forunit( const std::string& title ) const
-{
+symd<real_t>::for_unit( const std::string& title ) const {
 	avro_assert_msg( !title.empty() , "provide a variable name!" );
 	for (index_t i = 0; i < n_; i++)
 	for (index_t j = 0; j <= i; j++)
 		printf("%s(%lu,%lu) = %.16e;\n",title.c_str(),i,j,operator()(i,j));
 }
 
-// framework-specific functions
-template<typename type>
-void
-LogEuclidean<type>::interpolate( const std::vector<type>& alpha ,
-                         const std::vector<symd<type>>& tensors , symd<type>& T )
-{
-  avro_assert( alpha.size()==tensors.size() );
-
-  T.zero();
-  for (index_t k = 0; k < tensors.size(); k++)
-    T = T +numerics::logm(tensors[k])*alpha[k];
-  T = numerics::expm(T);
-}
-
 template class symd<real_t>;
-template class LogEuclidean<real_t>;
-
-#if USE_SURREAL
 template class symd<SurrealS<1>>;
-template class LogEuclidean<SurrealS<1>>;
-
 template class symd<SurrealS<3>>;
-template class LogEuclidean<SurrealS<3>>;
-
 template class symd<SurrealS<6>>;
-template class LogEuclidean<SurrealS<6>>;
-
 template class symd<SurrealS<10>>;
-template class LogEuclidean<SurrealS<10>>;
 
-#endif
+// constructors of surreal symmetric matrices from real ones
+template symd<SurrealS<1>>::symd( const symd<real_t>& A );
+template symd<SurrealS<3>>::symd( const symd<real_t>& A );
+template symd<SurrealS<6>>::symd( const symd<real_t>& A );
+template symd<SurrealS<10>>::symd( const symd<real_t>& A );
 
 } // avro

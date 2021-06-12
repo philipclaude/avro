@@ -134,7 +134,7 @@ UT_TEST_CASE(Metric_tests_3d)
 
   Metric m3(n);
   std::vector<real_t> alpha(2,0.5);
-  interp({0.5,0.5},{m1,m2},m3);
+  m3 = numerics::interp<real_t>({0.5,0.5},{m1,m2});
   m3.dump();
 }
 UT_TEST_CASE_END(Metric_tests_3d)

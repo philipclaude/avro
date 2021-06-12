@@ -28,68 +28,7 @@ namespace avro
 
 template<typename type> class MetricEvaluator;
 
-template<typename type>
-bool
-interp( const std::vector<type>& alpha ,
-             const std::vector<symd<type>>& tensors ,
-						 symd<type>& T )
-{
-	avro_assert( alpha.size()==tensors.size() );
-
-	T = 0;
-  for (index_t k=0;k<tensors.size();k++)
-	{
-		T = T + numerics::logm(tensors[k])*alpha[k];
-	}
-	T = numerics::expm(T);
-
-  type d = numerics::det(T);
-  if (d<=0 || std::isnan(d))
-  {
-    for (index_t k=0;k<tensors.size();k++)
-    {
-      //std::cout << tensors[k] << std::endl;
-      //std::cout << numerics::logm(tensors[k]) << std::endl;
-    }
-    print_inline(alpha);
-    //std::cout << T << std::endl;
-    return false;
-  }
-  return true;
-}
-
-template<typename type>
-static type
-quadratic_form( const symd<type>& M , const vecd<real_t>& e )
-{
-	if (M.n()==2)
-	{
-		type mu = M(0,0)*e(0) + M(0,1)*e(1);
-		type mv = M(1,0)*e(0) + M(1,1)*e(1);
-		return mu*e(0) + mv*e(1);
-	}
-	else if (M.n()==3)
-	{
-		type mu = M(0,0)*e(0) + M(0,1)*e(1) + M(0,2)*e(2);
-		type mv = M(1,0)*e(0) + M(1,1)*e(1) + M(1,2)*e(2);
-		type mw = M(2,0)*e(0) + M(2,1)*e(1) + M(2,2)*e(2);
-		return mu*e(0) + mv*e(1) + mw*e(2);
-	}
-	else if (M.n()==4)
-	{
-		type mu = M(0,0)*e(0) + M(0,1)*e(1) + M(0,2)*e(2) + M(0,3)*e(3);
-		type mv = M(1,0)*e(0) + M(1,1)*e(1) + M(1,2)*e(2) + M(1,3)*e(3);
-		type mw = M(2,0)*e(0) + M(2,1)*e(1) + M(2,2)*e(2) + M(2,3)*e(3);
-		type mt = M(3,0)*e(0) + M(3,1)*e(1) + M(3,2)*e(2) + M(3,3)*e(3);
-		return mu*e(0) + mv*e(1) + mw*e(2) + mt*e(3);
-	}
-	else
-		avro_implement;
-	return -1.;
-}
-
-class Metric : public symd<real_t>
-{
+class Metric : public symd<real_t> {
 public:
   Metric() :
     symd<real_t>(0),
@@ -108,27 +47,24 @@ public:
   {}
 
   Metric( const symd<real_t>& A ) :
-    Metric(A.m())
-  {
+    Metric(A.m()) {
     set(A);
     calculate();
   }
 
-  void allocate( coord_t n )
-  {
+  void allocate( coord_t n ) {
     symd<real_t>::allocate(n);
     log_.allocate(n);
     number_ = n;
   }
 
-  symd<real_t>& log(){ return log_; }
+  symd<real_t>& log() { return log_; }
   const symd<real_t>& log() const { return log_; }
 
-  void set( const symd<real_t>& m0 )
-  {
+  void set( const symd<real_t>& m0 ) {
     avro_assert( number_ == m0.m() && number_ == m0.n() );
-    for (coord_t i=0;i<number_;i++)
-    for (coord_t j=i;j<number_;j++)
+    for (coord_t i = 0; i < number_; i++)
+    for (coord_t j = i; j < number_; j++)
       (*this)(i,j) = m0(i,j);
   }
 
@@ -136,8 +72,7 @@ public:
   index_t elem() const { return elem_; }
   void set_elem( index_t elem ) { elem_  = elem; }
 
-  void calculate()
-  {
+  void calculate() {
     log_   = numerics::logm(*this);
     real_t d = numerics::det(*this);
     avro_assert_msg( d > 0. , "d = %g\n", d );
@@ -145,35 +80,30 @@ public:
   }
 
 private:
-  coord_t number_;
-  symd<real_t> log_; // logarithm of this metric
-  index_t elem_; // element in some mesh containing this metric
-  real_t sqdet_; // sqrt of determinant
+  coord_t number_;   // topological number
+  symd<real_t> log_; // matrix logarithm of this metric
+  index_t elem_;     // element in some mesh containing this metric
+  real_t sqdet_;     // sqrt of determinant
 };
 
 //
 // Metric attachment referenced by MetricField for holding metrics at
 // dynamic mesh points
 //
-class MetricAttachment : public Array<Metric>
-{
+class MetricAttachment : public Array<Metric> {
 public:
 	template<typename Function>
 	MetricAttachment( Function& fn , Points& points ) :
-    number_(fn.dim()), points_(points)
-	{
-		for (index_t k=0;k<points_.nb();k++)
-    {
+    number_(fn.dim()), points_(points) {
+		for (index_t k=0;k<points_.nb();k++) {
       Metric mk(number_);
-      if (points.ghost(k))
-      {
+      if (points.ghost(k)) {
         for (index_t i=0;i<number_;i++)
           mk(i,i) = 1.;
         mk.calculate();
         Array<Metric>::add( mk );
       }
-      else
-			{
+      else {
         mk.set( fn(points_[k]) );
         mk.calculate();
 			  Array<Metric>::add( mk );
@@ -182,7 +112,6 @@ public:
 	}
 
   MetricAttachment( Points& points , const std::vector<symd<real_t>>& metrics );
-
   MetricAttachment( Points& points );
 
 	const symd<real_t>& log( const index_t k ) const
@@ -219,8 +148,7 @@ private:
 // discrete metric field
 //
 template<typename type>
-class MetricField : public Field<type,Metric>
-{
+class MetricField : public Field<type,Metric> {
 public:
   MetricField( Topology<type>& topology , MetricAttachment& fld );
 	symd<real_t>& operator() ( const Points& x , index_t v );
@@ -255,27 +183,21 @@ public:
 
 private:
 
-  // static data
   const Topology<type>& topology_;
   const coord_t number_;
 
   // the dynamic field that changes when vertices are changed
 	MetricAttachment& attachment_;
-
   ElementSearch<type> searcher_;
-
   real_t normalization_;
-
   FieldInterpolation<type,Metric>* interpolation_;
 };
 
 template<typename type>
 real_t
-worst_quality( const Topology<type>& topology , MetricField<type>& metric )
-{
+worst_quality( const Topology<type>& topology , MetricField<type>& metric ) {
   std::vector<real_t> quality(topology.nb());
-  for (index_t k=0;k<topology.nb();k++)
-  {
+  for (index_t k = 0; k < topology.nb(); k++) {
     if (topology.ghost(k))
       quality[k] = 1e20;
     else

@@ -37,7 +37,7 @@ public:
 		data_.resize( nb() );
 	}
 
-  void fromeig( const vecd<type>& lambda , const matd<type>& q );
+  void from_eig( const vecd<type>& lambda , const matd<type>& q );
 
 	index_t nb() const { return n_*(n_ +1)/2; }
 	coord_t n() const { return n_; }
@@ -62,13 +62,7 @@ public:
 			operator()(i,i) = 1.;
 	}
 
-	void scale( const type alpha ) {
-		for (index_t k=0;k<nb();k++)
-			data_[k] *= alpha;
-	}
-
 	type& data( const index_t k ) { return data_[k]; }
-
 	type data( const index_t k ) const { return data_[k]; }
 
 	type& operator() ( const index_t i, const index_t j ) {
@@ -95,7 +89,7 @@ public:
 	}
 
 	symd& operator=( const matd<type>& A ) {
-		// hopefully A is already symmetric
+		// assumes A is already symmetric
 		avro_assert( A.m() == A.n() );
 		allocate( A.m() );
 		for (index_t i = 0; i < n_; i++)
@@ -109,22 +103,14 @@ public:
 		return *this;
 	}
 
-	template<typename Method>
-	void interpolate( const std::vector<type>& alpha ,
-										const std::vector<symd>& tensors ) {
-		Method::interpolate(alpha,tensors,*this);
-	}
-
 	symd<type> sandwich( const symd<type>& B ) const;
 
 	// eigenvalues and eigenvectors
 	std::pair< vecd<type>,matd<type> > eig() const;
 
-	type quadratic_form( const type* x ) const;
 	void display( const std::string& title=std::string() ) const;
-	void matlabize( const std::string& title ) const;
-	void forunit( const std::string& title ) const;
-
+	void for_matlab( const std::string& title ) const;
+	void for_unit( const std::string& title ) const;
 	void dump() const { display(); }
 
 private:
@@ -133,27 +119,9 @@ private:
 
 	std::pair< vecd<type>,matd<type> > __eig2__() const;
 	std::pair< vecd<type>,matd<type> > __eigivens__() const;
-
 };
 
-template<typename type>
-class LogEuclidean
-{
-public:
-	static void interpolate( const std::vector<type>& alpha ,
-													 const std::vector<symd<type>>& tensors , symd<type>& T );
-};
-
-template<typename type>
-class AffineInvariant
-{
-	static void interpolate( const std::vector<type>& alpha ,
-													 const std::vector<symd<type>>& tensors , symd<type>& T );
-};
-
-template<typename R, typename S>
-symd< typename result_of<R,S>::type > operator*( const symd<R>& A , const symd<S>& B );
-
+template<typename R, typename S> symd< typename result_of<R,S>::type > operator*( const symd<R>& A , const symd<S>& B );
 
 } // avro
 

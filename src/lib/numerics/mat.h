@@ -5,6 +5,7 @@
 #include "common/types.h"
 
 #include "numerics/surreal/SurrealS.h"
+#include "numerics/types.h"
 
 #include <vector>
 
@@ -133,13 +134,6 @@ private:
   index_t n_;
   std::vector<T> data_;
 };
-
-template<typename S,typename T> class result_of;
-
-template<int N> class result_of<real_t,SurrealS<N>> { public: typedef SurrealS<N> type; };
-template<int N> class result_of<SurrealS<N>,real_t> { public: typedef SurrealS<N> type; };
-template<int N> class result_of<SurrealS<N>,SurrealS<N>>  { public: typedef SurrealS<N> type; };
-template<> class result_of<real_t,real_t> { public: typedef real_t type; };
 
 template<index_t M,index_t N,typename T>
 class mats {
