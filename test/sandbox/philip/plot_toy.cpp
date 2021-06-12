@@ -45,16 +45,13 @@ get_density( const std::string& name , coord_t number )
   else return nullptr;
 }
 
-class DensityField : public Field<Simplex,real_t>
-{
+class DensityField : public Field<Simplex,real_t> {
 public:
   DensityField( const Points& points , Topology<Simplex>& slice , const std::vector<index_t>& sites , delaunay::DensityMeasure& density ) :
-    Field<Simplex,real_t>(slice,0,DISCONTINUOUS)
-  {
+    Field<Simplex,real_t>(slice,0,DISCONTINUOUS) {
     this->build();
     this->element().set_basis( BasisFunctionCategory_Lagrange );
-    for (index_t k=0;k<slice.nb();k++)
-    {
+    for (index_t k=0;k<slice.nb();k++) {
       index_t s = sites[k];
       this->value(k) = density.evaluate( 0 , nullptr , points[s] );
     }
@@ -62,20 +59,20 @@ public:
 
   index_t nb_rank() const { return 1; }
 
-  std::vector<std::string> ranknames() const
-   {std::vector<std::string> result; result.push_back("density"); return result;}
+  std::vector<std::string> ranknames() const {
+    std::vector<std::string> result;
+    result.push_back("density");
+    return result;
+  }
 };
 
-class MassField : public Field<Simplex,real_t>
-{
+class MassField : public Field<Simplex,real_t> {
 public:
   MassField( const Points& points , Topology<Simplex>& slice , const std::vector<index_t>& sites , const std::vector<real_t>& mass ) :
-    Field<Simplex,real_t>(slice,0,DISCONTINUOUS)
-  {
+    Field<Simplex,real_t>(slice,0,DISCONTINUOUS) {
     this->build();
     this->element().set_basis( BasisFunctionCategory_Lagrange );
-    for (index_t k=0;k<slice.nb();k++)
-    {
+    for (index_t k=0;k<slice.nb();k++) {
       index_t s = sites[k];
       this->value(k) = mass[s];
     }
@@ -83,8 +80,11 @@ public:
 
   index_t nb_rank() const { return 1; }
 
-  std::vector<std::string> ranknames() const
-   {std::vector<std::string> result; result.push_back("density"); return result;}
+  std::vector<std::string> ranknames() const {
+    std::vector<std::string> result;
+    result.push_back("density");
+    return result;
+  }
 };
 
 UT_TEST_CASE( test1 )
@@ -145,8 +145,7 @@ UT_TEST_CASE( test1 )
   slice.tetrahedra().fields().make("d",dfld);
 
   std::shared_ptr<MassField> mfld;
-  if (J.contains("mass"))
-  {
+  if (J.contains("mass")) {
     std::vector<real_t> mass = J.at("mass");
     mfld = std::make_shared<MassField>( transport.delaunay() , slice.tetrahedra(),slice.tet2site() , mass );
     slice.tetrahedra().fields().make("m",mfld);

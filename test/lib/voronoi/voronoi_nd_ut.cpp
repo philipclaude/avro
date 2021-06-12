@@ -109,8 +109,6 @@ UT_TEST_CASE( test_nd )
       index_t nb_points = std::pow( 2 , power );
       printf("dim = %u, nb_points = %lu\n",dim,nb_points);
 
-
-
       // create random delaunay vertices
       Delaunay delaunay( dim );
       std::vector<real_t> p(dim,0.);
