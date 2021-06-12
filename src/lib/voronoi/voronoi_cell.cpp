@@ -5,12 +5,6 @@
 #include "voronoi/delaunay.h"
 #include "voronoi/voronoi_cell.h"
 
-extern "C"
-{
-//#include <qhull/libqhull/libqhull.h>
-//#include <qhull/libqhull/geom.h>
-}
-
 #include <csignal>
 
 bool __check_capacity__ = true;
@@ -20,32 +14,6 @@ namespace avro
 
 namespace delaunay
 {
-
-#if 0
-real_t
-get_volume_qhull( const Points& points , const std::vector<index_t>& cell )
-{
-  const index_t np = cell.size();
-  const coord_t dim = points.dim();
-
-  std::vector<coordT> coordinates(np*dim);
-
-  index_t i = 0;
-  for (index_t k=0;k<np;k++)
-  for (coord_t d=0;d<dim;d++)
-    coordinates[i++] = points[cell[k]][d];
-
-  char flags[25];
-  sprintf (flags, "qhull s FA Q12");
-
-  qh_new_qhull(dim, np , coordinates.data() , 0, flags, NULL, NULL);
-  qh_getarea(qh facet_list);
-  real_t volume  = (qh totvol);
-  qh_freeqhull(!qh_ALL);
-
-  return volume;
-}
-#endif
 
 // needed to create a set/map of elements
 bool
@@ -200,7 +168,7 @@ VoronoiCell::compute( const std::vector<index_t>& E )
   time_clip_ += real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 
   t0 = clock();
-  if (number_<=4)
+  if (number_< 4)
     generate_simplices();
   time_decompose_ = real_t(clock() - t0)/real_t(CLOCKS_PER_SEC);
 }
