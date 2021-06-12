@@ -16,6 +16,7 @@
 
 #include "common/types.h"
 
+#include "numerics/linear_algebra.h"
 #include "numerics/vec.h"
 
 using namespace avro;

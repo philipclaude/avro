@@ -4,7 +4,6 @@
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 
 #include "numerics/mat.h"
-#include "numerics/determinant.h"
 #include "numerics/dual.h"
 #include "numerics/linear_algebra.h"
 #include "numerics/symd.h"
@@ -149,34 +148,6 @@ symd<type>::quadratic_form( const type* x ) const
 }
 
 template<typename type>
-type
-symd<type>::determinant() const
-{
-  if (n_==2)
-		return data_[0]*data_[2] -data_[1]*data_[1];
-  if (n_==3)
-  {
-		return  operator()(0,0)*(operator()(2,2)*operator()(1,1)-operator()(2,1)*operator()(1,2))
-	         -operator()(1,0)*(operator()(2,2)*operator()(0,1)-operator()(2,1)*operator()(0,2))
-	         +operator()(2,0)*(operator()(1,2)*operator()(0,1)-operator()(1,1)*operator()(0,2));
-  }
-	assert( n_ == 4 );
-	type X1_1=operator()(0,0),X1_2=operator()(0,1),X1_3=operator()(0,2),X1_4=operator()(0,3);
-	type X2_1=operator()(1,0),X2_2=operator()(1,1),X2_3=operator()(1,2),X2_4=operator()(1,3);
-	type X3_1=operator()(2,0),X3_2=operator()(2,1),X3_3=operator()(2,2),X3_4=operator()(2,3);
-	type X4_1=operator()(3,0),X4_2=operator()(3,1),X4_3=operator()(3,2),X4_4=operator()(3,3);
-	return
-        X1_1*X2_2*X3_3*X4_4 - X1_1*X2_2*X3_4*X4_3 - X1_1*X2_3*X3_2*X4_4
-      + X1_1*X2_3*X3_4*X4_2 + X1_1*X2_4*X3_2*X4_3 - X1_1*X2_4*X3_3*X4_2
-      - X1_2*X2_1*X3_3*X4_4 + X1_2*X2_1*X3_4*X4_3 + X1_2*X2_3*X3_1*X4_4
-      - X1_2*X2_3*X3_4*X4_1 - X1_2*X2_4*X3_1*X4_3 + X1_2*X2_4*X3_3*X4_1
-      + X1_3*X2_1*X3_2*X4_4 - X1_3*X2_1*X3_4*X4_2 - X1_3*X2_2*X3_1*X4_4
-      + X1_3*X2_2*X3_4*X4_1 + X1_3*X2_4*X3_1*X4_2 - X1_3*X2_4*X3_2*X4_1
-      - X1_4*X2_1*X3_2*X4_3 + X1_4*X2_1*X3_3*X4_2 + X1_4*X2_2*X3_1*X4_3
-      - X1_4*X2_2*X3_3*X4_1 - X1_4*X2_3*X3_1*X4_2 + X1_4*X2_3*X3_2*X4_1;
-}
-
-template<typename type>
 symd<type>
 symd<type>::sandwich( const symd<type>& B ) const
 {
@@ -238,46 +209,6 @@ symd<type>::sandwich( const symd<type>& B ) const
 	else
 		avro_implement;
 	return C;
-}
-
-template<typename type>
-symd<type>
-symd<type>::exp() const
-{
-	std::pair< vecd<type>,matd<type> > decomp = eig();
-	for (index_t k=0;k<n_;k++)
-		decomp.first(k) = ::exp( decomp.first(k) );
-	return symd<type>(decomp);
-}
-
-template<typename type>
-symd<type>
-symd<type>::log() const
-{
-	std::pair< vecd<type>,matd<type> > decomp = eig();
-	for (index_t k=0;k<n_;k++)
-		decomp.first(k) = ::log( decomp.first(k) );
-	return symd<type>(decomp);
-}
-
-template<typename type>
-symd<type>
-symd<type>::pow( real_t p ) const
-{
-	std::pair< vecd<type>,matd<type> > decomp = eig();
-	for (index_t k=0;k<n_;k++)
-		decomp.first(k) = ::pow( decomp.first(k) , p );
-	return symd<type>(decomp);
-}
-
-template<typename type>
-symd<type>
-symd<type>::sqrt() const
-{
-	std::pair< vecd<type>,matd<type> > decomp = eig();
-	for (index_t k=0;k<n_;k++)
-		decomp.first(k) = ::sqrt( decomp.first(k) );
-	return symd<type>(decomp);
 }
 
 // eigenvalues and eigenvectors
@@ -459,20 +390,6 @@ symd<type>::__eigivens__() const
 }
 
 template<typename type>
-bool
-symd<type>::check()
-{
-  // check if the tensor is indeed symd by ensuring the eigenvalues are > 0
-  std::pair< vecd<type>,matd<type> > E = eig();
-  for (index_t k=0;k<E.first.m();k++)
-  {
-    if (E.first[k]<1e-16)
-      return false;
-  }
-  return true;
-}
-
-template<typename type>
 void
 symd<type>::display( const std::string& title ) const
 {
@@ -485,44 +402,40 @@ symd<type>::display( const std::string& title ) const
 
 template<typename type>
 void
-symd<type>::matlabize( const std::string& title ) const
-{
+symd<type>::matlabize( const std::string& title ) const {
 	avro_assert_not_reached;
 }
 
 template<typename type>
 void
-symd<type>::forunit( const std::string& title ) const
-{
+symd<type>::forunit( const std::string& title ) const {
 	avro_assert_not_reached;
 }
 
 template<>
 void
-symd<real_t>::display( const std::string& title ) const
-{
+symd<real_t>::display( const std::string& title ) const {
   if (!title.empty()) printf("%s\n",title.c_str());
   else printf("SPT:\n");
-  for (index_t i=0;i<n_;i++)
+  for (index_t i = 0; i < n_; i++)
   {
     printf("[ ");
-    for (index_t j=0;j<n_;j++)
-      printf("%.16e ",operator()(i,j));
+    for (index_t j = 0; j < n_;j++)
+      printf("%.5e ",operator()(i,j));
     printf("]\n");
   }
 }
 
 template<>
 void
-symd<real_t>::matlabize( const std::string& title ) const
-{
+symd<real_t>::matlabize( const std::string& title ) const {
 	if (!title.empty()) printf("%s = [",title.c_str());
   else printf("A = [");
-  for (index_t i=0;i<n_;i++)
+  for (index_t i = 0; i < n_; i++)
   {
-    for (index_t j=0;j<n_;j++)
+    for (index_t j = 0; j < n_; j++)
 		{
-      printf("%.16e",operator()(i,j));
+      printf("%.8e",operator()(i,j));
 			if (int(j)<n_-1) printf(",");
 			else
 			{
@@ -539,8 +452,8 @@ void
 symd<real_t>::forunit( const std::string& title ) const
 {
 	avro_assert_msg( !title.empty() , "provide a variable name!" );
-	for (index_t i=0;i<n_;i++)
-	for (index_t j=0;j<=i;j++)
+	for (index_t i = 0; i < n_; i++)
+	for (index_t j = 0; j <= i; j++)
 		printf("%s(%lu,%lu) = %.16e;\n",title.c_str(),i,j,operator()(i,j));
 }
 
@@ -553,18 +466,13 @@ LogEuclidean<type>::interpolate( const std::vector<type>& alpha ,
   avro_assert( alpha.size()==tensors.size() );
 
   T.zero();
-  for (index_t k=0;k<tensors.size();k++)
-	{
-    T = T +tensors[k].log()*alpha[k];
-	}
-  T = T.exp();
+  for (index_t k = 0; k < tensors.size(); k++)
+    T = T +numerics::logm(tensors[k])*alpha[k];
+  T = numerics::expm(T);
 }
 
 template class symd<real_t>;
 template class LogEuclidean<real_t>;
-
-//template class symd<dual>;
-//template class LogEuclidean<dual>;
 
 #if USE_SURREAL
 template class symd<SurrealS<1>>;

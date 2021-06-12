@@ -16,8 +16,6 @@
 
 #include "mesh/topology.h"
 
-#include "numerics/coordinate.h"
-
 #include <algorithm>
 #include <set>
 

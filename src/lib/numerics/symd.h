@@ -43,10 +43,9 @@ public:
 	coord_t n() const { return n_; }
 	coord_t m() const { return n_; }
 
-	void copy( const symd& T )
-	{
-		avro_assert( n_==T.n() );
-		for (index_t k=0;k<nb();k++)
+	void copy( const symd& T ) {
+		avro_assert( n_ == T.n() );
+		for (index_t k = 0; k < nb(); k++)
 			data_[k] = T.data(k);
 	}
 
@@ -72,27 +71,23 @@ public:
 
 	type data( const index_t k ) const { return data_[k]; }
 
-	type& operator() ( const index_t i, const index_t j )
-	{
+	type& operator() ( const index_t i, const index_t j ) {
 		return (i>j) ? data_[i*(i+1)/2 +j] : data_[j*(j +1)/2 +i];
 	}
 
-	type operator() ( const index_t i, const index_t j ) const
-	{
+	type operator() ( const index_t i, const index_t j ) const {
 		return (i>j) ? data_[i*(i+1)/2 +j] : data_[j*(j +1)/2 +i];
 	}
 
 	symd operator+() const { return *this; }
-	symd operator+( const symd& U )
-	{
+	symd operator+( const symd& U ) {
 		symd V(U.n());
 		for (coord_t i=0;i<U.nb();i++)
 			V.data(i) = data_[i] +U.data(i);
 		return V;
 	}
 
-	symd operator*( const type a ) const
-	{
+	symd operator*( const type a ) const {
 		symd C(n());
 		for (index_t i=0;i<nb();i++)
 			C.data(i) = a*data_[i];
@@ -100,9 +95,9 @@ public:
 	}
 
 	symd& operator=( const matd<type>& A ) {
+		// hopefully A is already symmetric
 		avro_assert( A.m() == A.n() );
 		allocate( A.m() );
-		// hopefully A is already symmetric
 		for (index_t i = 0; i < n_; i++)
 		for (index_t j = 0; j < n_; j++)
 			(*this)(i,j) = A(i,j);
@@ -116,16 +111,9 @@ public:
 
 	template<typename Method>
 	void interpolate( const std::vector<type>& alpha ,
-										const std::vector<symd>& tensors )
-	{
+										const std::vector<symd>& tensors ) {
 		Method::interpolate(alpha,tensors,*this);
 	}
-
-	symd exp() const;
-	symd log() const;
-	symd inv() const;
-	symd pow( real_t p ) const;
-	symd sqrt() const;
 
 	symd<type> sandwich( const symd<type>& B ) const;
 
@@ -133,14 +121,11 @@ public:
 	std::pair< vecd<type>,matd<type> > eig() const;
 
 	type quadratic_form( const type* x ) const;
-	type determinant() const;
 	void display( const std::string& title=std::string() ) const;
 	void matlabize( const std::string& title ) const;
 	void forunit( const std::string& title ) const;
 
 	void dump() const { display(); }
-
-  bool check();
 
 private:
 	coord_t n_;

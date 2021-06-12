@@ -44,4 +44,32 @@ extern "C" void DGESVD( char *jobu , char* jobvt , int *m , int *n , double *A ,
 
 } // avro
 
+#ifdef AVRO_NO_LAPACK
+
+extern "C"
+{
+
+void
+dgesv_(int *N, int *NRHS, double *A, int *LDA,
+       int *IPIV,double *B, int *LDB, int *INFO) {
+  avro_assert_not_reached;
+}
+
+void dgesvd_( char *jobu , char* jobvt , int *m , int *n , double* a ,
+              int* lda , double *s , double *u , int* ldu , double *vt ,
+              int* ldvt, double* work , int* lwork , int* info ) {
+  avro_assert_not_reached;
+}
+
+void
+dgeev_( char* jobvl, char* jobvr, int* n, double* a,
+        int* lda, double* wr, double* wi, double* vl,
+        int* ldvl, double* vr, int* ldvr, double* work,
+        int* lwork, int *info ) {
+  avro_assert_not_reached;
+}
+
+}
+#endif
+
 #endif

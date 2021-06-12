@@ -21,6 +21,7 @@ namespace numerics
 index_t factorial( const index_t i );
 index_t binomial( const index_t n , const index_t k );
 index_t nchoosek( index_t n , index_t k );
+real_t  eps( const real_t& x );
 
 } // numerics
 

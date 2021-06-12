@@ -4,7 +4,6 @@
 #include "common/error.h"
 #include "common/types.h"
 
-#include "numerics/determinant.h"
 #include "numerics/surreal/SurrealS.h"
 
 #include <vector>
@@ -16,8 +15,7 @@ template<typename T> class vecd;
 template<typename T> class symd;
 
 template<typename T>
-class matd
-{
+class matd {
 public:
   matd(index_t n) :
     m_(n),
@@ -39,8 +37,7 @@ public:
   matd(const matd& A) :
     m_(A.m()),
     n_(A.n()),
-    data_(m_*n_)
-  {
+    data_(m_*n_) {
     for (index_t i = 0; i < m_; i++)
     for (index_t j = 0; j < n_; j++)
       (*this)(i,j) = A(i,j);
@@ -55,8 +52,7 @@ public:
   matd( const symd<T>& A ) :
     m_(A.m()),
     n_(A.m()),
-    data_(m_*n_)
-  {
+    data_(m_*n_) {
     for (index_t i = 0; i < m_; i++)
     for (index_t j = 0; j < n_; j++)
       (*this)(i,j) = A(i,j);
@@ -146,8 +142,7 @@ template<int N> class result_of<SurrealS<N>,SurrealS<N>>  { public: typedef Surr
 template<> class result_of<real_t,real_t> { public: typedef real_t type; };
 
 template<index_t M,index_t N,typename T>
-class mats
-{
+class mats {
 public:
   mats() {
     zero();

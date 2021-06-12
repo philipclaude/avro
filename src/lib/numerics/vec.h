@@ -157,6 +157,6 @@ template<typename R,typename S> vecd< typename result_of<R,S>::type > operator+(
 template<typename R,typename S> vecd< typename result_of<R,S>::type > operator*( const R& x , const vecd<S>& y );
 template<typename R,typename S> vecd< typename result_of<R,S>::type > operator*( const vecd<R>& x , const S& y );
 
-} // pydg
+} // avro
 
 #endif

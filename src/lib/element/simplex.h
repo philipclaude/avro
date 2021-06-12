@@ -18,7 +18,6 @@
 
 #include "numerics/functions.h"
 #include "numerics/mat.h"
-#include "numerics/types.h"
 
 #include <map>
 #include <vector>
@@ -31,8 +30,7 @@ template<typename type> class SimplicialDecomposition;
 class Points;
 class Entity;
 
-class Simplex : public Element<Simplex>
-{
+class Simplex : public Element<Simplex> {
 public:
   Simplex( const coord_t number , const coord_t order );
 

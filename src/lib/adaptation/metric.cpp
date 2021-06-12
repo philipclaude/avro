@@ -20,8 +20,8 @@
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
-#include "numerics/determinant.h"
 #include "numerics/functions.h" // factorial
+#include "numerics/linear_algebra.h"
 #include "numerics/geometry.h"
 
 #include <json/json.hpp>
