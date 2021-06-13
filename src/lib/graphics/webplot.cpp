@@ -151,7 +151,7 @@ Application<Web_Interface>::receive( const std::string& text )
     real_t d = stod(data[0]);
     real_t angles[2] = {stod(data[1]),stod(data[2])};
     clip_plane_.update(d,angles,dir);
-    clip_plane_.plot(manager_,focus_,mat4(1));
+    clip_plane_.plot(manager_,focus_,glm::identity());
   }
   if (message[0]=="clip")
   {

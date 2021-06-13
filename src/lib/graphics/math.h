@@ -134,7 +134,6 @@ public:
       (*this)(i,j) = m(i,j);
   }
 
-  float* value_ptr();
   float* operator[] (index_t i) { return &(*this)(i,0); }
 };
 
@@ -144,11 +143,12 @@ public:
     mats<4,4,float>()
   {}
 
+    /*
   mat4( const float f ) {
     zero();
     for (int i=0;i<4;i++)
-      (*this)[i][i] = 1.0;
-  }
+      (*this)(i,i) = f;
+  }*/
 
   mat4( const mats<4,4,float>& m ) {
     for (int i = 0; i < 4; i++)
@@ -156,16 +156,14 @@ public:
       (*this)(i,j) = m(i,j);
   }
 
-  float* value_ptr();
   float* operator[] (index_t i) { return &(*this)(i,0); }
   const float* operator[] (index_t i) const { return &(*this)(i,0); }
-
-private:
 };
 
 namespace glm {
 
 class mat4 mat4( float a );
+class mat4 identity();
 class mat4 perspective( float fov , float aspect , float znear , float zfar );
 class mat4 lookAt( const vec3& eye , const vec3& center , const vec3& up );
 class mat4 rotate( const class mat4& m , float angle , const vec3& axis );

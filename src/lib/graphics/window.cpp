@@ -261,7 +261,7 @@ GLFW_Window::setup()
   // ensure we can capture the escape key being pressed below
   glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
 
-  // hide the mouse and enable unlimited mouvement
+  // hide the mouse and enable unlimited movement
   //glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   glfwSetCursorPos(window_, width_/2, height_/2);
@@ -289,8 +289,8 @@ void
 GLFW_Window::poll()
 {
   make_current();
-  //glfwPollEvents(); // poll events better for animations
-  glfwWaitEvents();  // wait events better for drawing upon request
+  glfwPollEvents(); // poll events better for animations
+  //glfwWaitEvents();  // wait events better for drawing upon request
 }
 
 void
@@ -520,7 +520,7 @@ GLFW_Window::draw()
     manager_.draw(scene(j));
 
   draw_axes();
-  //draw_plane(focus_);
+  draw_plane(scene_[0]->focus());
 
   update_view();
   end_draw();

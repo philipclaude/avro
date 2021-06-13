@@ -20,7 +20,7 @@
 #include "mesh/search.h"
 
 #include "numerics/linear_algebra.h"
-#include "numerics/symd.h"
+#include "numerics/sym.h"
 #include "numerics/vec.h"
 
 namespace avro

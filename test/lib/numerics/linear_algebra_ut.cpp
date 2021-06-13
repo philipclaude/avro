@@ -13,7 +13,7 @@
 
 #include "numerics/linear_algebra.h"
 #include "numerics/mat.h"
-#include "numerics/symd.h"
+#include "numerics/sym.h"
 
 using namespace avro;
 
