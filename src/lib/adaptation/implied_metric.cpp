@@ -94,8 +94,8 @@ ElementImpliedMetric<type>::compute( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
   J_ = J0_*Jeq_;
-  //symd<real_t> JJt = J_*transpose(J_);
-  matd<real_t> JJt = J_*transpose(J_);
+  //symd<real_t> JJt = J_*numerics::transpose(J_);
+  matd<real_t> JJt = J_*numerics::transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -108,8 +108,8 @@ ElementImpliedMetric<type>::compute( const Points& points , const index_t* v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  //symd<real_t> JJt = J_*transpose(J_);
-  matd<real_t> JJt = J_*transpose(J_);
+  //symd<real_t> JJt = J_*numerics::transpose(J_);
+  matd<real_t> JJt = J_*numerics::transpose(J_);
   M_ = numerics::inverse( JJt );
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
@@ -123,7 +123,7 @@ ElementImpliedMetric<type>::inverse( const Points& points , const index_t *v , i
 {
   element_.jacobian( v , nv , points , J0_ );
   J_ = J0_*Jeq_;
-  M_ = J_*transpose(J_); // no inverse
+  M_ = J_*numerics::transpose(J_); // no inverse
   for (index_t i=0;i<element_.number();i++)
   for (index_t j=i;j<element_.number();j++)
     this->operator()(i,j) = M_(i,j);
@@ -239,7 +239,7 @@ MeshImpliedMetric<type>::initialize()
     // compute the weighted average
     try
     {
-      interp( alpha , mb , this->data_[k] );
+      this->data_[k] = numerics::interp( alpha , mb );
     }
     catch(...)
     {
@@ -400,8 +400,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<symd<real_t>>& Svec ,
 
     // get the edge length squared
     vecd<real_t> e( DIM , dx.data() );
-    SurrealClassVertex lni = quadratic_form(nodalMetric[p],e);
-    SurrealClassVertex lnj = quadratic_form(nodalMetric[q],e);
+    SurrealClassVertex lni = numerics::quadratic_form(nodalMetric[p],e);
+    SurrealClassVertex lnj = numerics::quadratic_form(nodalMetric[q],e);
     lni = sqrt(lni);
     lnj = sqrt(lnj);
 

@@ -11,7 +11,7 @@
 
 #include "mesh/points.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 #include "numerics/expansion.h"
 #include "numerics/functions.h"
 #include "numerics/geometry.h"

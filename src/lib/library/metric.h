@@ -15,7 +15,9 @@
 
 #include "mesh/interpolation.h"
 
-#include "numerics/matrix.h"
+#include "numerics/linear_algebra.h"
+#include "numerics/mat.h"
+#include "numerics/symd.h"
 
 namespace avro
 {
@@ -129,7 +131,7 @@ public:
     lambda[1] = 1./(ht*ht);
     lambda[2] = 1./(hz*hz);
 
-    matd<real_t> M = Q* (diag(lambda)*transpose(Q));
+    matd<real_t> M = Q* (numerics::diag(lambda)*numerics::transpose(Q));
     symd<real_t> m(3);
     m.set(M);
     return m;
@@ -176,7 +178,7 @@ public:
     lambda[2] = 1./(hz*hz);
 
     symd<real_t> m(3);
-    m = Q*diag(lambda)*transpose(Q);
+    m = (Q*numerics::diag(lambda))*numerics::transpose(Q);
 
     return m;
   }
@@ -290,7 +292,7 @@ public:
   	L[2] = 1./(hphi*hphi);
   	L[3] = 1./(ht*ht);
 
-  	return Q*diag(L)*transpose(Q);
+  	return Q*numerics::diag(L)*numerics::transpose(Q);
   }
 };
 

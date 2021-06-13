@@ -23,7 +23,7 @@
 
 #include "numerics/geometry.h"
 #include "numerics/linear_algebra.h"
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 namespace avro
 {
@@ -326,7 +326,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
     V(j,k) = x[ v[k] ][j];
 
   // set the least-squares portion of the system
-  matd<real_t> A = transpose(V)*V;
+  matd<real_t> A = numerics::transpose(V)*V;
   matd<real_t> B(nv+1,nv+1); // initializes to zero
   for (index_t i=0;i<nv;i++)
   for (index_t j=0;j<nv;j++)
@@ -340,7 +340,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   }
 
   // set the right-hand side
-  vecd<real_t> w0 = transpose(V)*p;
+  vecd<real_t> w0 = numerics::transpose(V)*p;
   vecd<real_t> b0(nv+1);
   for (index_t i = 0; i < nv; i++)
     b0(i) = w0(i);
@@ -354,7 +354,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   // solve the system
   vecd<real_t> b(nv+1);
   //b = tinymat::DLA::InverseLUP::Solve(B,b0);
-  solveLUP( B , b0 , b );
+  numerics::solveLUP( B , b0 , b );
 
   // set the barycentric coordinates ignoring the last entry
   // because it holds the lagrange multiplier

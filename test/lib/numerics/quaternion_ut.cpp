@@ -3,6 +3,7 @@
 #include "common/types.h"
 
 #include "numerics/quaternion.h"
+#include "graphics/math.h"
 
 using namespace avro;
 
@@ -18,9 +19,7 @@ UT_TEST_CASE( test1 )
   axis[0] = 1; axis[1] = 0; axis[2] = 0;
   Quaternion qx(theta,axis);
 
-  glm::mat3 rx = qx.rotation_matrix();
-
-  std::cout << glm::to_string(rx) << std::endl;
+  graphics::mat3 rx = qx.rotation_matrix();
 
   UT_ASSERT_NEAR( rx[0][0] , 1 , tol );
   UT_ASSERT_NEAR( rx[0][1] , 0 , tol );
@@ -36,7 +35,7 @@ UT_TEST_CASE( test1 )
   axis[0] = 0; axis[1] = 1; axis[2] = 0;
   Quaternion qy(theta,axis);
 
-  glm::mat3 ry = qy.rotation_matrix();
+  graphics::mat3 ry = qy.rotation_matrix();
 
   UT_ASSERT_NEAR( ry[0][0] , cos(theta) , tol );
   UT_ASSERT_NEAR( ry[0][1] , 0 , tol );
@@ -52,7 +51,7 @@ UT_TEST_CASE( test1 )
   axis[0] = 0; axis[1] = 0; axis[2] = 1;
   Quaternion qz(theta,axis);
 
-  glm::mat3 rz = qz.rotation_matrix();
+  graphics::mat3 rz = qz.rotation_matrix();
 
   UT_ASSERT_NEAR( rz[0][0] , cos(theta) , tol );
   UT_ASSERT_NEAR( rz[0][1] , -sin(theta) , tol );

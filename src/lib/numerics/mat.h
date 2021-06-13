@@ -4,8 +4,8 @@
 #include "common/error.h"
 #include "common/types.h"
 
-#include "numerics/determinant.h"
 #include "numerics/surreal/SurrealS.h"
+#include "numerics/types.h"
 
 #include <vector>
 
@@ -16,8 +16,7 @@ template<typename T> class vecd;
 template<typename T> class symd;
 
 template<typename T>
-class matd
-{
+class matd {
 public:
   matd(index_t n) :
     m_(n),
@@ -39,8 +38,7 @@ public:
   matd(const matd& A) :
     m_(A.m()),
     n_(A.n()),
-    data_(m_*n_)
-  {
+    data_(m_*n_) {
     for (index_t i = 0; i < m_; i++)
     for (index_t j = 0; j < n_; j++)
       (*this)(i,j) = A(i,j);
@@ -55,8 +53,7 @@ public:
   matd( const symd<T>& A ) :
     m_(A.m()),
     n_(A.m()),
-    data_(m_*n_)
-  {
+    data_(m_*n_) {
     for (index_t i = 0; i < m_; i++)
     for (index_t j = 0; j < n_; j++)
       (*this)(i,j) = A(i,j);
@@ -138,16 +135,8 @@ private:
   std::vector<T> data_;
 };
 
-template<typename S,typename T> class result_of;
-
-template<int N> class result_of<real_t,SurrealS<N>> { public: typedef SurrealS<N> type; };
-template<int N> class result_of<SurrealS<N>,real_t> { public: typedef SurrealS<N> type; };
-template<int N> class result_of<SurrealS<N>,SurrealS<N>>  { public: typedef SurrealS<N> type; };
-template<> class result_of<real_t,real_t> { public: typedef real_t type; };
-
 template<index_t M,index_t N,typename T>
-class mats
-{
+class mats {
 public:
   mats() {
     zero();
@@ -229,14 +218,6 @@ template<typename R,typename S> matd< typename result_of<R,S>::type > operator* 
 template<typename R,typename S> matd< typename result_of<R,S>::type > operator* ( const S& a ,  const matd<R>& B );
 template<typename R,typename S> matd< typename result_of<R,S>::type > operator+ ( const matd<R>& A , const matd<S>& B );
 template<typename R,typename S> matd< typename result_of<R,S>::type > operator- ( const matd<R>& A , const matd<S>& B );
-
-template<index_t M,typename T> mats<M,M,T> inverse( const mats<M,M,T>& A );
-template<index_t M,typename T> T det( const mats<M,M,T>& A );
-template<index_t M,typename T> T trace( const mats<M,M,T>& A );
-template<typename T> matd<T> transpose( const matd<T>& A );
-
-template<typename T> void solveLUP( const matd<T>& A , const vecd<T>& b , vecd<T>& x );
-template<typename T> void inverseLUP( const matd<T>& A , matd<T>& Ainv );
 
 } // avro
 

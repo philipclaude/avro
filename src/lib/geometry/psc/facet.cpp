@@ -68,7 +68,7 @@ Facet::build_basis()
   for (coord_t j=0;j<dim_;j++)
     V_(j,k) = basis_(j,k);
 
-  matd<real_t> VtV = transpose(V_)*V_;
+  matd<real_t> VtV = numerics::transpose(V_)*V_;
   for (coord_t i=0;i<number_;i++)
   for (coord_t j=0;j<number_;j++)
     B_(i,j) = VtV(i,j);
@@ -116,14 +116,14 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
 
   // compute right-hand-side of minimization statement
   vecd<real_t> x0(x.size(),x.data());
-  vecd<real_t> b = transpose(V_)*( x0 - x0_ );
+  vecd<real_t> b = numerics::transpose(V_)*( x0 - x0_ );
 
   // solve VtV * alpha = Vt * (x - x0)
   //vecd<real_t> alpha = tinymat::DLA::InverseLUP::Solve(B_,b);
   //avro_assert( alpha.m() == number_ );
 
   vecd<real_t> alpha(number_);
-  solveLUP(B_,b,alpha);
+  numerics::solveLUP(B_,b,alpha);
 
   // compute the closest point y = V*alpha + x0
   vecd<real_t> y = V_*alpha + x0_;

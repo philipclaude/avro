@@ -38,13 +38,13 @@ UT_TEST_CASE( uniforms )
 
   UT_CATCH_EXCEPTION( shader.setUniform( "lightDir" , 1. , 1. , 1. , 1. ) );
 
-  vec2 v2 = {1,1};
+  vec2 v2 = {1.f,1.f};
   UT_CATCH_EXCEPTION( shader.setUniform( "lightDir" , v2  ) );
 
-  vec3 v3 = {1,1,1};
+  vec3 v3 = {1.f,1.f,1.f};
   shader.setUniform( "lightDir" , v3  );
 
-  vec4 v4 = {1,1,1,1};
+  vec4 v4 = {1.f,1.f,1.f,1.f};
   UT_CATCH_EXCEPTION( shader.setUniform( "lightDir" , v4  ) );
 
   mat3 m3;

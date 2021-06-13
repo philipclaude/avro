@@ -11,8 +11,6 @@
 
 #include "geometry/egads/object.h"
 
-#include "numerics/coordinate.h"
-
 #include <egads.h>
 
 namespace avro

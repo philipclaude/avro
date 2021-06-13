@@ -11,6 +11,8 @@
 #define avro_LIB_GEOMETRY_PSC_FACET_H_
 
 #include "geometry/psc/object.h"
+#include "numerics/mat.h"
+#include "numerics/vec.h"
 
 namespace avro
 {

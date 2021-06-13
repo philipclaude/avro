@@ -13,8 +13,6 @@
 #include "geometry/egads/object.h"
 #include "geometry/entity.h"
 
-#include "numerics/coordinate.h"
-
 using namespace avro;
 
 UT_TEST_SUITE( geometry_primitive_suite)

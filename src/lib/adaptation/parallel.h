@@ -3,10 +3,6 @@
 
 #include "common/types.h"
 
-#include "mesh/points.h"
-
-#include "numerics/matrix.h"
-
 #include <map>
 #include <set>
 #include <vector>
@@ -20,6 +16,7 @@ class MetricField_Analytic;
 }
 
 template<typename type> class Topology;
+template<typename T> class symd;
 
 typedef symd<real_t> VertexMetric;
 class AdaptationParameters;

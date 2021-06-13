@@ -13,7 +13,7 @@
 #include "common/error.h"
 #include "common/types.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 #include <memory>
 #include <type_traits>

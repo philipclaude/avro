@@ -23,8 +23,8 @@ UT_TEST_CASE( test_nd )
 {
   coord_t numberL = 4;
   coord_t numberH = 4;
-  coord_t powerL = 12;
-  coord_t powerH = 14;
+  coord_t powerL = 6;
+  coord_t powerH = 6;
   bool generate_mode = false;
 
   for (coord_t number = numberL; number <= numberH; number++)
@@ -108,8 +108,6 @@ UT_TEST_CASE( test_nd )
     {
       index_t nb_points = std::pow( 2 , power );
       printf("dim = %u, nb_points = %lu\n",dim,nb_points);
-
-
 
       // create random delaunay vertices
       Delaunay delaunay( dim );

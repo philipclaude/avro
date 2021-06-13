@@ -55,7 +55,7 @@ class ClippedCell : public Topology<Simplex>
 {
 public:
   ClippedCell( const LaguerreDiagram<type>& diagram , coord_t dim , index_t cell ,
-      const numerics::MatrixD<real_t>& B , const numerics::MatrixD<real_t>& At ) :
+      const matd<real_t>& B , const matd<real_t>& At ) :
     Topology<Simplex>(points_,3),
     diagram_(diagram),
     dim_(dim),
@@ -111,12 +111,12 @@ public:
         if (s < 0.0 || s > 1.0) continue;
 
         // compute the geomeetric intersection
-        numerics::VectorD<real_t> xs(dim_);
+        vecd<real_t> xs(dim_);
         for (coord_t d = 0; d < dim_; d++)
           xs(d) = polytope.points()[e0][d] + s*( polytope.points()[e1][d] - polytope.points()[e0][d] );
 
         // compute the uvw coordinates
-        numerics::VectorD<real_t> xu(3);
+        vecd<real_t> xu(3);
         xu = B_* (At_*xs );
 
         for (coord_t d = 0; d < xu.m(); d++)
@@ -193,8 +193,8 @@ private:
   index_t elem_; // which domain element?
   index_t site_; // which voronoi site does this correspond to?
 
-  const numerics::MatrixD<real_t>& B_;
-  const numerics::MatrixD<real_t>& At_;
+  const matd<real_t>& B_;
+  const matd<real_t>& At_;
 
   std::vector<index_t> tet2site_;
 
@@ -277,9 +277,9 @@ public:
 
 
     // precompute the transformation matrix
-    numerics::MatrixD<real_t> A(4,3);
-    numerics::MatrixD<real_t> At(3,4);
-    numerics::MatrixD<real_t> B(3,3);
+    matd<real_t> A(4,3);
+    matd<real_t> At(3,4);
+    matd<real_t> B(3,3);
 
     for (coord_t d = 0; d < 4; d++)
     {

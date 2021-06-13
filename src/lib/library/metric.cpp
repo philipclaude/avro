@@ -59,7 +59,7 @@ MetricField_UniformGeometry<type>::eval( const Points& points , index_t p , cons
   }
   avro_assert( metrics.size()!=0 );
   std::vector<real_t> alpha(metrics.size(),1./metrics.size());
-  interp( alpha , metrics , mp );
+  mp = numerics::interp( alpha , metrics );
   return 0;
 }
 

@@ -22,11 +22,11 @@ using namespace avro;
 
 UT_TEST_SUITE( metric_suite )
 
-numerics::SymMatrixD<real_t>
+symd<real_t>
 random_tensor( index_t n )
 {
-  numerics::MatrixD<real_t> X(n,n);
-  numerics::MatrixD<real_t> Xt(n,n);
+  matd<real_t> X(n,n);
+  matd<real_t> Xt(n,n);
   for (index_t i=0;i<n;i++)
   for (index_t j=0;j<n;j++)
   {
@@ -34,7 +34,7 @@ random_tensor( index_t n )
     Xt(j,i) = X(i,j);
   }
 
-  numerics::SymMatrixD<real_t> N = Xt*X;
+  symd<real_t> N = Xt*X;
 
   // add n to diagonal for spd-ness
   for (index_t i=0;i<n;i++)
@@ -42,10 +42,10 @@ random_tensor( index_t n )
   return N;
 }
 
-numerics::SymMatrixD<real_t>
+symd<real_t>
 identity( index_t n )
 {
-  numerics::SymMatrixD<real_t> m(n);
+  symd<real_t> m(n);
   for (index_t i=0;i<n;i++)
     m(i,i) = 1;
   return m;
@@ -61,21 +61,21 @@ UT_TEST_CASE(Metric_tests_2d)
   Metric m(n);
   m.set(identity(n));
 
-  numerics::SymMatrixD<real_t> expm = numerics::expm(m);
+  symd<real_t> expm = numerics::expm(m);
   UT_ASSERT_NEAR( expm(0,0) , std::exp(1.) , tol );
   UT_ASSERT_NEAR( expm(0,1) , 0. , tol );
   UT_ASSERT_NEAR( expm(1,1) , std::exp(1.) , tol );
 
-  numerics::SymMatrixD<real_t> logm = numerics::logm(m);
+  symd<real_t> logm = numerics::logm(m);
   UT_ASSERT_EQUALS( logm(0,0) , 0. );
   UT_ASSERT_EQUALS( logm(0,1) , 0. );
   UT_ASSERT_EQUALS( logm(1,1) , 0. );
 
-  numerics::MatrixD<real_t> q(n,n);
-  numerics::VectorD<real_t> lambda(n);
+  matd<real_t> q(n,n);
+  vecd<real_t> lambda(n);
   numerics::eig(m,lambda,q);
 
-  numerics::MatrixD<real_t> m0 = q*diag(lambda)*transpose(q);
+  matd<real_t> m0 = q*numerics::diag(lambda)*numerics::transpose(q);
   m0.dump();
 
   UT_ASSERT_EQUALS( m0.m() , m.m() );
@@ -102,11 +102,11 @@ UT_TEST_CASE(Metric_tests_3d)
   m(1,2) = -0.6;
   m(2,2) = 2.3;
 
-  numerics::MatrixD<real_t> q(n,n);
-  numerics::VectorD<real_t> lambda(n);
+  matd<real_t> q(n,n);
+  vecd<real_t> lambda(n);
   numerics::eig(m,lambda,q);
 
-  numerics::SymMatrixD<real_t> m0 = q*diag(lambda)*transpose(q);
+  symd<real_t> m0 = q*numerics::diag(lambda)*numerics::transpose(q);
   m0.dump();
 
   for (index_t i=0;i<n;i++)
@@ -122,7 +122,7 @@ UT_TEST_CASE(Metric_tests_3d)
   m(2,2) = -1.3;
 
   numerics::eig(m,lambda,q);
-  m0 = q*diag(lambda)*transpose(q);
+  m0 = q*numerics::diag(lambda)*numerics::transpose(q);
 
   for (index_t i=0;i<n;i++)
   for (index_t j=0;j<n;j++)
@@ -134,7 +134,7 @@ UT_TEST_CASE(Metric_tests_3d)
 
   Metric m3(n);
   std::vector<real_t> alpha(2,0.5);
-  interp({0.5,0.5},{m1,m2},m3);
+  m3 = numerics::interp<real_t>({0.5,0.5},{m1,m2});
   m3.dump();
 }
 UT_TEST_CASE_END(Metric_tests_3d)
@@ -158,11 +158,11 @@ UT_TEST_CASE(tests_4d)
   m(2,3) = 1.56;
   m(3,3) = 1.71;
 
-  numerics::MatrixD<real_t> q(n,n);
-  numerics::VectorD<real_t> lambda(n);
+  matd<real_t> q(n,n);
+  vecd<real_t> lambda(n);
   numerics::eig(m,lambda,q);
 
-  numerics::SymMatrixD<real_t> m0 = q*diag(lambda)*transpose(q);
+  symd<real_t> m0 = q*numerics::diag(lambda)*numerics::transpose(q);
   m0.dump();
 
   for (index_t i=0;i<n;i++)

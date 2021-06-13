@@ -14,7 +14,7 @@
 
 #include "graphics/math.h"
 
-#include "numerics/matrix.h"
+#include "numerics/mat.h"
 
 #include <math.h>
 

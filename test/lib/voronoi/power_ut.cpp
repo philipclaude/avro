@@ -14,6 +14,8 @@ using namespace avro;
 
 UT_TEST_SUITE( laguerre_test_suite )
 
+#if 0 // i think this test is deprecated 
+
 UT_TEST_CASE( test_simplex )
 {
   GEO::PCK::initialize();
@@ -27,7 +29,7 @@ UT_TEST_CASE( test_simplex )
   // create random delaunay vertices
   Delaunay delaunay( dim );
   #if 1
-  index_t nb_points = 1e2;
+  index_t nb_points = 1e3;
   std::vector<real_t> x(dim,0.);
   for (index_t k=0;k<nb_points;k++)
   {
@@ -58,5 +60,7 @@ UT_TEST_CASE( test_simplex )
     vis.run();
 }
 UT_TEST_CASE_END( test_simplex )
+
+#endif
 
 UT_TEST_SUITE_END( laguerre_test_suite )

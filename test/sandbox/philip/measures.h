@@ -2,39 +2,35 @@
 #define AVRO_SANDBOX_SDOT_MEASURES_H_
 
 #include "numerics/linear_algebra.h"
+#include "numerics/symd.h"
+#include "numerics/vec.h"
+
 #include "voronoi/optimal_transport.h"
-#include "adaptation/metric.h" // for quadratic_form which should be moved
 
 namespace avro
 {
 using namespace delaunay;
 
-class DensityMeasure_Sin : public delaunay::DensityMeasure
-{
+class DensityMeasure_Sin : public delaunay::DensityMeasure {
 public:
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const {
     return 1e1*( 1 + sin(2*M_PI*x[0])*sin(2*M_PI*x[1]) );
   }
 };
 
-class DensityMeasure_Quadratic : public delaunay::DensityMeasure
-{
+class DensityMeasure_Quadratic : public delaunay::DensityMeasure {
 public:
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const {
     return .1 + 100*x[0]*x[0];
   }
 };
 
-class DensityMeasure_Sphere : public delaunay::DensityMeasure
-{
+class DensityMeasure_Sphere : public delaunay::DensityMeasure {
 public:
   DensityMeasure_Sphere( coord_t dim ) :
     dim_(dim)
   {}
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const {
     real_t rho = 1.0;
     for (coord_t d = 0; d < dim_; d++)
       rho += 100.0*(x[d] - 0.5)*(x[d] - 0.5);
@@ -44,14 +40,12 @@ private:
   coord_t dim_;
 };
 
-class DensityMeasure_Cone : public delaunay::DensityMeasure
-{
+class DensityMeasure_Cone : public delaunay::DensityMeasure {
 public:
   DensityMeasure_Cone( coord_t dim ) :
     dim_(dim)
   {}
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const {
     real_t r2 = 0.0;
     for (coord_t d = 0; d < dim_-1; d++)
       r2 += x[d]*x[d];
@@ -71,12 +65,10 @@ private:
 };
 
 
-class DensityMeasure_Shock : public delaunay::DensityMeasure
-{
+class DensityMeasure_Shock : public delaunay::DensityMeasure {
 public:
   DensityMeasure_Shock( coord_t dim ) :
-    dim_(dim)
-  {
+    dim_(dim) {
     k0_ = 10.0;
     k1_ = 1000.0;
     vs_ = 0.7;
@@ -84,12 +76,10 @@ public:
     alpha_ = 1e-3;
   }
 
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const {
     real_t rt = r0_ + vs_*x[dim_-1];
     real_t x2 = 0.0;
-    for (coord_t d = 0; d < dim_-1; d++)
-    {
+    for (coord_t d = 0; d < dim_-1; d++) {
       x2 += x[d]*x[d];
     }
     x2 = std::sqrt(x2);
@@ -101,38 +91,35 @@ private:
 
 };
 
-class DensityMeasure_Gaussian : public delaunay::DensityMeasure
-{
+class DensityMeasure_Gaussian : public delaunay::DensityMeasure {
 public:
-  DensityMeasure_Gaussian( const numerics::VectorD<real_t>& mu , const numerics::SymMatrixD<real_t>& sigma ) :
+  DensityMeasure_Gaussian( const vecd<real_t>& mu , const symd<real_t>& sigma ) :
     mu_(mu),
     sigma_(sigma),
+    sigma_inv_(mu.m()),
     dim_(mu.m()),
-    X_(dim_)
-  {
+    X_(dim_) {
     detS_ = numerics::det(sigma_);
     sigma_inv_ = numerics::inverse(sigma_);
     avro_assert( dim_ == sigma_.m() );
     avro_assert( dim_ == sigma_.n() );
   }
 
-  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
-  {
-    numerics::VectorD<real_t> X(dim_);
+  real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const {
+    vecd<real_t> X(dim_);
     for (coord_t d = 0; d < dim_; d++)
       X[d] = x[d] - mu_[d];
-
     real_t A = 1./std::sqrt( std::pow(2*M_PI,dim_)*detS_);
-    real_t exp = quadratic_form(sigma_inv_,X);//Transpose(X)*sigma_inv_*X;
+    real_t exp = numerics::quadratic_form(sigma_inv_,X);
     return A*std::exp(-0.5*exp);
   }
 
 private:
-  const numerics::VectorD<real_t>& mu_;
-  const numerics::SymMatrixD<real_t>& sigma_;
-  numerics::SymMatrixD<real_t> sigma_inv_;
+  vecd<real_t> mu_;
+  symd<real_t> sigma_;
+  symd<real_t> sigma_inv_;
   coord_t dim_;
-  numerics::VectorD<real_t> X_;
+  vecd<real_t> X_;
   real_t detS_;
 };
 
