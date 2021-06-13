@@ -1,4 +1,4 @@
-#include "numerics/symd.h"
+#include "numerics/sym.h"
 #include "numerics/mat.hpp"
 #include "numerics/vec.h"
 

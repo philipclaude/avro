@@ -2,7 +2,7 @@
 #define AVRO_SANDBOX_SDOT_MEASURES_H_
 
 #include "numerics/linear_algebra.h"
-#include "numerics/symd.h"
+#include "numerics/sym.h"
 #include "numerics/vec.h"
 
 #include "voronoi/optimal_transport.h"

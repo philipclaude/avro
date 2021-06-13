@@ -36,7 +36,7 @@ Controls::Controls( float fov , int width , int height , float znear , float zfa
   perspective_ = glm::perspective(fov,(float)width_/(float)height_,znear,zfar);
   perspective_ = perspective_ * glm::lookAt( eye_ , center_ , up_ );
 
-  model_view_ = glm::mat4(1.0);
+  model_view_ = glm::identity();
   ui_matrix_  = model_view_;
 
   startx_ = -1;
@@ -52,13 +52,13 @@ bool
 Controls::update()
 {
   ui_matrix_  = model_view_;
-  model_view_ = glm::mat4(1.0);
+  model_view_ = glm::identity();
 
   bool updated = false;
   if (!enabled_) return updated;
 
-  rotation_ = mat4(1.0f);
-  translation_ = mat4(1.0f);
+  rotation_ = glm::identity();
+  translation_ = glm::identity();
 
   // mouse-movement
   if ( dragging )
@@ -273,8 +273,8 @@ Controls::mouse_wheel(double deltax ,double deltay)
 void
 Controls::reset()
 {
-  model_view_ = mat4(1.0);
-  ui_matrix_  = mat4(1.0);
+  model_view_ = glm::identity();
+  ui_matrix_  = glm::identity();
   scale_ = 1.0;
 
   startx_ = -1;

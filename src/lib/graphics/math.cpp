@@ -34,6 +34,14 @@ mat4( float a ) {
 }
 
 class mat4
+identity() {
+  class mat4 m;
+  for (index_t i = 0; i < 4; i++)
+    m(i,i) = 1.0;
+  return m;
+}
+
+class mat4
 perspective( float fov , float aspect , float n , float f ) {
   class mat4 m;
 

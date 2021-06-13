@@ -59,11 +59,11 @@ Interface::initialize()
 #ifdef AVRO_HEADLESS_GRAPHICS
   const char* glsl_version = "#version 330";
 #else
-  //const char* glsl_version = "#version 410";
-  const char* glsl_version = "#version 330"; // again, I would like this to be 4.1
+  const char* glsl_version = "#version 410";
+  //const char* glsl_version = "#version 330"; // again, I would like this to be 4.1
 #endif
 
-  // Setup Platform/Renderer bindings
+  // setup Platform/Renderer bindings
   ImGui_ImplGlfw_InitForOpenGL(window_.window(), true);
   ImGui_ImplOpenGL3_Init(glsl_version);
 }

@@ -75,7 +75,7 @@ void
 ClippingPlane::initialize()
 {
   transformed_points_.clear();
-  transformation_ = mat4(1.0f);
+  transformation_ = glm::identity();
 
   for (index_t k=0;k<points_.nb();k++)
     transformed_points_.create( points_[k] );
@@ -104,6 +104,7 @@ ClippingPlane::update()
   {
     vec4 p = { points_[k][0] , points_[k][1] , points_[k][2] , 1. };
     vec4 q = transformation_*p;
+
 
     for (index_t d=0;d<points_.dim();d++)
     {
@@ -191,8 +192,8 @@ ClippingPlane::update( real_t distance , real_t* angles , int dir )
       transformed_points_[k][d] -= normal_[d]*distance_;
   }
 
-  mat4 M = mat4(1.0);
-  mat4 T = mat4(1.0);
+  mat4 M = glm::identity();
+  mat4 T = glm::identity();
 
   // compound the rotation into M by first translating to the initial point
   for (coord_t d=0;d<3;d++)
@@ -206,8 +207,8 @@ ClippingPlane::update( real_t distance , real_t* angles , int dir )
   angles[0] = angles[0]*M_PI/180.;
   angles[1] = angles[1]*M_PI/180.;
 
-  mat4 Mr1 = mat4(0);
-  mat4 Mr2 = mat4(0);
+  mat4 Mr1; // initializes to zero
+  mat4 Mr2;
   Mr1[3][3] = 1;
   Mr2[3][3] = 1;
 
@@ -273,7 +274,6 @@ ClippingPlane::update( real_t distance , real_t* angles , int dir )
 
   for (coord_t d=0;d<3;d++)
     center_[d] /= transformed_points_.nb();
-
 }
 
 void

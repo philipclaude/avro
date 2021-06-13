@@ -12,7 +12,7 @@
 #include "common/types.h"
 
 #include "numerics/mat.h"
-#include "numerics/symd.h"
+#include "numerics/sym.h"
 #include "numerics/dual.h"
 
 #include "numerics/functions.h"
