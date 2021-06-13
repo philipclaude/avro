@@ -104,15 +104,73 @@ scale( const class mat4& a , const vec3& s ) {
 
 class mat4
 rotate( const class mat4& a , float angle , const vec3& axis ) {
+
   class mat4 m;
-  avro_implement;
+  float x = axis[0], y = axis[1], z = axis[2];
+  float len = 1./norm(axis);
+
+  x *= len;
+  y *= len;
+  z *= len;
+
+  float s = sin(angle), c = cos(angle), t = 1 - c;
+
+  float b00 = x * x * t + c;
+  float b01 = y * x * t + z * s;
+  float b02 = z * x * t - y * s;
+  float b10 = x * y * t - z * s;
+  float b11 = y * y * t + c;
+  float b12 = z * y * t + x * s;
+  float b20 = x * z * t + y * s;
+  float b21 = y * z * t - x * s;
+  float b22 = z * z * t + c;
+
+  float a00 = a(0,0);
+  float a01 = a(1,0);
+  float a02 = a(2,0);
+  float a03 = a(3,0);
+  float a10 = a(0,1);
+  float a11 = a(1,1);
+  float a12 = a(2,1);
+  float a13 = a(3,1);
+  float a20 = a(0,2);
+  float a21 = a(1,2);
+  float a22 = a(2,2);
+  float a23 = a(3,2);
+
+  m(0,0) = a00 * b00 + a10 * b01 + a20 * b02;
+  m(1,0) = a01 * b00 + a11 * b01 + a21 * b02;
+  m(2,0) = a02 * b00 + a12 * b01 + a22 * b02;
+  m(3,0) = a03 * b00 + a13 * b01 + a23 * b02;
+  m(0,1) = a00 * b10 + a10 * b11 + a20 * b12;
+  m(1,1) = a01 * b10 + a11 * b11 + a21 * b12;
+  m(2,1) = a02 * b10 + a12 * b11 + a22 * b12;
+  m(3,1) = a03 * b10 + a13 * b11 + a23 * b12;
+  m(0,2) = a00 * b20 + a10 * b21 + a20 * b22;
+  m(1,2) = a01 * b20 + a11 * b21 + a21 * b22;
+  m(2,2) = a02 * b20 + a12 * b21 + a22 * b22;
+  m(3,2) = a03 * b20 + a13 * b21 + a23 * b22;
+
+  m(0,3) = a(0,3);
+  m(1,3) = a(1,3);
+  m(2,3) = a(2,3);
+  m(3,3) = a(3,3);
+
   return m;
 }
 
 class mat4
 translate( const class mat4& a , const vec3& t ) {
   class mat4 m;
-  avro_implement;
+  for (index_t i = 0; i < 4; i++)
+  for (index_t j = 0; j < 4; j++)
+    m(i,j) = a(i,j);
+
+  m(0,3) = a(0,0)*t(0) + a(0,1)*t(1) + a(0,2)*t(2) + a(0,3);
+  m(1,3) = a(1,0)*t(0) + a(1,1)*t(1) + a(1,2)*t(2) + a(1,3);
+  m(2,3) = a(2,0)*t(0) + a(2,1)*t(1) + a(2,2)*t(2) + a(2,3);
+  m(3,3) = a(3,0)*t(0) + a(3,1)*t(1) + a(3,2)*t(2) + a(3,3);
+
   return m;
 }
 

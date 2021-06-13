@@ -43,7 +43,30 @@ using mat4 = glm::mat4;
 
 #else
 
-typedef vecs<2,float> vec2;
+class vec2 : public vecs<2,float> {
+public:
+  vec2() {}
+
+  vec2( const vecs<2,float>& v ) {
+    for (index_t i = 0; i < 2; i++)
+      (*this)(i) = v(i);
+  }
+
+  template<typename R>
+  vec2( const std::initializer_list<R>& v ) {
+    float v0 = float( *(v.begin()+0) );
+    float v1 = float( *(v.begin()+1) );
+    operator=( {v0,v1} );
+  }
+
+  vec2& operator= (const std::initializer_list<float>& v ) {
+    avro_assert( v.size() == 2 );
+    index_t i = 0;
+    for (auto it = v.begin(); it != v.end(); ++it)
+      (*this)(i++) = *it;
+    return *this;
+  }
+};
 
 class vec3 : public vecs<3,float> {
 public:

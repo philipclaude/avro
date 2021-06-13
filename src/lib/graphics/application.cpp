@@ -12,9 +12,6 @@
 #include "graphics/user_interface.h"
 #include "graphics/window.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/string_cast.hpp>
-
 #include <wsserver.h>
 
 #include <limits>
