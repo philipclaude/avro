@@ -482,7 +482,7 @@ public:
     std::vector<PARM_INT> adjncy(adjncy_.begin(),adjncy_.end());
     std::vector<PARM_INT> vwgt( vgwt_.begin() , vgwt_.end() );
     PARM_INT *padjwgt = NULL;
-    PARM_INT wgtflag = 0; // 0 for no weights, 1 for edge weights, 2 for vertex weights, 3 for both
+    PARM_INT wgtflag = 2; // 0 for no weights, 1 for edge weights, 2 for vertex weights, 3 for both
     PARM_INT edgecut = 0;
     PARM_INT bias = 0;
     PARM_INT ncon = 1;
