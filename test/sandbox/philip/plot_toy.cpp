@@ -92,7 +92,8 @@ UT_TEST_CASE( test1 )
   typedef Polytope type;
 
   //std::string filename = "/Users/pcaplan/Dropbox/research/publications/imr-2021-xxxx/quantization/qntz-gaussian-lbfgs-dim-4-n-10000-snapshot-iter-100.json";
-  std::string filename = "/Users/pcaplan/Dropbox/research/publications/imr-2021-xxxx/optimal_transport/sdot-uniform-dim-4-n-1000-snapshot-iter-90.json";
+  std::string filename = "/Users/pcaplan/Dropbox/research/publications/imr-2021-xxxx/quantization/qntz-cone-lbfgs-dim-4-n-10000-snapshot-iter-100.json";
+  //std::string filename = "/Users/pcaplan/Dropbox/research/publications/imr-2021-xxxx/optimal_transport/sdot-uniform-dim-4-n-1000-snapshot-iter-90.json";
   //std::string filename = "/Users/pcaplan/Dropbox/research/publications/imr-2021-xxxx/performance/points-dim-4-p-6.json";
 
 
@@ -124,8 +125,8 @@ UT_TEST_CASE( test1 )
   HyperSlice<type> slice(transport.diagram());
   delaunay::IntegrationSimplices& triangulation = transport.simplices();
 
-  std::vector<real_t> center(number,0.5);
-  slice.compute( center , 3 );
+  std::vector<real_t> center(number,0.01);
+  slice.compute( center , 0 );
 
 /*
   std::shared_ptr<delaunay::TriangulationCells> tc = std::make_shared<delaunay::TriangulationCells>(triangulation);
@@ -140,7 +141,7 @@ UT_TEST_CASE( test1 )
   std::shared_ptr<SliceSites> ts = std::make_shared<SliceSites>(slice.tetrahedra(),slice.tet2site());
   slice.tetrahedra().fields().make("sites",ts);
 
-  std::shared_ptr<delaunay::DensityMeasure> density = get_density( /*J["density"]*/ "gaussian" , number );
+  std::shared_ptr<delaunay::DensityMeasure> density = get_density( /*J["density"]*/ "cone" , number );
   std::shared_ptr<DensityField> dfld = std::make_shared<DensityField>( transport.delaunay() , slice.tetrahedra(),slice.tet2site() , *density.get() );
   slice.tetrahedra().fields().make("d",dfld);
 

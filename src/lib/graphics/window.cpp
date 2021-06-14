@@ -289,8 +289,8 @@ void
 GLFW_Window::poll()
 {
   make_current();
-  glfwPollEvents(); // poll events better for animations
-  //glfwWaitEvents();  // wait events better for drawing upon request
+  //glfwPollEvents(); // poll events better for animations
+  glfwWaitEvents();  // wait events better for drawing upon request
 }
 
 void
@@ -497,7 +497,7 @@ GLFW_Window::draw_colorbar(const Colormap& colormap, const real_t* ulim)
 void
 GLFW_Window::end_draw()
 {
-  if (interface_!=nullptr)
+  if (interface_ != nullptr)
     interface_->end_draw();
   glfwSwapBuffers(window_);
 

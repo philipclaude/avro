@@ -143,13 +143,6 @@ public:
     mats<4,4,float>()
   {}
 
-    /*
-  mat4( const float f ) {
-    zero();
-    for (int i=0;i<4;i++)
-      (*this)(i,i) = f;
-  }*/
-
   mat4( const mats<4,4,float>& m ) {
     for (int i = 0; i < 4; i++)
     for (int j = 0; j < 4; j++)

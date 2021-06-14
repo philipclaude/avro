@@ -71,6 +71,7 @@ public:
 
   index_t create_scene();
 
+  bool has_interface() const { return interface_ != nullptr; }
   Interface& interface() { return *interface_.get(); }
   const Interface& interface() const { return *interface_.get(); }
 
