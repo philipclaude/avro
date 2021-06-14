@@ -96,7 +96,7 @@ UT_TEST_CASE( test1 )
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
-  library::MetricField_UGAWG_Linear analytic;
+  library::MetricField_UGAWG_Linear2 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
@@ -142,12 +142,12 @@ UT_TEST_CASE( test1 )
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
-  manager.set_analytic( &analytic );
+  //manager.set_analytic( &analytic );
 
   index_t rank = mpi::rank();
 
   index_t niter = 5;
-  for (index_t iter=0;iter<=niter;iter++)
+  for (index_t iter = 0; iter <= niter; iter++)
   {
     params.adapt_iter() = iter;
     params.limit_metric() = true;

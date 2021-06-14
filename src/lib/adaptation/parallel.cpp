@@ -59,8 +59,7 @@ namespace avro
 #define TAG_BUDDY 601
 
 void
-pprintf(const char* format , ... )
-{
+pprintf(const char* format , ... ) {
   va_list args;
   va_start(args,format);
   index_t rank = mpi::rank();
@@ -70,21 +69,17 @@ pprintf(const char* format , ... )
 }
 
 void
-avro_msgp( const std::string& msg )
-{
+avro_msgp( const std::string& msg ) {
   index_t rank = mpi::rank();
-  if (rank == 0)
-  {
+  if (rank == 0) {
     printf("[processor %3lu]: %s\n",index_t(0),msg.c_str());
-    for (index_t k=1;k<index_t(mpi::size());k++)
-    {
+    for (index_t k = 1; k < index_t(mpi::size()); k++) {
       std::vector<char> msgc = mpi::receive<std::vector<char>>( k , TAG_MISC );
       printf("[processor %3lu]: %s\n",k,msgc.data());
     }
     fflush(stdout);
   }
-  else
-  {
+  else {
     std::vector<char> msgc(msg.begin(),msg.end());
     msgc.push_back('\0');
     mpi::send( mpi::blocking{} , msgc , 0 , TAG_MISC );
@@ -94,27 +89,22 @@ avro_msgp( const std::string& msg )
 
 // useful for debugging for problems in [0,1]^d
 inline bool
-check_geometry( const Points& points )
-{
+check_geometry( const Points& points ) {
   real_t tol = 1e-12;
   index_t nb_error = 0;
-  for (index_t k=0;k<points.nb();k++)
-  {
+  for (index_t k = 0; k < points.nb(); k++) {
     bool geometry = false;
-    for (coord_t d=0;d<points.dim();d++)
-    {
-      if (fabs(points[k][d]-1.0)<tol) geometry = true;
-      if (fabs(points[k][d]    )<tol) geometry = true;
+    for (coord_t d = 0; d < points.dim(); d++) {
+      if (fabs(points[k][d]-1.0) < tol) geometry = true;
+      if (fabs(points[k][d]    ) < tol) geometry = true;
     }
 
-    if (geometry && points.entity(k) == nullptr )
-    {
+    if (geometry && points.entity(k) == nullptr ) {
       printf("point %lu is on geometry but has no entity!\n",k);
       points.print(k,true);
       nb_error++;
     }
-    else if (!geometry && points.entity(k) != nullptr)
-    {
+    else if (!geometry && points.entity(k) != nullptr) {
       printf("point %lu is interior but has an entity!\n",k);
       points.print(k,true);
       nb_error++;
@@ -127,8 +117,8 @@ template<typename type>
 AdaptationManager<type>::AdaptationManager( const Topology<type>& topology , const std::vector<VertexMetric>& metrics , AdaptationParameters& params ) :
   params_(params),
   topology_( topology.points().dim() , topology.points().udim() , topology.number() ),
-  analytic_(nullptr)
-{
+  analytic_(nullptr) {
+
   // save some mpi stuff
   rank_ = mpi::rank();
 
@@ -138,42 +128,37 @@ AdaptationManager<type>::AdaptationManager( const Topology<type>& topology , con
 
 template<typename type>
 void
-AdaptationManager<type>::set_analytic( library::MetricField_Analytic* analytic )
-{
+AdaptationManager<type>::set_analytic( library::MetricField_Analytic* analytic ) {
   analytic_ = analytic;
 }
 
 template<typename type>
 void
-AdaptationManager<type>::send_metrics( index_t receiver , const std::vector<index_t>& indices , const std::vector<VertexMetric>& metrics , bool global_flag )
-{
+AdaptationManager<type>::send_metrics( index_t receiver , const std::vector<index_t>& indices , const std::vector<VertexMetric>& metrics , bool global_flag ) {
+  
   // number of unique entries in a metric
   index_t nb_entry = topology_.number()*(topology_.number()+1)/2;
   std::vector<index_t> global_indices( indices.size() , 0 );
   std::vector<real_t> metric_data( indices.size()*nb_entry , 0.0 );
 
   index_t entry = 0;
-  if (global_flag)
-  {
+  if (global_flag) {
     // indices are global, we we need to retrieve the local metrics
-    for (index_t k=0;k<indices.size();k++)
-    {
+    for (index_t k = 0; k < indices.size(); k++) {
       index_t g = indices[k];
       const VertexMetric& m = metrics[g];
-      for (int i=0;i<m.n();i++)
-      for (int j=i;j<m.n();j++)
+      for (int i = 0; i < m.n(); i++)
+      for (int j = i; j < m.n(); j++)
         metric_data[entry++] = m(i,j);
     }
     global_indices = indices;
   }
-  else
-  {
+  else {
     // indices are local, so we need to convert to global
-    for (index_t k=0;k<indices.size();k++)
-    {
+    for (index_t k=0;k<indices.size();k++) {
       const VertexMetric& m = metrics[indices[k]];
-      for (int i=0;i<m.n();i++)
-      for (int j=i;j<m.n();j++)
+      for (int i = 0; i < m.n(); i++)
+      for (int j = i; j < m.n(); j++)
         metric_data[entry++] = m(i,j);
       global_indices[k] = topology_.points().global( indices[k] );
     }
@@ -186,8 +171,8 @@ AdaptationManager<type>::send_metrics( index_t receiver , const std::vector<inde
 
 template<typename type>
 void
-AdaptationManager<type>::receive_metrics( index_t sender , bool overwrite )
-{
+AdaptationManager<type>::receive_metrics( index_t sender , bool overwrite ) {
+
   // number of unique entries in a metric
   index_t n = topology_.number()*(topology_.number()+1)/2;
 
@@ -400,18 +385,18 @@ public:
     }
   }
 
-  void check()
-  {
+  void check() {
+
     // this should only be run for small problems
     index_t N = vtxdist_[mpi::size()];
     avro_assert_msg( N < 1000 , "this should only be used for debugging on small problems");
-    if (mpi::rank() == 0)
-    {
+    if (mpi::rank() == 0) {
+
       matd<real_t> graph(N,N);
 
       index_t n = 0;
-      for (index_t k=0;k<xadj_.size()-1;k++)
-      {
+      for (index_t k=0;k<xadj_.size()-1;k++) {
+
         index_t p = xadj_[k];
         index_t q = xadj_[k+1];
         for (index_t j=p;j<q;j++)
@@ -419,47 +404,42 @@ public:
         n++;
       }
 
-      for (index_t r=1;r<mpi::size();r++)
-      {
+      for (index_t r=1;r<mpi::size();r++) {
+
         std::vector<index_t> xadj = mpi::receive<std::vector<index_t>>(r,TAG_CELL_FIRST);
         std::vector<index_t> adjncy = mpi::receive<std::vector<index_t>>(r,TAG_CELL_LAST);
-        for (index_t k=0;k<xadj.size()-1;k++)
-        {
+        for (index_t k = 0; k < xadj.size()-1; k++) {
           index_t p = xadj[k];
           index_t q = xadj[k+1];
-          for (index_t j=p;j<q;j++)
+          for (index_t j = p; j < q; j++)
             graph(n,adjncy[j]) = 1.0;
           n++;
         }
       }
 
       index_t nb_error = 0;
-      for (index_t k=0;k<graph.m();k++)
-      for (index_t i=0;i<graph.n();i++)
-      {
-        if (graph(k,i) != graph(i,k))
-        {
+      for (index_t k = 0; k < graph.m(); k++)
+      for (index_t i = 0; i < graph.n(); i++) {
+        if (graph(k,i) != graph(i,k)) {
           printf( "non-symmetric adjacency matrix in entry (%lu,%lu) = %g but (%lu,%lu) = %g\n" ,k,i , graph(k,i) , i,k,graph(i,k) );
           nb_error++;
         }
       }
       avro_assert_msg( nb_error == 0 , "non-symmetric adjacency matrix");
     }
-    else
-    {
+    else {
       mpi::send( mpi::blocking{} , xadj_ , 0 , TAG_CELL_FIRST );
       mpi::send( mpi::blocking{} , adjncy_ , 0 , TAG_CELL_LAST );
     }
     mpi::barrier();
   }
 
-  void assign_weights( const std::vector<VertexMetric>& metrics )
-  {
+  void assign_weights( const std::vector<VertexMetric>& metrics ) {
+
     real_t alpha = 10.0;
     real_t beta = 0.1;
 
-    if (metrics.size() == 0)
-    {
+    if (metrics.size() == 0) {
       // it's possible to have partitions with no points if there are too many partitions
       vgwt_.resize( nb_vert_ , 0. );
       return;
@@ -471,8 +451,7 @@ public:
 
     // assign a weight based on digonnet 2019
     vgwt_.resize( nb_vert_ , 0.0 ); return;
-    for (index_t k=0;k<partition_.nb();k++)
-    {
+    for (index_t k=0;k<partition_.nb();k++) {
       real_t q = metric.quality(partition_,k);
       avro_assert( q>=0.0 );
       vgwt_[k] = alpha*( 1. + beta*fabs( 1. - 1./q ) );
@@ -482,12 +461,10 @@ public:
    // assign a small quality (more work needed) for interface elements
    index_t rank = mpi::rank();
    real_t factor = 2;
-   for (index_t k=0;k<boundary_.nb();k++)
-   {
+   for (index_t k = 0; k < boundary_.nb(); k++) {
      if (boundary_.partL(k) == rank)
        vgwt_[boundary_.elemL(k)] *= factor;
-     else
-     {
+     else {
        assert( boundary_.partR(k) == rank );
        vgwt_[boundary_.elemR(k)] *= factor;
      }
@@ -496,14 +473,12 @@ public:
 
   }
 
-  index_t global_elem( index_t partition , index_t elem ) const
-  {
+  index_t global_elem( index_t partition , index_t elem ) const {
     avro_assert_msg( partition < vtxdist_.size()-1 , "partition = %lu" , partition );
     return vtxdist_[ partition ] + elem;
   }
 
-  void repartition( std::vector<index_t>& repartition )
-  {
+  void repartition( std::vector<index_t>& repartition ) {
     // setup the parmetis version of the adjacency graph
     std::vector<PARM_INT> vtxdist(vtxdist_.begin(),vtxdist_.end());
     std::vector<PARM_INT> xadj(xadj_.begin(),xadj_.end());
@@ -575,8 +550,7 @@ private:
   index_t nb_vert_;
 };
 
-class ProcessorGraph
-{
+class ProcessorGraph {
 public:
   ProcessorGraph( const std::vector<index_t>& element_offset , const std::set< std::pair<index_t,index_t> >& pairs ) :
     element_offset_(element_offset),
@@ -584,15 +558,16 @@ public:
   {}
 
   template<typename type>
-  void match( const PartitionBoundary<type>& interface )
-  {
+  void match( const PartitionBoundary<type>& interface ) {
+
     avro_assert( mpi::size()%2 == 0 );
 
     std::set< std::pair<index_t,index_t> > E;
     const std::map<ElementIndices,index_t>& facets = interface.facets();
+
     std::map<ElementIndices,index_t>::const_iterator it;
-    for (it=facets.begin();it!=facets.end();++it)
-    {
+    for (it = facets.begin(); it != facets.end(); ++it) {
+
       index_t k = it->second;
 
       index_t partL = interface.partL(k);
@@ -1541,8 +1516,7 @@ add_mantle( Topology<type>& topology , std::vector<index_t>& crust )
   topology.build_structures();
 
   std::set<index_t> pts;
-  for (index_t k=0;k<crust.size();k++)
-  {
+  for (index_t k=0;k<crust.size();k++) {
     for (index_t j=0;j<topology.nv(crust[k]);j++)
       pts.insert( topology(crust[k],j) );
   }
@@ -1573,7 +1547,7 @@ AdaptationManager<type>::adapt()
 
   // perform the passes, alternating between doing an interface migration
   // and a load balance
-  for (index_t pass=0;pass<index_t(params_.max_passes());pass++)
+  for (index_t pass = 0; pass < index_t(params_.max_passes()); pass++)
   {
     if (rank_ == 0) printf("\n*** pass %lu ***\n\n",pass);
     mpi::barrier();
@@ -1603,15 +1577,14 @@ AdaptationManager<type>::adapt()
     topology_.points().copy(mesh.points());
     Mesh mesh_out(number,dim);
 
-    if (analytic_)
-    {
-      for (index_t k=0;k<topology_.points().nb();k++)
+    if (analytic_) {
+      for (index_t k = 0;k < topology_.points().nb(); k++)
         metrics_[k] = (*analytic_)( topology_.points()[k] );
     }
 
     // option to write out the input mesh (for debugging)
     library::meshb writer;
-    if (number<4)
+    if (number < 4)
       writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
@@ -1621,18 +1594,16 @@ AdaptationManager<type>::adapt()
     if (pass > 0) params_.limit_metric() = false;
     if (analytic_ != nullptr) params_.limit_metric() = true;
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
-    try
-    {
+    try {
+
       // do the adaptation!
-      clock_t t0 = 0,t1;
-      if (rank_ == 0)
-      {
+      clock_t t0 = 0, t1;
+      if (rank_ == 0) {
         printf("--> adapting mesh!\n");
         t0 = clock();
       }
       ::avro::adapt<type>( problem );
-      if (rank_ == 0)
-      {
+      if (rank_ == 0) {
         t1 = clock();
         printf("--> time = %4.3g seconds.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
       }
@@ -1644,14 +1615,12 @@ AdaptationManager<type>::adapt()
       mesh_out.points().copy( topology_.points() );
 
       // unset any global indices in unfixed points, since these need to be renumbered
-      for (index_t k=0;k<topology_.points().nb();k++)
-      {
+      for (index_t k=0;k<topology_.points().nb();k++) {
         if (topology_.points().fixed(k)) continue;
         topology_.points().set_global( k , 0 );
       }
     }
-    catch(...)
-    {
+    catch(...) {
       printf("there was an error adapting the mesh on processor %lu :(\n",rank_);
       mpi::abort(1);
     }
@@ -1664,15 +1633,12 @@ AdaptationManager<type>::adapt()
     Mesh m(number,dim);
     std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
     retrieve(*topology_out.get());
-    if (rank_==0)
-    {
-      if (number<4)
-      {
+    if (rank_ == 0) {
+      if (number < 4) {
         m.add(topology_out);
         writer.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false,true);
       }
-      else
-      {
+      else {
         Topology_Spacetime<type> spacetime(*topology_out.get());
         spacetime.extract();
         spacetime.write( "mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh" );
@@ -1680,23 +1646,19 @@ AdaptationManager<type>::adapt()
     }
 
     // we alternate between forcing the interfaces to migrate and performing a load balance
-    if (pass % 2 == 0)
-    {
+    if (pass % 2 == 0) {
       if (rank_ == 0) printf("--> migrating interface\n");
       mpi::barrier();
 
       // the first time we adapt (and every even pass), we need to push the interfaces into processor neighbours
-      try
-      {
+      try {
         migrate_interface();
       }
-      catch(...)
-      {
+      catch(...) {
         migrate_balance();
       }
     }
-    else
-    {
+    else {
       if (rank_ == 0) printf("--> balancing partitions\n");
       mpi::barrier();
 
@@ -1708,46 +1670,38 @@ AdaptationManager<type>::adapt()
 }
 
 template<typename type>
-class PartitionField : public Field<type,real_t>
-{
+class PartitionField : public Field<type,real_t> {
 public:
   PartitionField( const Topology<type>& topology ) :
-    Field<type,real_t>(topology,1,DISCONTINUOUS)
-  {
+    Field<type,real_t>(topology,1,DISCONTINUOUS) {
     this->element().set_basis( BasisFunctionCategory_Lagrange );
   }
 
   index_t nb_rank() const override { return 1; }
-  std::string get_name( index_t j ) const override
-  {
+  std::string get_name( index_t j ) const override {
     return std::to_string(j);
   }
 };
 
 template<typename type>
 index_t
-AdaptationManager<type>::get_total_nb_points() const
-{
+AdaptationManager<type>::get_total_nb_points() const {
   index_t nb_rank = mpi::size();
 
   // get the maximum global index
   index_t nb_points = 0;
-  for (index_t k=0;k<topology_.points().nb();k++)
-  {
+  for (index_t k=0;k<topology_.points().nb();k++) {
     if (topology_.points().global(k) > nb_points)
       nb_points = topology_.points().global(k);
   }
 
-  if (rank_ == 0)
-  {
-    for (index_t k=1;k<nb_rank;k++)
-    {
+  if (rank_ == 0) {
+    for (index_t k = 1; k < nb_rank; k++) {
       index_t nb_points_k = index_t(mpi::receive<int>( k , TAG_MISC ));
       nb_points = std::max(nb_points,nb_points_k);
     }
   }
-  else
-  {
+  else {
     mpi::send( mpi::blocking{} , int(nb_points) , 0 , TAG_MISC );
   }
   mpi::barrier();
@@ -1757,31 +1711,25 @@ AdaptationManager<type>::get_total_nb_points() const
 template<typename type>
 void
 AdaptationManager<type>::append_partition( index_t p , Topology<type>& topology , Topology_Partition<type>& partition ,
-                                           std::vector<bool>& created , std::vector<real_t>& partition_index ) const
-{
-  for (index_t j=0;j<partition.points().nb();j++)
-  {
+                                           std::vector<bool>& created , std::vector<real_t>& partition_index ) const {
+  for (index_t j = 0; j < partition.points().nb(); j++) {
     // retrieve the global index of this point
     index_t g = partition.points().global(j);
-    if (created[g])
-    {
+    if (created[g]) {
       // this point was already created
       continue;
     }
     created[g] = true;
-    for (index_t d=0;d<topology.points().dim();d++)
-    {
+    for (index_t d = 0; d < topology.points().dim(); d++) {
       topology.points()[g][d] = partition.points()[j][d];
     }
     topology.points().set_entity(g,partition.points().entity(j));
   }
 
-  for (index_t j=0;j<partition.nb();j++)
-  {
+  for (index_t j=0;j<partition.nb();j++) {
     partition_index.push_back(p);
     std::vector<index_t> s = partition.get(j);
-    for (index_t i=0;i<s.size();i++)
-    {
+    for (index_t i=0;i<s.size();i++) {
       s[i] = partition.points().global(s[i]);
       avro_assert( s[i] < topology.points().nb() );
     }
@@ -1791,28 +1739,25 @@ AdaptationManager<type>::append_partition( index_t p , Topology<type>& topology 
 
 template<typename type>
 void
-AdaptationManager<type>::retrieve( Topology<type>& topology )
-{
+AdaptationManager<type>::retrieve( Topology<type>& topology ) {
   // fill the topology with the elements
   // fill the points with the vertices
   // assign the globals into the points
   index_t nb_rank = mpi::size();
   index_t nb_points = get_total_nb_points() + 1; // +1 because of 0-bias
-  if (rank_==0)
-  {
+  if (rank_ == 0) {
     std::vector<bool> created(nb_points,false);
 
     // initialize all the points (data filled below)
     std::vector<real_t> zero(topology.points().dim(),0.0);
-    for (index_t j=0;j<nb_points;j++)
+    for (index_t j = 0; j < nb_points; j++)
       topology.points().create(zero.data());
 
     // append the root partition into the output topology
     std::vector<real_t> partition_index;
     printf("appending partition\n");
     append_partition( 0 , topology , topology_ , created , partition_index );
-    for (index_t k=1;k<nb_rank;k++)
-    {
+    for (index_t k = 1; k < nb_rank; k++) {
       printf("receiving partition %lu\n",k);
       // receive the partition from processor k and append it into the output topology
       Topology_Partition<type> partition( topology_.points().dim() , topology_.points().udim() , topology_.number() );
@@ -1824,20 +1769,18 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
     //topology.points().print(true);
 
     // fill the partition field
-    if (topology.nb() < 20000 && false)
-    {
+    if (topology.nb() < 20000 && false) {
       // field construction will be super slow if there are too many elements
       field_ = std::make_shared<PartitionField<type>>(topology);
       topology.element().set_basis( BasisFunctionCategory_Lagrange );
       field_->build();
-      for (index_t k=0;k<topology.nb();k++)
-      for (index_t j=0;j<topology.nv(k);j++)
+      for (index_t k = 0; k < topology.nb(); k++)
+      for (index_t j = 0; j < topology.nv(k); j++)
         (*field_)(k,j) = partition_index[k];
       topology.fields().make("partition",field_);
     }
   }
-  else
-  {
+  else {
     // send the working topology to the root processor
     topology_.send(0);
   }
@@ -1846,8 +1789,7 @@ AdaptationManager<type>::retrieve( Topology<type>& topology )
 
 template<typename type>
 void
-AdaptationManager<type>::reassign_metrics( const std::vector<VertexMetric>& metrics )
-{
+AdaptationManager<type>::reassign_metrics( const std::vector<VertexMetric>& metrics ) {
   metrics_ = metrics;
 }
 

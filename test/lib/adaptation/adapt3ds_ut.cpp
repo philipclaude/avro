@@ -137,7 +137,7 @@ UT_TEST_CASE(test1)
     {
       graphics::Visualizer vis;
       vis.add_topology(topology_out);
-      vis.run();
+      //vis.run();
     }
 
     params.has_uv() = true;

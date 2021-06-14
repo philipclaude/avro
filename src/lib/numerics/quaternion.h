@@ -37,15 +37,15 @@ public:
     graphics::mat3 R;
     real_t s = magnitude();
     real_t qr = q_[0], qi = q_[1], qj = q_[2], qk = q_[3];
-    R[0][0] = 1. -2.*s*(qj*qj +qk*qk);
-    R[0][1] = 2.*s*(qi*qj -qk*qr);
-    R[0][2] = 2.*s*(qi*qk +qj*qr);
-    R[1][0] = 2.*s*(qi*qj +qk*qr);
-    R[1][1] = 1. -2.*s*(qi*qi +qk*qk);
-    R[1][2] = 2.*s*(qj*qk -qi*qr);
-    R[2][0] = 2.*s*(qi*qk -qj*qr);
-    R[2][1] = 2.*s*(qj*qk +qi*qr);
-    R[2][2] = 1. -2.*s*(qi*qi +qj*qj);
+    R(0,0) = 1. -2.*s*(qj*qj +qk*qk);
+    R(0,1) = 2.*s*(qi*qj -qk*qr);
+    R(0,2) = 2.*s*(qi*qk +qj*qr);
+    R(1,0) = 2.*s*(qi*qj +qk*qr);
+    R(1,1) = 1. -2.*s*(qi*qi +qk*qk);
+    R(1,2) = 2.*s*(qj*qk -qi*qr);
+    R(2,0) = 2.*s*(qi*qk -qj*qr);
+    R(2,1) = 2.*s*(qj*qk +qi*qr);
+    R(2,2) = 1. -2.*s*(qi*qi +qj*qj);
     return R;
   }
 

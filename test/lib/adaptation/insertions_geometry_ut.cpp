@@ -119,7 +119,7 @@ UT_TEST_CASE(test1)
   graphics::Visualizer vis;
   vis.add_topology(topology);
 
-  vis.run();
+  //vis.run();
 
 }
 UT_TEST_CASE_END(test1)
