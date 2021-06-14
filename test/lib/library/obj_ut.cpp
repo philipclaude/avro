@@ -20,8 +20,8 @@ UT_TEST_SUITE( obj_file_suite )
 UT_TEST_CASE( test1 )
 {
 
-//  objFile topology( BASE_TEST_DIR+"/geometry/obj/suzanne.obj" );
-  objFile topology( "/Users/pcaplan/Google Drive/teaching/cs461w21/assignments/project/giraffe/model/giraffe.obj" );
+  objFile topology( BASE_TEST_DIR+"/geometry/obj/suzanne.obj" );
+  //objFile topology( "/Users/pcaplan/Google Drive/teaching/cs461w21/assignments/project/giraffe/model/giraffe.obj" );
 
   graphics::Visualizer vis;
   vis.add_topology(topology);

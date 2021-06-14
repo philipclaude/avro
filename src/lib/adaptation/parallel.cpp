@@ -279,7 +279,6 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
     metrics_ = metrics;
   }
   mpi::barrier();
-
 }
 
 template<typename type>
@@ -289,14 +288,13 @@ public:
   PartitionGraph( Topology<type>& partition , const PartitionBoundary<type>& boundary , const std::vector<index_t>& vtxdist ) :
     partition_(partition),
     boundary_(boundary),
-    vtxdist_(vtxdist)
-  {
+    vtxdist_(vtxdist) {
     avro_assert( vtxdist_.size() == index_t(mpi::size()+1) );
     build();
   }
 
-  void build()
-  {
+  void build() {
+
     index_t rank = mpi::rank();
 
     edges_.clear();
@@ -305,13 +303,12 @@ public:
 
     // extract the adjacencies from the partition
     std::map<index_t,index_t> local;
-    for (index_t k=0;k<partition_.nb();k++)
-    {
-      for (index_t j=0;j<partition_.neighbours().nfacets();j++)
-      {
+    for (index_t k = 0; k < partition_.nb(); k++) {
+      for (index_t j=0;j<partition_.neighbours().nfacets();j++) {
+
         int n = partition_.neighbours()(k,j);
-        if (n<0) continue;      // do not create adjacency information for boundary elements
-        if (n<int(k)) continue; // only create an edge once
+        if (n < 0) continue;      // do not create adjacency information for boundary elements
+        if (n < int(k)) continue; // only create an edge once
 
         index_t g0 = global_elem( rank , k );
         index_t g1 = global_elem( rank , index_t(n) );
@@ -322,18 +319,18 @@ public:
     }
 
     // create the global to local information
-    for (index_t k=0;k<partition_.nb();k++)
+    for (index_t k = 0; k < partition_.nb(); k++)
       local.insert( {global_elem(rank,k),k} );
 
     // add the edges corresponding to the boundary facets
     std::set<index_t> ghost;
-    for (index_t k=0;k<boundary_.nb();k++)
-    {
+    for (index_t k = 0; k < boundary_.nb(); k++) {
+
       index_t g0 = global_elem( boundary_.partL(k) , boundary_.elemL(k) );
       index_t g1 = global_elem( boundary_.partR(k) , boundary_.elemR(k) );
 
-      if (boundary_.partL(k) == rank )
-      {
+      if (boundary_.partL(k) == rank ) {
+
         avro_assert( boundary_.partR(k) != rank );
         avro_assert( local.find(g0) != local.end() );
         edges_.push_back( g0 );
@@ -342,8 +339,8 @@ public:
         // keep track of ghost elements
         ghost.insert( g1 );
       }
-      else
-      {
+      else {
+        
         avro_assert( boundary_.partR(k) == rank );
         avro_assert( local.find(g1) != local.end() );
         edges_.push_back( g1 );
@@ -357,8 +354,7 @@ public:
 
     // convert to csr
     std::vector< std::set<index_t> > node2node(nb_vert_);
-    for (index_t k=0;k<edges_.size()/2;k++)
-    {
+    for (index_t k = 0; k < edges_.size()/2; k++) {
       avro_assert( edges_[2*k] != edges_[2*k+1] );
 
       // only add adjacency information for vertices (elements) on this processor
@@ -372,8 +368,8 @@ public:
     xadj_.resize( nb_vert_+1 );
     xadj_[0] = 0;
     adjncy_.clear();
-    for (index_t k=0;k<nb_vert_;k++)
-    {
+    for (index_t k = 0; k < nb_vert_; k++) {
+
       // set the adjacency pointers
       xadj_[k+1] = xadj_[k] + node2node[k].size();
 
@@ -387,7 +383,7 @@ public:
 
   void check() {
 
-    // this should only be run for small problems
+    // this function should only be called for small problems
     index_t N = vtxdist_[mpi::size()];
     avro_assert_msg( N < 1000 , "this should only be used for debugging on small problems");
     if (mpi::rank() == 0) {
@@ -479,6 +475,7 @@ public:
   }
 
   void repartition( std::vector<index_t>& repartition ) {
+
     // setup the parmetis version of the adjacency graph
     std::vector<PARM_INT> vtxdist(vtxdist_.begin(),vtxdist_.end());
     std::vector<PARM_INT> xadj(xadj_.begin(),xadj_.end());
@@ -665,22 +662,21 @@ public:
     avro_assert_msg( global_.size() == points_.nb() , "|global| = %lu, |points| = %lu" , global_.size() , points_.nb() );
   }
 
-  void add_to( Topology<type>& topology )
-  {
+  void add_to( Topology<type>& topology ) {
     std::map<index_t,index_t> global;
-    for (index_t k=0;k<topology.points().nb();k++)
+    for (index_t k = 0; k < topology.points().nb(); k++)
       global.insert( {topology.points().global(k) , k} );
 
-    for (index_t k=0;k<this->nb();k++)
-    {
+    for (index_t k = 0; k < this->nb(); k++) {
+
       std::vector<index_t> s = this->get(k);
-      for (index_t j=0;j<s.size();j++)
-      {
+      for (index_t j = 0; j < s.size(); j++) {
+
         // check if this index already exists in the global list
         index_t p = points_.global(s[j]);
         index_t q;
-        if (global.find(p) == global.end())
-        {
+        if (global.find(p) == global.end())  {
+
           // this point is added to the topology, so the metric will be needed
           metric_.push_back( p );
 
@@ -714,8 +710,8 @@ private:
 
 template<typename type>
 void
-AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
-{
+AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
+
   index_t nb_rank = mpi::size();
 
   if (rank_ == 0) printf("--> exchanging elements\n");
@@ -723,22 +719,20 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
 
   // determine if there will be zero elements remaining on this processor
   index_t nb_keep = 0;
-  for (index_t k=0;k<repartition.size();k++)
-  {
+  for (index_t k = 0; k < repartition.size(); k++) {
     if (repartition[k] == rank_) nb_keep++;
   }
-  if (nb_keep == 0)
-  {
+  if (nb_keep == 0) {
     // unset one element
     repartition[0] = rank_;
   }
 
   // print a message with all the send information
   std::vector<index_t> nb_send( nb_rank , 0 );
-  for (index_t k=0;k<repartition.size();k++)
+  for (index_t k = 0; k < repartition.size(); k++)
     nb_send[repartition[k]]++;
   std::string msg = "exchange: ( ";
-  for (index_t j=0;j<nb_send.size();j++)
+  for (index_t j = 0; j < nb_send.size(); j++)
     msg += std::to_string(nb_send[j]) + " ";
   msg += ")";
   avro_msgp( msg );
@@ -759,21 +753,20 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
 
   // receive chunks on the root processor so we can send the combined chunks away
   std::vector< std::shared_ptr<MigrationChunk<type>> > pieces( nb_rank );
-  if (rank_ == 0)
-  {
+  if (rank_ == 0) {
+
     // initialize the pieces
-    for (index_t k=0;k<nb_rank;k++)
-    {
+    for (index_t k = 0; k < nb_rank; k++) {
       pieces[k] = std::make_shared<MigrationChunk<type>>(dim,udim,number);
       pieces[k]->set_entities(topology_.entities());
     }
 
     // extract the pieces from the root processor
-    for (index_t j=1;j<nb_rank;j++)
+    for (index_t j = 1; j < nb_rank; j++)
       pieces[j]->extract( goodbye , goodbye.partition() , j );
 
-    for (index_t k=1;k<nb_rank;k++)
-    {
+    for (index_t k = 1; k < nb_rank; k++) {
+
       // receive the chunk from processor k
       MigrationChunk<type> chunk(dim,udim,number);
       chunk.set_entities( topology_.entities() );
@@ -782,12 +775,11 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
       avro_assert( partition_k.size() == chunk.nb() );
 
       // add the elements to the appropriate pieces
-      for (index_t j=0;j<nb_rank;j++)
+      for (index_t j = 0; j < nb_rank; j++)
         pieces[j]->extract( chunk , partition_k , j );
     }
   }
-  else
-  {
+  else {
     // send the elements we don't need anymore to the root processor
     goodbye.send(0);
     mpi::send( mpi::blocking{} , goodbye.partition() , 0 , TAG_MISC );
@@ -797,8 +789,8 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
   // send the chunks to the corresponding processors
   MigrationChunk<type> chunk(dim,udim,number);
   chunk.set_entities( topology_.entities() );
-  if (rank_ == 0)
-  {
+  if (rank_ == 0) {
+
     // accumulate the pieces
     for (index_t k=1;k<nb_rank;k++)
       pieces[k]->send(k);
@@ -807,22 +799,20 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
     chunk.TopologyBase::copy( *pieces[0].get() );
     pieces[0]->points().copy(chunk.points());
   }
-  else
-  {
+  else {
     // receive the chunks we need to add
     chunk.receive(0);
   }
   mpi::barrier();
 
   std::vector<index_t> removals;
-  for (index_t k=0;k<repartition.size();k++)
-  {
+  for (index_t k=0;k<repartition.size();k++) {
     if (repartition[k] != rank_)
       removals.push_back( k );
   }
 
   std::map<index_t,index_t> metrics_owned;
-  for (index_t k=0;k<topology_.points().nb();k++)
+  for (index_t k = 0; k < topology_.points().nb(); k++)
     metrics_owned.insert( {topology_.points().global(k),k} );
 
   // add the received chunk to the topology
@@ -830,19 +820,17 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
   chunk.add_to( topology_ );
 
   crust_.clear();
-  for (index_t k=0;k<chunk.nb();k++)
+  for (index_t k = 0; k < chunk.nb(); k++)
     crust_.push_back( nb_elem + k );
 
   topology_.remove_elements( removals );
-
-  for (index_t k=0;k<crust_.size();k++)
+  for (index_t k = 0; k < crust_.size(); k++)
     avro_assert_msg( crust_[k] < topology_.nb(), "crust = %lu, |topology| = %lu on rank %lu",crust_[k],topology_.nb(),rank_);
 
   // determine which metrics need to be added
   std::set<index_t> idx( chunk.metric().begin() , chunk.metric().end() );
   std::vector<index_t> metric;
-  for (index_t k=0;k<chunk.metric().size();k++)
-  {
+  for (index_t k = 0; k < chunk.metric().size(); k++) {
     index_t p = chunk.metric()[k];
     if (metrics_owned.find(p) == metrics_owned.end())
       metric.push_back(p);
@@ -857,29 +845,25 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
     metric_requests = metric;
 
     // append the metric requests received from other processors
-    for (index_t k=1;k<nb_rank;k++)
-    {
+    for (index_t k = 1; k < nb_rank; k++) {
       std::vector<index_t> metric_k = mpi::receive<std::vector<index_t>>( k , TAG_MISC );
       std::copy( metric_k.begin() , metric_k.end() , std::inserter(metric_send_idx[k],metric_send_idx[k].end() ) );
-      for (index_t j=0;j<metric_k.size();j++)
+      for (index_t j = 0; j < metric_k.size(); j++)
         metric_requests.push_back(metric_k[j]);
     }
     uniquify(metric_requests);
   }
-  else
-  {
+  else {
     mpi::send( mpi::blocking{} , metric , 0 , TAG_MISC );
   }
   mpi::barrier();
 
   // now gather the data from all the processors
-  if (rank_ == 0)
-  {
-    for (index_t k=1;k<nb_rank;k++)
+  if (rank_ == 0) {
+    for (index_t k = 1; k < nb_rank; k++)
       mpi::send( mpi::blocking{} , metric_requests , k , TAG_MISC );
   }
-  else
-  {
+  else {
     metric_requests = mpi::receive<std::vector<index_t>>(0,TAG_MISC);
   }
   mpi::barrier();
@@ -887,40 +871,38 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
   // create the metric data to send for the points we own
   std::vector<real_t> metric_data;
   std::vector<index_t> metric_idx;
-  for (index_t k=0;k<metric_requests.size();k++)
-  {
+  for (index_t k = 0; k < metric_requests.size(); k++) {
+
     // determine if we own this metric
     index_t p = metric_requests[k];
     if (metrics_owned.find(p) == metrics_owned.end()) continue;
 
     index_t q = metrics_owned.at(p);
     metric_idx.push_back( metric_requests[k] );
-    for (index_t j=0;j<number;j++)
-    for (index_t i=j;i<number;i++)
+    for (index_t j = 0; j < number; j++)
+    for (index_t i = j; i < number; i++)
       metric_data.push_back( metrics_[q](i,j) );
   }
 
-  if (rank_ == 0)
-  {
+  if (rank_ == 0) {
+    
     // receive all the metric data and append it to the list (initialized by the root)
-    for (index_t k=1;k<nb_rank;k++)
-    {
+    for (index_t k = 1; k < nb_rank; k++) {
+
       std::vector<index_t> metric_idx_k = mpi::receive<std::vector<index_t>>( k , TAG_METRIC_INDICES );
       std::vector<real_t> metric_data_k = mpi::receive<std::vector<real_t>>( k , TAG_METRIC_ENTRIES );
 
       // append the data
       index_t count = 0;
-      for (index_t m=0;m<metric_idx_k.size();m++)
-      {
+      for (index_t m = 0; m < metric_idx_k.size(); m++) {
         metric_idx.push_back(metric_idx_k[m]);
-        for (index_t j=0;j<number;j++)
-        for (index_t i=j;i<number;i++)
+        for (index_t j = 0; j < number; j++)
+        for (index_t i = j; i < number; i++)
           metric_data.push_back( metric_data_k[count++] );
       }
     }
   }
-  else
-  {
+  else {
     // send our metric data to the root
     mpi::send( mpi::blocking{} , metric_idx , 0 , TAG_METRIC_INDICES );
     mpi::send( mpi::blocking{} , metric_data , 0 , TAG_METRIC_ENTRIES );
@@ -928,16 +910,13 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
   mpi::barrier();
 
   // now receive all the data from the host
-  if (rank_ == 0)
-  {
-    for (index_t k=1;k<nb_rank;k++)
-    {
+  if (rank_ == 0) {
+    for (index_t k = 1; k < nb_rank; k++) {
       mpi::send( mpi::blocking{} , metric_idx , k , TAG_METRIC_INDICES );
       mpi::send( mpi::blocking{} , metric_data , k , TAG_METRIC_ENTRIES );
     }
   }
-  else
-  {
+  else {
     metric_idx  = mpi::receive<std::vector<index_t>>(0,TAG_METRIC_INDICES);
     metric_data = mpi::receive<std::vector<real_t>>(0,TAG_METRIC_ENTRIES);
   }
@@ -945,17 +924,14 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
 
   // find the data we need and append it into our array
   index_t N = number*(number+1)/2;
-  for (index_t k=0;k<metric.size();k++)
-  {
+  for (index_t k = 0; k < metric.size(); k++) {
     bool found = false;
-    for (index_t m=0;m<metric_idx.size();m++)
-    {
-      if (metric_idx[m] == metric[k])
-      {
+    for (index_t m = 0; m < metric_idx.size(); m++) {
+      if (metric_idx[m] == metric[k]) {
         VertexMetric mk(number);
         index_t count = 0;
-        for (index_t j=0;j<number;j++)
-        for (index_t i=j;i<number;i++)
+        for (index_t j = 0; j < number; j++)
+        for (index_t i = j; i < number; i++)
           mk(i,j) = metric_data[ m*N + count++ ];
         metrics_.push_back(mk);
         found = true;
@@ -971,13 +947,12 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
   topology_.remove_unused(&point_map);
 
   // map the metrics too
-  for (index_t k=0;k<point_map.size();k++)
+  for (index_t k = 0; k < point_map.size(); k++)
     metrics_.erase( metrics_.begin() + point_map[k]-k );
 
   avro_assert( metrics_.size() == topology_.points().nb() );
-  for (index_t k=0;k<topology_.nb();k++)
-  {
-    for (index_t j=0;j<topology_.nv(k);j++)
+  for (index_t k = 0;k < topology_.nb(); k++) {
+    for (index_t j = 0; j < topology_.nv(k); j++)
       avro_assert( topology_(k,j) < topology_.points().nb() );
   }
 
@@ -986,8 +961,8 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition )
 
 template<typename type>
 void
-AdaptationManager<type>::migrate_balance()
-{
+AdaptationManager<type>::migrate_balance() {
+
   index_t nb_rank = mpi::size();
 
   // migrate the interface into the interior of the partitions
@@ -1064,33 +1039,28 @@ AdaptationManager<type>::migrate_interface()
   boundary.compute(topology_,rank_);
 
   PartitionBoundary<type> interface( topology_.number()-1 );
-  if (rank_ == 0)
-  {
+  if (rank_ == 0) {
     // receive and accumulate all boundary information
     interface.append( boundary );
-    for (index_t k=1;k<nb_rank;k++)
-    {
+    for (index_t k = 1; k < nb_rank; k++) {
       PartitionBoundary<type> boundary_k( topology_.number()-1 );
       boundary_k.receive(k);
       interface.append(boundary_k);
     }
     avro_assert( interface.complete(element_offset_) );
   }
-  else
-  {
+  else {
     // send our partition boundary information
     boundary.send(0);
   }
   mpi::barrier();
 
-  if (rank_ == 0 )
-  {
+  if (rank_ == 0 ) {
     // send the accumulated boundary information
     for (index_t k=1;k<nb_rank;k++)
       interface.send(k);
   }
-  else
-  {
+  else {
     // receive the accumulated boundary information
     interface.receive(0);
   }
@@ -1101,8 +1071,8 @@ AdaptationManager<type>::migrate_interface()
 
   // setup a buddy system
   index_t buddy = mpi::size();
-  if (rank_ == 0)
-  {
+  if (rank_ == 0) {
+
     // build up the interprocessor graph
     // with vertex weights defined be current processor work
     // compute a matching of this graph
@@ -1111,8 +1081,8 @@ AdaptationManager<type>::migrate_interface()
     graph.match(interface);
 
     // send off the processor pairs
-    for (index_t k=0;k<graph.nb_pairs();k++)
-    {
+    for (index_t k=0;k<graph.nb_pairs();k++) {
+
       std::pair<index_t,index_t> p = graph.get_pair(k);
 
       index_t p0 = p.first;
@@ -1130,8 +1100,7 @@ AdaptationManager<type>::migrate_interface()
     for (auto it=pairs.begin();it!=pairs.end();++it)
       pairs_.insert(*it);
   }
-  else
-  {
+  else {
     // wait to receive our processor pair
     buddy = mpi::receive<index_t>(0,TAG_BUDDY);
   }
@@ -1140,13 +1109,15 @@ AdaptationManager<type>::migrate_interface()
 
   std::vector<index_t> discard;
   std::set<index_t> interface_point;
-  if (rank_ < buddy)
-  {
+  if (rank_ < buddy) {
+
+    // loop through all interface facets, finding the ones this processor owns
     const std::map<ElementIndices,index_t>& facets = interface.facets();
     std::map<ElementIndices,index_t>::const_iterator it;
     std::vector<index_t> elems;
-    for (it=facets.begin();it!=facets.end();++it)
-    {
+
+    for (it = facets.begin(); it != facets.end(); ++it) {
+
       const ElementIndices& f = it->first;
       index_t k = it->second;
 
@@ -1157,26 +1128,27 @@ AdaptationManager<type>::migrate_interface()
       index_t elemR = interface.elemR(k);
 
       // always keep rank to the left and buddy to the right
-      if (partL > partR)
-      {
+      if (partL > partR) {
         std::swap(partL,partR);
         std::swap(elemL,elemR);
       }
+
+      // make sure this facet is on the current processor pair
       if (partL != rank_ || partR != buddy) continue;
 
-      for (index_t j=0;j<f.indices.size();j++)
+      // identify points which are on the interface of the processor pair
+      for (index_t j = 0; j < f.indices.size(); j++)
         interface_point.insert( f.indices[j] );
 
-      // add the boundary facet
-      discard.push_back(elemL); // elements on rank
+      // we will discard the element on this processor
+      discard.push_back(elemL);
     }
   }
   mpi::barrier();
 
   // list out the interface points
   std::set<index_t> pts;
-  for (index_t k=0;k<topology_.points().nb();k++)
-  {
+  for (index_t k = 0; k < topology_.points().nb(); k++) {
     index_t p = topology_.points().global(k);
     if (interface_point.find(p) == interface_point.end()) continue;
     pts.insert( k );
@@ -1184,11 +1156,10 @@ AdaptationManager<type>::migrate_interface()
 
   // we will discard any element in the ball of an interface point
   std::vector<index_t> ball;
-  for (std::set<index_t>::iterator it=pts.begin();it!=pts.end();++it)
-  {
+  for (std::set<index_t>::iterator it = pts.begin(); it != pts.end(); ++it) {
     ball.clear();
     topology_.inverse().ball( *it , ball );
-    for (index_t j=0;j<ball.size();j++)
+    for (index_t j = 0; j < ball.size(); j++)
       discard.push_back(ball[j]);
   }
   uniquify(discard);
@@ -1197,7 +1168,7 @@ AdaptationManager<type>::migrate_interface()
   std::vector<index_t> repartition(topology_.nb(),rank_);
 
   // re-assign the discarded elements to the buddy
-  for (index_t k=0;k<discard.size();k++)
+  for (index_t k = 0; k < discard.size(); k++)
     repartition[discard[k]] = buddy;
   mpi::barrier();
 
@@ -1206,10 +1177,8 @@ AdaptationManager<type>::migrate_interface()
 }
 
 void
-get_fixed_globals( const Points& points , std::vector<index_t>& global )
-{
-  for (index_t k=0;k<points.nb();k++)
-  {
+get_fixed_globals( const Points& points , std::vector<index_t>& global ) {
+  for (index_t k = 0; k < points.nb(); k++) {
     if (!points.fixed(k)) continue;
     global.push_back(points.global(k));
   }
@@ -1511,22 +1480,21 @@ fix_crust( Topology<type>& topology , const std::vector<index_t>& crust0 )
 
 template<typename type>
 void
-add_mantle( Topology<type>& topology , std::vector<index_t>& crust )
-{
+add_mantle( Topology<type>& topology , std::vector<index_t>& crust ) {
+
   topology.build_structures();
 
   std::set<index_t> pts;
-  for (index_t k=0;k<crust.size();k++) {
-    for (index_t j=0;j<topology.nv(crust[k]);j++)
+  for (index_t k = 0; k < crust.size(); k++) {
+    for (index_t j = 0; j < topology.nv(crust[k]); j++)
       pts.insert( topology(crust[k],j) );
   }
 
   std::vector<index_t> ball;
-  for (std::set<index_t>::iterator it=pts.begin();it!=pts.end();++it)
-  {
+  for (std::set<index_t>::iterator it = pts.begin(); it != pts.end(); ++it) {
     ball.clear();
     topology.inverse().ball( *it , ball );
-    for (index_t j=0;j<ball.size();j++)
+    for (index_t j = 0; j < ball.size(); j++)
       crust.push_back( ball[j] );
   }
   uniquify(crust);
@@ -1535,8 +1503,8 @@ add_mantle( Topology<type>& topology , std::vector<index_t>& crust )
 
 template<typename type>
 void
-AdaptationManager<type>::adapt()
-{
+AdaptationManager<type>::adapt() {
+
   avro_assert_msg( params_.max_passes() % 2 == 0 , "number of passes should be even" );
 
   coord_t dim = topology_.points().dim();
@@ -1547,8 +1515,8 @@ AdaptationManager<type>::adapt()
 
   // perform the passes, alternating between doing an interface migration
   // and a load balance
-  for (index_t pass = 0; pass < index_t(params_.max_passes()); pass++)
-  {
+  for (index_t pass = 0; pass < index_t(params_.max_passes()); pass++) {
+
     if (rank_ == 0) printf("\n*** pass %lu ***\n\n",pass);
     mpi::barrier();
 
@@ -1757,16 +1725,16 @@ AdaptationManager<type>::retrieve( Topology<type>& topology ) {
     std::vector<real_t> partition_index;
     printf("appending partition\n");
     append_partition( 0 , topology , topology_ , created , partition_index );
+
     for (index_t k = 1; k < nb_rank; k++) {
-      printf("receiving partition %lu\n",k);
+
       // receive the partition from processor k and append it into the output topology
+      printf("receiving partition %lu\n",k);
       Topology_Partition<type> partition( topology_.points().dim() , topology_.points().udim() , topology_.number() );
       partition.set_entities( topology_.entities() );
       partition.receive(k);
       append_partition( k , topology , partition , created , partition_index );
     }
-
-    //topology.points().print(true);
 
     // fill the partition field
     if (topology.nb() < 20000 && false) {
