@@ -164,6 +164,13 @@ Application<GLFW_Interface<API_t>>::run( const std::string& view )
    {
      for (index_t k=0;k<window_.size();k++)
      {
+       if (window_[k]->has_interface()) {
+         window_[k]->interface().begin_draw();
+         window_[k]->interface().end_draw();
+         if (window_[k]->interface().active()) {
+          glfwSwapBuffers(window_[k]->window());
+        }
+       }
        window_[k]->poll(); // poll for events
        if (window_[k]->should_close())
        {
@@ -186,7 +193,7 @@ Application<GLFW_Interface<API_t>>::run( const std::string& view )
 
 Visualizer::Visualizer()
 {
-  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"avro 2.0 2021");
+  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"avro");
   add_window( main_.get() );
   //add_window( &side_ );
 

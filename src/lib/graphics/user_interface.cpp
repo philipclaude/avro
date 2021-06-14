@@ -35,7 +35,8 @@ namespace graphics
 Widget::Widget( GLFW_Window& window ) :
   window_(window),
   context_(window.interface().context()),
-  listener_(nullptr)
+  listener_(nullptr),
+  active_(false)
 {}
 
 Interface::Interface( GLFW_Window& window , Listener& listener ) :
@@ -157,11 +158,13 @@ Toolbar::begin_draw()
   {
     window_.controls().disable();
     window_.clip_controls().disable();
+    active_ = true;
   }
   else
   {
     window_.controls().enable();
     window_.clip_controls().enable();
+    active_ = false;
   }
 
   ImGuiWindowFlags window_flags = 0;
@@ -390,7 +393,6 @@ Toolbar::begin_draw()
               items[k+1] = field_names[k].c_str();
 
             real_t ulim[2] = {0,1};
-
             ImGui::Combo("Fields",&current_field,items.data(),items.size());
             ImGui::SameLine();
             if (ImGui::Button("Load"))

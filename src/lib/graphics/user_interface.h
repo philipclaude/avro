@@ -42,10 +42,13 @@ public:
   void set_listener( Listener* listener )
   { listener_ = listener; }
 
+  bool& active() { return active_; }
+
 protected:
   GLFW_Window& window_;
   const ImGuiIO& context_;
   Listener* listener_;
+  bool active_;
 };
 
 class Interface
@@ -66,6 +69,8 @@ public:
 
   const ImGuiIO& context() const { return context_; }
   ImGuiIO& context() { return context_; }
+
+  bool& active() { return widgets_[0]->active(); }
 
 private:
   GLFW_Window& window_;
