@@ -453,16 +453,16 @@ public:
       vgwt_[k] = alpha*( 1. + beta*fabs( 1. - 1./q ) );
     }
 
-    #if 0
+    #if 1
    // assign a small quality (more work needed) for interface elements
    index_t rank = mpi::rank();
-   real_t factor = 2;
+   real_t factor = 1e5;
    for (index_t k = 0; k < boundary_.nb(); k++) {
      if (boundary_.partL(k) == rank)
-       vgwt_[boundary_.elemL(k)] *= factor;
+       vgwt_[boundary_.elemL(k)] = factor;
      else {
        assert( boundary_.partR(k) == rank );
-       vgwt_[boundary_.elemR(k)] *= factor;
+       vgwt_[boundary_.elemR(k)] = factor;
      }
    }
    #endif

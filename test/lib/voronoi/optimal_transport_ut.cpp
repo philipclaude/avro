@@ -20,7 +20,7 @@ UT_TEST_CASE( test_nd_polytope )
   coord_t numberL = 2;
   coord_t numberH = 2;
 
-  index_t nb_points = 1e3;
+  index_t nb_points = 1e2;
 
   for (coord_t number = numberL; number <= numberH; number++)
   {

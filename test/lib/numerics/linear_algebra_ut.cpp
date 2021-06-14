@@ -51,7 +51,7 @@ UT_TEST_SUITE(linear_algebra_tests)
 
 UT_TEST_CASE(inverse_tests)
 {
-  real_t tol = 1e-12;
+  real_t tol = 1e-10;
   index_t ntests = 10;
 
   for (index_t n=1;n<=4;n++)
