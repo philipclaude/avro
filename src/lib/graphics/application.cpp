@@ -104,7 +104,7 @@ Application<GLFW_Interface<API_t>>::Application() :
   glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);
   #else
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1); // I would like this to be 4.1 eventually, but wazowski only has 3.3
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
   #endif
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -164,13 +164,16 @@ Application<GLFW_Interface<API_t>>::run( const std::string& view )
    {
      for (index_t k=0;k<window_.size();k++)
      {
+			 bool active = false;
        if (window_[k]->has_interface()) {
          window_[k]->interface().begin_draw();
          window_[k]->interface().end_draw();
          if (window_[k]->interface().active()) {
-          glfwSwapBuffers(window_[k]->window());
+					 active = true;
         }
        }
+	   if (active) glfwSwapBuffers(window_[k]->window());
+	   window_[k]->interface().active() = false;
        window_[k]->poll(); // poll for events
        if (window_[k]->should_close())
        {
