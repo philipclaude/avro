@@ -395,8 +395,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     std::unordered_set<index_t> flagged;
     std::vector<index_t> shell;
     std::vector<index_t> N;
-    for (index_t k=0;k<filter.nb_candidates();k++)
-    {
+    for (index_t k = 0; k < filter.nb_candidates(); k++) {
+      
       // index of the vertex stored in the filter
       index_t idx = filter.candidate(k);
 
@@ -408,19 +408,19 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
-      if (topology_.points().fixed(n0) && topology_.points().fixed(n1))
+      if (topology_.points().fixed(n0) || topology_.points().fixed(n1))
         continue;
 
       // do not insert on ghost edges
-      if (n0<topology_.points().nb_ghost() ||
-          n1<topology_.points().nb_ghost())
+      if (n0 < topology_.points().nb_ghost() ||
+          n1 < topology_.points().nb_ghost())
         continue;
 
       // check if the points were removed or flagged
-      if (removed.find(n0)!=removed.end() || removed.find(n1)!=removed.end())
+      if (removed.find(n0) != removed.end() || removed.find(n1) != removed.end())
         continue;
 
-      if (flagged.find(n0)!=flagged.end() || flagged.find(n1)!=flagged.end())
+      if (flagged.find(n0) != flagged.end() || flagged.find(n1) != flagged.end())
         continue;
 
       // the metric needs to be interpolated for the filter to evaluate lengths
@@ -458,7 +458,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t Lmin = sqrt(0.5);
 
       // if the current length is greater than 4.0, we need to be more flexible
-      if (lk>4.0) Lmin = 0.0;
+      //if (lk>4.0) Lmin = 0.0; // philip: removed june 15 2021
 
       // loossen up the minimum length if this is a partition boundary
       //bool fixed = (topology_.points().fixed(n0) || topology_.points().fixed(n1));
@@ -525,8 +525,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // if the inserter was enlarged, don't be too restrictive with quality
       real_t qwi = worst_quality(inserter_,metric_);
-      if (qwi<Q0)
-      {
+      if (qwi < Q0) {
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);

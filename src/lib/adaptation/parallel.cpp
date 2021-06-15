@@ -300,6 +300,9 @@ public:
     edges_.clear();
     adjncy_.clear();
     xadj_.clear();
+    egwt_.clear();
+
+    std::vector<index_t> ewt;
 
     // extract the adjacencies from the partition
     std::map<index_t,index_t> local;
@@ -315,6 +318,7 @@ public:
 
         edges_.push_back( g0 );
         edges_.push_back( g1 );
+        ewt.push_back( 1 );
       }
     }
 
@@ -349,35 +353,58 @@ public:
         // keep track of ghost elements
         ghost.insert(g0);
       }
+      ewt.push_back( 10 );
     }
     nb_vert_ = partition_.nb(); // number of vertices local to this processor
 
     // convert to csr
-    std::vector< std::set<index_t> > node2node(nb_vert_);
+    std::vector< std::vector<index_t> > node2node(nb_vert_);
+    std::vector< std::vector<index_t> > node2node_weight( nb_vert_ );
     for (index_t k = 0; k < edges_.size()/2; k++) {
       avro_assert( edges_[2*k] != edges_[2*k+1] );
 
       // only add adjacency information for vertices (elements) on this processor
-      if (ghost.find(edges_[2*k]) == ghost.end())
-        node2node[ local.at(edges_[2*k])   ].insert( edges_[2*k+1] );
-      if (ghost.find(edges_[2*k+1]) == ghost.end())
-        node2node[ local.at(edges_[2*k+1]) ].insert( edges_[2*k] );
+      if (ghost.find(edges_[2*k]) == ghost.end()) {
+
+        node2node[ local.at(edges_[2*k])   ].push_back( edges_[2*k+1] );
+
+        // assign the weight of this edge
+        if (ghost.find(edges_[2*k+1]) == ghost.end())
+          node2node_weight[ local.at(edges_[2*k])].push_back(1);
+        else
+          node2node_weight[ local.at(edges_[2*k])].push_back(1000);
+      }
+      if (ghost.find(edges_[2*k+1]) == ghost.end()) {
+
+        node2node[ local.at(edges_[2*k+1]) ].push_back( edges_[2*k] );
+
+        // assign the weight of this edge
+        if (ghost.find(edges_[2*k]) == ghost.end())
+          node2node_weight[ local.at(edges_[2*k+1])].push_back(1);
+        else
+          node2node_weight[ local.at(edges_[2*k+1])].push_back(1e6);
+      }
     }
 
     // convert to the parmetis arrays
     xadj_.resize( nb_vert_+1 );
     xadj_[0] = 0;
     adjncy_.clear();
+    egwt_.clear();
     for (index_t k = 0; k < nb_vert_; k++) {
 
       // set the adjacency pointers
       xadj_[k+1] = xadj_[k] + node2node[k].size();
 
-      // does parmetis want these sorted? not sure
       std::vector<index_t> adjlist( node2node[k].begin(),node2node[k].end() );
-      std::sort(adjlist.begin(),adjlist.end());
-      for (index_t i=0;i<adjlist.size();i++)
+      std::vector<index_t> wgtlist( node2node_weight[k].begin() , node2node_weight[k].end() );
+
+      avro_assert( adjlist.size() == wgtlist.size() );
+      //std::sort(adjlist.begin(),adjlist.end()); // does parmetis want these sorted?
+      for (index_t i = 0; i < adjlist.size(); i++) {
         adjncy_.push_back(adjlist[i]);
+        egwt_.push_back(wgtlist[i]);
+      }
     }
   }
 
@@ -391,16 +418,15 @@ public:
       matd<real_t> graph(N,N);
 
       index_t n = 0;
-      for (index_t k=0;k<xadj_.size()-1;k++) {
-
+      for (index_t k = 0; k < xadj_.size()-1; k++) {
         index_t p = xadj_[k];
         index_t q = xadj_[k+1];
-        for (index_t j=p;j<q;j++)
+        for (index_t j = p; j < q; j++)
           graph(n,adjncy_[j]) = 1.0;
         n++;
       }
 
-      for (index_t r=1;r<mpi::size();r++) {
+      for (index_t r = 1; r < mpi::size(); r++) {
 
         std::vector<index_t> xadj = mpi::receive<std::vector<index_t>>(r,TAG_CELL_FIRST);
         std::vector<index_t> adjncy = mpi::receive<std::vector<index_t>>(r,TAG_CELL_LAST);
@@ -447,13 +473,13 @@ public:
 
     // assign a weight based on digonnet 2019
     vgwt_.resize( nb_vert_ , 0.0 ); return;
-    for (index_t k=0;k<partition_.nb();k++) {
+    for (index_t k = 0; k < partition_.nb(); k++) {
       real_t q = metric.quality(partition_,k);
-      avro_assert( q>=0.0 );
+      avro_assert( q >= 0.0 );
       vgwt_[k] = alpha*( 1. + beta*fabs( 1. - 1./q ) );
     }
 
-    #if 1
+    #if 0
    // assign a small quality (more work needed) for interface elements
    index_t rank = mpi::rank();
    real_t factor = 1e5;
@@ -481,12 +507,15 @@ public:
     std::vector<PARM_INT> xadj(xadj_.begin(),xadj_.end());
     std::vector<PARM_INT> adjncy(adjncy_.begin(),adjncy_.end());
     std::vector<PARM_INT> vwgt( vgwt_.begin() , vgwt_.end() );
-    PARM_INT *padjwgt = NULL;
-    PARM_INT wgtflag = 2; // 0 for no weights, 1 for edge weights, 2 for vertex weights, 3 for both
+    std::vector<PARM_INT> ewgt( egwt_.begin() , egwt_.end() );
+    PARM_INT *padjwgt = ewgt.data();// NULL;
+    PARM_INT wgtflag = 1; // 0 for no weights, 1 for edge weights, 2 for vertex weights, 3 for both
     PARM_INT edgecut = 0;
     PARM_INT bias = 0;
     PARM_INT ncon = 1;
     PARM_INT nparts = mpi::size();
+
+    avro_assert( ewgt.size() == adjncy.size() );
 
     std::vector<PARM_REAL> tpwgts(ncon*nparts,1./nparts);
     std::vector<PARM_REAL> ubvec(ncon,1.05);
@@ -1383,7 +1412,7 @@ AdaptationManager<type>::fix_boundary()
   std::vector<index_t> pts;
 
   // fix all non-manifold vertices (i.e. vertices in which the ball does not match the actual inverse)
-  //fix_non_manifold(topology_);
+  fix_non_manifold(topology_);
   for (index_t k=0;k<topology_.points().nb();k++)
   {
     if (topology_.points().fixed(k))
@@ -1526,6 +1555,7 @@ AdaptationManager<type>::adapt() {
     mpi::barrier();
     fix_boundary();
 
+    #if 0
     // fix any points that are part of non-contributing elements
     // puff out the crust (include the mantle :P)
     if (rank_ == 0) printf("--> determining remesh region\n");
@@ -1534,6 +1564,9 @@ AdaptationManager<type>::adapt() {
 
     // fix any points that are not in the crust
     fix_crust( topology_ , crust_ );
+    }
+    #endif
+
     crust_.clear();
 
     // create the mesh we will write to
@@ -1546,7 +1579,7 @@ AdaptationManager<type>::adapt() {
     Mesh mesh_out(number,dim);
 
     if (analytic_) {
-      for (index_t k = 0;k < topology_.points().nb(); k++)
+      for (index_t k = 0; k < topology_.points().nb(); k++)
         metrics_[k] = (*analytic_)( topology_.points()[k] );
     }
 
@@ -1556,10 +1589,11 @@ AdaptationManager<type>::adapt() {
       writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
-    params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
+    if (rank_ != 15) params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
+    params_.swapout() = true;
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
-    if (pass > 0) params_.limit_metric() = false;
+    //if (pass > 0) params_.limit_metric() = false;
     if (analytic_ != nullptr) params_.limit_metric() = true;
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     try {
@@ -1614,7 +1648,7 @@ AdaptationManager<type>::adapt() {
     }
 
     // we alternate between forcing the interfaces to migrate and performing a load balance
-    if (pass % 2 == 0) {
+    if (pass % 2 == 0 && false) {
       if (rank_ == 0) printf("--> migrating interface\n");
       mpi::barrier();
 

@@ -65,6 +65,8 @@ Cavity<type>::positive_implied_metrics()
 {
   for (index_t k=0;k<this->nb();k++)
   {
+    //if (this->ghost(k)) continue; // philip june 15th 2021: why has this not been needed before?
+
     // retrieve the implied metric of the element
     if (mk_.determinant(this->points_,this->operator()(k),this->nv(k))<0.0)
       return false;

@@ -38,7 +38,7 @@ public:
     symd<real_t> m(dim_);
 
     real_t H_ = 5.;
-		real_t f_ = 10.;
+		real_t f_ = 5.;
 		real_t A_ = 2.;
 		real_t P_ = 5.;
 		real_t y0_ = 5.;
@@ -87,7 +87,7 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 2;
+  coord_t number = 3;
   coord_t dim = number;
 
   EGADS::Context context;
@@ -96,14 +96,17 @@ UT_TEST_CASE( test1 )
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
-  library::MetricField_UGAWG_Linear2 analytic;
+  //library::MetricField_UGAWG_Linear analytic;
+  library::MetricField_UGAWG_Polar1 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
   library::meshb mesh(BASE_TEST_DIR+"/meshes/cube-cylinder.mesh");
   std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
   Topology<Simplex>& topology = *ptopology.get();
-  #elif 0
+  #elif 1
+  number = 2;
+  dim = 2;
   std::vector<real_t> lens(number,10.);
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,20);
@@ -135,18 +138,18 @@ UT_TEST_CASE( test1 )
   params.curved() = false;//true;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 4*number;
+  params.max_passes() = 4;
   params.swapout() = false;
   params.has_uv() = true;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
-  //manager.set_analytic( &analytic );
+  manager.set_analytic( &analytic );
 
   index_t rank = mpi::rank();
 
-  index_t niter = 5;
+  index_t niter = 10;
   for (index_t iter = 0; iter <= niter; iter++)
   {
     params.adapt_iter() = iter;
