@@ -408,7 +408,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
-      if (topology_.points().fixed(n0) || topology_.points().fixed(n1))
+      if (topology_.points().fixed(n0) && topology_.points().fixed(n1))
         continue;
 
       // do not insert on ghost edges
@@ -491,6 +491,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
+        topology_.points().set_age( n0 , topology_.points().age(n0)+ 1 );
+        topology_.points().set_age( n1 , topology_.points().age(n1)+ 1 );
         nb_length_rejected++;
 
         // option to swap out of the rejected configuration
@@ -565,6 +567,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // apply the insertion into the topology
       topology_.apply(inserter_);
       avro_assert( metric_.check(topology_) );
+
+      topology_.points().set_age( n0 , 0 );
+      topology_.points().set_age( n1 , 0 );
 
       // determine if any points were removed
       for (index_t j=0;j<inserter_.nb_removed_nodes();j++)

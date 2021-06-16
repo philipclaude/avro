@@ -96,7 +96,7 @@ UT_TEST_CASE( test1 )
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
-  //library::MetricField_UGAWG_Linear analytic;
+  //library::MetricField_UGAWG_Linear2 analytic;
   library::MetricField_UGAWG_Polar1 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
@@ -130,7 +130,7 @@ UT_TEST_CASE( test1 )
   params.standard();
 
   std::vector<VertexMetric> metrics(topology.points().nb());
-  for (index_t k=0;k<topology.points().nb();k++)
+  for (index_t k = 0; k < topology.points().nb(); k++)
     metrics[k] = analytic( topology.points()[k] );
 
   params.partitioned() = false;
@@ -138,22 +138,21 @@ UT_TEST_CASE( test1 )
   params.curved() = false;//true;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 2;
+  params.max_passes() = 1;
   params.swapout() = true;
   params.has_uv() = true;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
-  //manager.set_analytic( &analytic );
 
   index_t rank = mpi::rank();
 
   index_t niter = 10;
-  for (index_t iter = 0; iter <= niter; iter++)
-  {
+  for (index_t iter = 0; iter <= niter; iter++) {
+
     params.adapt_iter() = iter;
-    params.limit_metric() = false;//true;
+    params.limit_metric() = true;
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);
 
@@ -162,12 +161,12 @@ UT_TEST_CASE( test1 )
 
     // re-evaluate the metrics
     metrics.resize( manager.topology().points().nb() );
-    for (index_t k=0;k<metrics.size();k++)
+    for (index_t k = 0; k < metrics.size(); k++)
       metrics[k] = analytic( manager.topology().points()[k] );
 
     // TODO
     // create metric field
-    // limit metric here in serial, then pass off to processors
+    // limit metric here in serial, then pass off to processors?
 
     manager.reassign_metrics(metrics);
 

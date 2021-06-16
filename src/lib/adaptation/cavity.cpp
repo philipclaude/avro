@@ -76,35 +76,32 @@ Cavity<type>::positive_implied_metrics()
 
 template<typename type>
 bool
-Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>& C0 )
-{
+Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>& C0 ) {
+
   cavity_.clear();
   boundary_.clear();
   nodes_.clear();
   removed_nodes_.clear();
 
   // assign the coordinates and index of the star
-  for (coord_t d=0;d<point_.size();d++)
+  for (coord_t d = 0; d < point_.size(); d++)
     point_[d] = x[d];
   star_ = p;
 
   // compute the cavity about p with elements initialized to C0
-  for (index_t k=0;k<C0.size();k++)
+  for (index_t k = 0; k < C0.size(); k++)
     add_cavity(C0[k]);
 
   // enlarge the cavity until the point is visible from every face of the boundary
-  if (check_visibility_)
-  {
+  if (check_visibility_) {
     bool accept = enlarge();
-    if (!accept)
-    {
+    if (!accept) {
       // cavity was rejected, point cannot be visible
       return false;
     }
   }
-  else
-  {
-    avro_assert(C0.size()>0);
+  else {
+    avro_assert(C0.size() > 0);
   }
 
   // accumulate the nodes of the cavity elements
@@ -112,16 +109,13 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
   compute_nodes();
 
   // compute the boundary of the cavity elements
-  try
-  {
-    if (!compute_boundary())
-    {
+  try {
+    if (!compute_boundary()) {
       avro_assert_not_reached;
       return false;
     }
   }
-  catch(...)
-  {
+  catch(...) {
     nb_error_++;
     if (rethrow_) // option for debugging
       avro_assert_not_reached; // any kind of failed assertion
@@ -135,8 +129,7 @@ Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>&
   // apply the cavity to the candidate (also computes removed nodes)
   apply();
 
-  if (!node_removal_allowed_ && nb_removed_nodes()>0)
-  {
+  if (!node_removal_allowed_ && nb_removed_nodes()>0) {
     printf("node removal not allowed\n");
     return false;
   }

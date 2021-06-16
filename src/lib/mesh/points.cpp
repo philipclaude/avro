@@ -81,6 +81,7 @@ Points::create( const real_t* x )
 	primitive_.add(NULL);
 	fixed_.add(false);
 	global_.add(nb()-1); // 1-bias
+	age_.add(0);
 }
 
 void
@@ -110,7 +111,8 @@ Points::copy( Points& v , const bool ghosts) const
     v.set_entity( k , primitive_[k] );
     v.set_fixed( k , fixed_[k] );
     v.set_param( k , u(k) );
-		v.set_global( k , global_[k] );
+	v.set_global( k , global_[k] );
+	v.set_age( k , age_[k] );
   }
 
 	for (index_t k=0;k<incidence_.nb();k++)
@@ -135,6 +137,7 @@ Points::create_ghost()
 	primitive_.insert( nb_ghost_ , NULL );
 	fixed_.insert( nb_ghost_ , false );
 	global_.insert( nb_ghost_ , 0 );
+	age_.insert( nb_ghost_ , 0 );
 
 	// increment the ghost counter
 	nb_ghost_++;
@@ -237,6 +240,7 @@ Points::remove( const index_t k )
 	primitive_.remove(k);
 	fixed_.remove(k);
 	global_.remove(k);
+	age_.remove(k);
 
 	if (k<nb_ghost_) nb_ghost_--;
 }
@@ -551,6 +555,7 @@ Points::move_to( index_t k0 , index_t k1 )
 	body_.insert( k1 , body(k0) );
 	primitive_.insert( k1 , entity(k0) );
 	fixed_.insert( k1 , fixed(k0) );
+	age_.insert( k1 , age(k0) );
 	#else
 	DOF<real_t>::insert( k1*dim_ , x0.data() , x0.size() );
 	u_.insert( k1*udim_ , u0.data() , u0.size() );
@@ -558,6 +563,7 @@ Points::move_to( index_t k0 , index_t k1 )
 	primitive_.insert( k1 , e0 );
 	fixed_.insert( k1 , fixed(k0) );
 	global_.insert( k1 , global(k0) );
+	age_.insert( k1 , age(k0) );
 	#endif
 	remove(k0+1); // +1 because we added a vertex in front of k0
 }
@@ -573,6 +579,7 @@ Points::clear()
 	incidence_.clear();
 	fixed_.clear();
 	global_.clear();
+	age_.clear();
 }
 
 } // avro

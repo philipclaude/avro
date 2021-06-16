@@ -172,7 +172,7 @@ Application<GLFW_Interface<API_t>>::run( const std::string& view )
 					 active = true;
         }
        }
-	   //if (active) glfwSwapBuffers(window_[k]->window());
+	   if (active) glfwSwapBuffers(window_[k]->window());
 	   window_[k]->interface().active() = false;
        window_[k]->poll(); // poll for events
        if (window_[k]->should_close())
