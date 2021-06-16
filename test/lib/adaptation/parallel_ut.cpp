@@ -138,14 +138,14 @@ UT_TEST_CASE( test1 )
   params.curved() = false;//true;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 4;
-  params.swapout() = false;
+  params.max_passes() = 2;
+  params.swapout() = true;
   params.has_uv() = true;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
-  manager.set_analytic( &analytic );
+  //manager.set_analytic( &analytic );
 
   index_t rank = mpi::rank();
 
@@ -153,7 +153,7 @@ UT_TEST_CASE( test1 )
   for (index_t iter = 0; iter <= niter; iter++)
   {
     params.adapt_iter() = iter;
-    params.limit_metric() = true;
+    params.limit_metric() = false;//true;
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);
 
@@ -164,6 +164,10 @@ UT_TEST_CASE( test1 )
     metrics.resize( manager.topology().points().nb() );
     for (index_t k=0;k<metrics.size();k++)
       metrics[k] = analytic( manager.topology().points()[k] );
+
+    // TODO
+    // create metric field
+    // limit metric here in serial, then pass off to processors
 
     manager.reassign_metrics(metrics);
 

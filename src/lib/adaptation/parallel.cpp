@@ -135,7 +135,7 @@ AdaptationManager<type>::set_analytic( library::MetricField_Analytic* analytic )
 template<typename type>
 void
 AdaptationManager<type>::send_metrics( index_t receiver , const std::vector<index_t>& indices , const std::vector<VertexMetric>& metrics , bool global_flag ) {
-  
+
   // number of unique entries in a metric
   index_t nb_entry = topology_.number()*(topology_.number()+1)/2;
   std::vector<index_t> global_indices( indices.size() , 0 );
@@ -344,7 +344,7 @@ public:
         ghost.insert( g1 );
       }
       else {
-        
+
         avro_assert( boundary_.partR(k) == rank );
         avro_assert( local.find(g1) != local.end() );
         edges_.push_back( g1 );
@@ -914,7 +914,7 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   }
 
   if (rank_ == 0) {
-    
+
     // receive all the metric data and append it to the list (initialized by the root)
     for (index_t k = 1; k < nb_rank; k++) {
 
@@ -1594,7 +1594,7 @@ AdaptationManager<type>::adapt() {
     params_.export_boundary() = false;
     params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
     //if (pass > 0) params_.limit_metric() = false;
-    if (analytic_ != nullptr) params_.limit_metric() = true;
+    //if (analytic_ != nullptr) params_.limit_metric() = true;
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     try {
 
@@ -1605,6 +1605,7 @@ AdaptationManager<type>::adapt() {
         t0 = clock();
       }
       ::avro::adapt<type>( problem );
+      mpi::barrier();
       if (rank_ == 0) {
         t1 = clock();
         printf("--> time = %4.3g seconds.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));

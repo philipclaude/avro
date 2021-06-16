@@ -396,7 +396,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     std::vector<index_t> shell;
     std::vector<index_t> N;
     for (index_t k = 0; k < filter.nb_candidates(); k++) {
-      
+
       // index of the vertex stored in the filter
       index_t idx = filter.candidate(k);
 
