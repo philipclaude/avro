@@ -59,6 +59,8 @@ public:
   bool& limit_metric() { return boolParams_["limit_metric"]; }
   int& smoothing_exponent() { return intParams_["smoothing-exponent"]; }
 
+  std::string& parallel_method() { return stringParams_["parallel method"]; }
+
   // set the default
   void standard();
 };

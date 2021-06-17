@@ -138,7 +138,8 @@ UT_TEST_CASE( test1 )
   params.curved() = false;//true;
   params.insertion_volume_factor() = -1;
   params.limit_metric() = true;
-  params.max_passes() = 1;
+  params.max_passes() = 2;
+  params.parallel_method() = "migrate";
   params.swapout() = true;
   params.has_uv() = true;
 

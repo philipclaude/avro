@@ -408,8 +408,11 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
-      if (topology_.points().fixed(n0) && topology_.points().fixed(n1))
+      if (topology_.points().fixed(n0) && topology_.points().fixed(n1)) {
+        topology_.points().set_age( n0 , topology_.points().age(n0)+ 1 );
+        topology_.points().set_age( n1 , topology_.points().age(n1)+ 1 );
         continue;
+      }
 
       // do not insert on ghost edges
       if (n0 < topology_.points().nb_ghost() ||
@@ -491,8 +494,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
-        topology_.points().set_age( n0 , topology_.points().age(n0)+ 1 );
-        topology_.points().set_age( n1 , topology_.points().age(n1)+ 1 );
+        //topology_.points().set_age( n0 , topology_.points().age(n0)+ 1 );
+        //topology_.points().set_age( n1 , topology_.points().age(n1)+ 1 );
         nb_length_rejected++;
 
         // option to swap out of the rejected configuration
@@ -568,23 +571,21 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       topology_.apply(inserter_);
       avro_assert( metric_.check(topology_) );
 
+      // set the age of the endpoint vertices to 0 since a split was performed
       topology_.points().set_age( n0 , 0 );
       topology_.points().set_age( n1 , 0 );
 
       // determine if any points were removed
-      for (index_t j=0;j<inserter_.nb_removed_nodes();j++)
-      {
+      for (index_t j=0;j<inserter_.nb_removed_nodes();j++) {
         index_t removed_node = inserter_.removed_node(j);
-        if (removed.find(removed_node)==removed.end())
-        {
+        if (removed.find(removed_node)==removed.end()) {
           printf("vertex %lu was removed!\n",removed_node);
           removed.insert( removed_node );
         }
       }
 
       // check if the cavity was enlarged to turn off some of the existing edges
-      if (inserter_.enlarged())
-      {
+      if (inserter_.enlarged()) {
         // turn off points in the cavity, we can attempt them on the next pass
         const std::vector<index_t>& nodes = inserter_.nodes();
         for (index_t j=0;j<nodes.size();j++)
@@ -605,8 +606,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
     std::sort( removed_indices.begin() , removed_indices.end() );
     std::reverse( removed_indices.begin() , removed_indices.end() );
-    for (index_t j=0;j<removed_indices.size();j++)
-    {
+    for (index_t j = 0; j < removed_indices.size(); j++) {
       topology_.remove_point( j );
       metric_.remove(j);
       topology_.inverse().remove(j);
