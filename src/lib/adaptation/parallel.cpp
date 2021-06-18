@@ -1598,9 +1598,7 @@ synchronize_metrics( const Points& points , std::vector<VertexMetric>& metrics0 
 
         global_metrics[idx].push_back(m);
       }
-
     }
-
   }
   else {
       std::vector<real_t> metric_data;
@@ -1673,9 +1671,7 @@ synchronize_metrics( const Points& points , std::vector<VertexMetric>& metrics0 
       for (index_t c = r; c < n; c++)
         metrics0[global2local.at(global)](r,c) = metric_data[ N*k + j++ ];
     }
-
   }
-  avro_msgp("done synchronizing metrics");
   mpi::barrier();
 }
 
@@ -1715,7 +1711,7 @@ AdaptationManager<type>::adapt() {
   // perform the passes, alternating between doing an interface migration
   // and a load balance
   const std::string method = params_.parallel_method();
-  params_.limit_metric() = false;
+  bool limit_metric = params_.limit_metric();
   index_t max_passes = params_.max_passes();
   index_t nb_part = mpi::size();
   index_t pass = 0;
@@ -1732,7 +1728,7 @@ AdaptationManager<type>::adapt() {
     fix_boundary();
 
     // option to limit the metrics - do not limit the metrics in the call to the mesh adapter
-    if (pass == 0) {
+    if (pass == 0 && params_.limit_metric()) {
       MetricAttachment attachment( topology_.points() , metrics_ );
       attachment.limit(topology_,2.0);
       for (index_t k = 0; k < attachment.nb(); k++)
@@ -1741,6 +1737,7 @@ AdaptationManager<type>::adapt() {
       // we need to synchronize the metrics across processors that may have been modified by metric limiting
       synchronize_metrics( topology_.points() , metrics_ );
     }
+    params_.limit_metric() = false;
 
     // in recursive mode, fix any vertices that touch edges/elements of good quality
     // this is important so that we don't adapt the full mesh
@@ -1848,8 +1845,9 @@ AdaptationManager<type>::adapt() {
     if (rank_ == 0) printf("--> performing load balance & interface migration with %lu partitions\n",nb_part);
     migrate_balance( nb_part );
     pass++;
-
   }
+
+  params_.limit_metric() = limit_metric;
 }
 
 template<typename type>
