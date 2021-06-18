@@ -314,10 +314,10 @@ public:
     }
     //avro_msgp( "number of fixed elems = " + std::to_string(fixed.size()) );
 
-    std::vector<index_t> elem_age( partition_.nb() , 1 );
+    std::map<index_t,index_t> elem_age;
     for (index_t k = 0; k < partition_.nb(); k++) {
       for (index_t j = 0; j < partition_.nv(k); j++)
-        elem_age[k] += partition_.points().age( partition_(k,j) );
+        elem_age[ global_elem(rank,k) ] += partition_.points().age( partition_(k,j) );
     }
 
     // extract the adjacencies from the partition
@@ -374,7 +374,7 @@ public:
     // assign weights on the node of the graph (elements in the mesh)
     assign_weights(metrics);
 
-    index_t penalty = 2;
+    index_t penalty = 1e2;
 
     // convert to csr
     std::vector< std::vector<index_t> > node2node(nb_vert_);
@@ -386,11 +386,11 @@ public:
       avro_assert( elem0 != elem1 );
 
       // determine the initial weight on this edge from the vertex weights
-      real_t q0 = elem_age[elem0];
-      real_t q1 = elem_age[elem1];
+      real_t q0 = 1;//elem_age[elem0];
+      real_t q1 = 1;//elem_age[elem1];
 
-      //q0 = (ghost.find(elem0) == ghost.end()) ? q0 : penalty;
-      //q1 = (ghost.find(elem1) == ghost.end()) ? q1 : penalty;
+      q0 = (ghost.find(elem0) == ghost.end()) ? elem_age[elem0] : penalty;
+      q1 = (ghost.find(elem1) == ghost.end()) ? elem_age[elem1] : penalty;
 
       bool f0 = fixed.find(elem0) != fixed.end() || ghost.find(elem0) != ghost.end();
       bool f1 = fixed.find(elem1) != fixed.end() || ghost.find(elem1) != ghost.end();
