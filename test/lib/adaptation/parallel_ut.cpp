@@ -91,7 +91,7 @@ UT_TEST_CASE( test1 )
   coord_t dim = number;
 
   EGADS::Context context;
-  #if 1
+  #if 0
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
@@ -104,9 +104,8 @@ UT_TEST_CASE( test1 )
   library::meshb mesh(BASE_TEST_DIR+"/meshes/cube-cylinder.mesh");
   std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
   Topology<Simplex>& topology = *ptopology.get();
-  #elif 1
-  number = 2;
-  dim = 2;
+  #elif 0
+  dim = number = 2;
   std::vector<real_t> lens(number,10.);
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,20);
@@ -116,13 +115,14 @@ UT_TEST_CASE( test1 )
     topology.points()[k][d] *= 10.;
   library::MetricField_UGAWG_sin analytic;
   #else
+  dim = number = 4;
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
   library::Tesseract geometry(c,lengths);
   std::vector<index_t> dims(number,5);
   CKF_Triangulation topology(dims);
   //library::MetricField_Uniform analytic(number,0.25);
-  library::MetricField_Tesseract_Linear analytic;
+  library::MetricField_Tesseract_Wave analytic;
   #endif
   topology.points().attach(geometry);
 
@@ -142,6 +142,7 @@ UT_TEST_CASE( test1 )
   params.parallel_method() = "migrate";
   params.swapout() = true;
   params.has_uv() = true;
+  params.elems_per_processor() = 10000;
 
   topology.build_structures();
 
@@ -164,10 +165,6 @@ UT_TEST_CASE( test1 )
     metrics.resize( manager.topology().points().nb() );
     for (index_t k = 0; k < metrics.size(); k++)
       metrics[k] = analytic( manager.topology().points()[k] );
-
-    // TODO
-    // create metric field
-    // limit metric here in serial, then pass off to processors?
 
     manager.reassign_metrics(metrics);
 

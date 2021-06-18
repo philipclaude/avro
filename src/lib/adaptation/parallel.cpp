@@ -314,11 +314,13 @@ public:
     }
     //avro_msgp( "number of fixed elems = " + std::to_string(fixed.size()) );
 
-    std::map<index_t,index_t> elem_age;
+    std::vector<index_t> elem_age( partition_.nb() , 1 );
     for (index_t k = 0; k < partition_.nb(); k++) {
       for (index_t j = 0; j < partition_.nv(k); j++)
-        elem_age[ global_elem(rank,k) ] += partition_.points().age( partition_(k,j) );
+        elem_age[k] += partition_.points().age( partition_(k,j) );
     }
+    index_t max_age = *std::max_element( elem_age.begin() , elem_age.end() );
+    index_t penalty = 100*max_age; // heuristic
 
     // extract the adjacencies from the partition
     std::map<index_t,index_t> local;
@@ -372,9 +374,8 @@ public:
     nb_vert_ = partition_.nb(); // number of vertices local to this processor
 
     // assign weights on the node of the graph (elements in the mesh)
+    // (these may not actually get used by the graph partitioner)
     assign_weights(metrics);
-
-    index_t penalty = 1e2;
 
     // convert to csr
     std::vector< std::vector<index_t> > node2node(nb_vert_);
@@ -385,33 +386,23 @@ public:
       index_t elem1 = edges_[2*k+1];
       avro_assert( elem0 != elem1 );
 
-      // determine the initial weight on this edge from the vertex weights
-      real_t q0 = 1;//elem_age[elem0];
-      real_t q1 = 1;//elem_age[elem1];
+      // determine the weight on this edge from the age of the elements, or if they are fixed
+      index_t q0 = (ghost.find(elem0) == ghost.end()) ? elem_age[local.at(elem0)] : penalty;
+      index_t q1 = (ghost.find(elem1) == ghost.end()) ? elem_age[local.at(elem1)] : penalty;
 
-      q0 = (ghost.find(elem0) == ghost.end()) ? elem_age[elem0] : penalty;
-      q1 = (ghost.find(elem1) == ghost.end()) ? elem_age[elem1] : penalty;
-
-      bool f0 = fixed.find(elem0) != fixed.end() || ghost.find(elem0) != ghost.end();
-      bool f1 = fixed.find(elem1) != fixed.end() || ghost.find(elem1) != ghost.end();
-
+      //bool f0 = fixed.find(elem0) != fixed.end() || ghost.find(elem0) != ghost.end();
+      //bool f1 = fixed.find(elem1) != fixed.end() || ghost.find(elem1) != ghost.end();
       //if (f0) q0 = penalty;
       //if (f1) q1 = penalty;
 
       // only add adjacency information for vertices (elements) on this processor
       if (ghost.find(elem0) == ghost.end()) {
-
-        node2node[ local.at(elem0)].push_back(elem1);
-
-        // assign the weight of this edge
-        node2node_weight[ local.at(elem0) ].push_back( q0 );
+        node2node[local.at(elem0)].push_back(elem1);
+        node2node_weight[local.at(elem0)].push_back( q0 );
       }
       if (ghost.find(elem1) == ghost.end()) {
-
-        node2node[ local.at(elem1) ].push_back(elem0);
-
-        // assign the weight of this edge
-        node2node_weight[ local.at(elem1) ].push_back( q1 );
+        node2node[local.at(elem1)].push_back(elem0);
+        node2node_weight[local.at(elem1)].push_back( q1 );
       }
     }
 
@@ -434,6 +425,7 @@ public:
         egwt_.push_back(wgtlist[i]);
       }
     }
+    mpi::barrier();
 
   }
 
@@ -544,8 +536,6 @@ public:
     options[2] = 42;
     //options[3] = PARMETIS_PSR_COUPLED; // only used for AdaptiveRepart
 
-    mpi::barrier();
-
     // partition the graph!
     std::vector<PARM_INT> part(nb_vert_,mpi::rank());
     MPI_Comm comm = MPI_COMM_WORLD;
@@ -572,7 +562,8 @@ public:
                             &comm);
     #endif
     avro_assert( result == METIS_OK );
-    avro_msgp("parmetis returned with edge cut = " + std::to_string(edgecut) );
+    if (mpi::rank() == 0)
+      printf("partitioned mesh into %lu domains, final edge cut = %d\n",nb_part,edgecut);
 
     // store the partition result
     repartition.assign( part.begin() , part.end() );
@@ -773,8 +764,21 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     if (repartition[k] == rank_) nb_keep++;
   }
   if (nb_keep == 0) {
-    // unset one element
-    repartition[0] = rank_;
+
+    // find the single best element to keep
+    MetricAttachment attachment( topology_.points() , metrics_ );
+    MetricField<type> field(topology_,attachment);
+
+    index_t kmax = 0;
+    real_t qmax = 0;
+    for (index_t k = 0; k < topology_.nb(); k++) {
+      real_t q = field.quality( topology_, k );
+      if (q > qmax) {
+        qmax = q;
+        kmax = k;
+      }
+    }
+    repartition[kmax] = rank_;
   }
 
   // print a message with all the send information
@@ -1730,7 +1734,7 @@ AdaptationManager<type>::adapt() {
     // option to limit the metrics - do not limit the metrics in the call to the mesh adapter
     if (pass == 0 && params_.limit_metric()) {
       MetricAttachment attachment( topology_.points() , metrics_ );
-      attachment.limit(topology_,2.0);
+      attachment.limit(topology_,2.0,true);
       for (index_t k = 0; k < attachment.nb(); k++)
         metrics_[k] = attachment[k];
 
@@ -1818,14 +1822,12 @@ AdaptationManager<type>::adapt() {
     }
 
     // count vertex age (currently debugging info)
-    mpi::barrier();
     index_t max_age = 5;
     std::vector<index_t> age_count(max_age);
     for (index_t k = 0; k < topology_.points().nb(); k++) {
       if (topology_.points().age(k) >= max_age) age_count[max_age-1]++;
       else age_count[topology_.points().age(k)]++;
     }
-    print_inline( age_count , "[age on processor  " + std::to_string(rank_) + "]: ");
     mpi::barrier();
 
     if (method == "recursive") {
@@ -1837,9 +1839,26 @@ AdaptationManager<type>::adapt() {
       }
     }
     else {
+
       // standard, hope the interfaces are migrated to the interior
+      index_t nb_elem_per_core = params_.elems_per_processor();
+
+      index_t nb_elem = topology_out->nb();
+      if (rank_ == 0) {
+        for (index_t k = 0; k < index_t(mpi::size()); k++)
+          mpi::send( mpi::blocking{} , int(nb_elem) , k , TAG_MISC );
+      }
+      else {
+        nb_elem = mpi::receive<int>( 0 , TAG_MISC );
+      }
+
       nb_part = mpi::size();
       if (pass == max_passes-1) done = true;
+      else {
+        nb_part = index_t(nb_elem/nb_elem_per_core);
+        if (nb_part == 0) nb_part = 1;
+      }
+      if (nb_part > index_t(mpi::size())) nb_part = mpi::size();
     }
 
     if (rank_ == 0) printf("--> performing load balance & interface migration with %lu partitions\n",nb_part);

@@ -54,7 +54,7 @@ public:
   MeshImpliedMetric( const Topology<type>& topology );
 
   void initialize();
-  void optimize();
+  void optimize(bool quiet = false);
 
   template<int DIM> real_t cost( const std::vector<symd<real_t>>& m , std::vector<symd<real_t>>& dc_dS , real_t& complexity0 ) const;
   template<int DIM> real_t deviation( const std::vector<symd<real_t>>& S , std::vector<symd<real_t>>& df_dS ) const;

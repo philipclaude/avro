@@ -409,8 +409,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
       if (topology_.points().fixed(n0) && topology_.points().fixed(n1)) {
-        topology_.points().set_age( n0 , topology_.points().age(n0)+ 1 );
-        topology_.points().set_age( n1 , topology_.points().age(n1)+ 1 );
+        topology_.points().age( n0 )++;
+        topology_.points().age( n1 )++;
         continue;
       }
 
@@ -461,21 +461,15 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t Lmin = sqrt(0.5);
 
       // if the current length is greater than 4.0, we need to be more flexible
-      //if (lk>4.0) Lmin = 0.0; // philip: removed june 15 2021
-
-      // loossen up the minimum length if this is a partition boundary
-      //bool fixed = (topology_.points().fixed(n0) || topology_.points().fixed(n1));
-      //if (fixed) Lmin = 0.01;
+      //if (lk>4.0) Lmin = 0.0; // philip: commented june 15 2021
 
       // also relax the insertion criterion when we insert on geometry Edges
       Entity* ge = inserter_.geometry(n0,n1);
-      if (ge!=NULL && ge->number()==1)
+      if (ge != NULL && ge->number() == 1)
         Lmin = 0.25;
 
-
-      #if 1 // philip april 23rd
+      // set the geometry entity for the inserted point
       topology_.points().set_entity(ns,ge);
-      #endif
 
       for (index_t j=0;j<N.size();j++)
       {
@@ -494,8 +488,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
-        //topology_.points().set_age( n0 , topology_.points().age(n0)+ 1 );
-        //topology_.points().set_age( n1 , topology_.points().age(n1)+ 1 );
         nb_length_rejected++;
 
         // option to swap out of the rejected configuration

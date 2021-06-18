@@ -63,12 +63,15 @@ template<typename type>
 bool
 Cavity<type>::positive_implied_metrics()
 {
+  const real_t tol = 1e-6;
   for (index_t k=0;k<this->nb();k++)
   {
-    //if (this->ghost(k)) continue; // philip june 15th 2021: why has this not been needed before?
+    // philip june 15th 2021: why has this not been needed before?
+    // update on june 18th 2021: because determinant check was previously 0.0, not tol
+    if (this->ghost(k)) continue;
 
     // retrieve the implied metric of the element
-    if (mk_.determinant(this->points_,this->operator()(k),this->nv(k))<0.0)
+    if (mk_.determinant(this->points_,this->operator()(k),this->nv(k))<tol)
       return false;
   }
   return true;

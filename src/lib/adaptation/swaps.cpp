@@ -185,8 +185,8 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
       // skip fixed edges (when working in parallel)
       if (topology_.points().fixed(e0) && topology_.points().fixed(e1)) {
-        topology_.points().set_age( e0 , topology_.points().age(e0)+1 );
-        topology_.points().set_age( e1 , topology_.points().age(e1)+1 );  
+        topology_.points().age( e0 )++;
+        topology_.points().age( e1 )++;  
         continue;
       }
 
@@ -231,8 +231,6 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         if (!accept)
         {
           // it was rejected because of geometry topology or visiblity
-          topology_.points().set_age( e0 , topology_.points().age(e0)+1 );
-          topology_.points().set_age( e1 , topology_.points().age(e1)+1 );  
           continue;
         }
 
@@ -269,8 +267,8 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       if (m<0) continue;
 
 
-      topology_.points().set_age( e0 , 0 );
-      topology_.points().set_age( e1 , 0 );
+      topology_.points().age(e0) = 0;
+      topology_.points().age(e1) = 0;
 
       nb_swaps++;
       edge_swapper_.apply( index_t(m) , e0 , e1 );

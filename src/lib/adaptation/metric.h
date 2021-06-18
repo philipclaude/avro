@@ -129,7 +129,7 @@ public:
   bool check() const;
 
   template<typename type>
-  void limit( const Topology<type>& topology , real_t href );
+  void limit( const Topology<type>& topology , real_t href , bool quiet = false );
 
   Points& points() { return points_; }
 

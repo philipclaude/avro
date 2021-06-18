@@ -79,6 +79,7 @@ public:
   bool fixed( const index_t k ) const { return fixed_[k]; }
   index_t global( const index_t k ) const { return global_[k]; }
   index_t age( const index_t k ) const { return age_[k]; }
+  index_t& age( const index_t k ) { return age_[k]; }
 
   // boundary vertex query function
   bool boundary( const index_t k ) const;
