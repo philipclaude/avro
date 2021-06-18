@@ -312,8 +312,13 @@ public:
       for (index_t j = 0; j < ball.size(); j++)
         fixed.insert( global_elem( rank , ball[j] ) );
     }
-    avro_msgp( "number of fixed elems = " + std::to_string(fixed.size()) );
+    //avro_msgp( "number of fixed elems = " + std::to_string(fixed.size()) );
 
+    std::vector<index_t> elem_age( partition_.nb() , 1 );
+    for (index_t k = 0; k < partition_.nb(); k++) {
+      for (index_t j = 0; j < partition_.nv(k); j++)
+        elem_age[k] += partition_.points().age( partition_(k,j) );
+    }
 
     // extract the adjacencies from the partition
     std::map<index_t,index_t> local;
@@ -369,7 +374,7 @@ public:
     // assign weights on the node of the graph (elements in the mesh)
     assign_weights(metrics);
 
-    index_t penalty = 1e2;
+    index_t penalty = 2;
 
     // convert to csr
     std::vector< std::vector<index_t> > node2node(nb_vert_);
@@ -381,20 +386,17 @@ public:
       avro_assert( elem0 != elem1 );
 
       // determine the initial weight on this edge from the vertex weights
-      real_t q0 = 0;
-      real_t q1 = 0;
+      real_t q0 = elem_age[elem0];
+      real_t q1 = elem_age[elem1];
 
-      //q0 = (ghost.find(elem0) == ghost.end()) ? penalty/quality_[ local.at(elem0) ] : 100*penalty;
-      //q1 = (ghost.find(elem1) == ghost.end()) ? penalty/quality_[ local.at(elem1) ] : 100*penalty;
-
-      q0 = (ghost.find(elem0) == ghost.end()) ? 1 : penalty;
-      q1 = (ghost.find(elem1) == ghost.end()) ? 1 : penalty;
+      //q0 = (ghost.find(elem0) == ghost.end()) ? q0 : penalty;
+      //q1 = (ghost.find(elem1) == ghost.end()) ? q1 : penalty;
 
       bool f0 = fixed.find(elem0) != fixed.end() || ghost.find(elem0) != ghost.end();
       bool f1 = fixed.find(elem1) != fixed.end() || ghost.find(elem1) != ghost.end();
 
-      if (f0) q0 = penalty;
-      if (f1) q1 = penalty;
+      //if (f0) q0 = penalty;
+      //if (f1) q1 = penalty;
 
       // only add adjacency information for vertices (elements) on this processor
       if (ghost.find(elem0) == ghost.end()) {
@@ -523,6 +525,7 @@ public:
     std::vector<PARM_INT> adjncy(adjncy_.begin(),adjncy_.end());
     std::vector<PARM_INT> vwgt( vgwt_.begin() , vgwt_.end() );
     std::vector<PARM_INT> ewgt( egwt_.begin() , egwt_.end() );
+    PARM_INT* pvwgt = NULL; // vwgt.data();
     PARM_INT *padjwgt = ewgt.data();// NULL;
     PARM_INT wgtflag = 1; // 0 for no weights, 1 for edge weights, 2 for vertex weights, 3 for both
     PARM_INT edgecut = 0;
@@ -538,18 +541,17 @@ public:
     PARM_INT options[4];
     options[0] = 1;
     options[1] = 0;
-    options[2] = 0;
-    options[3] = PARMETIS_PSR_COUPLED; // only used for AdaptiveRepart
+    options[2] = 42;
+    //options[3] = PARMETIS_PSR_COUPLED; // only used for AdaptiveRepart
 
     mpi::barrier();
-    avro_msgp("calling parmetis on local graph with " + std::to_string(nb_vert_) + " vertices");
 
     // partition the graph!
     std::vector<PARM_INT> part(nb_vert_,mpi::rank());
     MPI_Comm comm = MPI_COMM_WORLD;
     #if 1
     int result = ParMETIS_V3_PartKway( vtxdist.data() , xadj.data() , adjncy.data() ,
-                            vwgt.data() , padjwgt, &wgtflag,
+                            pvwgt , padjwgt, &wgtflag,
                             &bias , &ncon , &nparts,
                             tpwgts.data() , ubvec.data(),
                             options,
@@ -570,6 +572,7 @@ public:
                             &comm);
     #endif
     avro_assert( result == METIS_OK );
+    avro_msgp("parmetis returned with edge cut = " + std::to_string(edgecut) );
 
     // store the partition result
     repartition.assign( part.begin() , part.end() );
@@ -1030,6 +1033,7 @@ AdaptationManager<type>::migrate_balance( index_t nb_part ) {
       interface.append(boundary_k);
     }
     avro_assert( interface.complete(element_offset_) );
+    printf("--> number of interface facets = %lu\n",interface.nb());
   }
   else {
     // send our partition boundary information
@@ -1471,7 +1475,7 @@ AdaptationManager<type>::fix_boundary() {
 template<typename type>
 void
 fix_crust( Topology<type>& topology , const std::vector<index_t>& crust0 ) {
-  
+
   for (index_t k = 0; k < crust0.size(); k++) {
     if (crust0[k] >= topology.nb()) print_inline(crust0);
     avro_assert_msg( crust0[k] < topology.nb() , "crust elem %lu but topology has %lu elements" , crust0[k] , topology.nb() );
@@ -1520,7 +1524,7 @@ fix_conforming( Topology<type>& topology , const std::vector<VertexMetric>& metr
   std::vector< std::vector<index_t> > v2v( topology.points().nb() );
   for (index_t k = 0; k < edges.size()/2; k++) {
     v2v[ edges[2*k]   ].push_back( edges[2*k+1] );
-    v2v[ edges[2*k+1] ].push_back( edges[2*k] ); 
+    v2v[ edges[2*k+1] ].push_back( edges[2*k] );
   }
 
   real_t lim = 2.0;
@@ -1646,7 +1650,7 @@ synchronize_metrics( const Points& points , std::vector<VertexMetric>& metrics0 
       if (global2local.find(global) != global2local.end())
         metrics0[global2local[global]] = m;
     }
-    
+
     for (index_t k = 1; k < nb_rank; k++) {
       mpi::send( mpi::blocking{} , idx , k , TAG_METRIC_INDICES );
       mpi::send( mpi::blocking{} , metric_data , k , TAG_METRIC_ENTRIES );
@@ -1841,7 +1845,7 @@ AdaptationManager<type>::adapt() {
       if (pass == max_passes-1) done = true;
     }
 
-    if (rank_ == 0) printf("--> performing load balance & interface migration with %lu partitions\n",nb_part); 
+    if (rank_ == 0) printf("--> performing load balance & interface migration with %lu partitions\n",nb_part);
     migrate_balance( nb_part );
     pass++;
 
