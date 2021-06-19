@@ -1531,7 +1531,7 @@ fix_conforming( Topology<type>& topology , const std::vector<VertexMetric>& metr
     v2v[ edges[2*k+1] ].push_back( edges[2*k] );
   }
 
-  real_t lim = 2.0;
+  real_t lim = sqrt(2.0);
   for (index_t k = 0; k < v2v.size(); k++) {
     bool ok = true;
 
@@ -1746,8 +1746,10 @@ AdaptationManager<type>::adapt() {
     // in recursive mode, fix any vertices that touch edges/elements of good quality
     // this is important so that we don't adapt the full mesh
     if (method == "recursive" && pass > 0) {
-      fix_conforming( topology_ , metrics_ );
+      //fix_conforming( topology_ , metrics_ );
     }
+    if (pass > 0) fix_conforming( topology_ , metrics_ );
+
 
     // create the mesh we will write to
     // create a mesh and add the topology

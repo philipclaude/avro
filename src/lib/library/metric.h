@@ -292,7 +292,10 @@ public:
   	L[2] = 1./(hphi*hphi);
   	L[3] = 1./(ht*ht);
 
-  	return Q*numerics::diag(L)*numerics::transpose(Q);
+	for (coord_t d = 0; d < 4; d++)
+		L[d] *= 10;
+
+  	return (Q*numerics::diag(L))*numerics::transpose(Q);
   }
 };
 

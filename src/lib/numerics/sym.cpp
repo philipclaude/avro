@@ -155,11 +155,22 @@ template<typename type>
 std::pair< vecd<type>,matd<type> >
 symd<type>::eig() const
 {
+  std::pair< vecd<type>,matd<type> > decomp = __eigivens__();
+  
+  // bound the result?
+  /*type lim = 1e30;
+  for (coord_t i = 0; i < decomp.first.m(); i++) {
+    if (decomp.first[i] >  lim) decomp.first[i] =  lim;
+    if (decomp.first[i] < -lim) decomp.first[i] = -lim;
+  }*/
+  return decomp;
+/*
   if (n_==2) return __eigivens__();
   if (n_==3 || n_==4) return __eigivens__();
   printf("unknown eigendecomposition for %ux%u tensors\n",n_,n_);
   avro_assert_not_reached;
 	return { vecd<type>(n_) , matd<type>(n_,n_) };
+*/
 }
 
 template<typename type>

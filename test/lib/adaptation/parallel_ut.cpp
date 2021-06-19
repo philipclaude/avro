@@ -65,7 +65,7 @@ public:
   {
     symd<real_t> m(dim_);
 
-    real_t hu = 0.1;
+    real_t hu = 0.01;
     real_t h0 = hu/100;
     real_t hy = h0 +2.*(hu -h0)*fabs( x[1] -0.5 );
     real_t hx = hu;//h0 +2.*(hu -h0)*fabs( x[0] -0.5 );
@@ -87,17 +87,17 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 3;
+  coord_t number = 2;
   coord_t dim = number;
 
   EGADS::Context context;
-  #if 0
+  #if 1
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
-  //library::MetricField_UGAWG_Linear2 analytic;
-  library::MetricField_UGAWG_Polar1 analytic;
+  library::MetricField_UGAWG_Linear2 analytic;
+  //library::MetricField_UGAWG_Polar1 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
@@ -122,7 +122,8 @@ UT_TEST_CASE( test1 )
   std::vector<index_t> dims(number,5);
   CKF_Triangulation topology(dims);
   //library::MetricField_Uniform analytic(number,0.25);
-  library::MetricField_Tesseract_Wave analytic;
+  //library::MetricField_Tesseract_Wave analytic;
+  library::MetricField_Tesseract_Linear analytic(0.00125);
   #endif
   topology.points().attach(geometry);
 
@@ -136,13 +137,13 @@ UT_TEST_CASE( test1 )
   params.partitioned() = false;
   params.balanced() = true; // assume load-balanced once the first partition is computed
   params.curved() = false;//true;
-  params.insertion_volume_factor() = -1;
+  params.insertion_volume_factor() = (number <= 3) ? -1 : std::sqrt(2.0);
   params.limit_metric() = true;
-  params.max_passes() = 2;
+  params.max_passes() = 3;
   params.parallel_method() = "migrate";
-  params.swapout() = true;
+  params.swapout() = false;
   params.has_uv() = true;
-  params.elems_per_processor() = 10000;
+  params.elems_per_processor() = 5000;
 
   topology.build_structures();
 
@@ -150,7 +151,7 @@ UT_TEST_CASE( test1 )
 
   index_t rank = mpi::rank();
 
-  index_t niter = 10;
+  index_t niter = 0;
   for (index_t iter = 0; iter <= niter; iter++) {
 
     params.adapt_iter() = iter;
