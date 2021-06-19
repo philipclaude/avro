@@ -74,10 +74,12 @@ UT_TEST_CASE( test_2d )
   delaunay::VoronoiDiagram diagram( delaunay , domain );
   diagram.compute(false);
 
+  #if 0
   graphics::Visualizer vis;
   vis.add_topology(diagram);
 
   vis.run();
+#endif
 }
 UT_TEST_CASE_END( test_2d )
 
@@ -130,7 +132,7 @@ UT_TEST_CASE( test_2d_simplex )
   diagram.compute(true);
   */
 
-  #if 1
+  #if 0
   graphics::Visualizer vis;
   vis.add_topology(diagram);
 
