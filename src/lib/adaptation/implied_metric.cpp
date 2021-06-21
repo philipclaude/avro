@@ -135,7 +135,7 @@ ElementImpliedMetric<type>::determinant( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
   real_t detJ0 = numerics::det(J0_);
-  if (detJ0==0.0) return 0.0;
+  if (detJ0 == 0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
 }
 
@@ -145,7 +145,7 @@ ElementImpliedMetric<type>::determinant( const Points& points , const index_t* v
 {
   element_.jacobian( v, nv, points , J0_ );
   real_t detJ0 = numerics::det(J0_);
-  if (detJ0==0.0) return 0.0;
+  if (detJ0 == 0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
 }
 

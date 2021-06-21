@@ -88,6 +88,26 @@ UT_TEST_CASE(inverse_tests)
 }
 UT_TEST_CASE_END(inverse_tests)
 
+UT_TEST_CASE( symd_eign_test )
+{
+  real_t tol = 1e-12;
+
+  for (index_t n = 2; n < 10; n++) {
+
+    symd<real_t> A = random_tensor(n);
+
+    std::pair< vecd<real_t> , matd<real_t> > e = numerics::eign(A);
+    const matd<real_t>& Q = e.second;
+    const vecd<real_t>& L = e.first;
+
+    matd<real_t> A1 = Q * numerics::diag(L) * numerics::transpose(Q);
+    for (index_t i = 0; i < n; i++)
+    for (index_t j = 0; j < n; j++)
+      UT_ASSERT_NEAR( A(i,j) , A1(i,j) , tol );
+  }
+
+}
+UT_TEST_CASE_END( symd_eign_test )
 
 
 UT_TEST_SUITE_END(linear_algebra_tests)

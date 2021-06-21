@@ -50,8 +50,8 @@ symd<type>::symd( const matd<type>& M ) :
   n_(M.n()) {
   avro_assert( M.m() == M.n() );
   data_.resize(nb());
-  for (index_t i=0;i<n_;i++)
-  for (index_t j=0;j<n_;j++)
+  for (index_t i = 0; i < n_; i++)
+  for (index_t j = 0; j < n_; j++)
     operator()(i,j) = M(i,j);
 }
 
@@ -77,8 +77,7 @@ symd<type>::set( const matd<type>& M ) {
 
 template<typename type>
 void
-symd<type>::from_eig(const vecd<type>& lambda , const matd<type>& q )
-{
+symd<type>::from_eig(const vecd<type>& lambda , const matd<type>& q ) {
   // constructor from eigendecomposition
 	n_ = lambda.m();
   data_.resize( nb() );
@@ -88,24 +87,24 @@ symd<type>::from_eig(const vecd<type>& lambda , const matd<type>& q )
 
 template<typename type>
 symd<type>
-symd<type>::sandwich( const symd<type>& B ) const
-{
-	symd<type> C(n_);
+symd<type>::sandwich( const symd<type>& B ) const {
 
 	avro_assert( n_>=2 && n_<=4 );
+
+	symd<type> C(n_);
 
 	type A1_1 = operator()(0,0); type A1_2 = operator()(0,1);
 	type A2_1 = operator()(1,0); type A2_2 = operator()(1,1);
 	type B1_1 = B(0,0); type B1_2 = B(0,1);
 	type B2_1 = B(1,0); type B2_2 = B(1,1);
 
-	if (n_==2)
+	if (n_ == 2)
 	{
 		C(0,0) = B1_1*(A1_1*B1_1+A2_1*B1_2)+B2_1*(A1_2*B1_1+A2_2*B1_2);
 		C(0,1) = B1_2*(A1_1*B1_1+A2_1*B1_2)+B2_2*(A1_2*B1_1+A2_2*B1_2);
 		C(1,1) = B1_2*(A1_1*B2_1+A2_1*B2_2)+B2_2*(A1_2*B2_1+A2_2*B2_2);
 	}
-	else if (n_==3)
+	else if (n_ == 3)
 	{
 		type A1_3 = operator()(0,2); type A2_3 = operator()(1,2); type A3_3 = operator()(2,2);
 		type A3_1 = A1_3; type A3_2 = A2_3;
@@ -120,7 +119,7 @@ symd<type>::sandwich( const symd<type>& B ) const
     C(1,2) = B1_3*(A1_1*B2_1+A2_1*B2_2+A3_1*B2_3)+B2_3*(A1_2*B2_1+A2_2*B2_2+A3_2*B2_3)+B3_3*(A1_3*B2_1+A2_3*B2_2+A3_3*B2_3);
     C(2,2) = B1_3*(A1_1*B3_1+A2_1*B3_2+A3_1*B3_3)+B2_3*(A1_2*B3_1+A2_2*B3_2+A3_2*B3_3)+B3_3*(A1_3*B3_1+A2_3*B3_2+A3_3*B3_3);
 	}
-	else if (n_==4)
+	else if (n_ == 4)
 	{
 		type A1_3 = operator()(0,2); type A2_3 = operator()(1,2); type A3_3 = operator()(2,2);
 		type A3_1 = A1_3; type A3_2 = A2_3;
@@ -153,30 +152,33 @@ symd<type>::sandwich( const symd<type>& B ) const
 // eigenvalues and eigenvectors
 template<typename type>
 std::pair< vecd<type>,matd<type> >
-symd<type>::eig() const
-{
+symd<type>::eig() const  {
+
   std::pair< vecd<type>,matd<type> > decomp = __eigivens__();
-  
-  // bound the result?
-  /*type lim = 1e30;
+	#if 0
+  // bound the result? this can be dangerous
+  type lim = 1e30;
   for (coord_t i = 0; i < decomp.first.m(); i++) {
     if (decomp.first[i] >  lim) decomp.first[i] =  lim;
     if (decomp.first[i] < -lim) decomp.first[i] = -lim;
-  }*/
+  }
+	#endif
   return decomp;
-/*
-  if (n_==2) return __eigivens__();
-  if (n_==3 || n_==4) return __eigivens__();
-  printf("unknown eigendecomposition for %ux%u tensors\n",n_,n_);
-  avro_assert_not_reached;
-	return { vecd<type>(n_) , matd<type>(n_,n_) };
-*/
+}
+
+// eigenvalues and eigenvectors
+template<>
+std::pair< vecd<real_t>,matd<real_t> >
+symd<real_t>::eig() const  {
+	// go for numerical stability with lapack when using real matrices
+	return numerics::eign(*this);
+  //std::pair< vecd<real_t>,matd<real_t> > decomp = __eigivens__();
+  //return decomp;
 }
 
 template<typename type>
 std::pair< vecd<type>,matd<type> >
-symd<type>::__eig2__() const
-{
+symd<type>::__eig2__() const {
   vecd<type> d(n_);
   matd<type> Q(n_,n_);
   type sqDelta,dd,trm,vnorm;
@@ -200,8 +202,7 @@ symd<type>::__eig2__() const
   Q(0,1) = (d[0] -data_[0]);
   vnorm = ::sqrt( Q(0,0)*Q(0,0) +Q(0,1)*Q(0,1) );
 
-  if (vnorm < tol)
-  {
+  if (vnorm < tol) {
     Q(0,0) = (d[0] -data_[2]);
     Q(0,1) = data_[1];
     vnorm = ::sqrt( Q(0,0)*Q(0,0) +Q(0,1)*Q(0,1) );
@@ -308,7 +309,7 @@ symd<type>::__eigivens__() const {
           }
 
           // update eigenvectors
-          for (coord_t r=0;r<n_;r++) {
+          for (coord_t r = 0; r < n_; r++) {
             t = E(r,p);
             E(r,p) = c*t -s*E(r,q);
             E(r,q) = s*t +c*E(r,q);
@@ -351,8 +352,7 @@ void
 symd<real_t>::display( const std::string& title ) const {
   if (!title.empty()) printf("%s\n",title.c_str());
   else printf("SPT:\n");
-  for (index_t i = 0; i < n_; i++)
-  {
+  for (index_t i = 0; i < n_; i++) {
     printf("[ ");
     for (index_t j = 0; j < n_;j++)
       printf("%.5e ",operator()(i,j));
@@ -365,14 +365,11 @@ void
 symd<real_t>::for_matlab( const std::string& title ) const {
 	if (!title.empty()) printf("%s = [",title.c_str());
   else printf("A = [");
-  for (index_t i = 0; i < n_; i++)
-  {
-    for (index_t j = 0; j < n_; j++)
-		{
+  for (index_t i = 0; i < n_; i++) {
+    for (index_t j = 0; j < n_; j++) {
       printf("%.8e",operator()(i,j));
 			if (int(j)<n_-1) printf(",");
-			else
-			{
+			else {
 				if (int(i)<n_-1)
 					printf(";");
 			}
