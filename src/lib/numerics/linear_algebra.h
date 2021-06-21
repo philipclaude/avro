@@ -70,6 +70,7 @@ template<typename type> type       det( const symd<type>& M );
 template<typename T> symd<T>       inverse( const symd<T>& M );
 template<typename T> void eig( const symd<T>& m , vecd<T>& L , matd<T>& Q );
 template<typename T> std::pair< vecd<T> , matd<T> > eig( const symd<T>& m );
+template<typename T> std::pair< vecd<T> , matd<T> > eign( const symd<T>& m);
 template<typename T> symd<T> interp( const std::vector<real_t>& alpha , const std::vector<symd<T>>& tensors);
 template<typename type> type quadratic_form( const symd<type>& M , const vecd<real_t>& e );
 

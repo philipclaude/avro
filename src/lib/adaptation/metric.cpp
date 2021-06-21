@@ -468,7 +468,7 @@ MetricAttachment::set_cells( const Topology<type>& topology ) {
 
 template<typename type>
 void
-MetricAttachment::limit( const Topology<type>& topology , real_t href ) {
+MetricAttachment::limit( const Topology<type>& topology , real_t href , bool quiet ) {
 	const coord_t dim = topology.number();
 	if (!topology.element().parameter())
 		avro_assert_msg( topology.points().dim() == dim , "dim = %u , num = %u" , topology.points().dim() , dim );
@@ -480,7 +480,7 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href ) {
 	// compute the implied metric of the input topology
 	MeshImpliedMetric<type> implied( topology );
 	implied.initialize();
-	implied.optimize();
+	implied.optimize(quiet);
 
 	// go through the entries of the current field and limit them using the step
 	index_t nb_limited = 0;
@@ -525,7 +525,8 @@ MetricAttachment::limit( const Topology<type>& topology , real_t href ) {
 		this->operator[](k).set(mk);
 		this->operator[](k).calculate();
 	}
-	printf("limited %lu metrics out of %lu\n",nb_limited,this->nb());
+	if (!quiet)
+		printf("limited %lu metrics out of %lu\n",nb_limited,this->nb());
 }
 
 void
@@ -658,6 +659,6 @@ MetricAttachment::from_solb( const std::string& filename ) {
 
 template class MetricField<Simplex>;
 template void MetricAttachment::set_cells( const Topology<Simplex>& );
-template void MetricAttachment::limit(const Topology<Simplex>&,real_t);
+template void MetricAttachment::limit(const Topology<Simplex>&,real_t, bool);
 
 } // avro

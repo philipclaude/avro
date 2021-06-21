@@ -441,7 +441,7 @@ adapt( AdaptationProblem& problem )
   {
     // option to limit the metric field from the current mesh-implied metric
     // any problematic vertices will be fixed
-    field.limit(mesh_topology,2.0);
+    field.limit(mesh_topology,1.7);
   }
 
   // create a discrete metric with the input topology

@@ -135,7 +135,7 @@ ElementImpliedMetric<type>::determinant( const std::vector<const real_t*>& xk )
 {
   element_.jacobian( xk , J0_ );
   real_t detJ0 = numerics::det(J0_);
-  if (detJ0==0.0) return 0.0;
+  if (detJ0 == 0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
 }
 
@@ -145,7 +145,7 @@ ElementImpliedMetric<type>::determinant( const Points& points , const index_t* v
 {
   element_.jacobian( v, nv, points , J0_ );
   real_t detJ0 = numerics::det(J0_);
-  if (detJ0==0.0) return 0.0;
+  if (detJ0 == 0.0) return 0.0;
   return 1./( detJ0*detJ0*detJeq_*detJeq_ );
 }
 
@@ -536,7 +536,7 @@ impliedMetric_objective( unsigned n , const double* x , double* grad, void* data
 
 template<typename type>
 void
-MeshImpliedMetric<type>::optimize()
+MeshImpliedMetric<type>::optimize(bool quiet)
 {
   // compute the number of variables
   coord_t n = topology_.points().dim();
@@ -580,18 +580,21 @@ MeshImpliedMetric<type>::optimize()
   opt.set_maxeval(200);
 
 	// optimize the step matrices
-  printf("optimizing implied metric...\n");
+  if (!quiet)
+    printf("optimizing implied metric...\n");
 	real_t f_opt;
 	nlopt::result result = nlopt::result::SUCCESS;
   result = opt.optimize( x , f_opt );
-  printf("done!\n");
-  printf("summary:\n");
-	printf("\tresult = %s\n",nloptResultDescription(result).c_str());
-	printf("\teval_count = %lu, objective = %3.6e\n",data.eval_count,data.objective);
-  printf("\tcomplexity = %g\n",data.complexity);
-  printf("\tdeviation = %g\n",data.deviation);
+  if (!quiet) {
+    printf("summary:\n");
+    printf("\tresult = %s\n",nloptResultDescription(result).c_str());
+    printf("\teval_count = %lu, objective = %3.6e\n",data.eval_count,data.objective);
+    printf("\tcomplexity = %g\n",data.complexity);
+    printf("\tdeviation = %g\n",data.deviation);
+  }
 
 	// store the result
+  index_t nb_bad = 0;
 	for (index_t k=0;k<topology_.points().nb();k++)
 	{
 
@@ -611,12 +614,11 @@ MeshImpliedMetric<type>::optimize()
     real_t detm = numerics::det(this->data_[k]);
     if (detm <= 0.0)
     {
-      printf("detm = %g\n",detm);
-
       // forget about the step
+      nb_bad++;
       this->data_[k] = nodalMetricSqrt_[k]*nodalMetricSqrt_[k];
 
-      printf("detm = %g! -> fixing ball of vertex %lu",detm,k);
+      printf("detm = %g! -> fixing ball of vertex %lu\n",detm,k);
 
       // this will segfault if the inverse topology is not constructed
       std::vector<index_t> ball;
@@ -624,12 +626,11 @@ MeshImpliedMetric<type>::optimize()
       for (index_t j=0;j<ball.size();j++)
       for (index_t i=0;i<topology_.nv(ball[j]);i++)
         topology_.points().set_fixed( topology_(ball[j],i) , true );
-
-      printf("detm = %g! -> fixing ball of vertex %lu",detm,k);
-
     }
     //avro_assert_msg( detm > 0. , "detm = %g for vertex %lu",detm,k );
 	}
+  if (nb_bad > 0)
+    printf("there were %lu bad vertices when computing the implied metric :(\n",nb_bad);
 }
 
 template class ElementImpliedMetric<Simplex>;

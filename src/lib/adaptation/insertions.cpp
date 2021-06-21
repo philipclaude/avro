@@ -104,6 +104,8 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
 }
 
 
+static const index_t EXPECTED_VALENCY[5] = {0,2,10,30,150};
+
 template<typename type>
 bool
 Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell )
@@ -274,6 +276,11 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     return false;
   }
 
+  if (this->boundary().nb() > 2*EXPECTED_VALENCY[this->number()]) {
+    this->topology_.remove_point(ns);
+    return false;
+  }
+
 
   if (entitys!=NULL && entitys->number()==2)
   {
@@ -395,8 +402,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     std::unordered_set<index_t> flagged;
     std::vector<index_t> shell;
     std::vector<index_t> N;
-    for (index_t k=0;k<filter.nb_candidates();k++)
-    {
+    for (index_t k = 0; k < filter.nb_candidates(); k++) {
+
       // index of the vertex stored in the filter
       index_t idx = filter.candidate(k);
 
@@ -408,19 +415,22 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
-      if (topology_.points().fixed(n0) && topology_.points().fixed(n1))
+      if (topology_.points().fixed(n0) && topology_.points().fixed(n1)) {
+        topology_.points().age( n0 )++;
+        topology_.points().age( n1 )++;
         continue;
+      }
 
       // do not insert on ghost edges
-      if (n0<topology_.points().nb_ghost() ||
-          n1<topology_.points().nb_ghost())
+      if (n0 < topology_.points().nb_ghost() ||
+          n1 < topology_.points().nb_ghost())
         continue;
 
       // check if the points were removed or flagged
-      if (removed.find(n0)!=removed.end() || removed.find(n1)!=removed.end())
+      if (removed.find(n0) != removed.end() || removed.find(n1) != removed.end())
         continue;
 
-      if (flagged.find(n0)!=flagged.end() || flagged.find(n1)!=flagged.end())
+      if (flagged.find(n0) != flagged.end() || flagged.find(n1) != flagged.end())
         continue;
 
       // the metric needs to be interpolated for the filter to evaluate lengths
@@ -458,21 +468,15 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t Lmin = sqrt(0.5);
 
       // if the current length is greater than 4.0, we need to be more flexible
-      if (lk>4.0) Lmin = 0.0;
-
-      // loossen up the minimum length if this is a partition boundary
-      //bool fixed = (topology_.points().fixed(n0) || topology_.points().fixed(n1));
-      //if (fixed) Lmin = 0.01;
+      //if (lk>4.0) Lmin = 0.0; // philip: commented june 15 2021
 
       // also relax the insertion criterion when we insert on geometry Edges
       Entity* ge = inserter_.geometry(n0,n1);
-      if (ge!=NULL && ge->number()==1)
+      if (ge != NULL && ge->number() == 1)
         Lmin = 0.25;
 
-
-      #if 1 // philip april 23rd
+      // set the geometry entity for the inserted point
       topology_.points().set_entity(ns,ge);
-      #endif
 
       for (index_t j=0;j<N.size();j++)
       {
@@ -525,8 +529,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // if the inserter was enlarged, don't be too restrictive with quality
       real_t qwi = worst_quality(inserter_,metric_);
-      if (qwi<Q0)
-      {
+      if (qwi < Q0) {
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
@@ -567,20 +570,21 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       topology_.apply(inserter_);
       avro_assert( metric_.check(topology_) );
 
+      // set the age of the endpoint vertices to 0 since a split was performed
+      topology_.points().set_age( n0 , 0 );
+      topology_.points().set_age( n1 , 0 );
+
       // determine if any points were removed
-      for (index_t j=0;j<inserter_.nb_removed_nodes();j++)
-      {
+      for (index_t j=0;j<inserter_.nb_removed_nodes();j++) {
         index_t removed_node = inserter_.removed_node(j);
-        if (removed.find(removed_node)==removed.end())
-        {
+        if (removed.find(removed_node)==removed.end()) {
           printf("vertex %lu was removed!\n",removed_node);
           removed.insert( removed_node );
         }
       }
 
       // check if the cavity was enlarged to turn off some of the existing edges
-      if (inserter_.enlarged())
-      {
+      if (inserter_.enlarged()) {
         // turn off points in the cavity, we can attempt them on the next pass
         const std::vector<index_t>& nodes = inserter_.nodes();
         for (index_t j=0;j<nodes.size();j++)
@@ -601,8 +605,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
     std::sort( removed_indices.begin() , removed_indices.end() );
     std::reverse( removed_indices.begin() , removed_indices.end() );
-    for (index_t j=0;j<removed_indices.size();j++)
-    {
+    for (index_t j = 0; j < removed_indices.size(); j++) {
       topology_.remove_point( j );
       metric_.remove(j);
       topology_.inverse().remove(j);

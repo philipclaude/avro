@@ -38,7 +38,7 @@ public:
     symd<real_t> m(dim_);
 
     real_t H_ = 5.;
-		real_t f_ = 10.;
+		real_t f_ = 5.;
 		real_t A_ = 2.;
 		real_t P_ = 5.;
 		real_t y0_ = 5.;
@@ -65,7 +65,7 @@ public:
   {
     symd<real_t> m(dim_);
 
-    real_t hu = 0.1;
+    real_t hu = 0.01;
     real_t h0 = hu/100;
     real_t hy = h0 +2.*(hu -h0)*fabs( x[1] -0.5 );
     real_t hx = hu;//h0 +2.*(hu -h0)*fabs( x[0] -0.5 );
@@ -92,11 +92,13 @@ UT_TEST_CASE( test1 )
 
   EGADS::Context context;
   #if 1
+  dim = number = 3;
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
-  library::MetricField_UGAWG_Linear analytic;
+  //library::MetricField_UGAWG_Linear2 analytic;
+  library::MetricField_UGAWG_Polar1 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
@@ -104,6 +106,7 @@ UT_TEST_CASE( test1 )
   std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
   Topology<Simplex>& topology = *ptopology.get();
   #elif 0
+  dim = number = 2;
   std::vector<real_t> lens(number,10.);
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,20);
@@ -113,13 +116,15 @@ UT_TEST_CASE( test1 )
     topology.points()[k][d] *= 10.;
   library::MetricField_UGAWG_sin analytic;
   #else
+  dim = number = 4;
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
   library::Tesseract geometry(c,lengths);
   std::vector<index_t> dims(number,5);
   CKF_Triangulation topology(dims);
   //library::MetricField_Uniform analytic(number,0.25);
-  library::MetricField_Tesseract_Linear analytic;
+  //library::MetricField_Tesseract_Wave analytic;
+  library::MetricField_Tesseract_Linear analytic(0.00125);
   #endif
   topology.points().attach(geometry);
 
@@ -127,28 +132,29 @@ UT_TEST_CASE( test1 )
   params.standard();
 
   std::vector<VertexMetric> metrics(topology.points().nb());
-  for (index_t k=0;k<topology.points().nb();k++)
+  for (index_t k = 0; k < topology.points().nb(); k++)
     metrics[k] = analytic( topology.points()[k] );
 
   params.partitioned() = false;
   params.balanced() = true; // assume load-balanced once the first partition is computed
   params.curved() = false;//true;
-  params.insertion_volume_factor() = -1;
+  params.insertion_volume_factor() = (number <= 3) ? -1 : std::sqrt(2.0);
   params.limit_metric() = true;
-  params.max_passes() = 4*number;
+  params.max_passes() = 3;
+  params.parallel_method() = "migrate";
   params.swapout() = false;
   params.has_uv() = true;
+  params.elems_per_processor() = 5000;
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
-  manager.set_analytic( &analytic );
 
   index_t rank = mpi::rank();
 
-  index_t niter = 5;
-  for (index_t iter=0;iter<=niter;iter++)
-  {
+  index_t niter = 10;
+  for (index_t iter = 0; iter <= niter; iter++) {
+
     params.adapt_iter() = iter;
     params.limit_metric() = true;
     if (rank == 0)
@@ -159,7 +165,7 @@ UT_TEST_CASE( test1 )
 
     // re-evaluate the metrics
     metrics.resize( manager.topology().points().nb() );
-    for (index_t k=0;k<metrics.size();k++)
+    for (index_t k = 0; k < metrics.size(); k++)
       metrics[k] = analytic( manager.topology().points()[k] );
 
     manager.reassign_metrics(metrics);

@@ -227,7 +227,7 @@ GLFW_Window::mouse_scroll_callback(double xpos, double ypos)
 {
   //if (!modify_clip_plane_)
   controls_.mouse_wheel(xpos,ypos);
-  clip_controls_.mouse_wheel(xpos,ypos);
+  //clip_controls_.mouse_wheel(xpos,ypos);
   draw();
 }
 
@@ -499,7 +499,7 @@ GLFW_Window::end_draw()
 {
   if (interface_ != nullptr)
     interface_->end_draw();
-  glfwSwapBuffers(window_);
+  //glfwSwapBuffers(window_);
 
   bool clip_updated = clip_controls_.update();
   if (modify_clip_plane_ && clip_updated)

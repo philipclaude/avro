@@ -592,7 +592,7 @@ BoundaryPoints::BoundaryPoints( const Points& points , bool meta ) :
 
   if (count==0)
   {
-    printf("[warning] no boundary points found! adding all points!\n");
+    //printf("[warning] no boundary points found! adding all points!\n");
     for (index_t k=0;k<points.nb();k++)
     {
       if (k<points.nb_ghost()) continue;

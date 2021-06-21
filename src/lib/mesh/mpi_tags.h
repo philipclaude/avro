@@ -8,6 +8,7 @@
 #define TAG_GEOMETRY_NUMBERS 3
 #define TAG_LOCAL2GLOBAL 4
 #define TAG_FIXED 5
+#define TAG_AGE 6
 
 // topology tags
 #define TAG_CELL_INDEX 11

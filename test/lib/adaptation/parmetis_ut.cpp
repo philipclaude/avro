@@ -33,29 +33,33 @@ UT_TEST_CASE( test1 )
 
   std::vector<PARM_INT> xadj;
   std::vector<PARM_INT> adjncy;
+  std::vector<PARM_INT> egwt;
   std::vector<PARM_INT> vtxdist = {0,5,10,15};
   if (rank == 0)
   {
     xadj   = {0,2,5,8,11,13};
     adjncy = {1,5,0,2,6,1,3,7,2,4,8,3,9};
+    egwt   = {1,1,1,1,1,1,1,1,1,1,1,1,1};
   }
   else if (rank == 1)
   {
     xadj   = {0,3,7,11,15,18};
     adjncy = {0,6,10,1,5,7,11,2,6,8,12,3,7,9,13,4,8,14};
+    egwt   = {1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1, 1};
   }
   else if (rank == 2)
   {
     xadj   = {0,2,5,8,11,13};
     adjncy = {5,11,6,10,12,7,11,13,8,12,14,9,13};
+    egwt   = {1, 1,1, 1, 1,1, 1, 1,1, 1, 1,1, 1};
   }
   else
     avro_assert_not_reached;
 
     // setup the parmetis version of the adjacency graph
     PARM_INT *pvwgt = NULL;
-    PARM_INT *padjwgt = NULL;
-    PARM_INT wgtflag = 0;
+    PARM_INT *padjwgt = egwt.data();//NULL;
+    PARM_INT wgtflag = 1; // 0 = no weights, 1 = edge weights, 2 = vertex weights, 3 = both
     PARM_INT edgecut = 0;
     PARM_INT bias = 0;
     PARM_INT ncon = 1;
@@ -63,11 +67,18 @@ UT_TEST_CASE( test1 )
 
     std::vector<PARM_REAL> tpwgts(ncon*nparts,1./nparts);
     std::vector<PARM_REAL> ubvec(ncon,1.05);
-    PARM_INT options[4];
-    options[0] = 1;
+    PARM_INT options[METIS_NOPTIONS];
+    /*options[0] = 1;
     options[1] = 3;
     options[2] = 0;
-    options[3] = PARMETIS_PSR_COUPLED;
+    options[3] = PARMETIS_PSR_COUPLED;*/
+
+    METIS_SetDefaultOptions[METIS_NOPTIONS];
+    options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
+    options[METIS_OPTION_DBGLVL] = METIS_DBG_INFO;
+
+
+
     mpi::barrier();
 
     index_t nb_vert = 5;
@@ -97,6 +108,7 @@ UT_TEST_CASE( test1 )
                             part.data(),
                             &comm);
     #endif
+    printf("edge cut = %d\n",edgecut);
     mpi::barrier();
 
     print_inline(part);

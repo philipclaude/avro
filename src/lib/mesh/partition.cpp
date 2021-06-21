@@ -278,6 +278,7 @@ Topology_Partition<type>::convert( const Points& points )
     points_.set_entity( k , points.entity(global) );
     points_.set_fixed( k , points.fixed(global) );
     points_.set_global( k , points.global(global) );
+    points_.set_age( k , points.age(global) );
   }
 
   for (index_t k=0;k<this->nb();k++)
@@ -325,6 +326,7 @@ Topology_Partition<type>::receive( index_t sender )
   std::vector<int> geometry_numbers = mpi::receive<std::vector<int>>(sender,TAG_GEOMETRY_NUMBERS);
   std::vector<int> global = mpi::receive<std::vector<int>>(sender,TAG_LOCAL2GLOBAL);
   std::vector<int> fixed = mpi::receive<std::vector<int>>(sender,TAG_FIXED);
+  std::vector<int> age = mpi::receive<std::vector<int>>(sender,TAG_AGE);
 
   coord_t dim = points_.dim();
   coord_t udim = points_.udim();
@@ -344,6 +346,7 @@ Topology_Partition<type>::receive( index_t sender )
     else
       points_.set_fixed(k,false);
     points_.set_global( k , global[k] );
+    points_.set_age( k , age[k] );
   }
 }
 
@@ -367,6 +370,7 @@ Topology_Partition<type>::send( index_t receiver ) const
   std::vector<int> geometry_numbers( nb_points , -1 );
   std::vector<int> fixed( nb_points , 0 );
   std::vector<int> global( nb_points , -1 );
+  std::vector<int> age( nb_points , -1 );
 
   for (index_t k=0;k<nb_points;k++)
   {
@@ -383,6 +387,7 @@ Topology_Partition<type>::send( index_t receiver ) const
     }
     if (points_.fixed(k)) fixed[k] = 1;
     global[k] = points_.global(k);
+    age[k] = points_.age(k);
   }
 
   mpi::send( mpi::blocking{} , coordinates , receiver , TAG_COORDINATE );
@@ -391,6 +396,7 @@ Topology_Partition<type>::send( index_t receiver ) const
   mpi::send( mpi::blocking{} , geometry_numbers , receiver , TAG_GEOMETRY_NUMBERS );
   mpi::send( mpi::blocking{} , global , receiver , TAG_LOCAL2GLOBAL );
   mpi::send( mpi::blocking{} , fixed , receiver , TAG_FIXED );
+  mpi::send( mpi::blocking{} , age , receiver , TAG_AGE );
 }
 
 template<typename type>

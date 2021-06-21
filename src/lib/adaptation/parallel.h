@@ -4,6 +4,7 @@
 #include "common/types.h"
 
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -58,7 +59,7 @@ public:
 
 private:
 
-  void migrate_balance();
+  void migrate_balance( index_t nb_part );
   void migrate_interface();
 
   void send_metrics( index_t receiver , const std::vector<index_t>& global_indices , const std::vector<VertexMetric>& metrics , bool global_flag );
@@ -80,6 +81,8 @@ private:
   std::vector<index_t> crust_;
 
   library::MetricField_Analytic* analytic_;
+
+  std::vector<bool> active_;
 };
 
 } // avro

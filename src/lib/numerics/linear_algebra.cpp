@@ -125,6 +125,7 @@ range( const matd<real_t>& A , matd<real_t>& U0 ) {
   int lwork = std::max( 3*std::min(M,N)+std::max(M,N),5*std::min(M,N)-4 ) +10;
   std::vector<double> work( lwork );
 
+  // TODO matd's are now column major, so we don't need temporary anymore
   std::vector<double> tdata( m*n );
   for (int i = 0; i < m; i++)
   for (int j = 0; j < n; j++)
@@ -144,7 +145,7 @@ range( const matd<real_t>& A , matd<real_t>& U0 ) {
 
   // analyze the singular values to determine the rank
   std::vector<double> s;
-  if (m ==0 ) s.push_back( S[0] );
+  if (m == 0 ) s.push_back( S[0] );
   else if (m > 0)
   {
     for (int i =0 ; i < m; i++)
@@ -226,6 +227,44 @@ eign( const matd<real_t>& A , vecd<real_t>& L ) {
   dgeev_(&jobvl,&jobvr,&m,const_cast<real_t*>(&A(0,0)),&stride,&L[0],&wi[0],vl,&ldvl,vr,&ldvr,&work[0],&lwork,&INFO);
   avro_assert_msg( INFO == 0, "INFO == %d", INFO );
   #endif
+}
+
+template<>
+std::pair< vecd<real_t> , matd<real_t> >
+eign( const symd<real_t>& A ) {
+
+  avro_assert( A.m() == A.n()  );
+  int n = A.n();
+
+  vecd<real_t> L(n);
+  matd<real_t> Q(n,n);
+
+  #if 0 //ndef AVRO_NO_LAPACK
+  avro_implement;
+  #else
+  char jobvl = 'N';  // do not compute left eigenvectors
+  char jobvr = 'V';  // compute right eigenvectors
+  real_t *vl = NULL; // left eigenvector place holder
+  int ldvl = 1;
+  std::vector<real_t> vr(n*n);    // right eigenvector place holder
+  int ldvr = n;
+  int m = A.m();
+  int stride = m;
+  int lwork = 16*A.m();
+  std::vector<real_t> work( lwork );
+  std::vector<real_t> wi( m );
+  int INFO;
+
+  matd<real_t> Atmp(A);
+  dgeev_(&jobvl,&jobvr,&m,&Atmp(0,0),&stride,&L[0],&wi[0],vl,&ldvl,vr.data(),&ldvr,&work[0],&lwork,&INFO);
+  avro_assert_msg( INFO == 0, "INFO == %d", INFO );
+
+  index_t k = 0;
+  for (index_t j = 0; j < n; j++) // through columns
+  for (index_t i = 0; i < n; i++) // through rows
+    Q(i,j) = vr[k++];
+  #endif
+  return {L,Q};
 }
 
 template<typename T>

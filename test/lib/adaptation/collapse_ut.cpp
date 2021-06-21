@@ -284,7 +284,7 @@ UT_TEST_CASE(CKF_2d)
   plotter->addPlot(debugger);
   //plotter->addPlot(bplot0);
   plotter->addPlot(bplotf);
-  plotter->run();
+  //plotter->run();
 }
 UT_TEST_CASE_END(CKF_2d)
 

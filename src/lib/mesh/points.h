@@ -73,10 +73,13 @@ public:
   void set_param( const index_t k , const real_t* u );
   void set_fixed( const index_t k , bool f ) { fixed_.set(k,f); }
   void set_global( const index_t k , index_t g ) { global_.set(k,g); }
+  void set_age( const index_t k , index_t a ) { age_.set(k,a); }
 
   Entity* entity( const index_t k ) const { return primitive_[k]; }
   bool fixed( const index_t k ) const { return fixed_[k]; }
   index_t global( const index_t k ) const { return global_[k]; }
+  index_t age( const index_t k ) const { return age_[k]; }
+  index_t& age( const index_t k ) { return age_[k]; }
 
   // boundary vertex query function
   bool boundary( const index_t k ) const;
@@ -133,6 +136,7 @@ protected:
   Array<bool>    fixed_;     // whether this vertex is tagged as fixed
   Array<index_t> global_;    // global id of this vertex (used for parallel algorithms), 1-bias since 0 = GLOBAL_UNSET
   Table<int>     incidence_; // vertex-facet/bisector incidence matrix
+  Array<index_t> age_;
 
   index_t nb_ghost_; // how many ghost vertices
 
