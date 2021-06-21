@@ -387,13 +387,18 @@ public:
       avro_assert( elem0 != elem1 );
 
       // determine the weight on this edge from the age of the elements, or if they are fixed
+      #if 1
       index_t q0 = (ghost.find(elem0) == ghost.end()) ? elem_age[local.at(elem0)] : penalty;
       index_t q1 = (ghost.find(elem1) == ghost.end()) ? elem_age[local.at(elem1)] : penalty;
+      #else
+      index_t q0 = (ghost.find(elem0) == ghost.end()) ? 1 : penalty;
+      index_t q1 = (ghost.find(elem1) == ghost.end()) ? 1 : penalty;
+      #endif
 
-      //bool f0 = fixed.find(elem0) != fixed.end() || ghost.find(elem0) != ghost.end();
-      //bool f1 = fixed.find(elem1) != fixed.end() || ghost.find(elem1) != ghost.end();
-      //if (f0) q0 = penalty;
-      //if (f1) q1 = penalty;
+      bool f0 = fixed.find(elem0) != fixed.end() || ghost.find(elem0) != ghost.end();
+      bool f1 = fixed.find(elem1) != fixed.end() || ghost.find(elem1) != ghost.end();
+      if (f0) q0 = penalty;
+      if (f1) q1 = penalty;
 
       // only add adjacency information for vertices (elements) on this processor
       if (ghost.find(elem0) == ghost.end()) {
@@ -1428,7 +1433,7 @@ AdaptationManager<type>::fix_boundary() {
     if (topology_.points().fixed(k))
       pts.push_back(k);
   }
-  avro_msgp("detected "+ std::to_string(pts.size()) + " non-manifold vertices out of " + std::to_string(topology_.points().nb()) + "!");
+  //avro_msgp("detected "+ std::to_string(pts.size()) + " non-manifold vertices out of " + std::to_string(topology_.points().nb()) + "!");
 
   // compute the boundary
   Facets facets(topology_);
@@ -1549,7 +1554,7 @@ fix_conforming( Topology<type>& topology , const std::vector<VertexMetric>& metr
   for (index_t k = 0; k < topology.points().nb(); k++) {
     if (topology.points().fixed(k)) nb_fixed++;
   }
-  printf("there are %lu fixed points out of %lu\n",nb_fixed,topology.points().nb());
+  //printf("there are %lu fixed points out of %lu\n",nb_fixed,topology.points().nb());
 }
 
 void
@@ -1748,7 +1753,7 @@ AdaptationManager<type>::adapt() {
     if (method == "recursive" && pass > 0) {
       //fix_conforming( topology_ , metrics_ );
     }
-    if (pass > 0) fix_conforming( topology_ , metrics_ );
+    //if (pass > 0) fix_conforming( topology_ , metrics_ );
 
 
     // create the mesh we will write to
@@ -1863,7 +1868,7 @@ AdaptationManager<type>::adapt() {
       if (nb_part > index_t(mpi::size())) nb_part = mpi::size();
     }
 
-    if (rank_ == 0) printf("--> performing load balance & interface migration with %lu partitions\n",nb_part);
+    if (rank_ == 0) printf("--> performing load balance & interface migration for %lu elements on %lu partitions\n",topology_out->nb(),nb_part);
     migrate_balance( nb_part );
     pass++;
   }

@@ -171,9 +171,9 @@ template<>
 std::pair< vecd<real_t>,matd<real_t> >
 symd<real_t>::eig() const  {
 	// go for numerical stability with lapack when using real matrices
-	return numerics::eign(*this);
-  //std::pair< vecd<real_t>,matd<real_t> > decomp = __eigivens__();
-  //return decomp;
+	//return numerics::eign(*this);
+  std::pair< vecd<real_t>,matd<real_t> > decomp = __eigivens__();
+  return decomp;
 }
 
 template<typename type>

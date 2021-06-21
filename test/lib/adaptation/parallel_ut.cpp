@@ -92,12 +92,13 @@ UT_TEST_CASE( test1 )
 
   EGADS::Context context;
   #if 1
+  dim = number = 3;
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
-  library::MetricField_UGAWG_Linear2 analytic;
-  //library::MetricField_UGAWG_Polar1 analytic;
+  //library::MetricField_UGAWG_Linear2 analytic;
+  library::MetricField_UGAWG_Polar1 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
@@ -151,7 +152,7 @@ UT_TEST_CASE( test1 )
 
   index_t rank = mpi::rank();
 
-  index_t niter = 0;
+  index_t niter = 10;
   for (index_t iter = 0; iter <= niter; iter++) {
 
     params.adapt_iter() = iter;

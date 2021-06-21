@@ -104,6 +104,8 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
 }
 
 
+static const index_t EXPECTED_VALENCY[5] = {0,2,10,30,150};
+
 template<typename type>
 bool
 Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell )
@@ -270,6 +272,11 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   // check if all produce elements have a positive determinant of implied metric
   if (!this->positive_implied_metrics())
   {
+    this->topology_.remove_point(ns);
+    return false;
+  }
+
+  if (this->boundary().nb() > 2*EXPECTED_VALENCY[this->number()]) {
     this->topology_.remove_point(ns);
     return false;
   }

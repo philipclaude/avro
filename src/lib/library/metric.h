@@ -103,39 +103,7 @@ public:
     MetricField_Analytic(3)
   {}
 
-  symd<real_t> operator()( const real_t* x ) const
-  {
-    real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
-    real_t t = atan2( x[1] , x[0] );
-
-    real_t hz = 0.1;
-    real_t ht = 0.1;
-    real_t h0 = 1e-3;
-    real_t hr = h0 +2.*(0.1 -h0)*fabs( r -0.5 );
-
-    matd<real_t> Q(3,3);
-    Q(0,0) = cos(t);
-    Q(0,1) = -sin(t);
-    Q(0,2) = 0.0;
-
-    Q(1,0) = sin(t);
-    Q(1,1) = cos(t);
-    Q(1,2) = 0.0;
-
-    Q(2,0) = 0.0;
-    Q(2,1) = 0.0;
-    Q(2,2) = 1.0;
-
-    vecd<real_t> lambda(3);
-    lambda[0] = 1./(hr*hr);
-    lambda[1] = 1./(ht*ht);
-    lambda[2] = 1./(hz*hz);
-
-    matd<real_t> M = Q* (numerics::diag(lambda)*numerics::transpose(Q));
-    symd<real_t> m(3);
-    m.set(M);
-    return m;
-  }
+  symd<real_t> operator()( const real_t* x ) const;
 };
 
 

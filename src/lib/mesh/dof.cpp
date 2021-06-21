@@ -34,6 +34,20 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
   real_t d = numerics::det(T);
   if (d<=0 || std::isnan(d))
   {
+
+    // find all nonzero coefficients
+    std::vector<real_t> alpha;
+    std::vector<index_t> idx_alpha;
+    for (index_t k = 0; k < nv; k++) {
+      if (phi[k] < 1e-8) continue;
+      alpha.push_back( phi[k] );
+      idx_alpha.push_back( idx[k] );
+    }
+
+    bool result = this->interpolate( idx_alpha.data() , idx_alpha.size() , alpha, pT );
+    avro_assert( result );
+    return true;
+
     for (index_t k=0;k<nv;k++)
     {
       //std::cout << (*this)( idx[k],0 ) << std::endl;
