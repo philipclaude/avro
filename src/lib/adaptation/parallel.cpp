@@ -1737,6 +1737,7 @@ AdaptationManager<type>::adapt() {
     fix_boundary();
 
     // option to limit the metrics - do not limit the metrics in the call to the mesh adapter
+    try {
     if (pass == 0 && params_.limit_metric()) {
       MetricAttachment attachment( topology_.points() , metrics_ );
       attachment.limit(topology_,2.0,true);
@@ -1747,6 +1748,11 @@ AdaptationManager<type>::adapt() {
       synchronize_metrics( topology_.points() , metrics_ );
     }
     params_.limit_metric() = false;
+    }
+    catch(...) {
+      printf("pass %lu: there was an error limiting the metric on processor %lu :(\n",pass,rank_);
+      mpi::abort(1);
+    }
 
     // in recursive mode, fix any vertices that touch edges/elements of good quality
     // this is important so that we don't adapt the full mesh
@@ -1757,7 +1763,6 @@ AdaptationManager<type>::adapt() {
 
 
     // create the mesh we will write to
-    // create a mesh and add the topology
     Mesh mesh(number,dim);
     std::shared_ptr<Topology<type>> ptopology = std::make_shared<Topology<type>>(mesh.points(),number);
     ptopology->TopologyBase::copy(topology_);
@@ -1826,6 +1831,12 @@ AdaptationManager<type>::adapt() {
         spacetime.extract();
         spacetime.write( "mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh" );
       }
+      std::vector<real_t> volumes( topology_out->nb() );
+      real_t v0 = topology_out->volume();
+      topology_out->get_volumes(volumes);
+      real_t min_v0 = *std::min_element( volumes.begin() , volumes.end() );
+      real_t max_v0 = *std::max_element( volumes.begin() , volumes.end() );
+      printf("--> volume = %g, min = %g, max = %g\n",topology_out->volume(),min_v0,max_v0);
     }
 
     // count vertex age (currently debugging info)

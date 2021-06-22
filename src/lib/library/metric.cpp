@@ -111,8 +111,9 @@ MetricField_UniformGeometry<type>::operator()( const Points& points , index_t p 
 }
 
 symd<real_t>
-MetricField_UGAWG_Polar1::operator()( const real_t* x ) const
-{
+MetricField_UGAWG_Polar1::operator()( const real_t* X ) const {
+  real_t eps = 1e-3;
+  real_t x[3] = { X[0]+eps, X[1]+eps, X[2] };
   real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
   real_t t = atan2( x[1] , x[0] );
 
@@ -140,11 +141,60 @@ MetricField_UGAWG_Polar1::operator()( const real_t* x ) const
   lambda[2] = 1./(hz*hz);
 
   for (coord_t d = 0; d < 3; d++)
-  lambda[d] *= 2;
+    lambda[d] *= 2;
 
-  matd<real_t> M = Q* (numerics::diag(lambda)*numerics::transpose(Q));
-  symd<real_t> m(3);
-  m.set(M);
+  //matd<real_t> M = Q* (numerics::diag(lambda)*numerics::transpose(Q));
+  //symd<real_t> m(3);
+  //m.set(M);
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {lambda,Q};
+  symd<real_t> m(decomp);
+
+  return m;
+}
+
+#define MIN(a,b) (a < b) ? (a) : (b);
+
+symd<real_t>
+MetricField_UGAWG_Polar2::operator()( const real_t* X ) const {
+  real_t eps = 1e-3;
+  real_t x[3] = { X[0]+eps, X[1]+eps, X[2] };
+  real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
+  real_t t = atan2( x[1] , x[0] );
+
+  real_t hz = 0.1;
+  real_t ht = 0.1;
+  real_t h0 = 1e-3;
+  real_t hr = h0 +2.*(0.1 -h0)*fabs( r -0.5 );
+
+  #if 0
+  real_t d = 10*(0.6 -r);
+  if (d < 0.0) ht = 0.1;
+  else ht = d/40. +0.1*(1. -d);
+  #else
+  real_t d0 = MIN( 10.0 * fabs(r - 0.5) , 1.0 );
+  ht = 0.1*d0 + 0.025*(1.0 -d0);
+  #endif
+
+  matd<real_t> Q(3,3);
+  Q(0,0) = cos(t);
+  Q(0,1) = -sin(t);
+  Q(0,2) = 0.0;
+
+  Q(1,0) = sin(t);
+  Q(1,1) = cos(t);
+  Q(1,2) = 0.0;
+
+  Q(2,0) = 0.0;
+  Q(2,1) = 0.0;
+  Q(2,2) = 1.0;
+
+  vecd<real_t> lambda(3);
+  lambda[0] = 1./(hr*hr);
+  lambda[1] = 1./(ht*ht);
+  lambda[2] = 1./(hz*hz);
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {lambda,Q};
+  symd<real_t> m(decomp);
   return m;
 }
 

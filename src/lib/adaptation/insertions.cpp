@@ -104,7 +104,7 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
 }
 
 
-static const index_t EXPECTED_VALENCY[5] = {0,2,10,30,150};
+static const index_t EXPECTED_VALENCY[5] = {0,2,3,10,20};
 
 template<typename type>
 bool
@@ -129,6 +129,7 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     elems_ = shell;
   }
   if (elems_.size()==0) return false;
+  if (elems_.size() > EXPECTED_VALENCY[this->topology_.number()]) return false;
 
   // index of the vertex to be inserted
   index_t ns = this->topology_.points().nb();
@@ -277,6 +278,8 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   }
 
   if (this->boundary().nb() > 2*EXPECTED_VALENCY[this->number()]) {
+    printf("expected valency exceeded!!!\n");
+    avro_implement;
     this->topology_.remove_point(ns);
     return false;
   }

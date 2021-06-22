@@ -98,7 +98,7 @@ UT_TEST_CASE( test1 )
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology(dims);
   //library::MetricField_UGAWG_Linear2 analytic;
-  library::MetricField_UGAWG_Polar1 analytic;
+  library::MetricField_UGAWG_Polar2 analytic;
   #elif 0
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
   Body& geometry = model.body(0);
@@ -144,7 +144,7 @@ UT_TEST_CASE( test1 )
   params.parallel_method() = "migrate";
   params.swapout() = false;
   params.has_uv() = true;
-  params.elems_per_processor() = 5000;
+  params.elems_per_processor() = 2000;
 
   topology.build_structures();
 
@@ -178,7 +178,7 @@ UT_TEST_CASE( test1 )
   Topology<Simplex> topology_out(points_out,number);
   manager.retrieve(topology_out);
 
-  if (rank==0)
+  if (rank == 0)
   {
     real_t volume = topology_out.volume();
     UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
