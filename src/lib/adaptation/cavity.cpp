@@ -39,7 +39,7 @@ Cavity<type>::Cavity( Topology<type>& _topology ) :
   check_visibility_(true),
   star_(0),
   boundary_( topology_.points() , topology_.number()-1 ),
-  minvol_(1e-12),
+  minvol_(1e-10),
   sign_(1.0),
   nb_error_(0),
   rethrow_(false),

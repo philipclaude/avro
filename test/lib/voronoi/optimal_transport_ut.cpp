@@ -15,29 +15,29 @@ UT_TEST_SUITE( optimal_transport_test_suite )
 
 UT_TEST_CASE( test_nd_polytope )
 {
-  //typedef Polytope type;
-  typedef Simplex type;
+  typedef Polytope type;
+  //typedef Simplex type;
   coord_t numberL = 2;
   coord_t numberH = 2;
 
-  index_t nb_points = 1e2;
+  index_t nb_points = 1e1;
 
-  for (coord_t number = numberL; number <= numberH; number++)
-  {
+  for (coord_t number = numberL; number <= numberH; number++) {
+
     coord_t dim = number;
 
-    CubeDomain<type> domain(dim,10);
+    CubeDomain<type> domain(dim,dim,10);
     printf("dim = %u, nb_points = %lu\n",dim,nb_points);
 
     // create random delaunay vertices
     Delaunay delaunay( dim );
     std::vector<index_t> elems;
-    for (index_t k=0;k<nb_points;k++)
-    {
+    for (index_t k = 0; k < nb_points; k++) {
+
       index_t elem;
       std::vector<real_t> p(dim,0.);
-      if (typeid(type) == typeid(Simplex) && false)
-      {
+      if (typeid(type) == typeid(Simplex)) {
+
         // pick a random element
         elem = random_within(int(0),int(domain.nb()));
         index_t N = domain.nv(elem);
@@ -45,13 +45,11 @@ UT_TEST_CASE( test_nd_polytope )
 
         // randomize the barycentric coordinates
         alpha[N-1] = 1.0;
-        for (index_t j=0;j<N-1;j++)
-        {
-          alpha[j] = random_within(0.,1.0);
+        for (index_t j = 0; j < N-1; j++) {
+          alpha[j]   = random_within(0.,1.0);
           alpha[N-1] -= alpha[j];
         }
-        for (index_t j=0;j<N;j++)
-        {
+        for (index_t j = 0; j < N; j++) {
           if (alpha[j] < 0.0) alpha[j] = 0.0;
         }
 
@@ -60,8 +58,7 @@ UT_TEST_CASE( test_nd_polytope )
         for (index_t j = 0; j < N; j++)
           p[d] += alpha[j]*domain.points()[ domain(elem,j) ][d];
       }
-      else
-      {
+      else {
         elem = 0;
         for (coord_t d = 0; d < dim; d++)
           p[d] = random_within(0.0,1.0);

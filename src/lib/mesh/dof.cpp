@@ -24,18 +24,28 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
 
   symd<real_t> T(*pT);
 
-  T = 0;
+  T.zero();
   for (index_t k=0;k<nv;k++)
 	{
 		T = T + numerics::logm( (*this)( idx[k] , 0 ) )*phi[k];
 	}
 	T = numerics::expm(T);
 
+  #if 0
+  // check the eigenvalues
+  std::pair< vecd<real_t> , matd<real_t> > decomp = numerics::eig(T);
+  real_t hmin = 1e-8;
+  for (index_t d = 0; d < T.n(); d++) {
+    real_t h = 1./sqrt(decomp.first(d));
+    avro_assert( h > hmin );
+  }
+  #endif
+
   real_t d = numerics::det(T);
   if (d<=0 || std::isnan(d))
   {
-
     // find all nonzero coefficients
+    #if 0
     std::vector<real_t> alpha;
     std::vector<index_t> idx_alpha;
     for (index_t k = 0; k < nv; k++) {
@@ -47,6 +57,7 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
     bool result = this->interpolate( idx_alpha.data() , idx_alpha.size() , alpha, pT );
     avro_assert( result );
     return true;
+    #endif
 
     for (index_t k=0;k<nv;k++)
     {

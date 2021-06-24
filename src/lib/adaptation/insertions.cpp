@@ -104,8 +104,6 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
 }
 
 
-static const index_t EXPECTED_VALENCY[5] = {0,2,10,30,150};
-
 template<typename type>
 bool
 Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell )
@@ -276,12 +274,6 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
     return false;
   }
 
-  if (this->boundary().nb() > 2*EXPECTED_VALENCY[this->number()]) {
-    this->topology_.remove_point(ns);
-    return false;
-  }
-
-
   if (entitys!=NULL && entitys->number()==2)
   {
     // check if the insertion is visible to the boundary of the geometry
@@ -328,6 +320,8 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   return true;
 }
 
+static index_t MAX_VALENCY[5] = { 1 , 3 , 20 , 50 , 350 };
+
 template<typename type>
 void
 AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
@@ -352,7 +346,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
   real_t Q0 = worst_quality(topology_,metric_);
 
   // don't be too restrictive with insertions when the quality is already good
-  if (Q0>0.4) Q0 = 0.1;
+  if (Q0 > 0.4)  Q0 = 0.1;
+  if (Q0 < 1e-3) Q0 = 1e-3;
 
   std::vector<real_t> lens;
   metric_.lengths(topology_,lens);
@@ -487,6 +482,23 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           break;
         }
       }
+
+      // trying something (philip june 22, 2021)
+      real_t l0 = metric_.length( topology_.points() , n0 , ns ); 
+      real_t l1 = metric_.length( topology_.points() , n1 , ns );
+      //if (l0 >= lk && l1 >= lk) bad = true;
+
+      std::vector<index_t> surrounding;
+      for (index_t j = 0; j < N.size(); j++) {
+        if (N[j] < topology_.points().nb_ghost()) continue;
+        surrounding.clear();
+        topology_.inverse().ball( N[j] , surrounding );
+        if (surrounding.size() > MAX_VALENCY[topology_.number()]) {
+          bad = true;
+          break;
+        }
+      }
+      // end
 
       bool swapped;
       if (bad && limitlength)

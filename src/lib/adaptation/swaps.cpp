@@ -120,7 +120,6 @@ void
 AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 {
   index_t pass = 0;
-
   real_t lmin0 = -1;
   real_t lmax0 = -1;
   if (lcheck)
@@ -484,7 +483,7 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
   if (this->topology_.element().parameter())
   {
     avro_assert( ge!=nullptr );
-    avro_assert( ge->number()==2 ); // otherwise this shoudl have been caught by 'valid'
+    avro_assert( ge->number()==2 ); // otherwise this should have been caught by 'valid'
     avro_assert( this->C_.size()==2 );
 
     bool accept;

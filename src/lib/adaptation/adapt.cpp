@@ -334,6 +334,7 @@ adapt( AdaptationProblem& problem )
     redirected_fd = dup(fileno(stdout));
     redirected_fid = freopen(output_redirect.c_str(),"w",stdout);
   }
+  UNUSED( redirected_fid );
 
   params.standard();
   params.print();
@@ -346,6 +347,18 @@ adapt( AdaptationProblem& problem )
   // retrieve the background mesh and metric field
   Mesh& mesh = problem.mesh_in;
   std::vector<symd<real_t>>& fld = problem.fld;
+
+  #if 0
+  for (index_t k = 0; k < fld.size(); k++) {
+    const symd<real_t>& T = fld[k];
+    std::pair< vecd<real_t> , matd<real_t> > decomp = numerics::eig(T);
+    real_t hmin = 1e-8;
+    for (index_t d = 0; d < T.n(); d++) {
+      real_t h = 1./sqrt(decomp.first(d));
+      avro_assert( h > hmin );
+    }
+  }
+  #endif
 
   // extract the background topology
   avro_assert_msg( mesh.nb_topologies()==1 ,

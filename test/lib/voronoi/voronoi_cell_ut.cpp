@@ -79,7 +79,7 @@ UT_TEST_CASE( test_2d )
   vis.add_topology(diagram);
 
   vis.run();
-#endif
+  #endif
 }
 UT_TEST_CASE_END( test_2d )
 
