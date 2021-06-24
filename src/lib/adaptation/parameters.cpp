@@ -48,6 +48,7 @@ AdaptationParameters::standard()
   // parallel parameters
   if (!stringParams_.has("parallel method")) stringParams_["parallel method"] = "recursive";
   if (!intParams_.has("elems_per_processor")) intParams_["elems_per_processor"] = 10000;
+  if (!boolParams_.has("allow_serial")) boolParams_["allow_serial"] = true;
 }
 
 } // avro

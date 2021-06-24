@@ -61,6 +61,7 @@ public:
 
   std::string& parallel_method() { return stringParams_["parallel method"]; }
   int& elems_per_processor() { return intParams_["elems_per_processor"]; }
+  bool& allow_serial() { return boolParams_["allow_serial"]; }
 
   // set the default
   void standard();

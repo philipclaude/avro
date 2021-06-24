@@ -31,6 +31,16 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
 	}
 	T = numerics::expm(T);
 
+  #if 0
+  // check the eigenvalues
+  std::pair< vecd<real_t> , matd<real_t> > decomp = numerics::eig(T);
+  real_t hmin = 1e-8;
+  for (index_t d = 0; d < T.n(); d++) {
+    real_t h = 1./sqrt(decomp.first(d));
+    avro_assert( h > hmin );
+  }
+  #endif
+
   real_t d = numerics::det(T);
   if (d<=0 || std::isnan(d))
   {

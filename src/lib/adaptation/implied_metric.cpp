@@ -376,7 +376,8 @@ MeshImpliedMetric<type>::deviation( const std::vector<symd<real_t>>& Svec ,
       S.data(i).deriv(i) = 1.0; // derivative with respect to its own value is 1
 
     const MatrixSymSurrealVertex& sqrtM0 = nodalMetricSqrt_[k];
-    nodalMetric[k] = (numerics::expm(S)).sandwich(sqrtM0);
+    MatrixSymSurrealVertex expS = numerics::expm(S);
+    nodalMetric[k] = expS.sandwich(sqrtM0);
   }
 
   // compute the deviation for every edge
@@ -603,7 +604,8 @@ MeshImpliedMetric<type>::optimize(bool quiet)
 			S.data(i) = x[k*nrank+i];
 
     // assign the implied metric
-    this->data_[k] = (numerics::expm(S)).sandwich(nodalMetricSqrt_[k]);
+    symd<real_t> expS = numerics::expm(S);
+    this->data_[k] = expS.sandwich(nodalMetricSqrt_[k]);
 
     if (k<topology_.points().nb_ghost())
     {

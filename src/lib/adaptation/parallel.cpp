@@ -319,8 +319,13 @@ public:
       for (index_t j = 0; j < partition_.nv(k); j++)
         elem_age[k] += partition_.points().age( partition_(k,j) );
     }
-    index_t max_age = *std::max_element( elem_age.begin() , elem_age.end() );
-    index_t penalty = 100*max_age; // heuristic
+    index_t max_age0 = *std::max_element( elem_age.begin() , elem_age.end() );
+
+    index_t max_age = (index_t) mpi::all_reduce( int(max_age0) , mpi::max{} );
+
+    index_t penalty = 10; // heuristic  
+    for (index_t k = 0; k < elem_age.size(); k++)
+	    elem_age[k] = index_t( 10.0*elem_age[k]/max_age ) + 1;
 
     // extract the adjacencies from the partition
     std::map<index_t,index_t> local;
@@ -1536,7 +1541,9 @@ fix_conforming( Topology<type>& topology , const std::vector<VertexMetric>& metr
     v2v[ edges[2*k+1] ].push_back( edges[2*k] );
   }
 
-  real_t lim = sqrt(2.0);
+  // a pass using this feature is not intended to produce a metric conforming mesh
+  // but to clean up the interfaces that may be rejected and are much further from metric-conforming
+  real_t lim = 3.0;//sqrt(2.0);
   for (index_t k = 0; k < v2v.size(); k++) {
     bool ok = true;
 
@@ -1725,6 +1732,7 @@ AdaptationManager<type>::adapt() {
   index_t nb_part = mpi::size();
   index_t pass = 0;
   bool done = false;
+  bool freeze_conforming = false;
   while (!done) {
 
     if (rank_ == 0) printf("\n*** pass %lu ***\n\n",pass);
@@ -1759,7 +1767,7 @@ AdaptationManager<type>::adapt() {
     if (method == "recursive" && pass > 0) {
       //fix_conforming( topology_ , metrics_ );
     }
-    //if (pass > 0) fix_conforming( topology_ , metrics_ );
+    if (freeze_conforming) fix_conforming( topology_ , metrics_ );
 
 
     // create the mesh we will write to
@@ -1836,7 +1844,7 @@ AdaptationManager<type>::adapt() {
       topology_out->get_volumes(volumes);
       real_t min_v0 = *std::min_element( volumes.begin() , volumes.end() );
       real_t max_v0 = *std::max_element( volumes.begin() , volumes.end() );
-      printf("--> volume = %g, min = %g, max = %g\n",topology_out->volume(),min_v0,max_v0);
+      printf("--> volume = %g, min = %g, max = %g\n",v0,min_v0,max_v0);
     }
 
     // count vertex age (currently debugging info)
@@ -1871,7 +1879,14 @@ AdaptationManager<type>::adapt() {
       }
 
       nb_part = mpi::size();
-      if (pass == max_passes-1) done = true;
+      freeze_conforming = false;
+      if (pass == max_passes-1 || max_passes <= 2) {
+        done = true;
+      }
+      else if (pass == max_passes-2 && params_.allow_serial()) {
+        freeze_conforming = true;
+        nb_part = 1;
+      }
       else {
         nb_part = index_t(nb_elem/nb_elem_per_core);
         if (nb_part == 0) nb_part = 1;

@@ -120,7 +120,6 @@ void
 AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 {
   index_t pass = 0;
-
   real_t lmin0 = -1;
   real_t lmax0 = -1;
   if (lcheck)
