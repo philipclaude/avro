@@ -100,7 +100,8 @@ UT_TEST_CASE( symd_eign_test )
     const matd<real_t>& Q = e.second;
     const vecd<real_t>& L = e.first;
 
-    matd<real_t> A1 = Q * numerics::diag(L) * numerics::transpose(Q);
+    symd<real_t> A1(n);
+    A1.from_eig(L,Q);
     for (index_t i = 0; i < n; i++)
     for (index_t j = 0; j < n; j++)
       UT_ASSERT_NEAR( A(i,j) , A1(i,j) , tol );

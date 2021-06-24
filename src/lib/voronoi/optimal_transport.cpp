@@ -41,8 +41,8 @@ LaguerreCellBase<type>::LaguerreCellBase( const Delaunay& delaunay, GEO::Nearest
 
 template<typename type>
 void
-LaguerreCellBase<type>::reset()
-{
+LaguerreCellBase<type>::reset() {
+
   // reset the mesh data
   clear();
   points_.clear();
@@ -66,8 +66,8 @@ LaguerreCellBase<type>::reset()
 
 template<typename type>
 void
-LaguerreCellBase<type>::enlarge_neighbours()
-{
+LaguerreCellBase<type>::enlarge_neighbours() {
+
   index_t nb_nns = neighbours_.size();
   nb_nns += 10;
   if (nb_nns > delaunay_.nb()) nb_nns = delaunay_.nb();
@@ -81,22 +81,20 @@ LaguerreCellBase<type>::enlarge_neighbours()
 LaguerreCell<Polytope>::LaguerreCell(index_t site , const Delaunay& delaunay ,
                                      GEO::NearestNeighborSearch& nns ,
                                      const Topology<Polytope>& domain , bool exact , index_t nb_nns ) :
-  LaguerreCellBase(delaunay,nns,domain,exact,nb_nns)
-{
+  LaguerreCellBase(delaunay,nns,domain,exact,nb_nns) {
   set_site(site);
 }
 
 void
-LaguerreCell<Polytope>::initialize()
-{
+LaguerreCell<Polytope>::initialize() {
+
   index_t elem_ = 0;
   avro_assert( domain_.nb() == 1 );
 
   // create the initial points
   vertex_.clear();
   vertex_.resize( domain_.nv(elem_) );
-  for (index_t j=0;j<domain_.nv(elem_);j++)
-  {
+  for (index_t j = 0; j < domain_.nv(elem_); j++) {
     vertex_[j] = Vertex(delaunay_.dim(),domain_.number());
     vertex_[j].setCoordinates( domain_.points()[ domain_(elem_)[j] ] , domain_.points().dim() );
     vertex_[j].setNumber( domain_.number() );
@@ -109,20 +107,16 @@ LaguerreCell<Polytope>::initialize()
   polytope_ = linspace(domain_.nv(elem_));
 
   // initialize the edges
-  if (domain_edges_.size() > 0)
-  {
+  if (domain_edges_.size() > 0) {
     pedges_ = domain_edges_;
   }
-  else
-  {
+  else {
     pedges_.clear();
     for (index_t ii=0;ii<polytope_.size();ii++)
-    for (index_t jj=ii+1;jj<polytope_.size();jj++)
-    {
+    for (index_t jj=ii+1;jj<polytope_.size();jj++) {
       index_t e0 = polytope_[ii];
       index_t e1 = polytope_[jj];
-      if (element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) )
-      {
+      if (element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) ) {
         // clip the edge and save the result into q
         pedges_.push_back(e0);
         pedges_.push_back(e1);
@@ -132,8 +126,8 @@ LaguerreCell<Polytope>::initialize()
 }
 
 void
-LaguerreCell<Polytope>::compute()
-{
+LaguerreCell<Polytope>::compute() {
+
   clock_t t0;
 
   // reset everything
@@ -834,8 +828,7 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
     parallel_for_member_callback( this , &thisclass::clip ),
     0,cells_.size() );
   #else
-  for (index_t k=0;k<cells_.size();k++)
-  {
+  for (index_t k=0;k<cells_.size();k++) {
     cells_[k]->compute();
   }
   #endif
@@ -845,8 +838,8 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
 
   // accumulate the result
   sites_.clear();
-  for (index_t k=0;k<cells_.size();k++)
-  {
+  for (index_t k=0;k<cells_.size();k++) {
+
     // retrieve the voronoi cell
     const LaguerreCell<type>& cell = *cells_[k].get();
 

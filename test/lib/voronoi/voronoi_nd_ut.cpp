@@ -23,8 +23,8 @@ UT_TEST_CASE( test_nd )
 {
   coord_t numberL = 4;
   coord_t numberH = 4;
-  coord_t powerL = 6;
-  coord_t powerH = 6;
+  coord_t powerL = 2;
+  coord_t powerH = 2;
   bool generate_mode = false;
 
   for (coord_t number = numberL; number <= numberH; number++)
