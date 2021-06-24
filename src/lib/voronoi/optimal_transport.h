@@ -244,6 +244,7 @@ public:
   typedef LaguerreDiagram thisclass;
 
   LaguerreDiagram( Delaunay& delaunay , const Topology<type>& domain );
+  ~LaguerreDiagram();
 
   void initialize();
   void create( bool exact , index_t nb_nns );

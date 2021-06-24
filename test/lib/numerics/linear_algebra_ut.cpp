@@ -90,9 +90,9 @@ UT_TEST_CASE_END(inverse_tests)
 
 UT_TEST_CASE( symd_eign_test )
 {
-  real_t tol = 1e-12;
+  real_t tol = 1e-10;
 
-  for (index_t n = 2; n < 10; n++) {
+  for (index_t n = 2; n < 6; n++) {
 
     symd<real_t> A = random_tensor(n);
 
@@ -102,6 +102,10 @@ UT_TEST_CASE( symd_eign_test )
 
     symd<real_t> A1(n);
     A1.from_eig(L,Q);
+
+    A1.display();
+    A.display();
+
     for (index_t i = 0; i < n; i++)
     for (index_t j = 0; j < n; j++)
       UT_ASSERT_NEAR( A(i,j) , A1(i,j) , tol );

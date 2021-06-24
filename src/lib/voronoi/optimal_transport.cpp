@@ -937,6 +937,11 @@ LaguerreDiagram<type>::compute_neighbour_properties()
   maximum_neighbours_ = * std::max_element( neighbour_counts_.begin() , neighbour_counts_.end() );
 }
 
+template<typename type>
+LaguerreDiagram<type>::~LaguerreDiagram() {
+  if (neighbour_search_ != nullptr) delete neighbour_search_;
+}
+
 real_t
 Integrand_Transport_Energy::operator()( index_t k , const real_t* xref , const real_t* x ) const
 {

@@ -217,6 +217,7 @@ namespace GEO {
          */
         NearestNeighborSearch(coord_index_t dimension);
 
+    public:
         /**
          * \brief NearestNeighborSearch destructor
          */
