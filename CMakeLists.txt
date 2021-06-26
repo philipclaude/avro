@@ -123,3 +123,4 @@ add_subdirectory(test)
 
 # this needs to happen here so the "avro" target is correct
 add_subdirectory(src/bin)
+add_subdirectory(src/examples)

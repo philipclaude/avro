@@ -12,7 +12,9 @@
 #include "library/ckf.h"
 #include "library/factory.h"
 
+#include "mesh/facets.h"
 #include "mesh/mesh.h"
+#include "mesh/partition.h"
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
@@ -87,12 +89,12 @@ Context::import_model()
   std::vector<index_t> count(number+1,0);
   for (index_t k=0;k<entities.size();k++)
     count[entities[k]->number()]++;
-  print_inline(count,"count");
+  //print_inline(count,"count");
 
   std::vector<index_t> offset(number+1,0);
   for (index_t k=1;k<=number;k++)
     offset[k] = offset[k-1] + count[k-1];
-  print_inline(offset,"offset");
+  //print_inline(offset,"offset");
 
   std::vector<index_t> ids(entities.size());
   std::vector<index_t> recount(number+1,0);
@@ -101,14 +103,14 @@ Context::import_model()
     ids[k] = offset[entities[k]->number()] + recount[ entities[k]->number() ];
     recount[entities[k]->number()]++;
   }
-  print_inline(recount,"recount");
+  //print_inline(recount,"recount");
 
   for (index_t k=0;k<entities.size();k++)
   {
     id2entity_.insert( {ids[k] , entities[k]} );
     entity2id_.insert( {entities[k],ids[k]} );
-    entities[k]->print_header();
-    printf("--> maps to id %lu\n",ids[k]);
+    //entities[k]->print_header();
+    //printf("--> maps to id %lu\n",ids[k]);
   }
 }
 
@@ -258,6 +260,81 @@ Context::adapt( const std::vector<real_t>& m )
   return 0; // success
 }
 
+int
+Context::adapt_parallel( const std::vector<real_t>& m )
+{
+  avro_assert_msg( points_ != nullptr , "points are not defined" );
+  avro_assert_msg( topology_ != nullptr , "topology is not defined" );
+
+  index_t nb_rank = (number_+1)*number_/2;
+  index_t nb_metric = m.size() / nb_rank;
+  avro_assert( nb_metric == points_->nb() );
+
+  // save the metrics in the proper format
+  std::vector<symd<real_t>> metric;
+  index_t count = 0;
+  for (index_t k=0;k<nb_metric;k++)
+  {
+    symd<real_t> mk(number_);
+    for (index_t i=0;i<number_;i++)
+    for (index_t j=i;j<number_;j++)
+      mk(i,j) = m[count++];
+    metric.push_back(mk);
+  }
+
+  // setup the adaptation manager
+  AdaptationParameters params(parameters_);
+  params.set( "partitioned" , true );
+  params.set( "allow serial" , true );
+  params.set( "insertion volume factor" ,  -1.0 );
+  params.set( "curved" , false);
+  params.set( "limit metric" , true );
+  params.set( "max parallel passes" , index_t(3) );
+  params.set( "elems per processor" , index_t(5000) );
+  params.set("has uv", true);
+  params.set( "swapout" , false);
+
+  std::vector<Entity*> entities;
+  model_->get_tessellatable_entities(entities);
+
+  topology_->build_structures();
+  AdaptationManager<Simplex> manager( *topology_.get() , metric , params );
+
+  manager.topology().set_entities( entities );
+  printf("there are %lu entities\n",entities.size());
+
+  manager.adapt();
+
+  // copy the adapted mesh into the context data
+  topology_->TopologyBase::copy( manager.topology() );
+  manager.topology().points().copy( *points_.get() );
+
+  mpi::barrier();
+
+  return 0; // success
+}
+
+void
+Context::partition() {
+
+  AdaptationParameters params;
+  params.set( "partitioned" , false );
+
+  // dummy metrics to initialize the adaptation manager
+  // yes, this means there will be an unncessary synchronization of metric data
+  // which will then get thrown away, but it should be a low overhead since this
+  // should only be done **once** at the beginning of a simulation
+  index_t nb_points = points_->nb();
+  std::vector<symd<real_t>> metric( nb_points );
+
+  topology_->build_structures();
+  AdaptationManager<Simplex> manager( *topology_.get() , metric , params );
+
+  // copy the partitioned mesh into the context data
+  topology_->TopologyBase::copy( manager.topology() );
+  manager.topology().points().copy( *points_.get() );
+}
+
 void
 Context::retrieve_mesh( std::vector<real_t>& x , std::vector<index_t>& s ) const
 {
@@ -326,6 +403,46 @@ Context::retrieve_boundary( std::vector<std::vector<index_t>>& facets ,
       facets[k].push_back( bk(j,i) );
     geometry[k] = entity2id_.at(entity);
   }
+}
+
+void
+Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
+                                     std::vector<int>& geometry ) const
+{
+  avro_assert_msg( topology_ != nullptr , "topology is not defined" );
+
+  std::map<Entity*,int>::const_iterator it;
+  std::map<Entity*,int> entity2index;
+  for (it = entity2id_.begin(); it != entity2id_.end(); ++it) {
+    if (it->first->number() == number_-1) {
+      entity2index.insert( {it->first,entity2index.size()} );
+    }
+  }
+  index_t nb_boundary = entity2index.size();
+
+  faces.resize( nb_boundary );
+  geometry.resize( nb_boundary );
+
+  // compute the boundary
+  Facets facets(*topology_.get());
+  facets.compute();
+  std::vector<index_t> facet(topology_->number());
+  for (index_t k = 0; k < facets.nb(); k++) {
+
+    // skip partition interface facets or interior facets
+    // (that do not lie on wakes, i.e. interior geometries)
+    facets.retrieve(k,facet);
+    Entity* entity = BoundaryUtils::geometryFacet( topology_->points() , facet.data() , facet.size());
+    if (entity == nullptr) continue;
+
+    // this is a geometry facet that is on either an external or interior geometry
+    index_t idx = entity2index.at(entity);
+    for (index_t j = 0; j < facet.size(); j++)
+      faces[idx].push_back(facet[j]);
+  }
+
+  for (it = entity2index.begin(); it != entity2index.end(); ++it)
+    geometry[it->second] = entity2id_.at(it->first);
 }
 
 }

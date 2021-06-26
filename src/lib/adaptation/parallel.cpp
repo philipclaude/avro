@@ -260,6 +260,7 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
       receive_metrics(0,true);
     }
     topology_.set_entities(entities);
+    printf("there are %lu entities in parallel.cpp\n",entities.size());
   }
   else {
 

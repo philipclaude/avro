@@ -52,8 +52,12 @@ public:
   void load_local2global( const std::vector<index_t>& g );
   void load_geometry( const std::vector<int>& g , const std::vector<real_t>& u );
 
+  // partition function
+  void partition();
+
   // the actual adaptation function
   int adapt( const std::vector<real_t>& metric );
+  int adapt_parallel( const std::vector<real_t>& metric );
 
   // these should be called anytime a mesh needs to be retrieved (e.g. after an adaptation)
   void retrieve_mesh( std::vector<real_t>& x , std::vector<index_t>& s ) const;
@@ -61,7 +65,8 @@ public:
   void retrieve_geometry( std::vector<int>& g , std::vector<real_t>& u ) const;
   void retrieve_boundary( std::vector<std::vector<index_t>>& faces ,
                           std::vector<int>& geometry , bool interior=false ) const;
-
+  void retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
+                                   std::vector<int>& geometry ) const;
 
   // polytopal mesh retrieval functions
   void retrieve_polytopes( std::vector<index_t>& indices , std::vector<index_t>& nv_per_elem ) const;
