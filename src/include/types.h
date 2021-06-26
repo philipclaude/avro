@@ -7,8 +7,8 @@
 // Licensed under The GNU Lesser General Public License, version 2.1
 // See http://www.opensource.org/licenses/lgpl-2.1.php
 //
-#ifndef avro_COMMON_TYPES_H_
-#define avro_COMMON_TYPES_H_
+#ifndef AVRO_API_TYPES_H_
+#define AVRO_API_TYPES_H_
 
 #ifndef nil
 #include <cstdlib>

@@ -9,7 +9,7 @@
 //
 #include "common/error.h"
 #include "common/tools.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "numerics/mat.h"
 #include "numerics/sym.h"

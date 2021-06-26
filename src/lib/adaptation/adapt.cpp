@@ -45,12 +45,14 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
   smoother_(topology),
   edge_swapper_(topology)
 {
-  collapser_.curved() = params.curved();
-  inserter_.curved() = params.curved();
-  smoother_.curved() = params.curved();
-  edge_swapper_.curved() = params.curved();
+  bool curved = params.get_param<bool>("curved");
+  collapser_.curved() = curved;
+  inserter_.curved() = curved;
+  smoother_.curved() = curved;
+  edge_swapper_.curved() = curved;
 
-  smoother_.exponent() = index_t(params.smoothing_exponent());
+  int smoothing_exponent = params.get_param<int>("smoothing exponent");
+  smoother_.exponent() = index_t(smoothing_exponent);
 }
 
 const real_t nb_smooth = 10;
@@ -66,18 +68,19 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   const coord_t number = topology.number();
 
   // retrieve the parameters
-  const bool limit_insertion_length = params.limit_insertion_length();
-  const bool swapout = params.swapout();
-  const real_t lt_min = params.lt_min();
-  real_t lt_max = params.lt_max();
-  const bool smooth_on = params.use_smoothing();
-  const bool fefloa = params.fefloa();
+  const bool limit_insertion_length = true;//params.limit_insertion_length();
+  const bool swapout = params.get_param<bool>("swapout");
+  const real_t lt_min = sqrt(2.0);//params.lt_min();
+  real_t lt_max = 2.0;//params.lt_max();
+  const bool smooth_on = true;//params.use_smoothing();
+  const bool fefloa = false;//params.fefloa();
 
   if (fefloa) lt_max = sqrt(2.0); // and we will do one pass
 
   // the uv-parameters might not be set for the incoming points
   // for the case of real_t geometries
-  if (params.curved())
+  bool curved = params.get_param<bool>("curved");
+  if (curved)
   {
     // check all parametric coordinates for consistency
     coord_t udim = mesh_topology.points().udim();
@@ -88,7 +91,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
       if (e==NULL) continue;
 
       // project the mesh_topology points to the geometry if not provided
-      if(!params.has_uv())
+      bool has_uv = params.get_param<bool>("has uv");
+      if(!has_uv)
       {
         real_t* x = mesh_topology.points()[k];
         std::vector<real_t> X(x,x+mesh_topology.points().dim());
@@ -260,9 +264,9 @@ done:
   {
     properties.compute( mesh_topology , metric );
     properties.print("final metric conformity" );
-    if (params.write_conformity())
-      properties.dump( params.directory()+
-                       "/properties_"+stringify(params.adapt_iter())+".json");
+    if (params.get_param<bool>("write conformity"))
+      properties.dump( params.get_param<std::string>("directory")+
+                       "/properties_"+stringify(params.get_param<int>("adapt_iter"))+".json");
   }
   else avro_implement;
 
@@ -322,7 +326,7 @@ adapt( AdaptationProblem& problem )
   // standardize the parameters
   AdaptationParameters& params = problem.params;
 
-  const std::string& output_redirect = params.output_redirect();
+  std::string output_redirect = params.get_param<std::string>("output_redirect");
 
   fpos_t pos;
   int redirected_fd = 0;
@@ -336,7 +340,7 @@ adapt( AdaptationProblem& problem )
   }
   UNUSED( redirected_fid );
 
-  params.standard();
+  //params.standard();
   params.print();
 
   // initialize the predicates
@@ -450,7 +454,7 @@ adapt( AdaptationProblem& problem )
   field.set_cells( topology );
   avro_assert( field.check () );
 
-  if (params.limit_metric())
+  if (params.get_param<bool>("limit_metric"))
   {
     // option to limit the metric field from the current mesh-implied metric
     // any problematic vertices will be fixed
@@ -477,27 +481,30 @@ adapt( AdaptationProblem& problem )
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );
 
   // option to output the mesh
-  std::string mesh_file = params.directory()+params.prefix()+"_"+stringify(params.adapt_iter())+".mesh";
-  if (params.write_mesh())
+  std::string mesh_file = params.get_param<std::string>("directory")+params.get_param<std::string>("prefix")
+                            +"_"+stringify(params.get_param<int>("adapt iter"))+".mesh";
+  if (params.get_param<bool>("write_mesh"))
   {
-    if (topology.number()<=3 && !params.has_interior_boundaries())
+    if (topology.number()<=3 && !params.get_param<bool>("has_interior_boundaries"))
     {
       // write the full mesh
       library::meshb meshb;
-      meshb.write( problem.mesh_out , mesh_file , params.export_boundary() );
+      meshb.write( problem.mesh_out , mesh_file , params.get_param<bool>("export_boundary") );
       printf("wrote mesh %s\n",mesh_file.c_str());
     }
-    else if (topology.number()==4 && params.export_boundary())
+    else if (topology.number()==4 && params.get_param<bool>("export_boundary"))
     {
       // get the boundary of the mesh
       Topology_Spacetime<Simplex> spacetime(mesh_topology);
       spacetime.extract();
 
-      std::string filename = params.directory()+"/"+params.prefix()+"_"+stringify(params.adapt_iter())+".mesh";
+      std::string filename = params.get_param<std::string>("directory")+"/"
+                            +params.get_param<std::string>("prefix")+"_"
+                            +stringify(params.get_param<int>("adapt_iter"))+".mesh";
       spacetime.write( filename );
     }
 
-    if (topology.number()==3 && params.has_interior_boundaries())
+    if (topology.number()==3 && params.get_param<bool>("has_interior_boundaries"))
     {
       #if 0
       Boundary<Simplex> bnd2( mesh_topology );
@@ -518,7 +525,7 @@ adapt( AdaptationProblem& problem )
       #endif
     }
 
-    if (!params.has_interior_boundaries())
+    if (!params.get_param<bool>("has_interior_boundaries"))
     {
       #if 0
       const std::string json_file = params.directory()+"mesh_"+stringify(params.adapt_iter())+".json";

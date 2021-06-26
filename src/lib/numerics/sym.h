@@ -7,7 +7,7 @@
 #define AVRO_NUMERICS_symd_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "numerics/mat.h"
 #include "numerics/vec.h"

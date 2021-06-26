@@ -10,7 +10,7 @@
 #ifndef avro_LIB_NUMERICS_GEOMETRY_H_
 #define avro_LIB_NUMERICS_GEOMETRY_H_
 
-#include "common/types.h"
+#include "types.h"
 
 #include <vector>
 #include <cmath>

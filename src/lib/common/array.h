@@ -11,7 +11,7 @@
 #define avro_LIB_ARRAY_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "types.h"
 
 #include <vector>
 

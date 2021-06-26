@@ -2,7 +2,7 @@
 
 #include "common/mpi.hpp"
 #include "common/tools.h"
-#include "common/types.h"
+#include "types.h"
 
 #ifdef AVRO_MPI
 

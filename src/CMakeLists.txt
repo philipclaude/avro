@@ -4,7 +4,7 @@ set(CMAKE_CXX_FLAGS ${CXX_FLAGS0})
 
 # add all the source files
 add_source_directories(SOURCES "Source Files" .)
-add_source_directories(SOURCES "Source Files\\api" api)
+add_source_directories(SOURCES "Source Files\\include" include)
 add_source_directories(SOURCES "Source Files\\adaptation" lib/adaptation)
 add_source_directories(SOURCES "Source Files\\common" lib/common)
 add_source_directories(SOURCES "Source Files\\mesh" lib/element)
@@ -44,7 +44,6 @@ include_directories( ${THIRD_PARTY_INCLUDE_DIRS} )
 
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
-include_directories( third_party/tinymat )
 
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )

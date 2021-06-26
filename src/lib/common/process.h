@@ -11,7 +11,7 @@
 #define avro_COMMON_PROCESS_H_
 
 #include "common/thread.h"
-#include "common/types.h"
+#include "types.h"
 
 #include <memory>
 

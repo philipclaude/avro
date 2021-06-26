@@ -10,8 +10,8 @@
 #ifndef avro_LIB_ADAPTATION_PARAMETERS_H_
 #define avro_LIB_ADAPTATION_PARAMETERS_H_
 
-#include "common/parameters.h"
-#include "common/types.h"
+#include "../include/parameters.h"
+#include "types.h"
 
 #include <map>
 #include <string>
@@ -20,13 +20,14 @@
 namespace avro
 {
 
+#if 0
 class AdaptationParameters : public Parameters
 {
 public:
   AdaptationParameters()
   {
     names_ = {"directory","prefix","adapt_iter","output_redirect","write_mesh","write_conformity",
-    "has_interior_boundaries","curved","has_uv","partitioned", "balanced","max_passes",
+    "has_interior_boundaries","curved","has_uv","max_passes",
     "insertion_volume_factor","limit_insertion_length","swapout","lt_min",
     "lt_max","use_smoothing","fefloa","limit_metric"};
   }
@@ -66,6 +67,30 @@ public:
   // set the default
   void standard();
 };
+
+#else
+
+class AdaptationParameters : public ParameterSet
+{
+public:
+  AdaptationParameters( const ParameterSet& params ) :
+    AdaptationParameters()
+  {
+    copy(params);
+  }
+  AdaptationParameters() {
+    register_parameter( "swapout" , false , "whether to swap out of restrictive configurations when insertions/collapses are rejected" );
+    register_parameter( "insertion_volume_factor" , -1 , "whether to limit insertions by checking complexity after insertion" );
+    register_parameter( "use smoothing" , true , "whether to use smoothing during the adaptation" );
+    register_parameter( "allow serial" , false , "whether to allow serial adaptation when running in parallel" );
+    register_parameter( "has uv" , false , "whether parameter space coordinates are specified for geometry points in the mesh" );
+    register_parameter( "smoothing exponent" , 1 , "smoothing exponent" );
+    register_parameter( "elems per processor" , 10000 , "number of elements for each processor" );
+    register_parameter( "adapt iter" , 1 , "adaptation iteration" );
+  }
+};
+
+#endif
 
 } // avro
 

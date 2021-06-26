@@ -11,7 +11,7 @@
 #define avro_LIB_GEOMETRICS_ENTITY_H_
 
 #include "common/tree.h"
-#include "common/types.h"
+#include "types.h"
 
 #include <string>
 

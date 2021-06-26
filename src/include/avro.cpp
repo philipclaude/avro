@@ -3,6 +3,7 @@
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
 #include "adaptation/parallel.h"
+#include "adaptation/parameters.h"
 
 #include "element/simplex.h"
 
@@ -26,9 +27,7 @@ Context::Context( coord_t number , coord_t dim , coord_t udim ) :
   model_(nullptr),
   points_(nullptr),
   topology_(nullptr)
-{
-  parameters_.standard();
-}
+{}
 
 Context::Context( const Context& ctx ) :
   number_(ctx.number()),
@@ -38,7 +37,6 @@ Context::Context( const Context& ctx ) :
   points_(nullptr),
   topology_(nullptr)
 {
-  parameters_.standard();
   //parameters_.curved() = ctx.parameters().curved();
   import_model();
 }
@@ -64,10 +62,16 @@ Context::define_geometry( const std::string& geometry )
   // load the model using the factory
   bool curved;
   model_ = library::get_geometry(geometry,curved);
-  parameters_.curved() = curved;
+  parameters_.set_param( "curved" , curved );
 
   // import the data from the model
   import_model();
+}
+
+void
+Context::define_geometry( const Model& model )
+{
+  avro_implement;
 }
 
 void
@@ -160,6 +164,16 @@ Context::load_simplices( const std::vector<index_t>& s )
     topology_->add( &s[(number_+1)*k] , number_+1 );
 }
 
+void
+Context::load_local2global( const std::vector<index_t>& local2global )
+{
+  avro_assert( points_ != nullptr );
+  avro_assert( points_->nb() == local2global.size() );
+
+  for (index_t k = 0; k < local2global.size(); k++)
+    points_->set_global( k , local2global[k] );
+}
+
 Entity*
 Context::id2geometry( int id ) const
 {
@@ -228,7 +242,13 @@ Context::adapt( const std::vector<real_t>& m )
   mesh_in.add( topology_ );
 
   // setup the problem
-  AdaptationProblem problem = {mesh_in,metric,parameters_,mesh_out};
+  AdaptationParameters params(parameters_);
+  //params.prefix() = parameters_.get_param<std::string>("prefix");
+  //params.write_conformity() = parameters_.get_param<bool>("write conformity");
+  //params.write_mesh() = parameters_.get_param<bool>("write mesh");
+  //params.output_redirect() = parameters_.get_param<std::string>("output redirect");
+
+  AdaptationProblem problem = {mesh_in,metric,params,mesh_out};
   int result = ::avro::adapt<Simplex>( problem );
   if (result != 0) return 1;
 
@@ -259,6 +279,15 @@ Context::retrieve_mesh( std::vector<real_t>& x , std::vector<index_t>& s ) const
     s[i++] = (*topology_)(k,d);
 }
 
+void
+Context::retrieve_local2global( std::vector<index_t>& local2global ) const
+{
+  avro_assert_msg( points_ != nullptr , "points are not defined" );
+
+  local2global.resize( points_->nb() );
+  for (index_t k = 0; k < points_->nb(); k++)
+    local2global[k] = points_->global(k);
+}
 
 void
 Context::retrieve_geometry( std::vector<int>& g , std::vector<real_t>& u ) const

@@ -12,7 +12,7 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/mat.h"
 #include "numerics/predicates.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "mesh/points.h"
 

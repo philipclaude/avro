@@ -12,7 +12,7 @@
 
 #include "common/error.h"
 #include "common/tools.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "graphics/clipping.h"
 #include "graphics/colormap.h"

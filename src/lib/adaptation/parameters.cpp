@@ -14,6 +14,7 @@
 namespace avro
 {
 
+#if 0
 void
 AdaptationParameters::standard()
 {
@@ -44,11 +45,12 @@ AdaptationParameters::standard()
   if (!boolParams_.has("fefloa")) boolParams_["fefloa"] = false;
   if (!boolParams_.has("limit_metric")) boolParams_["limit_metric"] = false;
   if (!intParams_.has("smoothing-exponent")) intParams_["smoothing-exponent"] = 1; // 4 = 1996 bossen-heckbert paper
-  
+
   // parallel parameters
   if (!stringParams_.has("parallel method")) stringParams_["parallel method"] = "recursive";
   if (!intParams_.has("elems_per_processor")) intParams_["elems_per_processor"] = 10000;
   if (!boolParams_.has("allow_serial")) boolParams_["allow_serial"] = true;
 }
+#endif
 
 } // avro

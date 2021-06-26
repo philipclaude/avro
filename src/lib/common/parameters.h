@@ -10,7 +10,7 @@
 #ifndef AVRO_LIB_COMMON_PARAMETERS_H_
 #define AVRO_LIB_COMMON_PARAMETERS_H_
 
-#include "common/types.h"
+#include "types.h"
 
 #include <map>
 #include <string>

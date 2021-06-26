@@ -202,8 +202,6 @@ Vertex::sideFast( const real_t *zi , const real_t *zj )
   {
     di += ( x_[d] -zi[d] )*( x_[d] -zi[d] );
     dj += ( x_[d] -zj[d] )*( x_[d] -zj[d] );
-
-		//printf("d = %u, x = %g, zi = %g, zj = %g\n",d,x_[d],zi[d],zj[d]);
   }
   if (di>dj) return GEO::NEGATIVE;
   return GEO::POSITIVE;

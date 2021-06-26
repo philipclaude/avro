@@ -10,7 +10,7 @@
 #ifndef avro_LIB_MESH_FIELD_INTERPOLATION_H_
 #define avro_LIB_MESH_FIELD_INTERPOLATION_H_
 
-#include "common/types.h"
+#include "types.h"
 
 #include <memory>
 #include <vector>

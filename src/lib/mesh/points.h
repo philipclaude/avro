@@ -14,7 +14,7 @@
 #include "common/table.h"
 #include "common/error.h"
 #include "common/json.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "mesh/dof.h"
 

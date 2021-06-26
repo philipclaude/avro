@@ -1,6 +1,6 @@
 #include "unit_tester.hpp"
 
-#include "common/types.h"
+#include "types.h"
 
 #include "blossom5/PerfectMatching.h"
 

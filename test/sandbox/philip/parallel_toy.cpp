@@ -122,8 +122,8 @@ UT_TEST_CASE( test1 )
   library::Tesseract geometry(c,lengths);
   std::vector<index_t> dims(number,5);
   CKF_Triangulation topology(dims);
-  //library::MetricField_Uniform analytic(number,0.25);
-  library::MetricField_Tesseract_Wave analytic;
+  library::MetricField_Uniform analytic(number,0.25);
+  //library::MetricField_Tesseract_Wave analytic;
   //library::MetricField_Tesseract_Linear analytic;//(0.00125);
   #endif
   topology.points().attach(geometry);

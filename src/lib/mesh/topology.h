@@ -13,7 +13,7 @@
 #include "common/table.h"
 #include "common/json.h"
 #include "common/tree.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "element/polytope.h"
 #include "element/simplex.h"

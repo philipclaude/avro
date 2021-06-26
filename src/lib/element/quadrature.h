@@ -10,7 +10,7 @@
 #ifndef avro_LIB_MASTER_QUADRATURE_H_
 #define avro_LIB_MASTER_QUADRATURE_H_
 
-#include "common/types.h"
+#include "types.h"
 
 #include <vector>
 

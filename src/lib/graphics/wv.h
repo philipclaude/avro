@@ -10,7 +10,7 @@
 #ifndef avro_LIB_GRAPHICS_WV_H_
 #define avro_LIB_GRAPHICS_WV_H_
 
-#include "common/types.h"
+#include "types.h"
 
 #include "graphics/manager.h"
 

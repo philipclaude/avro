@@ -2,7 +2,7 @@
 #define PYDG_NUMERICS_VECTOR_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "numerics/mat.h"
 

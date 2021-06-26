@@ -12,7 +12,7 @@
 
 #include "common/table.h"
 #include "common/json.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "element/element.h"
 #include "element/polytope.h"

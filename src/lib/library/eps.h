@@ -10,7 +10,7 @@
 #ifndef avro_LIB_LIBRARY_EPS_H_
 #define avro_LIB_LIBRARY_EPS_H_
 
-#include "common/types.h"
+#include "types.h"
 
 #include <cmath>
 #include <cstdlib>

@@ -12,7 +12,7 @@
 
 #include "common/process.h"
 #include "common/thread.h"
-#include "common/types.h"
+#include "types.h"
 
 #include <algorithm>
 

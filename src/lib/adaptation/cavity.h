@@ -11,7 +11,7 @@
 #define avro_LIB_ADAPTATION_CAVITY_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "adaptation/implied_metric.h"
 

@@ -12,7 +12,7 @@
 
 #include "common/error.h"
 #include "common/parallel_for.h"
-#include "common/types.h"
+#include "types.h"
 
 #include "mesh/dof.h"
 #include "mesh/field.h"

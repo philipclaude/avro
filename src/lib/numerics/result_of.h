@@ -1,5 +1,5 @@
-#ifndef AVRO_LIB_NUMERICS_TYPES_H_
-#define AVRO_LIB_NUMERICS_TYPES_H_
+#ifndef AVRO_LIB_NUMERICS_RESULT_OF_H_
+#define AVRO_LIB_NUMERICS_RESULT_OF_H_
 
 namespace avro {
 
