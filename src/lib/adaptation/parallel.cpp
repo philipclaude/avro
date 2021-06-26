@@ -228,9 +228,6 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
       Partition<type> partition(topology);
       partition.compute( nb_partition );
 
-      // assume the mesh is balanced now
-      params_.set_param("balanced", true);
-
       // extract the partitions
       std::vector<std::shared_ptr<Topology_Partition<type>>> pieces(nb_partition);
       partition.get(pieces);
@@ -1746,9 +1743,9 @@ AdaptationManager<type>::adapt() {
 
   // perform the passes, alternating between doing an interface migration
   // and a load balance
-  const std::string method = "default";//params_.parallel_method();
-  bool limit_metric = params_.get_param<bool>("limit_metric");
-  index_t max_passes = params_.get_param<int>("max_passes");
+  const std::string method = "default";
+  bool limit_metric = params_.get_param<bool>("limit metric");
+  index_t max_passes = params_.get_param<index_t>("max parallel passes");
   index_t nb_part = mpi::size();
   index_t pass = 0;
   bool done = false;
@@ -1766,7 +1763,7 @@ AdaptationManager<type>::adapt() {
 
     // option to limit the metrics - do not limit the metrics in the call to the mesh adapter
     try {
-    if (pass == 0 && params_.get_param<bool>("limit_metric")) {
+    if (pass == 0 && params_.get_param<bool>("limit metric")) {
       MetricAttachment attachment( topology_.points() , metrics_ );
       attachment.limit(topology_,2.0,true);
       for (index_t k = 0; k < attachment.nb(); k++)
@@ -1775,7 +1772,7 @@ AdaptationManager<type>::adapt() {
       // we need to synchronize the metrics across processors that may have been modified by metric limiting
       synchronize_metrics( topology_.points() , metrics_ );
     }
-    params_.set_param("limit_metric", false);
+    params_.set_param("limit metric", false);
     }
     catch(...) {
       printf("pass %lu: there was an error limiting the metric on processor %lu :(\n",pass,rank_);
@@ -1852,12 +1849,12 @@ AdaptationManager<type>::adapt() {
     if (rank_ == 0) {
       if (number < 4) {
         m.add(topology_out);
-        writer.write(m,"mesh-adapt"+std::to_string(params_.get_param<int>("adapt iter"))+"-pass"+std::to_string(pass)+".mesh",false,true);
+        writer.write(m,"mesh-adapt"+std::to_string(params_.get_param<index_t>("adapt iter"))+"-pass"+std::to_string(pass)+".mesh",false,true);
       }
       else {
         Topology_Spacetime<type> spacetime(*topology_out.get());
         spacetime.extract();
-        spacetime.write( "mesh-adapt"+std::to_string(params_.get_param<int>("adapt iter"))+"-pass"+std::to_string(pass)+".mesh" );
+        spacetime.write( "mesh-adapt"+std::to_string(params_.get_param<index_t>("adapt iter"))+"-pass"+std::to_string(pass)+".mesh" );
       }
       std::vector<real_t> volumes( topology_out->nb() );
       real_t v0 = topology_out->volume();
@@ -1887,7 +1884,7 @@ AdaptationManager<type>::adapt() {
     else {
 
       // standard, hope the interfaces are migrated to the interior
-      index_t nb_elem_per_core = params_.get_param<int>("elems_per_processor");
+      index_t nb_elem_per_core = params_.get_param<index_t>("elems per processor");
 
       index_t nb_elem = topology_out->nb();
       if (rank_ == 0) {

@@ -26,7 +26,7 @@ UT_TEST_CASE(test1)
   ParameterSet parameters;
 
   parameters.set_param( "max parallel passes" , index_t(5) );
-  UT_CATCH_EXCEPTION( parameters.set_param( "something unknown" , 2 ) );
+  UT_CATCH_EXCEPTION( parameters.set_param( "something unknown" , index_t(2) ) );
   parameters.set_param( "metric limiting factor" , std::sqrt(2.0) );
 
   parameters.print();

@@ -129,7 +129,7 @@ adapt( int nb_input , const char** inputs )
   params.set_param("prefix", s[0]);
 
   if (number<4)
-    params.set_param("insertion volume factor", -1);
+    params.set_param("insertion volume factor", -1.0 );
 
   for (index_t iter=0;iter<nb_iter;iter++)
   {

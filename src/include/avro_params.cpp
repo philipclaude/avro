@@ -60,7 +60,6 @@ ParameterSet::get_param( const std::string& name ) const {
 
 INSTANTIATE(std::string)
 INSTANTIATE(bool)
-INSTANTIATE(int)
 INSTANTIATE(index_t)
 INSTANTIATE(real_t)
 

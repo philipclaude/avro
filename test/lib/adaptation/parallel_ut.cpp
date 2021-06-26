@@ -129,12 +129,12 @@ UT_TEST_CASE( test1 )
   topology.points().attach(geometry);
 
   AdaptationParameters params;
-  params.set_param( "directory" , std::string("tmp/"));
+  params.set_param( "directory" , std::string("tmp/") );
   params.set_param( "insertion volume factor" ,  -1.0 );
   params.set_param( "curved" , false);
   params.set_param( "limit metric" , true );
   params.set_param( "max parallel passes" , index_t(3) );
-  params.set_param( "elems per processor" , 5000 );
+  params.set_param( "elems per processor" , index_t(5000) );
   params.set_param("has uv", true);
   params.set_param( "swapout" , false);
 
@@ -157,7 +157,7 @@ UT_TEST_CASE( test1 )
   index_t niter = 1;
   for (index_t iter = 0; iter <= niter; iter++) {
 
-    params.set_param("adapt_iter",index_t(iter));
+    params.set_param("adapt iter", iter );
     params.set_param("limit metric" , true );
     if (iter <= 1) params.set_param("allow serial", true);
     else params.set_param("allow_serial", false);

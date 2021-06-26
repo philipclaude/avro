@@ -50,12 +50,13 @@ AdaptationParameters::set_defaults() {
   register_parameter( "use smoothing" , true , "whether to use smoothing during the adaptation" );
   register_parameter( "allow serial" , false , "whether to allow serial adaptation when running in parallel" );
   register_parameter( "has uv" , false , "whether parameter space coordinates are specified for geometry points in the mesh" );
-  register_parameter( "smoothing exponent" , 1 , "smoothing exponent" );
+  register_parameter( "smoothing exponent" , index_t(1) , "smoothing exponent" );
   register_parameter( "elems per processor" , index_t(10000) , "number of elements for each processor" );
   register_parameter( "adapt iter" , index_t(1) , "adaptation iteration" );
   register_parameter( "has interior boundaries" , false , "whether there are geometry entities which are embedded interior to the mesh" );
   register_parameter( "export boundary" , false , "should the boundary be included in the exported mesh" );
   register_parameter( "write conformity" , false , "whether metric conformity information should be written when adaptation finishes" );
+  register_parameter( "partitioned" , false , "whether the incoming mesh is already partitioned" );
 }
 
 template<typename type>
@@ -74,7 +75,7 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
   smoother_.curved() = curved;
   edge_swapper_.curved() = curved;
 
-  int smoothing_exponent = params.get_param<int>("smoothing exponent");
+  int smoothing_exponent = params.get_param<index_t>("smoothing exponent");
   smoother_.exponent() = index_t(smoothing_exponent);
 }
 
@@ -289,7 +290,7 @@ done:
     properties.print("final metric conformity" );
     if (params.get_param<bool>("write conformity"))
       properties.dump( params.get_param<std::string>("directory")+
-                       "/properties_"+stringify(params.get_param<int>("adapt_iter"))+".json");
+                       "/properties_"+stringify(params.get_param<index_t>("adapt iter"))+".json");
   }
   else avro_implement;
 
@@ -301,8 +302,7 @@ done:
  if (mesh_out.nb_topologies()==0)
  {
    std::shared_ptr<Topology<type>> ptopology_out =
-                std::make_shared<Topology<type>>( mesh_out.points() ,
-                                                number );
+                std::make_shared<Topology<type>>( mesh_out.points() , number );
    mesh_out.add(ptopology_out);
  }
 

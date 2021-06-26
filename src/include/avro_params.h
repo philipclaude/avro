@@ -84,6 +84,10 @@ protected:
     parameters_.insert( {name,param} );
   }
 
+  template <typename T> void register_parameter( const std::string& name , const char* def , const std::string& description ) {
+    register_parameter(name,std::string(def),description);
+  }
+
   const std::map<std::string,std::shared_ptr<Parameter>>& parameters() const { return parameters_; }
 
 private:
@@ -91,6 +95,10 @@ private:
   typedef std::map<std::string,std::shared_ptr<Parameter>>::const_iterator param_const_itr;
   std::map<std::string,std::shared_ptr<Parameter>> parameters_;
 };
+
+// integers should be avoided in parameters because they are confusing
+template<> void ParameterSet::set_param( const std::string& name , const int& value ) = delete;
+template<> int  ParameterSet::get_param( const std::string& name ) const = delete;
 
 } // avro
 
