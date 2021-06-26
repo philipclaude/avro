@@ -2,6 +2,8 @@ if (avro_WITH_FPG)
 	add_subdirectory(PCK/fpg)
 endif()
 
+add_subdirectory(pybind11)
+
 add_source_directories( TET_SOURCES "tetgen source" tetgen1.5.0 )
 set_source_files_properties( ${TET_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 set_source_files_properties( ${TET_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" TETLIBRARY )

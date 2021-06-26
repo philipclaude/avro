@@ -263,6 +263,7 @@ Context::adapt( const std::vector<real_t>& m )
 int
 Context::adapt_parallel( const std::vector<real_t>& m )
 {
+  #if AVRO_MPI
   avro_assert_msg( points_ != nullptr , "points are not defined" );
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
 
@@ -308,6 +309,7 @@ Context::adapt_parallel( const std::vector<real_t>& m )
   manager.topology().points().copy( *points_.get() );
 
   mpi::barrier();
+  #endif
 
   return 0; // success
 }
@@ -315,6 +317,7 @@ Context::adapt_parallel( const std::vector<real_t>& m )
 void
 Context::partition() {
 
+#if AVRO_MPI
   AdaptationParameters params;
   params.set( "partitioned" , false );
 
@@ -331,6 +334,8 @@ Context::partition() {
   // copy the partitioned mesh into the context data
   topology_->TopologyBase::copy( manager.topology() );
   manager.topology().points().copy( *points_.get() );
+
+#endif
 }
 
 void

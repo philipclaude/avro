@@ -5,13 +5,16 @@ config=$1
 nproc=$2
 
 
-#Files might linger if a build was aborted
+# files might linger if a build was aborted
 echo "Removing any lingering untracked files"
 for f in `git ls-files --others --exclude-standard`; do
   rm -f $f
 done
 
-#Create the build directory if it does not exist
+# update submodules
+./get_submodules.sh
+
+# create the build directory if it does not exist
 cmakedir=build/$config
 mkdir -p $cmakedir
 cd $cmakedir
