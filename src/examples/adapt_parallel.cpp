@@ -1,5 +1,6 @@
 #include <avro.h>
 
+#include "common/mpi.hpp"
 #include "common/process.h" // to initialize MPI
 
 #define VERBOSE 0
