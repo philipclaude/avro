@@ -78,7 +78,6 @@ UT_TEST_CASE( solid_bodies )
   model.add_body( cylinder );
 
   TessellationParameters params;
-  params.standard();
 
   ModelTessellation tess(model,params);
 
@@ -101,8 +100,7 @@ UT_TEST_CASE( smiley_test )
   model.add_body(smiley);
 
   TessellationParameters params;
-  params.standard();
-  params.min_size() = 0.1;
+  params.set("min size" , 0.1 );
 
   ModelTessellation tess(model,params);
 

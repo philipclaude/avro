@@ -57,15 +57,15 @@ UT_TEST_CASE(adapt_test)
 
   // define the problem and adapt
   AdaptationParameters params;
-  params.set_param( "directory" , std::string("tmp/"));
-  params.set_param( "insertion volume factor" ,  -1.0 );
-  params.set_param( "curved" , false);
+  params.set( "directory" , std::string("tmp/"));
+  params.set( "insertion volume factor" ,  -1.0 );
+  params.set( "curved" , false);
 
   index_t niter = 0;
   for (index_t iter=0;iter<=niter;iter++)
   {
 
-    params.set_param( "adapt iter" , index_t(iter) );
+    params.set( "adapt iter" , index_t(iter) );
 
     // create the metric field
     std::vector<symd<real_t>> fld;
@@ -90,7 +90,7 @@ UT_TEST_CASE(adapt_test)
       ptopology->add(topology_out(k),topology_out.nv(k));
     pmesh->add(ptopology);
 
-    params.set_param("has uv", true);
+    params.set("has uv", true);
   }
 }
 UT_TEST_CASE_END(adapt_test)

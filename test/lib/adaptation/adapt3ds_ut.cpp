@@ -62,9 +62,8 @@ UT_TEST_CASE(test1)
   #endif
 
   TessellationParameters tess_params;
-  tess_params.standard();
-  tess_params.min_size() = 1.0;
-  tess_params.min_angle() = 20;
+  tess_params.set("min size" , 1.0 );
+  tess_params.set("min angle", 20.0);
 
   ModelTessellation tess(model,tess_params);
 
@@ -93,19 +92,19 @@ UT_TEST_CASE(test1)
 
   // define the problem and adapt
   AdaptationParameters params;
-  params.set_param( "directory" , std::string("tmp/"));
-  params.set_param( "insertion volume factor" ,  -1.0 );
-  params.set_param( "curved" , true);
-  params.set_param( "limit metric" , false ); // requires some implementation
-  params.set_param( "has uv",  true );
-  params.set_param( "use smoothing" , true);
-  params.set_param( "swapout" , false);
+  params.set( "directory" , std::string("tmp/"));
+  params.set( "insertion volume factor" ,  -1.0 );
+  params.set( "curved" , true);
+  params.set( "limit metric" , false ); // requires some implementation
+  params.set( "has uv",  true );
+  params.set( "use smoothing" , true);
+  params.set( "swapout" , false);
 
   index_t niter = 1;
   for (index_t iter = 0; iter < niter; iter++)
   {
 
-    params.set_param( "adapt iter" , index_t(iter) );
+    params.set( "adapt iter" , index_t(iter) );
 
     // create the metric field
     std::vector<symd<real_t>> fld;
@@ -139,7 +138,7 @@ UT_TEST_CASE(test1)
       //vis.run();
     }
 
-    params.set_param("has uv", true);
+    params.set("has uv", true);
   }
 }
 UT_TEST_CASE_END(test1)

@@ -213,7 +213,7 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
   index_t nb_rank = mpi::size();
   index_t nb_partition = nb_rank;
 
-  if (!params_.get_param<bool>("partitioned")) {
+  if (!params_["partitioned"]) {
     // extract the entities so we can assign them to the partitions
     std::vector<Entity*> entities;
     for (index_t k = 0; k < topology.points().nb(); k++) {
@@ -1744,8 +1744,8 @@ AdaptationManager<type>::adapt() {
   // perform the passes, alternating between doing an interface migration
   // and a load balance
   const std::string method = "default";
-  bool limit_metric = params_.get_param<bool>("limit metric");
-  index_t max_passes = params_.get_param<index_t>("max parallel passes");
+  bool limit_metric = params_["limit metric"];
+  index_t max_passes = params_["max parallel passes"];
   index_t nb_part = mpi::size();
   index_t pass = 0;
   bool done = false;
@@ -1763,7 +1763,7 @@ AdaptationManager<type>::adapt() {
 
     // option to limit the metrics - do not limit the metrics in the call to the mesh adapter
     try {
-    if (pass == 0 && params_.get_param<bool>("limit metric")) {
+    if (pass == 0 && params_["limit metric"]) {
       MetricAttachment attachment( topology_.points() , metrics_ );
       attachment.limit(topology_,2.0,true);
       for (index_t k = 0; k < attachment.nb(); k++)
@@ -1772,7 +1772,7 @@ AdaptationManager<type>::adapt() {
       // we need to synchronize the metrics across processors that may have been modified by metric limiting
       synchronize_metrics( topology_.points() , metrics_ );
     }
-    params_.set_param("limit metric", false);
+    params_.set("limit metric", false);
     }
     catch(...) {
       printf("pass %lu: there was an error limiting the metric on processor %lu :(\n",pass,rank_);
@@ -1801,10 +1801,10 @@ AdaptationManager<type>::adapt() {
       writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
-    params_.set_param("output redirect" , "adaptation-output-proc"+std::to_string(rank_)+".txt" );
-    params_.set_param("swapout" , false ); // I think there are some bugs with swapout in parallel (maybe with setting fixed)
-    params_.set_param("export boundary", false);
-    params_.set_param("prefix" , "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass) );
+    params_.set("output redirect" , "adaptation-output-proc"+std::to_string(rank_)+".txt" );
+    params_.set("swapout" , false ); // I think there are some bugs with swapout in parallel (maybe with setting fixed)
+    params_.set("export boundary", false);
+    params_.set("prefix" , "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass) );
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     try {
 
@@ -1847,14 +1847,15 @@ AdaptationManager<type>::adapt() {
     std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
     retrieve(*topology_out.get());
     if (rank_ == 0) {
+      index_t adapt_iter = params_["adapt iter"];
       if (number < 4) {
         m.add(topology_out);
-        writer.write(m,"mesh-adapt"+std::to_string(params_.get_param<index_t>("adapt iter"))+"-pass"+std::to_string(pass)+".mesh",false,true);
+        writer.write(m,"mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".mesh",false,true);
       }
       else {
         Topology_Spacetime<type> spacetime(*topology_out.get());
         spacetime.extract();
-        spacetime.write( "mesh-adapt"+std::to_string(params_.get_param<index_t>("adapt iter"))+"-pass"+std::to_string(pass)+".mesh" );
+        spacetime.write( "mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".mesh" );
       }
       std::vector<real_t> volumes( topology_out->nb() );
       real_t v0 = topology_out->volume();
@@ -1884,7 +1885,7 @@ AdaptationManager<type>::adapt() {
     else {
 
       // standard, hope the interfaces are migrated to the interior
-      index_t nb_elem_per_core = params_.get_param<index_t>("elems per processor");
+      index_t nb_elem_per_core = params_["elems per processor"];
 
       index_t nb_elem = topology_out->nb();
       if (rank_ == 0) {
@@ -1900,7 +1901,7 @@ AdaptationManager<type>::adapt() {
       if (pass == max_passes-1 || max_passes <= 2) {
         done = true;
       }
-      else if (pass == max_passes-2 && params_.get_param<bool>("allow_serial")) {
+      else if (pass == max_passes-2 && params_["allow_serial"]) {
         freeze_conforming = true;
         nb_part = 1;
       }
@@ -1916,7 +1917,7 @@ AdaptationManager<type>::adapt() {
     pass++;
   }
 
-  params_.set_param("limit metric" , limit_metric );
+  params_.set("limit metric" , limit_metric );
 }
 
 template<typename type>

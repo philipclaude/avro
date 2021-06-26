@@ -137,14 +137,14 @@ UT_TEST_CASE( test1 )
   //params.parallel_method() = "migrate";
 
   AdaptationParameters params;
-  params.set_param( "directory" , std::string("tmp/"));
-  params.set_param( "insertion volume factor" ,  -1.0 );
-  params.set_param( "curved" , false);
-  params.set_param( "limit metric" , true );
-  params.set_param( "max parallel passes" , index_t(3) );
-  params.set_param( "elems per processor" , index_t(5000) );
-  params.set_param("has uv", true);
-  params.set_param( "swapout" , false);
+  params.set( "directory" , std::string("tmp/"));
+  params.set( "insertion volume factor" ,  -1.0 );
+  params.set( "curved" , false);
+  params.set( "limit metric" , true );
+  params.set( "max parallel passes" , index_t(3) );
+  params.set( "elems per processor" , index_t(5000) );
+  params.set("has uv", true);
+  params.set( "swapout" , false);
 
 
   topology.build_structures();
@@ -156,10 +156,10 @@ UT_TEST_CASE( test1 )
   index_t niter = 10;
   for (index_t iter = 0; iter <= niter; iter++) {
 
-    params.set_param("adapt_iter",index_t(iter));
-    params.set_param("limit metric" , true );
-    if (iter <= 1) params.set_param("allow serial", true);
-    else params.set_param("allow_serial", false);
+    params.set("adapt_iter",index_t(iter));
+    params.set("limit metric" , true );
+    if (iter <= 1) params.set("allow serial", true);
+    else params.set("allow_serial", false);
 
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);

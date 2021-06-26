@@ -127,40 +127,32 @@ UT_TEST_CASE( test1 )
   //library::MetricField_Tesseract_Linear analytic;//(0.00125);
   #endif
   topology.points().attach(geometry);
+  topology.build_structures();
 
   AdaptationParameters params;
-  params.set_param( "directory" , std::string("tmp/") );
-  params.set_param( "insertion volume factor" ,  -1.0 );
-  params.set_param( "curved" , false);
-  params.set_param( "limit metric" , true );
-  params.set_param( "max parallel passes" , index_t(3) );
-  params.set_param( "elems per processor" , index_t(5000) );
-  params.set_param("has uv", true);
-  params.set_param( "swapout" , false);
-
+  params.set( "directory" , std::string("tmp/") );
+  params.set( "insertion volume factor" ,  -1.0 );
+  params.set( "curved" , false);
+  params.set( "limit metric" , true );
+  params.set( "max parallel passes" , index_t(3) );
+  params.set( "elems per processor" , index_t(5000) );
+  params.set("has uv", true);
+  params.set( "swapout" , false);
 
   std::vector<VertexMetric> metrics(topology.points().nb());
   for (index_t k = 0; k < topology.points().nb(); k++)
     metrics[k] = analytic( topology.points()[k] );
 
-  //params.partitioned() = false;
-  //params.balanced() = true; // assume load-balanced once the first partition is computed
-  //params.parallel_method() = "migrate";
-  //params.elems_per_processor() = 5000;
-
-  topology.build_structures();
-
   AdaptationManager<Simplex> manager( topology , metrics , params );
 
   index_t rank = mpi::rank();
-
   index_t niter = 1;
   for (index_t iter = 0; iter <= niter; iter++) {
 
-    params.set_param("adapt iter", iter );
-    params.set_param("limit metric" , true );
-    if (iter <= 1) params.set_param("allow serial", true);
-    else params.set_param("allow_serial", false);
+    params.set("adapt iter", iter );
+    params.set("limit metric" , true );
+    if (iter <= 1) params.set("allow serial", true);
+    else params.set("allow serial", false);
 
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);

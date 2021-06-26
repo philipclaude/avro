@@ -61,7 +61,7 @@ Context::define_geometry( const std::string& geometry )
   // load the model using the factory
   bool curved;
   model_ = library::get_geometry(geometry,curved);
-  parameters_.set_param( "curved" , curved );
+  parameters_.set( "curved" , curved );
 
   // import the data from the model
   import_model();

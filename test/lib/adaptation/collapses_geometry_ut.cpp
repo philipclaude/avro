@@ -45,9 +45,8 @@ UT_TEST_CASE(test1)
   EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/tire.egads");
 
   TessellationParameters tess_params;
-  tess_params.standard();
-  tess_params.min_size() = 0.2;
-  tess_params.min_angle() = 20;
+  tess_params.set("min size" , 0.2 );
+  tess_params.set("min angle", 20.0);
 
   ModelTessellation tess(model,tess_params);
 

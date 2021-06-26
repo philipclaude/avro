@@ -118,18 +118,18 @@ adapt( int nb_input , const char** inputs )
 
   // define the problem and adapt
   AdaptationParameters params;
-  params.set_param("curved", curved);
-  params.set_param("directory", std::string("./"));
-  params.set_param("write conformity", false);
-  params.set_param("swapout" , false);
-  params.set_param("use smoothing" , true);
+  params.set("curved", curved);
+  params.set("directory", "./" );
+  params.set("write conformity", false);
+  params.set("swapout" , false);
+  params.set("use smoothing" , true);
 
   std::string outputfile(inputs[3]);
   std::vector<std::string> s = split(outputfile,".");
-  params.set_param("prefix", s[0]);
+  params.set("prefix", s[0]);
 
   if (number<4)
-    params.set_param("insertion volume factor", -1.0 );
+    params.set("insertion volume factor", -1.0 );
 
   for (index_t iter=0;iter<nb_iter;iter++)
   {
@@ -142,7 +142,7 @@ adapt( int nb_input , const char** inputs )
       pfld->limit( mesh.retrieve<type>(0) , href );
 
     // adjust the adaptation parameters
-    params.set_param("adapt iter" , iter);
+    params.set("adapt iter" , iter);
 
     // create the mesh we will write to
     std::shared_ptr<Mesh> pmesh_out = std::make_shared<Mesh>(mesh.points().dim(),mesh.number());
@@ -168,7 +168,7 @@ adapt( int nb_input , const char** inputs )
       ptopology->add(ptopology_out(k),pmesh_out->topology(0).nv(k));
     pmesh->add(ptopology);
 
-    if (params.get_param<bool>("curved")) params.set_param("has uv", true);
+    if (params["curved"]) params.set("has uv", true);
   }
 
   Library* lib = Library::get();
@@ -179,8 +179,6 @@ adapt( int nb_input , const char** inputs )
 
   return 0;
 }
-
-
 
 } // programs
 

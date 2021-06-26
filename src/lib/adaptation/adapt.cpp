@@ -69,14 +69,14 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
   smoother_(topology),
   edge_swapper_(topology)
 {
-  bool curved = params.get_param<bool>("curved");
+  bool curved = params["curved"];
   collapser_.curved() = curved;
   inserter_.curved() = curved;
   smoother_.curved() = curved;
   edge_swapper_.curved() = curved;
 
-  int smoothing_exponent = params.get_param<index_t>("smoothing exponent");
-  smoother_.exponent() = index_t(smoothing_exponent);
+  index_t smoothing_exponent = params["smoothing exponent"];
+  smoother_.exponent() = smoothing_exponent;
 }
 
 const real_t nb_smooth = 10;
@@ -93,17 +93,17 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
 
   // retrieve the parameters
   const bool limit_insertion_length = true;
-  const bool swapout = params.get_param<bool>("swapout");
+  const bool swapout = params["swapout"];
   const real_t lt_min = sqrt(2.0);
   real_t lt_max = 2.0;
-  const bool smooth_on = params.get_param<bool>("use smoothing");
+  const bool smooth_on = params["use smoothing"];
   const bool fefloa = false;
 
   if (fefloa) lt_max = sqrt(2.0); // and we will do one pass
 
   // the uv-parameters might not be set for the incoming points
   // for the case of real_t geometries
-  bool curved = params.get_param<bool>("curved");
+  bool curved = params["curved"];
   if (curved)
   {
     // check all parametric coordinates for consistency
@@ -115,7 +115,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
       if (e==NULL) continue;
 
       // project the mesh_topology points to the geometry if not provided
-      bool has_uv = params.get_param<bool>("has uv");
+      bool has_uv = params["has uv"];
       if(!has_uv)
       {
         real_t* x = mesh_topology.points()[k];
@@ -288,9 +288,10 @@ done:
   {
     properties.compute( mesh_topology , metric );
     properties.print("final metric conformity" );
-    if (params.get_param<bool>("write conformity"))
-      properties.dump( params.get_param<std::string>("directory")+
-                       "/properties_"+stringify(params.get_param<index_t>("adapt iter"))+".json");
+    std::string directory = params["directory"];
+    index_t adapt_iter = params["adapt iter"];
+    if (params["write conformity"])
+      properties.dump( directory + "/properties_" + stringify(adapt_iter) + ".json");
   }
   else avro_implement;
 
@@ -349,7 +350,7 @@ adapt( AdaptationProblem& problem )
   // standardize the parameters
   AdaptationParameters& params = problem.params;
 
-  std::string output_redirect = params.get_param<std::string>("output redirect");
+  std::string output_redirect = params["output redirect"];
 
   fpos_t pos;
   int redirected_fd = 0;
@@ -477,7 +478,7 @@ adapt( AdaptationProblem& problem )
   field.set_cells( topology );
   avro_assert( field.check () );
 
-  bool limit_metric = params.get_param<bool>("limit metric");
+  bool limit_metric = params["limit metric"];
   if (limit_metric)
   {
     // option to limit the metric field from the current mesh-implied metric
@@ -504,12 +505,12 @@ adapt( AdaptationProblem& problem )
   // call the adaptation!
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );
 
-  std::string directory = params.get_param<std::string>("directory");
-  std::string prefix = params.get_param<std::string>("prefix");
-  index_t adapt_iter = params.get_param<index_t>("adapt iter");
-  bool write_mesh = params.get_param<bool>("write mesh");
-  bool has_interior_boundaries = params.get_param<bool>("has interior boundaries");
-  bool export_boundary = params.get_param<bool>("export boundary");
+  std::string directory = params["directory"];
+  std::string prefix = params["prefix"];
+  index_t adapt_iter = params["adapt iter"];
+  bool write_mesh = params["write mesh"];
+  bool has_interior_boundaries = params["has interior boundaries"];
+  bool export_boundary = params["export boundary"];
 
   // option to output the mesh
   std::string mesh_file = directory + prefix + "_" + stringify(adapt_iter) + ".mesh";

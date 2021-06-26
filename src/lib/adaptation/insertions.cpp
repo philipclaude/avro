@@ -327,7 +327,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 {
   avro_assert( metric_.check(topology_) );
 
-  real_t dof_factor = params_.get_param<real_t>("insertion volume factor");
+  real_t dof_factor = params_["insertion volume factor"];
 
   index_t nb_swaps;
   index_t nb_inserted,nb_inserted_total = 0;

@@ -30,10 +30,9 @@ UT_TEST_CASE(test1)
   //EGADS::Model model(&context,"/Users/pcaplan/Codes/mach-II/library/geometry/turtle.step");
 
   TessellationParameters params;
-  params.standard();
 
-  params.min_size() = 0.1;
-  params.min_angle() = 20;
+  params.set("min size" , 0.1 );
+  params.set("min angle", 20.0);
 
   ModelTessellation tess(model,params);
 

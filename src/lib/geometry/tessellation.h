@@ -10,7 +10,7 @@
 #ifndef AVRO_LIB_GEOMETRY_TESSELLATION_H_
 #define AVRO_LIB_GEOMETRY_TESSELLATION_H_
 
-#include "common/parameters.h"
+#include "avro_params.h"
 
 #include "mesh/mesh.h"
 
@@ -20,25 +20,14 @@ namespace avro
 class Body;
 class Model;
 
-class TessellationParameters : public Parameters
+class TessellationParameters : public ParameterSet
 {
 public:
-  TessellationParameters()
-  {
-    names_ = {"type","min-size","min-length","min-angle"};
-  }
-
-  std::string& type() { return stringParams_["type"]; }
-  real_t& min_size() { return realParams_["min-size"]; }
-  real_t& min_length() { return realParams_["min-length"]; }
-  real_t& min_angle() { return realParams_["min-angle"]; }
-
-  void standard()
-  {
-    if (!stringParams_.has("type")) stringParams_["type"] = "simplex";
-    if (!realParams_.has("min-size")) realParams_["min-size"] = 0.25;
-    if (!realParams_.has("min-length")) realParams_["min-length"] = 0.01;
-    if (!realParams_.has("min-angle")) realParams_["min-angle"] = 30;
+  TessellationParameters() {
+    register_parameter( "type" , "simplex" , "element type for tessellation" );
+    register_parameter( "min size" , 0.25 , "minimum size" );
+    register_parameter( "min length" , 0.01 , "minimum length" );
+    register_parameter( "min angle" , 30.0 , "minimum angle in degrees" );
   }
 };
 

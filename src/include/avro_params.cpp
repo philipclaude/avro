@@ -6,6 +6,26 @@
 namespace avro
 {
 
+Parameter::operator index_t() const {
+  avro_assert( type_name_ == typeid(index_t).name());
+  return static_cast<const ParameterType<index_t>&>(*this);
+}
+
+Parameter::operator real_t() const {
+  avro_assert( type_name_ == typeid(real_t).name());
+  return static_cast<const ParameterType<real_t>&>(*this);
+}
+
+Parameter::operator std::string() const {
+  avro_assert( type_name_ == typeid(std::string).name());
+  return static_cast<const ParameterType<std::string>&>(*this);
+}
+
+Parameter::operator bool() const {
+  avro_assert( type_name_ == typeid(bool).name());
+  return static_cast<const ParameterType<bool>&>(*this);
+}
+
 ParameterSet::ParameterSet() {
   set_defaults();
 }
@@ -16,9 +36,9 @@ ParameterSet::ParameterSet( const ParameterSet& params ) {
 
 void
 ParameterSet::set_defaults() {
-  register_parameter( "output redirect" , std::string() , "defines where avro output will be redirected (if supported)" );
-  register_parameter( "directory" , std::string("./") , "defines where output files will be written" );
-  register_parameter( "prefix" , std::string("avro_") , "output prefix" );
+  register_parameter( "output redirect" , "" , "defines where avro output will be redirected (if supported)" );
+  register_parameter( "directory" , "./" , "defines where output files will be written" );
+  register_parameter( "prefix" , "avro_" , "output prefix" );
   register_parameter( "write mesh" , true , "controls whether the mesh is written upon completion of the algortihm" );
   register_parameter( "limit metric" , false , "controls whether the metric is limited from the current mesh" );
   register_parameter( "metric limiting factor" , 2.0 , "factor by which entries of the step matrix are limited when limiting the metric" );
@@ -26,11 +46,12 @@ ParameterSet::set_defaults() {
   register_parameter( "sdot iterations" , index_t(10) , "controls the number of iterations performed when optimizing the weights of a power diagram" );
   register_parameter( "max parallel passes" , index_t(3) , "controls the maximum number of passes used in a parallel adaptation run" );
   register_parameter( "curved" , true , "controls whether an input geometry is curved (which will make for a faster adaptation if false)" );
+  register_parameter( "adapt iter" , index_t(1) , "adaptation iteration" );
 }
 
 template<typename T>
 void
-ParameterSet::set_param( const std::string& name , const T& value ) {
+ParameterSet::set( const std::string& name , const T& value ) {
   param_itr it = parameters_.find(name);
   if (it == parameters_.end()) {
     printf("parameter \"%s\" is not valid\n",name.c_str());
@@ -38,25 +59,24 @@ ParameterSet::set_param( const std::string& name , const T& value ) {
   }
   else {
     Parameter& param = *it->second.get();
+    avro_assert( param.type_name() == typeid(T).name() );
     static_cast<ParameterType<T>&>(param).set(value);
   }
 }
 
-template<typename T>
-T
-ParameterSet::get_param( const std::string& name ) const {
+const Parameter&
+ParameterSet::operator[] ( const std::string& name ) const {
   param_const_itr it = parameters_.find(name);
   if (it == parameters_.end()) {
     printf("parameter \"%s\" is not valid\n",name.c_str());
-    T x(0);
+    avro_assert_not_reached;
+    ParameterType<index_t> x("unknown",0u,"unknown");
     return x;
   }
-  const Parameter& param = *it->second.get();
-  return static_cast<const ParameterType<T>&>(param);
+  return *it->second.get();
 }
 
-#define INSTANTIATE(T) template void ParameterSet::set_param( const std::string& , const T& ); \
-                       template T ParameterSet::get_param( const std::string& ) const;
+#define INSTANTIATE(T) template void ParameterSet::set( const std::string& , const T& );
 
 INSTANTIATE(std::string)
 INSTANTIATE(bool)
