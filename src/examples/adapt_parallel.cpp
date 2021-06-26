@@ -21,7 +21,7 @@ main( int argc , char** argv )
   avro::Context context(number,dim,udim);
 
   // setup the geometry & initial mesh
-  context.define_geometry("box"); //
+  context.define_geometry("box");
   context.define_mesh("CKF-3-3-3");
   context.attach_geometry();
 
@@ -34,10 +34,10 @@ main( int argc , char** argv )
   std::vector<real_t> coordinates;
   std::vector<index_t> elements; // unused
   context.retrieve_mesh( coordinates , elements );
-  index_t nb_points = coordinates.size() / dim;
+  index_t nb_points = coordinates.size() / dim; // local number of points
 
   index_t nb_rank = number*(number+1)/2;
-  std::vector<real_t> metrics( nb_points * nb_rank , 0.0 );
+  std::vector<real_t> metrics( nb_points * nb_rank , 0.0 ); // local metrics
 
   // constant diagonal metric requesting a size of h
   real_t h = 0.25;
@@ -50,6 +50,7 @@ main( int argc , char** argv )
   }
 
   // perform the adaptation
+  context.parameters().set( "limit metric" , true );
   context.adapt_parallel(metrics);
 
   // retrieve the mesh from the context
@@ -92,4 +93,6 @@ main( int argc , char** argv )
     }
     #endif
   }
+
+  avro::ProcessMPI::terminate();
 }

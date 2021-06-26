@@ -288,7 +288,6 @@ Context::adapt_parallel( const std::vector<real_t>& m )
   params.set( "allow serial" , true );
   params.set( "insertion volume factor" ,  -1.0 );
   params.set( "curved" , false);
-  params.set( "limit metric" , true );
   params.set( "max parallel passes" , index_t(3) );
   params.set( "elems per processor" , index_t(5000) );
   params.set("has uv", true);
@@ -301,7 +300,6 @@ Context::adapt_parallel( const std::vector<real_t>& m )
   AdaptationManager<Simplex> manager( *topology_.get() , metric , params );
 
   manager.topology().set_entities( entities );
-  printf("there are %lu entities\n",entities.size());
 
   manager.adapt();
 
