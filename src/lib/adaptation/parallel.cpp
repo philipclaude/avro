@@ -1901,7 +1901,7 @@ AdaptationManager<type>::adapt() {
       if (pass == max_passes-1 || max_passes <= 2) {
         done = true;
       }
-      else if (pass == max_passes-2 && params_["allow_serial"]) {
+      else if (pass == max_passes-2 && params_["allow serial"]) {
         freeze_conforming = true;
         nb_part = 1;
       }
