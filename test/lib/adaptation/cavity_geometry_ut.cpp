@@ -12,7 +12,6 @@
 #include "adaptation/adapt.h"
 #include "adaptation/geometry.h"
 #include "adaptation/metric.h"
-#include "adaptation/parameters.h"
 
 #include "common/error.h"
 

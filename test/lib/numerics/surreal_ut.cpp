@@ -5,7 +5,7 @@
 
 #include "unit_tester.hpp"
 
-#include "types.h"
+#include "avro_types.h"
 
 #include "numerics/surreal/SurrealS.h"
 

@@ -10,7 +10,7 @@
 #ifndef avro_LIB_LIBRARY_CKF_H_
 #define avro_LIB_LIBRARY_CKF_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"

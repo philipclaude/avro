@@ -12,7 +12,7 @@
 
 #include "common/error.h"
 #include "common/tools.h"
-#include "types.h"
+#include "avro_types.h"
 
 #ifdef AVRO_WITH_GL
 

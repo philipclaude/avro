@@ -11,7 +11,7 @@
 #define AVRO_COMMON_SET_H_
 
 #include "common/tools.h"
-#include "types.h"
+#include "avro_types.h"
 
 #include <vector>
 #include <algorithm>

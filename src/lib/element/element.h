@@ -10,7 +10,7 @@
 #ifndef avro_LIB_SHAPE_SHAPE_H_
 #define avro_LIB_SHAPE_SHAPE_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include "element/basis.h"
 #include "element/reference.h"

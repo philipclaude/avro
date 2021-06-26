@@ -12,7 +12,7 @@
 #include "numerics/linear_algebra.h"
 #include "numerics/mat.h"
 #include "numerics/predicates.h"
-#include "types.h"
+#include "avro_types.h"
 
 #include "mesh/points.h"
 

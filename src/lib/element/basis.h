@@ -10,7 +10,7 @@
 #ifndef avro_LIB_MASTER_BASIS_H_
 #define avro_LIB_MASTER_BASIS_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include "element/reference.h"
 

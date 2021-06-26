@@ -3,7 +3,6 @@
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
 #include "adaptation/parallel.h"
-#include "adaptation/parameters.h"
 
 #include "element/simplex.h"
 

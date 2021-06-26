@@ -9,7 +9,9 @@
 //
 #include "unit_tester.hpp"
 
-#include "parameters.h"
+#include "avro_params.h"
+
+#include "adaptation/adapt.h"
 
 #include <cmath>
 
@@ -23,11 +25,15 @@ UT_TEST_CASE(test1)
 
   ParameterSet parameters;
 
-  parameters.set_param( "max passes" , 5 );
-  parameters.set_param( "something unknown" , 2 );
+  parameters.set_param( "max parallel passes" , index_t(5) );
+  UT_CATCH_EXCEPTION( parameters.set_param( "something unknown" , 2 ) );
   parameters.set_param( "metric limiting factor" , std::sqrt(2.0) );
 
   parameters.print();
+
+  AdaptationParameters adapt_params(parameters);
+  UT_ASSERT_EQUALS( adapt_params.get_param<index_t>("max parallel passes" ) , 5 );
+  adapt_params.print();
 }
 UT_TEST_CASE_END(test1)
 

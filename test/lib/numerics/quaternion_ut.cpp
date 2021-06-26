@@ -1,6 +1,6 @@
 #include "unit_tester.hpp"
 
-#include "types.h"
+#include "avro_types.h"
 
 #include "numerics/quaternion.h"
 #include "graphics/math.h"

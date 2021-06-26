@@ -11,7 +11,7 @@
 #define avro_COMMON_THREAD_H_
 
 #include "common/error.h"
-#include "types.h"
+#include "avro_types.h"
 
 #include <memory>
 #include <string>

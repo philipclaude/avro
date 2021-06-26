@@ -10,7 +10,7 @@
 #ifndef avro_LIB_GEOMETRY_BODY_H_
 #define avro_LIB_GEOMETRY_BODY_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include <memory>
 #include <vector>

@@ -10,14 +10,13 @@
 #include "adaptation/adapt.h"
 #include "adaptation/filter.h"
 #include "adaptation/metric.h"
-#include "adaptation/parameters.h"
 
 #include "geometry/entity.h"
 
 #include "mesh/topology.h"
 
 #include "common/tools.h"
-#include "types.h"
+#include "avro_types.h"
 
 #include <unordered_set>
 

@@ -11,7 +11,7 @@
 #define avro_LIB_LINEAR_ALGEBRA_H_
 
 #include <cmath>
-#include "types.h"
+#include "avro_types.h"
 
 namespace avro
 {

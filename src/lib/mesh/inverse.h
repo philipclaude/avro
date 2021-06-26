@@ -10,7 +10,7 @@
 #ifndef avro_LIB_MESH_INVERSE_H_
 #define avro_LIB_MESH_INVERSE_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include <unordered_set>
 #include <vector>

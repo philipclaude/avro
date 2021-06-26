@@ -12,7 +12,7 @@
 
 #include "common/process.h"
 #include "common/thread.h"
-#include "types.h"
+#include "avro_types.h"
 
 #include <algorithm>
 

@@ -71,7 +71,7 @@
 #ifndef GEOGRAM_API_DEFS
 #define GEOGRAM_API_DEFS
 
-#include "types.h"
+#include "avro_types.h"
 using namespace avro;
 
 /*

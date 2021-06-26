@@ -11,7 +11,6 @@
 
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
-#include "adaptation/parameters.h"
 
 #include "common/error.h"
 
@@ -94,19 +93,19 @@ UT_TEST_CASE(test1)
 
   // define the problem and adapt
   AdaptationParameters params;
-  params.directory() = "tmp/";
-  params.insertion_volume_factor() = -1;
-  params.curved() = true;
-  params.has_uv() = true;
-  params.use_smoothing() = true;
-  params.swapout() = false;
-  //params.limit_metric() = true; // requires a little implementation first
+  params.set_param( "directory" , std::string("tmp/"));
+  params.set_param( "insertion volume factor" ,  -1.0 );
+  params.set_param( "curved" , true);
+  params.set_param( "limit metric" , false ); // requires some implementation
+  params.set_param( "has uv",  true );
+  params.set_param( "use smoothing" , true);
+  params.set_param( "swapout" , false);
 
   index_t niter = 1;
   for (index_t iter = 0; iter < niter; iter++)
   {
 
-    params.adapt_iter() = iter;
+    params.set_param( "adapt iter" , index_t(iter) );
 
     // create the metric field
     std::vector<symd<real_t>> fld;
@@ -140,7 +139,7 @@ UT_TEST_CASE(test1)
       //vis.run();
     }
 
-    params.has_uv() = true;
+    params.set_param("has uv", true);
   }
 }
 UT_TEST_CASE_END(test1)

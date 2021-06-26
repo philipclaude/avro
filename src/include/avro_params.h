@@ -13,6 +13,7 @@ public:
 
   virtual ~Parameter() {}
   virtual void print() const = 0;
+  virtual void help() const = 0;
 
 protected:
   Parameter( const std::string& name , const std::string& description ) :
@@ -41,11 +42,11 @@ public:
   operator T() const { return value_; }
 
   void print() const {
-    std::cout << std::boolalpha << "parameter[" << name_ << "]: " << value_ << std::endl;
+    std::cout << std::boolalpha << "\tparameter[\"" << name_ << "\"]: " << value_ << std::endl;
   }
 
   void help() const {
-    std::cout << "parameter[" << name_ << "]: " << description_ << "(default = " << default_ << ")" << std::endl;
+    std::cout << std::boolalpha << "\tparameter[\"" << name_ << "\"]: " << description_ << "(default = " << default_ << ")" << std::endl;
   }
 
 private:
@@ -57,34 +58,23 @@ class ParameterSet
 {
 public:
   ParameterSet();
+  ParameterSet( const ParameterSet& params );
+  virtual ~ParameterSet() {}
 
-  void copy( const ParameterSet& params ) { assert(false); }
-
-  template<typename T> void set_param( const std::string& name , const T& value ) {
-    param_itr it = parameters_.find(name);
-    if (it == parameters_.end()) {
-      printf("parameter \"%s\" is not valid\n",name.c_str());
-    }
-    else {
-      Parameter& param = *it->second.get();
-      static_cast<ParameterType<T>&>(param).set(value);
-    }
-  }
-
-  template<typename T> T get_param( const std::string& name ) const {
-    param_const_itr it = parameters_.find(name);
-    if (it == parameters_.end()) {
-      printf("parameter \"%s\" is not valid\n",name.c_str());
-      T x(0);
-      return x;
-    }
-    const Parameter& param = *it->second.get();
-    return static_cast<const ParameterType<T>&>(param);
-  }
+  virtual void set_defaults();
+  template<typename T> void set_param( const std::string& name , const T& value );
+  template<typename T> T get_param( const std::string& name ) const;
 
   void print() const {
+    printf("ParameterSet:\n");
     for (param_const_itr it = parameters_.begin(); it != parameters_.end(); ++it)
       it->second->print();
+  }
+
+  void help() const {
+    printf("ParameterSet:\n");
+    for (param_const_itr it = parameters_.begin(); it != parameters_.end(); ++it)
+      it->second->help();
   }
 
 protected:
@@ -92,6 +82,8 @@ protected:
     std::shared_ptr<Parameter> param = std::make_shared<ParameterType<T>>(name,def,description);
     parameters_.insert( {name,param} );
   }
+
+  const std::map<std::string,std::shared_ptr<Parameter>>& parameters() const { return parameters_; }
 
 private:
   typedef std::map<std::string,std::shared_ptr<Parameter>>::iterator param_itr;

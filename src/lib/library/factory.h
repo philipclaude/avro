@@ -10,7 +10,7 @@
 #ifndef AVRO_LIBRARY_FACTORY_H_
 #define AVRO_LIBRARY_FACTORY_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include <memory>
 #include <stdlib.h>

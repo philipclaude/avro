@@ -1,8 +1,8 @@
 #ifndef AVRO_API_AVRO_H_
 #define AVRO_API_AVRO_H_
 
-#include "types.h"
-#include "parameters.h"
+#include "avro_types.h"
+#include "avro_params.h"
 
 #include <memory>
 #include <vector>

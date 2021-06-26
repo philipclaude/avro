@@ -10,7 +10,7 @@
 #ifndef avro_NUMERICS_FUNCTIONS_H_
 #define avro_NUMERICS_FUNCTIONS_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 namespace avro
 {

@@ -11,7 +11,7 @@
 #define AVRO_GRAPH_NEIGHBOURS_H_
 
 #include "common/table.h"
-#include "types.h"
+#include "avro_types.h"
 
 namespace avro
 {

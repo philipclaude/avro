@@ -1,7 +1,7 @@
 #include "unit_tester.hpp"
 
+#include "adaptation/adapt.h"
 #include "adaptation/parallel.h"
-#include "adaptation/parameters.h"
 
 #include "common/mpi.hpp"
 #include "common/process.h"
@@ -129,22 +129,24 @@ UT_TEST_CASE( test1 )
   topology.points().attach(geometry);
 
   AdaptationParameters params;
-  params.standard();
+  params.set_param( "directory" , std::string("tmp/"));
+  params.set_param( "insertion volume factor" ,  -1.0 );
+  params.set_param( "curved" , false);
+  params.set_param( "limit metric" , true );
+  params.set_param( "max parallel passes" , index_t(3) );
+  params.set_param( "elems per processor" , 5000 );
+  params.set_param("has uv", true);
+  params.set_param( "swapout" , false);
+
 
   std::vector<VertexMetric> metrics(topology.points().nb());
   for (index_t k = 0; k < topology.points().nb(); k++)
     metrics[k] = analytic( topology.points()[k] );
 
-  params.partitioned() = false;
-  params.balanced() = true; // assume load-balanced once the first partition is computed
-  params.curved() = false;//true;
-  params.insertion_volume_factor() = -1;//(number <= 3) ? -1 : std::sqrt(2.0);
-  params.limit_metric() = true;
-  params.max_passes() = 3;
-  params.parallel_method() = "migrate";
-  params.swapout() = false;
-  params.has_uv() = true;
-  params.elems_per_processor() = 5000;
+  //params.partitioned() = false;
+  //params.balanced() = true; // assume load-balanced once the first partition is computed
+  //params.parallel_method() = "migrate";
+  //params.elems_per_processor() = 5000;
 
   topology.build_structures();
 
@@ -155,10 +157,10 @@ UT_TEST_CASE( test1 )
   index_t niter = 1;
   for (index_t iter = 0; iter <= niter; iter++) {
 
-    params.adapt_iter() = iter;
-    params.limit_metric() = true;
-    if (iter <= 1) params.allow_serial() = true;
-    else params.allow_serial() = false;
+    params.set_param("adapt_iter",index_t(iter));
+    params.set_param("limit metric" , true );
+    if (iter <= 1) params.set_param("allow serial", true);
+    else params.set_param("allow_serial", false);
 
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);

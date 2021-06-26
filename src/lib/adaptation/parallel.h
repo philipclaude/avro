@@ -1,7 +1,7 @@
 #ifndef avro_LIB_ADAPTATION_PARALLEL_H_
 #define avro_LIB_ADAPTATION_PARALLEL_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include <map>
 #include <memory>

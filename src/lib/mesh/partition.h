@@ -1,7 +1,7 @@
 #ifndef AVRO_LIB_MESH_PARTITION_H_
 #define AVRO_LIB_MESH_PARTITION_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include "mesh/points.h"
 

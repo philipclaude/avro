@@ -1,7 +1,7 @@
 #ifndef AVRO_LIB_VORONOI_POWER_H_
 #define AVRO_LIB_VORONOI_POWER_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include "element/polytope.h"
 #include "element/simplex.h"

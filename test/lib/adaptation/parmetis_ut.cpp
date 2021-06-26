@@ -2,7 +2,7 @@
 
 #include "common/mpi.hpp"
 #include "common/tools.h"
-#include "types.h"
+#include "avro_types.h"
 
 #ifdef AVRO_MPI
 
@@ -73,9 +73,9 @@ UT_TEST_CASE( test1 )
     options[2] = 0;
     options[3] = PARMETIS_PSR_COUPLED;*/
 
-    METIS_SetDefaultOptions[METIS_NOPTIONS];
-    options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
-    options[METIS_OPTION_DBGLVL] = METIS_DBG_INFO;
+    //METIS_SetDefaultOptions[METIS_NOPTIONS];
+    //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
+    //options[METIS_OPTION_DBGLVL] = METIS_DBG_INFO;
 
 
 

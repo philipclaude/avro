@@ -2,7 +2,7 @@
 #define PYDG_NUMERICS_MATRIX_H_
 
 #include "common/error.h"
-#include "types.h"
+#include "avro_types.h"
 
 #include "numerics/surreal/SurrealS.h"
 #include "numerics/result_of.h"

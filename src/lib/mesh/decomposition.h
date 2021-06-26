@@ -10,7 +10,7 @@
 #ifndef avro_LIB_MESH_SimplicialDecomposition_H_
 #define avro_LIB_MESH_SimplicialDecomposition_H_
 
-#include "types.h"
+#include "avro_types.h"
 
 #include "element/element.h"
 #include "element/simplex.h"

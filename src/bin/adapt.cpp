@@ -11,7 +11,6 @@
 
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
-#include "adaptation/parameters.h"
 
 #include "common/directory.h"
 #include "common/tools.h"
@@ -121,9 +120,9 @@ adapt( int nb_input , const char** inputs )
   AdaptationParameters params;
   params.set_param("curved", curved);
   params.set_param("directory", std::string("./"));
-  params.set_param("write_conformity", false);
-//  params.swapout() = false;
- // params.use_smoothing() = false;
+  params.set_param("write conformity", false);
+  params.set_param("swapout" , false);
+  params.set_param("use smoothing" , true);
 
   std::string outputfile(inputs[3]);
   std::vector<std::string> s = split(outputfile,".");
@@ -169,7 +168,7 @@ adapt( int nb_input , const char** inputs )
       ptopology->add(ptopology_out(k),pmesh_out->topology(0).nv(k));
     pmesh->add(ptopology);
 
-    if (params.get_param<bool>("curved")) params.set_param("has_uv", true);
+    if (params.get_param<bool>("curved")) params.set_param("has uv", true);
   }
 
   Library* lib = Library::get();
