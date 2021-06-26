@@ -1,5 +1,7 @@
 #include <avro.h>
 
+#include <assert.h>
+
 #include "common/mpi.hpp"
 #include "common/process.h" // to initialize MPI
 
