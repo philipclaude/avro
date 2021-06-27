@@ -93,4 +93,4 @@ target_link_libraries( avro_static ${avro_EXTERNAL_LIBRARIES_STATIC} )
 
 pybind11_add_module(pyavro lib/python/pyavro.cpp)
 target_compile_definitions(pyavro PRIVATE VERSION_INFO=1.1)
-target_link_libraries( pyavro PRIVATE avro_static ${avro_EXTERNAL_LIBRARIES} )
+target_link_libraries( pyavro PRIVATE avro_static )

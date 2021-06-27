@@ -48,7 +48,7 @@ retrieve_polytopes( const Context& context ) {
   std::vector<index_t> elements;
   std::vector<index_t> nv_per_elem;
   context.retrieve_polytopes(vertices,elements,nv_per_elem);
-  return {vertices,elements,nv_per_elem};
+  return std::make_tuple(vertices,elements,nv_per_elem);
 }
 
 namespace py = pybind11;
