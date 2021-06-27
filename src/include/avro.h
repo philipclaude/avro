@@ -18,6 +18,7 @@ class Entity;
 class Model;
 class Simplex;
 template <typename type> class Topology;
+class TopologyBase;
 class Points;
 
 // forward declaration of ego
@@ -69,10 +70,10 @@ public:
                                    std::vector<int>& geometry ) const;
 
   // polytopal mesh retrieval functions
-  void retrieve_polytopes( std::vector<index_t>& indices , std::vector<index_t>& nv_per_elem ) const;
+  void retrieve_polytopes( std::vector<real_t>& x , std::vector<index_t>& indices , std::vector<index_t>& nv_per_elem ) const;
   void retrieve_polytope_facets( std::vector<index_t>& indices , std::vector<index_t>& nv_per_elem ) const;
-  void compute_laguerre( const std::vector<real_t>& sites , const std::vector<real_t>& weights );
-  void compute_optimal_transport( const std::vector<real_t>& sites , const std::vector<real_t>& mass , const std::vector<real_t>& initial_weights );
+  std::vector<real_t> compute_laguerre( const std::vector<real_t>& sites , const std::vector<real_t>& weights , index_t nb_iter = 0 );
+  std::vector<real_t> compute_optimal_transport( const std::vector<real_t>& sites , const std::vector<real_t>& mass , const std::vector<real_t>& initial_weights , index_t nb_iter = 10 );
 
   ParameterSet& parameters() { return parameters_; }
   const ParameterSet& parameters() const { return parameters_; }
@@ -94,7 +95,7 @@ private:
   ParameterSet parameters_;
 
   std::shared_ptr<Points> points_;
-  std::shared_ptr<Topology<Simplex>> topology_;
+  std::shared_ptr<TopologyBase> topology_;
   std::vector<real_t> metric_;
 
 };

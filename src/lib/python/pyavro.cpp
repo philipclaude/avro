@@ -42,6 +42,15 @@ retrieve_boundary( const Context& context ) {
   return {faces,geometry};
 }
 
+std::tuple< std::vector<real_t> , std::vector<index_t> , std::vector<index_t> >
+retrieve_polytopes( const Context& context ) {
+  std::vector<real_t> vertices;
+  std::vector<index_t> elements;
+  std::vector<index_t> nv_per_elem;
+  context.retrieve_polytopes(vertices,elements,nv_per_elem);
+  return {vertices,elements,nv_per_elem};
+}
+
 namespace py = pybind11;
 
 PYBIND11_MODULE(pyavro, m) {
@@ -83,11 +92,15 @@ PYBIND11_MODULE(pyavro, m) {
   m.def("retrieve_mesh",&retrieve_mesh, "");
   m.def("retrieve_boundary",&retrieve_boundary,"");
   m.def("retrieve_geometry",&retrieve_geometry,"");
+  m.def("retrieve_polytopes",&retrieve_polytopes,"");
 
   py::class_<Context>(m,"Context")
     .def(py::init<coord_t,coord_t,coord_t>())
     .def("define_mesh",&Context::define_mesh)
     .def("define_geometry",static_cast<void (Context::*)(const std::string&)>(&Context::define_geometry), "define geometry from string")
     .def("attach_geometry",&Context::attach_geometry)
-    .def("adapt",&Context::adapt);
+    .def("adapt",&Context::adapt)
+    .def("compute_laguerre",&Context::compute_laguerre)
+    .def("compute_optimal_transport",&Context::compute_optimal_transport);
+
 }

@@ -20,6 +20,9 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
+#include "voronoi/delaunay.h"
+#include "voronoi/optimal_transport.h"
+
 namespace avro
 {
 
@@ -31,7 +34,7 @@ Context::Context( coord_t number , coord_t dim , coord_t udim ) :
   points_(nullptr),
   topology_(nullptr)
 {
-  //initialize_avro(); // don't think this is needed
+  initialize_avro();
 }
 
 Context::Context( const Context& ctx ) :
@@ -301,15 +304,16 @@ Context::adapt_parallel( const std::vector<real_t>& m )
   std::vector<Entity*> entities;
   model_->get_tessellatable_entities(entities);
 
-  topology_->build_structures();
-  AdaptationManager<Simplex> manager( *topology_.get() , metric , params );
+  Topology<Simplex>& topology = static_cast<Topology<Simplex>&>(*topology_.get());
+  topology.build_structures();
+  AdaptationManager<Simplex> manager( topology , metric , params );
 
   manager.topology().set_entities( entities );
 
   manager.adapt();
 
   // copy the adapted mesh into the context data
-  topology_->TopologyBase::copy( manager.topology() );
+  topology.TopologyBase::copy( manager.topology() );
   manager.topology().points().copy( *points_.get() );
 
   mpi::barrier();
@@ -332,11 +336,12 @@ Context::partition() {
   index_t nb_points = points_->nb();
   std::vector<symd<real_t>> metric( nb_points );
 
-  topology_->build_structures();
-  AdaptationManager<Simplex> manager( *topology_.get() , metric , params );
+  Topology<Simplex>& topology = static_cast<Topology<Simplex>&>(*topology_.get());
+  topology.build_structures();
+  AdaptationManager<Simplex> manager( topology , metric , params );
 
   // copy the partitioned mesh into the context data
-  topology_->TopologyBase::copy( manager.topology() );
+  topology.TopologyBase::copy( manager.topology() );
   manager.topology().points().copy( *points_.get() );
 
 #endif
@@ -360,6 +365,28 @@ Context::retrieve_mesh( std::vector<real_t>& x , std::vector<index_t>& s ) const
   for (index_t k=0;k<topology_->nb();k++)
   for (index_t d=0;d<nv;d++)
     s[i++] = (*topology_)(k,d);
+}
+
+void
+Context::retrieve_polytopes( std::vector<real_t>& x , std::vector<index_t>& elements , std::vector<index_t>& nv_per_elem ) const
+{
+  avro_assert_msg( points_ != nullptr , "points are not defined" );
+  avro_assert_msg( topology_ != nullptr , "topology is not defined" );
+
+  x.resize( points_->nb()*points_->dim() );
+  index_t i = 0;
+  for (index_t k=0;k<points_->nb();k++)
+  for (coord_t d=0;d<points_->dim();d++)
+    x[i++] = (*points_)(k,d);
+
+  elements.resize( topology_->data().size() );
+  nv_per_elem.resize( topology_->nb() );
+  i = 0;
+  for (index_t k = 0; k < topology_->nb(); k++) {
+    for (index_t  d = 0; d < topology_->nv(k); d++)
+      elements[i++] = (*topology_)(k,d);
+    nv_per_elem[k] = topology_->nv(k);
+  }
 }
 
 void
@@ -394,7 +421,8 @@ Context::retrieve_boundary( std::vector<std::vector<index_t>>& facets ,
                             std::vector<int>& geometry , bool interior ) const
 {
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
-  Boundary<Simplex> boundary(*topology_.get());
+  const Topology<Simplex>& topology = static_cast<const Topology<Simplex>&>(*topology_.get());
+  Boundary<Simplex> boundary(topology);
   boundary.extract(interior);
 
   facets.resize( boundary.nb_children() , std::vector<index_t>() );
@@ -417,6 +445,7 @@ Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
                                      std::vector<int>& geometry ) const
 {
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
+  const Topology<Simplex>& topology = static_cast<const Topology<Simplex>&>(*topology_.get());
 
   std::map<Entity*,int>::const_iterator it;
   std::map<Entity*,int> entity2index;
@@ -431,7 +460,7 @@ Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
   geometry.resize( nb_boundary );
 
   // compute the boundary
-  Facets facets(*topology_.get());
+  Facets facets(topology);
   facets.compute();
   std::vector<index_t> facet(topology_->number());
   for (index_t k = 0; k < facets.nb(); k++) {
@@ -452,4 +481,104 @@ Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
     geometry[it->second] = entity2id_.at(it->first);
 }
 
+#if 0
+template<typename type>
+std::shared_ptr<delaunay::OptimalTransportBase>
+get_optimal_transport_solver(coord_t number, coord_t dim) {
+
+  std::shared_ptr<CubeDomain<type>> domain = std::make_shared<CubeDomain<type>>(number,dim,2);
+  return std::make_shared<delaunay::SemiDiscreteOptimalTransport<type>>(*domain.get(),density.get());
 }
+#endif
+
+std::vector<real_t>
+Context::compute_laguerre( const std::vector<real_t>& sites , const std::vector<real_t>& weights , index_t nb_iter ) {
+
+  index_t nb_points = sites.size() / dim_;
+  avro_assert( nb_points == weights.size() );
+
+  std::shared_ptr<TopologyBase> pdomain;
+  delaunay::DensityMeasure_Uniform density;
+  std::shared_ptr<delaunay::OptimalTransportBase> solver;
+
+  std::string type = parameters_["domain type"];
+  if (type == "simplex") {
+    pdomain = std::make_shared<CubeDomain<Simplex>>(number_,dim_+1,2);
+    const Topology<Simplex>& domain = static_cast<const Topology<Simplex>&>(*pdomain.get());
+    solver = std::make_shared<delaunay::SemiDiscreteOptimalTransport<Simplex>>(domain,&density);
+  }
+  else if (type == "polytope") {
+    pdomain = std::make_shared<CubeDomain<Polytope>>(number_,dim_+1,2);
+    const Topology<Polytope>& domain = static_cast<const Topology<Polytope>&>(*pdomain.get());
+    solver = std::make_shared<delaunay::SemiDiscreteOptimalTransport<Polytope>>(domain,&density);
+  }
+  else
+    avro_implement;
+
+  solver->sample( nb_points );
+  solver->set_delaunay( sites.data() , dim_ );
+  solver->set_weights( weights.data() );
+
+  if (nb_iter == 0)
+    solver->optimize_points(1);
+  else
+    solver->optimize_points(nb_iter);
+
+  const Topology<Polytope>& diagram = solver->get_diagram();
+
+  // copy the diagram into the context data
+  // when we copy the points, we will only retrieve the first dim_ coordinates
+  points_ = std::make_shared<Points>(dim_,udim_);
+  topology_ = std::make_shared<Topology<Polytope>>(*points_.get(),number_);
+  topology_->copy( diagram );
+  diagram.points().copy( *points_.get() );
+
+  return solver->get_sites();
+}
+
+std::vector<real_t>
+Context::compute_optimal_transport( const std::vector<real_t>& sites , const std::vector<real_t>& mass , const std::vector<real_t>& initial_weights , index_t nb_iter ) {
+  index_t nb_points = sites.size() / dim_;
+  avro_assert( nb_points == initial_weights.size() );
+
+  std::shared_ptr<TopologyBase> pdomain;
+  delaunay::DensityMeasure_Uniform density;
+  std::shared_ptr<delaunay::OptimalTransportBase> solver;
+
+  std::string type = parameters_["domain type"];
+  if (type == "simplex") {
+    pdomain = std::make_shared<CubeDomain<Simplex>>(number_,dim_+1,2);
+    const Topology<Simplex>& domain = static_cast<const Topology<Simplex>&>(*pdomain.get());
+    solver = std::make_shared<delaunay::SemiDiscreteOptimalTransport<Simplex>>(domain,&density);
+  }
+  else if (type == "polytope") {
+    pdomain = std::make_shared<CubeDomain<Polytope>>(number_,dim_+1,2);
+    const Topology<Polytope>& domain = static_cast<const Topology<Polytope>&>(*pdomain.get());
+    solver = std::make_shared<delaunay::SemiDiscreteOptimalTransport<Polytope>>(domain,&density);
+  }
+  else
+    avro_implement;
+
+  solver->sample( nb_points );
+  solver->set_delaunay( sites.data() , dim_ );
+  solver->set_weights( initial_weights.data() );
+  solver->set_nu( mass );
+
+  if (nb_iter == 0)
+    solver->optimize_weights(1);
+  else
+    solver->optimize_weights(nb_iter);
+
+  const Topology<Polytope>& diagram = solver->get_diagram();
+
+  // copy the diagram into the context data
+  // when we copy the points, we will only retrieve the first dim_ coordinates
+  points_ = std::make_shared<Points>(dim_,udim_);
+  topology_ = std::make_shared<Topology<Polytope>>(*points_.get(),number_);
+  topology_->copy( diagram );
+  diagram.points().copy( *points_.get() );
+
+  return solver->get_weights();
+}
+
+} // avro

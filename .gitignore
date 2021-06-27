@@ -4,3 +4,5 @@ test/tmp/*.*
 external/*
 test/*.mesh
 test/imgui.ini
+src/examples/python/*.mesh
+src/examples/python/*.json

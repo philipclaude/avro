@@ -47,6 +47,7 @@ ParameterSet::set_defaults() {
   register_parameter( "max parallel passes" , index_t(3) , "controls the maximum number of passes used in a parallel adaptation run" );
   register_parameter( "curved" , true , "controls whether an input geometry is curved (which will make for a faster adaptation if false)" );
   register_parameter( "adapt iter" , index_t(1) , "adaptation iteration" );
+  register_parameter( "domain type" , "polytope" , "representation of the domain when calculating Voronoi diagrams options: polytope, simplex, mesh, sphere");
 }
 
 template<typename T>
@@ -70,8 +71,6 @@ ParameterSet::operator[] ( const std::string& name ) const {
   if (it == parameters_.end()) {
     printf("parameter \"%s\" is not valid\n",name.c_str());
     avro_assert_not_reached;
-    ParameterType<index_t> x("unknown",0u,"unknown");
-    return x;
   }
   return *it->second.get();
 }

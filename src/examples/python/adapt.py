@@ -1,6 +1,6 @@
 # add the path to the pyavro module using sys
 import sys
-sys.path.insert(0,'../../../build/debug/lib/')
+sys.path.insert(0,'../../../build/release/lib/')
 
 # import pyavro
 import pyavro

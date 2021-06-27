@@ -1022,7 +1022,8 @@ SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology
   exact_(false),
   print_(true),
   quad_order_(4),
-  weight_max_(1e6)
+  weight_max_(1e6),
+  save_every_(1e6)
 {}
 
 template<typename type>
@@ -1723,6 +1724,19 @@ SemiDiscreteOptimalTransport<type>::stochastic_gradient_descent( index_t nb_iter
     evaluate( nullptr , nullptr );
   }
 
+}
+
+template<typename type>
+std::vector<real_t>
+SemiDiscreteOptimalTransport<type>::get_sites() const {
+  index_t nb_points = delaunay_.nb();
+  index_t dim = domain_.number(); // maybe make dim a parameter to this function
+  std::vector<real_t> sites( nb_points*dim );
+  index_t i = 0;
+  for (index_t k = 0; k < nb_points; k++)
+  for (coord_t d = 0; d < dim; d++)
+    sites[i++] = delaunay_[k][d];
+  return sites;
 }
 
 
