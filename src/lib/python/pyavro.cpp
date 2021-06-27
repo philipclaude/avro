@@ -101,6 +101,7 @@ PYBIND11_MODULE(pyavro, m) {
     .def("attach_geometry",&Context::attach_geometry)
     .def("adapt",&Context::adapt)
     .def("compute_laguerre",&Context::compute_laguerre)
-    .def("compute_optimal_transport",&Context::compute_optimal_transport);
+    .def("compute_optimal_transport",&Context::compute_optimal_transport)
+    .def("plot",&Context::plot);
 
 }

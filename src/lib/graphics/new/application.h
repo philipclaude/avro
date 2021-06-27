@@ -1,6 +1,9 @@
 #ifndef AVRO_LIB_GRAPHICS_APPLICATION_H_
 #define AVRO_LIB_GRAPHICS_APPLICATION_H_
 
+#include <memory>
+#include <vectory>
+
 class VertexBuffer {
 
 public:

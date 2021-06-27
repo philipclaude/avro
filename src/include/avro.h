@@ -80,6 +80,8 @@ public:
 
   index_t nb_bodies() const;
 
+  void plot() const;
+
 private:
   Entity* id2geometry( int id ) const;
   void import_model();

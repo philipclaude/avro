@@ -12,7 +12,6 @@
 
 #include <nlopt.hpp>
 #include <HLBFGS/HLBFGS.h>
-#include "liblbfgs/lbfgs.h"
 #include "json/json.hpp"
 
 #include <fstream>
@@ -1342,9 +1341,9 @@ nlopt_transport_objective( unsigned n , const double* x , double* grad, void* da
 
 #define OPTIMIZER_NLOPT 1
 #define OPTIMIZER_HLBFGS 0
-#define OPTIMIZER_LIBLBFGS 0
 OptimalTransportBase* __transport__ = nullptr;
 
+#if OPTIMIZER_HLBFGS
 static void
 newiteration(int iter, int call_iter, double *x, double* f, double *g,  double* gnorm)
 {}
@@ -1357,38 +1356,7 @@ hlbfgs_transport_objective(int N, double* x, double *prev_x, double* f, double* 
   transport->iteration()++;
   *f = transport->transport_objective(index_t(N),x,g);
 }
-
-static lbfgsfloatval_t
-liblbfgs_evaluate(
-    void *instance,
-    const lbfgsfloatval_t *x,
-    lbfgsfloatval_t *g,
-    const int n,
-    const lbfgsfloatval_t step
-    )
-{
-  avro_assert( __transport__ != nullptr );
-  OptimalTransportBase* transport = static_cast<OptimalTransportBase*>(__transport__);
-  transport->iteration()++;
-  return transport->transport_objective(index_t(n),x,g);
-}
-
-static int
-liblbfgs_progress(
-    void *instance,
-    const lbfgsfloatval_t *x,
-    const lbfgsfloatval_t *g,
-    const lbfgsfloatval_t fx,
-    const lbfgsfloatval_t xnorm,
-    const lbfgsfloatval_t gnorm,
-    const lbfgsfloatval_t step,
-    int n,
-    int k,
-    int ls
-    )
-{
-    return 0;
-}
+#endif
 
 template<typename type>
 void

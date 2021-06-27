@@ -11,6 +11,8 @@
 #include "geometry/entity.h"
 #include "geometry/model.h"
 
+#include "graphics/application.h"
+
 #include "library/ckf.h"
 #include "library/factory.h"
 
@@ -579,6 +581,14 @@ Context::compute_optimal_transport( const std::vector<real_t>& sites , const std
   diagram.points().copy( *points_.get() );
 
   return solver->get_weights();
+}
+
+void
+Context::plot() const {
+  graphics::Visualizer vis;
+
+  vis.add_topology( *topology_.get() );
+  vis.run();
 }
 
 } // avro
