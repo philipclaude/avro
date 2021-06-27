@@ -31,7 +31,7 @@ Context::Context( coord_t number , coord_t dim , coord_t udim ) :
   points_(nullptr),
   topology_(nullptr)
 {
-  initialize_avro();
+  //initialize_avro(); // don't think this is needed
 }
 
 Context::Context( const Context& ctx ) :
@@ -239,9 +239,6 @@ Context::adapt( const std::vector<real_t>& m )
       mk(i,j) = m[count++];
     metric.push_back(mk);
   }
-
-  print_inline(m);
-  points_->print(true);
 
   Mesh mesh_in(dim_,number_);
   Mesh mesh_out(dim_,number_);

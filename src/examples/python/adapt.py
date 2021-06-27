@@ -33,3 +33,11 @@ coordinates,connectivity = pyavro.retrieve_mesh(ctx)
 nb_points = int(len(coordinates)/dim)
 nb_elems  = int(len(connectivity)/(number+1))
 print('adapted mesh has nb_points = ',nb_points,'nb_elems = ',nb_elems)
+
+faces,geometry = pyavro.retrieve_boundary(ctx)
+assert( len(faces) == len(geometry) )
+k = 0
+for bgroup in faces:
+    nb_faces_in_group = int(len(bgroup)/number)
+    print('boundary on entity',geometry[k],'has ',nb_faces_in_group,'faces')
+    k += 1

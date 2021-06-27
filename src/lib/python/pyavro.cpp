@@ -26,6 +26,22 @@ retrieve_mesh( const Context& context ) {
   return {coordinates,connectivity};
 }
 
+std::pair< std::vector<int> , std::vector<real_t> >
+retrieve_geometry( const Context& context ) {
+  std::vector<real_t> param;
+  std::vector<int> geometry;
+  context.retrieve_geometry(geometry,param);
+  return {geometry,param};
+}
+
+std::pair< std::vector<std::vector<index_t>> , std::vector<int> >
+retrieve_boundary( const Context& context ) {
+  std::vector<std::vector<index_t>> faces;
+  std::vector<int> geometry;
+  context.retrieve_boundary_parallel(faces,geometry); // not necessarily parallel, but is most general
+  return {faces,geometry};
+}
+
 namespace py = pybind11;
 
 PYBIND11_MODULE(pyavro, m) {
@@ -65,6 +81,8 @@ PYBIND11_MODULE(pyavro, m) {
 #endif
 
   m.def("retrieve_mesh",&retrieve_mesh, "");
+  m.def("retrieve_boundary",&retrieve_boundary,"");
+  m.def("retrieve_geometry",&retrieve_geometry,"");
 
   py::class_<Context>(m,"Context")
     .def(py::init<coord_t,coord_t,coord_t>())
