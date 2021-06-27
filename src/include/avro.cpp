@@ -4,6 +4,8 @@
 #include "adaptation/metric.h"
 #include "adaptation/parallel.h"
 
+#include "common/tools.h"
+
 #include "element/simplex.h"
 
 #include "geometry/entity.h"
@@ -28,7 +30,9 @@ Context::Context( coord_t number , coord_t dim , coord_t udim ) :
   model_(nullptr),
   points_(nullptr),
   topology_(nullptr)
-{}
+{
+  initialize_avro();
+}
 
 Context::Context( const Context& ctx ) :
   number_(ctx.number()),
@@ -235,6 +239,9 @@ Context::adapt( const std::vector<real_t>& m )
       mk(i,j) = m[count++];
     metric.push_back(mk);
   }
+
+  print_inline(m);
+  points_->print(true);
 
   Mesh mesh_in(dim_,number_);
   Mesh mesh_out(dim_,number_);

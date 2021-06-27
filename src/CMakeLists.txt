@@ -19,9 +19,6 @@ add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
 add_source_directories(SOURCES "Source Files\\voronoi" lib/voronoi)
 
-pybind11_add_module(pyavro lib/python/pyavro.cpp)
-target_compile_definitions(pyavro PRIVATE VERSION_INFO=1.1)
-
 # add the bin sources but remove the avro.cpp (main) executable source
 add_source_directories(SOURCES "Source Files\\bin" bin)
 list(REMOVE_ITEM SOURCES bin/avro.cpp )
@@ -93,3 +90,7 @@ else()
   target_link_libraries( avro_shared ${avro_EXTERNAL_LIBRARIES_SHARED})
 endif()
 target_link_libraries( avro_static ${avro_EXTERNAL_LIBRARIES_STATIC} )
+
+pybind11_add_module(pyavro lib/python/pyavro.cpp)
+target_compile_definitions(pyavro PRIVATE VERSION_INFO=1.1)
+target_link_libraries( pyavro PRIVATE avro_static ${avro_EXTERNAL_LIBRARIES} )
