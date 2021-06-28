@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 # this allows setting the version number
 if (POLICY CMP0048)
@@ -11,7 +11,7 @@ find_package(PkgConfig)
 # setup libraries and build type
 include(cmake/setup.cmake)
 include(cmake/compiler.cmake)
-project(avro VERSION 2.0)
+project(avro VERSION 2.1)
 
 if (POLICY CMP0077)
     cmake_policy(SET CMP0077 NEW)
@@ -94,7 +94,7 @@ include(cmake/debug.cmake)
 include(cmake/coverage.cmake)
 
 set(avro_VERSION_MAJOR 2)
-set(avro_VERSION_MINOR 0)
+set(avro_VERSION_MINOR 1)
 set(avro_VERSION_PATCH 0)
 set(avro_VERSION ${avro_VERSION_MAJOR}.${avro_VERSION_MINOR}.${avro_VERSION_PATCH})
 

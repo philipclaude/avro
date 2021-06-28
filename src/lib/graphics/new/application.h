@@ -6,12 +6,6 @@
 
 class VertexBuffer {
 
-public:
-	VertexBuffer();
-
-private:
-	std::vector<real_t>  data_;
-	std::vector<index_t> indices_;
 };
 
 class UniformSet {
@@ -35,18 +29,60 @@ class WebGL_Manager : public Manager {
 	void write( const VertexBuffer& buffer );
 };
 
+class Plot;
+
 class Primitive {
 
 public:
-	Primitive( const TopologyBase& topology , const Primitive* parent=nullptr );
+	Primitive( const Plot& plot );
+
+	virtual void write( Manager& manager ) = 0;
+	void render() const;
 
 private:
-	const TopologyBase& topology_;
-	const Primitive* parent_;
+	const Plot& plot_;
 	mat4 model_matrix_;
 
 	std::vector<VertexBuffer> buffers_;
 	vec3 center_;
+};
+
+class TrianglePrimitive : public Primitive {
+public:
+	TrianglePrimitive( const Plot& plot );
+
+	void write( Manager& manager );
+
+};
+
+class EdgePrimitive : public Primitive {
+
+
+};
+
+class NodePrimitive : public Primitive {
+
+};
+
+class PolygonPrimitive : public Primitive {
+
+};
+
+
+
+class Plot {
+
+	typedef std::shared_ptr<Primitive> Prim_ptr;
+
+public:
+	Plot( const TopologyBase& topology );
+
+private:
+	std::vector<Prim_ptr> faces_;
+	std::vector<Prim_ptr> edges_;
+	std::vector<Prim_ptr> nodes_;
+
+	mat4 model_matrix_;
 };
 
 class Trackball {
