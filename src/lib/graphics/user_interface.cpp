@@ -168,7 +168,13 @@ Toolbar::begin_draw()
   }
 
   ImGuiWindowFlags window_flags = 0;
-  window_flags |= ImGuiWindowFlags_NoCollapse;
+  window_flags |= ImGuiWindowFlags_NoTitleBar;
+  window_flags |= ImGuiWindowFlags_NoResize;
+  window_flags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
+
+  // set the controls at the top-left of the window
+  ImGui::SetNextWindowPos( ImVec2( 0 , 0 ) , true );
+  ImGui::SetNextWindowSize( ImVec2( 0.25*window_.width() , window_.height() ) );
 
   std::vector<std::string> entities = {"Volumes","Faces","Edges","Nodes"};
 
@@ -178,7 +184,8 @@ Toolbar::begin_draw()
 
   bool active = true;
   ImGui::SetNextItemWidth(200);
-  ImGui::Begin("Controls",&active,ImGuiWindowFlags_MenuBar);
+
+  ImGui::Begin("Controls",&active,window_flags);
   {
     if (ImGui::BeginMenuBar())
     {

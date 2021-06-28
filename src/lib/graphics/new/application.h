@@ -12,6 +12,18 @@ class UniformSet {
 
 };
 
+namespace graphics {
+
+class Mesh {
+
+	std::vector<real_t>  coordinates_;
+	std::vector<index_t> triangles_;
+	std::vector<index_t> edges_;
+
+};
+
+}
+
 class Manager {
 	virtual void write( const VertexBuffer& buffer ) = 0;
 };
@@ -64,7 +76,7 @@ class NodePrimitive : public Primitive {
 
 };
 
-class PolygonPrimitive : public Primitive {
+class PolytopePrimitive : public Primitive {
 
 };
 
@@ -75,15 +87,28 @@ class Plot {
 	typedef std::shared_ptr<Primitive> Prim_ptr;
 
 public:
-	Plot( const TopologyBase& topology );
+	template<typename type>
+	Plot( const Topology<type>& topology );
 
 private:
+	std::vector<Prim_ptr> volumes_;
 	std::vector<Prim_ptr> faces_;
 	std::vector<Prim_ptr> edges_;
 	std::vector<Prim_ptr> nodes_;
 
 	mat4 model_matrix_;
 };
+
+template<>
+Plot::Plot( const Topology<Simplex>& topology ) {
+
+	// check how many volumes we have
+	// or check how many partitions to gather
+
+	
+
+}
+
 
 class Trackball {
 public:

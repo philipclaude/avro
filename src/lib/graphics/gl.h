@@ -153,7 +153,8 @@ class OpenGL_Manager : public GraphicsManager
 {
   template<typename type> friend class Application;
 
-private:
+//private:
+public:
   OpenGL_Manager();
 
 public:

@@ -231,7 +231,7 @@ OpenGL_Manager::write( Primitive& primitive )
   GL_CALL( glBindVertexArray(id_vao_triangles) );
   vao_triangles_.insert( {&primitive,id_vao_triangles} );
 
-  GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo_triangles ) );
+  GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo_triangles ) ); // this does nothing
 
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_position ) );
   GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );
