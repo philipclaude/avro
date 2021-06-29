@@ -20,7 +20,7 @@ ut_pre(int argc, char** argv)
 
   // initialize the distributed/shared memory task/thread managers
   /*
-  #ifdef AVRO_MPI
+  #if AVRO_MPI
   ProcessMPI::initialize();
   #endif
   ProcessCPU::initialize();

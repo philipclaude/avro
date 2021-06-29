@@ -1,4 +1,4 @@
-R"(#version 330
+#version 330
 
 precision mediump float;
 precision mediump int;
@@ -77,4 +77,3 @@ void main()
    v_Color.a  = xpar;
    v_bColor.a = xpar;
 }
-)"

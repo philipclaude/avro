@@ -30,7 +30,7 @@ namespace avro
 namespace graphics
 {
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 Widget::Widget( GLFW_Window& window ) :
   window_(window),
@@ -57,7 +57,7 @@ Interface::initialize()
   ImGui::StyleColorsDark();
   //ImGui::StyleColorsClassic();
 
-#ifdef AVRO_HEADLESS_GRAPHICS
+#if AVRO_HEADLESS_GRAPHICS
   const char* glsl_version = "#version 330";
 #else
   //const char* glsl_version = "#version 410";

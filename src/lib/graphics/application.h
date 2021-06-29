@@ -74,7 +74,7 @@ template<typename type> class Application;
 template<typename T> struct GLFW_Interface;
 struct Web_Interface;
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 template<typename API_t>
 class Application<GLFW_Interface<API_t>> : public ApplicationBase
@@ -127,7 +127,7 @@ private:
   void connect_client();
 };
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 class Visualizer : public Application<GLFW_Interface<OpenGL_Manager>>
 {

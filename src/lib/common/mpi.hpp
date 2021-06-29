@@ -20,7 +20,7 @@
 #include <type_traits>
 #include <vector>
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 #include <mpi.h>
 

@@ -27,7 +27,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 #include <parmetis.h>
 
 #include "blossom5/PerfectMatching.h"
@@ -46,7 +46,7 @@
 namespace avro
 {
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 #define TAG_METRIC_INDICES 301
 #define TAG_METRIC_ENTRIES 302

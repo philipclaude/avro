@@ -30,7 +30,7 @@ namespace avro
 namespace graphics
 {
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 bool
 load_ppm( const std::string& filename , GLFWimage& image )

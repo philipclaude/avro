@@ -10,9 +10,11 @@
 #include "common/process.h"
 #include "common/tools.h"
 
+#include "avro_config.h"
+
 using namespace avro;
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 void
 main_hello( index_t k )
@@ -242,9 +244,9 @@ UT_TEST_CASE_END(reduce_test)
 
 UT_TEST_SUITE_END(common_mpi_suite)
 
-#else // NO_MPIRUN
+#else
 
 UT_TEST_SUITE(common_mpi_suite)
 UT_TEST_SUITE_END(common_mpi_suite)
 
-#endif // NO_MPIRUN
+#endif

@@ -21,7 +21,7 @@
 #include <memory>
 #include <vector>
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 #include "common/mpi.hpp"
 #endif
 
@@ -118,7 +118,7 @@ public:
   bool parameter_space() const { return parameter_space_; }
   void set_parameter_space( bool x ) { parameter_space_ = x; }
 
-  #ifdef AVRO_MPI
+  #if AVRO_MPI
   void send( mpi::communicator& comm , index_t destination ) const;
   void receive( mpi::communicator& comm , index_t sender );
   #endif

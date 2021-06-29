@@ -54,7 +54,7 @@ initialize_avro()
   ProcessMPI::initialize();
   ProcessCPU::initialize();
   ProcessGPU::initialize();
-  #ifdef AVRO_MPI
+  #if AVRO_MPI
   printf("--> initialized MPI manager: %s (mpi::size = %lu).\n",ProcessMPI::manager_name().c_str(),mpi::size());
   #endif
   printf("--> initialized CPU manager: %s (nb_thread = %lu).\n",ProcessCPU::manager_name().c_str(),ProcessCPU::maximum_concurrent_threads());
@@ -71,7 +71,7 @@ initialize_avro()
   if (!glfwInit()) printf("error initializing glfw!\n");
 
   // set the version
-  #ifdef AVRO_HEADLESS_GRAPHICS // core 3.3 supported by wazowski's drivers
+  #if AVRO_HEADLESS_GRAPHICS // core 3.3 supported by wazowski's drivers
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);

@@ -28,7 +28,7 @@ namespace avro
 #define avro_throw(args...) throw(avro::Exception(__FILE__,__LINE__,args));
 
 #if (1 || defined(avro_DEBUG))
-  //#ifdef AVRO_MPI
+  //#if AVRO_MPI
   //  #define avro_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__); avro_throw("assertion error");}
   //#else
     #define avro_assert(X) if(unlikely(!(X))) { printf("\nfailed to assert %s in file %s line %d\n",(#X),__FILE__,__LINE__);avro_throw("assertion error");}

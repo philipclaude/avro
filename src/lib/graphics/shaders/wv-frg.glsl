@@ -1,4 +1,4 @@
-R"(#version 330
+#version 330
 
 precision mediump float;
 precision mediump int;
@@ -76,4 +76,3 @@ void main()
 //        FragColor.a = float(gl_PrimitiveID - high*256)/255.;
    }
 }
-)"

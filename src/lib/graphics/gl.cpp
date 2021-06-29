@@ -20,7 +20,7 @@ namespace avro
 namespace graphics
 {
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 int
 checkOpenGLError(const char* file, int line)
@@ -75,14 +75,18 @@ dumpGLInfo(bool dumpExtensions)
   glGetIntegerv(GL_SAMPLES, &samples);
   glGetIntegerv(GL_SAMPLE_BUFFERS, &sampleBuffers);
 
+  int wmax = GL_MAX_TEXTURE_SIZE;
+  int dmax = GL_MAX_3D_TEXTURE_SIZE;
+  int nmax_2d = wmax * wmax;
+  int nmax_3d = wmax * wmax * dmax; // maximum number of values in a single (3d) texture
+
 	printf("-------------------------------------------------------------\n");
-  printf("GL Vendor    : %s\n", vendor);
-  printf("GL Renderer  : %s\n", renderer);
-  printf("GL Version   : %s\n", version);
-  printf("GL Version   : %d.%d\n", major, minor);
-  printf("GLSL Version : %s\n", glslVersion);
-	printf("MSAA samples : %d\n", samples);
-	printf("MSAA buffers : %d\n", sampleBuffers);
+  printf("--> vendor: %s\n", vendor);
+  printf("--> device: %s\n", renderer);
+  printf("--> driver: %s (@ OpenGL %d.%d)\n", version,major,minor);
+  printf("--> @ glsl: %s\n", glslVersion);
+  printf("--> maximum # triangles with 2d tex: p1 (%d), p2 (%d), p3 (%d)\n",nmax_2d/3,nmax_2d/6,nmax_2d/10);
+  printf("--> maximum # triangles with 3d tex: p1 (%d), p2 (%d), p3 (%d)\n",nmax_3d/3,nmax_3d/6,nmax_3d/10);
   printf("-------------------------------------------------------------\n");
 
   if (dumpExtensions)

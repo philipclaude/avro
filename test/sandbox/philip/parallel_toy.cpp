@@ -83,7 +83,7 @@ public:
 
 UT_TEST_SUITE( adaptation_parallel_test_suite )
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 UT_TEST_CASE( test1 )
 {

@@ -23,7 +23,7 @@ namespace graphics
 
 class SceneGraph;
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 enum GLSLShaderType
 {

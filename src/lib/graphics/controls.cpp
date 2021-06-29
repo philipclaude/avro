@@ -182,7 +182,7 @@ Controls::mouse_down(int button, int action, int mods,int x,int y)
   dragging = true;
 
   modifier = 0;
-  #ifdef AVRO_WITH_GL
+  #if AVRO_WITH_GL
   if (mods == GLFW_MOD_SHIFT) modifier = 1;
   if (mods == GLFW_MOD_ALT) modifier = 2;
   if (mods == GLFW_MOD_CONTROL) modifier = 4;

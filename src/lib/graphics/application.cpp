@@ -76,7 +76,7 @@ Application<Web_Interface>::send( const std::string& response ) const
 void
 Application<Web_Interface>::save_eps()
 {
-  #ifdef AVRO_WITH_GL
+  #if AVRO_WITH_GL
   // first set the transformation to the scene
   OpenGL_Manager manager_gl;
   scene_->write(manager_gl);
@@ -87,7 +87,7 @@ Application<Web_Interface>::save_eps()
   #endif
 }
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 template<typename API_t>
 Application<GLFW_Interface<API_t>>::Application() :
@@ -98,7 +98,7 @@ Application<GLFW_Interface<API_t>>::Application() :
   avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
 
   // set the version
-  #ifdef AVRO_HEADLESS_GRAPHICS // core 3.3 supported by wazowski's drivers
+  #if AVRO_HEADLESS_GRAPHICS // core 3.3 supported by wazowski's drivers
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);
@@ -185,7 +185,7 @@ Application<GLFW_Interface<API_t>>::run( const std::string& view )
 
      if (restart_) break;
 
-     #ifdef AVRO_HEADLESS_GRAPHICS
+     #if AVRO_HEADLESS_GRAPHICS
      break;
      #endif
    }

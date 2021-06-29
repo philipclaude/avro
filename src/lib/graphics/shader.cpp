@@ -13,25 +13,9 @@
 #include "graphics/shader.h"
 #include "graphics/window.h"
 
-const std::string __basic_vs_src__ =
-#include "shaders/basic.vs"
-;
+#include "avro_config.h" // we need AVRO_SOURCE_DIR to find shaders
 
-const std::string __basic_fs_src__ =
-#include "shaders/basic.fs"
-;
-
-const std::string __edge_fs_src__ =
-#include "shaders/edge.fs"
-;
-
-const std::string __wv_vs_src__ =
-#include "shaders/wv.vs"
-;
-
-const std::string __wv_fs_src__ =
-#include "shaders/wv.fs"
-;
+#include <fstream>
 
 namespace avro
 {
@@ -39,27 +23,47 @@ namespace avro
 namespace graphics
 {
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
+
+std::string
+get_shader_src( const std::string& filename ) {
+  std::string content;
+  std::ifstream file_stream(filename.c_str(), std::ios::in);
+
+  if (!file_stream.is_open()) {
+      std::cerr << "could not read file " << filename << ". file does not exist." << std::endl;
+      return "";
+  }
+
+  std::string line = "";
+  while (!file_stream.eof()) {
+      std::getline(file_stream, line);
+      content.append(line + "\n");
+  }
+
+  file_stream.close();
+  return content;
+}
 
 ShaderProgram::ShaderProgram( const std::string& name ) :
   handle_(-1),
   linked_(false),
   name_(name)
 {
-  if (name_=="basic")
-  {
-    avro_assert_msg( compile(name_.c_str(),__basic_vs_src__,__basic_fs_src__) , "error compiling basic shaders" );
+  if (name_ == "basic") {
+    std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-vtx.glsl" );
+    std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-frg.glsl" );
+    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling basic shader" );
   }
-  else if (name_=="edge")
-  {
-    avro_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
+  else if (name_ == "wv") {
+    std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-vtx.glsl" );
+    std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-frg.glsl" );
+    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling wv shader" );
   }
-  else if (name_=="wv")
-  {
-    avro_assert_msg( compile(name_.c_str(),__wv_vs_src__,__wv_fs_src__) , "error compiling basic shaders" );
+  else {
+    printf("unknown shader %s\n",name.c_str());
+    avro_assert_not_reached;
   }
-  else
-    avro_implement;
 }
 
 int

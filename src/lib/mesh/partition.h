@@ -39,7 +39,7 @@ public:
   const std::vector<Entity*>& entities() const { return entities_; }
   Entity* lookup( int identifier , int number ) const;
 
-  #ifdef AVRO_MPI
+  #if AVRO_MPI
   void send( index_t receiver ) const;
   void receive( index_t sender );
   #endif

@@ -12,9 +12,11 @@
 
 #include "common/error.h"
 #include "common/tools.h"
+
+#include "avro_config.h"
 #include "avro_types.h"
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 #include <glad/include/glad/glad.h>
 #define GLFW_INCLUDE_NONE

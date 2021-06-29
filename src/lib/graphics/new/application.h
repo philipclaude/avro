@@ -12,17 +12,40 @@ class UniformSet {
 
 };
 
-namespace graphics {
+class VertexArray {
 
-class Mesh {
-
-	std::vector<real_t>  coordinates_;
-	std::vector<index_t> triangles_;
-	std::vector<index_t> edges_;
-
+	std::vector<real_t>  coordinates_; // total number of control points of the mesh : size = np
+	std::vector<index_t> triangles_;   // connectivity of control points to form triangles: size = nt * (q+1)*(q+2)/2 
+	std::vector<index_t> edges_;       // connectivity of control point to form edges: size = ne * (q+1)
+	std::vector<real_t>  fields_;      // total number of solution controls points: size = nfield * nt * (p+1)*(p+2)/2
 };
 
-}
+class OpenGL_VertexArray : public VertexArray {
+
+public:
+	OpenGL_VertexArray( const TopologyBase& topology ) {
+
+	}
+
+private:
+	GLuint vertex_array_;
+	GLuint coordinate_buffer_;
+	GLuint triangle_buffer_;
+	GLuint edge_buffer_;
+	std::vector<GLuint> texture_buffers_;
+};
+
+
+
+class WebViewer_VertexArray : public VertexArray {
+public:
+	WebViewer_VertexArray( const TopologyBase& topology ) {
+
+	}
+
+	// keep track of WV id's
+
+};
 
 class Manager {
 	virtual void write( const VertexBuffer& buffer ) = 0;
@@ -33,7 +56,6 @@ class OpenGL_Manager : public Manager {
 	void write( const VertexBuffer& buffer );
 	void draw( index_t id , const UniformSet& uniforms );
 
-	std::map<int,VertexBuffer*> buffer_;
 };
 
 class WebGL_Manager : public Manager {
@@ -48,39 +70,17 @@ class Primitive {
 public:
 	Primitive( const Plot& plot );
 
-	virtual void write( Manager& manager ) = 0;
-	void render() const;
+	void create_buffers( const TopologyBase& topology ) {
+		// extract triangles from topology
+
+		// 
+	}
 
 private:
 	const Plot& plot_;
-	mat4 model_matrix_;
 
-	std::vector<VertexBuffer> buffers_;
-	vec3 center_;
+	VertexArray vertex_array_;
 };
-
-class TrianglePrimitive : public Primitive {
-public:
-	TrianglePrimitive( const Plot& plot );
-
-	void write( Manager& manager );
-
-};
-
-class EdgePrimitive : public Primitive {
-
-
-};
-
-class NodePrimitive : public Primitive {
-
-};
-
-class PolytopePrimitive : public Primitive {
-
-};
-
-
 
 class Plot {
 
@@ -104,8 +104,6 @@ Plot::Plot( const Topology<Simplex>& topology ) {
 
 	// check how many volumes we have
 	// or check how many partitions to gather
-
-	
 
 }
 

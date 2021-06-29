@@ -4,7 +4,7 @@
 #include "common/tools.h"
 #include "avro_types.h"
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 #include <parmetis.h>
 #if PARMETIS_MAJOR_VERSION == 3
@@ -23,7 +23,7 @@ using namespace avro;
 
 UT_TEST_SUITE( parmetis_test_suite )
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 #if TEST_NUM_PROCS == 3
 

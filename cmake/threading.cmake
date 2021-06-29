@@ -13,8 +13,8 @@ if (avro_CPU_THREAD_MANAGER STREQUAL "openmp")
     set( avro_CPU_THREAD_MANAGER "openmp" )
     set( avro_WITH_OPENMP true )
     message( STATUS "CPU thread manager = OpenMP.")
-    add_definitions(-Davro_CPU_THREAD_MANAGER_OPENMP)
-    
+    #add_definitions(-Davro_CPU_THREAD_MANAGER_OPENMP)
+    set( AVRO_CPU_THREAD_MANAGER avro_CPU_THREAD_MANAGER_OPENMP PARENT_SCOPE )
   endif()
 
 else()
@@ -24,19 +24,22 @@ endif()
 if (avro_CPU_THREAD_MANAGER STREQUAL "cpp11")
   # set the CPU thread manager as c++11 threads
   message( STATUS "CPU thread manager = c++11.")
-  add_definitions(-Davro_CPU_THREAD_MANAGER_CPP)
+  #add_definitions(-Davro_CPU_THREAD_MANAGER_CPP)
+  set( AVRO_CPU_THREAD_MANAGER avro_CPU_THREAD_MANAGER_CPP )
 endif()
 
 if (avro_CPU_THREAD_MANAGER STREQUAL "pthread")
   # set the CPU thread manager as pthreads
   message( STATUS "CPU thread manager = pthread.")
-  add_definitions(-Davro_CPU_THREAD_MANAGER_PTHREAD)
+  #add_definitions(-Davro_CPU_THREAD_MANAGER_PTHREAD)
+  set( AVRO_CPU_THREAD_MANAGER avro_CPU_THREAD_MANAGER_PTHREAD PARENT_SCOPE )
 endif()
 
 if (avro_CPU_THREAD_MANAGER STREQUAL "emp")
   # set the CPU thread manager as EMP threads
   message( STATUS "CPU thread manager = EMP (part of EngSketchPad).")
-  add_definitions(-Davro_CPU_THREAD_MANAGER_EMP)
+  #add_definitions(-Davro_CPU_THREAD_MANAGER_EMP)
+  set( AVRO_CPU_THREAD_MANAGER avro_CPU_THREAD_MANAGER_EMP PARENT_SCOPE )
 endif()
 
 # determine the GPU threading environment
@@ -47,7 +50,8 @@ if (avro_GPU_THREAD_MANAGER STREQUAL "cuda")
   if (NOT CUDA_FOUND)
     message(FATAL_ERROR "CUDA was not found")
   endif()
-  add_definitions(-Davro_GPU_THREAD_MANAGER_CUDA)
+  #add_definitions(-Davro_GPU_THREAD_MANAGER_CUDA)
+  set( AVRO_GPU_THREAD_MANAGER avro_GPU_THREAD_MANAGER_CUDA PARENT_SCOPE )
   set(avro_WITH_CUDA true )
 elseif( avro_GPU_THREADING STREQUAL "opencl" )
 
@@ -56,7 +60,8 @@ elseif( avro_GPU_THREADING STREQUAL "opencl" )
   if (NOT OPENCL_FOUND)
     message(FATAL_ERROR "OpenCL was not found")
   endif()
-  add_definitions(-Davro_GPU_THREAD_MANAGER_OPENCL)
+  #add_definitions(-Davro_GPU_THREAD_MANAGER_OPENCL)
+  set( AVRO_GPU_THREAD_MANAGER avro_GPU_THREAD_MANAGER_OPENCL PARENT_SCOPE )
   set(avro_WITH_OPENCL true)
 
 else()
