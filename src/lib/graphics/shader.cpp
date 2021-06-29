@@ -53,7 +53,8 @@ ShaderProgram::ShaderProgram( const std::string& name ) :
   if (name_ == "basic") {
     std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-vtx.glsl" );
     std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-frg.glsl" );
-    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling basic shader" );
+    std::string geo_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-geo.glsl" );
+    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling basic shader" );
   }
   else if (name_ == "wv") {
     std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-vtx.glsl" );
@@ -228,7 +229,7 @@ ShaderProgram::setUniform( const char *name, const mat4& m)
     GL_CALL( glUniformMatrix4fv(loc, 1, GL_FALSE, &m[0][0] ) );
   }
   else
-    printf("uniform not set for program handle %d!!\n",handle_);
+    printf("uniform %s not set for program handle %d!!\n",name,handle_);
 }
 
 void

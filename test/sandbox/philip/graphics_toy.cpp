@@ -3,6 +3,8 @@
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
+#include "graphics/colormap.h"
+
 using namespace avro;
 using namespace avro::graphics;
 
@@ -82,10 +84,12 @@ UT_TEST_CASE( test1 )
   GL_CALL( glBindVertexArray(vertex_array) );
 
   // generate new buffers
-  std::vector<GLuint> buffers(3);
+  std::vector<GLuint> buffers(5);
   GL_CALL( glGenBuffers( buffers.size() , buffers.data() ) );
   GLuint position_buffer = buffers[0];
   GLuint triangle_buffer = buffers[1];
+  GLuint texture_buffer  = buffers[3];
+  GLuint colormap_buffer = buffers[4];
 
   // bind the position buffer
   GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, position_buffer ) );
@@ -96,6 +100,37 @@ UT_TEST_CASE( test1 )
   GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_buffer ) );
   GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, 24 * sizeof(idx_t), indices , GL_STATIC_DRAW) );
   GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
+
+  // bind the solution values to the texture buffer
+  std::vector<float> solution = {
+                       0.4,
+                       0.7,
+                       0.3,
+                       0.3,
+                       0.4,
+                       0.5};
+
+  GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , texture_buffer) );
+  GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * solution.size() , solution.data() , GL_STATIC_DRAW) );
+
+  GLuint texture;
+  GL_CALL( glGenTextures( 1 , &texture) );
+  GL_CALL( glActiveTexture( GL_TEXTURE0 + 0 ) );
+  GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , texture) );
+  GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , texture_buffer ) ); // only store in the red component of each texel
+
+  #if 0
+  Colormap colormap;
+  colormap.change_style("giraffe");
+  GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , colormap_buffer) );
+  GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * 256*3 , colormap.data() , GL_STATIC_DRAW) );
+
+  GLuint colormap_texture;
+  GL_CALL( glGenTextures( 1 , &colormap_texture) );
+  GL_CALL( glActiveTexture( GL_TEXTURE0 + 1 ) );
+  GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , colormap_texture) );
+  GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
+  #endif
 
   // set up the view
   graphics::vec3 eye = {0,0,10};
@@ -111,8 +146,9 @@ UT_TEST_CASE( test1 )
   graphics::mat4 perspective_matrix = glm::perspective( fov , aspect , znear , zfar );
   graphics::mat4 view_matrix = glm::lookAt( eye , center , up );
   graphics::mat4 model_matrix = glm::identity();
-  graphics::mat4 mvp = perspective_matrix * view_matrix * model_matrix;
-  shader.setUniform("MVP",mvp);
+  graphics::mat4 mv = view_matrix * model_matrix;
+  graphics::mat4 mvp = perspective_matrix * mv;
+  shader.setUniform("u_ModelViewProjectionMatrix",mvp);
 
   // define which triangles we want to render
   std::vector<index_t> render_triangles = {0,2};
@@ -127,6 +163,8 @@ UT_TEST_CASE( test1 )
   GLuint end = *std::max_element( render_indices.begin() , render_indices.end() );
   GLuint count = render_indices.size();
   printf("start = %d, end = %d, count = %d\n",start,end,count);
+
+  printf("max texture buffer size = %d\n",GL_MAX_TEXTURE_BUFFER_SIZE);
 
   // bind the render triangles
   GLuint triangle_buffer_partial = buffers[2];
@@ -159,9 +197,10 @@ UT_TEST_CASE( test1 )
     GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
     // min index is 0, max index is 5 in first three triangles
+    GL_CALL( glBindBuffer(GL_TEXTURE_BUFFER , texture_buffer) );
+    GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , texture ) );
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, active_buffer ) );
-    //GL_CALL( glDrawRangeElements(GL_TRIANGLES, start , end , count , GL_UNSIGNED_INT , (void*)render_indices.data() ) );
-    GL_CALL( glDrawElements(GL_TRIANGLES, 24 , GL_IDX_TYPE , 0 ) ) ;//(void*)indices ) );
+    GL_CALL( glDrawElements(GL_TRIANGLES, 3 , GL_IDX_TYPE , 0 ) ) ;//(void*)indices ) );
 
     if (glfwWindowShouldClose(window)) break;
     if (glfwGetKey(window, GLFW_KEY_ESCAPE ) == GLFW_PRESS) break;
