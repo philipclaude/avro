@@ -23,15 +23,20 @@ UT_TEST_CASE( test1 )
   std::vector<GLfloat> coordinates = {
     0.0, 0.0, 0.0,
     1.0, 0.0, 0.0,
-    2.0, 1.0, 0.0,
+    2.0, 1.5, 0.0,
 
-    1.5, 0.5 , 0.0,
+    1.125, 0.5 , 0.0,
     0.5, 0.75, 0.0,
-    0.5, 0.25, 0.0
+    0.5, 0.5, 0.0,
+
+    0.0, 1.0, 0.0,
+    1.0, 1.5, 0.0,
+    0.25, 1.75, 0.0
   };
 
   std::vector<GLuint> indices = {
-    0,1,2,3,4,5 // q = 2 triangle
+    0,1,2,3,4,5, // q = 2 triangle
+    0,2,8,7,6,4
   };
 
   // create the window
@@ -58,8 +63,6 @@ UT_TEST_CASE( test1 )
   ShaderProgram shader("basic",true);
   shader.use();
 
-  printf("compiled shader\n");
-
   // generate vertex array in which buffers will be saved
   GLuint vertex_array;
   GL_CALL( glGenVertexArrays( 1, &vertex_array ) );
@@ -85,7 +88,8 @@ UT_TEST_CASE( test1 )
 
   // bind the solution values to the texture buffer
   std::vector<float> solution = { // p = 3 solution
-    0.0,0.0,0.0,0.5,0.5,0.5,0.5,0.5,0.5,0.9
+    0.0,0.0,0.0,0.5,0.5,0.5,0.5,0.5,0.5,0.9,
+    1.0,1.0,1.0,0.5,0.5,0.5,0.5,0.5,0.5,0.1
   };
   GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , texture_buffer) );
   GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * solution.size() , solution.data() , GL_STATIC_DRAW) );
@@ -112,7 +116,7 @@ UT_TEST_CASE( test1 )
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
 
   // set up the view
-  graphics::vec3 eye = {0,0,2};
+  graphics::vec3 eye = {0,0,5};
   graphics::vec3 up = {0,1,0};
   graphics::vec3 center = {0.5,0.5,0.0};
 
@@ -171,7 +175,7 @@ UT_TEST_CASE( test1 )
     // bind the buffer for the indices we want to draw
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_buffer ) );
     GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , 6 ) );
-    GL_CALL( glDrawElements(GL_PATCHES, 6 , GL_UNSIGNED_INT , 0 ) );
+    GL_CALL( glDrawElements(GL_PATCHES, 12 , GL_UNSIGNED_INT , 0 ) );
 
     // swap buffers and wait for user input
     glfwSwapBuffers(window);

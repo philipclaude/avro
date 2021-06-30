@@ -95,8 +95,8 @@ void main() {
         f += u[i]*phi[i];
     #endif
 
-    vec3 color = vec3(0,0,0);
-    //vec3 color = get_color(f);
+    //vec3 color = vec3(0,0,0);
+    vec3 color = get_color(f);
 
     fragColor = vec4(color,1.0);
 }
