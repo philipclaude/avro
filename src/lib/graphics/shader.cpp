@@ -45,7 +45,7 @@ get_shader_src( const std::string& filename ) {
   return content;
 }
 
-ShaderProgram::ShaderProgram( const std::string& name ) :
+ShaderProgram::ShaderProgram( const std::string& name , bool with_tess ) :
   handle_(-1),
   linked_(false),
   name_(name)
@@ -54,7 +54,15 @@ ShaderProgram::ShaderProgram( const std::string& name ) :
     std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-vtx.glsl" );
     std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-frg.glsl" );
     std::string geo_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-geo.glsl" );
-    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling basic shader" );
+
+    if (with_tess) {
+      std::string tcs_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-tcs.glsl" );
+      std::string tes_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-tes.glsl" );
+      avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src,tcs_src,tes_src) , "error compiling basic shader" );
+    }
+    else {
+      avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling basic shader" );
+    }
   }
   else if (name_ == "wv") {
     std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-vtx.glsl" );

@@ -93,7 +93,10 @@ UT_TEST_CASE( test1 )
   GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
 
   // bind the solution values to the texture buffer
-  std::vector<float> solution = {0,0,0,0.25,0.25,0.25,0.25,0.25,0.25,0.5};
+  std::vector<float> solution = {
+    0.0,0.0,0.0,0.5,0.5,0.5,0.5,0.5,0.5,0.9,
+    1.0,1.0,1.0,0.5,0.5,0.5,0.5,0.5,0.5,0.1
+  };
   GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , texture_buffer) );
   GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * solution.size() , solution.data() , GL_STATIC_DRAW) );
 
@@ -147,6 +150,8 @@ UT_TEST_CASE( test1 )
   // render loop
   while (true) {
 
+    shader.setUniform( "nb_basis" , 10 );
+
     // grey-ish background color
     float col = 0.9;
     glClearColor (col,col,col, 0.0);
@@ -162,18 +167,18 @@ UT_TEST_CASE( test1 )
     // bind the desired solution texture
     glActiveTexture(GL_TEXTURE0 + 0);
     GLint solution_location = glGetUniformLocation(shader.handle() , "solution");
-    avro_assert( solution_location >= 0 );
+    //avro_assert( solution_location >= 0 );
     glUniform1i(solution_location, 0); // first sampler in fragment shader
 
     // bind the desired colormap
     glActiveTexture(GL_TEXTURE0 + 1);
     GLint colormap_location = glGetUniformLocation(shader.handle() , "colormap");
-    avro_assert( colormap_location >= 0 );
+    //avro_assert( colormap_location >= 0 );
     glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
     // bind the buffer for the indices we want to draw
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_buffer ) );
-    GL_CALL( glDrawElements(GL_TRIANGLES, 3 , GL_UNSIGNED_INT , 0 ) );
+    GL_CALL( glDrawElements(GL_TRIANGLES, 6 , GL_UNSIGNED_INT , 0 ) );
 
     // swap buffers and wait for user input
     glfwSwapBuffers(window);

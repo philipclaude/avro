@@ -9,13 +9,15 @@ in vec2 v_Parameter;
 uniform samplerBuffer solution;
 uniform samplerBuffer colormap;
 
+uniform int nb_basis;
+
 vec3
 get_color( float u ) {
 
     int ncolor = 256;
 
-    float umin = -4.0;
-    float umax =  4.0;
+    float umin = 0;
+    float umax =  1;
 
     float frac = ncolor*(u - umin)/(umax - umin);
     int   indx = int(frac);
@@ -37,7 +39,7 @@ get_color( float u ) {
 
 void main() {
 
-    int idx = 0;//gl_PrimitiveID*6;
+    int idx = gl_PrimitiveID*nb_basis;
 
     float s = v_Parameter.x;
     float t = v_Parameter.y;
@@ -53,7 +55,6 @@ void main() {
     float f7 = texelFetch( solution , idx + 7 ).x;
     float f8 = texelFetch( solution , idx + 8 ).x;
     float f9 = texelFetch( solution , idx + 9 ).x;
-
 
     #if 0
     float phi0 =  s*-3.0-t*3.0+s*t*4.0+(s*s)*2.0+(t*t)*2.0+1.0;
@@ -94,6 +95,7 @@ void main() {
         f += u[i]*phi[i];
     #endif
 
+    //vec3 color = vec3(0,0,0);
     vec3 color = get_color(f);
 
     fragColor = vec4(color,1.0);

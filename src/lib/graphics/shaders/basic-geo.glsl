@@ -21,7 +21,12 @@ void main() {
   EmitVertex();
 
   gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[2],1.0);
-  v_Parameter = vec2(1.,1.);
+  v_Parameter = vec2(0.,1.);
+
+  // i'm not sure if this need to be set after every vertex, or just once before the end of the primitive
+  // it at least needs to be set before the last EmitVertex()
+  gl_PrimitiveID = gl_PrimitiveIDIn;
+
   EmitVertex();
 
   EndPrimitive();
@@ -51,7 +56,7 @@ void main() {
   EmitVertex();
 
   EndPrimitive();
-  
+
 }
 
 #endif

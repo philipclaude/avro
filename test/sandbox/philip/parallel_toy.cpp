@@ -156,10 +156,10 @@ UT_TEST_CASE( test1 )
   index_t niter = 10;
   for (index_t iter = 0; iter <= niter; iter++) {
 
-    params.set("adapt_iter",index_t(iter));
+    params.set("adapt iter",index_t(iter));
     params.set("limit metric" , true );
     if (iter <= 1) params.set("allow serial", true);
-    else params.set("allow_serial", false);
+    else params.set("allow serial", false);
 
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);
