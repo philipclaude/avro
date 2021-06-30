@@ -103,7 +103,7 @@ UT_TEST_CASE( test1 )
 
   // bind the colormap values to a buffer
   Colormap colormap;
-  colormap.change_style("bwr");
+  colormap.change_style("parula");
   index_t ncolor = 256*3;
   GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , colormap_buffer) );
   GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * ncolor , colormap.data() , GL_STATIC_DRAW) );
@@ -142,6 +142,7 @@ UT_TEST_CASE( test1 )
   glDisable(GL_DEPTH_TEST);
 
   // render loop
+  int level = 1;
   while (true) {
 
     //printf("rendering?\n");
@@ -152,6 +153,7 @@ UT_TEST_CASE( test1 )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shader.setUniform( "nb_basis" , 10 );
+    shader.setUniform( "u_level" , level );
 
     // bind which attributes we want to draw
     GL_CALL( glBindVertexArray(vertex_array) );
@@ -175,7 +177,7 @@ UT_TEST_CASE( test1 )
     // bind the buffer for the indices we want to draw
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_buffer ) );
     GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , 6 ) );
-    GL_CALL( glDrawElements(GL_PATCHES, 12 , GL_UNSIGNED_INT , 0 ) );
+    GL_CALL( glDrawElements(GL_PATCHES, indices.size() , GL_UNSIGNED_INT , 0 ) );
 
     // swap buffers and wait for user input
     glfwSwapBuffers(window);
@@ -184,6 +186,10 @@ UT_TEST_CASE( test1 )
     // determine if we should exit the render loop
     if (glfwWindowShouldClose(window)) break;
     if (glfwGetKey(window, GLFW_KEY_ESCAPE ) == GLFW_PRESS) break;
+
+    if (glfwGetKey(window,GLFW_KEY_P) == GLFW_PRESS) level++;
+    if (glfwGetKey(window,GLFW_KEY_M) == GLFW_PRESS) level--;
+    if (level <= 0) level = 1;
   }
 
   // clean up
