@@ -93,7 +93,7 @@ UT_TEST_CASE( test1 )
   GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
 
   // bind the solution values to the texture buffer
-  std::vector<float> solution = {0,0,0,1,1,1};
+  std::vector<float> solution = {0,0,0,0.25,0.25,0.25,0.25,0.25,0.25,0.5};
   GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , texture_buffer) );
   GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * solution.size() , solution.data() , GL_STATIC_DRAW) );
 
