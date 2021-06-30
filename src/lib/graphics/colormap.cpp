@@ -41,7 +41,7 @@ Colormap::change_style( const std::string& style )
 }
 
 void
-Colormap::map(float  scalar, float* color) const
+Colormap::map(float scalar, float* color) const
 {
     int   indx;
     float frac;

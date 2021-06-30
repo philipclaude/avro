@@ -62,38 +62,28 @@ checkOpenGLError(const char* file, int line)
 }
 
 void
-dumpGLInfo(bool dumpExtensions)
-{
+dumpGLInfo(bool dumpExtensions) {
+
   const GLubyte *renderer = glGetString( GL_RENDERER );
   const GLubyte *vendor = glGetString( GL_VENDOR );
   const GLubyte *version = glGetString( GL_VERSION );
   const GLubyte *glslVersion = glGetString( GL_SHADING_LANGUAGE_VERSION );
 
-  GLint major, minor, samples, sampleBuffers;
+  GLint major, minor;
   glGetIntegerv(GL_MAJOR_VERSION, &major);
   glGetIntegerv(GL_MINOR_VERSION, &minor);
-  glGetIntegerv(GL_SAMPLES, &samples);
-  glGetIntegerv(GL_SAMPLE_BUFFERS, &sampleBuffers);
-
-  int wmax = GL_MAX_TEXTURE_SIZE;
-  int dmax = GL_MAX_3D_TEXTURE_SIZE;
-  int nmax_2d = wmax * wmax;
-  int nmax_3d = wmax * wmax * dmax; // maximum number of values in a single (3d) texture
 
 	printf("-------------------------------------------------------------\n");
   printf("--> vendor: %s\n", vendor);
   printf("--> device: %s\n", renderer);
-  printf("--> driver: %s (@ OpenGL %d.%d)\n", version,major,minor);
+  printf("--> driver: %s (@ OpenGL %d.%d)\n", version, major, minor);
   printf("--> @ glsl: %s\n", glslVersion);
-  printf("--> maximum # triangles with 2d tex: p1 (%d), p2 (%d), p3 (%d)\n",nmax_2d/3,nmax_2d/6,nmax_2d/10);
-  printf("--> maximum # triangles with 3d tex: p1 (%d), p2 (%d), p3 (%d)\n",nmax_3d/3,nmax_3d/6,nmax_3d/10);
   printf("-------------------------------------------------------------\n");
 
-  if (dumpExtensions)
-  {
-    GLint next;
-    glGetIntegerv(GL_NUM_EXTENSIONS, &next);
-    for (int i=0;i<next;i++)
+  if (dumpExtensions) {
+    GLint nb_ext;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &nb_ext);
+    for (int i = 0; i < nb_ext; i++)
       printf("%s\n", glGetStringi(GL_EXTENSIONS, i));
   }
 }
