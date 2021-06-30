@@ -18,6 +18,6 @@ void main() {
   vec3 pos = (1 - u - v) * P100 + u*P010 + v*P001;
 
 
-  gl_Position = u_ModelViewProjectionMatrix * vec4(pos,1.0);
+  gl_Position = u_ModelViewProjectionMatrix vec4(pos,1.0);
   v_Position  = pos;
 }
