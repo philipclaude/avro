@@ -27,21 +27,20 @@
   <div class="d-flex" id="wrapper">
 
     <!-- Sidebar -->
-    <div class="bg-light border-right" id="sidebar-wrapper">
+    <div style="width:15%" class="bg-light border-right" id="sidebar-wrapper">
       <div>
         <div class="sidebar-heading">
-          <img src="fig/avro.png" width="10%" display="block" margin="auto"/>
-          &nbsp;&nbsp;
-          <b>mach-II</b>
+          <img src="fig/avro.png" width="25%" display="block" margin="auto"/>
+          &nbsp;&nbsp;<b>geocl</b>
         </div>
       </div>
-      <div class="list-group list-group-flush">
-        <a href="#about" class="list-group-item list-group-item-action bg-light">about</a>
-        <a href="#quickstart" class="list-group-item list-group-item-action bg-light">quickstart</a>
-        <a href="#usage" class="list-group-item list-group-item-action bg-light">usage</a>
-        <a href="#developing" class="list-group-item list-group-item-action bg-light">developing</a>
-        <a href="#testing" class="list-group-item list-group-item-action bg-light">testing</a>
-        <!--<a href="coverage_results" class="list-group-item list-group-item-action bg-light">coverage</a>-->
+      <div style="width:100%" class="list-group list-group-flush">
+        <a href="index.html#about" class="list-group-item list-group-item-action bg-light">about</a>
+        <a href="index.html#quickstart" class="list-group-item list-group-item-action bg-light">quickstart</a>
+        <a href="usage.html" class="list-group-item list-group-item-action bg-light">usage</a>
+        <a href="index.html#developing" class="list-group-item list-group-item-action bg-light">developing</a>
+        <a href="index.html#testing" class="list-group-item list-group-item-action bg-light">testing</a>
+        <a href="coverage_results" class="list-group-item list-group-item-action bg-light">coverage</a>
       </div>
     </div>
     <!-- /#sidebar-wrapper -->
@@ -54,16 +53,16 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
             <li class="nav-item">
-              <a class="nav-link" href="http://mach-ii.gitlab.io/mach-ii">introduction</a>
+              <a class="nav-link" href="http:/geocl.gitlab.io/geocl">introduction</a>
             </li>
             <li class="nav-item active">
-              <a class="nav-link" href="http://mach-ii.gitlab.io/avro">avro<span class="sr-only">(current)</span></a>
+              <a class="nav-link" href="http://geocl.gitlab.io/avro">avro<span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="http://wazowski.middlebury.edu/library">library</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="http://gitlab.com/mach-II">gitlab</a>
+              <a class="nav-link" href="http://gitlab.com/geocl">gitlab</a>
             </li>
           </ul>
         </div>
@@ -97,7 +96,7 @@
             <li><code>C++</code> compiler (with <code>C++11</code> capability), such as <code>g++</code> 4.8.3+, <code>clang</code> 3.5+, <code>icpc</code> 14+</li>
             <li><code>EngineeringSketchPad</code> 1.09+ (mostly just for <code>EGADS</code>) for interfacing to geometry models</li>
             <li><code>nlopt</code> 2.4.2+ for solving optimization problems</li>
-            <li><code>OpenGL 3+</code> and <code>glm</code></li>
+            <li><code>OpenGL 3+</code></li>
             <li><code>LAPACK</code> for linear algebra</code></li>
           </ul>
         </p>
@@ -117,14 +116,14 @@
         <p>Install dependencies:</p>
         <pre class="prettyprint lang-bsh" style="color: black">
 
-          $ brew install git cmake nlopt glm lapack
+          $ brew install git cmake nlopt lapack
         </pre>
 
         <h4 class="mt-4">dependencies on Linux</h4>
         <p>Install dependencies:</p>
         <pre class="prettyprint lang-bsh" style="color: black">
 
-          $ sudo apt-get install git cmake cmake-curses-gui libnlopt-dev libblas-dev liblapack-dev libglm-dev xorg-dev
+          $ sudo apt-get install git cmake cmake-curses-gui libnlopt-dev libblas-dev liblapack-dev xorg-dev
         </pre>
 
         <h4 class="mt-4"><code>EngineeringSketchPad</code> (both Linux and OS X)</h4>
@@ -209,7 +208,7 @@
           $ make avro -j 4
         </pre>
         <p>
-          This will compile the main <code>avro</code> executable (<code>build/release/bin/avro</code>).
+          This will compile the main <code>avro</code> executable (<code>build/release/bin/avro</code>) using 4 threads.
           Here are some extra targets that you may want to build:
         </p>
         <pre class="prettyprint lang-bsh" style="color: black">
@@ -218,41 +217,11 @@
           $ make                # compiles all unit tests (without running)
           $ make unit           # compiles and runs all unit tests
         </pre>
-
-        <h3 class="mt-4" id="usage">usage</h3>
-        <h4 class="mt-4">using the <code>avro</code> executable</h4>
-        <p>The main <code>avro</code> executable provides an interface to various "programs," which are specified by executing:</p>
-        <pre class="prettyprint lang-bsh" style="color: black">
-
-          $ bin/avro -[program name] [required arguments] [optional arguments specified with = signs]
-        </pre>
         <p>
-        The "program name" can be one of "adapt", "plot" or "voronoi", which each take a different list of required arguments, and a set of optional arguments.
+          Information about using the <code>avro</code> executable as well as the <code>avro</code> API are described in the <a href="usage.html">usage section</a>.
         </p>
-        <ul>
-          <li><code>adapt</code>: runs mesh adaptation on some input <code>mesh</code> with <code>geometry</code> and <code>metric</code> to some <code>output_prefix</code>.</li>
-          <li><code>plot</code>: plots some input <code>mesh</code>.
-            Instead of <code>plot</code>, you can also run the <code>webplot</code> program, which will start a graphics server.
-            Most of the functionality with <code>webplot</code> will be the same as <code>plot</code>, except for any OpenGL 4+ features.
-            After starting the graphics server, you can then open the file <code>app/webplot/webplot.html</code> in your browser to visualize your meshes.
-          </li>
-          <li><code>voronoi</code>: computes a restricted Voronoi diagram of some input <code>mesh</code> with <code>points</code> (the Delaunay vertices).</li>
-        </ul>
-        You can learn more about required and optional arguments by running <code>avro</code> with no arguments, which will display some information about each program.
 
-        <h4 class="mt-4">running unit tests</h4>
-        <p>
-        The <code>CMake</code> configuration provides targets for all unit tests found in the <code>test</code> directory in which the name of the file ends with <code>*_ut.cpp</code>.
-        All subdirectories in these targets are separated by underscores.
-        For example, you can <b>build</b> and <b>run</b> the unit test found in <code>test/lib/mesh/topology_ut.cpp</code> by executing:
-        </p>
-        <pre class="prettyprint lang-bsh" style="color: black">
-
-          $ make lib_mesh_topology_ut
-        </pre>
-        You should then see a summary of the results for the test.
         <hr>
-
         <h3 class="mt-4" id="developing">developing</h3>
 
         <h4 class="mt-4">conventions</h4>
@@ -374,6 +343,12 @@
         <hr>
 
         <h3 class="mt-4" id="testing">testing</h3>
+        <h4 class="mt-4">running unit tests</h4>
+        <p>
+        The <code>CMake</code> configuration provides targets for all unit tests found in the <code>test</code> directory in which the name of the file ends with <code>*_ut.cpp</code>.
+        All subdirectories in these targets are separated by underscores.
+        For example, you can <b>build</b> and <b>run</b> the unit test found in <code>test/lib/mesh/topology_ut.cpp</code> by executing:
+        </p>
         <h4 class="mt-4">writing unit tests</h4>
         <p>
         <code>avro</code> uses its own unit testing framework with the single header file in <code>test/unit_tester.hpp</code>.

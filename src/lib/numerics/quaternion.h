@@ -10,7 +10,7 @@
 #ifndef AVRO_NUMERICS_QUATERNION_H_
 #define AVRO_NUMERICS_QUATERNION_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "graphics/math.h"
 

@@ -11,7 +11,7 @@
 #define avro_LIB_COMMON_KDTREE_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include <memory>
 #include <vector>

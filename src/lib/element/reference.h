@@ -10,7 +10,7 @@
 #ifndef avro_SRC_LIB_MASTER_REFERENCE_H_
 #define avro_SRC_LIB_MASTER_REFERENCE_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "numerics/functions.h"
 

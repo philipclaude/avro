@@ -10,7 +10,7 @@
 #include "unit_tester.hpp"
 
 #include "common/directory.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 using namespace avro;
 

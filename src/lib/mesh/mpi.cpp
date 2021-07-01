@@ -4,7 +4,7 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 namespace avro
 {

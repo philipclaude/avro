@@ -10,7 +10,7 @@
 #include "unit_tester.hpp"
 
 #include "common/tools.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include <string>
 #include <vector>

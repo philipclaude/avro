@@ -14,7 +14,7 @@
 
 #include "unit_tester.hpp"
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "numerics/linear_algebra.h"
 #include "numerics/vec.h"

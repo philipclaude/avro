@@ -1,7 +1,6 @@
 #include "unit_tester.hpp"
 
 #include "adaptation/adapt.h"
-#include "adaptation/parameters.h"
 
 #include "common/mpi.hpp"
 #include "common/process.h"
@@ -163,15 +162,13 @@ UT_TEST_CASE( test1 )
   ptopology->points().attach( geometry );
 
   AdaptationParameters params;
-  params.standard();
-
-  params.directory() = "tmp/";
-  params.curved() = false;
-  params.insertion_volume_factor() = -1;
-  params.limit_metric() = true;
-  params.swapout() = true;
-  params.has_uv() = false;
-  params.use_smoothing() = true;
+  params.set( "directory" , std::string("tmp/"));
+  params.set( "insertion volume factor" ,  -1.0 );
+  params.set( "curved" , false);
+  params.set( "limit metric" , true );
+  params.set("has uv", false);
+  params.set( "swapout" , true);
+  params.set( "use smoothing" , true );
 
   // create a mesh and add the topology
   std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,number);
@@ -181,7 +178,7 @@ UT_TEST_CASE( test1 )
   index_t niter = 5;
   for (index_t iter=0;iter<=niter;iter++)
   {
-    params.adapt_iter() = iter;
+    params.set( "adapt iter" , index_t(iter) );
 
     // create the metric field
     std::vector<symd<real_t>> fld;
@@ -214,7 +211,7 @@ UT_TEST_CASE( test1 )
       vis.run();
     }
 
-    params.has_uv() = true;
+    params.set("has uv", true);
   }
 
 }

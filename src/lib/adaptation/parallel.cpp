@@ -4,7 +4,6 @@
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
 #include "adaptation/parallel.h"
-#include "adaptation/parameters.h"
 
 #include "element/simplex.h"
 
@@ -28,7 +27,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 #include <parmetis.h>
 
 #include "blossom5/PerfectMatching.h"
@@ -47,7 +46,7 @@
 namespace avro
 {
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 #define TAG_METRIC_INDICES 301
 #define TAG_METRIC_ENTRIES 302
@@ -214,7 +213,7 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
   index_t nb_rank = mpi::size();
   index_t nb_partition = nb_rank;
 
-  if (!params_.partitioned()) {
+  if (!params_["partitioned"]) {
     // extract the entities so we can assign them to the partitions
     std::vector<Entity*> entities;
     for (index_t k = 0; k < topology.points().nb(); k++) {
@@ -228,9 +227,6 @@ AdaptationManager<type>::initialize(const Topology<type>& topology , const std::
       // partition the input topology
       Partition<type> partition(topology);
       partition.compute( nb_partition );
-
-      // assume the mesh is balanced now
-      params_.balanced() = true;
 
       // extract the partitions
       std::vector<std::shared_ptr<Topology_Partition<type>>> pieces(nb_partition);
@@ -323,7 +319,7 @@ public:
 
     index_t max_age = (index_t) mpi::all_reduce( int(max_age0) , mpi::max{} );
 
-    index_t penalty = 10; // heuristic  
+    index_t penalty = 10; // heuristic
     for (index_t k = 0; k < elem_age.size(); k++)
 	    elem_age[k] = index_t( 10.0*elem_age[k]/max_age ) + 1;
 
@@ -558,6 +554,27 @@ public:
                             &edgecut,
                             part.data(),
                             &comm);
+    #elif 0 // this only works for d <= 3
+
+    PARM_INT dim = partition_.points().dim();
+    std::vector<PARM_REAL> coordinates( partition_.nb() * dim );
+
+    for (index_t k = 0; k < partition_.nb(); k++) {
+      index_t nv = partition_.nv(k);
+      for (index_t j = 0; j < nv; j++)
+      for (coord_t d = 0; d < dim; d++)
+        coordinates[dim*k+d] += partition_.points()[ partition_(k,j) ][d] / nv;
+    }
+
+    int result = ParMETIS_V3_PartGeomKway( vtxdist.data() , xadj.data() , adjncy.data() ,
+                            pvwgt , padjwgt, &wgtflag,
+                            &bias , &dim , coordinates.data() , &ncon , &nparts,
+                            tpwgts.data() , ubvec.data(),
+                            options,
+                            &edgecut,
+                            part.data(),
+                            &comm);
+
     #else
     PARM_REAL itr = 1000000.;
     index_t mem_vertex = (partition_.number()+1)*sizeof(index_t);
@@ -1726,9 +1743,9 @@ AdaptationManager<type>::adapt() {
 
   // perform the passes, alternating between doing an interface migration
   // and a load balance
-  const std::string method = params_.parallel_method();
-  bool limit_metric = params_.limit_metric();
-  index_t max_passes = params_.max_passes();
+  const std::string method = "default";
+  bool limit_metric = params_["limit metric"];
+  index_t max_passes = params_["max parallel passes"];
   index_t nb_part = mpi::size();
   index_t pass = 0;
   bool done = false;
@@ -1746,7 +1763,7 @@ AdaptationManager<type>::adapt() {
 
     // option to limit the metrics - do not limit the metrics in the call to the mesh adapter
     try {
-    if (pass == 0 && params_.limit_metric()) {
+    if (pass == 0 && params_["limit metric"]) {
       MetricAttachment attachment( topology_.points() , metrics_ );
       attachment.limit(topology_,2.0,true);
       for (index_t k = 0; k < attachment.nb(); k++)
@@ -1755,7 +1772,7 @@ AdaptationManager<type>::adapt() {
       // we need to synchronize the metrics across processors that may have been modified by metric limiting
       synchronize_metrics( topology_.points() , metrics_ );
     }
-    params_.limit_metric() = false;
+    params_.set("limit metric", false);
     }
     catch(...) {
       printf("pass %lu: there was an error limiting the metric on processor %lu :(\n",pass,rank_);
@@ -1784,10 +1801,10 @@ AdaptationManager<type>::adapt() {
       writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
-    params_.output_redirect() = "adaptation-output-proc"+std::to_string(rank_)+".txt";
-    params_.swapout() = false; // I think there are some bugs with swapout in parallel (maybe with setting fixed)
-    params_.export_boundary() = false;
-    params_.prefix() = "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass);
+    params_.set("output redirect" , "adaptation-output-proc"+std::to_string(rank_)+".txt" );
+    params_.set("swapout" , false ); // I think there are some bugs with swapout in parallel (maybe with setting fixed)
+    params_.set("export boundary", false);
+    params_.set("prefix" , "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass) );
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     try {
 
@@ -1830,14 +1847,15 @@ AdaptationManager<type>::adapt() {
     std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
     retrieve(*topology_out.get());
     if (rank_ == 0) {
+      index_t adapt_iter = params_["adapt iter"];
       if (number < 4) {
         m.add(topology_out);
-        writer.write(m,"mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh",false,true);
+        writer.write(m,"mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".mesh",false,true);
       }
       else {
         Topology_Spacetime<type> spacetime(*topology_out.get());
         spacetime.extract();
-        spacetime.write( "mesh-adapt"+std::to_string(params_.adapt_iter())+"-pass"+std::to_string(pass)+".mesh" );
+        spacetime.write( "mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".mesh" );
       }
       std::vector<real_t> volumes( topology_out->nb() );
       real_t v0 = topology_out->volume();
@@ -1867,7 +1885,7 @@ AdaptationManager<type>::adapt() {
     else {
 
       // standard, hope the interfaces are migrated to the interior
-      index_t nb_elem_per_core = params_.elems_per_processor();
+      index_t nb_elem_per_core = params_["elems per processor"];
 
       index_t nb_elem = topology_out->nb();
       if (rank_ == 0) {
@@ -1883,7 +1901,7 @@ AdaptationManager<type>::adapt() {
       if (pass == max_passes-1 || max_passes <= 2) {
         done = true;
       }
-      else if (pass == max_passes-2 && params_.allow_serial()) {
+      else if (pass == max_passes-2 && params_["allow serial"]) {
         freeze_conforming = true;
         nb_part = 1;
       }
@@ -1899,7 +1917,7 @@ AdaptationManager<type>::adapt() {
     pass++;
   }
 
-  params_.limit_metric() = limit_metric;
+  params_.set("limit metric" , limit_metric );
 }
 
 template<typename type>

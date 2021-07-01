@@ -10,7 +10,7 @@
 #ifndef avro_MESH_SEARCH_H_
 #define avro_MESH_SEARCH_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "mesh/boundary.h"
 

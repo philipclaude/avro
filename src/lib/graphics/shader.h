@@ -23,7 +23,7 @@ namespace graphics
 
 class SceneGraph;
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 enum GLSLShaderType
 {
@@ -34,7 +34,7 @@ enum GLSLShaderType
 class ShaderProgram
 {
 public:
-  ShaderProgram( const std::string& name );
+  ShaderProgram( const std::string& name , bool with_tess=false );
 
   bool compileShaderFromFile( const char* filename, GLSLShaderType type );
   bool compileShaderFromFile( const std::string& filename, GLSLShaderType type );

@@ -4,7 +4,7 @@ set(CMAKE_CXX_FLAGS ${CXX_FLAGS0})
 
 # add all the source files
 add_source_directories(SOURCES "Source Files" .)
-add_source_directories(SOURCES "Source Files\\api" api)
+add_source_directories(SOURCES "Source Files\\include" include)
 add_source_directories(SOURCES "Source Files\\adaptation" lib/adaptation)
 add_source_directories(SOURCES "Source Files\\common" lib/common)
 add_source_directories(SOURCES "Source Files\\mesh" lib/element)
@@ -44,7 +44,6 @@ include_directories( ${THIRD_PARTY_INCLUDE_DIRS} )
 
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
-include_directories( third_party/tinymat )
 
 # add the symbolic links for the webplot application
 #install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )
@@ -91,3 +90,7 @@ else()
   target_link_libraries( avro_shared ${avro_EXTERNAL_LIBRARIES_SHARED})
 endif()
 target_link_libraries( avro_static ${avro_EXTERNAL_LIBRARIES_STATIC} )
+
+pybind11_add_module(pyavro lib/python/pyavro.cpp)
+target_compile_definitions(pyavro PRIVATE VERSION_INFO=1.1)
+target_link_libraries( pyavro PRIVATE avro_static )

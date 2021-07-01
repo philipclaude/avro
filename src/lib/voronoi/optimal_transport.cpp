@@ -12,7 +12,6 @@
 
 #include <nlopt.hpp>
 #include <HLBFGS/HLBFGS.h>
-#include "liblbfgs/lbfgs.h"
 #include "json/json.hpp"
 
 #include <fstream>
@@ -1022,7 +1021,8 @@ SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology
   exact_(false),
   print_(true),
   quad_order_(4),
-  weight_max_(1e6)
+  weight_max_(1e6),
+  save_every_(1e6)
 {}
 
 template<typename type>
@@ -1341,9 +1341,9 @@ nlopt_transport_objective( unsigned n , const double* x , double* grad, void* da
 
 #define OPTIMIZER_NLOPT 1
 #define OPTIMIZER_HLBFGS 0
-#define OPTIMIZER_LIBLBFGS 0
 OptimalTransportBase* __transport__ = nullptr;
 
+#if OPTIMIZER_HLBFGS
 static void
 newiteration(int iter, int call_iter, double *x, double* f, double *g,  double* gnorm)
 {}
@@ -1356,38 +1356,7 @@ hlbfgs_transport_objective(int N, double* x, double *prev_x, double* f, double* 
   transport->iteration()++;
   *f = transport->transport_objective(index_t(N),x,g);
 }
-
-static lbfgsfloatval_t
-liblbfgs_evaluate(
-    void *instance,
-    const lbfgsfloatval_t *x,
-    lbfgsfloatval_t *g,
-    const int n,
-    const lbfgsfloatval_t step
-    )
-{
-  avro_assert( __transport__ != nullptr );
-  OptimalTransportBase* transport = static_cast<OptimalTransportBase*>(__transport__);
-  transport->iteration()++;
-  return transport->transport_objective(index_t(n),x,g);
-}
-
-static int
-liblbfgs_progress(
-    void *instance,
-    const lbfgsfloatval_t *x,
-    const lbfgsfloatval_t *g,
-    const lbfgsfloatval_t fx,
-    const lbfgsfloatval_t xnorm,
-    const lbfgsfloatval_t gnorm,
-    const lbfgsfloatval_t step,
-    int n,
-    int k,
-    int ls
-    )
-{
-    return 0;
-}
+#endif
 
 template<typename type>
 void
@@ -1723,6 +1692,19 @@ SemiDiscreteOptimalTransport<type>::stochastic_gradient_descent( index_t nb_iter
     evaluate( nullptr , nullptr );
   }
 
+}
+
+template<typename type>
+std::vector<real_t>
+SemiDiscreteOptimalTransport<type>::get_sites() const {
+  index_t nb_points = delaunay_.nb();
+  index_t dim = domain_.number(); // maybe make dim a parameter to this function
+  std::vector<real_t> sites( nb_points*dim );
+  index_t i = 0;
+  for (index_t k = 0; k < nb_points; k++)
+  for (coord_t d = 0; d < dim; d++)
+    sites[i++] = delaunay_[k][d];
+  return sites;
 }
 
 

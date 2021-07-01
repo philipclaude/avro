@@ -22,6 +22,8 @@ namespace avro
 ModelTessellation::ModelTessellation( Model& model , TessellationParameters& params) :
   Mesh(0,0), model_(model)
 {
+  std::string type = params["type"];
+
 
   // need to set the number of the mesh (it's initialized to 0)
   for (index_t k=0;k<model.nb_bodies();k++)
@@ -46,7 +48,7 @@ ModelTessellation::ModelTessellation( Model& model , TessellationParameters& par
 
     // tessellate the body in the model
     std::shared_ptr<BodyTessellation> body_tess;
-    if (params.type() == "simplex")
+    if (type == "simplex")
     {
       body_tess = std::make_shared<BodyTessellation>( points_ , model.body(k) , params );
     }
@@ -102,7 +104,7 @@ ModelTessellation::get_body_internal_points( const BodyTessellation& body_tess )
 BodyTessellation::BodyTessellation( Points& model_points , Body& body , TessellationParameters& params ) :
   Mesh(body.number(),model_points.dim()),
   body_(body),
-  params_(params), 
+  params_(params),
   model_points_(model_points)
 {
   printf("number = %u, dim = %u\n",body.number(),points_.dim());

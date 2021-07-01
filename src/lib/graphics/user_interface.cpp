@@ -30,7 +30,7 @@ namespace avro
 namespace graphics
 {
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 Widget::Widget( GLFW_Window& window ) :
   window_(window),
@@ -57,7 +57,7 @@ Interface::initialize()
   ImGui::StyleColorsDark();
   //ImGui::StyleColorsClassic();
 
-#ifdef AVRO_HEADLESS_GRAPHICS
+#if AVRO_HEADLESS_GRAPHICS
   const char* glsl_version = "#version 330";
 #else
   //const char* glsl_version = "#version 410";
@@ -168,7 +168,13 @@ Toolbar::begin_draw()
   }
 
   ImGuiWindowFlags window_flags = 0;
-  window_flags |= ImGuiWindowFlags_NoCollapse;
+  window_flags |= ImGuiWindowFlags_NoTitleBar;
+  window_flags |= ImGuiWindowFlags_NoResize;
+  window_flags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
+
+  // set the controls at the top-left of the window
+  ImGui::SetNextWindowPos( ImVec2( 0 , 0 ) , true );
+  ImGui::SetNextWindowSize( ImVec2( 0.25*window_.width() , window_.height() ) );
 
   std::vector<std::string> entities = {"Volumes","Faces","Edges","Nodes"};
 
@@ -178,7 +184,8 @@ Toolbar::begin_draw()
 
   bool active = true;
   ImGui::SetNextItemWidth(200);
-  ImGui::Begin("Controls",&active,ImGuiWindowFlags_MenuBar);
+
+  ImGui::Begin("Controls",&active,window_flags);
   {
     if (ImGui::BeginMenuBar())
     {

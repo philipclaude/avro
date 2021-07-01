@@ -9,7 +9,6 @@
 //
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
-#include "adaptation/parameters.h"
 #include "adaptation/properties.h"
 
 #include "geometry/entity.h"
@@ -35,6 +34,31 @@ typedef avro::real_t REAL;
 namespace avro
 {
 
+AdaptationParameters::AdaptationParameters() {
+  set_defaults();
+}
+
+AdaptationParameters::AdaptationParameters( const ParameterSet& params ) :
+  ParameterSet(params) {
+  set_defaults();
+}
+
+void
+AdaptationParameters::set_defaults() {
+  register_parameter( "swapout" , false , "whether to swap out of restrictive configurations when insertions/collapses are rejected" );
+  register_parameter( "insertion volume factor" , -1.0 , "whether to limit insertions by checking complexity after insertion" );
+  register_parameter( "use smoothing" , true , "whether to use smoothing during the adaptation" );
+  register_parameter( "allow serial" , false , "whether to allow serial adaptation when running in parallel" );
+  register_parameter( "has uv" , false , "whether parameter space coordinates are specified for geometry points in the mesh" );
+  register_parameter( "smoothing exponent" , index_t(1) , "smoothing exponent" );
+  register_parameter( "elems per processor" , index_t(10000) , "number of elements for each processor" );
+  register_parameter( "adapt iter" , index_t(1) , "adaptation iteration" );
+  register_parameter( "has interior boundaries" , false , "whether there are geometry entities which are embedded interior to the mesh" );
+  register_parameter( "export boundary" , false , "should the boundary be included in the exported mesh" );
+  register_parameter( "write conformity" , false , "whether metric conformity information should be written when adaptation finishes" );
+  register_parameter( "partitioned" , false , "whether the incoming mesh is already partitioned" );
+}
+
 template<typename type>
 AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& metric , AdaptationParameters& params ) :
   topology_(topology),
@@ -45,12 +69,14 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
   smoother_(topology),
   edge_swapper_(topology)
 {
-  collapser_.curved() = params.curved();
-  inserter_.curved() = params.curved();
-  smoother_.curved() = params.curved();
-  edge_swapper_.curved() = params.curved();
+  bool curved = params["curved"];
+  collapser_.curved() = curved;
+  inserter_.curved() = curved;
+  smoother_.curved() = curved;
+  edge_swapper_.curved() = curved;
 
-  smoother_.exponent() = index_t(params.smoothing_exponent());
+  index_t smoothing_exponent = params["smoothing exponent"];
+  smoother_.exponent() = smoothing_exponent;
 }
 
 const real_t nb_smooth = 10;
@@ -66,18 +92,19 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   const coord_t number = topology.number();
 
   // retrieve the parameters
-  const bool limit_insertion_length = params.limit_insertion_length();
-  const bool swapout = params.swapout();
-  const real_t lt_min = params.lt_min();
-  real_t lt_max = params.lt_max();
-  const bool smooth_on = params.use_smoothing();
-  const bool fefloa = params.fefloa();
+  const bool limit_insertion_length = true;
+  const bool swapout = params["swapout"];
+  const real_t lt_min = sqrt(2.0);
+  real_t lt_max = 2.0;
+  const bool smooth_on = params["use smoothing"];
+  const bool fefloa = false;
 
   if (fefloa) lt_max = sqrt(2.0); // and we will do one pass
 
   // the uv-parameters might not be set for the incoming points
   // for the case of real_t geometries
-  if (params.curved())
+  bool curved = params["curved"];
+  if (curved)
   {
     // check all parametric coordinates for consistency
     coord_t udim = mesh_topology.points().udim();
@@ -88,7 +115,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
       if (e==NULL) continue;
 
       // project the mesh_topology points to the geometry if not provided
-      if(!params.has_uv())
+      bool has_uv = params["has uv"];
+      if(!has_uv)
       {
         real_t* x = mesh_topology.points()[k];
         std::vector<real_t> X(x,x+mesh_topology.points().dim());
@@ -260,9 +288,10 @@ done:
   {
     properties.compute( mesh_topology , metric );
     properties.print("final metric conformity" );
-    if (params.write_conformity())
-      properties.dump( params.directory()+
-                       "/properties_"+stringify(params.adapt_iter())+".json");
+    std::string directory = params["directory"];
+    index_t adapt_iter = params["adapt iter"];
+    if (params["write conformity"])
+      properties.dump( directory + "/properties_" + stringify(adapt_iter) + ".json");
   }
   else avro_implement;
 
@@ -274,8 +303,7 @@ done:
  if (mesh_out.nb_topologies()==0)
  {
    std::shared_ptr<Topology<type>> ptopology_out =
-                std::make_shared<Topology<type>>( mesh_out.points() ,
-                                                number );
+                std::make_shared<Topology<type>>( mesh_out.points() , number );
    mesh_out.add(ptopology_out);
  }
 
@@ -322,7 +350,7 @@ adapt( AdaptationProblem& problem )
   // standardize the parameters
   AdaptationParameters& params = problem.params;
 
-  const std::string& output_redirect = params.output_redirect();
+  std::string output_redirect = params["output redirect"];
 
   fpos_t pos;
   int redirected_fd = 0;
@@ -336,7 +364,7 @@ adapt( AdaptationProblem& problem )
   }
   UNUSED( redirected_fid );
 
-  params.standard();
+  //params.standard();
   params.print();
 
   // initialize the predicates
@@ -450,11 +478,12 @@ adapt( AdaptationProblem& problem )
   field.set_cells( topology );
   avro_assert( field.check () );
 
-  if (params.limit_metric())
+  bool limit_metric = params["limit metric"];
+  if (limit_metric)
   {
     // option to limit the metric field from the current mesh-implied metric
     // any problematic vertices will be fixed
-    field.limit(mesh_topology,1.7);
+    field.limit(mesh_topology,2.0);
   }
 
   // create a discrete metric with the input topology
@@ -476,28 +505,35 @@ adapt( AdaptationProblem& problem )
   // call the adaptation!
   int result = call( topology , mesh_topology , metric , params , problem.mesh_out );
 
+  std::string directory = params["directory"];
+  std::string prefix = params["prefix"];
+  index_t adapt_iter = params["adapt iter"];
+  bool write_mesh = params["write mesh"];
+  bool has_interior_boundaries = params["has interior boundaries"];
+  bool export_boundary = params["export boundary"];
+
   // option to output the mesh
-  std::string mesh_file = params.directory()+params.prefix()+"_"+stringify(params.adapt_iter())+".mesh";
-  if (params.write_mesh())
+  std::string mesh_file = directory + prefix + "_" + stringify(adapt_iter) + ".mesh";
+  if (write_mesh)
   {
-    if (topology.number()<=3 && !params.has_interior_boundaries())
+    if (topology.number()<=3 && !has_interior_boundaries)
     {
       // write the full mesh
       library::meshb meshb;
-      meshb.write( problem.mesh_out , mesh_file , params.export_boundary() );
+      meshb.write( problem.mesh_out , mesh_file , export_boundary );
       printf("wrote mesh %s\n",mesh_file.c_str());
     }
-    else if (topology.number()==4 && params.export_boundary())
+    else if (topology.number()==4 && export_boundary)
     {
       // get the boundary of the mesh
       Topology_Spacetime<Simplex> spacetime(mesh_topology);
       spacetime.extract();
 
-      std::string filename = params.directory()+"/"+params.prefix()+"_"+stringify(params.adapt_iter())+".mesh";
+      std::string filename = directory + "/" + prefix + "_" + stringify(adapt_iter) + ".mesh";
       spacetime.write( filename );
     }
 
-    if (topology.number()==3 && params.has_interior_boundaries())
+    if (topology.number()==3 && has_interior_boundaries)
     {
       #if 0
       Boundary<Simplex> bnd2( mesh_topology );
@@ -508,7 +544,7 @@ adapt( AdaptationProblem& problem )
 
       library::Plottable<Simplex> plot(bnd_topo);
       gamma.withGeometry() = false;
-      std::string boundary_file = params.directory()+params.prefix()+"_boundary_"+stringify(params.adapt_iter())+".mesh";
+      std::string boundary_file = directory + prefix + "_boundary_" + stringify(adapt_iter) + ".mesh";
 
       gamma.writeMesh( plot , boundary_file , false );
       printf("wrote boundary of mesh %s\n",boundary_file.c_str());
@@ -518,10 +554,10 @@ adapt( AdaptationProblem& problem )
       #endif
     }
 
-    if (!params.has_interior_boundaries())
+    if (!has_interior_boundaries)
     {
       #if 0
-      const std::string json_file = params.directory()+"mesh_"+stringify(params.adapt_iter())+".json";
+      const std::string json_file = directory + "mesh_" + stringify(adapt_iter) + ".json";
       io::writeMesh<Simplex>( json_file , topology , &metric.field() );
       #endif
     }

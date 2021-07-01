@@ -20,7 +20,7 @@ namespace avro
 namespace graphics
 {
 
-#ifdef AVRO_WITH_GL
+#if AVRO_WITH_GL
 
 int
 checkOpenGLError(const char* file, int line)
@@ -62,34 +62,28 @@ checkOpenGLError(const char* file, int line)
 }
 
 void
-dumpGLInfo(bool dumpExtensions)
-{
+dumpGLInfo(bool dumpExtensions) {
+
   const GLubyte *renderer = glGetString( GL_RENDERER );
   const GLubyte *vendor = glGetString( GL_VENDOR );
   const GLubyte *version = glGetString( GL_VERSION );
   const GLubyte *glslVersion = glGetString( GL_SHADING_LANGUAGE_VERSION );
 
-  GLint major, minor, samples, sampleBuffers;
+  GLint major, minor;
   glGetIntegerv(GL_MAJOR_VERSION, &major);
   glGetIntegerv(GL_MINOR_VERSION, &minor);
-  glGetIntegerv(GL_SAMPLES, &samples);
-  glGetIntegerv(GL_SAMPLE_BUFFERS, &sampleBuffers);
 
 	printf("-------------------------------------------------------------\n");
-  printf("GL Vendor    : %s\n", vendor);
-  printf("GL Renderer  : %s\n", renderer);
-  printf("GL Version   : %s\n", version);
-  printf("GL Version   : %d.%d\n", major, minor);
-  printf("GLSL Version : %s\n", glslVersion);
-	printf("MSAA samples : %d\n", samples);
-	printf("MSAA buffers : %d\n", sampleBuffers);
+  printf("--> vendor: %s\n", vendor);
+  printf("--> device: %s\n", renderer);
+  printf("--> driver: %s (@ OpenGL %d.%d)\n", version, major, minor);
+  printf("--> @ glsl: %s\n", glslVersion);
   printf("-------------------------------------------------------------\n");
 
-  if (dumpExtensions)
-  {
-    GLint next;
-    glGetIntegerv(GL_NUM_EXTENSIONS, &next);
-    for (int i=0;i<next;i++)
+  if (dumpExtensions) {
+    GLint nb_ext;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &nb_ext);
+    for (int i = 0; i < nb_ext; i++)
       printf("%s\n", glGetStringi(GL_EXTENSIONS, i));
   }
 }
@@ -231,7 +225,7 @@ OpenGL_Manager::write( Primitive& primitive )
   GL_CALL( glBindVertexArray(id_vao_triangles) );
   vao_triangles_.insert( {&primitive,id_vao_triangles} );
 
-  GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo_triangles ) );
+  GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo_triangles ) ); // this does nothing
 
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, vbo_position ) );
   GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) );

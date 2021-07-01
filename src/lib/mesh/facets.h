@@ -11,7 +11,7 @@
 #define avro_LIB_MESH_FACETS_H_
 
 #include "common/table.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include <algorithm>
 #include <functional>

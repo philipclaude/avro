@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>avro</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="css/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="css/style.css" rel="stylesheet">
+
+  <link rel="shortcut icon" href="fig/favicon.ico">
+
+  <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?skin=desert"></script>
+
+</head>
+
+<body>
+
+  <div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div style="width:15%" class="bg-light border-right" id="sidebar-wrapper">
+      <div>
+        <div class="sidebar-heading">
+          <img src="fig/avro.png" width="25%" display="block" margin="auto"/>
+          &nbsp;&nbsp;<b>geocl</b>
+        </div>
+      </div>
+      <div style="width:100%" class="list-group list-group-flush">
+        <a href="index.html#about" class="list-group-item list-group-item-action bg-light">about</a>
+        <a href="index.html#quickstart" class="list-group-item list-group-item-action bg-light">quickstart</a>
+        <a href="usage.html" class="list-group-item list-group-item-action bg-light">usage</a>
+        <a href="index.html#developing" class="list-group-item list-group-item-action bg-light">developing</a>
+        <a href="index.html#testing" class="list-group-item list-group-item-action bg-light">testing</a>
+        <a href="coverage_results" class="list-group-item list-group-item-action bg-light">coverage</a>
+      </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+
+      <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="http:/geocl.gitlab.io/geocl">introduction</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="http://geocl.gitlab.io/avro">avro<span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="http://wazowski.middlebury.edu/library">library</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="http://gitlab.com/geocl">gitlab</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <div class="container-fluid">
+
+        <h3 class="mt-4" id="usage">usage</h3>
+        <h4 class="mt-4"><code>avro</code> executable</h4>
+        <p>The main <code>avro</code> executable provides an interface to various "programs," which are specified by executing:</p>
+        <pre class="prettyprint lang-bsh" style="color: black">
+
+          $ bin/avro -[program name] [required arguments] [optional arguments specified with = signs]
+        </pre>
+        <p>
+        The "program name" can be one of "adapt", "plot" or "voronoi", which each take a different list of required arguments, and a set of optional arguments.
+        </p>
+        <ul>
+          <li><code>adapt</code>: runs mesh adaptation on some input <code>mesh</code> with <code>geometry</code> and <code>metric</code> to some <code>output_prefix</code>.</li>
+          <li><code>plot</code>: plots some input <code>mesh</code>.
+            Instead of <code>plot</code>, you can also run the <code>webplot</code> program, which will start a graphics server.
+            Most of the functionality with <code>webplot</code> will be the same as <code>plot</code>, except for any OpenGL 4+ features.
+            After starting the graphics server, you can then open the file <code>app/webplot/webplot.html</code> in your browser to visualize your meshes.
+          </li>
+          <li><code>voronoi</code>: computes a restricted Voronoi diagram of some input <code>mesh</code> with <code>points</code> (the Delaunay vertices).</li>
+        </ul>
+        You can learn more about required and optional arguments by running <code>avro</code> with no arguments, which will display some information about each program.
+
+        <h4 class="mt-4"><code>C++</code> API</h4>
+        <p>
+          <code>avro</code> can be called from another <code>C++</code> program in order to use certain functionalities.
+          Currently, only the adaptation functionality is exposed (both serial and parallel), though future versions will expose Voronoi diagram and mesh generation capabilities.
+          To call <code>avro</code> from your code, the first thing you need to do is to <code>#include &lt;avro.h&gt;</code>, which is in <code>src/api</code>.
+          A <code>FindAVRO.cmake</code> file is included in the <code>cmake</code> directory to help you find <code>avro</code> on your system.
+        </p>
+        <p>
+          The interface to <code>avro</code> is done via a <i>context</i>.
+          The context handles the mesh, geometry and metric definition that will then be passed to the adaptation functionality.
+          The context needs to be initialized with a topological number (<code>number</code>), point dimension (<code>dim</code>) and maximum parameter space dimension of the geometry (<code>udim</code>).
+          Often, the parameter space dimension is <code>udim = dim - 1</code>.
+          Typically, a 3d problem would create a context as <code>avro::Context context(3,3,2)</code> whereas a 4d problem would initialize the context as <code>avro::Context context(4,4,3)</code>.
+        </p>
+        <h5>defining a geometry</h5>
+        <p>
+          You then need to define a geometry for the <code>avro</code> context using the <code>define_geometry</code> method of your <code>Context</code> object.
+          You can either pass a string or an <code>avro::Model</code>.
+          When passing a string, you can use <code>"square"</code>, <code>"cube"</code> or <code>"tesseract"</code> which will load a built-in geometry defined within <code>avro</code>.
+          These are all unit d-cubes that bound [0,1]^d.
+          Alternatively, an <code>EGADS</code> geometry can be loaded when the string defines the location to an <code>EGADS</code> file.
+          If you need to create a custom geometry, you should create an <code>avro::Model</code> (sorry, no documentation for this yet), which can then be passed into the the <code>define_geometry</code> function (this is in progress).
+        </p>
+        <h5 id="importing">importing a mesh into the context</h5>
+        <p>
+          At the most fundamental level, a mesh is defined by coordinates and element connectivity data.
+          To load a mesh into your <code>avro::Context</code> object, you should use the <code>load_mesh( coordinates , connectivity )</code> function.
+          The <code>coordinates</code> is a <code>std::vector</code> of <code>avro::real_t</code> of size <code>dim x nb_points</code> where <code>dim</code> is the ambient dimension of the points and <code>nb_points</code> is the number of local points used by this mesh.
+          The <code>connectivity</code> is a <code>std::vector</code> of <code>avro::index_t</code> of size <code>nb_points_per_elem x nb_elem</code> where <code>nb_points_per_elem</code> is the number of points defining a single element.
+          For straight-sided elements, this is <code>nb_points_per_elem = number + 1</code> where <code>number</code> is the topological number of the mesh.
+          <code>nb_elem</code> is the number of local elements on the mesh for a particular processor.
+        </p>
+        <p>
+          <code>avro</code> will need various metadata, depending on the problem at hand.
+          For adaptation, you always (always, always!) need to define the geometry metadata attached to each point.
+          This is the geometry entity with the <b>lowest</b> topological dimension the point lies on.
+          For example, when a point lies on a geometry Node, it also lies on several Edges, or even Faces, but you need to specify the point is on a Node.
+          To load the geometry metadata into your current mesh, you should use the <code>Context::load_geometry( entity_idx , param )</code> method which expects a <code>std::vector</code> of <code>int</code> (called <code>entity_idx</code>), as well as a <code>std::vector</code> of <code>avro::real_t</code> (called <code>param</code>).
+          The <code>entity_idx</code> vector contains the geometry index of every (local) point in the mesh.
+          This geometry index should be -1 for interior vertices (since they don't lie on a geometry), otherwise they will be a nonnegative integer that associates every geometry entity with some identifier.
+          It might be tempting to make this integer equal to an EGADS body index - don't!
+          The entity identifiers can be retrieved via the <code>Context::get_geometry_ids</code> function.
+          The <code>std::vector</code> called <code>param</code> has a length of <code>udim x nb_points</code> containing the parameter space coordinates of each point with its associated geometry entity.
+          If a point lies on an entity which has a topological dimension less than <code>udim</code> (such as an Edge in a 3d model), you still need to pass in <code>udim</code> parameter space coordinates, but you can leave the unnecessary ones to some arbitrary value, such as <code>avro::unset_value</code>.
+          If you have attached the geometry to your mesh, using <code>Context::attach_geometry</code> (which should only ever be done once), then you can retrieve the initial geometry metadata using <code>Context::retrieve_geometry</code>, which retrieves the geometry metadata of the current loaded mesh.
+          In general, you should not need any other information, however, custom geometries (such as for wake problems), you might need the association between these geometry identifies and an EGADS <code>ego</code>.
+          If so, please submit a feature request.
+        </p>
+        <p>
+          For parallel problems, you also need to specify the <code>local2global</code> metadata for every point in the mesh.
+          This can be done by calling the <code>Context::load_local2global( local2global )</code> function.
+          The <code>local2global</code> parameter is a <code>std::vector</code> of <code>avro::index_t</code> of length <code>nb_points</code> which provides the global index of every point in the global mesh (should each processor mesh be merged into a single mesh).
+        </p>
+        <h5>retrieving a mesh from the context</h5>
+        <p>
+          You can retrieve the current mesh from the context using the <code>Context::retrieve_mesh( coordinates , connectivity )</code> function where the <code>coordinates</code> and <code>connectivity</code> are <code>std::vector</code>'s with the same format described in the section <a href="#importing">importing a mesh</a>.
+          You can also retrieve the point-entity relations using the <code>Context::retrieve_geometry( entity_idx , param )</code> function which retrieves a <code>std::vector</code> of integers (<code>int</code>) which are negative for interior points, but have the nonnegative index of the geometry entity the associated point lies on.
+          The <code>Context::retrieve_geometry</code> function also retrieves the parameter space coordinates of all the points (<code>param</code>) in the same format described above.
+          For parallel problems, <code>avro</code> will assign global indices for each point in the mesh, which can be retrieved using the <code>Context::retrieve_local2global( local2global )</code> function.
+        </p>
+
+        <h5>adapting to a metric</h5>
+        <p>
+          Now that you have loaded a mesh into <code>avro</code>, you can call the <code>Context::adapt( metrics )</code> function by passing in a <code>std::vector</code> of <code>avro::real_t</code> which has a length of <code>nb_points x number x (number+1)/2 </code>.
+          In other words, you can pass in the unique entries of a metric tensor defined at each point.
+          These are stored contiguously in the <code>metrics</code> vector, in either row- or column-major format (it doesn't matter since the matrix is symmetric).
+          <code>avro</code> will then adapt the mesh and overwrite the current mesh in your context (it will throw away the mesh you started out with in the context).
+        </p>
+        <p>
+          To modify parameters used in the adaptation algorithm, you can retrieve a reference to the <code>AdaptationParameters</code> using <code>context.parameters()</code> (assuming you have an <code>avro::Context</code> called <code>context</code>).
+          Please see the <code>parameters.h</code> file to see which parameters can be modified, and the <code>parameters.cpp</code> file to see default values.
+        </p>
+
+        <h4 class="mt-4"><code>Python</code> API</h4>
+        <p>
+          TBD
+        </p>
+
+
+      </div> <!-- container-fluid -->
+    </div> <!-- page-content-wrapper -->
+  </div> <!-- wrapper -->
+
+</body>
+
+</html>

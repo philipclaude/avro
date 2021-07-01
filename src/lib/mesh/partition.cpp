@@ -13,7 +13,7 @@
 
 #include <set>
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 #include "common/mpi.hpp"
 

@@ -11,7 +11,7 @@
 #define AVRO_MESH_DELAUNAY_H_
 
 #include "mesh/points.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 namespace avro
 {

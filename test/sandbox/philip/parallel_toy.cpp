@@ -1,7 +1,7 @@
 #include "unit_tester.hpp"
 
+#include "adaptation/adapt.h"
 #include "adaptation/parallel.h"
-#include "adaptation/parameters.h"
 
 #include "common/mpi.hpp"
 #include "common/process.h"
@@ -83,7 +83,7 @@ public:
 
 UT_TEST_SUITE( adaptation_parallel_test_suite )
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 UT_TEST_CASE( test1 )
 {
@@ -122,29 +122,30 @@ UT_TEST_CASE( test1 )
   library::Tesseract geometry(c,lengths);
   std::vector<index_t> dims(number,5);
   CKF_Triangulation topology(dims);
-  //library::MetricField_Uniform analytic(number,0.25);
-  library::MetricField_Tesseract_Wave analytic;
+  library::MetricField_Uniform analytic(number,0.25);
+  //library::MetricField_Tesseract_Wave analytic;
   //library::MetricField_Tesseract_Linear analytic;//(0.00125);
   #endif
   topology.points().attach(geometry);
-
-  AdaptationParameters params;
-  params.standard();
 
   std::vector<VertexMetric> metrics(topology.points().nb());
   for (index_t k = 0; k < topology.points().nb(); k++)
     metrics[k] = analytic( topology.points()[k] );
 
-  params.partitioned() = false;
-  params.balanced() = true; // assume load-balanced once the first partition is computed
-  params.curved() = false;//true;
-  params.insertion_volume_factor() = -1;//(number <= 3) ? -1 : std::sqrt(2.0);
-  params.limit_metric() = true;
-  params.max_passes() = 3;
-  params.parallel_method() = "migrate";
-  params.swapout() = false;
-  params.has_uv() = true;
-  params.elems_per_processor() = 5000;
+  //params.partitioned() = false;
+  //params.balanced() = true; // assume load-balanced once the first partition is computed
+  //params.parallel_method() = "migrate";
+
+  AdaptationParameters params;
+  params.set( "directory" , std::string("tmp/"));
+  params.set( "insertion volume factor" ,  -1.0 );
+  params.set( "curved" , false);
+  params.set( "limit metric" , true );
+  params.set( "max parallel passes" , index_t(3) );
+  params.set( "elems per processor" , index_t(5000) );
+  params.set("has uv", true);
+  params.set( "swapout" , false);
+
 
   topology.build_structures();
 
@@ -155,10 +156,10 @@ UT_TEST_CASE( test1 )
   index_t niter = 10;
   for (index_t iter = 0; iter <= niter; iter++) {
 
-    params.adapt_iter() = iter;
-    params.limit_metric() = true;
-    if (iter <= 1) params.allow_serial() = true;
-    else params.allow_serial() = false;
+    params.set("adapt iter",index_t(iter));
+    params.set("limit metric" , true );
+    if (iter <= 1) params.set("allow serial", true);
+    else params.set("allow serial", false);
 
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);

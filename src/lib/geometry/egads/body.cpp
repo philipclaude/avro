@@ -136,7 +136,8 @@ get_tessellation_node( ego body , ego egads_tess , ego node , BodyTessellation& 
 {
   // allocate the appropriate object to hold the tessellation
   std::shared_ptr<TopologyBase> topology = nullptr;
-  if (params.type() == "simplex")
+  std::string type = params["type"];
+  if (type == "simplex")
     topology = std::make_shared< Topology<Simplex> >( tess.model_points() , 0 );
   else
     avro_implement;
@@ -176,7 +177,8 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
 {
   // allocate the appropriate object to hold the tessellation
   std::shared_ptr<TopologyBase> topology = nullptr;
-  if (params.type() == "simplex")
+  std::string type = params["type"];
+  if (type == "simplex")
     topology = std::make_shared< Topology<Simplex> >( tess.model_points() , 1 );
   else
     avro_implement;
@@ -249,7 +251,8 @@ get_tessellation_face( ego body , ego egads_tess , const Object& face , BodyTess
 {
   // allocate the appropriate object to hold the tessellation
   std::shared_ptr<TopologyBase> topology = nullptr;
-  if (params.type() == "simplex")
+  std::string type = params["type"];
+  if (type == "simplex")
     topology = std::make_shared< Topology<Simplex> >( tess.model_points() , 2 );
   else
     avro_implement;
@@ -329,9 +332,12 @@ Body::tessellate( BodyTessellation& tess ) const
   if (size < box[4] -box[1]) size = box[4] -box[1];
   if (size < box[5] -box[2]) size = box[5] -box[2];
 
-  sizes[0] = params.min_size()*size;
-  sizes[1] = params.min_length()*size;
-  sizes[2] = params.min_angle();
+  real_t min_size = params["min size"];
+  real_t min_length = params["min length"];
+
+  sizes[0] = min_size*size;
+  sizes[1] = min_length*size;
+  sizes[2] = params["min angle"];
 
   printf("sizes = (%g,%g,%g)\n",sizes[0],sizes[1],sizes[2]);
 
@@ -343,7 +349,8 @@ Body::tessellate( BodyTessellation& tess ) const
   avro_assert_msg( status==1 , "egads status tessellation = %d" , status );
 
   std::shared_ptr<TopologyBase> root;
-  if (params.type()=="simplex")
+  std::string type = params["type"];
+  if (type == "simplex")
     root = std::make_shared<Topology<Simplex>>(tess.model_points(),tess.number());
   else
     avro_implement;
@@ -459,13 +466,13 @@ Body::tessellate( BodyTessellation& tess ) const
       // find the topology for this child
       std::shared_ptr< TopologyBase > child_topology_base = topologies[ entity.child_smptr(k) ];
 
-      if (params.type()=="simplex")
+      if (type == "simplex")
       {
         Topology<Simplex>& topology = static_cast<Topology<Simplex>&>(*topology_base.get());
         std::shared_ptr< Topology<Simplex> > child_topology = std::static_pointer_cast< Topology<Simplex>>(child_topology_base);
         topology.add_child(child_topology);
       }
-      else if (params.type()=="quad")
+      else if (type == "quad")
       {
         printf("quads not currently supported.\n");
         avro_implement;

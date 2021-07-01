@@ -45,7 +45,7 @@ UT_TEST_CASE( test1 )
   }
   DensityMeasure_Gaussian density3(mu,sigma);
 
-  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density4);
+  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density);
   transport.save_every( 1e10 , "tmp/void" );
   transport.sample( nb_points );
 

@@ -1,7 +1,7 @@
 #ifndef avro_LIB_GRAPHICS_CLIPPING_H_
 #define avro_LIB_GRAPHICS_CLIPPING_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "graphics/math.h"
 

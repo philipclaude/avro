@@ -12,9 +12,11 @@
 
 #include "common/error.h"
 #include "common/tools.h"
-#include "common/types.h"
 
-#ifdef AVRO_WITH_GL
+#include "avro_config.h"
+#include "avro_types.h"
+
+#if AVRO_WITH_GL
 
 #include <glad/include/glad/glad.h>
 #define GLFW_INCLUDE_NONE
@@ -153,7 +155,8 @@ class OpenGL_Manager : public GraphicsManager
 {
   template<typename type> friend class Application;
 
-private:
+//private:
+public:
   OpenGL_Manager();
 
 public:

@@ -10,6 +10,8 @@
 #ifndef avro_LIB_ADAPTATION_ADAPT_H_
 #define avro_LIB_ADAPTATION_ADAPT_H_
 
+#include "avro_params.h"
+
 #include "adaptation/primitive.h"
 
 #include <memory>
@@ -20,9 +22,17 @@ namespace avro
 template<typename type> class Topology;
 class Mesh;
 
-class AdaptationParameters;
 class MetricAttachment;
 template<typename type,typename T> class FieldInterpolation;
+
+class AdaptationParameters : public ParameterSet
+{
+public:
+
+  AdaptationParameters();
+  AdaptationParameters( const ParameterSet& params );
+  void set_defaults();
+};
 
 struct AdaptationProblem
 {

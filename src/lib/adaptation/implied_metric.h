@@ -11,7 +11,7 @@
 #define avro_LIB_ADAPTATION_IMPLIED_METRIC_H_
 
 #include "common/array.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "mesh/field.h"
 

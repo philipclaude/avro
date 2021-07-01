@@ -47,6 +47,8 @@ public:
     L[1] = lims_[1];
   }
 
+  float* data() { return colormap_; }
+
 protected:
   std::string style_;
   float *colormap_;

@@ -2,9 +2,9 @@
 
 #include "common/mpi.hpp"
 #include "common/tools.h"
-#include "common/types.h"
+#include "avro_types.h"
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 #include <parmetis.h>
 #if PARMETIS_MAJOR_VERSION == 3
@@ -23,7 +23,7 @@ using namespace avro;
 
 UT_TEST_SUITE( parmetis_test_suite )
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 
 #if TEST_NUM_PROCS == 3
 
@@ -73,9 +73,9 @@ UT_TEST_CASE( test1 )
     options[2] = 0;
     options[3] = PARMETIS_PSR_COUPLED;*/
 
-    METIS_SetDefaultOptions[METIS_NOPTIONS];
-    options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
-    options[METIS_OPTION_DBGLVL] = METIS_DBG_INFO;
+    //METIS_SetDefaultOptions[METIS_NOPTIONS];
+    //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
+    //options[METIS_OPTION_DBGLVL] = METIS_DBG_INFO;
 
 
 

@@ -3,3 +3,8 @@ app/WebViewer
 test/tmp/*.*
 external/*
 test/*.mesh
+test/imgui.ini
+src/examples/python/*.mesh
+src/examples/python/*.json
+src/examples/python/*.ini
+src/include/avro_config.h

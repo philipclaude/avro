@@ -1,7 +1,7 @@
 #ifndef avro_LIB_ADAPTATION_PARALLEL_H_
 #define avro_LIB_ADAPTATION_PARALLEL_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include <map>
 #include <memory>
@@ -55,6 +55,7 @@ public:
   void exchange( std::vector<index_t>& repartition );
 
   const Topology_Partition<type>& topology() const { return topology_; }
+  Topology_Partition<type>& topology() { return topology_; }
   void reassign_metrics( const std::vector<VertexMetric>& metrics );
 
 private:

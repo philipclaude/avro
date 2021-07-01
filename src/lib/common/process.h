@@ -11,11 +11,13 @@
 #define avro_COMMON_PROCESS_H_
 
 #include "common/thread.h"
-#include "common/types.h"
+
+#include "avro_config.h"
+#include "avro_types.h"
 
 #include <memory>
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 #include "common/mpi.hpp"
 #endif
 
@@ -101,7 +103,7 @@ namespace ProcessMPI
   // worker functions
   void worker_do( Thread& task );
 
-  #ifdef AVRO_MPI
+  #if AVRO_MPI
   mpi::communicator& get_comm();
   #endif
 

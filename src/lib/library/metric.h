@@ -11,7 +11,7 @@
 #define avro_LIB_LIBRARY_METRIC_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "mesh/interpolation.h"
 

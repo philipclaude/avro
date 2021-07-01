@@ -12,7 +12,7 @@
 
 #include "adaptation/cavity.h"
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "mesh/points.h"
 

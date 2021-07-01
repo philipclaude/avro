@@ -66,6 +66,7 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
 
     // perform the interpolation and return the element containing the point
     success = field_.dof().interpolate( field_[elem] , field_.nv(elem) , phi , &tp );
+
     if (success) return ielem;
   }
   return -1; // indicate there was a problem interpolating

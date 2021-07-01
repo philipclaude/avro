@@ -10,7 +10,7 @@
 #ifndef avro_LIB_GEOMETRY_PLC_H_
 #define avro_LIB_GEOMETRY_PLC_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "geometry/body.h"
 #include "geometry/entity.h"

@@ -2,7 +2,7 @@
 #define AVRO_BIN_PROGRAMS_H_
 
 #include "common/tools.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include <memory>
 #include <stdlib.h>

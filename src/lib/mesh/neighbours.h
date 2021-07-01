@@ -10,7 +10,7 @@
 #ifndef avro_LIB_MESH_NEIGHBOURS_H_
 #define avro_LIB_MESH_NEIGHBOURS_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 #include "common/tools.h"
 
 #include <algorithm>

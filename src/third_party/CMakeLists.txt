@@ -2,6 +2,8 @@ if (avro_WITH_FPG)
 	add_subdirectory(PCK/fpg)
 endif()
 
+add_subdirectory(pybind11)
+
 add_source_directories( TET_SOURCES "tetgen source" tetgen1.5.0 )
 set_source_files_properties( ${TET_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 set_source_files_properties( ${TET_SOURCES} PROPERTIES "COMPILE_DEFINITIONS" TETLIBRARY )
@@ -60,12 +62,6 @@ endif()
 add_source_directories(HLBFGS_SOURCES "HLBFGS" HLBFGS )
 set_source_files_properties( ${HLBFGS_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 
-add_source_directories(OPENNL_SOURCES "OpenNL" OpenNL )
-
-add_source_directories(LIBLBFGS_SOURCES "LIBLBFGS" liblbfgs )
-set_source_files_properties( ${LIBLBFGS_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
-
-
 # ESP
 if (AVRO_NO_ESP)
 	add_source_directories( WV_SOURCES "wv" wv )
@@ -80,4 +76,4 @@ endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${LIBLBFGS_SOURCES} ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${NNSEARCH_SOURCES} ${HLBFGS_SOURCES} ${QHULL_SOURCES} )
+add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${WV_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${NNSEARCH_SOURCES} ${HLBFGS_SOURCES} ${QHULL_SOURCES} )

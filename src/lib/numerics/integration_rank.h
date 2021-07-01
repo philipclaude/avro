@@ -11,7 +11,7 @@
 #define avro_LIB_NUMERICS_INTEGRATION_RANK_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "mesh/dof.h"
 #include "mesh/field.h"

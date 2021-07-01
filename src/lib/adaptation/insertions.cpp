@@ -10,14 +10,13 @@
 #include "adaptation/adapt.h"
 #include "adaptation/filter.h"
 #include "adaptation/metric.h"
-#include "adaptation/parameters.h"
 
 #include "geometry/entity.h"
 
 #include "mesh/topology.h"
 
 #include "common/tools.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include <unordered_set>
 
@@ -328,7 +327,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 {
   avro_assert( metric_.check(topology_) );
 
-  real_t dof_factor = params_.insertion_volume_factor();
+  real_t dof_factor = params_["insertion volume factor"];
 
   index_t nb_swaps;
   index_t nb_inserted,nb_inserted_total = 0;
@@ -484,7 +483,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       }
 
       // trying something (philip june 22, 2021)
-      real_t l0 = metric_.length( topology_.points() , n0 , ns ); 
+      real_t l0 = metric_.length( topology_.points() , n0 , ns );
       real_t l1 = metric_.length( topology_.points() , n1 , ns );
       //if (l0 >= lk && l1 >= lk) bad = true;
 

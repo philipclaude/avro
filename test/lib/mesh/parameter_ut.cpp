@@ -38,7 +38,6 @@ UT_TEST_CASE(test1)
   //EGADS::Model model(&context,"/Users/pcaplan/Codes/mach-II/library/geometry/bunny.stp");
 
   TessellationParameters tess_params;
-  tess_params.standard();
   ModelTessellation tess(model,tess_params);
 
   // create a mesh and add the topology

@@ -363,18 +363,6 @@ private:
 };
 
 
-class OptimalTransportBase
-{
-public:
-  virtual real_t transport_objective( index_t n , const real_t* x , real_t* grad ) = 0;
-  virtual ~OptimalTransportBase() {}
-
-  index_t& iteration() { return iteration_; }
-
-protected:
-  index_t iteration_;
-};
-
 typedef struct
 {
   std::vector<real_t> mass_min;
@@ -422,6 +410,30 @@ typedef struct
   }
 } SDOT_Snapshot;
 
+class OptimalTransportBase
+{
+public:
+  virtual real_t transport_objective( index_t n , const real_t* x , real_t* grad ) = 0;
+  virtual ~OptimalTransportBase() {}
+
+  index_t& iteration() { return iteration_; }
+
+  virtual void sample( index_t nb_sample ) = 0;
+  virtual void optimize_points(index_t) = 0;
+  virtual void optimize_points_lloyd(index_t) = 0;
+  virtual void optimize_weights(index_t) = 0;
+  virtual void set_delaunay( const real_t* x , coord_t dim ) = 0;
+  virtual void set_weights( const real_t* w ) = 0;
+  virtual void set_nu( const std::vector<real_t>& nu ) = 0;
+
+  virtual const Topology<Polytope>& get_diagram() const = 0;
+  virtual std::vector<real_t> get_sites() const = 0;
+  virtual std::vector<real_t> get_weights() const = 0;
+
+protected:
+  index_t iteration_;
+};
+
 template<typename type>
 class SemiDiscreteOptimalTransport : public OptimalTransportBase
 {
@@ -448,14 +460,16 @@ public:
 
   const Topology<type>& domain() const { return domain_; }
   Delaunay& delaunay() { return delaunay_; }
-  IntegrationSimplices& simplices() { return simplices_; }
   LaguerreDiagram<type>& diagram() { return diagram_; }
+  IntegrationSimplices& simplices() { return simplices_; }
 
   std::vector<real_t>& mass() { return mass_; }
   const std::vector<real_t>& mass() const { return mass_; }
   void set_nu( const std::vector<real_t>& nu ) { nu_ = nu; }
   std::vector<real_t>& nu() { return nu_; }
   const std::vector<real_t>& weights() const { return weight_; }
+  std::vector<real_t> get_sites() const;
+  std::vector<real_t> get_weights() const { return weight_; }
 
   void start();
   int mode() const { return mode_; }
@@ -473,6 +487,8 @@ public:
     prefix_     = prefix;
   }
   void save_snapshot();
+
+  const Topology<Polytope>& get_diagram() const { return diagram_; }
 
 private:
   const Topology<type>& domain_;

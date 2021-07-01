@@ -1,7 +1,7 @@
 #ifndef AVRO_LIB_MESH_PARTITION_H_
 #define AVRO_LIB_MESH_PARTITION_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "mesh/points.h"
 
@@ -39,7 +39,7 @@ public:
   const std::vector<Entity*>& entities() const { return entities_; }
   Entity* lookup( int identifier , int number ) const;
 
-  #ifdef AVRO_MPI
+  #if AVRO_MPI
   void send( index_t receiver ) const;
   void receive( index_t sender );
   #endif

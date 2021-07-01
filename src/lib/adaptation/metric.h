@@ -12,7 +12,7 @@
 
 #include "common/array.h"
 #include "common/table.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "mesh/field.h"
 #include "mesh/interpolation.h"

@@ -26,10 +26,8 @@ UT_TEST_CASE(test1)
   OpenCSM_Model model(BASE_TEST_DIR+"/geometry/bottle.csm");
 
   TessellationParameters params;
-  params.standard();
-
-  params.min_size() = 0.1;
-  params.min_angle() = 20;
+  params.set("min size" , 0.1 );
+  params.set("min angle", 20.0);
 
   ModelTessellation tess(model,params);
 

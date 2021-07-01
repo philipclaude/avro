@@ -11,7 +11,7 @@
 #define avro_LIB_GEOMETRY_EGADS_DATA_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "geometry/egads/egads_fwd.h"
 

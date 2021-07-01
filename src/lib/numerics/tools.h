@@ -6,7 +6,7 @@
 #ifndef AVRO_NUMERICS_TOOLS_H_
 #define AVRO_NUMERICS_TOOLS_H_
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include <vector>
 

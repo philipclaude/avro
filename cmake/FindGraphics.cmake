@@ -22,10 +22,7 @@ if (avro_WITH_GL)
     find_library(COCOA_LIBRARY Cocoa)
   endif()
 
-  add_definitions( -DAVRO_WITH_GL )
+  set( AVRO_WITH_GL true )
 else()
   message( STATUS "only supporting WebViewer")
 endif()
-
-#find_package(GLM CONFIG REQUIRED)
-#include_directories( ${GLM_INCLUDE_DIR} )

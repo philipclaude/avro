@@ -11,7 +11,7 @@
 #define avro_LIB_GRAPHICS_MANAGER_H_
 
 #include "common/error.h"
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "graphics/listener.h"
 #include "graphics/math.h"

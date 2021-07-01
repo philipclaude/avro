@@ -9,7 +9,7 @@
 //
 #include "common/process.h"
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 #include <mpi.h>
 #include "common/mpi.hpp"
 #endif
@@ -34,7 +34,7 @@ public:
   virtual void main_end( Thread& thread) = 0;
   virtual void barrier() = 0;
 
-  #ifdef AVRO_MPI
+  #if AVRO_MPI
   virtual mpi::communicator& get_comm() = 0;
   #endif
 
@@ -61,7 +61,7 @@ public:
 
 };
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 class MPITaskManager : public TaskManager
 {
 public:
@@ -124,7 +124,7 @@ index_t rank()
 
 void initialize()
 {
-  #ifdef AVRO_MPI
+  #if AVRO_MPI
   task_manager_ = std::make_shared<MPITaskManager>();
   #else
   task_manager_ = std::make_shared<SerialTaskManager>();
@@ -164,7 +164,7 @@ barrier()
   task_manager_->barrier();
 }
 
-#ifdef AVRO_MPI
+#if AVRO_MPI
 mpi::communicator&
 get_comm()
 {

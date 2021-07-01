@@ -12,7 +12,7 @@
 
 #if 0
 
-#include "common/types.h"
+#include "avro_types.h"
 
 #include "geometry/tessellation.h"
 

@@ -16,6 +16,22 @@
 namespace avro
 {
 
+template<typename type>
+bool
+DOF<type>::interpolate( const index_t* idx , index_t nv , const std::vector<real_t>& phi , type* u ) const
+{
+  printf("herr?\n");
+  avro_assert_msg( nv == phi.size() , "nv = %lu, |phi| = %lu" , nv , phi.size() );
+  for (index_t j=0;j<rank();j++)
+    u[j] = type(0);
+  for (index_t j=0;j<rank();j++)
+  {
+    for (index_t i=0;i<phi.size();i++)
+      u[j] = u[j] + (*this)( idx[i] , 0 )*phi[i];
+  }
+  return true;
+}
+
 template<>
 bool
 DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<real_t>& phi , Metric* pT ) const
@@ -71,5 +87,7 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
   pT->set(T);
   return true;
 }
+
+template class DOF<double>;
 
 } // avro

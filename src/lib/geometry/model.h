@@ -32,6 +32,7 @@ public:
   index_t nb_bodies() const { return body_.size(); }
 
   void get_entities( std::vector<Entity*>& entities ) const;
+  void get_tessellatable_entities( std::vector<Entity*>& entities ) const;
 
   void add_body( std::shared_ptr<Body>& body )
   { body_.push_back(body); }

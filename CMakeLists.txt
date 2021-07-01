@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 # this allows setting the version number
 if (POLICY CMP0048)
@@ -11,7 +11,7 @@ find_package(PkgConfig)
 # setup libraries and build type
 include(cmake/setup.cmake)
 include(cmake/compiler.cmake)
-project(avro VERSION 2.0)
+project(avro VERSION 2.1)
 
 if (POLICY CMP0077)
     cmake_policy(SET CMP0077 NEW)
@@ -85,18 +85,14 @@ else()
   endmacro()
 endif()
 
-if (NOT avro_RUN_WITH_MPI)
-    add_definitions( -DNO_MPIRUN )
-endif()
-
 # debug and coverage utilities
 include(cmake/debug.cmake)
 include(cmake/coverage.cmake)
 
-set(avro_VERSION_MAJOR 2)
-set(avro_VERSION_MINOR 0)
-set(avro_VERSION_PATCH 0)
-set(avro_VERSION ${avro_VERSION_MAJOR}.${avro_VERSION_MINOR}.${avro_VERSION_PATCH})
+set(AVRO_VERSION_MAJOR 2)
+set(AVRO_VERSION_MINOR 1)
+set(AVRO_VERSION_PATCH 0)
+set(AVRO_VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH})
 
 # Determine the current build date
 string(TIMESTAMP avro_BUILD_DATE "%Y-%m-%d %H:%M:%S")
@@ -115,7 +111,7 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 
 add_definitions( -DGLIBCXX_USE_CXX11_ABI=0 )
-add_definitions( -DAVRO_SOURCE_DIR="${CMAKE_SOURCE_DIR}" )
+#add_definitions( -DAVRO_SOURCE_DIR="${CMAKE_SOURCE_DIR}" )
 
 add_subdirectory(src/third_party)
 add_subdirectory(src)
@@ -123,3 +119,21 @@ add_subdirectory(test)
 
 # this needs to happen here so the "avro" target is correct
 add_subdirectory(src/bin)
+add_subdirectory(src/examples)
+
+function(config_bool cmake_var header_var )
+  if (${cmake_var})
+    set( ${header_var} 1 PARENT_SCOPE )
+  else()
+    set( ${header_var} 0 PARENT_SCOPE )
+  endif()
+endfunction()
+
+# generate a configuration file
+config_bool( AVRO_WITH_MPI CMAKE_AVRO_WITH_MPI )
+config_bool( AVRO_HEADLESS_GRAHPICS CMAKE_AVRO_HEADLESS_GRAPHICS )
+config_bool( AVRO_NO_ESP CMAKE_AVRO_NO_ESP )
+config_bool( AVRO_WITH_GL CMAKE_AVRO_WITH_GL )
+message( STATUS ${AVRO_CPU_THREAD_MANAGER} )
+set( CMAKE_AVRO_CPU_THREAD_MANAGER ${AVRO_CPU_THREAD_MANAGER} )
+configure_file( "${CMAKE_SOURCE_DIR}/src/include/avro_config.h.in" "${CMAKE_SOURCE_DIR}/src/include/avro_config.h" )
