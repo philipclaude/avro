@@ -60,7 +60,8 @@ UT_TEST_CASE( test1 )
   dumpGLInfo();
 
   // define the basic shader
-  ShaderProgram shader("basic",true);
+  bool with_tess = true;
+  ShaderProgram shader("basic",with_tess);
   shader.use();
 
   // generate vertex array in which buffers will be saved
@@ -103,7 +104,7 @@ UT_TEST_CASE( test1 )
 
   // bind the colormap values to a buffer
   Colormap colormap;
-  colormap.change_style("parula");
+  colormap.change_style("hot");
   index_t ncolor = 256*3;
   GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , colormap_buffer) );
   GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * ncolor , colormap.data() , GL_STATIC_DRAW) );
@@ -145,8 +146,6 @@ UT_TEST_CASE( test1 )
   int level = 1;
   while (true) {
 
-    //printf("rendering?\n");
-
     // grey-ish background color
     float col = 0.9;
     glClearColor (col,col,col, 0.0);
@@ -176,8 +175,12 @@ UT_TEST_CASE( test1 )
 
     // bind the buffer for the indices we want to draw
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle_buffer ) );
-    GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , 6 ) );
-    GL_CALL( glDrawElements(GL_PATCHES, indices.size() , GL_UNSIGNED_INT , 0 ) );
+    if (with_tess) {
+      GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , 6 ) );
+      GL_CALL( glDrawElements(GL_PATCHES, indices.size() , GL_UNSIGNED_INT , 0 ) );
+    }
+    else GL_CALL( glDrawElements(GL_TRIANGLES, 3 , GL_UNSIGNED_INT , 0 ) );
+
 
     // swap buffers and wait for user input
     glfwSwapBuffers(window);

@@ -27,11 +27,11 @@ void main() {
   float phi4 =  t*(s+t-1.0)*-4.0;
   float phi5 =  -s*(s*4.0+t*4.0-4.0);
 
-  //vec3 pos = (1 - u - v) * P100 + u*P010 + v*P001;
   vec3 pos = phi0 * p0 + phi1 * p1 + phi2*p2 + phi3*p3 + phi4*p4 + phi5*p5;
 
+  // why does including this cause nothing to render in os x, but it's ok in linux??
+  //gl_Position = u_ModelViewProjectionMatrix * vec4(pos,1.0);
 
-  gl_Position = u_ModelViewProjectionMatrix * vec4(pos,1.0);
   v_Position  = pos;
   v_ParameterTess = vec2(u,v);
 }

@@ -1,9 +1,8 @@
-#version 330
+#version 410
 
 
 layout( location = 0 ) out vec4 fragColor;
 
-in vec3 v_Position;
 in vec2 v_Parameter;
 
 uniform samplerBuffer solution;
@@ -39,11 +38,10 @@ get_color( float u ) {
 
 void main() {
 
-    int idx = gl_PrimitiveID*nb_basis;
-
     float s = v_Parameter.x;
     float t = v_Parameter.y;
 
+    int idx  = gl_PrimitiveID*nb_basis;
     float f0 = texelFetch( solution , idx + 0 ).x;
     float f1 = texelFetch( solution , idx + 1 ).x;
     float f2 = texelFetch( solution , idx + 2 ).x;
