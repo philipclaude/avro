@@ -7,4 +7,5 @@ test/imgui.ini
 src/examples/python/*.mesh
 src/examples/python/*.json
 src/examples/python/*.ini
+src/examples/.DS_Store
 src/include/avro_config.h

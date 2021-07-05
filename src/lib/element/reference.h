@@ -31,7 +31,6 @@ public:
     order_(order)
   {}
 
-  // this will create a linker error if not defined by the base
   const real_t* get_reference_coordinate( index_t k ) const;
   const index_t* get_lattice_coordinate( index_t k ) const;
 
@@ -103,17 +102,6 @@ public:
   {}
 
 };
-
-#if 0
-
-
-template<>
-class ReferenceElement<Hypercube> : public ReferenceElementBase
-{
-
-};
-
-#endif
 
 } // avro
 

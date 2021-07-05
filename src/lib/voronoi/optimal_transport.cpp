@@ -1022,7 +1022,8 @@ SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology
   print_(true),
   quad_order_(4),
   weight_max_(1e6),
-  save_every_(1e6)
+  save_every_(1e6),
+  prefix_("avro-sdot")
 {}
 
 template<typename type>

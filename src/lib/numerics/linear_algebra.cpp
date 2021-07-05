@@ -783,6 +783,7 @@ INST_DETERMINANT(6)
 INST_DETERMINANT(10)
 #endif
 
+template int det(const matd<int>& X);
 template real_t det(const matd<real_t>& X);
 template real_t det(const symd<real_t>& X);
 template dual   det(const matd<dual>& X);
