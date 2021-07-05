@@ -23,6 +23,28 @@ class Simplex;
 class Polytope;
 class Hypercube;
 
+template<typename type, int N, int P> struct LagrangeNodes;
+
+template<int P>
+struct LagrangeNodes<Simplex,1,P> {
+  static const std::vector<real_t> coord_s_,coord_t_;
+};
+
+template<int P>
+struct LagrangeNodes<Simplex,2,P> {
+  static const std::vector<real_t> coord_s_,coord_t_;
+};
+
+template<int P>
+struct LagrangeNodes<Simplex,3,P> {
+  static const std::vector<real_t> coord_s_,coord_t_,coord_u_;
+};
+
+template<int P>
+struct LagrangeNodes<Simplex,4,P> {
+  static const std::vector<real_t> coord_s_,coord_t_,coord_u_,coord_v_;
+};
+
 class ReferenceElementBase
 {
 public:
@@ -59,6 +81,36 @@ protected:
 
 template<typename type> class ReferenceElement;
 
+template<typename type>
+class ReferenceElement {
+
+public:
+  ReferenceElement( coord_t number , coord_t order );
+
+  const real_t* get_reference_coordinate( index_t k ) const;
+
+  real_t vunit() const { return unit_volume_; }
+  index_t nb_basis() const;
+
+  index_t nb_interior() const { return interior_.size(); }
+  index_t interior( index_t k ) const { return interior_[k]; }
+
+  const index_t* get_lattice_coordinate( index_t k ) const;
+  int find_index( const index_t* x ) const;
+  int find_index( const real_t* x ) const;
+
+private:
+  coord_t number_;
+  coord_t order_;
+  std::vector<real_t> nodes_;
+  std::vector<index_t> lattice_;
+  std::vector<index_t> interior_;
+
+  real_t unit_volume_;
+  real_t orth_volume_;
+};
+
+/*
 template<>
 class ReferenceElement<Simplex> : public ReferenceElementBase
 {
@@ -66,11 +118,11 @@ public:
   ReferenceElement( coord_t number , coord_t order ) :
     ReferenceElementBase(number,order)
   {
-    precalculate();
+    //precalculate();
   }
 
   const real_t* get_reference_coordinate( index_t k ) const;
-  const index_t* get_lattice_coordinate( index_t k ) const;
+  //const index_t* get_lattice_coordinate( index_t k ) const;
 
   index_t nb_basis() const
   {
@@ -89,7 +141,9 @@ public:
   void precalculate();
 
 private:
-  std::vector<index_t> interior_;
+  //std::vector<index_t> interior_;
+
+  std::vector<real_t> nodes_;
 
 };
 
@@ -102,6 +156,7 @@ public:
   {}
 
 };
+*/
 
 } // avro
 

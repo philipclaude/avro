@@ -200,6 +200,7 @@ Builder<type>::build()
         for (index_t j=0;j<dof.size();j++)
         {
 
+          #if 1
           // retrieve the barycentric coordinates of this interior point in the facet
           const index_t* lf = reference.get_lattice_coordinate( reference.interior(j) );
 
@@ -215,6 +216,9 @@ Builder<type>::build()
           // determine which index in the element this corresponds to
           int idx = element_.reference().find_index( ls.data() );
           avro_assert( idx>=0 );
+          #else
+          index_t idx = j;//element_.reference().get_dof_index( j ,  )
+          #endif
 
           (*this)(k,idx) = dof[j];
         }

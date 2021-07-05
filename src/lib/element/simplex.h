@@ -30,12 +30,17 @@ template<typename type> class SimplicialDecomposition;
 class Points;
 class Entity;
 
-index_t nb_simplex_basis( coord_t n , coord_t p ) {
-  if      (n == 1) return  p+1;
+inline index_t
+nb_simplex_basis( coord_t n , coord_t p ) {
+  if      (n == 0) return    1;
+  else if (n == 1) return  p+1;
   else if (n == 2) return (p+1)*(p+2)/2;
   else if (n == 3) return (p+1)*(p+2)*(p+3)/6;
   else if (n == 4) return (p+1)*(p+2)*(p+3)*(p+4)/24;
-  else avro_implement;
+  else {
+    printf("simplex n = %u not supported\n",n);
+    avro_implement;
+  }
 }
 
 class Simplex : public Element<Simplex> {
@@ -126,6 +131,10 @@ public:
   real_t jacobian( const std::vector<const real_t*>& x , coord_t dim ) const;
   void   jacobian( const std::vector<const real_t*>& xk , matd<real_t>& J ) const;
   void   jacobian( const index_t* v , index_t nv , const Points& points , matd<real_t>& J ) const;
+
+  const ReferenceElement<Simplex>& reference() const { return reference_; }
+
+
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;
   void get_triangle( const index_t* v , index_t nv , index_t itriangle , index_t* t ) const;
@@ -133,6 +142,8 @@ protected:
   void get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , std::vector<index_t>& f ) const;
 
 private:
+
+  ReferenceElement<Simplex> reference_;
 
   //index_t edge( const index_t iedge , const index_t inode ) const;
   index_t triangle( const index_t itriangle , const index_t inode ) const;

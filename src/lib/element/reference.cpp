@@ -11,8 +11,10 @@
 #include "common/tools.h"
 
 #include "element/reference.h"
+#include "element/simplex.h"
 
 #include "numerics/functions.h"
+#include "numerics/geometry.h"
 #include "numerics/mat.h"
 
 #include <cmath>
@@ -20,6 +22,7 @@
 namespace avro
 {
 
+/*
 const real_t*
 ReferenceElement<Simplex>::get_reference_coordinate( index_t k ) const
 {
@@ -31,30 +34,6 @@ ReferenceElement<Simplex>::get_lattice_coordinate( index_t k ) const
 {
   return &lref_[k*(number_+1)];
 }
-
-int
-ReferenceElement<Simplex>::find_index( const index_t* x ) const
-{
-  for (index_t i=0;i<nb_basis();i++)
-  {
-    const index_t* coord0 = get_lattice_coordinate(i);
-    index_t distance = 0;
-    for (coord_t d=0;d<number_;d++)
-    {
-      if (coord0[d]-x[d]!=0)
-      {
-        distance = 1;
-        break;
-      }
-    }
-    if (distance==0)
-    {
-      return i;
-    }
-  }
-  return -1;
-}
-
 int
 ReferenceElement<Simplex>::find_index( const real_t* x ) const
 {
@@ -63,6 +42,7 @@ ReferenceElement<Simplex>::find_index( const real_t* x ) const
     y[d] = x[d]*order_;
   avro_implement;
 }
+*/
 
 static void
 next_index( const int n , const int q , bool& more , std::vector<index_t>& x )
@@ -113,6 +93,7 @@ next_index( const int n , const int q , bool& more , std::vector<index_t>& x )
   }
 }
 
+/*
 void
 ReferenceElement<Simplex>::precalculate()
 {
@@ -250,5 +231,235 @@ ReferenceElement<Simplex>::precalculate()
     }
   }
 }
+*/
+
+template<typename type,int N, int P>
+struct GetLagrangeNodes {
+  static void get( std::vector<real_t>& nodes );
+};
+
+template<typename type,int P>
+struct GetLagrangeNodes<type,1,P> {
+  static void get( std::vector<real_t>& nodes );
+};
+
+template<typename type,int P>
+struct GetLagrangeNodes<type,2,P> {
+  static void get( std::vector<real_t>& nodes );
+};
+
+template<typename type,int P>
+struct GetLagrangeNodes<type,3,P> {
+  static void get( std::vector<real_t>& nodes );
+};
+
+template<typename type,int P>
+struct GetLagrangeNodes<type,4,P> {
+  static void get( std::vector<real_t>& nodes );
+};
+
+template<typename type, int P>
+void
+GetLagrangeNodes<type,1,P>::get( std::vector<real_t>& nodes ) {
+
+  const std::vector<real_t>& s = LagrangeNodes<type,1,P>::coord_s_;
+  for (index_t k = 0; k < s.size(); k++) {
+    nodes.push_back( s[k] );
+  }
+}
+
+template<typename type, int P>
+void
+GetLagrangeNodes<type,2,P>::get( std::vector<real_t>& nodes ) {
+
+  const std::vector<real_t>& s = LagrangeNodes<type,2,P>::coord_s_;
+  const std::vector<real_t>& t = LagrangeNodes<type,2,P>::coord_t_;
+
+  avro_assert( s.size() == t.size() );
+
+  for (index_t k = 0; k < s.size(); k++) {
+    nodes.push_back( s[k] );
+    nodes.push_back( t[k] );
+  }
+}
+
+template<typename type, int P>
+void
+GetLagrangeNodes<type,3,P>::get( std::vector<real_t>& nodes ) {
+
+  const std::vector<real_t>& s = LagrangeNodes<type,3,P>::coord_s_;
+  const std::vector<real_t>& t = LagrangeNodes<type,3,P>::coord_t_;
+  const std::vector<real_t>& u = LagrangeNodes<type,3,P>::coord_u_;
+
+  avro_assert( s.size() == t.size() );
+  avro_assert( u.size() == s.size() );
+
+  for (index_t k = 0; k < s.size(); k++) {
+    nodes.push_back( s[k] );
+    nodes.push_back( t[k] );
+    nodes.push_back( u[k] );
+  }
+}
+
+template<typename type, int P>
+void
+GetLagrangeNodes<type,4,P>::get( std::vector<real_t>& nodes ) {
+
+  const std::vector<real_t>& s = LagrangeNodes<type,4,P>::coord_s_;
+  const std::vector<real_t>& t = LagrangeNodes<type,4,P>::coord_t_;
+  const std::vector<real_t>& u = LagrangeNodes<type,4,P>::coord_u_;
+  const std::vector<real_t>& v = LagrangeNodes<type,4,P>::coord_v_;
+
+  avro_assert( s.size() == t.size() );
+  avro_assert( u.size() == s.size() );
+  avro_assert( v.size() == s.size() );
+
+  for (index_t k = 0; k < s.size(); k++) {
+    nodes.push_back( s[k] );
+    nodes.push_back( t[k] );
+    nodes.push_back( u[k] );
+    nodes.push_back( v[k] );
+  }
+}
+
+template<>
+index_t
+ReferenceElement<Simplex>::nb_basis() const {
+  return nb_simplex_basis(number_,order_);
+}
+
+template<typename type>
+ReferenceElement<type>::ReferenceElement( coord_t number , coord_t order ) :
+  number_(number),
+  order_(order) {
+
+  if (number_ == 1) {
+    static const int N = 1;
+    if      (order_ == 1) GetLagrangeNodes<type,N,1>::get(nodes_);
+    else if (order_ == 2) GetLagrangeNodes<type,N,2>::get(nodes_);
+    else if (order_ == 3) GetLagrangeNodes<type,N,3>::get(nodes_);
+    else if (order_ == 4) GetLagrangeNodes<type,N,4>::get(nodes_);
+    else avro_implement;
+  }
+  if (number_ == 2) {
+    static const int N = 2;
+    if      (order_ == 1) GetLagrangeNodes<type,N,1>::get(nodes_);
+    else if (order_ == 2) GetLagrangeNodes<type,N,2>::get(nodes_);
+    else if (order_ == 3) GetLagrangeNodes<type,N,3>::get(nodes_);
+    else if (order_ == 4) GetLagrangeNodes<type,N,4>::get(nodes_);
+    else avro_implement;
+  }
+  if (number_ == 3) {
+    static const int N = 3;
+    if      (order_ == 1) GetLagrangeNodes<type,N,1>::get(nodes_);
+    else if (order_ == 2) GetLagrangeNodes<type,N,2>::get(nodes_);
+    else if (order_ == 3) GetLagrangeNodes<type,N,3>::get(nodes_);
+    else if (order_ == 4) GetLagrangeNodes<type,N,4>::get(nodes_);
+    else avro_implement;
+  }
+  if (number_ == 4) {
+    static const int N = 4;
+    if      (order_ == 1) GetLagrangeNodes<type,N,1>::get(nodes_);
+    else if (order_ == 2) GetLagrangeNodes<type,N,2>::get(nodes_);
+    else if (order_ == 3) GetLagrangeNodes<type,N,3>::get(nodes_);
+    else if (order_ == 4) GetLagrangeNodes<type,N,4>::get(nodes_);
+    else avro_implement;
+  }
+
+  real_t length = order_;
+
+  bool more = false;
+  std::vector<index_t> xp(number_+1);
+  std::vector<real_t> xref_;
+
+  for (index_t i=0;;i++)
+  {
+    next_index( number_+1 , order_ , more , xp );
+
+    for (index_t j=0;j<xp.size();j++)
+    {
+      lattice_.push_back(xp[j]);
+      xref_.push_back( real_t(xp[j])/real_t(length));
+    }
+
+    if (!more) break;
+  }
+
+  std::vector<index_t> lattice2canonical( nb_basis() );
+  for (index_t k = 0; k < nb_basis(); k++) {
+    int idx = find_index( &xref_[(number_+1)*k] );
+    lattice2canonical[k] = idx;
+  }
+
+  for (index_t k=0;k<nb_basis();k++)
+  {
+    bool anyzero = false;
+    for (coord_t j=0;j<number_+1;j++)
+    {
+      if (lattice_[k*(number_+1)+j]==0)
+      {
+        anyzero = true;
+        break;
+      }
+    }
+    if (!anyzero)
+    {
+      //printf("lref = (%lu,%lu,%lu)\n",lref_[k*(number_+1)],lref_[k*(number_+1)+1],lref_[k*(number_+1)+2]);
+      interior_.push_back(k);
+    }
+  }
+}
+
+template<>
+int
+ReferenceElement<Simplex>::find_index( const index_t* x ) const
+{
+  for (index_t i=0;i<nb_basis();i++)
+  {
+    const index_t* coord0 = get_lattice_coordinate(i);
+    index_t distance = 0;
+    for (coord_t d=0;d<number_;d++)
+    {
+      if (coord0[d]-x[d]!=0)
+      {
+        distance = 1;
+        break;
+      }
+    }
+    if (distance==0)
+    {
+      return i;
+    }
+  }
+  return -1;
+}
+
+template<>
+int
+ReferenceElement<Simplex>::find_index( const real_t* x ) const {
+  for (index_t i=0;i<nb_basis();i++)
+  {
+    real_t d = numerics::distance( &nodes_[(number_)*i] , x , number_ );
+    if (d < 1e-12) return i;
+  }
+  avro_assert_not_reached;
+  return -1;
+}
+
+template<typename type>
+const real_t*
+ReferenceElement<type>::get_reference_coordinate( const index_t k ) const {
+  avro_assert( k < nodes_.size()/number_ );
+  return &nodes_[k*number_];
+}
+
+template<typename type>
+const index_t*
+ReferenceElement<type>::get_lattice_coordinate( const index_t k ) const {
+  avro_assert( k < lattice_.size()/(number_+1) );
+  return &lattice_[k*(number_+1)];
+}
+
+template class ReferenceElement<Simplex>;
 
 } // avro

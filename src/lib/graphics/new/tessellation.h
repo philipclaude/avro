@@ -3,6 +3,8 @@
 
 #include "avro_types.h"
 
+#include <vector>
+
 namespace avro
 {
 

@@ -120,9 +120,9 @@ UT_TEST_CASE_END( test1 )
 
 UT_TEST_CASE( test2 )
 {
-  std::vector<std::vector<real_t>> error(5,std::vector<real_t>());
-  std::vector<std::vector<real_t>> hsize(5,std::vector<real_t>());
-  for (coord_t p=1;p<=5;p++)
+  std::vector<std::vector<real_t>> error(4,std::vector<real_t>());
+  std::vector<std::vector<real_t>> hsize(4,std::vector<real_t>());
+  for (coord_t p=1;p<=4;p++)
   for (index_t n=5;n<=30;n+=5)
   {
     CKF_Triangulation topology( {n,n} );
@@ -170,9 +170,9 @@ UT_TEST_CASE_END( test2 )
 
 UT_TEST_CASE( test2_3d )
 {
-  std::vector<std::vector<real_t>> error(5,std::vector<real_t>());
-  std::vector<std::vector<real_t>> hsize(5,std::vector<real_t>());
-  for (coord_t p=1;p<=5;p++)
+  std::vector<std::vector<real_t>> error(4,std::vector<real_t>());
+  std::vector<std::vector<real_t>> hsize(4,std::vector<real_t>());
+  for (coord_t p=1;p<=4;p++)
   for (index_t n=2;n<=6;n+=2)
   {
     CKF_Triangulation topology( {n,n,n} );
@@ -182,7 +182,7 @@ UT_TEST_CASE( test2_3d )
 
     topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
-    Field<Simplex,real_t> u(topology,p,DISCONTINUOUS);
+    Field<Simplex,real_t> u(topology,p,CONTINUOUS);
     u.build();
     u.element().set_basis( BasisFunctionCategory_Lagrange );
     u.element().load_quadrature(quadrature);
@@ -223,9 +223,9 @@ UT_TEST_CASE_END( test2_3d)
 UT_TEST_CASE( test2_4d )
 {
   // no assertions on slope
-  std::vector<std::vector<real_t>> error(5,std::vector<real_t>());
-  std::vector<std::vector<real_t>> hsize(5,std::vector<real_t>());
-  for (coord_t p=1;p<=5;p++)
+  std::vector<std::vector<real_t>> error(3,std::vector<real_t>());
+  std::vector<std::vector<real_t>> hsize(3,std::vector<real_t>());
+  for (coord_t p=1;p<=3;p++)
   for (index_t n=2;n<=3;n+=1)
   {
     CKF_Triangulation topology( {n,n,n,n} );
@@ -235,7 +235,7 @@ UT_TEST_CASE( test2_4d )
 
     topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
-    Field<Simplex,real_t> u(topology,p,DISCONTINUOUS);
+    Field<Simplex,real_t> u(topology,p,CONTINUOUS);
     u.build();
     u.element().set_basis( BasisFunctionCategory_Lagrange );
     u.element().load_quadrature(quadrature);

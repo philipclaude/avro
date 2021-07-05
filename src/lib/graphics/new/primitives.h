@@ -194,7 +194,7 @@ public:
 			if (topology_.points().entity(k) == nullptr) continue;
 			entities.insert( topology_.points().entity(k)->identifier() );
 		}
-		entities_.insert( entities.begin() , entities.end() );
+		entities_.assign( entities.begin() , entities.end() );
 
 		compute_triangles();
 		compute_edges();

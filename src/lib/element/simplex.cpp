@@ -34,6 +34,7 @@ Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
 
 Simplex::Simplex( const coord_t number , const coord_t order ) :
   Element(number,order,"simplex"),
+  reference_(number,order),
   entity_(nullptr)
 {
   precalculate();
