@@ -52,7 +52,7 @@ template<typename type>
 void
 Element<type>::set_basis( BasisFunctionCategory category )
 {
-  basis_ = std::make_shared<Basis<type>>(reference_,category);
+  basis_ = std::make_shared<Basis<type>>(number_,order_,category);
 }
 
 template class Element<Simplex>;
