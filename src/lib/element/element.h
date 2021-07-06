@@ -45,7 +45,6 @@ public:
     ElementBase("unknown"),
     number_(number),
     order_(order),
-    //reference_(number_,order_),
     parameter_(false),
     basis_(nullptr)
   {}
@@ -54,7 +53,6 @@ public:
     ElementBase(name),
     number_(number),
     order_(order),
-    //reference_(number,order_),
     parameter_(false),
     basis_(nullptr)
   {}
@@ -77,8 +75,6 @@ public:
   void set_parameter( bool x ) { parameter_ = x; }
   bool parameter() const { return parameter_; }
 
-  //const ReferenceElement<type>& reference() const { return reference_; }
-
   real_t quad_weight(index_t k) const { return wquad_[k]; }
   const real_t* quad_point(index_t k) const { return &xquad_[number_*k]; }
 
@@ -91,8 +87,6 @@ protected:
 
   std::vector<real_t> xquad_;
   std::vector<real_t> wquad_;
-
-  //ReferenceElement<type> reference_;
 
   bool parameter_;
 

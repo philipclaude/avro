@@ -30,31 +30,8 @@ template<typename type> class SimplicialDecomposition;
 class Points;
 class Entity;
 
-inline index_t
-nb_simplex_basis( coord_t n , coord_t p ) {
-  if      (n == 0) return    1;
-  else if (n == 1) return  p+1;
-  else if (n == 2) return (p+1)*(p+2)/2;
-  else if (n == 3) return (p+1)*(p+2)*(p+3)/6;
-  else if (n == 4) return (p+1)*(p+2)*(p+3)*(p+4)/24;
-  else {
-    printf("simplex n = %u not supported\n",n);
-    avro_implement;
-  }
-}
-
-inline index_t
-nb_simplex_basis_interior( coord_t n , coord_t p ) {
-  if      (n == 0) return    1;
-  else if (n == 1) return  p-1;
-  else if (n == 2) return (p-1)*(p-2)/2;
-  else if (n == 3) return (p-1)*(p-2)*(p-3)/6;
-  else if (n == 4) return (p-1)*(p-2)*(p-3)*(p-4)/24;
-  else {
-    printf("simplex n = %u not supported\n",n);
-    avro_implement;
-  }
-}
+index_t nb_simplex_basis( coord_t n , coord_t p );
+index_t nb_simplex_basis_interior( coord_t n , coord_t p );
 
 class Simplex : public Element<Simplex> {
 public:
@@ -158,7 +135,6 @@ private:
 
   ReferenceElement<Simplex> reference_;
 
-  //index_t edge( const index_t iedge , const index_t inode ) const;
   index_t triangle( const index_t itriangle , const index_t inode ) const;
   std::vector<index_t> facet( const index_t j , const index_t i ) const;
 

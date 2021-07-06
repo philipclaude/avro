@@ -1,4 +1,5 @@
 #include "element/element.h"
+#include "element/lagrange_nodes.h"
 #include "element/reference.h"
 
 namespace avro

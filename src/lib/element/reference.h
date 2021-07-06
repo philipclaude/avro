@@ -23,44 +23,18 @@ class Simplex;
 class Polytope;
 class Hypercube;
 
-template<typename type, int N, int P> struct LagrangeNodes;
-
-template<int P>
-struct LagrangeNodes<Simplex,1,P> {
-  static const std::vector<real_t> coord_s_;
-};
-
-template<int P>
-struct LagrangeNodes<Simplex,2,P> {
-  static const std::vector<real_t> coord_s_;
-  static const std::vector<real_t> coord_t_;
-};
-
-template<int P>
-struct LagrangeNodes<Simplex,3,P> {
-  static const std::vector<real_t> coord_s_;
-  static const std::vector<real_t> coord_t_;
-  static const std::vector<real_t> coord_u_;
-};
-
-template<int P>
-struct LagrangeNodes<Simplex,4,P> {
-  static const std::vector<real_t> coord_s_;
-  static const std::vector<real_t> coord_t_;
-  static const std::vector<real_t> coord_u_;
-  static const std::vector<real_t> coord_v_;
-};
-
 class ReferenceElementBase
 {
-public:
+
+protected:
   ReferenceElementBase( coord_t number , coord_t order ) :
     number_(number),
     order_(order)
   {}
 
-  const real_t* get_canonical_coordinate( index_t k ) const;
-  const index_t* get_lattice_coordinate( index_t k ) const;
+public:
+
+  virtual ~ReferenceElementBase() {}
 
   coord_t order() const { return order_; }
   coord_t number() const { return number_; }
@@ -68,116 +42,41 @@ public:
   real_t unit_volume() const { return unit_volume_; }
   real_t orthogonal_volume() const { return orthogonal_volume_; }
 
-  const std::vector<real_t>& orthogonal_coordinates() const { return orthogonal_coordinates_; }
-  const std::vector<real_t>& unit_coordinates() const { return unit_coordinates_; }
-
   index_t nb_basis() const { return nb_basis_; }
+  index_t nb_barycentric() const { return number_ + 1; }
 
   index_t nb_interior() const { return interior_.size(); }
   index_t interior( index_t k ) const { return interior_[k]; }
+
+  const real_t* get_reference_coordinate( index_t k ) const;
+  index_t find_reference_index( const real_t* x ) const;
 
 protected:
   coord_t number_;
   coord_t order_;
   index_t nb_basis_;
 
-  // vertex coordinates
-  std::vector<real_t> unit_coordinates_; // unit element coordinates (unit edge lengths)
-  std::vector<real_t> orthogonal_coordinates_; // orthogonal corner at origin
-
+  // volume of reference element
   real_t unit_volume_;
   real_t orthogonal_volume_;
 
-  std::vector<real_t>  nodes_;
-  std::vector<index_t> lattice_;
-  std::vector<index_t> interior_;
-  std::vector<index_t> lattice2canonical_;
-  std::vector<index_t> canonical2lattice_;
-
+  std::vector<real_t>  nodes_;    // high-order node coordinates in canonical order
+  std::vector<index_t> interior_; // indices of interior nodes
 };
 
 template<typename type> class ReferenceElement;
 
-template<typename type>
-class ReferenceElement {
-
-public:
-  ReferenceElement( coord_t number , coord_t order );
-
-  //const real_t* get_reference_coordinate( index_t k ) const;
-
-  //real_t vunit() const { return unit_volume_; }
-  index_t nb_basis() const;
-
-
-
-  const index_t* get_canonical_coordinate( index_t k ) const;
-  int find_canonical_index( const index_t* x ) const;
-  int find_canonical_index( const real_t* x ) const;
-
-  index_t lattice2canonical( index_t k ) const { return lattice2canonical_[k]; }
-
-private:
-  /*
-  coord_t number_;
-  coord_t order_;
-  std::vector<real_t> nodes_;
-  std::vector<index_t> lattice_;
-  std::vector<index_t> interior_;
-  std::vector<index_t> lattice2canonical_;
-
-  real_t unit_volume_;
-  real_t orth_volume_;
-  */
-};
-
-/*
 template<>
-class ReferenceElement<Simplex> : public ReferenceElementBase
-{
+class ReferenceElement<Simplex> : public ReferenceElementBase {
 public:
   ReferenceElement( coord_t number , coord_t order ) :
-    ReferenceElementBase(number,order)
-  {
-    //precalculate();
+    ReferenceElementBase(number,order) {
+    build();
   }
-
-  const real_t* get_reference_coordinate( index_t k ) const;
-  //const index_t* get_lattice_coordinate( index_t k ) const;
-
-  index_t nb_basis() const
-  {
-    index_t np = 1;
-    for (coord_t d=1;d<=number_;d++)
-      np *= (order_+d);
-    return np/numerics::factorial(number_);
-  }
-
-  int find_index( const index_t* x ) const;
-  int find_index( const real_t* x ) const;
-
-  index_t nb_interior() const { return interior_.size(); }
-  index_t interior( index_t k ) const { return interior_[k]; }
-
-  void precalculate();
 
 private:
-  //std::vector<index_t> interior_;
-
-  std::vector<real_t> nodes_;
-
+  void build();
 };
-
-template<>
-class ReferenceElement<Polytope> : public ReferenceElementBase
-{
-public:
-  ReferenceElement( coord_t number , coord_t order ) :
-    ReferenceElementBase(number,order)
-  {}
-
-};
-*/
 
 } // avro
 

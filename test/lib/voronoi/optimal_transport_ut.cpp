@@ -20,7 +20,7 @@ UT_TEST_CASE( test_nd_polytope )
   coord_t numberL = 2;
   coord_t numberH = 2;
 
-  index_t nb_points = 1e1;
+  index_t nb_points = 1e2;
 
   for (coord_t number = numberL; number <= numberH; number++) {
 
@@ -83,7 +83,7 @@ UT_TEST_CASE( test_nd_polytope )
     std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
     triangulation.fields().make("e",te);
 
-    #if 0
+    #if 1
     if (number > 3 || (nb_points >= 1e6)) continue;
     graphics::Visualizer vis;
     vis.add_topology(triangulation);

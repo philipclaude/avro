@@ -552,7 +552,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t vol = 0.0;
       for (index_t k=0;k<inserter_.nb();k++)
         vol += metric_.volume( inserter_ , k );
-      index_t count = index_t(vol/topology_.element().reference().vunit());
+      index_t count = index_t(vol/topology_.element().reference().unit_volume());
       if (dof_factor>0 && dof_factor*count<inserter_.nb_real())
       {
         if (ge==NULL || ge->number()>2)
