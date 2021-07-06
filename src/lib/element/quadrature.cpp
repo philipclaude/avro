@@ -49,7 +49,7 @@ QuadratureStore<type>::build() {
   memory_ = 0;
   for (index_t n = 1; n <= nmax; n++) {
 
-    if (n == 4) pmax = 3;
+    //if (n == 4) pmax = 3;
 
     basis_.insert( { n , std::map< coord_t,std::map<coord_t,std::vector<matd<real_t>>>>() } );
     for (index_t p = 0; p <= pmax; p++)

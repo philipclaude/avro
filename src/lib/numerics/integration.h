@@ -17,6 +17,8 @@
 #include "mesh/dof.h"
 #include "mesh/field.h"
 
+#define QUAD_ORDER 4
+
 namespace avro
 {
 
@@ -51,9 +53,27 @@ private:
   const Topology<type>& topology_;
 };
 
+class QuadraturePoint {
+public:
+  QuadraturePoint( const Quadrature& quad ) :
+    quadrature_(quad),
+    idx_(quad.nb())
+  {}
+
+  void set_index( index_t idx ) { idx_ = idx; }
+  index_t index() const { return idx_; }
+
+  const real_t* coordinate() const { return quadrature_.x(idx_); }
+  real_t weight() const { return quadrature_.w(idx_); }
+
+private:
+  const Quadrature& quadrature_;
+  index_t idx_;
+};
+
 template<typename type, typename _T,typename Functor>
-class Integrand_Field : public Integrand<Integrand_Field<type,_T,Functor>>
-{
+class Integrand_Field : public Integrand<Integrand_Field<type,_T,Functor>> {
+
 public:
 
   typedef _T T;
@@ -62,31 +82,30 @@ public:
     field_(field)
   {}
 
-  T operator()( index_t k , const real_t* xref , const real_t* x ) const
-  {
+  T operator()( index_t k , const QuadraturePoint& point , const real_t* x ) const {
+
+    const matd<real_t>& Bu = field_.element().reference().quadrature().get_basis( field_.element().number() , field_.element().order() , QUAD_ORDER );
+
     std::vector<real_t> phi( field_.element().nb_basis(), 0 );
     std::vector<real_t> phix,phixx;
 
     std::vector<T> u(field_.dof().rank());
     std::vector<T> ux,uxx;
 
-    //printf("integrand field in elem %lu with nb_basis = %lu\n",k,field_.element().nb_basis());
+    for (index_t j = 0; j < phi.size(); j++)
+      phi[j] = Bu(j,point.index());
 
-    if (functor_.needs_solution())
-    {
-      //printf("evaluating basis\n");
-      field_.element().reference().basis().evaluate( xref , phi.data() );
-      //printf("interpolating dof\n");
+    const real_t* xref = point.coordinate();
+
+    if (functor_.needs_solution()) {
+      //field_.element().reference().basis().evaluate( xref , phi.data() );
       field_.dof().interpolate( field_[k] , field_.nv(k) , phi , u.data() );
-      //printf("done\n");
     }
-    if (functor_.needs_gradient())
-    {
+    if (functor_.needs_gradient()) {
       field_.element().reference().basis().evaluate( xref , phix.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phix , ux.data() );
     }
-    if (functor_.needs_hessian())
-    {
+    if (functor_.needs_hessian()) {
       field_.element().reference().basis().evaluate( xref , phixx.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phixx , uxx.data() );
     }
@@ -148,53 +167,19 @@ public:
 
     f = 0;
     std::vector<real_t> x(topology_.points().dim());
-    std::vector<real_t> phiu( element_.nb_basis() );
     std::vector<real_t> phix( topology_.element().nb_basis() );
 
-    #if 0
-    for (index_t i=0;i<element_.nb_quad();i++)
-    {
-      // retrieve the quadrature point and weight
-      real_t w = element_.quad_weight(i);
-      const real_t* xref = element_.quad_point(i);
-
-      // evaluate the basis functions at the quadrature point
-      topology_.element().reference().basis().evaluate( xref , phi.data() );
-
-      // evaluate the physical coordinates
-      topology_.points().interpolate( x_ , phi , x.data() );
-
-      // evaluate the jacobian at the reference point (for now assume constant)
-      real_t dj = topology_.element().jacobian(x_,topology_.points().dim());
-
-      // evaluate the integrand at the quadrature point
-      f += w*integrand( k , xref , x.data() )*dj;
-
-      //avro_assert( dj > 0.0 );
-    }
-    #else
-    //avro_implement;
-
-    const QuadratureStore<type>& quadrature_u = element_.reference().quadrature();
     const QuadratureStore<type>& quadrature_x = topology_.element().reference().quadrature();
-
-    const matd<real_t>& Bu = quadrature_u.get_basis( element_.number() , element_.order() );
-    const matd<real_t>& Bx = quadrature_x.get_basis( topology_.element().number() , topology_.element().order() );
-
-    const Quadrature& quad = quadrature_u.quadrature( element_.number() );
-
-    //avro_assert_msg( B.m() == phi.size(), "B = %lu x %lu, nb_basis = %lu" , B.m(), B.n(), phi.size() );
-    //avro_assert_msg( B.n() == quad.nb() , "B = %lu x %lu, quad.nb  = %lu" , B.m(), B.n(), quad.nb() );
+    const matd<real_t>& Bx = quadrature_x.get_basis( topology_.element().number() , topology_.element().order() , QUAD_ORDER );
+    const Quadrature& quad = quadrature_x.quadrature( element_.number() , QUAD_ORDER );
+    QuadraturePoint point(quad);
 
     for (index_t i = 0; i < quad.nb(); i++) {
 
-      real_t w = quad.w(i);
-      const real_t* xref = quad.x(i);
+      point.set_index(i);
+      real_t w = point.weight();
 
       // retrieve the basis functions evaluated at this quadrature point
-      for (index_t j = 0; j < phiu.size(); j++)
-        phiu[j] = Bu(j,i);
-
       for (index_t j = 0; j < phix.size(); j++)
         phix[j] = Bx(j,i);
 
@@ -205,10 +190,8 @@ public:
       real_t dj = topology_.element().jacobian(x_,topology_.points().dim());
 
       // evaluate the integrand at the quadrature point
-      f += w*integrand( k , xref , x.data() )*dj;
+      f += w*integrand( k , point , x.data() )*dj;
     }
-
-    #endif
   }
 
 private:
@@ -266,16 +249,6 @@ public:
   void
   integrate( const Topology<type>& topology , T* values=nullptr )
   {
-    #if 0
-    ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.element() );
-    for (index_t k=0;k<topology.nb();k++)
-    {
-      T df = T(0);
-      elem.integrate( k , integrand_ , df );
-      functional_ += df;
-      if (values != nullptr) values[k] = df;
-    }
-    #else
     if (integrators_.size() != topology.nb() ) initialize(topology);
     values_.clear();
     values_.resize( topology.nb() );
@@ -287,7 +260,6 @@ public:
       functional_ += values_[k];
       if (values != nullptr) values[k] = values_[k];
     }
-    #endif
   }
 
   template<typename type>

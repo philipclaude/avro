@@ -30,7 +30,7 @@ public:
   Integrand_Monomial()
   {}
 
-  T operator()( index_t , const real_t* , const real_t* x ) const
+  T operator()( index_t , const QuadraturePoint& , const real_t* x ) const
   {
     return x[0]*x[1];
   }
@@ -126,16 +126,11 @@ UT_TEST_CASE( test2 )
   for (index_t n = 5; n <= 30; n += 5)
   {
     CKF_Triangulation topology( {n,n} );
-    ConicalProductQuadrature quadrature(topology.points().dim());
-    quadrature.define();
-    topology.element().load_quadrature(quadrature);
-
     topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,CONTINUOUS);
     u.build();
     u.element().set_basis( BasisFunctionCategory_Legendre );
-    u.element().load_quadrature(quadrature);
 
     SomeFunction fcn(2);
     u.evaluate(fcn);
@@ -173,19 +168,19 @@ UT_TEST_CASE( test2_3d )
   std::vector<std::vector<real_t>> error(4,std::vector<real_t>());
   std::vector<std::vector<real_t>> hsize(4,std::vector<real_t>());
   for (coord_t p = 1; p <= 4; p++)
-  for (index_t n = 2; n <= 6; n+=2)
+  for (index_t n = 2; n <= 8; n+=2)
   {
     CKF_Triangulation topology( {n,n,n} );
-    ConicalProductQuadrature quadrature(topology.points().dim());
-    quadrature.define();
-    topology.element().load_quadrature(quadrature);
+    //ConicalProductQuadrature quadrature(topology.points().dim());
+    //quadrature.define();
+    //topology.element().load_quadrature(quadrature);
 
     topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,CONTINUOUS);
     u.build();
     u.element().set_basis( BasisFunctionCategory_Legendre );
-    u.element().load_quadrature(quadrature);
+    //u.element().load_quadrature(quadrature);
 
     SomeFunction fcn(3);
     u.evaluate(fcn);
@@ -221,23 +216,17 @@ UT_TEST_CASE_END( test2_3d)
 
 UT_TEST_CASE( test2_4d )
 {
-  // no assertions on slope
   std::vector<std::vector<real_t>> error(3,std::vector<real_t>());
   std::vector<std::vector<real_t>> hsize(3,std::vector<real_t>());
   for (coord_t p = 1; p <= 3; p++)
-  for (index_t n = 2; n <= 3; n+=1 )
+  for (index_t n = 2; n <= 5; n += 1 )
   {
     CKF_Triangulation topology( {n,n,n,n} );
-    ConicalProductQuadrature quadrature(topology.points().dim());
-    quadrature.define();
-    topology.element().load_quadrature(quadrature);
-
     topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,CONTINUOUS);
     u.build();
-    u.element().set_basis( BasisFunctionCategory_Lagrange );
-    u.element().load_quadrature(quadrature);
+    u.element().set_basis( BasisFunctionCategory_Legendre );
 
     SomeFunction fcn(3);
     u.evaluate(fcn);

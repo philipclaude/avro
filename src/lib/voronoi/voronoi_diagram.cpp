@@ -250,7 +250,7 @@ public:
   bool needs_gradient() const { return false; }
   bool needs_hessian() const { return false; }
 
-  T operator()( index_t k , const real_t* xref , const real_t* x ) const
+  T operator()( index_t k , const QuadraturePoint& , const real_t* x ) const
   {
     avro_assert_msg( k < parents_.size() , "elem = %lu, nb_parents = %lu", k , parents_.size() );
     avro_assert_msg( parents_[k] < sites_.nb_data() , "parents[%lu] = %lu, nb_sites = %lu" , k , parents_[k] , sites_.nb() );
