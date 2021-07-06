@@ -53,24 +53,6 @@ private:
   const Topology<type>& topology_;
 };
 
-class QuadraturePoint {
-public:
-  QuadraturePoint( const Quadrature& quad ) :
-    quadrature_(quad),
-    idx_(quad.nb())
-  {}
-
-  void set_index( index_t idx ) { idx_ = idx; }
-  index_t index() const { return idx_; }
-
-  const real_t* coordinate() const { return quadrature_.x(idx_); }
-  real_t weight() const { return quadrature_.w(idx_); }
-
-private:
-  const Quadrature& quadrature_;
-  index_t idx_;
-};
-
 template<typename type, typename _T,typename Functor>
 class Integrand_Field : public Integrand<Integrand_Field<type,_T,Functor>> {
 
@@ -98,14 +80,15 @@ public:
     const real_t* xref = point.coordinate();
 
     if (functor_.needs_solution()) {
-      //field_.element().reference().basis().evaluate( xref , phi.data() );
       field_.dof().interpolate( field_[k] , field_.nv(k) , phi , u.data() );
     }
     if (functor_.needs_gradient()) {
+      avro_implement;
       field_.element().reference().basis().evaluate( xref , phix.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phix , ux.data() );
     }
     if (functor_.needs_hessian()) {
+      avro_implement;
       field_.element().reference().basis().evaluate( xref , phixx.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phixx , uxx.data() );
     }

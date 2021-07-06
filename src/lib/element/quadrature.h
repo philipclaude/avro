@@ -119,6 +119,24 @@ private:
   index_t memory_;
 };
 
+class QuadraturePoint {
+public:
+  QuadraturePoint( const Quadrature& quad ) :
+    quadrature_(quad),
+    idx_(quad.nb())
+  {}
+
+  void set_index( index_t idx ) { idx_ = idx; }
+  index_t index() const { return idx_; }
+
+  const real_t* coordinate() const { return quadrature_.x(idx_); }
+  real_t weight() const { return quadrature_.w(idx_); }
+
+private:
+  const Quadrature& quadrature_;
+  index_t idx_;
+};
+
 extern QuadratureStore<Simplex> __store_simplex_legendre__;
 extern QuadratureStore<Simplex> __store_simplex_lagrange__;
 

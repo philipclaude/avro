@@ -48,11 +48,11 @@ public:
 
   void get( index_t k )
   {
-    if (topology_.layout()==TableLayout_Rectangular )
+    if (topology_.layout() == TableLayout_Rectangular )
     {
-      for (index_t j=0;j<field_.nv(k);j++)
+      for (index_t j = 0; j < field_.nv(k); j++)
         f_[j] = dof_[field_(k,j)];
-      for (index_t j=0;j<topology_.nv(k);j++)
+      for (index_t j = 0; j < topology_.nv(k); j++)
         x_[j] = topology_.points()[topology_(k,j)];
     }
     else
