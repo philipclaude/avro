@@ -56,17 +56,6 @@ nb_simplex_basis_interior( coord_t n , coord_t p ) {
   }
 }
 
-// remove me
-/*
-void
-Simplex::load_quadrature( Quadrature& quadrature )
-{
-  quadrature.retrieve(xquad_,wquad_);
-}
-*/
-
-// end
-
 Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
   Simplex(topology.number(),order)
 {}

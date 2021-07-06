@@ -31,10 +31,6 @@ QuadratureStore<type>::QuadratureStore( BasisFunctionCategory category ) :
   pmax = 4;
   qmax = 7;
 
-  if (category == BasisFunctionCategory_Bernstein) {
-    nmax = 3;
-  }
-
   build();
 }
 
@@ -53,6 +49,10 @@ QuadratureStore<type>::build() {
 
   memory_ = 0;
   for (index_t n = 1; n <= nmax; n++) {
+
+    if (n == 4 && category_ == BasisFunctionCategory_Bernstein) {
+      pmax = 1;
+    }
 
     basis_.insert( { n , std::map< coord_t,std::map<coord_t,std::vector<matd<real_t>>>>() } );
     for (index_t p = 0; p <= pmax; p++)
@@ -305,7 +305,7 @@ GrundmannMoellerQuadrature::define()
     h = 0;
     t = 0;
 
-    for ( ; ; )
+    for (;;)
     {
       comp_next ( beta_sum, m + 1, beta, more, h, t );
 

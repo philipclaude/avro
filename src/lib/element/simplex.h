@@ -122,15 +122,6 @@ public:
   void set_parameter( bool x ) { parameter_ = x; }
   bool parameter() const { return parameter_; }
 
-  /*
-  // REMOVE ME
-  index_t nb_quad() const { return wquad_.size(); }
-  void load_quadrature( Quadrature& quadrature ); // conical-product, grundmann-moeller, etc.
-  real_t quad_weight(index_t k) const { return wquad_[k]; }
-  const real_t* quad_point(index_t k) const { return &xquad_[number_*k]; }
-  // END
-  */
-
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;
   void get_triangle( const index_t* v , index_t nv , index_t itriangle , index_t* t ) const;
@@ -138,11 +129,6 @@ protected:
   void get_facet_vertices( const index_t* v , index_t nv , index_t ifacet , std::vector<index_t>& f ) const;
 
 private:
-
-  // REMOVE ME
-  //std::vector<real_t> xquad_;
-  //std::vector<real_t> wquad_;
-  // end
 
   ReferenceElement<Simplex> reference_;
 
@@ -154,6 +140,7 @@ private:
   std::vector<index_t> edges_;
   std::vector<index_t> triangles_;
 
+  // this is used to determine if we are doing mesh adaptation in parameter space
   bool parameter_;
   Entity* entity_;
 };

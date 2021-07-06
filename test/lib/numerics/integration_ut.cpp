@@ -85,10 +85,6 @@ private:
 UT_TEST_CASE( test1 )
 {
   CKF_Triangulation topology( {3,3,3,3} );
-  ConicalProductQuadrature quadrature(topology.points().dim());
-  quadrature.define();
-  topology.element().load_quadrature(quadrature);
-
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
   Integrand_Monomial integrand;
@@ -103,7 +99,6 @@ UT_TEST_CASE( test1 )
   Field<Simplex,real_t> u(topology,2,CONTINUOUS);
   u.build();
   u.element().set_basis( BasisFunctionCategory_Lagrange );
-  u.element().load_quadrature(quadrature);
 
   SomeFunction fcn(2);
   u.evaluate(fcn);
@@ -171,16 +166,12 @@ UT_TEST_CASE( test2_3d )
   for (index_t n = 2; n <= 8; n+=2)
   {
     CKF_Triangulation topology( {n,n,n} );
-    //ConicalProductQuadrature quadrature(topology.points().dim());
-    //quadrature.define();
-    //topology.element().load_quadrature(quadrature);
 
     topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
     Field<Simplex,real_t> u(topology,p,CONTINUOUS);
     u.build();
-    u.element().set_basis( BasisFunctionCategory_Legendre );
-    //u.element().load_quadrature(quadrature);
+    u.element().set_basis( BasisFunctionCategory_Bernstein );
 
     SomeFunction fcn(3);
     u.evaluate(fcn);
