@@ -134,7 +134,7 @@ UT_TEST_CASE( test2 )
 
     Field<Simplex,real_t> u(topology,p,CONTINUOUS);
     u.build();
-    u.element().set_basis( BasisFunctionCategory_Lagrange );
+    u.element().set_basis( BasisFunctionCategory_Legendre );
     u.element().load_quadrature(quadrature);
 
     SomeFunction fcn(2);
@@ -184,7 +184,7 @@ UT_TEST_CASE( test2_3d )
 
     Field<Simplex,real_t> u(topology,p,CONTINUOUS);
     u.build();
-    u.element().set_basis( BasisFunctionCategory_Lagrange );
+    u.element().set_basis( BasisFunctionCategory_Legendre );
     u.element().load_quadrature(quadrature);
 
     SomeFunction fcn(3);

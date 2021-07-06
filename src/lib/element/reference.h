@@ -12,8 +12,13 @@
 
 #include "avro_types.h"
 
+#include "common/error.h"
+
+#include "element/basis.h"
+
 #include "numerics/functions.h"
 
+#include <memory>
 #include <vector>
 
 namespace avro
@@ -21,7 +26,7 @@ namespace avro
 
 class Simplex;
 class Polytope;
-class Hypercube;
+template<typename type> class QuadratureStore;
 
 class ReferenceElementBase
 {
@@ -74,8 +79,16 @@ public:
     build();
   }
 
+  void set_basis( BasisFunctionCategory category );
+  const Basis<Simplex>& basis() const { avro_assert(basis_!=nullptr); return *basis_.get(); }
+  Basis<Simplex>& basis() { avro_assert(basis_ != nullptr); return *basis_.get(); }
+  const QuadratureStore<Simplex>& quadrature() const { avro_assert(quadrature_ != nullptr); return *quadrature_; }
+
 private:
   void build();
+
+  std::shared_ptr<Basis<Simplex>> basis_;
+  QuadratureStore<Simplex>* quadrature_;
 };
 
 } // avro

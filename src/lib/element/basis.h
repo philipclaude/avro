@@ -12,8 +12,6 @@
 
 #include "avro_types.h"
 
-#include "element/reference.h"
-
 namespace avro
 {
 

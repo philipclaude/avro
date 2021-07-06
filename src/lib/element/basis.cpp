@@ -258,7 +258,8 @@ Basis<type>::get_grad( coord_t number, coord_t order, BasisFunctionCategory cate
   if (category == BasisFunctionCategory_Legendre) {
     if (number == 1) {
       static const int N = 1;
-      if (order == 1)      return Legendre<type,N,1>::grad;
+      if (order == 0)      return Legendre<type,N,0>::grad;
+      else if (order == 1) return Legendre<type,N,1>::grad;
       else if (order == 2) return Legendre<type,N,2>::grad;
       else if (order == 3) return Legendre<type,N,3>::grad;
       else if (order == 4) return Legendre<type,N,4>::grad;
@@ -267,7 +268,8 @@ Basis<type>::get_grad( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 2) {
       static const int N = 2;
-      if (order == 1)      return Legendre<type,N,1>::grad;
+      if (order == 0)      return Legendre<type,N,0>::grad;
+      else if (order == 1) return Legendre<type,N,1>::grad;
       else if (order == 2) return Legendre<type,N,2>::grad;
       else if (order == 3) return Legendre<type,N,3>::grad;
       else if (order == 4) return Legendre<type,N,4>::grad;
@@ -276,7 +278,8 @@ Basis<type>::get_grad( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 3) {
       static const int N = 3;
-      if (order == 1)      return Legendre<type,N,1>::grad;
+      if (order == 0)      return Legendre<type,N,0>::grad;
+      else if (order == 1) return Legendre<type,N,1>::grad;
       else if (order == 2) return Legendre<type,N,2>::grad;
       else if (order == 3) return Legendre<type,N,3>::grad;
       else if (order == 4) return Legendre<type,N,4>::grad;
@@ -285,7 +288,8 @@ Basis<type>::get_grad( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 4) {
       static const int N = 4;
-      if (order == 1)      return Legendre<type,N,1>::grad;
+      if (order == 0)      return Legendre<type,N,0>::grad;
+      else if (order == 1) return Legendre<type,N,1>::grad;
       else if (order == 2) return Legendre<type,N,2>::grad;
       else if (order == 3) return Legendre<type,N,3>::grad;
       else if (order == 4) return Legendre<type,N,4>::grad;
@@ -395,7 +399,8 @@ Basis<type>::get_hess( coord_t number, coord_t order, BasisFunctionCategory cate
   if (category == BasisFunctionCategory_Legendre) {
     if (number == 1) {
       static const int N = 1;
-      if (order == 1)      return Legendre<type,N,1>::hess;
+      if (order == 0)      return Legendre<type,N,0>::hess;
+      else if (order == 1) return Legendre<type,N,1>::hess;
       else if (order == 2) return Legendre<type,N,2>::hess;
       else if (order == 3) return Legendre<type,N,3>::hess;
       else if (order == 4) return Legendre<type,N,4>::hess;
@@ -404,7 +409,8 @@ Basis<type>::get_hess( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 2) {
       static const int N = 2;
-      if (order == 1)      return Legendre<type,N,1>::hess;
+      if (order == 0)      return Legendre<type,N,0>::hess;
+      else if (order == 1) return Legendre<type,N,1>::hess;
       else if (order == 2) return Legendre<type,N,2>::hess;
       else if (order == 3) return Legendre<type,N,3>::hess;
       else if (order == 4) return Legendre<type,N,4>::hess;
@@ -413,7 +419,8 @@ Basis<type>::get_hess( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 3) {
       static const int N = 3;
-      if (order == 1)      return Legendre<type,N,1>::hess;
+      if (order == 0)      return Legendre<type,N,0>::hess;
+      else if (order == 1) return Legendre<type,N,1>::hess;
       else if (order == 2) return Legendre<type,N,2>::hess;
       else if (order == 3) return Legendre<type,N,3>::hess;
       else if (order == 4) return Legendre<type,N,4>::hess;
@@ -422,7 +429,8 @@ Basis<type>::get_hess( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 4) {
       static const int N = 4;
-      if (order == 1)      return Legendre<type,N,1>::hess;
+      if (order == 0)      return Legendre<type,N,0>::hess;
+      else if (order == 1) return Legendre<type,N,1>::hess;
       else if (order == 2) return Legendre<type,N,2>::hess;
       else if (order == 3) return Legendre<type,N,3>::hess;
       else if (order == 4) return Legendre<type,N,4>::hess;

@@ -55,7 +55,7 @@ Field<Simplex,T>::evaluate( const Function& function )
       const real_t* xref = element_.reference().get_reference_coordinate(j);
 
       // evaluate the basis functions at the quadrature point
-      topology_.element().basis().evaluate( xref , phi.data() );
+      topology_.element().reference().basis().evaluate( xref , phi.data() );
 
       // evaluate the physical coordinates
       topology_.points().interpolate( xk , phi , x.data() );
@@ -76,7 +76,7 @@ Field<Simplex,T>::evaluate( index_t rank , const std::vector<index_t>& parents ,
   for (index_t k=0;k<parents.size();k++)
   {
     // evaluate the basis functions for this reference coordinate
-    element_.basis().evaluate( alpha(k) , phi.data() );
+    element_.reference().basis().evaluate( alpha(k) , phi.data() );
 
     // evaluate the field
     result[k] = 0.0;

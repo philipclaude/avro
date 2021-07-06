@@ -81,7 +81,7 @@ public:
       const real_t* xref = element_.quad_point(i);
 
       // evaluate the basis functions at the quadrature point
-      topology_.element().basis().evaluate( xref , phi.data() );
+      topology_.element().reference().basis().evaluate( xref , phi.data() );
 
       // evaluate the physical coordinates
       topology_.points().interpolate( x_ , phi , x.data() );

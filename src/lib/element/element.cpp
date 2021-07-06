@@ -41,6 +41,7 @@ operator<( const ElementIndices& f , const ElementIndices& g )
                                       g.indices.begin(), g.indices.end());
 }
 
+/*
 template<typename type>
 void
 Element<type>::load_quadrature( Quadrature& quadrature )
@@ -54,7 +55,8 @@ Element<type>::set_basis( BasisFunctionCategory category )
 {
   basis_ = std::make_shared<Basis<type>>(number_,order_,category);
 }
+*/
 
-template class Element<Simplex>;
+//template class Element<Simplex>;
 
 } // avro

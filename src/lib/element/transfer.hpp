@@ -27,7 +27,7 @@ Simplex::transfer( const Simplex& element , const std::vector<const T*>& X , std
     const real_t* y = reference_.get_reference_coordinate(k);
 
     // evaluate the basis function of the original  at this coordinate
-    element.basis().evaluate( y , phi.data() );
+    element.reference().basis().evaluate( y , phi.data() );
 
     // evaluate the basis functions in the original  element
     for (coord_t d=0;d<dim;d++)
@@ -54,7 +54,7 @@ Simplex::transfer( const Simplex& element , const std::vector<const T>& X , std:
     const real_t* y = reference_.get_reference_coordinate(k);
 
     // evaluate the basis function of the original  at this coordinate
-    element.basis().evaluate( y , phi.data() );
+    element.reference().basis().evaluate( y , phi.data() );
 
     // evaluate the basis functions in the original  element
     for (index_t j=0;j<element.nb_basis();j++)

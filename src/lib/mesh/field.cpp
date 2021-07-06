@@ -73,11 +73,11 @@ Fields::id2name( const std::string& id ) const
 }
 
 template<typename T>
-FieldBase<T>::FieldBase( FieldType type , ElementBase& element , TableLayoutCategory category ) :
+FieldBase<T>::FieldBase( FieldType type , Shape& shape , TableLayoutCategory category ) :
   Table<index_t>(category),
   data_(1),
   type_(type),
-  element_(element)
+  shape_(shape)
 {}
 
 template<typename T>

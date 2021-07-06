@@ -75,19 +75,19 @@ public:
     if (functor_.needs_solution())
     {
       //printf("evaluating basis\n");
-      field_.element().basis().evaluate( xref , phi.data() );
+      field_.element().reference().basis().evaluate( xref , phi.data() );
       //printf("interpolating dof\n");
       field_.dof().interpolate( field_[k] , field_.nv(k) , phi , u.data() );
       //printf("done\n");
     }
     if (functor_.needs_gradient())
     {
-      field_.element().basis().evaluate( xref , phix.data() );
+      field_.element().reference().basis().evaluate( xref , phix.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phix , ux.data() );
     }
     if (functor_.needs_hessian())
     {
-      field_.element().basis().evaluate( xref , phixx.data() );
+      field_.element().reference().basis().evaluate( xref , phixx.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phixx , uxx.data() );
     }
 
@@ -148,7 +148,10 @@ public:
 
     f = 0;
     std::vector<real_t> x(topology_.points().dim());
-    std::vector<real_t> phi( topology_.element().nb_basis() );
+    std::vector<real_t> phiu( element_.nb_basis() );
+    std::vector<real_t> phix( topology_.element().nb_basis() );
+
+    #if 0
     for (index_t i=0;i<element_.nb_quad();i++)
     {
       // retrieve the quadrature point and weight
@@ -156,7 +159,7 @@ public:
       const real_t* xref = element_.quad_point(i);
 
       // evaluate the basis functions at the quadrature point
-      topology_.element().basis().evaluate( xref , phi.data() );
+      topology_.element().reference().basis().evaluate( xref , phi.data() );
 
       // evaluate the physical coordinates
       topology_.points().interpolate( x_ , phi , x.data() );
@@ -169,6 +172,43 @@ public:
 
       //avro_assert( dj > 0.0 );
     }
+    #else
+    //avro_implement;
+
+    const QuadratureStore<type>& quadrature_u = element_.reference().quadrature();
+    const QuadratureStore<type>& quadrature_x = topology_.element().reference().quadrature();
+
+    const matd<real_t>& Bu = quadrature_u.get_basis( element_.number() , element_.order() );
+    const matd<real_t>& Bx = quadrature_x.get_basis( topology_.element().number() , topology_.element().order() );
+
+    const Quadrature& quad = quadrature_u.quadrature( element_.number() );
+
+    //avro_assert_msg( B.m() == phi.size(), "B = %lu x %lu, nb_basis = %lu" , B.m(), B.n(), phi.size() );
+    //avro_assert_msg( B.n() == quad.nb() , "B = %lu x %lu, quad.nb  = %lu" , B.m(), B.n(), quad.nb() );
+
+    for (index_t i = 0; i < quad.nb(); i++) {
+
+      real_t w = quad.w(i);
+      const real_t* xref = quad.x(i);
+
+      // retrieve the basis functions evaluated at this quadrature point
+      for (index_t j = 0; j < phiu.size(); j++)
+        phiu[j] = Bu(j,i);
+
+      for (index_t j = 0; j < phix.size(); j++)
+        phix[j] = Bx(j,i);
+
+      // evaluate the physical coordinates
+      topology_.points().interpolate( x_ , phix , x.data() );
+
+      // evaluate the jacobian at the reference point (for now assume constant)
+      real_t dj = topology_.element().jacobian(x_,topology_.points().dim());
+
+      // evaluate the integrand at the quadrature point
+      f += w*integrand( k , xref , x.data() )*dj;
+    }
+
+    #endif
   }
 
 private:

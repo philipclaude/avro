@@ -12,6 +12,7 @@
 
 #include "element/lagrange_nodes.h"
 #include "element/reference.h"
+#include "element/quadrature.h"
 #include "element/simplex.h"
 
 #include "numerics/functions.h"
@@ -62,6 +63,26 @@ ReferenceElement<Simplex>::build() {
   }
   avro_assert_msg( interior_.size() == nb_simplex_basis_interior(number_,order_) ,
                    "|interior| = %lu, should be %lu", interior_.size() , nb_simplex_basis_interior(number_,order_) );
+}
+
+void
+ReferenceElement<Simplex>::set_basis( BasisFunctionCategory category )
+{
+  basis_ = std::make_shared<Basis<Simplex>>(number_,order_,category);
+
+  if (category == BasisFunctionCategory_Lagrange)
+    quadrature_ = &__store_simplex_lagrange__;
+  else if (category == BasisFunctionCategory_Legendre)
+    quadrature_ = &__store_simplex_legendre__;
+  else if (category == BasisFunctionCategory_Bernstein)
+    quadrature_ = &__store_simplex_legendre__;
+  else if (category == BasisFunctionCategory_None) {
+    // nothing to do, assume the caller knows what they're doing
+  }
+  else {
+    printf("unknown category %d\n",category);
+    avro_assert_not_reached;
+  }
 }
 
 index_t

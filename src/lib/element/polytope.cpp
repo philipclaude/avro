@@ -23,20 +23,22 @@ namespace avro
 {
 
 Polytope::Polytope( coord_t number , coord_t order , const Table<int>& incidence ) :
-  Element(number,order),
+  Shape(number,order),
   simplex_(number,order),
   incidence_(incidence),
   fullmesh_(false)
 {
-  avro_assert_msg( order==1 , "not supported..." );
+  avro_assert_msg( order == 1 , "not supported..." );
 }
 
 Polytope::Polytope( Topology<Polytope>& topology , const coord_t order , const Table<int>& incidence ) :
-  Element(topology.number(),order),
+  Shape(topology.number(),order),
   simplex_(topology.number(),order),
   incidence_(incidence),
   fullmesh_(false)
-{}
+{
+  avro_assert_msg( order == 1 , "not supported..." );
+}
 
 
 void
