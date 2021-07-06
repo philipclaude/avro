@@ -75,7 +75,8 @@ Basis<type>::get_func( coord_t number, coord_t order, BasisFunctionCategory cate
   if (category == BasisFunctionCategory_Bernstein) {
     if (number == 1) {
       static const int N = 1;
-      if (order == 1)      return Bernstein<type,N,1>::eval;
+      if (order == 0)      return &constant_basis_func<N>;
+      else if (order == 1) return Bernstein<type,N,1>::eval;
       else if (order == 2) return Bernstein<type,N,2>::eval;
       else if (order == 3) return Bernstein<type,N,3>::eval;
       else if (order == 4) return Bernstein<type,N,4>::eval;
@@ -84,7 +85,8 @@ Basis<type>::get_func( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 2) {
       static const int N = 2;
-      if (order == 1)      return Bernstein<type,N,1>::eval;
+      if (order == 0)      return &constant_basis_func<N>;
+      else if (order == 1) return Bernstein<type,N,1>::eval;
       else if (order == 2) return Bernstein<type,N,2>::eval;
       else if (order == 3) return Bernstein<type,N,3>::eval;
       else if (order == 4) return Bernstein<type,N,4>::eval;
@@ -93,7 +95,8 @@ Basis<type>::get_func( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 3) {
       static const int N = 3;
-      if (order == 1)      return Bernstein<type,N,1>::eval;
+      if (order == 0)      return &constant_basis_func<N>;
+      else if (order == 1) return Bernstein<type,N,1>::eval;
       else if (order == 2) return Bernstein<type,N,2>::eval;
       else if (order == 3) return Bernstein<type,N,3>::eval;
       else if (order == 4) return Bernstein<type,N,4>::eval;
@@ -102,7 +105,8 @@ Basis<type>::get_func( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 4) {
       static const int N = 4;
-      if (order == 1)      return Bernstein<type,N,1>::eval;
+      if (order == 0)      return &constant_basis_func<N>;
+      else if (order == 1) return Bernstein<type,N,1>::eval;
       else if (order == 2) return Bernstein<type,N,2>::eval;
       else if (order == 3) return Bernstein<type,N,3>::eval;
       else if (order == 4) return Bernstein<type,N,4>::eval;
@@ -216,7 +220,8 @@ Basis<type>::get_grad( coord_t number, coord_t order, BasisFunctionCategory cate
   if (category == BasisFunctionCategory_Bernstein) {
     if (number == 1) {
       static const int N = 1;
-      if (order == 1)      return Bernstein<type,N,1>::grad;
+      if (order == 0)      return &constant_basis_grad<N>;
+      else if (order == 1) return Bernstein<type,N,1>::grad;
       else if (order == 2) return Bernstein<type,N,2>::grad;
       else if (order == 3) return Bernstein<type,N,3>::grad;
       else if (order == 4) return Bernstein<type,N,4>::grad;
@@ -225,7 +230,8 @@ Basis<type>::get_grad( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 2) {
       static const int N = 2;
-      if (order == 1)      return Bernstein<type,N,1>::grad;
+      if (order == 0)      return &constant_basis_grad<N>;
+      else if (order == 1) return Bernstein<type,N,1>::grad;
       else if (order == 2) return Bernstein<type,N,2>::grad;
       else if (order == 3) return Bernstein<type,N,3>::grad;
       else if (order == 4) return Bernstein<type,N,4>::grad;
@@ -234,7 +240,8 @@ Basis<type>::get_grad( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 3) {
       static const int N = 3;
-      if (order == 1)      return Bernstein<type,N,1>::grad;
+      if (order == 0)      return &constant_basis_grad<N>;
+      else if (order == 1) return Bernstein<type,N,1>::grad;
       else if (order == 2) return Bernstein<type,N,2>::grad;
       else if (order == 3) return Bernstein<type,N,3>::grad;
       else if (order == 4) return Bernstein<type,N,4>::grad;
@@ -243,7 +250,8 @@ Basis<type>::get_grad( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 4) {
       static const int N = 4;
-      if (order == 1)      return Bernstein<type,N,1>::grad;
+      if (order == 0)      return &constant_basis_grad<N>;
+      else if (order == 1) return Bernstein<type,N,1>::grad;
       else if (order == 2) return Bernstein<type,N,2>::grad;
       else if (order == 3) return Bernstein<type,N,3>::grad;
       else if (order == 4) return Bernstein<type,N,4>::grad;
@@ -357,7 +365,8 @@ Basis<type>::get_hess( coord_t number, coord_t order, BasisFunctionCategory cate
   if (category == BasisFunctionCategory_Bernstein) {
     if (number == 1) {
       static const int N = 1;
-      if (order == 1)      return Bernstein<type,N,1>::hess;
+      if (order == 0)      return &constant_basis_hess<N>;
+      else if (order == 1) return Bernstein<type,N,1>::hess;
       else if (order == 2) return Bernstein<type,N,2>::hess;
       else if (order == 3) return Bernstein<type,N,3>::hess;
       else if (order == 4) return Bernstein<type,N,4>::hess;
@@ -366,7 +375,8 @@ Basis<type>::get_hess( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 2) {
       static const int N = 2;
-      if (order == 1)      return Bernstein<type,N,1>::hess;
+      if (order == 0)      return &constant_basis_hess<N>;
+      else if (order == 1) return Bernstein<type,N,1>::hess;
       else if (order == 2) return Bernstein<type,N,2>::hess;
       else if (order == 3) return Bernstein<type,N,3>::hess;
       else if (order == 4) return Bernstein<type,N,4>::hess;
@@ -375,7 +385,8 @@ Basis<type>::get_hess( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 3) {
       static const int N = 3;
-      if (order == 1)      return Bernstein<type,N,1>::hess;
+      if (order == 0)      return &constant_basis_hess<N>;
+      else if (order == 1) return Bernstein<type,N,1>::hess;
       else if (order == 2) return Bernstein<type,N,2>::hess;
       else if (order == 3) return Bernstein<type,N,3>::hess;
       else if (order == 4) return Bernstein<type,N,4>::hess;
@@ -384,7 +395,8 @@ Basis<type>::get_hess( coord_t number, coord_t order, BasisFunctionCategory cate
     }
     else if (number == 4) {
       static const int N = 4;
-      if (order == 1)      return Bernstein<type,N,1>::hess;
+      if (order == 0)      return &constant_basis_hess<N>;
+      else if (order == 1) return Bernstein<type,N,1>::hess;
       else if (order == 2) return Bernstein<type,N,2>::hess;
       else if (order == 3) return Bernstein<type,N,3>::hess;
       else if (order == 4) return Bernstein<type,N,4>::hess;

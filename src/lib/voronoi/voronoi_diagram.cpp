@@ -333,10 +333,7 @@ RestrictedVoronoiDiagram::compute_centroids( Points& centroids )
   }
 
   // compute the CVT energy
-  ConicalProductQuadrature quadrature(rvd.number(),3);
   simplex_topology.element().set_basis( BasisFunctionCategory_Lagrange );
-  quadrature.define();
-  simplex_topology.element().load_quadrature(quadrature);
 
   typedef Integrand_CVT_Energy<real_t> Integrand_t;
   Integrand_t integrand(delaunay_,*sites_.get(),parents);

@@ -21,6 +21,7 @@ namespace avro
 
 QuadratureStore<Simplex> __store_simplex_lagrange__(BasisFunctionCategory_Lagrange);
 QuadratureStore<Simplex> __store_simplex_legendre__(BasisFunctionCategory_Legendre);
+QuadratureStore<Simplex> __store_simplex_bernstein__(BasisFunctionCategory_Bernstein);
 
 template<typename type>
 QuadratureStore<type>::QuadratureStore( BasisFunctionCategory category ) :
@@ -29,6 +30,10 @@ QuadratureStore<type>::QuadratureStore( BasisFunctionCategory category ) :
   nmax = 4;
   pmax = 4;
   qmax = 7;
+
+  if (category == BasisFunctionCategory_Bernstein) {
+    nmax = 3;
+  }
 
   build();
 }
@@ -49,8 +54,6 @@ QuadratureStore<type>::build() {
   memory_ = 0;
   for (index_t n = 1; n <= nmax; n++) {
 
-    //if (n == 4) pmax = 3;
-
     basis_.insert( { n , std::map< coord_t,std::map<coord_t,std::vector<matd<real_t>>>>() } );
     for (index_t p = 0; p <= pmax; p++)
     {
@@ -58,8 +61,6 @@ QuadratureStore<type>::build() {
       const index_t nb_basis = type::nb_basis(n,p);
       std::vector<real_t> phi( nb_basis );
       std::vector<real_t> gphi( nb_basis*n );
-
-      //printf("n = %lu, p = %lu, nb_basis = %lu\n",n,p,nb_basis);
 
       // initialize the basis function evaluator
       ReferenceElement<Simplex> reference(n,p);

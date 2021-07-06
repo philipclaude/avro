@@ -493,10 +493,7 @@ PowerDiagram::eval_objective( std::vector<real_t>& dE_dZ , std::vector<real_t>& 
   gnorm_w = std::sqrt( gnorm_w );
 
   // compute the CVT energy
-  ConicalProductQuadrature quadrature(number_,2);
   simplex_topology.element().set_basis( BasisFunctionCategory_Lagrange );
-  quadrature.define();
-  simplex_topology.element().load_quadrature(quadrature);
 
   typedef Integrand_Power_Energy<real_t> Integrand_t;
   Integrand_t integrand(delaunay_,sites,parents,weight_,mass_);

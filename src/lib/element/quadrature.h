@@ -139,6 +139,7 @@ private:
 
 extern QuadratureStore<Simplex> __store_simplex_legendre__;
 extern QuadratureStore<Simplex> __store_simplex_lagrange__;
+extern QuadratureStore<Simplex> __store_simplex_bernstein__;
 
 
 } // avro

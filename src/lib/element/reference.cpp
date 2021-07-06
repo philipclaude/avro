@@ -75,7 +75,7 @@ ReferenceElement<Simplex>::set_basis( BasisFunctionCategory category )
   else if (category == BasisFunctionCategory_Legendre)
     quadrature_ = &__store_simplex_legendre__;
   else if (category == BasisFunctionCategory_Bernstein)
-    quadrature_ = &__store_simplex_legendre__;
+    quadrature_ = &__store_simplex_bernstein__;
   else if (category == BasisFunctionCategory_None) {
     // nothing to do, assume the caller knows what they're doing
   }

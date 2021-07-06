@@ -1080,10 +1080,7 @@ SemiDiscreteOptimalTransport<type>::evaluate( real_t* dc_dx , real_t* dc_dw )
   compute_laguerre();
 
   // define the integration rules
-  ConicalProductQuadrature quadrature(number,quad_order_);
   simplices_.element().set_basis( BasisFunctionCategory_Lagrange );
-  quadrature.define();
-  simplices_.element().load_quadrature(quadrature);
 
   // get the masses
   t0 = clock();
