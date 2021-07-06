@@ -27,22 +27,28 @@ template<typename type, int N, int P> struct LagrangeNodes;
 
 template<int P>
 struct LagrangeNodes<Simplex,1,P> {
-  static const std::vector<real_t> coord_s_,coord_t_;
+  static const std::vector<real_t> coord_s_;
 };
 
 template<int P>
 struct LagrangeNodes<Simplex,2,P> {
-  static const std::vector<real_t> coord_s_,coord_t_;
+  static const std::vector<real_t> coord_s_;
+  static const std::vector<real_t> coord_t_;
 };
 
 template<int P>
 struct LagrangeNodes<Simplex,3,P> {
-  static const std::vector<real_t> coord_s_,coord_t_,coord_u_;
+  static const std::vector<real_t> coord_s_;
+  static const std::vector<real_t> coord_t_;
+  static const std::vector<real_t> coord_u_;
 };
 
 template<int P>
 struct LagrangeNodes<Simplex,4,P> {
-  static const std::vector<real_t> coord_s_,coord_t_,coord_u_,coord_v_;
+  static const std::vector<real_t> coord_s_;
+  static const std::vector<real_t> coord_t_;
+  static const std::vector<real_t> coord_u_;
+  static const std::vector<real_t> coord_v_;
 };
 
 class ReferenceElementBase
@@ -53,30 +59,41 @@ public:
     order_(order)
   {}
 
-  const real_t* get_reference_coordinate( index_t k ) const;
+  const real_t* get_canonical_coordinate( index_t k ) const;
   const index_t* get_lattice_coordinate( index_t k ) const;
 
   coord_t order() const { return order_; }
   coord_t number() const { return number_; }
 
-  real_t vunit() const { return vunit_; }
-  real_t vorth() const { return vorth_; }
+  real_t unit_volume() const { return unit_volume_; }
+  real_t orthogonal_volume() const { return orthogonal_volume_; }
 
+  const std::vector<real_t>& orthogonal_coordinates() const { return orthogonal_coordinates_; }
+  const std::vector<real_t>& unit_coordinates() const { return unit_coordinates_; }
+
+  index_t nb_basis() const { return nb_basis_; }
+
+  index_t nb_interior() const { return interior_.size(); }
+  index_t interior( index_t k ) const { return interior_[k]; }
 
 protected:
   coord_t number_;
   coord_t order_;
+  index_t nb_basis_;
 
   // vertex coordinates
-  std::vector<real_t> xunit_; // unit element coordinates (unit edge lengths)
-  std::vector<real_t> xorth_; // orthogonal corner at origin
+  std::vector<real_t> unit_coordinates_; // unit element coordinates (unit edge lengths)
+  std::vector<real_t> orthogonal_coordinates_; // orthogonal corner at origin
 
-  // all coordinates
-  std::vector<real_t>  xref_;
-  std::vector<index_t> lref_;
+  real_t unit_volume_;
+  real_t orthogonal_volume_;
 
-  real_t vunit_;
-  real_t vorth_;
+  std::vector<real_t>  nodes_;
+  std::vector<index_t> lattice_;
+  std::vector<index_t> interior_;
+  std::vector<index_t> lattice2canonical_;
+  std::vector<index_t> canonical2lattice_;
+
 };
 
 template<typename type> class ReferenceElement;
@@ -87,27 +104,31 @@ class ReferenceElement {
 public:
   ReferenceElement( coord_t number , coord_t order );
 
-  const real_t* get_reference_coordinate( index_t k ) const;
+  //const real_t* get_reference_coordinate( index_t k ) const;
 
-  real_t vunit() const { return unit_volume_; }
+  //real_t vunit() const { return unit_volume_; }
   index_t nb_basis() const;
 
-  index_t nb_interior() const { return interior_.size(); }
-  index_t interior( index_t k ) const { return interior_[k]; }
 
-  const index_t* get_lattice_coordinate( index_t k ) const;
-  int find_index( const index_t* x ) const;
-  int find_index( const real_t* x ) const;
+
+  const index_t* get_canonical_coordinate( index_t k ) const;
+  int find_canonical_index( const index_t* x ) const;
+  int find_canonical_index( const real_t* x ) const;
+
+  index_t lattice2canonical( index_t k ) const { return lattice2canonical_[k]; }
 
 private:
+  /*
   coord_t number_;
   coord_t order_;
   std::vector<real_t> nodes_;
   std::vector<index_t> lattice_;
   std::vector<index_t> interior_;
+  std::vector<index_t> lattice2canonical_;
 
   real_t unit_volume_;
   real_t orth_volume_;
+  */
 };
 
 /*

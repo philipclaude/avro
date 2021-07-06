@@ -168,7 +168,7 @@ Builder<type>::build()
 
   // loop through the dimensional hierarchy
   index_t n = 0;
-  for (coord_t dim=0;dim<facets.nb_dim();dim++)
+  for (coord_t dim = 0; dim < facets.nb_dim(); dim++)
   {
     const std::map<ElementIndices,FacetParent>& facets_d = facets[dim];
     std::map<ElementIndices,FacetParent>::const_iterator it;
@@ -176,7 +176,7 @@ Builder<type>::build()
     ReferenceElement<type> reference(dim,element_.order());
 
     // loop through all the facets
-    for (it=facets_d.begin();it!=facets_d.end();++it)
+    for (it = facets_d.begin(); it != facets_d.end(); ++it)
     {
       const ElementIndices& f = it->first;
       avro_assert( f.dim == dim );
@@ -188,38 +188,35 @@ Builder<type>::build()
 
       // sprinkle the new dof into place
       std::vector<index_t> dof( element_.nb_interior(dim) );
-      for (index_t j=0;j<dof.size();j++)
+      for (index_t j = 0; j < dof.size(); j++)
         dof[j] = n++;
 
       // assign the dof to all parents of this facet
-      for (index_t i=0;i<parents.size();i++)
+      for (index_t i = 0; i < parents.size(); i++)
       {
         index_t k = parents[i];
         const std::vector<index_t>& canonical = it->second.canonical[i];
 
-        for (index_t j=0;j<dof.size();j++)
+        for (index_t j = 0; j < dof.size(); j++)
         {
-
-          #if 1
           // retrieve the barycentric coordinates of this interior point in the facet
           const index_t* lf = reference.get_lattice_coordinate( reference.interior(j) );
 
           // compute the barycentric coordinates of this point in the parent simplex
           // using the canonical vertices of the facet
-          std::vector<index_t> ls( element_.number() , 0 );
-          for (index_t ii=0;ii<ls.size();ii++)
+          std::vector<real_t> ls( element_.number() , 0 );
+          for (index_t ii = 0; ii < ls.size(); ii++)
           {
-            for (index_t jj=0;jj<canonical.size();jj++)
-              ls[ii] += lf[jj]*topology_.element().reference().get_lattice_coordinate( canonical[jj] )[ii];
+            for (index_t jj = 0; jj < canonical.size(); jj++) {
+              ls[ii] += lf[jj]*topology_.element().reference().get_reference_coordinate( canonical[jj] )[ii]/element_.order();
+            }
           }
 
           // determine which index in the element this corresponds to
           int idx = element_.reference().find_index( ls.data() );
-          avro_assert( idx>=0 );
-          #else
-          index_t idx = j;//element_.reference().get_dof_index( j ,  )
-          #endif
+          avro_assert( idx >= 0 );
 
+          // assign the dof index
           (*this)(k,idx) = dof[j];
         }
       }

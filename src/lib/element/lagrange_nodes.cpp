@@ -1,4 +1,5 @@
 #include "element/element.h"
+#include "element/reference.h"
 
 namespace avro
 {
@@ -14,7 +15,7 @@ namespace avro
 template<> const std::vector<real_t> LagrangeNodes<Simplex,1,1>::coord_s_ = {0.0,1.0};
 template<> const std::vector<real_t> LagrangeNodes<Simplex,1,2>::coord_s_ = {0.0,0.5,1.0};
 template<> const std::vector<real_t> LagrangeNodes<Simplex,1,3>::coord_s_ = {0.0,1./3,2./3,1.0};
-template<> const std::vector<real_t> LagrangeNodes<Simplex,1,4>::coord_s_ = {0.0,0.25,0.75,1.0};
+template<> const std::vector<real_t> LagrangeNodes<Simplex,1,4>::coord_s_ = {0.0,0.25,0.5,0.75,1.0};
 template<> const std::vector<real_t> LagrangeNodes<Simplex,1,5>::coord_s_ = {0.0,0.2,0.4,0.6,0.8,1.0};
 
 // triangle

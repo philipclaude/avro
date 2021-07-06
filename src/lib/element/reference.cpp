@@ -22,28 +22,6 @@
 namespace avro
 {
 
-/*
-const real_t*
-ReferenceElement<Simplex>::get_reference_coordinate( index_t k ) const
-{
-  return &xref_[k*(number_+1)];
-}
-
-const index_t*
-ReferenceElement<Simplex>::get_lattice_coordinate( index_t k ) const
-{
-  return &lref_[k*(number_+1)];
-}
-int
-ReferenceElement<Simplex>::find_index( const real_t* x ) const
-{
-  std::vector<index_t> y(number_);
-  for (coord_t d=0;d<number_;d++)
-    y[d] = x[d]*order_;
-  avro_implement;
-}
-*/
-
 static void
 next_index( const int n , const int q , bool& more , std::vector<index_t>& x )
 {
@@ -384,11 +362,12 @@ ReferenceElement<type>::ReferenceElement( coord_t number , coord_t order ) :
 
     if (!more) break;
   }
+  avro_assert( lattice_.size() == (number_+1)*nb_basis() );
 
-  std::vector<index_t> lattice2canonical( nb_basis() );
+  lattice2canonical_.resize( nb_basis() );
   for (index_t k = 0; k < nb_basis(); k++) {
     int idx = find_index( &xref_[(number_+1)*k] );
-    lattice2canonical[k] = idx;
+    lattice2canonical_[k] = idx;
   }
 
   for (index_t k=0;k<nb_basis();k++)
@@ -408,6 +387,7 @@ ReferenceElement<type>::ReferenceElement( coord_t number , coord_t order ) :
       interior_.push_back(k);
     }
   }
+  avro_assert_msg( interior_.size() == nb_simplex_basis_interior(number_,order) , "|interior| = %lu, should be %lu", interior_.size() , nb_simplex_basis_interior(number_,order_) );
 }
 
 template<>
@@ -437,11 +417,15 @@ ReferenceElement<Simplex>::find_index( const index_t* x ) const
 template<>
 int
 ReferenceElement<Simplex>::find_index( const real_t* x ) const {
-  for (index_t i=0;i<nb_basis();i++)
+  for (index_t i = 0; i < nb_basis(); i++)
   {
     real_t d = numerics::distance( &nodes_[(number_)*i] , x , number_ );
     if (d < 1e-12) return i;
   }
+  std::vector<real_t> xp(x,x+number_);
+  print_inline(xp,"could not find");
+  print_inline(nodes_);
+  printf("number = %lu, order = %lu\n",number_,order_);
   avro_assert_not_reached;
   return -1;
 }

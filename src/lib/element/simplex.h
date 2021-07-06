@@ -43,6 +43,19 @@ nb_simplex_basis( coord_t n , coord_t p ) {
   }
 }
 
+inline index_t
+nb_simplex_basis_interior( coord_t n , coord_t p ) {
+  if      (n == 0) return    1;
+  else if (n == 1) return  p-1;
+  else if (n == 2) return (p-1)*(p-2)/2;
+  else if (n == 3) return (p-1)*(p-2)*(p-3)/6;
+  else if (n == 4) return (p-1)*(p-2)*(p-3)*(p-4)/24;
+  else {
+    printf("simplex n = %u not supported\n",n);
+    avro_implement;
+  }
+}
+
 class Simplex : public Element<Simplex> {
 public:
   Simplex( const coord_t number , const coord_t order );
