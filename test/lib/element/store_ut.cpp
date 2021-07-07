@@ -8,11 +8,11 @@ UT_TEST_SUITE( quadrature_cache_test_suite )
 
 UT_TEST_CASE( build )
 {
-  const matd<real_t>& B = __store_simplex_lagrange__.get_basis( 3 , 3 , 5 );
+  const matd<real_t>& B = __store_simplex_lagrange__.get_basis( 3 , 3 , 4 );
 
   B.print();
 
-  const Quadrature& quadrature = __store_simplex_lagrange__.quadrature( 3 , 7 );
+  const Quadrature& quadrature = __store_simplex_lagrange__.quadrature( 3 , 4 );
 
   printf("[status] memory usage for quadrature store: %lu kB\n",__store_simplex_lagrange__.memory()/1000);
 
