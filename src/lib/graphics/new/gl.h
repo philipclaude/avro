@@ -84,19 +84,6 @@ void dumpGLInfo(bool dumpExtensions = false);
   avro_assert(!error); \
 }
 
-class Manager {
-};
-
-class Mesh;
-class UniformSet;
-
-class OpenGL_Manager : public Manager {
-
-	void write( const Mesh& buffer );
-	void draw( index_t id , const UniformSet& uniforms );
-
-};
-
 } // graphics
 
 } // avro

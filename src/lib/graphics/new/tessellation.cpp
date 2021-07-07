@@ -1,7 +1,11 @@
 #include "common/error.h"
 
-#include "graphics/new/tessellation.h"
+#include "geometry/entity.h"
 
+#include "graphics/new/tessellation.h"
+#include "graphics/gl.h"
+
+#include "mesh/boundary.h"
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
@@ -97,9 +101,11 @@ get_canonical_simplex_facets( coord_t number , std::vector<CanonicalFacet>& face
     facets.push_back( f0 );
     facets.push_back( f1 );
     facets.push_back( f2 );
+
     facets.push_back( f1_0 );
     facets.push_back( f1_1 );
     facets.push_back( f1_2 );
+
     facets.push_back( f2_0 );
   }
   else if (number == 3) {
@@ -180,8 +186,8 @@ Tessellation::_build( const Topology<Simplex>& topology ) {
   std::vector<CanonicalFacet> canonical;
   get_canonical_simplex_facets(element.number(),canonical);
 
-  std::vector<std::map<MeshFacet,index_t>> facets(element.number());
-  std::vector<std::vector<MeshFacet>> facets_(element.number());
+  std::vector<std::map<MeshFacet,index_t>> facets(element.number()+1);
+  std::vector<std::vector<MeshFacet>> facets_(element.number()+1);
   std::map<MeshFacet,index_t>::const_iterator it;
 
   std::vector<index_t> g;
@@ -189,9 +195,9 @@ Tessellation::_build( const Topology<Simplex>& topology ) {
   {
     for (index_t j = 0; j < canonical.size(); j++)
     {
-      avro_assert( canonical[j].indices.size() == (canonical[j].dim+1) );
+      avro_assert( canonical[j].indices.size() == index_t(canonical[j].dim+1) );
 
-      if (canonical[j].dim == element.number()) continue;
+      //if (canonical[j].dim == element.number()) continue;
       if (canonical[j].dim > 2) continue;
 
       // determine the indices of the facet
@@ -205,8 +211,6 @@ Tessellation::_build( const Topology<Simplex>& topology ) {
       g = f.indices;
       std::sort( f.indices.begin() , f.indices.end() );
       short orientation = find_orientation(g,f.indices);
-
-      //print_inline(f.indices);
 
       // determine if this facet exists
       it = facets[f.dim].find(f);
@@ -232,10 +236,10 @@ Tessellation::_build( const Topology<Simplex>& topology ) {
     }
   }
 
-  for (coord_t d = 0; d < facets_.size(); d++)
+  /*for (coord_t d = 0; d < facets_.size(); d++)
   for (index_t k = 0; k < facets_[d].size(); k++) {
     print_inline( facets_[d][k].indices );
-  }
+  }*/
 
   get_primitives(topology,facets_);
 }
@@ -290,7 +294,6 @@ Tessellation::_build( const Topology<Polytope>& topology ) {
         for (index_t j = 0; j < nb_triangles; j++)
           simplices.add( triangles.data()+3*j , 3 );
       }
-
     }
 
   }
@@ -306,8 +309,142 @@ Tessellation::build( const TopologyBase& topology ) {
     avro_implement;
 }
 
+
+static std::vector< std::vector< std::vector<index_t>> > canonical_tet_face = {
+  { {} , {} , {} , {} },  // p = 0
+  { {2,3,1} , {0,3,2} , {0,1,3} , {0,2,1} }, // p = 1
+  { {2,3,1,5,6,4} , {0,3,2,4,7,8} , {0,1,3,5,8,9} , {0,2,1,6,9,7} } , // p = 2
+  { {2,3,1,6,7,8,9,4,5,16} , {0,3,2,5,4,10,11,12,13,17} , {0,1,3,7,6,13,12,14,15,18} , {0,2,1,9,8,15,14,11,10,19} } // p = 3
+};
+
+template<typename type>
 void
-Tessellation::get_primitives( const TopologyBase& topology , const std::vector<std::vector<MeshFacet>>& facets ) {
+Tessellation::get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets ) {
+
+  // first add all the points
+  points_ = std::make_shared<PointPrimitive>(topology.points());
+
+  // count how many geometry entities there are
+  std::set<Entity*> entities;
+  for (index_t k = 0; k < topology.points().nb(); k++) {
+    if (topology.points().entity(k) == nullptr) continue;
+    entities.insert( topology.points().entity(k) );
+  }
+  printf("there are %lu entities\n",entities.size());
+  bool geometryless = (entities.size() == 0);
+
+  index_t nb_Nodes = 0;
+  index_t nb_Edges = 0;
+  index_t nb_Faces = 0;
+  std::map<Entity*,index_t> entity2index;
+  for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
+    Entity* entity = *it;
+    index_t idx = 0;
+    if (entity->number() == 0) idx = nb_Nodes++;
+    if (entity->number() == 1) idx = nb_Edges++;
+    if (entity->number() == 2) idx = nb_Faces++;
+    entity2index.insert( {entity,idx} );
+  }
+
+  index_t nb_edge_primitives = nb_Edges + 1;
+  index_t nb_triangle_primitives = nb_Faces + 1;
+
+  // if no geometry was given, at least split up the interior/boundary triangles
+  coord_t number = topology.number();
+  if (nb_triangle_primitives == 1 && number > 2) nb_triangle_primitives = 2;
+
+  // allocate the primitives
+  coord_t order = topology.element().order();
+
+  edges_.resize( nb_edge_primitives );
+  for (index_t k = 0; k < nb_edge_primitives; k++)
+    edges_[k] = std::make_shared<EdgePrimitive>(1);
+
+  triangles_.resize( nb_triangle_primitives );
+  for (index_t k = 0; k < nb_triangle_primitives; k++)
+    triangles_[k] = std::make_shared<TrianglePrimitive>(order);
+
+  Simplex simplex(2,order);
+  simplex.set_basis( BasisFunctionCategory_Lagrange );
+  index_t nb_basis = simplex.nb_basis();
+
+  // loop through facets and bin them accordingly
+  coord_t nb_dim = facets.size();
+
+  coord_t dim = 2;
+  const std::vector<MeshFacet>& facets_d = facets[dim];
+  printf("processing %lu %u-facets\n",facets_d.size(),dim);
+  for (index_t k = 0; k < facets_d.size(); k++) {
+
+    // retrieve the linear facet
+    const MeshFacet& f = facets_d[k];
+
+    // determine if this is a geometry facet
+    index_t primitive_id = 0;
+    if (number == 2) primitive_id = 0;
+    else if (geometryless) {
+      if (f.parent.size() == 1) primitive_id = 0; // boundary
+      else primitive_id = 1; // interior
+    }
+    else {
+      Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
+      if (entity == nullptr) primitive_id = nb_triangle_primitives -1; // interior at the end
+      else primitive_id = entity2index[entity];
+    }
+    avro_assert( primitive_id < nb_triangle_primitives );
+
+    // retrieve the high-order representation of the triangle
+    if (number == 2) {
+      // add the dof for the triangle
+      index_t elem = f.parent[0];
+      triangles_[primitive_id]->add( topology(elem) , topology.nv(elem) );
+    }
+    else if (number == 3) {
+      // pick one of the parents - it doesn't matter which one
+      index_t elem = f.parent[0];
+      index_t face = f.local[0];
+
+      // find the dof in the tetrahedron that maps to this triangle face
+      std::vector<index_t> dof( nb_basis );
+
+
+      for (index_t j = 0; j < nb_basis; j++) {
+        dof[j] = topology(elem, canonical_tet_face[order][face][j] );
+      }
+      triangles_[primitive_id]->add( dof.data() , dof.size() );
+    }
+  }
+
+  // generate the vertex array and primitive buffers
+  GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
+  GL_CALL( glBindVertexArray(vertex_array_) );
+
+  points_->print();
+  points_->write();
+
+  for (index_t k = 0; k < triangles_.size(); k++) {
+    triangles_[k]->print();
+    triangles_[k]->write();
+  }
+
+  // now create solution primitives to plot on the triangles
+  // TODO
+
+}
+
+void
+Tessellation::draw() {
+
+  // bind which attributes we want to draw
+  GL_CALL( glBindVertexArray(vertex_array_) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, points_->buffer()  ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
+  GL_CALL( glEnableVertexAttribArray(0) );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
+
+  for (index_t k = 0; k < triangles_.size(); k++)
+    triangles_[k]->draw();
 
 }
 

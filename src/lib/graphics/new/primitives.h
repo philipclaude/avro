@@ -156,24 +156,7 @@ public:
 	bool  visible_;
 };
 
-class PointPrimitive {
 
-public:
-
-	PointPrimitive( const Points& points );
-
-	void write();
-	void render() {
-		// draw the points
-	}
-
-	gl_index buffer() const { return buffer_; }
-
-private:
-	std::vector<gl_float> coordinates_;
-	gl_index buffer_;
-	bool  visible_;
-};
 #endif
 
 template<typename type> class Topology;
