@@ -62,7 +62,6 @@ public:
   coord_t order() const { return order_; }
 
 private:
-  const coord_t order_ = 1;
   void triangulate( coord_t number , Table<index_t>& table , Points& points , const index_t* v , index_t nv ) const;
 
   Simplex simplex_;

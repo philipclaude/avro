@@ -28,7 +28,7 @@ Polytope::Polytope( coord_t number , coord_t order , const Table<int>& incidence
   incidence_(incidence),
   fullmesh_(false)
 {
-  avro_assert_msg( order == 1 , "not supported..." );
+  avro_assert_msg( order <= 1 , "p = %u not supported" , order );
 }
 
 Polytope::Polytope( Topology<Polytope>& topology , const coord_t order , const Table<int>& incidence ) :
@@ -37,7 +37,7 @@ Polytope::Polytope( Topology<Polytope>& topology , const coord_t order , const T
   incidence_(incidence),
   fullmesh_(false)
 {
-  avro_assert_msg( order == 1 , "not supported..." );
+  avro_assert_msg( order <= 1 , "p = %u not supported" , order );
 }
 
 

@@ -95,11 +95,21 @@ ReferenceElement<Simplex>::build() {
 
   // compute the coordinates of the lagrange nodes
   nb_basis_ = nb_simplex_basis(number_,order_);
-  if (order_ > 0) get_lagrange_nodes<Simplex>(number_,order_,nodes_);
-  else {
+  if (order_ > 0 && number_ < 5) get_lagrange_nodes<Simplex>(number_,order_,nodes_);
+  else if (order_ == 0) {
     // yes, p = 0 Lagrange doesn't make sense, but it's okay
     for (coord_t d = 0; d < nb_coord; d++)
       nodes_.push_back( 1./nb_vertices );
+  }
+  else if (number_ > 4) {
+    for (index_t k = 0; k < nb_vertices; k++)
+    for (coord_t d = 0; d < nb_coord; d++) {
+      if (k == nb_coord - d - 1) nodes_.push_back(1.0);
+      else nodes_.push_back(0.0);
+    }
+  }
+  else {
+    avro_assert_not_reached;
   }
   avro_assert_msg( nodes_.size() == nb_coord*nb_basis_ ,
                    "|nodes| = %lu, nb_basis = %lu, number = %u", nodes_.size(),nb_basis_,number_ );

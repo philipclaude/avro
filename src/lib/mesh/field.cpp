@@ -150,9 +150,9 @@ template<typename T>
 void
 Field<Polytope,T>::build()
 {
-  if (this->type()==CONTINUOUS)
+  if (this->type() == CONTINUOUS)
   {
-    avro_assert( element_.order()==1 );
+    avro_assert( element_.order() == 1 );
 
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -167,9 +167,9 @@ Field<Polytope,T>::build()
       this->data_.add( &x0 , 1 );
     }
   }
-  else if (this->type()==DISCONTINUOUS)
+  else if (this->type() == DISCONTINUOUS)
   {
-    avro_assert( element_.order()==0 );
+    avro_assert_msg( element_.order() == 0 , "p = %u not supported" , element_.order() );
     T x0(0);
     for (index_t k=0;k<topology_.nb();k++)
     {
