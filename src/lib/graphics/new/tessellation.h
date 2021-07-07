@@ -168,9 +168,60 @@ private:
   gl_index buffer_;
 };
 
-// forward declarations
-//class TopologyBase;
-//template<typename type> class Topology;
+class FieldData {
+public:
+  FieldData( coord_t order ) :
+    order_(order),
+    nb_basis_(nb_simplex_basis(2,order_))
+  {}
+
+  void add( real_t* f , index_t ndof ) {
+    avro_assert( ndof == nb_basis_ );
+    for (index_t j = 0; j < ndof; j++)
+      data_.push_back(f[j]);
+  }
+
+  const std::vector<gl_float>& data() const { return data_; }
+
+private:
+  coord_t order_;
+  index_t nb_basis_;
+  std::vector<gl_float> data_;
+};
+
+class FieldPrimitive {
+public:
+  FieldPrimitive() {}
+
+  ~FieldPrimitive() {
+
+  }
+
+
+  void set_active( const std::string& active ) {
+    active_ = active;
+  }
+
+  void write() {
+
+    FieldData* field = data_[active_].get();
+
+    GL_CALL( glGenBuffers( 1 , &buffer_ ) );
+    GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , buffer_ ) );
+    GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(gl_float) * field->data().size() , field->data().data() , GL_STATIC_DRAW) );
+
+    GL_CALL( glGenTextures( 1 , &texture_) );
+    GL_CALL( glActiveTexture( GL_TEXTURE0 + 0 ) ); // fields are always in texture 0
+    GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , texture_) );
+    GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , buffer_ ) );
+  }
+
+private:
+  std::string active_;
+  std::map<std::string, std::shared_ptr<FieldData> > data_;
+  gl_index texture_;
+  gl_index buffer_;
+};
 
 struct MeshFacet;
 
@@ -203,6 +254,7 @@ private:
   std::shared_ptr<PointPrimitive> points_;
   std::vector< std::shared_ptr<EdgePrimitive> > edges_;
   std::vector< std::shared_ptr<TrianglePrimitive> > triangles_;
+  std::vector< std::shared_ptr<FieldPrimitive> > solution_;
 };
 
 } // graphics

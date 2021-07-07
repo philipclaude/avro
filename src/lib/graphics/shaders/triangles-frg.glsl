@@ -93,13 +93,9 @@ void main() {
         f += u[i]*phi[i];
     #endif
 
-    //vec3 color = vec3(0,0,0);
+    f = s+ t;
     vec3 color = get_color(f);
-
-    float tol = 0.05;
-    //if (abs(s) < tol || abs(t) < tol || abs(s+t-1) < tol) color = vec3(0,0,0);
-
-    color = vec3(0.8,0.8,0.2);
+    //color = vec3(0.8,0.8,0.2);
 
     fragColor = vec4(color,1.0);
 }

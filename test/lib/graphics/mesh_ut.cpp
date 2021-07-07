@@ -3,6 +3,7 @@
 #include "graphics/new/tessellation.h"
 #include "graphics/new/window.h"
 
+#include "graphics/colormap.h"
 #include "graphics/shader.h"
 
 #include "library/ckf.h"
@@ -134,14 +135,14 @@ UT_TEST_CASE( simplices_2d_test )
     real_t t = curvilinear.points()[k][1];
 
     real_t theta = s*M_PI;
-    real_t R = 0.5 + t*(1.0 - 0.5);
+    real_t R = 0.75 + t*(1.0 - 0.75);
 
     curvilinear.points()[k][0] = R*cos(theta);
     curvilinear.points()[k][1] = R*sin(theta);
   }
 
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear);
-  field->print();
+  //field->print();
   curvilinear.fields().make( "test" , field );
 
   Window window(width,height);
@@ -181,6 +182,22 @@ UT_TEST_CASE( simplices_2d_test )
 
   glfwSetCursorPosCallback(window.window(),&mouse_move_callback);
   glfwSetMouseButtonCallback(window.window(),&mouse_button_callback);
+
+  // bind the colormap values to a buffer
+  gl_index colormap_buffer;
+  GL_CALL( glGenBuffers( 1 , &colormap_buffer ) );
+  Colormap colormap;
+  colormap.change_style("viridis");
+  index_t ncolor = 256*3;
+  GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , colormap_buffer) );
+  GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * ncolor , colormap.data() , GL_STATIC_DRAW) );
+
+  // generate a texture to hold the colormap buffer
+  GLuint colormap_texture;
+  GL_CALL( glGenTextures( 1 , &colormap_texture) );
+  GL_CALL( glActiveTexture( GL_TEXTURE0 + 1 ) );
+  GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , colormap_texture) );
+  GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
 
   // set the tessellation level for the TCS
   int level = 10;

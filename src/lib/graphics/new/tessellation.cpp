@@ -415,14 +415,12 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
       triangles_[primitive_id]->add( topology(elem) , topology.nv(elem) );
     }
     else if (number == 3) {
-      // pick one of the parents - it doesn't matter which one
+      // pick one of the parents - it doesn't matter which one (unless we want a specific side)
       index_t elem = f.parent[0];
       index_t face = f.local[0];
 
       // find the dof in the tetrahedron that maps to this triangle face
       std::vector<index_t> dof( nb_basis );
-
-
       for (index_t j = 0; j < nb_basis; j++) {
         dof[j] = topology(elem, canonical_tet_face[order][face][j] );
       }
@@ -456,7 +454,7 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     index_t elem = f.parent[0];
     index_t edge = f.local[0];
 
-    printf("elem = %lu, edge = %lu\n",elem,edge);
+    //printf("elem = %lu, edge = %lu\n",elem,edge);
 
     // find the dof in the element that maps to this triangle face
     std::vector<index_t> dof( order+1 );
@@ -475,21 +473,31 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
   GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
   GL_CALL( glBindVertexArray(vertex_array_) );
 
-  points_->print();
+  //points_->print();
   points_->write();
 
   for (index_t k = 0; k < triangles_.size(); k++) {
-    triangles_[k]->print();
+    //triangles_[k]->print();
     triangles_[k]->write();
   }
 
   for (index_t k = 0; k < edges_.size(); k++) {
-    edges_[k]->print();
+    //edges_[k]->print();
     edges_[k]->write();
   }
 
+  const Fields& fields = topology.fields();
+
   // now create solution primitives to plot on the triangles
-  // TODO
+  solution_.resize( triangles_.size() );
+  for (index_t k = 0; k < solution_.size(); k++) {
+
+    solution_[k] = std::make_shared<FieldPrimitive>();
+
+    printf("need to add %lu field data to field primitive\n",fields.nb());
+
+
+  }
 
 }
 
@@ -505,6 +513,11 @@ Tessellation::draw_triangles( ShaderProgram& shader ) {
   GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
   GL_CALL( glEnableVertexAttribArray(0) );
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
+
+  // bind the desired colormap
+  glActiveTexture(GL_TEXTURE0 + 1);
+  GLint colormap_location = glGetUniformLocation(shader.handle() , "colormap");
+  glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
   for (index_t k = 0; k < triangles_.size(); k++)
     triangles_[k]->draw();
