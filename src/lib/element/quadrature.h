@@ -86,6 +86,7 @@ class QuadratureStore
 public:
   QuadratureStore( BasisFunctionCategory category );
 
+public:
   const matd<real_t>& get_basis( index_t n , index_t p , int q=-1 ) const {
     if (q < 0) q = qmax-1;
     return basis_.at(n).at(p).at(q)[0];
@@ -117,6 +118,12 @@ private:
   std::map< coord_t , std::map< coord_t , std::shared_ptr<Quadrature> > > quadrature_;
 
   index_t memory_;
+
+public:
+  /*static QuadratureStore<type>* get_lagrange() {
+    static QuadratureStore<type> instance(BasisFunctionCategory_Lagrange);
+    return &instance;
+  }*/
 };
 
 class QuadraturePoint {
@@ -140,7 +147,6 @@ private:
 extern QuadratureStore<Simplex> __store_simplex_legendre__;
 extern QuadratureStore<Simplex> __store_simplex_lagrange__;
 extern QuadratureStore<Simplex> __store_simplex_bernstein__;
-
 
 } // avro
 

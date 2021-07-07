@@ -1073,7 +1073,6 @@ SemiDiscreteOptimalTransport<type>::evaluate( real_t* dc_dx , real_t* dc_dw )
   clock_t t0;
   real_t time_integrate = 0.0;
 
-  coord_t number = domain_.number();
   coord_t dim = domain_.number();
 
   // compute the laguerre diagram

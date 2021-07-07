@@ -486,6 +486,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t l0 = metric_.length( topology_.points() , n0 , ns );
       real_t l1 = metric_.length( topology_.points() , n1 , ns );
       //if (l0 >= lk && l1 >= lk) bad = true;
+      UNUSED(lk);
+      UNUSED(l0);
+      UNUSED(l1);
 
       std::vector<index_t> surrounding;
       for (index_t j = 0; j < N.size(); j++) {

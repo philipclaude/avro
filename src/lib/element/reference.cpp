@@ -24,6 +24,64 @@
 namespace avro
 {
 
+index_t
+ReferenceElementBase::find_reference_index( const real_t* x ) const {
+  // yes, this uses floating-point checks, but we shouldn't expect precision issues here
+  // since this is the canonical reference elements (well spaced node coordinates)
+  const index_t nb_coord = nb_barycentric();
+  for (index_t k = 0; k < nb_basis_; k++) {
+    real_t d = numerics::distance( &nodes_[k*nb_coord] , x , nb_coord );
+    if (d < 1e-12) return k;
+  }
+  std::vector<real_t> xp(x,x+nb_coord);
+  printf("number = %u, order = %u\n",number_,order_);
+  print_inline(xp,"could not find");
+  print_inline(nodes_);
+  avro_assert_not_reached;
+  return nb_basis_;
+}
+
+const real_t*
+ReferenceElementBase::get_reference_coordinate( const index_t k ) const {
+  const index_t nb_coord = nb_barycentric();
+  avro_assert( k < nodes_.size()/nb_coord );
+  return &nodes_[k*nb_coord];
+}
+
+template<typename type>
+void
+ReferenceElementType<type>::set_basis( BasisFunctionCategory category )
+{
+  basis_ = std::make_shared<Basis<type>>(number_,order_,category);
+
+#if 1
+  if (category == BasisFunctionCategory_Lagrange)
+    quadrature_ = &__store_simplex_lagrange__;
+  else if (category == BasisFunctionCategory_Legendre)
+    quadrature_ = &__store_simplex_legendre__;
+  else if (category == BasisFunctionCategory_Bernstein)
+    quadrature_ = &__store_simplex_bernstein__;
+  else if (category == BasisFunctionCategory_None) {
+    // nothing to do, assume the caller knows what they're doing
+  }
+#else
+if (category == BasisFunctionCategory_Lagrange)
+  quadrature_ = QuadratureStore<type>::get_lagrange();
+  /*
+else if (category == BasisFunctionCategory_Legendre)
+  quadrature_ = &__store_simplex_legendre__;
+else if (category == BasisFunctionCategory_Bernstein)
+  quadrature_ = &__store_simplex_bernstein__;
+else if (category == BasisFunctionCategory_None) {
+  // nothing to do, assume the caller knows what they're doing
+}*/
+#endif
+  else {
+    printf("unknown category %d\n",category);
+    avro_assert_not_reached;
+  }
+}
+
 void
 ReferenceElement<Simplex>::build() {
 
@@ -65,48 +123,6 @@ ReferenceElement<Simplex>::build() {
                    "|interior| = %lu, should be %lu", interior_.size() , nb_simplex_basis_interior(number_,order_) );
 }
 
-void
-ReferenceElement<Simplex>::set_basis( BasisFunctionCategory category )
-{
-  basis_ = std::make_shared<Basis<Simplex>>(number_,order_,category);
-
-  if (category == BasisFunctionCategory_Lagrange)
-    quadrature_ = &__store_simplex_lagrange__;
-  else if (category == BasisFunctionCategory_Legendre)
-    quadrature_ = &__store_simplex_legendre__;
-  else if (category == BasisFunctionCategory_Bernstein)
-    quadrature_ = &__store_simplex_bernstein__;
-  else if (category == BasisFunctionCategory_None) {
-    // nothing to do, assume the caller knows what they're doing
-  }
-  else {
-    printf("unknown category %d\n",category);
-    avro_assert_not_reached;
-  }
-}
-
-index_t
-ReferenceElementBase::find_reference_index( const real_t* x ) const {
-  // yes, this uses floating-point checks, but we shouldn't expect precision issues here
-  // since this is the canonical reference elements (well spaced node coordinates)
-  const index_t nb_coord = nb_barycentric();
-  for (index_t k = 0; k < nb_basis_; k++) {
-    real_t d = numerics::distance( &nodes_[k*nb_coord] , x , nb_coord );
-    if (d < 1e-12) return k;
-  }
-  std::vector<real_t> xp(x,x+nb_coord);
-  printf("number = %u, order = %u\n",number_,order_);
-  print_inline(xp,"could not find");
-  print_inline(nodes_);
-  avro_assert_not_reached;
-  return nb_basis_;
-}
-
-const real_t*
-ReferenceElementBase::get_reference_coordinate( const index_t k ) const {
-  const index_t nb_coord = nb_barycentric();
-  avro_assert( k < nodes_.size()/nb_coord );
-  return &nodes_[k*nb_coord];
-}
+template class ReferenceElementType<Simplex>;
 
 } // avro

@@ -39,8 +39,6 @@ protected:
 
 public:
 
-  virtual ~ReferenceElementBase() {}
-
   coord_t order() const { return order_; }
   coord_t number() const { return number_; }
 
@@ -69,26 +67,36 @@ protected:
   std::vector<index_t> interior_; // indices of interior nodes
 };
 
+template<typename type>
+class ReferenceElementType : public ReferenceElementBase {
+public:
+  ReferenceElementType( coord_t number , coord_t order ) :
+    ReferenceElementBase(number,order)
+  {}
+
+  void set_basis( BasisFunctionCategory category );
+  const Basis<type>& basis() const { avro_assert(basis_ != nullptr); return *basis_.get(); }
+  Basis<type>& basis() { avro_assert(basis_ != nullptr); return *basis_.get(); }
+  const QuadratureStore<type>& quadrature() const { avro_assert(quadrature_ != nullptr); return *quadrature_; }
+
+protected:
+  std::shared_ptr<Basis<type>> basis_;
+  QuadratureStore<type>* quadrature_;
+};
+
+
 template<typename type> class ReferenceElement;
 
 template<>
-class ReferenceElement<Simplex> : public ReferenceElementBase {
+class ReferenceElement<Simplex> : public ReferenceElementType<Simplex> {
 public:
   ReferenceElement( coord_t number , coord_t order ) :
-    ReferenceElementBase(number,order) {
+    ReferenceElementType(number,order) {
     build();
   }
 
-  void set_basis( BasisFunctionCategory category );
-  const Basis<Simplex>& basis() const { avro_assert(basis_!=nullptr); return *basis_.get(); }
-  Basis<Simplex>& basis() { avro_assert(basis_ != nullptr); return *basis_.get(); }
-  const QuadratureStore<Simplex>& quadrature() const { avro_assert(quadrature_ != nullptr); return *quadrature_; }
-
 private:
   void build();
-
-  std::shared_ptr<Basis<Simplex>> basis_;
-  QuadratureStore<Simplex>* quadrature_;
 };
 
 } // avro

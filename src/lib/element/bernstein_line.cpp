@@ -22,8 +22,6 @@ namespace avro
 template<>
 void
 Bernstein<Simplex,1,0>::eval( const real_t* x , real_t* phi ) {
-  real_t s = x[0];
-
   // phi
   phi[0] = 1;
 }

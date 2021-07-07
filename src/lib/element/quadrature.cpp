@@ -29,9 +29,11 @@ QuadratureStore<type>::QuadratureStore( BasisFunctionCategory category ) :
 
   nmax = 4;
   pmax = 4;
-  qmax = 7;
+  qmax = 5;
 
   build();
+
+  printf("--> build quadrature store for %s, category = %d\n",type::type_name().c_str(),category);
 }
 
 template<typename type>
