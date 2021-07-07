@@ -394,12 +394,21 @@ inverseLUP( const matd<T>& LU , const std::vector<index_t>& P , matd<real_t>& Ai
         Ainv(i,j) -= LU(i,k) * Ainv(k,j);
     }
 
-    for (index_t i = n-1; i >= 0; i--) {
+    for (int i = n-1; i >= 0; i--) {
       for (index_t k = i+1; k < n; k++)
         Ainv(i,j) -= LU(i,k)*Ainv(k,j);
       Ainv(i,j) /= LU(i,i);
     }
   }
+}
+
+template<typename T>
+void
+inverseLUP( const matd<T>& A , matd<T>& Ainv ) {
+  matd<T> LU( A.m() , A.n() );
+  std::vector<index_t> P(A.n()+1);
+  decomposeLUP(A,LU,P);
+  inverseLUP(LU,P,Ainv);
 }
 
 template<typename T>
@@ -538,16 +547,6 @@ eig( const symd<T>& m , vecd<T>& L , matd<T>& Q ) {
   L.set( decomp.first );
   Q.set( decomp.second );
 }
-
-template<typename T>
-void
-inverseLUP( const matd<T>& A , matd<T>& Ainv ) {
-  matd<T> LU( A.m() , A.n() );
-  std::vector<index_t> P(A.n()+1);
-  decomposeLUP(A,LU,P);
-  inverseLUP(LU,P,Ainv);
-}
-
 
 template<typename type>
 type
@@ -783,6 +782,7 @@ INST_DETERMINANT(6)
 INST_DETERMINANT(10)
 #endif
 
+template int det(const matd<int>& X);
 template real_t det(const matd<real_t>& X);
 template real_t det(const symd<real_t>& X);
 template dual   det(const matd<dual>& X);

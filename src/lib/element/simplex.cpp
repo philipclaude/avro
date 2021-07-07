@@ -28,12 +28,42 @@
 namespace avro
 {
 
+index_t
+nb_simplex_basis( coord_t n , coord_t p ) {
+  if      (p == 0) return    1;
+  if      (n == 0) return    1;
+  else if (n == 1) return  p+1;
+  else if (n == 2) return (p+1)*(p+2)/2;
+  else if (n == 3) return (p+1)*(p+2)*(p+3)/6;
+  else if (n == 4) return (p+1)*(p+2)*(p+3)*(p+4)/24;
+  else {
+    printf("simplex n = %u not supported\n",n);
+    avro_implement;
+  }
+}
+
+index_t
+nb_simplex_basis_interior( coord_t n , coord_t p ) {
+  if      (p == 0) return    1;
+  if      (n == 0) return    1;
+  else if (n == 1) return  p-1;
+  else if (n == 2) return (p-1)*(p-2)/2;
+  else if (n == 3) return (p-1)*(p-2)*(p-3)/6;
+  else if (n == 4) return (p-1)*(p-2)*(p-3)*(p-4)/24;
+  else {
+    printf("simplex n = %u not supported\n",n);
+    avro_implement;
+  }
+}
+
 Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
   Simplex(topology.number(),order)
 {}
 
 Simplex::Simplex( const coord_t number , const coord_t order ) :
-  Element(number,order,"simplex"),
+  Shape(number,order),
+  reference_(number,order),
+  parameter_(false),
   entity_(nullptr)
 {
   precalculate();
@@ -76,10 +106,11 @@ Simplex::facet( const index_t j , const index_t i ) const
 }
 
 void
-Simplex::precalculate()
-{
+Simplex::precalculate() {
+
   // save the vertices
-  // TODO
+  for (index_t k = 0; k < number_+1; k++)
+    vertices_.push_back(k);
 
   // save the edges
   for (coord_t k=0;k<number_+1;k++)
@@ -102,12 +133,6 @@ Simplex::precalculate()
       }
     }
   }
-
-  // triangulate the reference element
-  // TODO
-
-  // precalculate the element function values at the quadrature points
-
 }
 
 void

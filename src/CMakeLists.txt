@@ -19,6 +19,8 @@ add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
 add_source_directories(SOURCES "Source Files\\voronoi" lib/voronoi)
 
+add_source_directories(SOURCES "Source Files\\graphics" lib/graphics/new)
+
 # add the bin sources but remove the avro.cpp (main) executable source
 add_source_directories(SOURCES "Source Files\\bin" bin)
 list(REMOVE_ITEM SOURCES bin/avro.cpp )

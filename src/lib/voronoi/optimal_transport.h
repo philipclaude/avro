@@ -353,7 +353,7 @@ public:
   bool needs_gradient() const { return false; }
   bool needs_hessian() const { return false; }
 
-  T operator()( index_t k , const real_t* xref , const real_t* x ) const;
+  T operator()( index_t k , const QuadraturePoint& point , const real_t* x ) const;
 
 private:
   const Points& delaunay_;

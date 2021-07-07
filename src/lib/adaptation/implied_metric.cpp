@@ -268,7 +268,7 @@ MeshImpliedMetric<type>::cost( const std::vector<symd<real_t>>& sv ,
   real_t  one_over_nv = 1./real_t(DIM+1);
 
   // reference complexity
-  complexity0 = topology_.nb_real()*topology_.element().reference().vunit();
+  complexity0 = topology_.nb_real()*topology_.element().reference().unit_volume();
 
   avro_assert( sv.size()==topology_.points().nb() );
   if (dc_dS.size()!=0)

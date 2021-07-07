@@ -12,107 +12,83 @@
 
 #include "avro_types.h"
 
-#include "element/reference.h"
-
 namespace avro
 {
 
-template<typename type> class Bezier;
-template<typename type> class Lagrange;
+template<typename type,int number,int order> class Bernstein;
+template<typename type,int number,int order> class Lagrange;
+template<typename type,int number,int order> class Legendre;
+
 class Simplex;
 
 enum BasisFunctionCategory
 {
+  BasisFunctionCategory_Bernstein,
   BasisFunctionCategory_Lagrange,
   BasisFunctionCategory_Legendre,
-  BasisFunctionCategory_Bezier,
   BasisFunctionCategory_None
 };
 
-template<>
-class Lagrange<Simplex>
-{
+template<int N,int P>
+class Bernstein<Simplex,N,P> {
 public:
-  static void eval( const ReferenceElement<Simplex>& ref , const double* x , double* phi );
-  static void grad( const ReferenceElement<Simplex>& ref , const double* x , double* gphi );
-  static void hess( const ReferenceElement<Simplex>& ref , const double* x , double* hphi );
+  static void eval( const double* x , double* phi );
+  static void grad( const double* x , double* gphi );
+  static void hess( const double* x , double* hphi );
 };
 
-template<>
-class Bezier<Simplex>
-{
+template<int N,int P>
+class Lagrange<Simplex,N,P> {
 public:
-  static void eval(const ReferenceElement<Simplex>& ref , const double* x , double* phi );
-  static void grad( const ReferenceElement<Simplex>& ref , const double* x , double* gphi );
-  static void hess(const ReferenceElement<Simplex>& ref , const double* x , double* hphi );
+  static void eval( const double* x , double* phi );
+  static void grad( const double* x , double* gphi );
+  static void hess( const double* x , double* hphi );
+};
+
+template<int N,int P>
+class Legendre<Simplex,N,P> {
+public:
+  static void eval( const double* x , double* phi );
+  static void grad( const double* x , double* gphi );
+  static void hess( const double* x , double* hphi );
 };
 
 template<typename type>
-class Basis
-{
+class Basis {
+
 private:
 
-  typedef void (*eval_func_ptr)(const ReferenceElement<type>&,const double*,double*);
-  typedef void (*eval_grad_ptr)(const ReferenceElement<type>&,const double*,double*);
-  typedef void (*eval_hess_ptr)(const ReferenceElement<type>&,const double*,double*);
+  typedef void (*eval_func_ptr)(const double*,double*);
+  typedef void (*eval_grad_ptr)(const double*,double*);
+  typedef void (*eval_hess_ptr)(const double*,double*);
 
-  eval_func_ptr
-  get_func( BasisFunctionCategory category )
-  {
-    if (category==BasisFunctionCategory_Lagrange)
-      return Lagrange<type>::eval;
-    if (category==BasisFunctionCategory_Bezier)
-      return Bezier<type>::eval;
-    return NULL;
-  }
-
-  eval_grad_ptr
-  get_grad( BasisFunctionCategory category )
-  {
-    if (category==BasisFunctionCategory_Lagrange)
-      return Lagrange<type>::grad;
-    if (category==BasisFunctionCategory_Bezier)
-      return Bezier<type>::grad;
-    return NULL;
-  }
-
-  eval_hess_ptr
-  get_hess( BasisFunctionCategory category )
-  {
-    if (category==BasisFunctionCategory_Lagrange)
-      return Lagrange<type>::hess;
-    if (category==BasisFunctionCategory_Bezier)
-      return Bezier<type>::hess;
-    return NULL;
-  }
+  eval_func_ptr get_func( coord_t number, coord_t order, BasisFunctionCategory );
+  eval_func_ptr get_grad( coord_t number, coord_t order, BasisFunctionCategory );
+  eval_func_ptr get_hess( coord_t number, coord_t order, BasisFunctionCategory );
 
 public:
 
-  Basis( const ReferenceElement<type>& reference , const BasisFunctionCategory category ) :
-    reference_(reference),
+  Basis( coord_t number , coord_t order , const BasisFunctionCategory category ) :
     category_(category),
-    fptr_( get_func(category_) ),
-    gptr_( get_grad(category_) ),
-    hptr_( get_hess(category_) )
+    fptr_( get_func(number,order,category_) ),
+    gptr_( get_grad(number,order,category_) ),
+    hptr_( get_hess(number,order,category_) )
   {}
 
-  void evaluate( const double* x , double* phi) const
-  {
-    fptr_(reference_,x,phi);
+  void evaluate( const double* x , double* phi) const {
+    fptr_(x,phi);
   }
 
-  void gradient( const double* x , double* gphi ) const
-  {
-    gptr_(reference_,x,gphi);
+  void gradient( const double* x , double* gphi ) const {
+    gptr_(x,gphi);
   }
 
-  void hessian( const double* x , double* hphi ) const
-  {
-    hptr_(reference_,x,hphi);
+  void hessian( const double* x , double* hphi ) const {
+    hptr_(x,hphi);
   }
 
 private:
-  const ReferenceElement<type>& reference_;
+
   BasisFunctionCategory category_;
 
   const eval_func_ptr fptr_;

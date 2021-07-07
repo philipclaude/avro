@@ -486,6 +486,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t l0 = metric_.length( topology_.points() , n0 , ns );
       real_t l1 = metric_.length( topology_.points() , n1 , ns );
       //if (l0 >= lk && l1 >= lk) bad = true;
+      UNUSED(lk);
+      UNUSED(l0);
+      UNUSED(l1);
 
       std::vector<index_t> surrounding;
       for (index_t j = 0; j < N.size(); j++) {
@@ -552,7 +555,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       real_t vol = 0.0;
       for (index_t k=0;k<inserter_.nb();k++)
         vol += metric_.volume( inserter_ , k );
-      index_t count = index_t(vol/topology_.element().reference().vunit());
+      index_t count = index_t(vol/topology_.element().reference().unit_volume());
       if (dof_factor>0 && dof_factor*count<inserter_.nb_real())
       {
         if (ge==NULL || ge->number()>2)

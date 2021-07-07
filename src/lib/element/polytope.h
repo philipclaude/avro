@@ -23,7 +23,7 @@ namespace avro
 template<typename type> class Topology;
 template<typename type> class SimplicialDecomposition;
 
-class Polytope : public Element<Polytope>
+class Polytope : public Shape
 {
 
 public:
@@ -59,7 +59,10 @@ public:
 
   bool& fullmesh() { return fullmesh_; }
 
+  coord_t order() const { return order_; }
+
 private:
+  const coord_t order_ = 1;
   void triangulate( coord_t number , Table<index_t>& table , Points& points , const index_t* v , index_t nv ) const;
 
   Simplex simplex_;

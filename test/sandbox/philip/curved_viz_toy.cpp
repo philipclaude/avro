@@ -143,7 +143,7 @@ UT_TEST_CASE( test1 )
   glDisable(GL_DEPTH_TEST);
 
   // render loop
-  int level = 1;
+  int level = 2;
   while (true) {
 
     // grey-ish background color
@@ -190,8 +190,8 @@ UT_TEST_CASE( test1 )
     if (glfwWindowShouldClose(window)) break;
     if (glfwGetKey(window, GLFW_KEY_ESCAPE ) == GLFW_PRESS) break;
 
-    if (glfwGetKey(window,GLFW_KEY_P) == GLFW_PRESS) level++;
-    if (glfwGetKey(window,GLFW_KEY_M) == GLFW_PRESS) level--;
+    if (glfwGetKey(window,GLFW_KEY_P) == GLFW_RELEASE) level++;
+    if (glfwGetKey(window,GLFW_KEY_M) == GLFW_RELEASE) level--;
     if (level <= 0) level = 1;
   }
 
@@ -200,6 +200,7 @@ UT_TEST_CASE( test1 )
   glDeleteTextures( 1 , &colormap_texture );
   glDeleteTextures( 1 , &texture );
   glDeleteVertexArrays( 1 , &vertex_array );
+  glfwDestroyWindow(window);
   glfwTerminate();
 
 }

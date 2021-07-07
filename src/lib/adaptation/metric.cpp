@@ -48,7 +48,7 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	else if (number_ == 3)
 		normalization_ = 36./std::pow(3.,1./3.);
 	else if (number_ == 4)
-		normalization_ = 10./std::pow( topology_.element().reference().vunit() ,
+		normalization_ = 10./std::pow( topology_.element().reference().unit_volume() ,
 																	 2./topology_.number() );
 	else
 		avro_assert_not_reached;

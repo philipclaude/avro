@@ -41,20 +41,4 @@ operator<( const ElementIndices& f , const ElementIndices& g )
                                       g.indices.begin(), g.indices.end());
 }
 
-template<typename type>
-void
-Element<type>::load_quadrature( Quadrature& quadrature )
-{
-  quadrature.retrieve(xquad_,wquad_);
-}
-
-template<typename type>
-void
-Element<type>::set_basis( BasisFunctionCategory category )
-{
-  basis_ = std::make_shared<Basis<type>>(reference_,category);
-}
-
-template class Element<Simplex>;
-
 } // avro

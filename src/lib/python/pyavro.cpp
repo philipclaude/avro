@@ -8,14 +8,6 @@
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-int add(int i, int j) {
-    return i + j;
-}
-
-void hello_pydg() {
-  printf("hello pydg!\n");
-}
-
 using namespace avro;
 
 std::pair< std::vector<real_t> , std::vector<index_t> >
@@ -55,33 +47,15 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(pyavro, m) {
     m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
+        avro python interface
+        ---------------------
 
-        .. currentmodule:: pydg
+        .. currentmodule:: pyavro
 
         .. autosummary::
            :toctree: _generate
 
-           add
-           subtract
     )pbdoc";
-
-    m.def("add", &add, R"pbdoc(
-        Add two numbers
-
-        Some other explanation about the add function.
-    )pbdoc");
-
-    m.def("subtract", [](int i, int j) { return i - j; }, R"pbdoc(
-        Subtract two numbers
-
-        Some other explanation about the subtract function.
-    )pbdoc");
-
-    m.def("hello", &hello_pydg, R"pbdoc(
-        Says hello pydg from c++!
-    )pbdoc");
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

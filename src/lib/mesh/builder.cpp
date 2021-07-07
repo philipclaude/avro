@@ -115,35 +115,34 @@ void
 Builder<type>::transfer( Topology<type>& f ) const
 {
   avro_assert( topology_.nb() == this->nb() );
-  avro_assert_msg( f.points().nb()==0 , "nb_vertices = %lu" , f.points().nb() );
-  avro_assert( f.points().dim()==topology_.points().dim() );
-  avro_assert( f.nb()==0 );
+  avro_assert_msg( f.points().nb() == 0 , "nb_vertices = %lu" , f.points().nb() );
+  avro_assert( f.points().dim() == topology_.points().dim() );
+  avro_assert( f.nb() == 0 );
 
   // create all the vertices for the outgoing topology
   const std::vector<index_t>& elems = this->data();
   index_t nb_vertices = *std::max_element( elems.begin() , elems.end() ) +1;
   std::vector<real_t> x0( topology_.points().dim() , 0. );
-  for (index_t k=0;k<nb_vertices;k++)
+  for (index_t k = 0; k < nb_vertices; k++)
     f.points().create( x0.data() );
 
   // copy the topology
-  for (index_t k=0;k<this->nb();k++)
+  for (index_t k = 0; k < this->nb(); k++)
     f.add( this->operator()(k) , this->nv(k) );
 
   // map all the vertices from the topology to f's vertices
   std::vector<const real_t*> dof0;
   std::vector<real_t*> dof1;
-  for (index_t k=0;k<topology_.nb();k++)
-  {
+  for (index_t k = 0; k < topology_.nb(); k++) {
+
     // get the vertices of the current element
     dof0.resize( topology_.nv(k) , NULL );
-    for (index_t j=0;j<topology_.nv(k);j++)
+    for (index_t j = 0; j < topology_.nv(k); j++)
       dof0[j] = topology_.points()[ topology_(k,j) ];
 
     // size the vertices to be added
     dof1.resize( this->nv(k) , NULL );
-    for (index_t j=0;j<dof1.size();j++)
-    {
+    for (index_t j = 0; j < dof1.size(); j++) {
       index_t idx = (*this)(k,j);
       dof1[j] = f.points()[ idx ];
     }
@@ -155,6 +154,9 @@ template<typename type>
 void
 Builder<type>::build()
 {
+  // we cannot build a continuous field of order 0, it's just not possible!
+  avro_assert( element_.order() > 0 );
+
   FacetDecomposition<type> facets( topology_ );
   facets.build();
 
@@ -167,17 +169,17 @@ Builder<type>::build()
   }
 
   // loop through the dimensional hierarchy
-  index_t n = 0;
-  for (coord_t dim=0;dim<facets.nb_dim();dim++)
-  {
+  index_t n = 0; // dof counter
+  for (coord_t dim = 0; dim < facets.nb_dim(); dim++) {
+
     const std::map<ElementIndices,FacetParent>& facets_d = facets[dim];
     std::map<ElementIndices,FacetParent>::const_iterator it;
 
     ReferenceElement<type> reference(dim,element_.order());
 
     // loop through all the facets
-    for (it=facets_d.begin();it!=facets_d.end();++it)
-    {
+    for (it = facets_d.begin(); it != facets_d.end(); ++it) {
+
       const ElementIndices& f = it->first;
       avro_assert( f.dim == dim );
 
@@ -188,34 +190,31 @@ Builder<type>::build()
 
       // sprinkle the new dof into place
       std::vector<index_t> dof( element_.nb_interior(dim) );
-      for (index_t j=0;j<dof.size();j++)
+      for (index_t j = 0; j < dof.size(); j++)
         dof[j] = n++;
 
       // assign the dof to all parents of this facet
-      for (index_t i=0;i<parents.size();i++)
-      {
+      for (index_t i = 0; i < parents.size(); i++) {
+
         index_t k = parents[i];
         const std::vector<index_t>& canonical = it->second.canonical[i];
 
-        for (index_t j=0;j<dof.size();j++)
-        {
+        for (index_t j = 0; j < dof.size(); j++) {
 
           // retrieve the barycentric coordinates of this interior point in the facet
-          const index_t* lf = reference.get_lattice_coordinate( reference.interior(j) );
+          const real_t* alpha = reference.get_reference_coordinate( reference.interior(j) );
 
           // compute the barycentric coordinates of this point in the parent simplex
           // using the canonical vertices of the facet
-          std::vector<index_t> ls( element_.number() , 0 );
-          for (index_t ii=0;ii<ls.size();ii++)
-          {
-            for (index_t jj=0;jj<canonical.size();jj++)
-              ls[ii] += lf[jj]*topology_.element().reference().get_lattice_coordinate( canonical[jj] )[ii];
+          std::vector<real_t> lambda( element_.reference().nb_barycentric() , 0 );
+          for (index_t ii = 0; ii < lambda.size(); ii++) {
+            for (index_t jj = 0; jj < canonical.size(); jj++) {
+              lambda[ii] += alpha[jj]*topology_.element().reference().get_reference_coordinate( canonical[jj] )[ii];;
+            }
           }
 
           // determine which index in the element this corresponds to
-          int idx = element_.reference().find_index( ls.data() );
-          avro_assert( idx>=0 );
-
+          index_t idx = element_.reference().find_reference_index( lambda.data() );
           (*this)(k,idx) = dof[j];
         }
       }

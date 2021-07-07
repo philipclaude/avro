@@ -103,11 +103,11 @@ MetricField_UniformGeometry<type>::operator()( const Points& points , index_t p 
   Metric m(dim_);
   if (p < points.nb_ghost())
   {
-    m = 0.0;
-    return m;
+    m.zero();
+    return std::move(m);
   }
   eval( points , p , {} , m );
-  return m;
+  return std::move(m);
 }
 
 symd<real_t>

@@ -12,8 +12,13 @@
 
 #include "avro_types.h"
 
+#include "common/error.h"
+
+#include "element/basis.h"
+
 #include "numerics/functions.h"
 
+#include <memory>
 #include <vector>
 
 namespace avro
@@ -21,99 +26,78 @@ namespace avro
 
 class Simplex;
 class Polytope;
-class Hypercube;
+template<typename type> class QuadratureStore;
 
 class ReferenceElementBase
 {
-public:
+
+protected:
   ReferenceElementBase( coord_t number , coord_t order ) :
     number_(number),
     order_(order)
   {}
 
-  // this will create a linker error if not defined by the base
-  const real_t* get_reference_coordinate( index_t k ) const;
-  const index_t* get_lattice_coordinate( index_t k ) const;
+public:
 
   coord_t order() const { return order_; }
   coord_t number() const { return number_; }
 
-  real_t vunit() const { return vunit_; }
-  real_t vorth() const { return vorth_; }
+  real_t unit_volume() const { return unit_volume_; }
+  real_t orthogonal_volume() const { return orthogonal_volume_; }
 
-
-protected:
-  coord_t number_;
-  coord_t order_;
-
-  // vertex coordinates
-  std::vector<real_t> xunit_; // unit element coordinates (unit edge lengths)
-  std::vector<real_t> xorth_; // orthogonal corner at origin
-
-  // all coordinates
-  std::vector<real_t>  xref_;
-  std::vector<index_t> lref_;
-
-  real_t vunit_;
-  real_t vorth_;
-};
-
-template<typename type> class ReferenceElement;
-
-template<>
-class ReferenceElement<Simplex> : public ReferenceElementBase
-{
-public:
-  ReferenceElement( coord_t number , coord_t order ) :
-    ReferenceElementBase(number,order)
-  {
-    precalculate();
-  }
-
-  const real_t* get_reference_coordinate( index_t k ) const;
-  const index_t* get_lattice_coordinate( index_t k ) const;
-
-  index_t nb_basis() const
-  {
-    index_t np = 1;
-    for (coord_t d=1;d<=number_;d++)
-      np *= (order_+d);
-    return np/numerics::factorial(number_);
-  }
-
-  int find_index( const index_t* x ) const;
-  int find_index( const real_t* x ) const;
+  index_t nb_basis() const { return nb_basis_; }
+  index_t nb_barycentric() const { return number_ + 1; }
 
   index_t nb_interior() const { return interior_.size(); }
   index_t interior( index_t k ) const { return interior_[k]; }
 
-  void precalculate();
+  const real_t* get_reference_coordinate( index_t k ) const;
+  index_t find_reference_index( const real_t* x ) const;
 
-private:
-  std::vector<index_t> interior_;
+protected:
+  coord_t number_;
+  coord_t order_;
+  index_t nb_basis_;
 
+  // volume of reference element
+  real_t unit_volume_;
+  real_t orthogonal_volume_;
+
+  std::vector<real_t>  nodes_;    // high-order node coordinates in canonical order
+  std::vector<index_t> interior_; // indices of interior nodes
 };
 
-template<>
-class ReferenceElement<Polytope> : public ReferenceElementBase
-{
+template<typename type>
+class ReferenceElementType : public ReferenceElementBase {
 public:
-  ReferenceElement( coord_t number , coord_t order ) :
+  ReferenceElementType( coord_t number , coord_t order ) :
     ReferenceElementBase(number,order)
   {}
 
+  void set_basis( BasisFunctionCategory category );
+  const Basis<type>& basis() const { avro_assert(basis_ != nullptr); return *basis_.get(); }
+  Basis<type>& basis() { avro_assert(basis_ != nullptr); return *basis_.get(); }
+  const QuadratureStore<type>& quadrature() const { avro_assert(quadrature_ != nullptr); return *quadrature_; }
+
+protected:
+  std::shared_ptr<Basis<type>> basis_;
+  QuadratureStore<type>* quadrature_;
 };
 
-#if 0
 
+template<typename type> class ReferenceElement;
 
 template<>
-class ReferenceElement<Hypercube> : public ReferenceElementBase
-{
+class ReferenceElement<Simplex> : public ReferenceElementType<Simplex> {
+public:
+  ReferenceElement( coord_t number , coord_t order ) :
+    ReferenceElementType(number,order) {
+    build();
+  }
 
+private:
+  void build();
 };
-
-#endif
 
 } // avro
 

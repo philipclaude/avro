@@ -50,7 +50,7 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
       {
         // get the reference coordinates of the closest element
   			ielem = searcher_->closest( points[p] , xref );
-        topology.element().basis().evaluate( xref.data() , phi.data() );
+        topology.element().reference().basis().evaluate( xref.data() , phi.data() );
 
         // perform the interpolation and return the element containing the point
   			index_t elem = index_t(ielem);
@@ -62,7 +62,7 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
     // get the reference coordinates of the element and evaluate the basis functions for interpolation
     index_t elem = index_t(ielem);
     topology.element().physical_to_reference( topology.points() , topology(elem) , topology.nv(elem) , points[p] , xref.data() );
-    topology.element().basis().evaluate( xref.data() , phi.data() );
+    topology.element().reference().basis().evaluate( xref.data() , phi.data() );
 
     // perform the interpolation and return the element containing the point
     success = field_.dof().interpolate( field_[elem] , field_.nv(elem) , phi , &tp );

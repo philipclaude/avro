@@ -48,11 +48,11 @@ public:
 
   void get( index_t k )
   {
-    if (topology_.layout()==TableLayout_Rectangular )
+    if (topology_.layout() == TableLayout_Rectangular )
     {
-      for (index_t j=0;j<field_.nv(k);j++)
+      for (index_t j = 0; j < field_.nv(k); j++)
         f_[j] = dof_[field_(k,j)];
-      for (index_t j=0;j<topology_.nv(k);j++)
+      for (index_t j = 0; j < topology_.nv(k); j++)
         x_[j] = topology_.points()[topology_(k,j)];
     }
     else
@@ -68,29 +68,36 @@ public:
   {
     get(k);
 
+    const QuadratureStore<type>& quadrature_x = topology_.element().reference().quadrature();
+    const matd<real_t>& Bx = quadrature_x.get_basis( topology_.element().number() , topology_.element().order() , QUAD_ORDER );
+
+    const Quadrature& quad = quadrature_x.quadrature( element_.number() , QUAD_ORDER );
+    QuadraturePoint point(quad);
+
     std::vector<T> I(nrank_,0);
     avro_assert( f.size() == nrank_ );
 
     std::fill( f.begin() , f.end() , 0 );
     std::vector<real_t> x(topology_.points().dim());
-    std::vector<real_t> phi( topology_.element().nb_basis() );
-    for (index_t i=0;i<element_.nb_quad();i++)
-    {
+    std::vector<real_t> phix( topology_.element().nb_basis() );
+    for (index_t i = 0; i < quad.nb(); i++) {
+
       // retrieve the quadrature point and weight
-      real_t w = element_.quad_weight(i);
-      const real_t* xref = element_.quad_point(i);
+      point.set_index(i);
+      real_t w = point.weight();
 
       // evaluate the basis functions at the quadrature point
-      topology_.element().basis().evaluate( xref , phi.data() );
+      for (index_t j = 0; j < phix.size(); j++)
+        phix[j] = Bx(j,i);
 
       // evaluate the physical coordinates
-      topology_.points().interpolate( x_ , phi , x.data() );
+      topology_.points().interpolate( x_ , phix , x.data() );
 
       // evaluate the jacobian at the reference point (for now assume constant)
       real_t dj = topology_.element().jacobian(x_,topology_.points().dim());
 
       // evaluate the integrand at the quadrature point
-      integrand( k , xref , x.data() , I );
+      integrand( k , point , x.data() , I );
 
       for (index_t r = 0; r < nrank_; r++)
         f[r] += w*I[r]*dj;
@@ -151,21 +158,6 @@ public:
   void
   integrate( const Topology<type>& topology , T* values=nullptr )
   {
-    #if 0
-    ElementIntegral_Ranked<type,T> elem( topology , topology.points() , topology , topology.element() , nrank_ );
-    for (index_t k=0;k<topology.nb();k++)
-    {
-      std::vector<T> df(nrank_,0);
-      elem.integrate( k , integrand_ , df );
-      for (index_t r = 0; r < nrank_; r++)
-        functional_[r] += df[r];
-      if (values != nullptr)
-      {
-        for (index_t r = 0; r < nrank_; r++)
-          values[k*nrank_+r] = df[r];
-      }
-    }
-    #else
     avro_assert( topology.nb() == integrators_.size() );
     values_.clear();
     values_.resize( topology.nb()*nrank_ );
@@ -182,8 +174,6 @@ public:
       for (index_t i = 0; i < values_.size(); i++)
         values[i] = values_[i];
     }
-
-    #endif
   }
 
   std::vector<T> value() const { return functional_; }

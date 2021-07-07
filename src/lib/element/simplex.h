@@ -15,6 +15,8 @@
 
 #include "element/basis.h"
 #include "element/element.h"
+#include "element/reference.h"
+#include "element/quadrature.h"
 
 #include "numerics/functions.h"
 #include "numerics/mat.h"
@@ -30,14 +32,17 @@ template<typename type> class SimplicialDecomposition;
 class Points;
 class Entity;
 
-class Simplex : public Element<Simplex> {
+index_t nb_simplex_basis( coord_t n , coord_t p );
+index_t nb_simplex_basis_interior( coord_t n , coord_t p );
+
+class Simplex : public Shape {
 public:
   Simplex( const coord_t number , const coord_t order );
+  Simplex( const Topology<Simplex>& topology , const coord_t order );
 
   static std::string type_name() { return "simplex"; }
   static TableLayoutCategory layout() { return TableLayout_Rectangular; }
-
-  Simplex( const Topology<Simplex>& topology , const coord_t order );
+  static index_t nb_basis( coord_t number , coord_t order ) { return nb_simplex_basis(number,order); }
 
   void precalculate();
 
@@ -50,49 +55,41 @@ public:
   real_t volume( const Points& points , const index_t* v , index_t nv ) const;
   void edge_vector( const Points& points , index_t n0 , index_t n1 , real_t* edge , Entity* entity=nullptr ) const;
 
-  index_t nb_facets( coord_t dim ) const
-  {
+  index_t nb_facets( coord_t dim ) const {
     return numerics::nchoosek(number_+1,dim+1);
   }
 
-  index_t nb_edges() const
-  {
+  index_t nb_edges() const {
     return nb_facets(1);
   }
 
-  index_t nb_points() const
-  {
+  index_t nb_points() const {
     return number_+1;
   }
 
-  index_t nb_facets() const
-  {
+  index_t nb_facets() const {
     return number_+1; // specialized for dim-1 facets
   }
 
-  index_t nb_basis() const
-  {
+  index_t nb_basis() const {
     return nb_basis(number_);
   }
 
-  index_t nb_basis( coord_t dim ) const
-  {
+  index_t nb_basis( coord_t dim ) const {
     index_t np = 1;
     for (coord_t d=1;d<=dim;d++)
       np *= (order_+d);
     return np/numerics::factorial(dim);
   }
 
-  index_t nb_interior( coord_t dim ) const
-  {
+  index_t nb_interior( coord_t dim ) const {
     index_t np = 1;
     for (coord_t d=1;d<=dim;d++)
       np *= (order_-d);
     return np/numerics::factorial(dim);
   }
 
-  index_t nb_interior() const
-  {
+  index_t nb_interior() const {
     return nb_interior(number_);
   }
 
@@ -118,6 +115,13 @@ public:
   real_t jacobian( const std::vector<const real_t*>& x , coord_t dim ) const;
   void   jacobian( const std::vector<const real_t*>& xk , matd<real_t>& J ) const;
   void   jacobian( const index_t* v , index_t nv , const Points& points , matd<real_t>& J ) const;
+
+  const ReferenceElement<Simplex>& reference() const { return reference_; }
+  void set_basis( BasisFunctionCategory category ) { reference_.set_basis(category); }
+
+  void set_parameter( bool x ) { parameter_ = x; }
+  bool parameter() const { return parameter_; }
+
 protected:
   void get_edge( const index_t* v , index_t nv , index_t iedge , index_t* e ) const;
   void get_triangle( const index_t* v , index_t nv , index_t itriangle , index_t* t ) const;
@@ -126,7 +130,8 @@ protected:
 
 private:
 
-  //index_t edge( const index_t iedge , const index_t inode ) const;
+  ReferenceElement<Simplex> reference_;
+
   index_t triangle( const index_t itriangle , const index_t inode ) const;
   std::vector<index_t> facet( const index_t j , const index_t i ) const;
 
@@ -135,15 +140,8 @@ private:
   std::vector<index_t> edges_;
   std::vector<index_t> triangles_;
 
-  // high-order edges
-  std::vector<index_t> full_edges_;
-
-  // store the transformation matrix from a lagrange simplex
-  matd<real_t> transformation_;
-
-  real_t vunit_;
-  real_t vorth_;
-
+  // this is used to determine if we are doing mesh adaptation in parameter space
+  bool parameter_;
   Entity* entity_;
 };
 

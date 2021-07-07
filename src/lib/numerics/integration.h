@@ -17,6 +17,8 @@
 #include "mesh/dof.h"
 #include "mesh/field.h"
 
+#define QUAD_ORDER 4
+
 namespace avro
 {
 
@@ -52,8 +54,8 @@ private:
 };
 
 template<typename type, typename _T,typename Functor>
-class Integrand_Field : public Integrand<Integrand_Field<type,_T,Functor>>
-{
+class Integrand_Field : public Integrand<Integrand_Field<type,_T,Functor>> {
+
 public:
 
   typedef _T T;
@@ -62,32 +64,32 @@ public:
     field_(field)
   {}
 
-  T operator()( index_t k , const real_t* xref , const real_t* x ) const
-  {
+  T operator()( index_t k , const QuadraturePoint& point , const real_t* x ) const {
+
+    const matd<real_t>& Bu = field_.element().reference().quadrature().get_basis( field_.element().number() , field_.element().order() , QUAD_ORDER );
+
     std::vector<real_t> phi( field_.element().nb_basis(), 0 );
     std::vector<real_t> phix,phixx;
 
     std::vector<T> u(field_.dof().rank());
     std::vector<T> ux,uxx;
 
-    //printf("integrand field in elem %lu with nb_basis = %lu\n",k,field_.element().nb_basis());
+    for (index_t j = 0; j < phi.size(); j++)
+      phi[j] = Bu(j,point.index());
 
-    if (functor_.needs_solution())
-    {
-      //printf("evaluating basis\n");
-      field_.element().basis().evaluate( xref , phi.data() );
-      //printf("interpolating dof\n");
+    const real_t* xref = point.coordinate();
+
+    if (functor_.needs_solution()) {
       field_.dof().interpolate( field_[k] , field_.nv(k) , phi , u.data() );
-      //printf("done\n");
     }
-    if (functor_.needs_gradient())
-    {
-      field_.element().basis().evaluate( xref , phix.data() );
+    if (functor_.needs_gradient()) {
+      avro_implement;
+      field_.element().reference().basis().evaluate( xref , phix.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phix , ux.data() );
     }
-    if (functor_.needs_hessian())
-    {
-      field_.element().basis().evaluate( xref , phixx.data() );
+    if (functor_.needs_hessian()) {
+      avro_implement;
+      field_.element().reference().basis().evaluate( xref , phixx.data() );
       //field_.dof().interpolate( field_(k) , field_.nv(k) , phixx , uxx.data() );
     }
 
@@ -148,26 +150,30 @@ public:
 
     f = 0;
     std::vector<real_t> x(topology_.points().dim());
-    std::vector<real_t> phi( topology_.element().nb_basis() );
-    for (index_t i=0;i<element_.nb_quad();i++)
-    {
-      // retrieve the quadrature point and weight
-      real_t w = element_.quad_weight(i);
-      const real_t* xref = element_.quad_point(i);
+    std::vector<real_t> phix( topology_.element().nb_basis() );
 
-      // evaluate the basis functions at the quadrature point
-      topology_.element().basis().evaluate( xref , phi.data() );
+    const QuadratureStore<type>& quadrature_x = topology_.element().reference().quadrature();
+    const matd<real_t>& Bx = quadrature_x.get_basis( topology_.element().number() , topology_.element().order() , QUAD_ORDER );
+    const Quadrature& quad = quadrature_x.quadrature( element_.number() , QUAD_ORDER );
+    QuadraturePoint point(quad);
+
+    for (index_t i = 0; i < quad.nb(); i++) {
+
+      point.set_index(i);
+      real_t w = point.weight();
+
+      // retrieve the basis functions evaluated at this quadrature point
+      for (index_t j = 0; j < phix.size(); j++)
+        phix[j] = Bx(j,i);
 
       // evaluate the physical coordinates
-      topology_.points().interpolate( x_ , phi , x.data() );
+      topology_.points().interpolate( x_ , phix , x.data() );
 
       // evaluate the jacobian at the reference point (for now assume constant)
       real_t dj = topology_.element().jacobian(x_,topology_.points().dim());
 
       // evaluate the integrand at the quadrature point
-      f += w*integrand( k , xref , x.data() )*dj;
-
-      //avro_assert( dj > 0.0 );
+      f += w*integrand( k , point , x.data() )*dj;
     }
   }
 
@@ -226,16 +232,6 @@ public:
   void
   integrate( const Topology<type>& topology , T* values=nullptr )
   {
-    #if 0
-    ElementIntegral<type,T> elem( topology , topology.points() , topology , topology.element() );
-    for (index_t k=0;k<topology.nb();k++)
-    {
-      T df = T(0);
-      elem.integrate( k , integrand_ , df );
-      functional_ += df;
-      if (values != nullptr) values[k] = df;
-    }
-    #else
     if (integrators_.size() != topology.nb() ) initialize(topology);
     values_.clear();
     values_.resize( topology.nb() );
@@ -247,7 +243,6 @@ public:
       functional_ += values_[k];
       if (values != nullptr) values[k] = values_[k];
     }
-    #endif
   }
 
   template<typename type>

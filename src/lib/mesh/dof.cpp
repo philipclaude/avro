@@ -20,7 +20,6 @@ template<typename type>
 bool
 DOF<type>::interpolate( const index_t* idx , index_t nv , const std::vector<real_t>& phi , type* u ) const
 {
-  printf("herr?\n");
   avro_assert_msg( nv == phi.size() , "nv = %lu, |phi| = %lu" , nv , phi.size() );
   for (index_t j=0;j<rank();j++)
     u[j] = type(0);

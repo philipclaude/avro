@@ -12,14 +12,115 @@
 #include <stdio.h>
 
 #include "element/quadrature_cp.h"
+#include "element/simplex.h"
+
+#include "numerics/linear_algebra.h"
 
 namespace avro
 {
 
+QuadratureStore<Simplex> __store_simplex_lagrange__(BasisFunctionCategory_Lagrange);
+QuadratureStore<Simplex> __store_simplex_legendre__(BasisFunctionCategory_Legendre);
+QuadratureStore<Simplex> __store_simplex_bernstein__(BasisFunctionCategory_Bernstein);
+
+template<typename type>
+QuadratureStore<type>::QuadratureStore( BasisFunctionCategory category ) :
+  category_(category) {
+
+  nmax = 4;
+  pmax = 4;
+  qmax = 5;
+
+  build();
+
+  printf("--> build quadrature store for %s, category = %d\n",type::type_name().c_str(),category);
+}
+
+template<typename type>
+void
+QuadratureStore<type>::build() {
+
+  // create all the quadratures
+  for (index_t n = 1; n <= nmax; n++) {
+    quadrature_.insert( { n , std::map<coord_t,std::shared_ptr<Quadrature>>() } );
+    for (index_t q = 1; q <= qmax; q++) {
+      quadrature_[n].insert( {q,std::make_shared<ConicalProductQuadrature>(n,q)} );
+      quadrature_[n][q]->define();
+    }
+  }
+
+  memory_ = 0;
+  for (index_t n = 1; n <= nmax; n++) {
+
+    if (n == 4 && category_ == BasisFunctionCategory_Bernstein) {
+      pmax = 1;
+    }
+
+    basis_.insert( { n , std::map< coord_t,std::map<coord_t,std::vector<matd<real_t>>>>() } );
+    for (index_t p = 0; p <= pmax; p++)
+    {
+      basis_[n].insert( { p , std::map<coord_t,std::vector<matd<real_t>>>() } );
+      const index_t nb_basis = type::nb_basis(n,p);
+      std::vector<real_t> phi( nb_basis );
+      std::vector<real_t> gphi( nb_basis*n );
+
+      // initialize the basis function evaluator
+      ReferenceElement<Simplex> reference(n,p);
+      Basis<Simplex> basis(n,p,category_);
+
+      // evaluate the basis at the Lagrange nodes
+      matd<real_t> A( nb_basis , nb_basis );
+      for (index_t i = 0; i < nb_basis; i++)
+      {
+        basis.evaluate( reference.get_reference_coordinate(i) , phi.data() );
+        for (index_t j = 0; j < nb_basis; j++)
+          A(j,i) = phi[j];
+      }
+
+      matd<real_t> Ainv(nb_basis,nb_basis);
+      numerics::inverseLUP(A,Ainv);
+
+      for (index_t q = 1; q <= qmax; q++)
+      {
+        // retrieve the quadrature rule
+        const Quadrature& quad = quadrature(n,q);
+        std::vector<matd<real_t>> B(n+1);
+        for (index_t d = 0; d <= n; d++)
+          B[d] = matd<real_t>( nb_basis , quad.nb() );
+
+        // loop through the quadrature points and evaluate the basis
+        for (index_t j = 0; j < quad.nb(); j++)
+        {
+          // evaluate the basis function at this quadrature points
+          basis.evaluate( quad.x(j) , phi.data() );
+
+          for (index_t i = 0; i < nb_basis; i++)
+            B[0](i,j) = phi[i];
+
+          basis.gradient( quad.x(j) , gphi.data() );
+          for (coord_t d = 0; d < n; d++)
+          {
+            for (index_t i = 0; i < nb_basis; i++)
+              B[d+1](i,j) = gphi[ d*nb_basis + i ];
+          }
+        }
+
+        for (index_t d = 0; d < B.size(); d++)
+        {
+          B[d] = Ainv*B[d]; // convert modal basis to nodal basis
+          memory_ += B[d].memory();
+        }
+
+        basis_[n][p].insert( { q , B } );
+      }
+    }
+  }
+}
+
 Quadrature::Quadrature( coord_t dim , const int order) :
   dim_(dim),
   order_(order),
-  nb_quad_(0),	
+  nb_quad_(0),
   defined_(false)
 {}
 
@@ -206,7 +307,7 @@ GrundmannMoellerQuadrature::define()
     h = 0;
     t = 0;
 
-    for ( ; ; )
+    for (;;)
     {
       comp_next ( beta_sum, m + 1, beta, more, h, t );
 

@@ -942,7 +942,7 @@ LaguerreDiagram<type>::~LaguerreDiagram() {
 }
 
 real_t
-Integrand_Transport_Energy::operator()( index_t k , const real_t* xref , const real_t* x ) const
+Integrand_Transport_Energy::operator()( index_t k , const QuadraturePoint& point , const real_t* x ) const
 {
   avro_assert_msg( k < simplices_.nb() , "elem = %lu, nb_simplices = %lu", k , simplices_.nb() );
 
@@ -952,7 +952,7 @@ Integrand_Transport_Energy::operator()( index_t k , const real_t* xref , const r
   const real_t* z = delaunay_[site];
 
   // evaluate the density
-  real_t rho = density_.evaluate( k , xref , x );
+  real_t rho = density_.evaluate( k , point.coordinate() , x );
 
   T f = 0;
   for (coord_t d=0;d<dim_;d++)
@@ -974,9 +974,9 @@ public:
   bool needs_gradient() const { return false; }
   bool needs_hessian() const { return false; }
 
-  T operator()( index_t k , const real_t* xref , const real_t* x ) const
+  T operator()( index_t k , const QuadraturePoint& point , const real_t* x ) const
   {
-    return density_.evaluate(k,xref,x);
+    return density_.evaluate(k,point.coordinate(),x);
   }
 
 private:
@@ -998,9 +998,9 @@ public:
   bool needs_gradient() const { return false; }
   bool needs_hessian() const { return false; }
 
-  T operator()( index_t k , const real_t* xref , const real_t* x , std::vector<T>& I ) const
+  T operator()( index_t k , const QuadraturePoint& point , const real_t* x , std::vector<T>& I ) const
   {
-    real_t rho = density_.evaluate(k,xref,x);
+    real_t rho = density_.evaluate(k,point.coordinate(),x);
     for (index_t r = 0; r < dim_; r++)
       I[r] = rho*x[r];
     return 1.0;
@@ -1022,7 +1022,8 @@ SemiDiscreteOptimalTransport<type>::SemiDiscreteOptimalTransport( const Topology
   print_(true),
   quad_order_(4),
   weight_max_(1e6),
-  save_every_(1e6)
+  save_every_(1e6),
+  prefix_("avro-sdot")
 {}
 
 template<typename type>
@@ -1072,17 +1073,13 @@ SemiDiscreteOptimalTransport<type>::evaluate( real_t* dc_dx , real_t* dc_dw )
   clock_t t0;
   real_t time_integrate = 0.0;
 
-  coord_t number = domain_.number();
   coord_t dim = domain_.number();
 
   // compute the laguerre diagram
   compute_laguerre();
 
   // define the integration rules
-  ConicalProductQuadrature quadrature(number,quad_order_);
   simplices_.element().set_basis( BasisFunctionCategory_Lagrange );
-  quadrature.define();
-  simplices_.element().load_quadrature(quadrature);
 
   // get the masses
   t0 = clock();
