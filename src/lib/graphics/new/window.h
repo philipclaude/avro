@@ -50,7 +50,6 @@ public:
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
-
   }
 
   GLFWwindow* window() { return window_; }

@@ -75,17 +75,46 @@ class EdgePrimitive {
 
 public:
   EdgePrimitive( coord_t order ) :
-    order_(order)
+    order_(order),
+    nb_basis_(order+1)
   {}
 
   void add( const index_t* v , index_t nv ) {
-    avro_assert( nv == nb_simplex_basis(1,order_) );
+    avro_assert_msg( nv == nb_basis_ , "nv = %lu, nb_basis = %lu" , nv , nb_basis_ );
     for (index_t j = 0; j < nv; j++)
       indices_.push_back(v[j]);
   }
 
+  index_t nb() const { return indices_.size() / nb_basis_; }
+
+  void write() {
+    // bind the triangles
+    GL_CALL( glGenBuffers( 1 , &buffer_ ) );
+    GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_ ) );
+    GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(gl_index) * indices_.size() , indices_.data() , GL_STATIC_DRAW) );
+    GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
+  }
+
+  void draw() {
+    // bind the buffer for the indices we want to draw
+    GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_ ) );
+    GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , nb_basis_ ) );
+    GL_CALL( glDrawElements(GL_PATCHES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+  }
+
+  void print() const {
+    for (index_t k = 0; k < nb(); k++) {
+      printf("edge %lu = ( ",k);
+      for (index_t j = 0; j < nb_basis_; j++)
+        printf("%d ",int(indices_[nb_basis_*k+j]));
+      printf(")\n");
+    }
+  }
+
 private:
   coord_t order_;
+  index_t nb_basis_;
+  gl_index buffer_;
   std::vector<gl_index> indices_;
 };
 
@@ -156,6 +185,8 @@ public:
   void build( const TopologyBase& topology );
 
   void draw();
+  void draw_triangles( ShaderProgram& );
+  void draw_edges( ShaderProgram& );
 
 private:
   template<typename type>

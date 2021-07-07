@@ -317,6 +317,21 @@ static std::vector< std::vector< std::vector<index_t>> > canonical_tet_face = {
   { {2,3,1,6,7,8,9,4,5,16} , {0,3,2,5,4,10,11,12,13,17} , {0,1,3,7,6,13,12,14,15,18} , {0,2,1,9,8,15,14,11,10,19} } // p = 3
 };
 
+static std::vector< std::vector< std::vector<index_t>> > canonical_tri_edge = {
+  { {} , {} , {} , {} , {} , {} },  // p = 0
+  { {2,1} , {0,2} , {1,0} }, // p = 1
+  { {2,1,3} , {0,2,4} , {1,0,5} }, // p = 2
+  { {2,1,4,3} , {0,2,6,5} , {1,0,8,7} } // p = 3
+};
+
+static std::vector< std::vector< std::vector<index_t>> > canonical_tet_edge = {
+  { {} , {} , {} },  // p = 0
+  { {2,3} , {1,3} , {1,2} , {0,2} , {0,3} , {0,1} }, // p = 1
+  { {2,3,4} , {1,3,5} , {1,2,6} , {0,2,7} , {0,3,8} , {0,1,9} }, // p = 2
+  { {2,3,4,5} , {1,3,7,6} , {1,2,8,9} , {0,2,11,10} , {0,3,12,13} , {0,1,14,15} } // p = 3
+};
+
+
 template<typename type>
 void
 Tessellation::get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets ) {
@@ -358,7 +373,7 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
 
   edges_.resize( nb_edge_primitives );
   for (index_t k = 0; k < nb_edge_primitives; k++)
-    edges_[k] = std::make_shared<EdgePrimitive>(1);
+    edges_[k] = std::make_shared<EdgePrimitive>(order);
 
   triangles_.resize( nb_triangle_primitives );
   for (index_t k = 0; k < nb_triangle_primitives; k++)
@@ -415,6 +430,47 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     }
   }
 
+  dim = 1;
+  const std::vector<MeshFacet>& edges = facets[dim];
+  printf("processing %lu %u-facets\n",facets_d.size(),dim);
+  for (index_t k = 0; k < edges.size(); k++) {
+
+    // retrieve the linear facet
+    const MeshFacet& f = edges[k];
+
+    // determine if this is a geometry facet
+    index_t primitive_id = 0;
+    if (number == 2) primitive_id = 0;
+    else if (geometryless) {
+      primitive_id = 0;
+    }
+    else {
+      Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
+      if (entity == nullptr) primitive_id = nb_triangle_primitives -1; // interior at the end
+      else primitive_id = entity2index[entity];
+    }
+    avro_assert( primitive_id < nb_edge_primitives );
+
+    // retrieve the high-order representation of the edge
+    // pick one of the parents - it doesn't matter which one
+    index_t elem = f.parent[0];
+    index_t edge = f.local[0];
+
+    printf("elem = %lu, edge = %lu\n",elem,edge);
+
+    // find the dof in the element that maps to this triangle face
+    std::vector<index_t> dof( order+1 );
+    for (index_t j = 0; j < dof.size(); j++) {
+      if (number == 3)
+        dof[j] = topology(elem, canonical_tet_edge[order][edge][j] );
+      else if (number == 2)
+        dof[j] = topology(elem, canonical_tri_edge[order][edge][j] );
+      else avro_assert_not_reached;
+    }
+    edges_[primitive_id]->add( dof.data() , dof.size() );
+  }
+
+
   // generate the vertex array and primitive buffers
   GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
   GL_CALL( glBindVertexArray(vertex_array_) );
@@ -427,13 +483,20 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     triangles_[k]->write();
   }
 
+  for (index_t k = 0; k < edges_.size(); k++) {
+    edges_[k]->print();
+    edges_[k]->write();
+  }
+
   // now create solution primitives to plot on the triangles
   // TODO
 
 }
 
 void
-Tessellation::draw() {
+Tessellation::draw_triangles( ShaderProgram& shader ) {
+
+  shader.use();
 
   // bind which attributes we want to draw
   GL_CALL( glBindVertexArray(vertex_array_) );
@@ -445,7 +508,23 @@ Tessellation::draw() {
 
   for (index_t k = 0; k < triangles_.size(); k++)
     triangles_[k]->draw();
+}
 
+void
+Tessellation::draw_edges( ShaderProgram& shader ) {
+
+  shader.use();
+
+  // bind which attributes we want to draw
+  GL_CALL( glBindVertexArray(vertex_array_) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, points_->buffer()  ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
+  GL_CALL( glEnableVertexAttribArray(0) );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
+
+  for (index_t k = 0; k < edges_.size(); k++)
+    edges_[k]->draw();
 }
 
 } // graphics

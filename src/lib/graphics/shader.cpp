@@ -50,24 +50,25 @@ ShaderProgram::ShaderProgram( const std::string& name , bool with_tess ) :
   linked_(false),
   name_(name)
 {
-  if (name_ == "basic") {
-    std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-vtx.glsl" );
-    std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-frg.glsl" );
-    std::string geo_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-geo.glsl" );
+  if (name_ == "wv") {
+    std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-vtx.glsl" );
+    std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-frg.glsl" );
+    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling wv shader" );
+  }
+  else if (name == "basic" || name == "triangles" || name == "edges") {
+    std::string base = AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/"+ name;
+    std::string vtx_src = get_shader_src( base + "-vtx.glsl" );
+    std::string frg_src = get_shader_src( base + "-frg.glsl" );
+    std::string geo_src = get_shader_src( base + "-geo.glsl" );
 
     if (with_tess) {
-      std::string tcs_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-tcs.glsl" );
-      std::string tes_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-tes.glsl" );
+      std::string tcs_src = get_shader_src( base + "-tcs.glsl" );
+      std::string tes_src = get_shader_src( base + "-tes.glsl" );
       avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src,tcs_src,tes_src) , "error compiling basic shader" );
     }
     else {
       avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling basic shader" );
     }
-  }
-  else if (name_ == "wv") {
-    std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-vtx.glsl" );
-    std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-frg.glsl" );
-    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling wv shader" );
   }
   else {
     printf("unknown shader %s\n",name.c_str());
