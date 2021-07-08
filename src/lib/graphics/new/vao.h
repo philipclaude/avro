@@ -123,11 +123,14 @@ private:
   std::vector<gl_index> indices_;
 };
 
+class FieldPrimitive;
+
 class TrianglePrimitive {
 public:
   TrianglePrimitive( coord_t order ) :
     order_(order),
-    nb_basis_(nb_simplex_basis(2,order_))
+    nb_basis_(nb_simplex_basis(2,order_)),
+    field_(nullptr)
   {}
 
   ~TrianglePrimitive() {
@@ -159,18 +162,16 @@ public:
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
   }
 
-  void draw() {
-    // bind the buffer for the indices we want to draw
-    GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_ ) );
-    GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , nb_basis_ ) );
-    GL_CALL( glDrawElements(GL_PATCHES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
-  }
+  void draw();
+
+  void set_field( FieldPrimitive* field ) { field_ = field; }
 
 private:
   coord_t order_;
   index_t nb_basis_;
   std::vector<gl_index> indices_;
   gl_index buffer_;
+  FieldPrimitive* field_;
 };
 
 class FieldData {
@@ -202,7 +203,6 @@ public:
 
   }
 
-
   void set_active( const std::string& active ) {
     active_ = active;
   }
@@ -223,6 +223,14 @@ public:
     GL_CALL( glActiveTexture( GL_TEXTURE0 + 0 ) ); // fields are always in texture 0
     GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , texture_) );
     GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , buffer_ ) );
+  }
+
+  void activate( ShaderProgram& shader ) {
+    // bind the desired solution texture
+    glActiveTexture(GL_TEXTURE0 + 0);
+    GLint solution_location = glGetUniformLocation(shader.handle() , "solution");
+    //avro_assert( solution_location >= 0 );
+    glUniform1i(solution_location, 0); // first sampler in fragment shader
   }
 
 private:

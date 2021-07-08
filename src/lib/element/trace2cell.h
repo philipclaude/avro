@@ -12,7 +12,7 @@ namespace avro
 class CanonicalTraceToCell
 {
 public:
-  CanonicalTraceToCell( index_t _elem , index_t _trace , index_t _orient ) :
+  CanonicalTraceToCell( index_t _elem , index_t _trace , int _orient ) :
         elem(_elem),
         trace(_trace),
         orient(_orient)
@@ -20,7 +20,7 @@ public:
 
   index_t elem;
   index_t trace;
-  index_t orient;
+  int orient;
 };
 
 class TraceToCellRefCoord

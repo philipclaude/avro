@@ -20,18 +20,36 @@ UT_TEST_SUITE( graphics_decomposition_suite )
 class TestField : public Field<Simplex,real_t> {
 
 public:
-  TestField( const Topology<Simplex>& topology ) :
-    Field<Simplex,real_t>( topology , 2, DISCONTINUOUS )
+  TestField( const Topology<Simplex>& topology , coord_t order ) :
+    Field<Simplex,real_t>( topology , order, DISCONTINUOUS )
   {
     build();
 
     const Simplex& element = this->element();
 
+    index_t n = 0;
     for (index_t k = 0; k < topology.nb(); k++) {
       for (index_t j = 0; j < element.nb_basis(); j++) {
-        // evaluate some function at the reference coordinate
+
+        // retrieve the reference coordinate
         const real_t* xref = element.reference().get_reference_coordinate(j);
-        UNUSED(xref);
+
+        // evaluate the basis functions of the mesh element
+        std::vector<real_t> phi( topology.element().nb_basis() );
+        topology.element().reference().basis().evaluate( xref , phi.data() );
+
+        real_t x[2] = {0,0};
+        for (index_t i = 0; i < phi.size(); i++) {
+          x[0] += phi[i]*topology.points()[ topology(k,i) ][0];
+          x[1] += phi[i]*topology.points()[ topology(k,i) ][1];
+        }
+
+        index_t idx = this->index(k,j);
+        avro_assert( n == idx );
+
+        real_t value = 0.95*sin( x[0]*M_PI )*sin( x[1]*M_PI );
+        //(*this)(k,j) = value;
+        this->value(n++) = value;
       }
     }
   }
@@ -54,7 +72,7 @@ GLFWwindow* win = nullptr;
 // set up the view
 graphics::vec3 eye = {0,0,5};
 graphics::vec3 up = {0,1,0};
-graphics::vec3 center = {0.5,0.5,0.0};
+graphics::vec3 center = {0.5,0.5,0.5};
 
 float fov    = M_PI/4.0;
 float aspect = width/height;
@@ -113,9 +131,9 @@ draw() {
   point_shader->use();
   point_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
 
-  vao_ptr->draw_triangles(*triangle_shader);
   vao_ptr->draw_edges(*edge_shader);
-  vao_ptr->draw_points(*point_shader);
+  vao_ptr->draw_triangles(*triangle_shader);
+  //vao_ptr->draw_points(*point_shader);
 
   glfwSwapBuffers(win);
 
@@ -155,14 +173,16 @@ UT_TEST_CASE( simplices_2d_test )
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,4);
+  std::vector<index_t> dims(number,3);
   CKF_Triangulation topology( dims );
 
-  coord_t order = 2;
+  coord_t geometry_order = 1;
   Points nodes(dim);
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
-  Topology<Simplex> curvilinear(nodes,topology,order);
+  Topology<Simplex> curvilinear(nodes,topology,geometry_order);
+  curvilinear.element().set_basis( BasisFunctionCategory_Lagrange );
 
+  #if 0
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {
 
     real_t s = curvilinear.points()[k][0];
@@ -174,8 +194,10 @@ UT_TEST_CASE( simplices_2d_test )
     curvilinear.points()[k][0] = R*cos(theta);
     curvilinear.points()[k][1] = R*sin(theta);
   }
+  #endif
 
-  std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear);
+  coord_t solution_order = 1;
+  std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear,solution_order);
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   field->print();
   curvilinear.fields().make( "test" , field );
@@ -187,7 +209,8 @@ UT_TEST_CASE( simplices_2d_test )
   VertexAttributeObject vao(number,1);
   vao.build(curvilinear);
 
-  std::vector<std::string> macros = {"#define SOLUTION_ORDER 2","#define GEOMETRY_ORDER 2"};
+  std::vector<std::string> macros = {"#define SOLUTION_ORDER " + std::to_string(field->element().order()),
+                                     "#define GEOMETRY_ORDER " + std::to_string(curvilinear.element().order()) };
 
   bool with_tess = true;
   ShaderProgram tshader("triangles",with_tess,macros);
@@ -225,11 +248,12 @@ UT_TEST_CASE( simplices_2d_test )
   int level = 5;
 
   tshader.use();
-  tshader.setUniform( "nb_basis" , 6 );
+  tshader.setUniform( "nb_basis" , int(nb_simplex_basis(2,field->element().order())) );
   tshader.setUniform( "u_level" , level );
 
+  tshader.printActiveUniforms();
+
   eshader.use();
-  eshader.setUniform("nb_basis" , 3 );
   eshader.setUniform("u_level" , level );
 
   vao_ptr = &vao;

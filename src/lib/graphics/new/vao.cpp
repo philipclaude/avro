@@ -126,7 +126,7 @@ get_canonical_simplex_facets( coord_t number , std::vector<CanonicalFacet>& face
     CanonicalFacet f1_5; f1_5.dim = 1; f1_5.indices = {2,3}; f1_5.local = 0;
 
     // triangles (normal facing outwards)
-    CanonicalFacet f2_0; f2_0.dim = 2; f2_0.indices = {2,3,1}; f2_0.local = 0;
+    CanonicalFacet f2_0; f2_0.dim = 2; f2_0.indices = {1,2,3}; f2_0.local = 0;
     CanonicalFacet f2_1; f2_1.dim = 2; f2_1.indices = {0,3,2}; f2_1.local = 1;
     CanonicalFacet f2_2; f2_2.dim = 2; f2_2.indices = {0,1,3}; f2_2.local = 2;
     CanonicalFacet f2_3; f2_3.dim = 2; f2_3.indices = {0,2,1}; f2_3.local = 3;
@@ -157,6 +157,7 @@ get_canonical_simplex_facets( coord_t number , std::vector<CanonicalFacet>& face
 		avro_assert_not_reached;
 }
 
+#if 0
 short
 find_orientation( const std::vector<index_t>& f , const std::vector<index_t>& g )
 {
@@ -178,6 +179,47 @@ find_orientation( const std::vector<index_t>& f , const std::vector<index_t>& g 
   }
   return numerics::det(P);
 }
+#else
+
+std::vector< std::vector<index_t> > tet_faces = { {1,2,3} , {0,3,2} , {0,1,3} , {0,2,1} };
+std::vector< std::vector<index_t> > tet_face_permute = { {0,1,2}, {1,2,0}, {2,0,1} , {0,2,1}, {1,0,2}, {2,1,0} };
+std::vector< int > tet_face_orient = { 1 , 2 , 3 , -1 , -2 , -3 };
+
+short
+find_orientation( index_t face , const std::vector<index_t>& f , const std::vector<index_t>& g ) {
+
+  avro_assert( f.size() == 3 && g.size() == 4 );
+
+  // retrieve the tet facet
+  std::vector<index_t> F(3);
+  for (index_t i = 0; i < 3; i++)
+    F[i] = g[tet_faces[face][i]];
+
+  printf("face = %lu\n",face);
+  print_inline(f);
+  print_inline(F);
+
+  // loop through the permutations
+  for (index_t k = 0; k < 6; k++) {
+
+    const std::vector<index_t>& P = tet_face_permute[k];
+
+    int d = 0;
+    for (index_t i = 0; i < 3; i++) {
+      d += ( f[P[i]] - F[i] );
+    }
+    if (d == 0) {
+      printf("found orientation %lu = %d\n",k,tet_face_orient[k]);
+      return tet_face_orient[k];
+    }
+  }
+
+  avro_assert_not_reached;
+
+  return 1;
+}
+
+#endif
 
 template<>
 void
@@ -211,7 +253,15 @@ VertexAttributeObject::_build( const Topology<Simplex>& topology ) {
       // save the indices, then sort and determine positive/negative orientation
       g = f.indices;
       std::sort( f.indices.begin() , f.indices.end() );
-      short orientation = find_orientation(g,f.indices);
+      short orientation = 1;
+
+      //if (canonical[j].dim == 2 && number == 3) orientation = find_orientation(g,f.indices);
+      if (canonical[j].dim == 2 && topology.number() == 3) {
+        std::vector<index_t> H(4);
+        for (index_t ii = 0; ii < 4; ii++)
+          H[ii] = topology(k,ii);
+        orientation = find_orientation(canonical[j].local,g,H);
+      }
 
       // determine if this facet exists
       it = facets[f.dim].find(f);
@@ -306,9 +356,9 @@ VertexAttributeObject::build( const TopologyBase& topology ) {
 
 static std::vector< std::vector< std::vector<index_t>> > canonical_tet_face = {
   { {} , {} , {} , {} },  // p = 0
-  { {2,3,1} , {0,3,2} , {0,1,3} , {0,2,1} }, // p = 1
-  { {2,3,1,5,6,4} , {0,3,2,4,7,8} , {0,1,3,5,8,9} , {0,2,1,6,9,7} } , // p = 2
-  { {2,3,1,6,7,8,9,4,5,16} , {0,3,2,5,4,10,11,12,13,17} , {0,1,3,7,6,13,12,14,15,18} , {0,2,1,9,8,15,14,11,10,19} } // p = 3
+  { {1,2,3} , {0,3,2} , {0,1,3} , {0,2,1} }, // p = 1
+  { {1,2,3,4,5,6} , {0,3,2,4,7,8} , {0,1,3,5,8,9} , {0,2,1,6,9,7} } , // p = 2
+  { {1,2,3,4,5,6,7,8,9,16} , {0,3,2,5,4,10,11,12,13,17} , {0,1,3,7,6,13,12,14,15,18} , {0,2,1,9,8,15,14,11,10,19} } // p = 3
 };
 
 static std::vector< std::vector< std::vector<index_t>> > canonical_tri_edge = {
@@ -497,13 +547,13 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       Simplex simplex(2,solution_order);
       printf("solution order = %lu\n",solution_order);
 
-      // generate the interpolation data to evaluate the field
-      Table<real_t> alpha( TableLayout_Rectangular , 3 );
+      // generate the interpolation data to evaluate the field on the primitive triangles
+      Table<real_t> alpha( TableLayout_Rectangular , number );
       std::vector<index_t> parents;
       for (index_t j = 0; j < triangles.size(); j++) {
-        const MeshFacet& f = triangles[j];
 
-        // get some parent information
+        // retrieve some facet information
+        const MeshFacet& f = triangles[j];
         index_t elem = f.parent[0];
         index_t face = f.local[0];
         int orientation = f.orientation[0];
@@ -518,11 +568,17 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
           // using the face and orientation
           const real_t* x = simplex.reference().get_reference_coordinate(n);
 
-          real_t u[3];
-          trace2cell.eval( trace , x , u );
-
           // store the interpolation data
-          alpha.add( u , 3 );
+          if (number == 2) {
+            alpha.add( x , number );
+          }
+          else if (number == 3) {
+            // determine the reference coordinates in the tetrahedron
+            std::vector<real_t> u(number);
+            trace2cell.eval( trace , x , u.data() );
+            print_inline(u);
+            alpha.add( u.data() , number );
+          }
           parents.push_back( elem );
         }
       }
@@ -539,9 +595,14 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
         for (index_t j = 0; j < triangles.size(); j++)
           data->add( values.data() + simplex.nb_basis()*j , simplex.nb_basis() );
         solution_[k]->add( field_names[i] , data );
+        solution_[k]->set_active( field_names[i] );
       }
     }
   }
+
+  avro_assert( solution_.size() == triangles_.size() );
+  for (index_t k = 0; k < solution_.size(); k++)
+    solution_[k]->write();
 }
 
 void
@@ -563,7 +624,10 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
   glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
   for (index_t k = 0; k < triangles_.size(); k++) {
+
     //if (k == 1) continue;
+
+    solution_[k]->activate(shader);
     triangles_[k]->draw();
   }
 }
@@ -582,7 +646,6 @@ VertexAttributeObject::draw_edges( ShaderProgram& shader ) {
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
   for (index_t k = 0; k < edges_.size(); k++) {
-    //if (k == 1) continue;
     edges_[k]->draw();
   }
 }

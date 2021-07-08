@@ -377,13 +377,12 @@ mapTraceCoordsToCell( coord_t number , const real_t* ut , int trace , real_t* uc
     case 1:
       mapLineTraceCoordsToTriangle( ut , trace , uc );
       break;
-
     case 2:
       mapTriangleTraceCoordsToTet( ut , trace , uc );
       break;
-
     case 3:
       mapTetTraceCoordsToPentatope( ut , trace , uc );
+      break;
   }
 }
 
