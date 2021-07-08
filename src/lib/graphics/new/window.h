@@ -38,6 +38,7 @@ public:
       avro_assert_not_reached;
     }
     glfwMakeContextCurrent(window_);
+    glfwSwapInterval(1);
 
     // load GL functions
     gladLoadGL();
@@ -48,8 +49,8 @@ public:
     glfwPollEvents();
     glfwSetCursorPos(window_, width_/2, height_/2);
 
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
+    //glEnable(GL_CULL_FACE);
+    //glEnable(GL_DEPTH_TEST);
   }
 
   GLFWwindow* window() { return window_; }

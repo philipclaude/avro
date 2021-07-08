@@ -236,11 +236,7 @@ Tessellation::_build( const Topology<Simplex>& topology ) {
     }
   }
 
-  /*for (coord_t d = 0; d < facets_.size(); d++)
-  for (index_t k = 0; k < facets_[d].size(); k++) {
-    print_inline( facets_[d][k].indices );
-  }*/
-
+  // convert the facets to primitives
   get_primitives(topology,facets_);
 }
 
@@ -295,10 +291,7 @@ Tessellation::_build( const Topology<Polytope>& topology ) {
           simplices.add( triangles.data()+3*j , 3 );
       }
     }
-
   }
-
-
 }
 
 void
@@ -336,6 +329,10 @@ template<typename type>
 void
 Tessellation::get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets ) {
 
+  // order and number of basis functions of the elements we will create
+  coord_t order = topology.element().order();
+  index_t nb_basis = nb_simplex_basis(2,order);
+
   // first add all the points
   points_ = std::make_shared<PointPrimitive>(topology.points());
 
@@ -367,10 +364,9 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
   // if no geometry was given, at least split up the interior/boundary triangles
   coord_t number = topology.number();
   if (nb_triangle_primitives == 1 && number > 2) nb_triangle_primitives = 2;
+  if (nb_edge_primitives == 1 && number >= 2) nb_edge_primitives = 2;
 
   // allocate the primitives
-  coord_t order = topology.element().order();
-
   edges_.resize( nb_edge_primitives );
   for (index_t k = 0; k < nb_edge_primitives; k++)
     edges_[k] = std::make_shared<EdgePrimitive>(order);
@@ -379,13 +375,7 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
   for (index_t k = 0; k < nb_triangle_primitives; k++)
     triangles_[k] = std::make_shared<TrianglePrimitive>(order);
 
-  Simplex simplex(2,order);
-  simplex.set_basis( BasisFunctionCategory_Lagrange );
-  index_t nb_basis = simplex.nb_basis();
-
-  // loop through facets and bin them accordingly
-  coord_t nb_dim = facets.size();
-
+  // loop through triangles and bin them accordingly
   coord_t dim = 2;
   const std::vector<MeshFacet>& facets_d = facets[dim];
   printf("processing %lu %u-facets\n",facets_d.size(),dim);
@@ -398,8 +388,8 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     index_t primitive_id = 0;
     if (number == 2) primitive_id = 0;
     else if (geometryless) {
-      if (f.parent.size() == 1) primitive_id = 0; // boundary
-      else primitive_id = 1; // interior
+      if (f.parent.size() == 1) primitive_id = 0; // interior
+      else primitive_id = 1; // boundary
     }
     else {
       Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
@@ -428,9 +418,10 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     }
   }
 
+  // loop through edges and bin them accordingly
   dim = 1;
   const std::vector<MeshFacet>& edges = facets[dim];
-  printf("processing %lu %u-facets\n",facets_d.size(),dim);
+  printf("processing %lu %u-facets\n",edges.size(),dim);
   for (index_t k = 0; k < edges.size(); k++) {
 
     // retrieve the linear facet
@@ -438,13 +429,17 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
 
     // determine if this is a geometry facet
     index_t primitive_id = 0;
-    if (number == 2) primitive_id = 0;
-    else if (geometryless) {
+    if (number == 2 && geometryless) {
+      if (f.parent.size() >= 2) primitive_id = 0; // interior
+      else primitive_id = 1; // boundary
+    }
+    else if (number == 3) {
+      // hard to tell if this is a geometry edge
       primitive_id = 0;
     }
     else {
       Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
-      if (entity == nullptr) primitive_id = nb_triangle_primitives -1; // interior at the end
+      if (entity == nullptr) primitive_id = nb_edge_primitives -1; // interior at the end
       else primitive_id = entity2index[entity];
     }
     avro_assert( primitive_id < nb_edge_primitives );
@@ -453,8 +448,6 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     // pick one of the parents - it doesn't matter which one
     index_t elem = f.parent[0];
     index_t edge = f.local[0];
-
-    //printf("elem = %lu, edge = %lu\n",elem,edge);
 
     // find the dof in the element that maps to this triangle face
     std::vector<index_t> dof( order+1 );
@@ -467,22 +460,19 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     }
     edges_[primitive_id]->add( dof.data() , dof.size() );
   }
+  edges_[0]->print();
 
 
   // generate the vertex array and primitive buffers
   GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
   GL_CALL( glBindVertexArray(vertex_array_) );
 
-  //points_->print();
   points_->write();
-
   for (index_t k = 0; k < triangles_.size(); k++) {
-    //triangles_[k]->print();
     triangles_[k]->write();
   }
 
   for (index_t k = 0; k < edges_.size(); k++) {
-    //edges_[k]->print();
     edges_[k]->write();
   }
 
@@ -495,8 +485,7 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     solution_[k] = std::make_shared<FieldPrimitive>();
 
     printf("need to add %lu field data to field primitive\n",fields.nb());
-
-
+    // TODO
   }
 
 }
@@ -519,8 +508,10 @@ Tessellation::draw_triangles( ShaderProgram& shader ) {
   GLint colormap_location = glGetUniformLocation(shader.handle() , "colormap");
   glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
-  for (index_t k = 0; k < triangles_.size(); k++)
+  for (index_t k = 0; k < triangles_.size(); k++) {
+    if (k == 1) continue;
     triangles_[k]->draw();
+  }
 }
 
 void
@@ -536,8 +527,10 @@ Tessellation::draw_edges( ShaderProgram& shader ) {
   GL_CALL( glEnableVertexAttribArray(0) );
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
-  for (index_t k = 0; k < edges_.size(); k++)
+  for (index_t k = 0; k < edges_.size(); k++) {
+    if (k == 1) continue;
     edges_[k]->draw();
+  }
 }
 
 } // graphics

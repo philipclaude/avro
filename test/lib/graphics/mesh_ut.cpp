@@ -48,16 +48,23 @@ int XM,YM;
 Tessellation* tess_ptr = nullptr;
 ShaderProgram* triangle_shader = nullptr;
 ShaderProgram* edge_shader = nullptr;
+GLFWwindow* win = nullptr;
 
-static void
-mouse_button_callback(GLFWwindow* window ,int button,int action,int mods)
-{
-  if (action == GLFW_PRESS) dragging = true;
-  else {
-    xm = ym = -1;
-    dragging = false;
-  }
-}
+// set up the view
+graphics::vec3 eye = {0,0,5};
+graphics::vec3 up = {0,1,0};
+graphics::vec3 center = {0.5,0.5,0.0};
+
+float fov    = M_PI/4.0;
+float aspect = width/height;
+float znear  = 0.001;
+float zfar   = 100;
+
+// define the transformation matrices, and set the MVP into the shader program
+graphics::mat4 perspective_matrix = glm::perspective( fov , aspect , znear , zfar );
+graphics::mat4 view_matrix = glm::lookAt( eye , center , up );
+graphics::mat4 mv = view_matrix * model_matrix;
+graphics::mat4 mvp = perspective_matrix * mv;
 
 mat4
 rotation( real_t X , real_t Y ) {
@@ -80,48 +87,70 @@ rotation( real_t X , real_t Y ) {
   return R;
 }
 
+// for now, hack the center of rotation to be the center of the cube domain
+real_t xc = 0.5;
+real_t yc = 0.5;
+real_t zc = 0.5;
+mat4 T = glm::translate( glm::identity() , {xc,yc,zc} );
+mat4 Tinv = glm::translate( glm::identity() , {-xc,-yc,-zc} );
+
 void
 draw() {
   float col = 1.0;
-  glClearColor (col,col,col, 0.0);
+  glClearColor(col,col,col, 0.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  mv  = view_matrix * model_matrix;
+  mvp = perspective_matrix * mv;
+
+  triangle_shader->use();
+  triangle_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
+
+  edge_shader->use();
+  edge_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
 
   tess_ptr->draw_triangles(*triangle_shader);
   tess_ptr->draw_edges(*edge_shader);
+
+  glfwSwapBuffers(win);
+
+}
+
+static void
+mouse_button_callback(GLFWwindow* window , int button, int action, int mods)
+{
+  if (action == GLFW_PRESS) dragging = true;
+  else {
+    xm = ym = -1;
+    dragging = false;
+  }
 }
 
 static void
 mouse_move_callback(GLFWwindow* window, double x, double y)
 {
-  if (!dragging) return;
+  if (!dragging) { return; }
   if (xm < 0 || ym < 0) {
     xm = x;
     ym = y;
     return;
   }
 
-  // for now, hack the center of rotation to be the center of the cube domain
-  real_t xc = 0.5;
-  real_t yc = 0.5;
-  real_t zc = 0.5;
-  mat4 T = glm::translate( glm::identity() , {xc,yc,zc} );
-  mat4 Tinv = glm::translate( glm::identity() , {-xc,-yc,-zc} );
-
   // translate to the center, rotate, then translate back
   mat4 R = rotation( -(x - xm)/width , (y - ym)/height );
   model_matrix = T * R * Tinv * model_matrix;
 
+  draw();
+
   xm = x;
   ym = y;
-
-  draw();
 }
 
 UT_TEST_CASE( simplices_2d_test )
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,3);
+  std::vector<index_t> dims(number,10);
   CKF_Triangulation topology( dims );
 
   coord_t order = 2;
@@ -142,11 +171,11 @@ UT_TEST_CASE( simplices_2d_test )
   }
 
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear);
-  //field->print();
   curvilinear.fields().make( "test" , field );
 
   Window window(width,height);
   window.init();
+  win = window.window();
 
   Tessellation tess(number,1);
   tess.build(curvilinear);
@@ -157,22 +186,6 @@ UT_TEST_CASE( simplices_2d_test )
 
   ShaderProgram eshader("edges",with_tess);
   eshader.use();
-
-  // set up the view
-  graphics::vec3 eye = {0,0,5};
-  graphics::vec3 up = {0,1,0};
-  graphics::vec3 center = {0.5,0.5,0.0};
-
-  float fov    = M_PI/4.0;
-  float aspect = width/height;
-  float znear  = 0.001;
-  float zfar   = 100;
-
-  // define the transformation matrices, and set the MVP into the shader program
-  graphics::mat4 perspective_matrix = glm::perspective( fov , aspect , znear , zfar );
-  graphics::mat4 view_matrix = glm::lookAt( eye , center , up );
-  graphics::mat4 mv = view_matrix * model_matrix;
-  graphics::mat4 mvp = perspective_matrix * mv;
 
   tshader.use();
   tshader.setUniform("u_ModelViewProjectionMatrix",mvp);
@@ -200,7 +213,7 @@ UT_TEST_CASE( simplices_2d_test )
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
 
   // set the tessellation level for the TCS
-  int level = 10;
+  int level = 5;
 
   tshader.use();
   tshader.setUniform( "nb_basis" , 6 );
@@ -213,23 +226,18 @@ UT_TEST_CASE( simplices_2d_test )
   tess_ptr = &tess;
   triangle_shader = &tshader;
   edge_shader = &eshader;
+  printf("drawing...\n");
   draw();
+  printf("done\n");
 
   while (true) {
 
-    // todo, only set the shader uniforms when drawing
-    graphics::mat4 mv = view_matrix * model_matrix;
-    graphics::mat4 mvp = perspective_matrix * mv;
-
-    tshader.use();
-    tshader.setUniform("u_ModelViewProjectionMatrix",mvp);
-
-    eshader.use();
-    eshader.setUniform("u_ModelViewProjectionMatrix",mvp);
-
-    // swap buffers and wait for user input
-    glfwSwapBuffers(window.window());
+    // wait for user input
     glfwWaitEvents();
+
+    // determine if we should exit the render loop
+    if (glfwWindowShouldClose(window.window())) break;
+    if (glfwGetKey(window.window(), GLFW_KEY_ESCAPE ) == GLFW_PRESS) break;
   }
 }
 UT_TEST_CASE_END( simplices_2d_test )
