@@ -1,8 +1,10 @@
 #include "common/error.h"
 
+#include "element/trace2cell.h"
+
 #include "geometry/entity.h"
 
-#include "graphics/new/tessellation.h"
+#include "graphics/new/vao.h"
 #include "graphics/gl.h"
 
 #include "mesh/boundary.h"
@@ -179,7 +181,7 @@ find_orientation( const std::vector<index_t>& f , const std::vector<index_t>& g 
 
 template<>
 void
-Tessellation::_build( const Topology<Simplex>& topology ) {
+VertexAttributeObject::_build( const Topology<Simplex>& topology ) {
 
   // get the canonical representation of the facets of the element
   const Simplex& element = topology.element();
@@ -197,7 +199,6 @@ Tessellation::_build( const Topology<Simplex>& topology ) {
     {
       avro_assert( canonical[j].indices.size() == index_t(canonical[j].dim+1) );
 
-      //if (canonical[j].dim == element.number()) continue;
       if (canonical[j].dim > 2) continue;
 
       // determine the indices of the facet
@@ -247,7 +248,7 @@ triangulate( const Points& points , const index_t* v , index_t nv , std::vector<
 
 template<>
 void
-Tessellation::_build( const Topology<Polytope>& topology ) {
+VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
 
   // only linear polytope meshes are supported
   avro_assert( topology.element().order() == 1 );
@@ -295,7 +296,7 @@ Tessellation::_build( const Topology<Polytope>& topology ) {
 }
 
 void
-Tessellation::build( const TopologyBase& topology ) {
+VertexAttributeObject::build( const TopologyBase& topology ) {
   if (topology.type_name() == "simplex")
     _build( static_cast<const Topology<Simplex>&>(topology) );
   else
@@ -327,7 +328,7 @@ static std::vector< std::vector< std::vector<index_t>> > canonical_tet_edge = {
 
 template<typename type>
 void
-Tessellation::get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets ) {
+VertexAttributeObject::get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets ) {
 
   // order and number of basis functions of the elements we will create
   coord_t order = topology.element().order();
@@ -376,13 +377,12 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     triangles_[k] = std::make_shared<TrianglePrimitive>(order);
 
   // loop through triangles and bin them accordingly
-  coord_t dim = 2;
-  const std::vector<MeshFacet>& facets_d = facets[dim];
-  printf("processing %lu %u-facets\n",facets_d.size(),dim);
-  for (index_t k = 0; k < facets_d.size(); k++) {
+  const std::vector<MeshFacet>& triangles = facets[2];
+  printf("processing %lu triangles\n",triangles.size());
+  for (index_t k = 0; k < triangles.size(); k++) {
 
     // retrieve the linear facet
-    const MeshFacet& f = facets_d[k];
+    const MeshFacet& f = triangles[k];
 
     // determine if this is a geometry facet
     index_t primitive_id = 0;
@@ -419,9 +419,8 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
   }
 
   // loop through edges and bin them accordingly
-  dim = 1;
-  const std::vector<MeshFacet>& edges = facets[dim];
-  printf("processing %lu %u-facets\n",edges.size(),dim);
+  const std::vector<MeshFacet>& edges = facets[1];
+  printf("processing %lu edges\n",edges.size());
   for (index_t k = 0; k < edges.size(); k++) {
 
     // retrieve the linear facet
@@ -449,7 +448,7 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     index_t elem = f.parent[0];
     index_t edge = f.local[0];
 
-    // find the dof in the element that maps to this triangle face
+    // find the dof in the element that maps to this edge
     std::vector<index_t> dof( order+1 );
     for (index_t j = 0; j < dof.size(); j++) {
       if (number == 3)
@@ -458,10 +457,10 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
         dof[j] = topology(elem, canonical_tri_edge[order][edge][j] );
       else avro_assert_not_reached;
     }
+
+    // add the edge indices to the primitive
     edges_[primitive_id]->add( dof.data() , dof.size() );
   }
-  edges_[0]->print();
-
 
   // generate the vertex array and primitive buffers
   GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
@@ -476,22 +475,77 @@ Tessellation::get_primitives( const Topology<type>& topology , const std::vector
     edges_[k]->write();
   }
 
-  const Fields& fields = topology.fields();
-
   // now create solution primitives to plot on the triangles
+  const Fields& fields = topology.fields();
+  std::vector<std::string> field_names;
+  fields.get_field_names(field_names);
+  avro_assert_msg( field_names.size() == fields.nb() , "|names| = %lu, nb_fields = %lu" , field_names.size() , fields.nb() );
+
   solution_.resize( triangles_.size() );
   for (index_t k = 0; k < solution_.size(); k++) {
 
     solution_[k] = std::make_shared<FieldPrimitive>();
 
     printf("need to add %lu field data to field primitive\n",fields.nb());
-    // TODO
-  }
+    for (index_t i = 0; i < fields.nb(); i++) {
 
+      // retrieve the field
+      const FieldHolder& fld = fields[field_names[i]];
+
+      // determine the order of the solution
+      index_t solution_order = fld.order();
+      Simplex simplex(2,solution_order);
+      printf("solution order = %lu\n",solution_order);
+
+      // generate the interpolation data to evaluate the field
+      Table<real_t> alpha( TableLayout_Rectangular , 3 );
+      std::vector<index_t> parents;
+      for (index_t j = 0; j < triangles.size(); j++) {
+        const MeshFacet& f = triangles[j];
+
+        // get some parent information
+        index_t elem = f.parent[0];
+        index_t face = f.local[0];
+        int orientation = f.orientation[0];
+
+        CanonicalTraceToCell trace(elem,face,orientation);
+        TraceToCellRefCoord trace2cell(simplex);
+
+        // evaluate the solution at the lagrange nodes of the reference simplex
+        for (index_t n = 0; n < simplex.nb_basis(); n++) {
+
+          // determine the reference coordinate in the parent element
+          // using the face and orientation
+          const real_t* x = simplex.reference().get_reference_coordinate(n);
+
+          real_t u[3];
+          trace2cell.eval( trace , x , u );
+
+          // store the interpolation data
+          alpha.add( u , 3 );
+          parents.push_back( elem );
+        }
+      }
+
+      // evaluate the field at the interpolation points
+      for (index_t rank = 0; rank < fld.nb_rank(); rank++) {
+        std::shared_ptr<FieldData> data = std::make_shared<FieldData>(solution_order);
+
+        std::vector<real_t> values;
+        fld.evaluate( rank, parents, alpha, values );
+        avro_assert( values.size() == simplex.nb_basis() * triangles.size() );
+
+        // store the data and save it to the solution primitive
+        for (index_t j = 0; j < triangles.size(); j++)
+          data->add( values.data() + simplex.nb_basis()*j , simplex.nb_basis() );
+        solution_[k]->add( field_names[i] , data );
+      }
+    }
+  }
 }
 
 void
-Tessellation::draw_triangles( ShaderProgram& shader ) {
+VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
 
   shader.use();
 
@@ -509,13 +563,13 @@ Tessellation::draw_triangles( ShaderProgram& shader ) {
   glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
   for (index_t k = 0; k < triangles_.size(); k++) {
-    if (k == 1) continue;
+    //if (k == 1) continue;
     triangles_[k]->draw();
   }
 }
 
 void
-Tessellation::draw_edges( ShaderProgram& shader ) {
+VertexAttributeObject::draw_edges( ShaderProgram& shader ) {
 
   shader.use();
 
@@ -528,9 +582,25 @@ Tessellation::draw_edges( ShaderProgram& shader ) {
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
   for (index_t k = 0; k < edges_.size(); k++) {
-    if (k == 1) continue;
+    //if (k == 1) continue;
     edges_[k]->draw();
   }
+}
+
+void
+VertexAttributeObject::draw_points( ShaderProgram& shader ) {
+
+  shader.use();
+
+  // bind which attributes we want to draw
+  GL_CALL( glBindVertexArray(vertex_array_) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, points_->buffer()  ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
+  GL_CALL( glEnableVertexAttribArray(0) );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
+
+  points_->draw(shader);
 }
 
 } // graphics

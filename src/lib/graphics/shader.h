@@ -34,7 +34,7 @@ enum GLSLShaderType
 class ShaderProgram
 {
 public:
-  ShaderProgram( const std::string& name , bool with_tess=false );
+  ShaderProgram( const std::string& name , bool with_tess=false , const std::vector<std::string>& macros = {} );
 
   bool compileShaderFromFile( const char* filename, GLSLShaderType type );
   bool compileShaderFromFile( const std::string& filename, GLSLShaderType type );
@@ -82,6 +82,7 @@ private:
   bool linked_;
   std::string log_;
   std::string name_;
+  std::vector<std::string> macros_;
 };
 
 class ShaderLibrary

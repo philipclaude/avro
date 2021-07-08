@@ -1,6 +1,6 @@
 #include "unit_tester.hpp"
 
-#include "graphics/new/tessellation.h"
+#include "graphics/new/vao.h"
 #include "graphics/new/window.h"
 
 #include "graphics/colormap.h"
@@ -45,9 +45,10 @@ bool dragging = false;
 int xm = -1;
 int ym = -1;
 int XM,YM;
-Tessellation* tess_ptr = nullptr;
+VertexAttributeObject* vao_ptr = nullptr;
 ShaderProgram* triangle_shader = nullptr;
 ShaderProgram* edge_shader = nullptr;
+ShaderProgram* point_shader = nullptr;
 GLFWwindow* win = nullptr;
 
 // set up the view
@@ -109,8 +110,12 @@ draw() {
   edge_shader->use();
   edge_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
 
-  tess_ptr->draw_triangles(*triangle_shader);
-  tess_ptr->draw_edges(*edge_shader);
+  point_shader->use();
+  point_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
+
+  vao_ptr->draw_triangles(*triangle_shader);
+  vao_ptr->draw_edges(*edge_shader);
+  vao_ptr->draw_points(*point_shader);
 
   glfwSwapBuffers(win);
 
@@ -150,7 +155,7 @@ UT_TEST_CASE( simplices_2d_test )
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,4);
   CKF_Triangulation topology( dims );
 
   coord_t order = 2;
@@ -171,27 +176,31 @@ UT_TEST_CASE( simplices_2d_test )
   }
 
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear);
+  field->element().set_basis( BasisFunctionCategory_Lagrange );
+  field->print();
   curvilinear.fields().make( "test" , field );
 
   Window window(width,height);
   window.init();
   win = window.window();
 
-  Tessellation tess(number,1);
-  tess.build(curvilinear);
+  VertexAttributeObject vao(number,1);
+  vao.build(curvilinear);
+
+  std::vector<std::string> macros = {"#define SOLUTION_ORDER 2","#define GEOMETRY_ORDER 2"};
 
   bool with_tess = true;
-  ShaderProgram tshader("triangles",with_tess);
-  tshader.use();
-
-  ShaderProgram eshader("edges",with_tess);
-  eshader.use();
-
+  ShaderProgram tshader("triangles",with_tess,macros);
   tshader.use();
   tshader.setUniform("u_ModelViewProjectionMatrix",mvp);
 
+  ShaderProgram eshader("edges",with_tess,macros);
   eshader.use();
   eshader.setUniform("u_ModelViewProjectionMatrix",mvp);
+
+  ShaderProgram pshader("points");
+  pshader.use();
+  pshader.setUniform("u_ModelViewProjectionMatrix",mvp);
 
   glfwSetCursorPosCallback(window.window(),&mouse_move_callback);
   glfwSetMouseButtonCallback(window.window(),&mouse_button_callback);
@@ -223,12 +232,11 @@ UT_TEST_CASE( simplices_2d_test )
   eshader.setUniform("nb_basis" , 3 );
   eshader.setUniform("u_level" , level );
 
-  tess_ptr = &tess;
+  vao_ptr = &vao;
   triangle_shader = &tshader;
   edge_shader = &eshader;
-  printf("drawing...\n");
+  point_shader = &pshader;
   draw();
-  printf("done\n");
 
   while (true) {
 

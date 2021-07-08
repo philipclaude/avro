@@ -1,6 +1,18 @@
 #version 410
 
-layout (vertices = 6) out;
+#if GEOMETRY_ORDER == 1
+#define NB_NODES 3
+#elif GEOMETRY_ORDER == 2
+#define NB_NODES 6
+#elif GEOMETRY_ORDER == 3
+#define NB_NODES 10
+#elif GEOMETRY_ORDER == 4
+#define NB_NODES 15
+#else
+#error "unsupported geometry order"
+#endif
+
+layout (vertices = NB_NODES) out;
 
 uniform int u_level;
 

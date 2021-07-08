@@ -30,7 +30,6 @@ namespace avro
 void
 Fields::get_names( std::vector<std::string>& names , std::vector<std::string>& ids ) const
 {
-  // get a json describing all the field names with ranks
   std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
   for (it=fields_.begin();it!=fields_.end();it++)
   {
@@ -41,6 +40,15 @@ Fields::get_names( std::vector<std::string>& names , std::vector<std::string>& i
       ids.push_back( identifiers_.at(it->first) + "-" + std::to_string(j) );
     }
   }
+}
+
+void
+Fields::get_field_names( std::vector<std::string>& names ) const
+{
+  names.clear();
+  std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
+  for (it = fields_.begin(); it != fields_.end(); it++)
+    names.push_back( it->first );
 }
 
 void

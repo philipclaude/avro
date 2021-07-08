@@ -8,5 +8,5 @@ out vec3 v_Position;
 void main()
 {
   v_Position  = a_Position; // pass the position to the geometry shader
-  gl_Position = vec4(a_Position,1.0);//u_ModelViewProjectionMatrix*vec4(a_Position,1.0);
+  gl_Position = vec4(a_Position,1.0);
 }

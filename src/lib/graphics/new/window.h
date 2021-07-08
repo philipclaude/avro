@@ -23,7 +23,7 @@ public:
     avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // to make MacOS happy; should not be needed
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window_ = glfwCreateWindow( width_ , height_ , "avro" , NULL, NULL);
@@ -38,7 +38,7 @@ public:
       avro_assert_not_reached;
     }
     glfwMakeContextCurrent(window_);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0); // otherwise rendering lags a bit behind cursor movement
 
     // load GL functions
     gladLoadGL();
@@ -51,6 +51,7 @@ public:
 
     //glEnable(GL_CULL_FACE);
     //glEnable(GL_DEPTH_TEST);
+    glEnable(GL_PROGRAM_POINT_SIZE);
   }
 
   GLFWwindow* window() { return window_; }

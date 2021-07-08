@@ -14,18 +14,19 @@ void main() {
 
   vec3 p0 = gl_in[0].gl_Position.xyz;
   vec3 p1 = gl_in[1].gl_Position.xyz;
+
+  #if GEOMETRY_ORDER == 2
   vec3 p2 = gl_in[2].gl_Position.xyz;
 
   float phi0, phi1, phi2;
   phi0 =  s*-3.0+(s*s)*2.0+1.0;
   phi1 =  -s+(s*s)*2.0;
   phi2 =  s*4.0-(s*s)*4.0;
+  v_Position = phi0 * p0 + phi1 * p1 + phi2*p2;
 
-  vec3 pos = phi0 * p0 + phi1 * p1 + phi2*p2;
+  #else
+  #error "unsupported geometry order"
+  #endif
 
-  // why does including this cause nothing to render in os x, but it's ok in linux??
-  //gl_Position = u_ModelViewProjectionMatrix * vec4(pos,1.0);
-
-  v_Position  = pos;
   v_ParameterTess = vec2(s,t);
 }

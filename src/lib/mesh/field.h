@@ -45,6 +45,8 @@ public:
   virtual std::string get_name( index_t j ) const = 0;
   virtual index_t nb_rank() const = 0;
 
+  virtual coord_t order() const = 0;
+
 protected:
   std::string name_;
 };
@@ -65,7 +67,7 @@ public:
   T& eval( const Coordinate& x ) const;
 
   virtual std::string get_name( index_t j ) const { return name_+std::to_string(j); }
-  virtual index_t nb_rank() const { return 0; }
+  virtual index_t nb_rank() const { return 1; }
 
   void allocate( index_t n )
     { data_.allocate(n); }
@@ -95,6 +97,8 @@ public:
 
   real_t min( index_t rank ) const;
   real_t max( index_t rank ) const;
+
+  coord_t order() const { return shape_.order(); }
 
   virtual void evaluate( index_t rank , const std::vector<index_t>& parents , const Table<real_t>& alpha , std::vector<real_t>& result ) const = 0;
 
@@ -172,6 +176,8 @@ public:
   std::string get_name( index_t j ) const { return base_.get_name(j); }
   index_t nb_rank() const { return base_.nb_rank(); }
 
+  coord_t order() const { return base_.order(); }
+
 private:
   std::string name_;
   derived_t&  base_;
@@ -230,6 +236,7 @@ public:
 
     void from_json( const json& J );
     void get_names( std::vector<std::string>& names , std::vector<std::string>& ids ) const;
+    void get_field_names( std::vector<std::string>& names ) const;
 
     std::string id2name( const std::string& id ) const;
 

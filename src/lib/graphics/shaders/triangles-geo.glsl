@@ -7,7 +7,6 @@ in vec3 v_Position[]; // receive the vertex coordinates from the vertex shader o
 
 out vec2 v_Parameter; // pass the parameter coordinates to the fragment shader
 
-#if 1
 in vec2 v_ParameterTess[];
 
 layout (triangle_strip , max_vertices = 3) out;
@@ -34,58 +33,3 @@ void main() {
   EndPrimitive();
 
 }
-
-#elif 1
-layout (triangle_strip , max_vertices = 3) out;
-
-void main() {
-
-  gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[0],1.0);
-  v_Parameter = vec2(0.,0.);
-  EmitVertex();
-
-  gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[1],1.0);
-  v_Parameter = vec2(1.,0.);
-
-  EmitVertex();
-
-  gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[2],1.0);
-  v_Parameter = vec2(0.,1.);
-
-  // i'm not sure if this need to be set after every vertex, or just once before the end of the primitive
-  // it at least needs to be set before the last EmitVertex()
-  gl_PrimitiveID = gl_PrimitiveIDIn;
-
-  EmitVertex();
-
-  EndPrimitive();
-
-}
-
-#else
-
-layout (line_strip , max_vertices = 4) out;
-
-void main() {
-
-  gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[0],1.0);
-  v_Parameter = vec2(0.,0.);
-  EmitVertex();
-
-  gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[1],1.0);
-  v_Parameter = vec2(1.,0.);
-  EmitVertex();
-
-  gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[2],1.0);
-  v_Parameter = vec2(1.,1.);
-  EmitVertex();
-
-  gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[0],1.0);
-  v_Parameter = vec2(0.,0.);
-  EmitVertex();
-
-  EndPrimitive();
-
-}
-
-#endif

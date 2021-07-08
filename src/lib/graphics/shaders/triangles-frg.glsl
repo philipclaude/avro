@@ -107,7 +107,8 @@ void main() {
     float phi9 =  s*t*2.7E1-s*(t*t)*2.7E1-(s*s)*t*2.7E1;
 
     f = phi0*f0 + phi1*f1 + phi2*f2 + phi3*f3 + phi4*f4 + phi5*f5 + phi6*f6 + phi7*f7 + phi8*f8 + phi9*f9;
-    #elif 0
+    #endif
+    #if SOLUTION_ORDER == 2
     f =  f0*(s*(-5.5)-t*(5.5)+s*t*18-s*(t*t)*(13.5)-(s*s)*t*(13.5)+(s*s)*9.0-
                 (s*s*s)*(4.5)+(t*t)*9.0-(t*t*t)*(4.5)+1.0)
 
@@ -128,10 +129,11 @@ void main() {
                 + f8*(s*(-4.5)+s*t*(4.5)-(s*s)*t*(13.5)+(s*s)*18-(s*s*s)*(13.5))
 
                 + f9*(s*t*27-s*(t*t)*27-(s*s)*t*27);
-    #endif
-
+    vec3 color = vec3(0.7,0.8,0.2);
+    #else
     vec3 color;
     get_color(s+t,color);
-    //color = vec3(0.2,0.8,0.2);
+    #endif
+
     fragColor = vec4(color,1.0);
 }

@@ -1,5 +1,5 @@
-#ifndef AVRO_LIB_GRAPHICS_MESH_H_
-#define AVRO_LIB_GRAPHICS_MESH_H_
+#ifndef AVRO_LIB_GRAPHICS_VAO_H_
+#define AVRO_LIB_GRAPHICS_VAO_H_
 
 #include "avro_types.h"
 
@@ -45,11 +45,16 @@ public:
     GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, buffer_ ) );
     GL_CALL( glBufferData(GL_ARRAY_BUFFER, sizeof(gl_float) * coordinates_.size() , coordinates_.data() , GL_STATIC_DRAW) );
     GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, 0) );
+
+
   }
 
-  void render() {
-		// draw the points
-	}
+  void draw( ShaderProgram& program ) {
+    program.use();
+    GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , buffer_) );
+    GL_CALL( glDrawArrays( GL_POINTS , 0 , coordinates_.size()/3 ) );
+    GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, 0) );
+  }
 
 	gl_index buffer() const { return buffer_; }
 
@@ -202,6 +207,10 @@ public:
     active_ = active;
   }
 
+  void add( const std::string& name , std::shared_ptr<FieldData> data ) {
+    data_.insert({name,data});
+  }
+
   void write() {
 
     FieldData* field = data_[active_].get();
@@ -225,19 +234,19 @@ private:
 
 struct MeshFacet;
 
-class Tessellation {
+class VertexAttributeObject {
 
 public:
-  Tessellation( coord_t number , coord_t order ) :
+  VertexAttributeObject( coord_t number , coord_t order ) :
     number_(number),
     order_(order)
   {}
 
   void build( const TopologyBase& topology );
 
-  void draw();
   void draw_triangles( ShaderProgram& );
   void draw_edges( ShaderProgram& );
+  void draw_points( ShaderProgram& );
 
 private:
   template<typename type>
