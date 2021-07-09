@@ -73,14 +73,14 @@ Field<Simplex,T>::evaluate( index_t rank , const std::vector<index_t>& parents ,
   std::vector<real_t> phi( element_.nb_basis() );
 
   result.resize( parents.size() );
-  for (index_t k=0;k<parents.size();k++)
+  for (index_t k = 0; k < parents.size(); k++)
   {
     // evaluate the basis functions for this reference coordinate
     element_.reference().basis().evaluate( alpha(k) , phi.data() );
 
     // evaluate the field
     result[k] = 0.0;
-    for (index_t j=0;j<phi.size();j++)
+    for (index_t j = 0; j < phi.size(); j++)
       result[k] += __at_rank__( (*this)(parents[k],j) , rank )*phi[j];
   }
 

@@ -414,7 +414,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
   // if no geometry was given, at least split up the interior/boundary triangles
   coord_t number = topology.number();
-  if (nb_triangle_primitives == 1 && number > 2) nb_triangle_primitives = 2;
+  //if (nb_triangle_primitives == 1 && number > 2) nb_triangle_primitives = 2;
   if (nb_edge_primitives == 1 && number >= 2) nb_edge_primitives = 2;
 
   // allocate the primitives
@@ -438,8 +438,9 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     index_t primitive_id = 0;
     if (number == 2) primitive_id = 0;
     else if (geometryless) {
-      if (f.parent.size() == 1) primitive_id = 0; // interior
-      else primitive_id = 1; // boundary
+      primitive_id = 0;
+      //if (f.parent.size() == 1) primitive_id = 0; // interior
+      //else primitive_id = 1; // boundary
     }
     else {
       Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
@@ -590,6 +591,14 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
         std::vector<real_t> values;
         fld.evaluate( rank, parents, alpha, values );
         avro_assert( values.size() == simplex.nb_basis() * triangles.size() );
+
+        printf("nb_basis = %lu\n",simplex.nb_basis());
+        print_inline( values );
+
+        for (index_t k = 0; k < values.size(); k++) {
+          //values[k] = 0.25;
+        }
+
 
         // store the data and save it to the solution primitive
         for (index_t j = 0; j < triangles.size(); j++)

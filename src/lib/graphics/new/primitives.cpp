@@ -11,8 +11,6 @@ namespace graphics
 void
 TrianglePrimitive::draw() {
 
-    //if (field_ != nullptr) field_->activate();
-
     // bind the buffer for the indices we want to draw
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_ ) );
     GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , nb_basis_ ) );

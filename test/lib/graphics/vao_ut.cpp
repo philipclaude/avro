@@ -27,6 +27,7 @@ public:
 
     const Simplex& element = this->element();
 
+
     index_t n = 0;
     for (index_t k = 0; k < topology.nb(); k++) {
       for (index_t j = 0; j < element.nb_basis(); j++) {
@@ -43,15 +44,18 @@ public:
           x[0] += phi[i]*topology.points()[ topology(k,i) ][0];
           x[1] += phi[i]*topology.points()[ topology(k,i) ][1];
         }
+        printf("x = %g, y = %g\n",x[0],x[1]);
 
         index_t idx = this->index(k,j);
         avro_assert( n == idx );
 
         real_t value = 0.95*sin( x[0]*M_PI )*sin( x[1]*M_PI );
         //(*this)(k,j) = value;
-        this->value(n++) = value;
+        this->value(n++) = value;//real_t(n)/this->nb();//real_t(k)/topology.nb();//value;
       }
     }
+    //avro_implement;
+    this->dof().print();
   }
 };
 
@@ -173,16 +177,16 @@ UT_TEST_CASE( simplices_2d_test )
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,3);
+  std::vector<index_t> dims(number,10);
   CKF_Triangulation topology( dims );
 
-  coord_t geometry_order = 1;
+  coord_t geometry_order = 2;
   Points nodes(dim);
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   Topology<Simplex> curvilinear(nodes,topology,geometry_order);
   curvilinear.element().set_basis( BasisFunctionCategory_Lagrange );
 
-  #if 0
+  #if 1
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {
 
     real_t s = curvilinear.points()[k][0];
@@ -196,7 +200,7 @@ UT_TEST_CASE( simplices_2d_test )
   }
   #endif
 
-  coord_t solution_order = 1;
+  coord_t solution_order = 3;
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear,solution_order);
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   field->print();

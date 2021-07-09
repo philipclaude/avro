@@ -34,7 +34,13 @@ void main() {
     float f = 0.0;
     vec3 color;
 
-    #if SOLUTION_ORDER == 1
+    #if SOLUTION_ORDER == 0
+
+    int idx = gl_PrimitiveID*1;
+    f = texelFetch( solution , idx + 0 ).x;
+    get_color(f,color);
+
+    #elif SOLUTION_ORDER == 1
 
     int idx  = gl_PrimitiveID*3;
 
