@@ -30,6 +30,19 @@ get_color( float u , out vec3 color ) {
     color = vec3(r0,g0,b0);
 }
 
+void
+shading( in vec3 l , in vec3 n , in vec3 base_color , out vec3 color ) {
+
+  float diffuse = max(0.0,dot(l,n));
+  float phong = 128.0;
+  float specular = pow(max(0.0,dot(-reflect(l,n),n)),phong);
+
+  vec3 cd = color * diffuse;
+  vec3 cs = vec3(0.2) * specular;
+  vec3 ca = vec3(0.2);
+  color_out = ca + cd + cs;
+}
+
 void main() {
 
   if (use_constant_color > 0) {
@@ -127,22 +140,8 @@ void main() {
   color = vec3(0.8,0.8,0.2);
   #endif
 
-  #if 1
-  // vector from surface point to camera (where light is)
-  vec3 direction = -normalize(g_Position);
-  vec3 normal = normalize(g_Normal);
+  vec3 color_out;
+  shading( -normalize(g_Position) , normalize(g_Normal) , color , color_out );
 
-  float diffuse = max(0.0,dot(direction,normal));
-  float phong = 128.0;
-  float specular = pow(max(0.0,dot(-reflect(direction,normal),normal)),phong);
-
-  //color = constant_color;
-  //color = vec3(0.4);
-  vec3 cd = color * diffuse;
-  vec3 cs = vec3(0.2) * specular;
-  vec3 ca = vec3(0.2);
-  color = ca + cd + cs;
-  #endif
-
-  fragColor = vec4(color,1.0);
+  fragColor = vec4(color_out,1.0);
 }
