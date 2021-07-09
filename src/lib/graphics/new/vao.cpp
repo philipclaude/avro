@@ -5,6 +5,7 @@
 
 #include "geometry/entity.h"
 
+#include "graphics/colormap.h"
 #include "graphics/new/primitives.h"
 #include "graphics/new/vao.h"
 #include "graphics/gl.h"
@@ -465,6 +466,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     }
   }
 
+
   // loop through edges and bin them accordingly
   const std::vector<MeshFacet>& edges = facets[1];
   printf("processing %lu edges\n",edges.size());
@@ -603,6 +605,22 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     }
   }
 
+  // assign a constant color to each triangle primitive
+  Colormap colormap;
+  colormap.change_style("hsv");
+  float lims[2] = {0,1};
+  colormap.set_limits(lims);
+  for (index_t k = 0; k < triangles_.size(); k++) {
+    vec3 color;
+    float u[3];
+    colormap.map( real_t(k)/triangles_.size() , u );
+    for (index_t i = 0; i < 3; i++)
+      color[i] = u[i];
+    triangles_[k]->set_color(color);
+    color.print();
+  }
+
+
   // write the active field (name + rank) to the GL associated with each triangle primitive
   avro_assert( solution_.size() == triangles_.size() );
   for (index_t k = 0; k < solution_.size(); k++)
@@ -622,13 +640,24 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
   GL_CALL( glEnableVertexAttribArray(0) );
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
+  show_field_ = false;
+
   // bind the desired colormap
   glActiveTexture(GL_TEXTURE0 + 1);
   GLint colormap_location = glGetUniformLocation(shader.handle() , "colormap");
   glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
   for (index_t k = 0; k < triangles_.size(); k++) {
-    solution_[k]->activate(shader);
+    if (!triangles_[k]->visible()) continue;
+
+    if (show_field_) {
+      solution_[k]->activate(shader);
+      shader.setUniform( "use_constant_color" , 0 );
+    }
+    else {
+      shader.setUniform( "use_constant_color" , 1 );
+      shader.setUniform( "constant_color" , triangles_[k]->color() );
+    }
     triangles_[k]->draw();
   }
 }

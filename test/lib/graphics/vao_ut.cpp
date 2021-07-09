@@ -7,6 +7,7 @@
 #include "graphics/shader.h"
 
 #include "library/ckf.h"
+#include "library/egads.h"
 
 #include "mesh/field.hpp"
 #include "mesh/points.h"
@@ -193,6 +194,11 @@ UT_TEST_CASE( simplices_2d_test )
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   Topology<Simplex> curvilinear(nodes,topology,geometry_order);
   curvilinear.element().set_basis( BasisFunctionCategory_Lagrange );
+
+  EGADS::Context context;
+  std::vector<real_t> lengths(number,1.0);
+  EGADS::Cube geometry(&context,lengths);
+  curvilinear.points().attach(geometry);
 
   #if 1
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {

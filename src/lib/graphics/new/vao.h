@@ -28,7 +28,8 @@ class VertexAttributeObject {
 public:
   VertexAttributeObject( coord_t number , coord_t order ) :
     number_(number),
-    order_(order)
+    order_(order),
+    show_field_(true)
   {}
 
   void build( const TopologyBase& topology );
@@ -38,6 +39,7 @@ public:
   void draw_points( ShaderProgram& );
 
   void set_rank( index_t rank );
+  bool& show_field() { return show_field_; }
 
 private:
   template<typename type>
@@ -51,6 +53,8 @@ private:
   coord_t order_;
 
   gl_index vertex_array_;
+  bool show_field_;
+
   std::shared_ptr<PointPrimitive> points_;
   std::vector< std::shared_ptr<EdgePrimitive> > edges_;
   std::vector< std::shared_ptr<TrianglePrimitive> > triangles_;

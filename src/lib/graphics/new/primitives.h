@@ -77,7 +77,9 @@ public:
 
   void draw();
 
-  void set_field( FieldPrimitive* field );
+  const vec3& color() const { return color_; }
+  void set_color( vec3 color ) { color_ = color; }
+  bool& visible() { return visible_; }
 
 private:
   coord_t order_;
@@ -85,6 +87,8 @@ private:
   std::vector<gl_index> indices_;
   gl_index buffer_;
   FieldPrimitive* field_;
+  vec3 color_;
+  bool visible_;
 };
 
 class FieldData {

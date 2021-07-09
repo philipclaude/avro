@@ -98,7 +98,7 @@ EdgePrimitive::print() const {
 TrianglePrimitive::TrianglePrimitive( coord_t order ) :
   order_(order),
   nb_basis_(nb_simplex_basis(2,order_)),
-  field_(nullptr)
+  visible_(true)
 {}
 
 TrianglePrimitive::~TrianglePrimitive() {
@@ -139,9 +139,6 @@ TrianglePrimitive::print() const {
     printf(")\n");
   }
 }
-
-void
-TrianglePrimitive::set_field( FieldPrimitive* field ) { field_ = field; }
 
 FieldData::FieldData( coord_t order ) :
   order_(order),
