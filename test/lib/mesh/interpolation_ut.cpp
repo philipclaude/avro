@@ -39,9 +39,6 @@ UT_TEST_SUITE( interpolation_test_suite )
 UT_TEST_CASE( test1 )
 {
   CKF_Triangulation topology( {3,3} );
-  ConicalProductQuadrature quadrature(topology.points().dim());
-  quadrature.define();
-  topology.element().load_quadrature(quadrature);
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
   topology.close();
@@ -52,7 +49,6 @@ UT_TEST_CASE( test1 )
   Field<Simplex,real_t> u(topology,2,CONTINUOUS);
   u.build();
   u.element().set_basis( BasisFunctionCategory_Lagrange );
-  u.element().load_quadrature(quadrature);
 
   SomeFunction fcn;
   u.evaluate(fcn);

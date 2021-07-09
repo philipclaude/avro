@@ -30,7 +30,6 @@ namespace avro
 void
 Fields::get_names( std::vector<std::string>& names , std::vector<std::string>& ids ) const
 {
-  // get a json describing all the field names with ranks
   std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
   for (it=fields_.begin();it!=fields_.end();it++)
   {
@@ -41,6 +40,15 @@ Fields::get_names( std::vector<std::string>& names , std::vector<std::string>& i
       ids.push_back( identifiers_.at(it->first) + "-" + std::to_string(j) );
     }
   }
+}
+
+void
+Fields::get_field_names( std::vector<std::string>& names ) const
+{
+  names.clear();
+  std::map<std::string,std::shared_ptr<FieldHolder>>::const_iterator it;
+  for (it = fields_.begin(); it != fields_.end(); it++)
+    names.push_back( it->first );
 }
 
 void
@@ -150,9 +158,9 @@ template<typename T>
 void
 Field<Polytope,T>::build()
 {
-  if (this->type()==CONTINUOUS)
+  if (this->type() == CONTINUOUS)
   {
-    avro_assert( element_.order()==1 );
+    avro_assert( element_.order() == 1 );
 
     for (index_t k=0;k<topology_.nb();k++)
     {
@@ -167,9 +175,9 @@ Field<Polytope,T>::build()
       this->data_.add( &x0 , 1 );
     }
   }
-  else if (this->type()==DISCONTINUOUS)
+  else if (this->type() == DISCONTINUOUS)
   {
-    avro_assert( element_.order()==0 );
+    avro_assert_msg( element_.order() == 0 , "p = %u not supported" , element_.order() );
     T x0(0);
     for (index_t k=0;k<topology_.nb();k++)
     {

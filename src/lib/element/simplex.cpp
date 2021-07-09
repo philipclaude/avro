@@ -30,6 +30,7 @@ namespace avro
 
 index_t
 nb_simplex_basis( coord_t n , coord_t p ) {
+  #if 0
   if      (p == 0) return    1;
   if      (n == 0) return    1;
   else if (n == 1) return  p+1;
@@ -40,10 +41,17 @@ nb_simplex_basis( coord_t n , coord_t p ) {
     printf("simplex n = %u not supported\n",n);
     avro_implement;
   }
+  #else
+  index_t np = 1;
+  for (coord_t d = 1; d <= n; d++)
+    np *= (p + d);
+  return np/numerics::factorial(n);
+  #endif
 }
 
 index_t
 nb_simplex_basis_interior( coord_t n , coord_t p ) {
+  #if 0
   if      (p == 0) return    1;
   if      (n == 0) return    1;
   else if (n == 1) return  p-1;
@@ -54,6 +62,13 @@ nb_simplex_basis_interior( coord_t n , coord_t p ) {
     printf("simplex n = %u not supported\n",n);
     avro_implement;
   }
+  #else
+  if (p == 0) return 1;
+  index_t np = 1;
+  for (coord_t d = 1; d <= n; d++)
+    np *= (p - d);
+  return np/numerics::factorial(n);
+  #endif
 }
 
 Simplex::Simplex( const Topology<Simplex>& topology , const coord_t order ) :
@@ -138,7 +153,7 @@ Simplex::precalculate() {
 void
 Simplex::get_canonical_indices( const index_t* v , index_t nv , const ElementIndices& f , std::vector<index_t>& canonical ) const
 {
-  avro_assert_msg( order_==1 , "should this only be called for linear simplices?" );
+  //avro_assert_msg( order_==1 , "should this only be called for linear simplices?" );
   for (index_t k=0;k<f.indices.size();k++)
   {
     bool found = false;

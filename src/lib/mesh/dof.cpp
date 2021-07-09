@@ -26,7 +26,7 @@ DOF<type>::interpolate( const index_t* idx , index_t nv , const std::vector<real
   for (index_t j=0;j<rank();j++)
   {
     for (index_t i=0;i<phi.size();i++)
-      u[j] = u[j] + (*this)( idx[i] , 0 )*phi[i];
+      u[j] = u[j] + (*this)( idx[i] , 0 )*phi[i]; // should it be j instead of 0?
   }
   return true;
 }

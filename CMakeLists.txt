@@ -26,6 +26,7 @@ option(avro_NO_ESP "ESP is not available, so we will use internal wv and egads-l
 set(avro_TEST_DATA "data/" CACHE STRING "location for avro test files relative to test/" )
 option(avro_WITH_GL "option to compile OpenGL-based visualizer (along with WebGL-based one)" true)
 option(avro_LITE "option to compile a lite version of avro" false )
+option(AVRO_HEADLESS_GRAPHICS "option to use headless graphics (true for unit testing)" false)
 
 set(avro_CPU_THREAD_MANAGER "cpp11" CACHE STRING "type of cpu threading environment to use [openmp, cpp11, pthread, emp]")
 set(avro_GPU_THREAD_MANAGER "none" CACHE STRING "type of gpu threading environment to use [opencl,cuda]")
@@ -132,7 +133,7 @@ endfunction()
 
 # generate a configuration file
 config_bool( AVRO_WITH_MPI CMAKE_AVRO_WITH_MPI )
-config_bool( AVRO_HEADLESS_GRAHPICS CMAKE_AVRO_HEADLESS_GRAPHICS )
+config_bool( AVRO_HEADLESS_GRAPHICS CMAKE_AVRO_HEADLESS_GRAPHICS )
 config_bool( AVRO_NO_ESP CMAKE_AVRO_NO_ESP )
 config_bool( AVRO_WITH_GL CMAKE_AVRO_WITH_GL )
 set( CMAKE_AVRO_CPU_THREAD_MANAGER ${AVRO_CPU_THREAD_MANAGER} )

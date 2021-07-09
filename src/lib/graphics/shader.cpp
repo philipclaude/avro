@@ -45,29 +45,36 @@ get_shader_src( const std::string& filename ) {
   return content;
 }
 
-ShaderProgram::ShaderProgram( const std::string& name , bool with_tess ) :
+ShaderProgram::ShaderProgram( const std::string& name , bool with_tess , const std::vector<std::string>& macros ) :
   handle_(-1),
   linked_(false),
-  name_(name)
+  name_(name),
+  macros_(macros)
 {
-  if (name_ == "basic") {
-    std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-vtx.glsl" );
-    std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-frg.glsl" );
-    std::string geo_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-geo.glsl" );
+  std::string base = AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/"+ name;
+  if (name_ == "wv") {
+    std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-vtx.glsl" );
+    std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-frg.glsl" );
+    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling wv shader" );
+  }
+  else if (name == "points") {
+    std::string vtx_src = get_shader_src( base + "-vtx.glsl" );
+    std::string frg_src = get_shader_src( base + "-frg.glsl" );
+    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling points shader" );
+  }
+  else if (name == "basic" || name == "triangles" || name == "edges") {
+    std::string vtx_src = get_shader_src( base + "-vtx.glsl" );
+    std::string frg_src = get_shader_src( base + "-frg.glsl" );
+    std::string geo_src = get_shader_src( base + "-geo.glsl" );
 
     if (with_tess) {
-      std::string tcs_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-tcs.glsl" );
-      std::string tes_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/basic-tes.glsl" );
-      avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src,tcs_src,tes_src) , "error compiling basic shader" );
+      std::string tcs_src = get_shader_src( base + "-tcs.glsl" );
+      std::string tes_src = get_shader_src( base + "-tes.glsl" );
+      avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src,tcs_src,tes_src) , "error compiling shader" );
     }
     else {
       avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling basic shader" );
     }
-  }
-  else if (name_ == "wv") {
-    std::string vtx_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-vtx.glsl" );
-    std::string frg_src = get_shader_src( AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/wv-frg.glsl" );
-    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling wv shader" );
   }
   else {
     printf("unknown shader %s\n",name.c_str());
@@ -399,7 +406,19 @@ ShaderProgram::compileShaderFromString( const std::string& source, GLSLShaderTyp
       return false;
   }
 
-  const char* c_code = source.c_str();
+  // add the macros after #version
+  std::size_t idx = source.find("#version");
+  idx = source.find("\n",idx);
+
+  std::string source1 = source.substr(0,idx);
+  std::string source2 = "\n";
+  for (index_t k = 0; k < macros_.size(); k++)
+    source2 += macros_[k] + "\n";
+  std::string source3 = source.substr(idx+1,source.size());
+
+  std::string final_source = source1 + source2 + source3;
+
+  const char* c_code = final_source.c_str();
   GL_CALL( glShaderSource( shaderHandle, 1, &c_code, NULL ) );
 
   // compile the shader
@@ -408,20 +427,21 @@ ShaderProgram::compileShaderFromString( const std::string& source, GLSLShaderTyp
   // check for errors
   int result;
   GL_CALL( glGetShaderiv( shaderHandle, GL_COMPILE_STATUS, &result ) );
-  if (result == GL_FALSE)
-  {
-    // Compile failed, store log and return false
+  if (result == GL_FALSE) {
+
+    // compile failed, store log and return false
     int length = 0;
     log_ = "";
     GL_CALL( glGetShaderiv(shaderHandle, GL_INFO_LOG_LENGTH, &length ) );
-    if (length > 0)
-    {
+    if (length > 0) {
       char* c_log = new char[length];
       int written = 0;
       GL_CALL( glGetShaderInfoLog(shaderHandle, length, &written, c_log) );
       log_ = c_log;
       delete [] c_log;
     }
+
+    std::cout << final_source << std::endl;
 
     return false;
   }

@@ -50,6 +50,9 @@ class Primitive;
 class ShaderProgram;
 class ShaderLibrary;
 
+typedef GLuint  gl_index;
+typedef GLfloat gl_float;
+
 int checkOpenGLError(const char*, int);
 void dumpGLInfo(bool dumpExtensions = false);
 
