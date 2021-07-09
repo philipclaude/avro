@@ -31,7 +31,7 @@ get_color( float u , out vec3 color ) {
 }
 
 void
-shading( in vec3 l , in vec3 n , in vec3 base_color , out vec3 color ) {
+shading( in vec3 l , in vec3 n , in vec3 color , out vec3 color_out ) {
 
   float diffuse = max(0.0,dot(l,n));
   float phong = 128.0;
@@ -46,9 +46,10 @@ shading( in vec3 l , in vec3 n , in vec3 base_color , out vec3 color ) {
 void main() {
 
   if (use_constant_color > 0) {
-    //fragColor = vec4(constant_color,1.0);
-    //fragColor = vec4( abs(g_Normal),1.0);
-    //return;
+    vec3 color_out;
+    shading( -normalize(g_Position) , normalize(g_Normal) , constant_color , color_out );
+    fragColor = vec4(color_out,1.0);
+    return;
   }
 
   float s = v_Parameter.x;
@@ -140,7 +141,7 @@ void main() {
   color = vec3(0.8,0.8,0.2);
   #endif
 
-  vec3 color_out;
+  vec3 color_out = color;
   shading( -normalize(g_Position) , normalize(g_Normal) , color , color_out );
 
   fragColor = vec4(color_out,1.0);

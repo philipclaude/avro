@@ -13,6 +13,8 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
+#if AVRO_HEADLESS_GRAPHICS == 0
+
 using namespace avro;
 using namespace avro::graphics;
 
@@ -142,7 +144,7 @@ draw() {
   point_shader->use();
   point_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
 
-  //vao_ptr->draw_edges(*edge_shader);
+  vao_ptr->draw_edges(*edge_shader);
   vao_ptr->draw_triangles(*triangle_shader);
   //vao_ptr->draw_points(*point_shader);
 
@@ -190,10 +192,11 @@ UT_TEST_CASE( simplices_2d_test )
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,3);
+  dims[1] = 2;
   CKF_Triangulation topology( dims );
 
-  coord_t geometry_order = 1;
+  coord_t geometry_order = 2;
   Points nodes(dim);
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   Topology<Simplex> curvilinear(nodes,topology,geometry_order);
@@ -204,7 +207,7 @@ UT_TEST_CASE( simplices_2d_test )
   EGADS::Cube geometry(&context,lengths);
   curvilinear.points().attach(geometry);
 
-  #if 0
+  #if 1
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {
 
     real_t s = curvilinear.points()[k][0];
@@ -213,7 +216,7 @@ UT_TEST_CASE( simplices_2d_test )
     real_t theta = s*M_PI;
     real_t R = 0.75 + t*(1.0 - 0.75);
 
-    curvilinear.points()[k][0] = R*cos(theta);
+    curvilinear.points()[k][0] = R*cos(M_PI - theta);
     curvilinear.points()[k][1] = R*sin(theta);
   }
   #endif
@@ -267,7 +270,7 @@ UT_TEST_CASE( simplices_2d_test )
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
 
   // set the tessellation level for the TCS
-  int level = 4;
+  int level = 8;
 
   tshader.use();
   tshader.setUniform( "u_level" , level );
@@ -293,6 +296,7 @@ UT_TEST_CASE( simplices_2d_test )
     if (glfwGetKey(window.window() , GLFW_KEY_0) == GLFW_PRESS) change_rank(0);
     if (glfwGetKey(window.window() , GLFW_KEY_1) == GLFW_PRESS) change_rank(1);
     if (glfwGetKey(window.window() , GLFW_KEY_2) == GLFW_PRESS) change_rank(2);
+    if (glfwGetKey(window.window() , GLFW_KEY_3) == GLFW_PRESS) change_rank(3);
   }
 }
 UT_TEST_CASE_END( simplices_2d_test )
@@ -323,3 +327,9 @@ UT_TEST_CASE_END( polyhedra_test )
 
 
 UT_TEST_SUITE_END( graphics_decomposition_suite )
+
+#else
+UT_TEST_SUITE( graphics_decomposition_suite )
+UT_TEST_SUITE_END( graphics_decomposition_suite )
+
+#endif
