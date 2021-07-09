@@ -4,7 +4,8 @@
 layout( location = 0 ) out vec4 fragColor;
 
 in vec2 v_Parameter;
-in vec3 x_Position;
+in vec3 g_Normal;
+in vec3 g_Position;
 
 uniform samplerBuffer solution;
 uniform samplerBuffer colormap;
@@ -14,8 +15,8 @@ uniform int use_constant_color;
 
 // TODO: make these uniforms
 const int ncolor = 256;
-const float umin =  -1;
-const float umax =   1;
+const float umin = -1;
+const float umax =  1;
 
 void
 get_color( float u , out vec3 color ) {
@@ -32,8 +33,9 @@ get_color( float u , out vec3 color ) {
 void main() {
 
   if (use_constant_color > 0) {
-    fragColor = vec4(constant_color,1.0);
-    return;
+    //fragColor = vec4(constant_color,1.0);
+    //fragColor = vec4( abs(g_Normal),1.0);
+    //return;
   }
 
   float s = v_Parameter.x;
@@ -123,6 +125,23 @@ void main() {
 
   #else
   color = vec3(0.8,0.8,0.2);
+  #endif
+
+  #if 1
+  // vector from surface point to camera (where light is)
+  vec3 direction = -normalize(g_Position);
+  vec3 normal = normalize(g_Normal);
+
+  float diffuse = max(0.0,dot(direction,normal));
+  float phong = 128.0;
+  float specular = pow(max(0.0,dot(-reflect(direction,normal),normal)),phong);
+
+  //color = constant_color;
+  //color = vec3(0.4);
+  vec3 cd = color * diffuse;
+  vec3 cs = vec3(0.2) * specular;
+  vec3 ca = vec3(0.2);
+  color = ca + cd + cs;
   #endif
 
   fragColor = vec4(color,1.0);

@@ -550,6 +550,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       std::vector<index_t> parents;
       for (index_t j = 0; j < triangles.size(); j++) {
 
+        // we can only add the appropriate triangle to the field primitive
         if (facet2primitive[j] != k) continue;
 
         // retrieve some facet information
@@ -595,7 +596,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
         avro_assert( values.size() == simplex.nb_basis() * triangles_[k]->nb() );
 
         // store the data and save it to the primitive
-        for (index_t j = 0; j < triangles.size(); j++)
+        for (index_t j = 0; j < triangles_[k]->nb(); j++)
           data->add( values.data() + simplex.nb_basis()*j , simplex.nb_basis() );
 
         // add the field data to the solution primitive
@@ -607,7 +608,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
   // assign a constant color to each triangle primitive
   Colormap colormap;
-  colormap.change_style("hsv");
+  colormap.change_style("parula");
   float lims[2] = {0,1};
   colormap.set_limits(lims);
   for (index_t k = 0; k < triangles_.size(); k++) {
@@ -617,9 +618,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     for (index_t i = 0; i < 3; i++)
       color[i] = u[i];
     triangles_[k]->set_color(color);
-    color.print();
   }
-
 
   // write the active field (name + rank) to the GL associated with each triangle primitive
   avro_assert( solution_.size() == triangles_.size() );
@@ -640,7 +639,7 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
   GL_CALL( glEnableVertexAttribArray(0) );
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
-  show_field_ = false;
+  show_field_ = true;//false;
 
   // bind the desired colormap
   glActiveTexture(GL_TEXTURE0 + 1);

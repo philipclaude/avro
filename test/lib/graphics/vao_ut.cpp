@@ -22,7 +22,7 @@ class TestField : public Field<Simplex,std::vector<real_t>> {
 
 public:
   TestField( const Topology<Simplex>& topology , coord_t order ) :
-    Field( topology , order, CONTINUOUS )
+    Field( topology , order, DISCONTINUOUS )
   {
     build();
 
@@ -91,6 +91,7 @@ graphics::mat4 perspective_matrix = glm::perspective( fov , aspect , znear , zfa
 graphics::mat4 view_matrix = glm::lookAt( eye , center , up );
 graphics::mat4 mv = view_matrix * model_matrix;
 graphics::mat4 mvp = perspective_matrix * mv;
+graphics::mat4 normal_matrix = glm::transpose(glm::inverse(mv));
 
 mat4
 rotation( real_t X , real_t Y ) {
@@ -128,9 +129,12 @@ draw() {
 
   mv  = view_matrix * model_matrix;
   mvp = perspective_matrix * mv;
+  normal_matrix = glm::transpose(glm::inverse(mv));
 
   triangle_shader->use();
   triangle_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
+  triangle_shader->setUniform("u_NormalMatrix",normal_matrix);
+  triangle_shader->setUniform("u_ModelViewMatrix",mv);
 
   edge_shader->use();
   edge_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
@@ -138,7 +142,7 @@ draw() {
   point_shader->use();
   point_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
 
-  vao_ptr->draw_edges(*edge_shader);
+  //vao_ptr->draw_edges(*edge_shader);
   vao_ptr->draw_triangles(*triangle_shader);
   //vao_ptr->draw_points(*point_shader);
 
@@ -189,7 +193,7 @@ UT_TEST_CASE( simplices_2d_test )
   std::vector<index_t> dims(number,10);
   CKF_Triangulation topology( dims );
 
-  coord_t geometry_order = 2;
+  coord_t geometry_order = 1;
   Points nodes(dim);
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   Topology<Simplex> curvilinear(nodes,topology,geometry_order);
@@ -200,7 +204,7 @@ UT_TEST_CASE( simplices_2d_test )
   EGADS::Cube geometry(&context,lengths);
   curvilinear.points().attach(geometry);
 
-  #if 1
+  #if 0
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {
 
     real_t s = curvilinear.points()[k][0];
@@ -233,6 +237,7 @@ UT_TEST_CASE( simplices_2d_test )
   ShaderProgram tshader("triangles",with_tess,macros);
   tshader.use();
   tshader.setUniform("u_ModelViewProjectionMatrix",mvp);
+  tshader.setUniform("u_NormalMatrix",normal_matrix);
 
   ShaderProgram eshader("edges",with_tess,macros);
   eshader.use();

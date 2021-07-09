@@ -4,6 +4,7 @@ layout (triangles, equal_spacing, ccw) in;
 
 out vec3 v_Position;
 out vec2 v_ParameterTess;
+out vec3 v_Normal;
 
 void main() {
 
@@ -13,6 +14,9 @@ void main() {
   vec3 p0 = gl_in[0].gl_Position.xyz;
   vec3 p1 = gl_in[1].gl_Position.xyz;
   vec3 p2 = gl_in[2].gl_Position.xyz;
+
+  // TODO, use basis functions to calculate normal
+  v_Normal = normalize(cross( p1 - p0 , p2 - p0 ));
 
   #if GEOMETRY_ORDER == 1
   v_Position = (1 - s - t)*p0 + s*p1 + t*p2;
