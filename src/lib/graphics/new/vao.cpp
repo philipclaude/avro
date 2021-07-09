@@ -195,10 +195,6 @@ find_orientation( index_t face , const std::vector<index_t>& f , const std::vect
   for (index_t i = 0; i < 3; i++)
     F[i] = g[tet_faces[face][i]];
 
-  printf("face = %lu\n",face);
-  print_inline(f);
-  print_inline(F);
-
   // loop through the permutations
   for (index_t k = 0; k < 6; k++) {
 
@@ -209,13 +205,10 @@ find_orientation( index_t face , const std::vector<index_t>& f , const std::vect
       d += ( f[P[i]] - F[i] );
     }
     if (d == 0) {
-      printf("found orientation %lu = %d\n",k,tet_face_orient[k]);
       return tet_face_orient[k];
     }
   }
-
   avro_assert_not_reached;
-
   return 1;
 }
 
@@ -546,7 +539,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       // determine the order of the solution
       index_t solution_order = fld.order();
       Simplex simplex(2,solution_order);
-      printf("solution order = %lu\n",solution_order);
 
       // generate the interpolation data to evaluate the field on the primitive triangles
       Table<real_t> alpha( TableLayout_Rectangular , number );
@@ -577,7 +569,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
             // determine the reference coordinates in the tetrahedron
             std::vector<real_t> u(number);
             trace2cell.eval( trace , x , u.data() );
-            print_inline(u);
             alpha.add( u.data() , number );
           }
           parents.push_back( elem );
@@ -591,14 +582,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
         std::vector<real_t> values;
         fld.evaluate( rank, parents, alpha, values );
         avro_assert( values.size() == simplex.nb_basis() * triangles.size() );
-
-        printf("nb_basis = %lu\n",simplex.nb_basis());
-        print_inline( values );
-
-        for (index_t k = 0; k < values.size(); k++) {
-          //values[k] = 0.25;
-        }
-
 
         // store the data and save it to the solution primitive
         for (index_t j = 0; j < triangles.size(); j++)
@@ -633,9 +616,6 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
   glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
   for (index_t k = 0; k < triangles_.size(); k++) {
-
-    //if (k == 1) continue;
-
     solution_[k]->activate(shader);
     triangles_[k]->draw();
   }

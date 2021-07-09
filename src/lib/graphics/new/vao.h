@@ -187,12 +187,18 @@ public:
       data_.push_back(f[j]);
   }
 
+	void write() {
+
+	}
+
   const std::vector<gl_float>& data() const { return data_; }
 
 private:
   coord_t order_;
   index_t nb_basis_;
   std::vector<gl_float> data_;
+
+	gl_index buffer_;
 };
 
 class FieldPrimitive {
@@ -222,14 +228,15 @@ public:
     GL_CALL( glGenTextures( 1 , &texture_) );
     GL_CALL( glActiveTexture( GL_TEXTURE0 + 0 ) ); // fields are always in texture 0
     GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , texture_) );
+
+		
     GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , buffer_ ) );
   }
 
   void activate( ShaderProgram& shader ) {
-    // bind the desired solution texture
+    // bind the desired solution texture to texture unit 0
     glActiveTexture(GL_TEXTURE0 + 0);
     GLint solution_location = glGetUniformLocation(shader.handle() , "solution");
-    //avro_assert( solution_location >= 0 );
     glUniform1i(solution_location, 0); // first sampler in fragment shader
   }
 
@@ -237,7 +244,7 @@ private:
   std::string active_;
   std::map<std::string, std::shared_ptr<FieldData> > data_;
   gl_index texture_;
-  gl_index buffer_;
+  gl_index buffer_; // should be a vector of buffers
 };
 
 struct MeshFacet;

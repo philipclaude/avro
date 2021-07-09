@@ -39,23 +39,20 @@ public:
         std::vector<real_t> phi( topology.element().nb_basis() );
         topology.element().reference().basis().evaluate( xref , phi.data() );
 
-        real_t x[2] = {0,0};
+        real_t x[3] = {0,0,0};
         for (index_t i = 0; i < phi.size(); i++) {
           x[0] += phi[i]*topology.points()[ topology(k,i) ][0];
           x[1] += phi[i]*topology.points()[ topology(k,i) ][1];
+          x[2] += phi[i]*topology.points()[ topology(k,i) ][2];
         }
-        printf("x = %g, y = %g\n",x[0],x[1]);
 
         index_t idx = this->index(k,j);
         avro_assert( n == idx );
 
-        real_t value = 0.95*sin( x[0]*M_PI )*sin( x[1]*M_PI );
-        //(*this)(k,j) = value;
-        this->value(n++) = value;//real_t(n)/this->nb();//real_t(k)/topology.nb();//value;
+        real_t value = 0.95*sin( x[0]*M_PI )*sin( x[1]*M_PI )* cos( x[2]*M_PI );
+        this->value(n++) = value;
       }
     }
-    //avro_implement;
-    this->dof().print();
   }
 };
 
@@ -177,7 +174,7 @@ UT_TEST_CASE( simplices_2d_test )
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,3);
   CKF_Triangulation topology( dims );
 
   coord_t geometry_order = 2;
@@ -186,7 +183,7 @@ UT_TEST_CASE( simplices_2d_test )
   Topology<Simplex> curvilinear(nodes,topology,geometry_order);
   curvilinear.element().set_basis( BasisFunctionCategory_Lagrange );
 
-  #if 1
+  #if 0
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {
 
     real_t s = curvilinear.points()[k][0];
@@ -203,7 +200,6 @@ UT_TEST_CASE( simplices_2d_test )
   coord_t solution_order = 3;
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear,solution_order);
   field->element().set_basis( BasisFunctionCategory_Lagrange );
-  field->print();
   curvilinear.fields().make( "test" , field );
 
   Window window(width,height);

@@ -49,7 +49,7 @@ public:
     glfwPollEvents();
     glfwSetCursorPos(window_, width_/2, height_/2);
 
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
   }

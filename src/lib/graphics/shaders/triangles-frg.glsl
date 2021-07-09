@@ -12,7 +12,7 @@ uniform samplerBuffer colormap;
 // TODO: make these uniforms
 const int ncolor = 256;
 const float umin =  -1;
-const float umax =  1;
+const float umax =   1;
 
 void
 get_color( float u , out vec3 color ) {
@@ -50,9 +50,6 @@ void main() {
 
     f = (1 - s - t)*f0 + s*f1 + t*f2;
     get_color(f,color);
-
-    //color = vec3( x_Position[0] , x_Position[1] , 0 );
-    //color = vec3( 0.8 , 0.8 , 0.2 );
 
     #elif SOLUTION_ORDER == 2
 
