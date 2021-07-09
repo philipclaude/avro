@@ -17,16 +17,15 @@ using namespace avro::graphics;
 
 UT_TEST_SUITE( graphics_decomposition_suite )
 
-class TestField : public Field<Simplex,real_t> {
+class TestField : public Field<Simplex,std::vector<real_t>> {
 
 public:
   TestField( const Topology<Simplex>& topology , coord_t order ) :
-    Field<Simplex,real_t>( topology , order, DISCONTINUOUS )
+    Field( topology , order, CONTINUOUS )
   {
     build();
 
     const Simplex& element = this->element();
-
 
     index_t n = 0;
     for (index_t k = 0; k < topology.nb(); k++) {
@@ -39,21 +38,27 @@ public:
         std::vector<real_t> phi( topology.element().nb_basis() );
         topology.element().reference().basis().evaluate( xref , phi.data() );
 
-        real_t x[3] = {0,0,0};
+        std::vector<real_t> x(4,0);
         for (index_t i = 0; i < phi.size(); i++) {
           x[0] += phi[i]*topology.points()[ topology(k,i) ][0];
           x[1] += phi[i]*topology.points()[ topology(k,i) ][1];
-          x[2] += phi[i]*topology.points()[ topology(k,i) ][2];
+
+          if (topology.points().dim() > 2)
+            x[2] += phi[i]*topology.points()[ topology(k,i) ][2];
         }
 
         index_t idx = this->index(k,j);
-        avro_assert( n == idx );
+        if (this->type() == DISCONTINUOUS) {
+          avro_assert( n++ == idx );
+        }
 
-        real_t value = 0.95*sin( x[0]*M_PI )*sin( x[1]*M_PI )* cos( x[2]*M_PI );
-        this->value(n++) = value;
+        x[3] = 0.95*sin( x[0]*M_PI )*sin( x[1]*M_PI )* cos( x[2]*M_PI );
+        this->value(idx) = x;
       }
     }
   }
+
+  index_t nb_rank() const { return 4; }
 };
 
 graphics::mat4 model_matrix = glm::identity();
@@ -170,11 +175,17 @@ mouse_move_callback(GLFWwindow* window, double x, double y)
   ym = y;
 }
 
+void
+change_rank(index_t rank) {
+  vao_ptr->set_rank(rank);
+  draw();
+}
+
 UT_TEST_CASE( simplices_2d_test )
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,3);
+  std::vector<index_t> dims(number,10);
   CKF_Triangulation topology( dims );
 
   coord_t geometry_order = 2;
@@ -183,7 +194,7 @@ UT_TEST_CASE( simplices_2d_test )
   Topology<Simplex> curvilinear(nodes,topology,geometry_order);
   curvilinear.element().set_basis( BasisFunctionCategory_Lagrange );
 
-  #if 0
+  #if 1
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {
 
     real_t s = curvilinear.points()[k][0];
@@ -245,13 +256,10 @@ UT_TEST_CASE( simplices_2d_test )
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
 
   // set the tessellation level for the TCS
-  int level = 5;
+  int level = 4;
 
   tshader.use();
-  tshader.setUniform( "nb_basis" , int(nb_simplex_basis(2,field->element().order())) );
   tshader.setUniform( "u_level" , level );
-
-  tshader.printActiveUniforms();
 
   eshader.use();
   eshader.setUniform("u_level" , level );
@@ -270,6 +278,10 @@ UT_TEST_CASE( simplices_2d_test )
     // determine if we should exit the render loop
     if (glfwWindowShouldClose(window.window())) break;
     if (glfwGetKey(window.window(), GLFW_KEY_ESCAPE ) == GLFW_PRESS) break;
+
+    if (glfwGetKey(window.window() , GLFW_KEY_0) == GLFW_PRESS) change_rank(0);
+    if (glfwGetKey(window.window() , GLFW_KEY_1) == GLFW_PRESS) change_rank(1);
+    if (glfwGetKey(window.window() , GLFW_KEY_2) == GLFW_PRESS) change_rank(2);
   }
 }
 UT_TEST_CASE_END( simplices_2d_test )

@@ -153,7 +153,7 @@ Simplex::precalculate() {
 void
 Simplex::get_canonical_indices( const index_t* v , index_t nv , const ElementIndices& f , std::vector<index_t>& canonical ) const
 {
-  avro_assert_msg( order_==1 , "should this only be called for linear simplices?" );
+  //avro_assert_msg( order_==1 , "should this only be called for linear simplices?" );
   for (index_t k=0;k<f.indices.size();k++)
   {
     bool found = false;

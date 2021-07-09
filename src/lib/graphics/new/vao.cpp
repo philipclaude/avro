@@ -1,9 +1,11 @@
 #include "common/error.h"
 
+#include "element/simplex.h"
 #include "element/trace2cell.h"
 
 #include "geometry/entity.h"
 
+#include "graphics/new/primitives.h"
 #include "graphics/new/vao.h"
 #include "graphics/gl.h"
 
@@ -407,7 +409,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
   // if no geometry was given, at least split up the interior/boundary triangles
   coord_t number = topology.number();
-  //if (nb_triangle_primitives == 1 && number > 2) nb_triangle_primitives = 2;
+  if (nb_triangle_primitives == 1 && number > 2) nb_triangle_primitives = 2;
   if (nb_edge_primitives == 1 && number >= 2) nb_edge_primitives = 2;
 
   // allocate the primitives
@@ -422,6 +424,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   // loop through triangles and bin them accordingly
   const std::vector<MeshFacet>& triangles = facets[2];
   printf("processing %lu triangles\n",triangles.size());
+  std::map<index_t,index_t> facet2primitive;
   for (index_t k = 0; k < triangles.size(); k++) {
 
     // retrieve the linear facet
@@ -431,9 +434,8 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     index_t primitive_id = 0;
     if (number == 2) primitive_id = 0;
     else if (geometryless) {
-      primitive_id = 0;
-      //if (f.parent.size() == 1) primitive_id = 0; // interior
-      //else primitive_id = 1; // boundary
+      if (f.parent.size() == 1) primitive_id = 0; // interior
+      else primitive_id = 1; // boundary
     }
     else {
       Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
@@ -458,6 +460,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       for (index_t j = 0; j < nb_basis; j++) {
         dof[j] = topology(elem, canonical_tet_face[order][face][j] );
       }
+      facet2primitive.insert( {k,primitive_id} );
       triangles_[primitive_id]->add( dof.data() , dof.size() );
     }
   }
@@ -545,6 +548,8 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       std::vector<index_t> parents;
       for (index_t j = 0; j < triangles.size(); j++) {
 
+        if (facet2primitive[j] != k) continue;
+
         // retrieve some facet information
         const MeshFacet& f = triangles[j];
         index_t elem = f.parent[0];
@@ -567,9 +572,9 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
           }
           else if (number == 3) {
             // determine the reference coordinates in the tetrahedron
-            std::vector<real_t> u(number);
-            trace2cell.eval( trace , x , u.data() );
-            alpha.add( u.data() , number );
+            real_t u[3];
+            trace2cell.eval( trace , x , u );
+            alpha.add( u , number );
           }
           parents.push_back( elem );
         }
@@ -577,21 +582,28 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
       // evaluate the field at the interpolation points
       for (index_t rank = 0; rank < fld.nb_rank(); rank++) {
+
+        // create field data to hold the solution defined on these triangles
+        // this will only by stored on the CPU until the activated field+rank is written to the GPU
         std::shared_ptr<FieldData> data = std::make_shared<FieldData>(solution_order);
 
+        // evaluate the field at the reference coordinates of each element (parent)
         std::vector<real_t> values;
         fld.evaluate( rank, parents, alpha, values );
-        avro_assert( values.size() == simplex.nb_basis() * triangles.size() );
+        avro_assert( values.size() == simplex.nb_basis() * triangles_[k]->nb() );
 
-        // store the data and save it to the solution primitive
+        // store the data and save it to the primitive
         for (index_t j = 0; j < triangles.size(); j++)
           data->add( values.data() + simplex.nb_basis()*j , simplex.nb_basis() );
-        solution_[k]->add( field_names[i] , data );
-        solution_[k]->set_active( field_names[i] );
+
+        // add the field data to the solution primitive
+        solution_[k]->add( field_names[i] , rank , data );
+        solution_[k]->set_active( field_names[i] , rank );
       }
     }
   }
 
+  // write the active field (name + rank) to the GL associated with each triangle primitive
   avro_assert( solution_.size() == triangles_.size() );
   for (index_t k = 0; k < solution_.size(); k++)
     solution_[k]->write();
@@ -654,6 +666,16 @@ VertexAttributeObject::draw_points( ShaderProgram& shader ) {
 
   points_->draw(shader);
 }
+
+void
+VertexAttributeObject::set_rank( index_t rank ) {
+
+  for (index_t k = 0; k < solution_.size(); k++) {
+    solution_[k]->set_active_rank(rank);
+    solution_[k]->write();
+  }
+}
+
 
 } // graphics
 

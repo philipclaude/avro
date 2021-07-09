@@ -72,10 +72,11 @@ FacetDecomposition<type>::build()
       {
         ElementIndices f;
         f.dim = j;
-        topology_.element().get_facet_vertices( topology_(k) , topology_.nv(k) , i , f );
+        index_t nv = topology_.element().number()+1;
+        topology_.element().get_facet_vertices( topology_(k) , nv , i , f );
 
         std::vector<index_t> canonical(f.indices.size());
-        topology_.element().get_canonical_indices( topology_(k) , topology_.nv(k) , f , canonical );
+        topology_.element().get_canonical_indices( topology_(k) , nv , f , canonical );
 
         // check if this facet exists
         std::map<ElementIndices,FacetParent>::iterator it = facets_j.find(f);
