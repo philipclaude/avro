@@ -172,7 +172,6 @@ FieldPrimitive::add( const std::string& name , index_t rank , std::shared_ptr<Fi
 void
 FieldPrimitive::write() {
 
-  //printf("writing active name = %s\n",active_name().c_str());
   FieldData* field = data_[active_name()].get();
 
   GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , buffer_ ) );
@@ -190,12 +189,8 @@ FieldPrimitive::activate( ShaderProgram& shader ) {
   // solution fields are alway in texture unit 0 in the shaders
   glActiveTexture(GL_TEXTURE0 + 0);
 
-  //write();
-  // new
-  // bind the texture associated with this primitive
   GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , texture_) );
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , buffer_ ) );
-  // end new
 
   GLint solution_location = glGetUniformLocation(shader.handle() , "solution");
   glUniform1i(solution_location, 0); // first sampler in fragment shader

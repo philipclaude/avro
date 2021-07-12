@@ -19,17 +19,6 @@ class TopologyBase;
 namespace graphics
 {
 
-class UniformSet : public ParameterSet {
-
-};
-
-class Shader {
-public:
-	void setUniform( const std::string& , int u );
-	void setUniform( const std::string& , vec3 u );
-	void setUniform( const std::string& , mat4 u );
-};
-
 class Plot {
 
 public:
@@ -39,19 +28,23 @@ public:
 			// we need to split up the topology into the boundaries
 
 		}
-
-		// support for parallel meshes too?
-
+		else {
+			add(topology);
+		}
 	}
 
 	Plot();
 
 	void add( const TopologyBase& topology ) {
-		vertex_array_objects_.push_back( std::make_shared<VertexArray>(topology) );
+		coord_t number = topology.number();
+		coord_t order  = topology.shape().order();
+		std::shared_ptr<VertexArrayObject> vao = std::make_shared<inverse>(number,order);
+		vao->build(topology);
+		vertex_array_objects_.push_back(vao);
 	}
 
 private:
-	std::vector< std::shared_ptr<VertexArray> > vertex_array_objects_;
+	std::vector< std::shared_ptr<VertexArrayObjects> > vaos_;
 };
 
 class Trackball {
@@ -88,22 +81,15 @@ private:
 };
 
 class Scene {
-	/*
-	a collection of primitives (points, edges, triangle) that can be rendered
-	in a window, or in an HTML canvas
-	*/
-public:
-	typedef std::shared_ptr<Primitive> Primitive_ptr;
 
-	Scene( Manager& manager );
+public:
+	Scene();
 
 	// create a new primitive
 	void add( const TopologyBase& topology );
 
 private:
-	Camera camera_;
-	std::vector<Primitive_ptr> primitive_;
-	Manager& manager_;
+
 };
 
 
@@ -130,6 +116,7 @@ private:
 	Scene scene_;
 	Interface interface_;
 	Trackball trackball_;
+	Camera camera_;
 
 	GLFW_Window* window_;
 	GLFW_Manager manager_;
@@ -137,30 +124,23 @@ private:
 	bool picking_;
 };
 
-class GLFW_Application : public Application {
+class GLFW_Application {
 
 public:
-	GLFW_Application() :
-		Application(manager_)
+	GLFW_Application()
 	{}
 
 	void run();
 
 private:
-	GL_Manager manager_;
 	Window window_;
 };
 
-class Web_Application : public Application {
-public:
-	Web_Application() :
-		Application(manager_)
-	{}
+class Web_Application {
 
 	void run();
 
 private:
-	WV_Manager manager_;
 	Scene scene_;
 };
 
