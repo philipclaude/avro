@@ -152,10 +152,12 @@ FieldData::add( real_t* f , index_t ndof ) {
     data_.push_back(f[j]);
 }
 
-FieldPrimitive::FieldPrimitive() {
+FieldPrimitive::FieldPrimitive(bool nowrite) {
   // initialize the buffer
-  GL_CALL( glGenBuffers( 1 , &buffer_ ) );
-  GL_CALL( glGenTextures( 1 , &texture_) );
+  if (!nowrite) {
+    GL_CALL( glGenBuffers( 1 , &buffer_ ) );
+    GL_CALL( glGenTextures( 1 , &texture_) );
+  }
 }
 
 FieldPrimitive::~FieldPrimitive() {

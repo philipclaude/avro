@@ -82,8 +82,8 @@ if (avro_WITH_GL)
   endif()
 endif()
 
-set( avro_EXTERNAL_LIBRARIES_SHARED ${avro_EXTERNAL_LIBRARIES}  dl )
-set( avro_EXTERNAL_LIBRARIES_STATIC ${avro_EXTERNAL_LIBRARIES} ${ESP_LIBRARIES_STATIC} )
+set( avro_EXTERNAL_LIBRARIES_SHARED ${avro_EXTERNAL_LIBRARIES}  dl webglpp_shared )
+set( avro_EXTERNAL_LIBRARIES_STATIC ${avro_EXTERNAL_LIBRARIES} ${ESP_LIBRARIES_STATIC} webglpp_static )
 
 # add links to third party softwares
 if (avro_STATIC_LINK_CXX)
@@ -96,3 +96,5 @@ target_link_libraries( avro_static ${avro_EXTERNAL_LIBRARIES_STATIC} )
 pybind11_add_module(pyavro lib/python/pyavro.cpp)
 target_compile_definitions(pyavro PRIVATE VERSION_INFO=1.1)
 target_link_libraries( pyavro PRIVATE avro_static )
+
+include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/webglpp/src/ )

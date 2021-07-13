@@ -512,16 +512,20 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   }
 
   // generate the vertex array and primitive buffers
-  GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
-  GL_CALL( glBindVertexArray(vertex_array_) );
-
-  points_->write();
-  for (index_t k = 0; k < triangles_.size(); k++) {
-    triangles_[k]->write();
+  if (!nowrite_) {
+    GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
+    GL_CALL( glBindVertexArray(vertex_array_) );
   }
 
-  for (index_t k = 0; k < edges_.size(); k++) {
-    edges_[k]->write();
+  if (!nowrite_) {
+    points_->write();
+    for (index_t k = 0; k < triangles_.size(); k++) {
+      triangles_[k]->write();
+    }
+
+    for (index_t k = 0; k < edges_.size(); k++) {
+      edges_[k]->write();
+    }
   }
 
   // now create solution primitives to plot on the triangles
@@ -533,7 +537,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   solution_.resize( triangles_.size() );
   for (index_t k = 0; k < solution_.size(); k++) {
 
-    solution_[k] = std::make_shared<FieldPrimitive>();
+    solution_[k] = std::make_shared<FieldPrimitive>(nowrite_);
 
     printf("need to add %lu field data to field primitive\n",fields.nb());
     for (index_t i = 0; i < fields.nb(); i++) {
@@ -622,8 +626,10 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
   // write the active field (name + rank) to the GL associated with each triangle primitive
   avro_assert( solution_.size() == triangles_.size() );
-  for (index_t k = 0; k < solution_.size(); k++)
-    solution_[k]->write();
+  if (!nowrite_) {
+    for (index_t k = 0; k < solution_.size(); k++)
+      solution_[k]->write();
+  }
 }
 
 void

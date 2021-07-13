@@ -28,6 +28,7 @@ public:
 	gl_index buffer() const { return buffer_; }
 
   index_t nb() const { return coordinates_.size() / 3; }
+  const std::vector<gl_float>& coordinates() const { return coordinates_; }
 
   void print() const;
 
@@ -72,6 +73,7 @@ public:
   void print() const;
 
   index_t nb() const { return indices_.size() / nb_basis_; }
+  const std::vector<gl_index>& indices() const { return indices_; }
 
   void write();
 
@@ -107,7 +109,7 @@ private:
 
 class FieldPrimitive {
 public:
-  FieldPrimitive();
+  FieldPrimitive(bool nowrite=false);
 
   ~FieldPrimitive();
 
