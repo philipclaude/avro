@@ -46,6 +46,7 @@ public:
   void add( const index_t* v , index_t nv );
 
   index_t nb() const { return indices_.size() / nb_basis_; }
+  const std::vector<gl_index>& indices() const { return indices_; }
 
   void write();
 
