@@ -33,7 +33,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/include )
 include_directories(${CMAKE_SOURCE_DIR}/src/third_party)
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
-include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/webglpp/src )
 
 if (AVRO_NO_ESP)
   set( ESP_LIBRARIES )

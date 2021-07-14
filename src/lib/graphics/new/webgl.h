@@ -17,7 +17,6 @@ class WebGLpp_Manager {
 
 public:
   WebGLpp_Manager( int port ) :
-    webglpp_(port),
     current_vao_index_(0)
   {}
 
