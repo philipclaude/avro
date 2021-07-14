@@ -52,7 +52,7 @@ public:
           avro_assert( n++ == idx );
         }
 
-        x[3] = 0.95*sin( x[0]*M_PI )*sin( x[1]*M_PI )* cos( x[2]*M_PI );
+        x[3] = 0.95*sin( 10*x[0]*M_PI )*sin( 10*x[1]*M_PI );//* cos( x[2]*M_PI );
         this->value(idx) = x[3];
       }
     }
@@ -67,7 +67,7 @@ UT_TEST_CASE(test1)
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,20);
 //  dims[1] = 2;
   CKF_Triangulation topology( dims );
 

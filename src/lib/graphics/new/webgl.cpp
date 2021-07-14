@@ -20,13 +20,13 @@ WebGLpp_Manager::add( const VertexAttributeObject& vao ) {
   avro_assert( vao.order() == 1 );
 
   #if 0
+
   // buffer the triangles
   for (index_t k = 0; k < vao.nb_triangles(); k++) {
 
     const TrianglePrimitive& triangles = vao.triangles(k);
 
     int triangle_buffer = gl.createBuffer();
-    printf("triangle_buffer = %d\n",triangle_buffer);
     gl.bindBuffer( gl::ELEMENT_ARRAY_BUFFER , triangle_buffer );
     gl.bufferData( gl::ELEMENT_ARRAY_BUFFER , triangles.indices().data() , sizeof(gl_index) * triangles.indices().size() );
     gl.tagBuffer( gl::ELEMENT_ARRAY_BUFFER , "triangles" + std::to_string(k) + "-" + std::to_string(idx) );
@@ -46,12 +46,10 @@ WebGLpp_Manager::add( const VertexAttributeObject& vao ) {
     const EdgePrimitive& edges = vao.edges(k);
 
     int edge_buffer = gl.createBuffer();
-    printf("edge_buffer = %d\n",edge_buffer);
     gl.bindBuffer( gl::ELEMENT_ARRAY_BUFFER , edge_buffer );
     gl.bufferData( gl::ELEMENT_ARRAY_BUFFER , edges.indices().data() , sizeof(gl_index) * edges.indices().size() );
     gl.tagBuffer( gl::ELEMENT_ARRAY_BUFFER , "edges" + std::to_string(k) + "-" + std::to_string(idx) );
   }
-
 
   #else
 
@@ -68,13 +66,13 @@ WebGLpp_Manager::add( const VertexAttributeObject& vao ) {
         index_t vertex = triangles[3*j+i];
         for (coord_t d = 0; d < 3; d++)
           coordinates.push_back( points[3*vertex + d] );
-        point_map.insert( {vertex,n} );
+        if (point_map.find(vertex) == point_map.end())
+          point_map.insert( {vertex,n} );
         indices.push_back(n++);
       }
     }
 
     int triangle_buffer = gl.createBuffer();
-    printf("triangle_buffer = %d\n",triangle_buffer);
     gl.bindBuffer( gl::ELEMENT_ARRAY_BUFFER , triangle_buffer );
     gl.bufferData( gl::ELEMENT_ARRAY_BUFFER , indices.data() , sizeof(gl_index) * indices.size() );
     gl.tagBuffer( gl::ELEMENT_ARRAY_BUFFER , "triangles" + std::to_string(k) + "-" + std::to_string(idx) );
@@ -91,17 +89,15 @@ WebGLpp_Manager::add( const VertexAttributeObject& vao ) {
 
     const std::vector<gl_index>& edges = vao.edges(k).indices();
 
-    std::vector<gl_index> indices;
+    std::vector<gl_index> indices( edges.size() );
     for (index_t j = 0; j < edges.size(); j++)
-      indices.push_back( point_map[edges[j]] );
+      indices[j] = point_map.at(edges[j]);
 
     int edge_buffer = gl.createBuffer();
-    printf("edge_buffer = %d\n",edge_buffer);
     gl.bindBuffer( gl::ELEMENT_ARRAY_BUFFER , edge_buffer );
     gl.bufferData( gl::ELEMENT_ARRAY_BUFFER , indices.data() , sizeof(gl_index) * indices.size() );
     gl.tagBuffer( gl::ELEMENT_ARRAY_BUFFER , "edges" + std::to_string(k) + "-" + std::to_string(idx) );
   }
-
 
   #endif
 
@@ -115,7 +111,6 @@ WebGLpp_Manager::add( const VertexAttributeObject& vao ) {
     //const std::string& name = it->first;
 
     int field_buffer = gl.createBuffer();
-    printf("field_buffer = %d\n",field_buffer);
     gl.bindBuffer( gl::ARRAY_BUFFER , field_buffer );
     gl.bufferData( gl::ARRAY_BUFFER , field.data().data() , sizeof(gl_float) * field.data().size() );
     gl.tagBuffer( gl::ARRAY_BUFFER , "field_order=" + std::to_string(field.order()) + "_tri" + std::to_string(k) + "-" + std::to_string(idx) );
