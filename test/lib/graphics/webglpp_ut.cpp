@@ -67,7 +67,7 @@ UT_TEST_CASE(test1)
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,5);
+  std::vector<index_t> dims(number,10);
 //  dims[1] = 2;
   CKF_Triangulation topology( dims );
 

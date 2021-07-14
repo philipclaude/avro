@@ -101,6 +101,7 @@ public:
   void add( real_t* f , index_t ndof );
 
   const std::vector<gl_float>& data() const { return data_; }
+  coord_t order() const { return order_; }
 
 private:
   coord_t order_;
@@ -131,6 +132,8 @@ public:
   void write();
 
   void activate( ShaderProgram& shader );
+
+  const std::map<std::string,std::shared_ptr<FieldData>>& data() const { return data_; }
 
 private:
   std::string active_field_;
