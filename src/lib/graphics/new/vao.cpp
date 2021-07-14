@@ -466,7 +466,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     }
   }
 
-
   // loop through edges and bin them accordingly
   const std::vector<MeshFacet>& edges = facets[1];
   printf("processing %lu edges\n",edges.size());
@@ -511,23 +510,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     edges_[primitive_id]->add( dof.data() , dof.size() );
   }
 
-  // generate the vertex array and primitive buffers
-  if (!nowrite_) {
-    GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
-    GL_CALL( glBindVertexArray(vertex_array_) );
-  }
-
-  if (!nowrite_) {
-    points_->write();
-    for (index_t k = 0; k < triangles_.size(); k++) {
-      triangles_[k]->write();
-    }
-
-    for (index_t k = 0; k < edges_.size(); k++) {
-      edges_[k]->write();
-    }
-  }
-
   // now create solution primitives to plot on the triangles
   const Fields& fields = topology.fields();
   std::vector<std::string> field_names;
@@ -537,7 +519,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   solution_.resize( triangles_.size() );
   for (index_t k = 0; k < solution_.size(); k++) {
 
-    solution_[k] = std::make_shared<FieldPrimitive>(nowrite_);
+    solution_[k] = std::make_shared<FieldPrimitive>();
 
     printf("need to add %lu field data to field primitive\n",fields.nb());
     for (index_t i = 0; i < fields.nb(); i++) {
@@ -626,79 +608,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
   // write the active field (name + rank) to the GL associated with each triangle primitive
   avro_assert( solution_.size() == triangles_.size() );
-  if (!nowrite_) {
-    for (index_t k = 0; k < solution_.size(); k++)
-      solution_[k]->write();
-  }
-}
-
-void
-VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
-
-  shader.use();
-
-  // bind which attributes we want to draw
-  GL_CALL( glBindVertexArray(vertex_array_) );
-
-  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, points_->buffer()  ) );
-  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
-  GL_CALL( glEnableVertexAttribArray(0) );
-  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
-
-  show_field_ = true;//false;
-
-  // bind the desired colormap
-  glActiveTexture(GL_TEXTURE0 + 1);
-  GLint colormap_location = glGetUniformLocation(shader.handle() , "colormap");
-  glUniform1i(colormap_location, 1); // second sampler in fragment shader
-
-  for (index_t k = 0; k < triangles_.size(); k++) {
-    if (!triangles_[k]->visible()) continue;
-
-    if (show_field_) {
-      solution_[k]->activate(shader);
-      shader.setUniform( "use_constant_color" , 0 );
-    }
-    else {
-      shader.setUniform( "use_constant_color" , 1 );
-      shader.setUniform( "constant_color" , triangles_[k]->color() );
-    }
-    triangles_[k]->draw();
-  }
-}
-
-void
-VertexAttributeObject::draw_edges( ShaderProgram& shader ) {
-
-  shader.use();
-
-  // bind which attributes we want to draw
-  GL_CALL( glBindVertexArray(vertex_array_) );
-
-  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, points_->buffer()  ) );
-  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
-  GL_CALL( glEnableVertexAttribArray(0) );
-  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
-
-  for (index_t k = 0; k < edges_.size(); k++) {
-    edges_[k]->draw();
-  }
-}
-
-void
-VertexAttributeObject::draw_points( ShaderProgram& shader ) {
-
-  shader.use();
-
-  // bind which attributes we want to draw
-  GL_CALL( glBindVertexArray(vertex_array_) );
-
-  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, points_->buffer()  ) );
-  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
-  GL_CALL( glEnableVertexAttribArray(0) );
-  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
-
-  points_->draw(shader);
 }
 
 void
@@ -709,7 +618,6 @@ VertexAttributeObject::set_rank( index_t rank ) {
     solution_[k]->write();
   }
 }
-
 
 } // graphics
 

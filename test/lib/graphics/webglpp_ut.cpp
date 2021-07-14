@@ -5,7 +5,7 @@
 
 #include "graphics/colormap.h"
 #include "graphics/shader.h"
-#include "graphics/new/webgl.h"
+#include "graphics/new/webglpp.h"
 
 #include "library/ckf.h"
 #include "library/egads.h"
@@ -52,7 +52,8 @@ public:
           avro_assert( n++ == idx );
         }
 
-        x[3] = 0.95*sin( 10*x[0]*M_PI )*sin( 10*x[1]*M_PI );//* cos( x[2]*M_PI );
+        x[3] = 0.95*sin( 10*x[0]*M_PI )*sin( 10*x[1]*M_PI ) +
+               0.95*sin( 10*x[1]*M_PI )*sin( 10*x[2]*M_PI );
         this->value(idx) = x[3];
       }
     }
@@ -87,15 +88,13 @@ UT_TEST_CASE(test1)
   curvilinear.fields().make( "test" , field );
 
   VertexAttributeObject vao(number,1);
-  vao.nowrite() = true;
   vao.build(curvilinear);
 
   // grab the decomposed primitives for webglpp
-  WebGLpp_Manager manager(7681);
+  WebGL_Manager manager;
+  manager.write( vao );
 
-  manager.add( vao );
-
-  manager.send();
+  manager.send(7681);
 }
 UT_TEST_CASE_END(test1)
 

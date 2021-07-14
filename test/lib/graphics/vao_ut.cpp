@@ -1,5 +1,6 @@
 #include "unit_tester.hpp"
 
+#include "graphics/new/managers.h"
 #include "graphics/new/vao.h"
 #include "graphics/new/window.h"
 
@@ -232,6 +233,7 @@ UT_TEST_CASE( simplices_2d_test )
 
   VertexAttributeObject vao(number,1);
   vao.build(curvilinear);
+  window.manager().write(vao);
 
   std::vector<std::string> macros = {"#define SOLUTION_ORDER " + std::to_string(field->element().order()),
                                      "#define GEOMETRY_ORDER " + std::to_string(curvilinear.element().order()) };

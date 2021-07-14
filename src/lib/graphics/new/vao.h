@@ -29,11 +29,8 @@ public:
   VertexAttributeObject( coord_t number , coord_t order ) :
     number_(number),
     order_(order),
-    nowrite_(false),
     show_field_(true)
   {}
-
-  bool& nowrite() { return nowrite_; }
 
   void build( const TopologyBase& topology );
 
@@ -55,6 +52,16 @@ public:
   const EdgePrimitive& edges( index_t k ) const { return *edges_[k].get(); }
   const FieldPrimitive& field( index_t k ) const { return *solution_[k].get(); }
 
+  PointPrimitive& points() { return *points_.get(); }
+  TrianglePrimitive& triangles( const index_t k ) { return *triangles_[k].get(); }
+  EdgePrimitive& edges( index_t k ) { return *edges_[k].get(); }
+  FieldPrimitive& field( index_t k ) { return *solution_[k].get(); }
+
+  gl_index& vertex_array()       { return vertex_array_; }
+  gl_index  vertex_array() const { return vertex_array_; }
+
+  void apply_transformation( const mat4& m );
+
 private:
   template<typename type>
   void get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets );
@@ -65,7 +72,6 @@ private:
 private:
   coord_t number_;
   coord_t order_;
-  bool nowrite_;
 
   gl_index vertex_array_;
   bool show_field_;
@@ -74,6 +80,8 @@ private:
   std::vector< std::shared_ptr<EdgePrimitive> > edges_;
   std::vector< std::shared_ptr<TrianglePrimitive> > triangles_;
   std::vector< std::shared_ptr<FieldPrimitive> > solution_;
+
+  mat4 model_matrix_;
 };
 
 } // graphics

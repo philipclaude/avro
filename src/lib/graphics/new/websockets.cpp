@@ -1,4 +1,5 @@
 #include "common/crypto.h"
+#include "avro_config.h"
 
 #include <cassert>
 #include <cstdint>
@@ -181,6 +182,10 @@ void write(int port, const std::vector<std::string>& messages) {
   // wait for a client to connect to
   while (client_fd < 0) {
 
+    #if AVRO_HEADLESS_GRAPHICS
+    break;
+    #endif
+
     // accept a connection from the client
     client_fd = accept(server_fd, (struct sockaddr*)&client , &len );
     if (client_fd < 0) continue; // no client connected
@@ -199,7 +204,7 @@ void write(int port, const std::vector<std::string>& messages) {
     }
 
     // send the data
-    for (int k = 0; k < messages.size(); k++)
+    for (int k = 0; k < (int)messages.size(); k++)
       sendmessage( client_fd , messages[k] , RFC6455_OP_TEXT );
   }
 

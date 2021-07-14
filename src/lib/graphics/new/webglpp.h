@@ -14,7 +14,7 @@ namespace websockets
 // server write function implemented in websockets.cpp
 void write( int port , const std::vector<std::string>& messages );
 
-}
+} // websockets
 
 // so you can do things like gl::ARRAY_BUFFER
 namespace gl
@@ -24,6 +24,12 @@ namespace gl
   static const int TEXTURE_BUFFER = 2;
   static const int STATIC_DRAW = 3;
 }
+
+namespace avro
+{
+
+namespace graphics
+{
 
 #define ERROR(msg) printf("%s (line %d of file %s\n",msg,__LINE__,__FILE__);
 
@@ -151,18 +157,6 @@ public:
     }
   }
 
-  // get functions
-  // these are internally needed to retrieve the data that will be sent to the client
-  template<typename T>
-  void getBufferData( int type , std::vector<T>& data ) {
-    if (type == gl::ARRAY_BUFFER) {
-      bound_array_buffer_->get<T>(data);
-    }
-    else {
-      ERROR("unimplemented buffer type");
-    }
-  }
-
   std::string
   target_name( int type ) {
     if      (type == gl::ARRAY_BUFFER) return "ARRAY_BUFFER";
@@ -171,7 +165,7 @@ public:
     return "";
   }
 
-  void send( int port=7681 );
+  void send( int port );
 
 private:
   std::vector< std::shared_ptr<BufferObject> > buffers_;
@@ -180,5 +174,30 @@ private:
   BufferObject* bound_element_buffer_;
   BufferObject* bound_texture_buffer_;
 };
+
+class VertexAttributeObject;
+
+class WebGL_Manager {
+
+public:
+  WebGL_Manager() :
+    current_vao_index_(0)
+  {}
+
+  void write( const VertexAttributeObject& vao );
+
+  void send(int port=7681) {
+    webglpp_.send(port);
+  }
+
+private:
+
+  WebGLpp webglpp_;
+  int current_vao_index_;
+};
+
+} // graphics
+
+} // avro
 
 #endif

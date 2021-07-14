@@ -13,19 +13,24 @@ class Points;
 namespace graphics
 {
 
-class PointPrimitive {
+class PrimitiveBase {
+public:
+  gl_index& buffer()       { return buffer_; }
+  gl_index  buffer() const { return buffer_; }
+
+protected:
+  gl_index buffer_;
+};
+
+class PointPrimitive : public PrimitiveBase {
 
 public:
 
 	PointPrimitive( const Points& points );
 
-  ~PointPrimitive();
-
 	void write();
 
   void draw( ShaderProgram& program );
-
-	gl_index buffer() const { return buffer_; }
 
   index_t nb() const { return coordinates_.size() / 3; }
   const std::vector<gl_float>& coordinates() const { return coordinates_; }
@@ -35,11 +40,10 @@ public:
 private:
   const Points& points_;
 	std::vector<gl_float> coordinates_;
-	gl_index buffer_;
 	bool  visible_;
 };
 
-class EdgePrimitive {
+class EdgePrimitive : public PrimitiveBase {
 
 public:
   EdgePrimitive( coord_t order );
@@ -57,17 +61,12 @@ public:
 private:
   coord_t order_;
   index_t nb_basis_;
-  gl_index buffer_;
   std::vector<gl_index> indices_;
 };
 
-class FieldPrimitive;
-
-class TrianglePrimitive {
+class TrianglePrimitive : public PrimitiveBase {
 public:
   TrianglePrimitive( coord_t order );
-
-  ~TrianglePrimitive();
 
   void add( const index_t* v , index_t nv );
 
@@ -88,8 +87,6 @@ private:
   coord_t order_;
   index_t nb_basis_;
   std::vector<gl_index> indices_;
-  gl_index buffer_;
-  FieldPrimitive* field_;
   vec3 color_;
   bool visible_;
 };
@@ -109,11 +106,9 @@ private:
   std::vector<gl_float> data_;
 };
 
-class FieldPrimitive {
+class FieldPrimitive : public PrimitiveBase {
 public:
-  FieldPrimitive(bool nowrite=false);
-
-  ~FieldPrimitive();
+  FieldPrimitive() {}
 
   void set_active( const std::string& active , index_t rank = 0 ) {
     active_field_ = active;
@@ -135,12 +130,14 @@ public:
 
   const std::map<std::string,std::shared_ptr<FieldData>>& data() const { return data_; }
 
+  gl_index& texture()       { return texture_; }
+  gl_index  texture() const { return texture_; }
+
 private:
   std::string active_field_;
   index_t active_rank_;
   std::map<std::string, std::shared_ptr<FieldData> > data_;
   gl_index texture_;
-  gl_index buffer_;
 };
 
 } // graphics
