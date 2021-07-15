@@ -42,10 +42,24 @@ public:
 
 	Plot( const TopologyBase& topology ) :
 		topology_(topology)
-	{}
+	{
+    model_matrix_ = glm::identity();
+  }
 
 	void build() {
-		vao_.build(topology_);
+
+    if (topology_.number() == 4) {
+      // build a spacetime topology and add the vao for each boundary (this is the topology we pass into build)
+
+      // we discard the spacetime topology, but hold on to the actual 4d topology
+      // in case the final vao (the slice) needs to be recomputed from the 4d topology
+      avro_implement;
+    }
+    else {
+      vao_.push_back( std::make_shared<VertexAttributeObject>() );
+      active_vao_ = vao_[0].get();
+      active_vao_->build(topology_);
+    }
 
 		// compute the center
 
@@ -58,11 +72,11 @@ public:
 		// m is the transformation relative to the trackball
 		if (!clip_.modifying()) {
 			if (centered) {
-				mat4 m1 = inverse_center_translation_ * m * center_translation_;
-				vao_.apply_transformation(m1);
+				model_matrix_ = inverse_center_translation_ * m * center_translation_ * model_matrix_;
 			}
-			else
-				vao_.apply_transformation(m);
+			else {
+        model_matrix_ = m * model_matrix_;
+      }
 
 			transform_clip(m,false);
 		}
@@ -82,23 +96,45 @@ public:
 	}
 
 	void draw() {
-		vao_.draw();
+		active_vao_->draw();
 
 		if (clip_.visible()) {
 			// draw clipping plane
 		}
 	}
 
+  const mat4& model_matrix() const { return model_matrix_; }
+
+  index_t nb_vao() const { return vao_.size(); }
+  VertexAttributeObject& vao( index_t k ) { return *vao_[k].get(); }
+
+  void set_triangle_shader( ShaderProgram* program ) { triangle_shader_ = program; }
+  void set_edge_shader( ShaderProgram* program ) { edge_shader_ = program; }
+  void set_point_shader( ShaderProgram* program ) { point_shader_ = program; }
+
+  ShaderProgram* triangle_shader() { return triangle_shader_; }
+  ShaderProgram* edge_shader() { return edge_shader_; }
+  ShaderProgram* point_shader() { return point_shader_; }
+
+  const VertexAttributeObject& active_vao() const { return *active_vao_; }
+  VertexAttributeObject& active_vao() { return *active_vao_; }
+
 private:
 
 	const TopologyBase& topology_;
-	VertexAttributeObject vao_;
+	VertexAttributeObject* active_vao_;
 	mat4 model_matrix_;
 
 	ClippingPlane clip_;
 	vec3 center_;
 	mat4 center_translation_;
 	mat4 inverse_center_translation_;
+
+  std::vector< std::shared_ptr<VertexAttributeObject> > vao_;
+
+  ShaderProgram* triangle_shader_;
+  ShaderProgram* edge_shader_;
+  ShaderProgram* point_shader_;
 };
 
 } // graphics

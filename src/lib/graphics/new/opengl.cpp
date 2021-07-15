@@ -92,20 +92,31 @@ PointPrimitive::draw( ShaderProgram& program ) {
 }
 
 void
-EdgePrimitive::draw() {
+EdgePrimitive::draw(bool with_tess) {
 
   // bind the buffer for the indices we want to draw
   GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_ ) );
-  GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , nb_basis_ ) );
-  GL_CALL( glDrawElements(GL_PATCHES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+
+  if (with_tess) {
+    GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , nb_basis_ ) );
+    GL_CALL( glDrawElements(GL_PATCHES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+  }
+  else {
+    GL_CALL( glDrawElements(GL_LINES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+  }
 }
 
 void
-TrianglePrimitive::draw() {
+TrianglePrimitive::draw(bool with_tess) {
   // bind the buffer for the indices we want to draw
   GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_ ) );
-  GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , nb_basis_ ) );
-  GL_CALL( glDrawElements(GL_PATCHES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+  if (with_tess) {
+    GL_CALL( glPatchParameteri( GL_PATCH_VERTICES , nb_basis_ ) );
+    GL_CALL( glDrawElements(GL_PATCHES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+  }
+  else {
+    GL_CALL( glDrawElements(GL_TRIANGLES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+  }
 }
 
 void
@@ -139,6 +150,7 @@ void
 VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
 
   shader.use();
+  shader.setUniform( "have_tessellation_shader" , shader.has_tessellation_shader() );
 
   // bind which attributes we want to draw
   GL_CALL( glBindVertexArray(vertex_array_) );
@@ -149,6 +161,7 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
   show_field_ = true;//false;
+  if (solution_.size() == 0) show_field_ = false;
 
   // bind the desired colormap
   glActiveTexture(GL_TEXTURE0 + 1);
@@ -166,7 +179,7 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
       shader.setUniform( "use_constant_color" , 1 );
       shader.setUniform( "constant_color" , triangles_[k]->color() );
     }
-    triangles_[k]->draw();
+    triangles_[k]->draw( shader.has_tessellation_shader() );
   }
 }
 
@@ -174,6 +187,7 @@ void
 VertexAttributeObject::draw_edges( ShaderProgram& shader ) {
 
   shader.use();
+  shader.setUniform( "have_tessellation_shader" , shader.has_tessellation_shader() );
 
   // bind which attributes we want to draw
   GL_CALL( glBindVertexArray(vertex_array_) );
@@ -184,7 +198,7 @@ VertexAttributeObject::draw_edges( ShaderProgram& shader ) {
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
   for (index_t k = 0; k < edges_.size(); k++) {
-    edges_[k]->draw();
+    edges_[k]->draw(shader.has_tessellation_shader());
   }
 }
 

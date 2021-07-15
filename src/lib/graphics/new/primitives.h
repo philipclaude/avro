@@ -54,7 +54,7 @@ public:
 
   void write();
 
-  void draw();
+  void draw(bool with_tess=true);
 
   void print() const;
 
@@ -77,7 +77,7 @@ public:
 
   void write();
 
-  void draw();
+  void draw(bool with_tess=true);
 
   const vec3& color() const { return color_; }
   void set_color( vec3 color ) { color_ = color; }

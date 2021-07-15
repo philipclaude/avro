@@ -393,7 +393,10 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   std::set<Entity*> entities;
   for (index_t k = 0; k < topology.points().nb(); k++) {
     if (topology.points().entity(k) == nullptr) continue;
-    entities.insert( topology.points().entity(k) );
+    Entity* entity = topology.points().entity(k);
+    entities.insert(entity);
+    for (index_t j = 0; j < entity->nb_parents(); j++)
+      entities.insert( entity->parents(j) );
   }
   printf("there are %lu entities\n",entities.size());
   bool geometryless = (entities.size() == 0);
@@ -522,85 +525,88 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   fields.get_field_names(field_names);
   avro_assert_msg( field_names.size() == fields.nb() , "|names| = %lu, nb_fields = %lu" , field_names.size() , fields.nb() );
 
-  solution_.resize( triangles_.size() );
-  for (index_t k = 0; k < solution_.size(); k++) {
+  if (fields.nb() > 0) {
+    solution_.resize( triangles_.size() );
+    for (index_t k = 0; k < solution_.size(); k++) {
 
-    solution_[k] = std::make_shared<FieldPrimitive>();
+      solution_[k] = std::make_shared<FieldPrimitive>();
 
-    printf("need to add %lu field data to field primitive\n",fields.nb());
-    for (index_t i = 0; i < fields.nb(); i++) {
+      printf("need to add %lu field data to field primitive\n",fields.nb());
+      for (index_t i = 0; i < fields.nb(); i++) {
 
-      // retrieve the field
-      const FieldHolder& fld = fields[field_names[i]];
+        // retrieve the field
+        const FieldHolder& fld = fields[field_names[i]];
 
-      // determine the order of the solution
-      index_t solution_order = fld.order();
-      Simplex simplex(2,solution_order);
+        // determine the order of the solution
+        index_t solution_order = fld.order();
+        Simplex simplex(2,solution_order);
 
-      // generate the interpolation data to evaluate the field on the primitive triangles
-      Table<real_t> alpha( TableLayout_Rectangular , number );
-      std::vector<index_t> parents;
-      for (index_t j = 0; j < triangles.size(); j++) {
+        // generate the interpolation data to evaluate the field on the primitive triangles
+        Table<real_t> alpha( TableLayout_Rectangular , number );
+        std::vector<index_t> parents;
+        for (index_t j = 0; j < triangles.size(); j++) {
 
-        // we can only add the appropriate triangle to the field primitive
-        if (facet2primitive[j] != k) continue;
+          // we can only add the appropriate triangle to the field primitive
+          if (facet2primitive[j] != k) continue;
 
-        // retrieve some facet information
-        const MeshFacet& f = triangles[j];
-        index_t elem = f.parent[0];
-        index_t face = f.local[0];
-        int orientation = f.orientation[0];
+          // retrieve some facet information
+          const MeshFacet& f = triangles[j];
+          index_t elem = f.parent[0];
+          index_t face = f.local[0];
+          int orientation = f.orientation[0];
 
-        CanonicalTraceToCell trace(elem,face,orientation);
-        TraceToCellRefCoord trace2cell(simplex);
+          CanonicalTraceToCell trace(elem,face,orientation);
+          TraceToCellRefCoord trace2cell(simplex);
 
-        // evaluate the solution at the lagrange nodes of the reference simplex
-        for (index_t n = 0; n < simplex.nb_basis(); n++) {
+          // evaluate the solution at the lagrange nodes of the reference simplex
+          for (index_t n = 0; n < simplex.nb_basis(); n++) {
 
-          // determine the reference coordinate in the parent element
-          // using the face and orientation
-          const real_t* x = simplex.reference().get_reference_coordinate(n);
+            // determine the reference coordinate in the parent element
+            // using the face and orientation
+            const real_t* x = simplex.reference().get_reference_coordinate(n);
 
-          // store the interpolation data
-          if (number == 2) {
-            alpha.add( x , number );
+            // store the interpolation data
+            if (number == 2) {
+              alpha.add( x , number );
+            }
+            else if (number == 3) {
+              // determine the reference coordinates in the tetrahedron
+              real_t u[3];
+              trace2cell.eval( trace , x , u );
+              alpha.add( u , number );
+            }
+            parents.push_back( elem );
           }
-          else if (number == 3) {
-            // determine the reference coordinates in the tetrahedron
-            real_t u[3];
-            trace2cell.eval( trace , x , u );
-            alpha.add( u , number );
-          }
-          parents.push_back( elem );
+        }
+
+        // evaluate the field at the interpolation points
+        for (index_t rank = 0; rank < fld.nb_rank(); rank++) {
+
+          // create field data to hold the solution defined on these triangles
+          // this will only by stored on the CPU until the activated field+rank is written to the GPU
+          std::shared_ptr<FieldData> data = std::make_shared<FieldData>(solution_order);
+
+          // evaluate the field at the reference coordinates of each element (parent)
+          std::vector<real_t> values;
+          fld.evaluate( rank, parents, alpha, values );
+          avro_assert( values.size() == simplex.nb_basis() * triangles_[k]->nb() );
+
+          // store the data and save it to the primitive
+          for (index_t j = 0; j < triangles_[k]->nb(); j++)
+            data->add( values.data() + simplex.nb_basis()*j , simplex.nb_basis() );
+
+          // add the field data to the solution primitive
+          solution_[k]->add( field_names[i] , rank , data );
+          solution_[k]->set_active( field_names[i] , rank );
         }
       }
-
-      // evaluate the field at the interpolation points
-      for (index_t rank = 0; rank < fld.nb_rank(); rank++) {
-
-        // create field data to hold the solution defined on these triangles
-        // this will only by stored on the CPU until the activated field+rank is written to the GPU
-        std::shared_ptr<FieldData> data = std::make_shared<FieldData>(solution_order);
-
-        // evaluate the field at the reference coordinates of each element (parent)
-        std::vector<real_t> values;
-        fld.evaluate( rank, parents, alpha, values );
-        avro_assert( values.size() == simplex.nb_basis() * triangles_[k]->nb() );
-
-        // store the data and save it to the primitive
-        for (index_t j = 0; j < triangles_[k]->nb(); j++)
-          data->add( values.data() + simplex.nb_basis()*j , simplex.nb_basis() );
-
-        // add the field data to the solution primitive
-        solution_[k]->add( field_names[i] , rank , data );
-        solution_[k]->set_active( field_names[i] , rank );
-      }
     }
-  }
+    avro_assert( solution_.size() == triangles_.size() );
+  } // fields.nb > 0
 
   // assign a constant color to each triangle primitive
   Colormap colormap;
-  colormap.change_style("parula");
+  colormap.change_style("hsv");
   float lims[2] = {0,1};
   colormap.set_limits(lims);
   for (index_t k = 0; k < triangles_.size(); k++) {
@@ -611,9 +617,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       color[i] = u[i];
     triangles_[k]->set_color(color);
   }
-
-  // write the active field (name + rank) to the GL associated with each triangle primitive
-  avro_assert( solution_.size() == triangles_.size() );
 }
 
 void
@@ -623,6 +626,11 @@ VertexAttributeObject::set_rank( index_t rank ) {
     solution_[k]->set_active_rank(rank);
     solution_[k]->write();
   }
+}
+
+void
+VertexAttributeObject::apply_transformation( const mat4& m ) {
+  model_matrix_ = m * model_matrix_;
 }
 
 } // graphics

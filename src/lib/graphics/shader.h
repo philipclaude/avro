@@ -77,12 +77,15 @@ public:
   int getUniformLocation(const char* name );
   bool fileExists( const std::string& filename );
 
+  bool has_tessellation_shader() const { return has_tessellation_shader_; }
+
 private:
   int handle_;
   bool linked_;
   std::string log_;
   std::string name_;
   std::vector<std::string> macros_;
+  bool has_tessellation_shader_;
 };
 
 class ShaderLibrary

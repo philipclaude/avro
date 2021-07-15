@@ -12,6 +12,7 @@ uniform samplerBuffer colormap;
 
 uniform vec3 constant_color;
 uniform int use_constant_color;
+uniform int have_tessellation_shader;
 
 // TODO: make these uniforms
 const int ncolor = 256;
@@ -50,7 +51,10 @@ void main() {
 
   if (use_constant_color > 0) {
     vec3 color_out;
-    shading( -normalize(g_Position) , normalize(g_Normal) , constant_color , color_out );
+    if (have_tessellation_shader > 0)
+      shading( -normalize(g_Position) , normalize(g_Normal) , constant_color , color_out );
+    else
+      color_out = constant_color; // no shading because there are no normals
     fragColor = vec4(color_out,1.0);
     return;
   }

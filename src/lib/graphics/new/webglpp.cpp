@@ -12,7 +12,8 @@ namespace avro
 namespace graphics
 {
 
-void add_json_field( std::string& J , const std::string& name , const int& i , bool end=false) {
+void
+add_json_field( std::string& J , const std::string& name , const int& i , bool end=false) {
   J += "\u0022" + name + "\u0022:" + std::to_string(i);
   if (end) J += "}";
   else J += ",";
