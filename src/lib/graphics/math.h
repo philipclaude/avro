@@ -156,6 +156,7 @@ public:
 namespace glm {
 
 class mat4 mat4( float a );
+class vec4 to_vec4( const vec3& x , float h );
 class mat4 identity();
 class mat4 perspective( float fov , float aspect , float znear , float zfar );
 class mat4 lookAt( const vec3& eye , const vec3& center , const vec3& up );

@@ -76,6 +76,9 @@ Window::init() {
   glfwSetScrollCallback(window_,&_mouse_scroll_callback);
   glfwSetKeyCallback( window_ , &_keyboard_callback );
   glfwSetWindowSizeCallback( window_ , &_resize_callback );
+
+  picking_  = false;
+  picked_   = 0;
 }
 
 void
@@ -100,6 +103,37 @@ void
 Window::mouse_move_callback(double x, double y) {
 
   // check if dragging
+  if (!trackball_.dragging() && !picking_) return;
+
+  if (picking_) {
+    // compute the world coordinates of the mouse
+    mat4 ms = glm::identity();
+
+    ms(0,0) =  (float)width_/2.;
+    ms(1,1) =  (float)height_/2.;
+    ms(0,3) =  (float)width_/2.;
+    ms(1,3) =  (float)height_/2.;
+
+    mat4 cs = ms * camera_.projection_matrix() * camera_.view_matrix();
+
+    // find the closest plot
+    real_t d = 1e20;
+    for (index_t k = 0; k < plot_.size(); k++) {
+      mat4 mcs = cs * plot_[k]->model_matrix();
+
+      // transform the plot center to screen coordinates
+      vec4 c = mcs * glm::to_vec4( plot_[k]->center() , 1.0 );
+
+      real_t dx = (x - c(0)/c(3));
+      real_t dy = (y - c(1)/c(3));
+      real_t distance = dx*dx + dy*dy;
+      if (distance < d) {
+        d        = distance;
+        picked_  = k;
+      }
+    }
+  }
+
   if (!trackball_.dragging()) return;
 
   real_t xm,ym;
@@ -120,10 +154,10 @@ Window::mouse_move_callback(double x, double y) {
   }
 
   // apply the transformation to the plots (or a single picked plot)
-  if (picked_ < 0) {
+  if (!picking_) {
     // apply the transformation to each plot's model matrix
     for (index_t k = 0; k < plot_.size(); k++) {
-      plot_[k]->transform(T,true);
+      plot_[k]->transform(T,false);
       if (!trackball_.rotating()) plot_[k]->transform_center(T);
     }
   }
@@ -151,6 +185,14 @@ Window::mouse_scroll_callback(double dx, double dy) {
 void
 Window::key_callback( int key , int scancode , int action , int mods ) {
   // no keys are currently implemented
+
+  if (key == GLFW_KEY_P) {
+    if (action == GLFW_PRESS) {
+      picking_ = !picking_;
+    }
+    printf("picking is %s\n",picking_? "on" : "off");
+    picked_ = -1;
+  }
 }
 
 void
@@ -199,7 +241,7 @@ Window::draw() {
 
   for (index_t k = 0; k < plot_.size(); k++) {
 
-    // calculate the matrices
+    // retrieve the model matrix from the plot
     const mat4& model_matrix = plot_[k]->model_matrix();
 
     // retrieve the current vao and draw

@@ -127,6 +127,7 @@ private:
   Trackball trackball_;
   Camera camera_;
   int picked_;
+  bool picking_;
 };
 
 } // graphics

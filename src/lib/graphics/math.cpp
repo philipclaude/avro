@@ -33,6 +33,16 @@ mat4( float a ) {
   return m;
 }
 
+class vec4
+to_vec4( const vec3& v , float h ) {
+  vec4 x;
+  x(0) = v(0);
+  x(1) = v(1);
+  x(2) = v(2);
+  x(3) = h;
+  return x;
+}
+
 class mat4
 identity() {
   class mat4 m;

@@ -22,7 +22,8 @@ class Plot {
 private:
 	class ClippingPlane {
 	public:
-		ClippingPlane() {}
+		ClippingPlane() :
+			modifying_(false) {}
 
 		bool visible() const { return visible_; }
 		bool modifying() const { return modifying_; }
