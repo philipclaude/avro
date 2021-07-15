@@ -47,6 +47,8 @@ class EdgePrimitive : public PrimitiveBase {
 
 public:
   EdgePrimitive( coord_t order );
+
+  coord_t order() const { return order_; }
   void add( const index_t* v , index_t nv );
 
   index_t nb() const { return indices_.size() / nb_basis_; }
@@ -58,10 +60,14 @@ public:
 
   void print() const;
 
+  bool visible() const { return visible_; }
+  void set_visible(bool x) { visible_ = x; }
+
 private:
   coord_t order_;
   index_t nb_basis_;
   std::vector<gl_index> indices_;
+  bool visible_;
 };
 
 class TrianglePrimitive : public PrimitiveBase {
@@ -82,6 +88,7 @@ public:
   const vec3& color() const { return color_; }
   void set_color( vec3 color ) { color_ = color; }
   bool& visible() { return visible_; }
+  coord_t order() const { return order_; }
 
 private:
   coord_t order_;
@@ -129,6 +136,8 @@ public:
   void activate( ShaderProgram& shader );
 
   const std::map<std::string,std::shared_ptr<FieldData>>& data() const { return data_; }
+
+  const FieldData& active() const { return *data_.at(active_name()).get(); }
 
   gl_index& texture()       { return texture_; }
   gl_index  texture() const { return texture_; }

@@ -115,47 +115,17 @@ UT_TEST_CASE( simplices_2d_test )
   plot.build();
   window.add_plot(&plot);
 
-  std::vector<std::string> macros = {"#define SOLUTION_ORDER " + std::to_string(field->element().order()),
-                                     "#define GEOMETRY_ORDER " + std::to_string(curvilinear.element().order()) };
-
-  bool with_tess = true;
-  ShaderProgram tshader("triangles",with_tess,macros);
-  ShaderProgram eshader("edges",with_tess,macros);
-  ShaderProgram pshader("points");
-
-  plot.set_triangle_shader(&tshader);
-  plot.set_edge_shader(&eshader);
-  plot.set_point_shader(&pshader);
-
   Plot plot2(topology);
   plot2.build();
   window.add_plot(&plot2);
 
-  std::vector<std::string> macros2 = {"#define SOLUTION_ORDER " + std::to_string(1),
-                                     "#define GEOMETRY_ORDER " + std::to_string(1) };
-
-  ShaderProgram tshader2("triangles",false,macros2);
-  ShaderProgram eshader2("edges",false,macros2);
-  ShaderProgram pshader2("points");
-
-  plot2.set_triangle_shader(&tshader2);
-  plot2.set_edge_shader(&eshader2);
-  plot2.set_point_shader(&pshader2);
-
-  // set the tessellation level for the TCS (only the triangle and edge shader use this)
-  int level = 10; // higher is better but more expensive
-
-  tshader.use();
-  tshader.setUniform( "u_level" , level );
-
-  eshader.use();
-  eshader.setUniform("u_level" , level );
+  window.compute_view();
 
   // bind the colormap values to a buffer
   gl_index colormap_buffer;
   GL_CALL( glGenBuffers( 1 , &colormap_buffer ) );
   Colormap colormap;
-  colormap.change_style("viridis");
+  colormap.change_style("giraffe");
   index_t ncolor = 256*3;
   GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , colormap_buffer) );
   GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * ncolor , colormap.data() , GL_STATIC_DRAW) );

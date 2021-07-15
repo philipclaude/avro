@@ -1,6 +1,7 @@
 #include "graphics/new/application.h"
 #include "graphics/new/managers.h"
 #include "graphics/new/primitives.h"
+#include "graphics/new/shader_library.h"
 #include "graphics/new/vao.h"
 
 namespace avro
@@ -8,6 +9,8 @@ namespace avro
 
 namespace graphics
 {
+
+std::shared_ptr<Shaders> __shaders__;
 
 OpenGL4_Manager::OpenGL4_Manager() {
 
@@ -18,6 +21,7 @@ OpenGL4_Manager::OpenGL4_Manager() {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+  glfwWindowHint(GLFW_RESIZABLE , GLFW_TRUE );
 }
 
 void
@@ -81,6 +85,7 @@ OpenGL4_Manager::~OpenGL4_Manager() {
   glDeleteBuffers( buffers_.size() , buffers_.data() );
   glDeleteTextures( textures_.size() , textures_.data() );
   glDeleteVertexArrays( vao_.size() , vao_.data() );
+  glfwTerminate();
 }
 
 void
@@ -160,7 +165,7 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
   GL_CALL( glEnableVertexAttribArray(0) );
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
-  show_field_ = true;//false;
+  show_field_ = true;
   if (solution_.size() == 0) show_field_ = false;
 
   // bind the desired colormap
@@ -216,6 +221,76 @@ VertexAttributeObject::draw_points( ShaderProgram& shader ) {
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
 
   points_->draw(shader);
+}
+
+void
+VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& projection ) {
+
+  // bind which attributes we want to draw
+  GL_CALL( glBindVertexArray(vertex_array_) );
+
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, points_->buffer()  ) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
+  GL_CALL( glEnableVertexAttribArray(0) );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER , 0 ) );
+
+  // calculate the matrices for the shaders
+  mat4 mv = view * model;
+  mat4 mvp = projection * mv;
+  mat4 normal_matrix = glm::transpose(glm::inverse(mv));
+
+  // draw the edges
+  for (index_t k = 0; k < edges_.size(); k++) {
+
+    if (!edges_[k]->visible()) continue;
+    coord_t q = edges_[k]->order();
+
+    ShaderProgram& shader = __shaders__->get("edges",0,q, q > 1);
+    shader.use();
+    shader.setUniform("u_ModelViewProjectionMatrix",mvp);
+    if (shader.has_tessellation_shader())
+      shader.setUniform("u_level",8);
+    edges_[k]->draw(shader.has_tessellation_shader());
+  }
+
+  // draw the triangles
+  show_field_ = true;
+  if (solution_.size() == 0) show_field_ = false;
+  for (index_t k = 0; k < triangles_.size(); k++) {
+
+    if (!triangles_[k]->visible()) continue;
+
+    coord_t p = 0;
+    if (solution_.size() != 0) p = solution_[k]->active().order();
+    coord_t q = triangles_[k]->order();
+
+    ShaderProgram& shader = __shaders__->get("triangles",p,q, q > 1);
+    shader.use();
+    shader.setUniform("u_ModelViewProjectionMatrix",mvp);
+    shader.setUniform("u_NormalMatrix",normal_matrix);
+    shader.setUniform("u_ModelViewMatrix",mv);
+
+    if (shader.has_tessellation_shader())
+      shader.setUniform("u_level",8);
+
+    // bind the desired colormap
+    glActiveTexture(GL_TEXTURE0 + 1);
+    GLint colormap_location = glGetUniformLocation(shader.handle() , "colormap");
+    glUniform1i(colormap_location, 1); // second sampler in fragment shader
+
+    if (show_field_) {
+      solution_[k]->activate(shader);
+      shader.setUniform( "use_constant_color" , 0 );
+    }
+    else {
+      shader.setUniform( "use_constant_color" , 1 );
+      shader.setUniform( "constant_color" , triangles_[k]->color() );
+    }
+    triangles_[k]->draw( shader.has_tessellation_shader() );
+  }
+
+  // draw the points
+
 }
 
 }

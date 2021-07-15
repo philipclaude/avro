@@ -60,9 +60,14 @@ public:
     R(3,3) =  1;
     return R;
   }
-  mat4 get_translation_matrix( double X , double Y ) {
+  mat4 get_translation_matrix( double x , double y ) {
     mat4 T;
     T = glm::identity();
+
+    // compute the transformation in screen space
+    vec3 t = {float(x),float(y),0.0f};
+    T = glm::translate( T , t );
+
     return T;
   }
 
@@ -86,7 +91,10 @@ public:
     picked_(-1)
   {}
 
+  ~Window();
+
   void init();
+  void compute_view();
 
   GLFWwindow* window() { return window_; }
   OpenGL4_Manager& manager() { return manager_; }
@@ -95,6 +103,7 @@ public:
   void mouse_move_callback(double x, double y);
   void mouse_scroll_callback(double x, double y);
   void key_callback( int key , int scancode , int action , int mods );
+  void resize( int width , int height);
 
   void add_plot( Plot* plot ) {
     plot_.push_back(plot);

@@ -2,6 +2,7 @@
 #define AVRO_LIB_GRAPHICS_PLOT_H_
 
 #include "graphics/math.h"
+#include "graphics/new/primitives.h"
 #include "graphics/new/vao.h"
 
 #include "mesh/topology.h"
@@ -41,7 +42,8 @@ private:
 public:
 
 	Plot( const TopologyBase& topology ) :
-		topology_(topology)
+		topology_(topology),
+    length_scale_(1.0)
 	{
     model_matrix_ = glm::identity();
   }
@@ -60,19 +62,49 @@ public:
       active_vao_ = vao_[0].get();
       active_vao_->build(topology_);
     }
-
-		// compute the center
-
-		// store the center translation
-
-		// store the inverse center translation
+    compute_center();
 	}
+
+  void compute_center() {
+    vec3 xmin = { 1e20, 1e20, 1e20};
+    vec3 xmax = {-1e20,-1e20,-1e20};
+
+    // compute the center
+    center_.zero();
+    const std::vector<gl_float>& coordinates = active_vao_->points().coordinates();
+    for (index_t k = 0; k < coordinates.size()/3; k++)
+    for (coord_t d = 0; d < 3; d++) {
+      gl_float x = coordinates[3*k+d];
+      center_(d) += x;
+
+      if (x < xmin(d)) xmin(d) = x;
+      if (x > xmax(d)) xmax(d) = x;
+    }
+
+    length_scale_ = -1;
+    for (coord_t d = 0; d < 3; d++) {
+      center_(d) *= (3./coordinates.size());
+      float L = (xmax(d) - xmin(d));
+      if (L > length_scale_) length_scale_ = L;
+    }
+
+    // store the center translation and its inverse
+    center_translation_ =  glm::translate( glm::identity() , center_ );
+    inverse_center_translation_ = glm::inverse(center_translation_);
+  }
+
+  void transform_center(const mat4& m) {
+    center_translation_ = m * center_translation_;
+    for (coord_t d = 0; d < 3; d++)
+      center_(d) = center_translation_(d,3);
+    inverse_center_translation_ = glm::inverse(center_translation_);
+  }
 
 	void transform( const mat4& m , bool centered) {
 		// m is the transformation relative to the trackball
 		if (!clip_.modifying()) {
 			if (centered) {
-				model_matrix_ = inverse_center_translation_ * m * center_translation_ * model_matrix_;
+				model_matrix_ = center_translation_ * m * inverse_center_translation_ * model_matrix_;
 			}
 			else {
         model_matrix_ = m * model_matrix_;
@@ -95,15 +127,10 @@ public:
 		// compound the total transformation to the model matrix
 	}
 
-	void draw() {
-		active_vao_->draw();
-
-		if (clip_.visible()) {
-			// draw clipping plane
-		}
-	}
 
   const mat4& model_matrix() const { return model_matrix_; }
+  const vec3& center() const { return center_; }
+  float length_scale() const { return length_scale_; }
 
   index_t nb_vao() const { return vao_.size(); }
   VertexAttributeObject& vao( index_t k ) { return *vao_[k].get(); }
@@ -135,6 +162,7 @@ private:
   ShaderProgram* triangle_shader_;
   ShaderProgram* edge_shader_;
   ShaderProgram* point_shader_;
+  float length_scale_;
 };
 
 } // graphics

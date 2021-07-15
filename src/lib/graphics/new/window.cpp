@@ -1,4 +1,5 @@
 #include "graphics/new/window.h"
+#include "graphics/new/shader_library.h"
 
 namespace avro
 {
@@ -7,27 +8,28 @@ namespace graphics
 {
 
 static void
-_mouse_button_callback(GLFWwindow* window ,int button,int action,int mods)
-{
+_mouse_button_callback(GLFWwindow* window ,int button,int action,int mods) {
   static_cast<Window*>(glfwGetWindowUserPointer(window))->mouse_button_callback(button,action,mods);
 }
 
 static void
-_mouse_move_callback(GLFWwindow* window, double x, double y)
-{
+_mouse_move_callback(GLFWwindow* window, double x, double y) {
   static_cast<Window*>(glfwGetWindowUserPointer(window))->mouse_move_callback(x,y);
 }
 
 static void
-_mouse_scroll_callback(GLFWwindow* window, double x, double y)
-{
+_mouse_scroll_callback(GLFWwindow* window, double x, double y) {
   static_cast<Window*>(glfwGetWindowUserPointer(window))->mouse_scroll_callback(x,y);
 }
 
 static void
-_keyboard_callback(GLFWwindow* window,int key,int scancode,int action,int mods)
-{
+_keyboard_callback(GLFWwindow* window,int key,int scancode,int action,int mods) {
   static_cast<Window*>(glfwGetWindowUserPointer(window))->key_callback(key,scancode,action,mods);
+}
+
+static void
+_resize_callback( GLFWwindow* window, int width, int height) {
+  static_cast<Window*>(glfwGetWindowUserPointer(window))->resize(width,height);
 }
 
 void
@@ -51,10 +53,15 @@ Window::init() {
   gladLoadGL();
   dumpGLInfo();
 
+  // initialize the shaders (must happen after the GL functions are loaded)
+  __shaders__ = std::make_shared<Shaders>(0,3,1,2);
+
   // ensure we can capture the escape key being pressed
   glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);
   glfwPollEvents();
   glfwSetCursorPos(window_, width_/2, height_/2);
+  glfwSetWindowSize(window_,width_,height_);
+  glViewport(0, 0, width_,height_);
 
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -68,6 +75,7 @@ Window::init() {
   glfwSetMouseButtonCallback(window_,&_mouse_button_callback);
   glfwSetScrollCallback(window_,&_mouse_scroll_callback);
   glfwSetKeyCallback( window_ , &_keyboard_callback );
+  glfwSetWindowSizeCallback( window_ , &_resize_callback );
 }
 
 void
@@ -94,56 +102,89 @@ Window::mouse_move_callback(double x, double y) {
   // check if dragging
   if (!trackball_.dragging()) return;
 
+  real_t xm,ym;
+  trackball_.get_current_position(xm,ym);
+
   // check if rotating/translating
   // compute the translation/rotation matrix from the trackball
   mat4 T;
   if (trackball_.rotating()) {
-    real_t xm,ym;
-    trackball_.get_current_position(xm,ym);
-    real_t dx = -(x - xm)/width_;
-    real_t dy =  (y - ym)/height_;
+    real_t dx = (xm - x)/width_;
+    real_t dy = (ym - y)/height_;
     T = trackball_.get_rotation_matrix(dx,dy);
   }
   else {
-    T = trackball_.get_translation_matrix(x,y);
+    real_t dx = (xm - x)/width_;
+    real_t dy = (ym - y)/height_;
+    T = trackball_.get_translation_matrix(dx,dy);
   }
 
   // apply the transformation to the plots (or a single picked plot)
   if (picked_ < 0) {
     // apply the transformation to each plot's model matrix
     for (index_t k = 0; k < plot_.size(); k++) {
-      plot_[k]->transform(T,false);
+      plot_[k]->transform(T,true);
+      if (!trackball_.rotating()) plot_[k]->transform_center(T);
     }
   }
   else {
     // apply the transformation to the particular object
     plot_[picked_]->transform(T,true);
+    if (!trackball_.rotating()) plot_[picked_]->transform_center(T);
   }
 
   trackball_.set_current_position(x,y);
   draw();
-
 }
 
 void
 Window::mouse_scroll_callback(double dx, double dy) {
 
-  // move the camera or scale the model matrix?
-
-  printf("dy = %g\n",dy);
+  // move the camera eye according to the scroll
   vec3 v;
   for (coord_t d = 0; d < 3; d++)
-    v(d) = camera_.eye()(d) + 0.001*dy*(camera_.lookat()(d) - camera_.eye()(d));
-
-  camera_.set_lookat(v);
-  v.print();
-
+    v(d) = camera_.eye()(d) + 0.1*dy*(camera_.lookat()(d) - camera_.eye()(d));
+  camera_.set_eye(v);
   draw();
 }
 
 void
 Window::key_callback( int key , int scancode , int action , int mods ) {
   // no keys are currently implemented
+}
+
+void
+Window::compute_view() {
+
+  // get each plot's center and take the average
+  vec3 center;
+  center.zero();
+
+  float d = 0.0;
+  for (index_t k = 0; k < plot_.size(); k++) {
+    for (coord_t d = 0; d < 3; d++)
+      center(d) = center(d) + plot_[k]->center()(d);
+    if (plot_[k]->length_scale() > d)
+      d = plot_[k]->length_scale();
+  }
+
+  for (coord_t d = 0; d < 3; d++)
+    center(d) /= plot_.size();
+  camera_.set_lookat(center);
+
+  // set the camera to be in the -z direction from the center (up is +y)
+  vec3 eye = center;
+  eye(2) = eye(2) - 4*d; // multiply the distance a bit so we're not too close to the plots
+  camera_.set_eye(eye);
+}
+
+void
+Window::resize(int width, int height) {
+  width_  = width;
+  height_ = height;
+  camera_.compute_projection(width_,height_);
+  glViewport(0, 0, width_,height_);
+  draw();
 }
 
 void
@@ -154,41 +195,23 @@ Window::draw() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   const mat4& view_matrix = camera_.view_matrix();
-  const mat4& perspective_matrix = camera_.projection_matrix();
+  const mat4& projection_matrix = camera_.projection_matrix();
 
   for (index_t k = 0; k < plot_.size(); k++) {
 
     // calculate the matrices
     const mat4& model_matrix = plot_[k]->model_matrix();
 
-    mat4 mv  = view_matrix * model_matrix;
-    mat4 mvp = perspective_matrix * mv;
-    mat4 normal_matrix = glm::transpose(glm::inverse(mv));
-
-    ShaderProgram* ts = plot_[k]->triangle_shader();
-    ts->use();
-    ts->setUniform("u_ModelViewProjectionMatrix",mvp);
-    ts->setUniform("u_NormalMatrix",normal_matrix);
-    ts->setUniform("u_ModelViewMatrix",mv);
-
-    ShaderProgram* es = plot_[k]->edge_shader();
-    es->use();
-    es->setUniform("u_ModelViewProjectionMatrix",mvp);
-
-    ShaderProgram* ps = plot_[k]->point_shader();
-    ps->use();
-    ps->setUniform("u_ModelViewProjectionMatrix",mvp);
-
-    // retrieve the current vao
+    // retrieve the current vao and draw
     VertexAttributeObject& vao = plot_[k]->active_vao();
-
-    // draw the primitives
-    vao.draw_edges(*es);
-    vao.draw_triangles(*ts);
-    //vao.draw_points(*ps);
+    vao.draw(model_matrix,view_matrix,projection_matrix);
   }
 
   glfwSwapBuffers(window_);
+}
+
+Window::~Window() {
+  glfwDestroyWindow(window_);
 }
 
 } // graphics

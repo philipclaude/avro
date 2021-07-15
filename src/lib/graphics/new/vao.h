@@ -32,7 +32,7 @@ public:
 
   void build( const TopologyBase& topology );
 
-	void draw();
+	void draw( const mat4& model , const mat4& view , const mat4& projection );
   void draw_triangles( ShaderProgram& );
   void draw_edges( ShaderProgram& );
   void draw_points( ShaderProgram& );

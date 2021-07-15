@@ -21,6 +21,7 @@ public:
   void set_lookat( const vec3& lookat ) { lookat_ = lookat; compute_view(); }
 
   void compute_view();
+  void compute_projection( index_t width , index_t height );
 
   const mat4& view_matrix() const { return view_matrix_; }
   const mat4& projection_matrix() const { return projection_matrix_; }

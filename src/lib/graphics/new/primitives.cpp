@@ -37,7 +37,8 @@ PointPrimitive::print() const {
 
 EdgePrimitive::EdgePrimitive( coord_t order ) :
   order_(order),
-  nb_basis_(order+1)
+  nb_basis_(order+1),
+  visible_(true)
 {}
 
 void

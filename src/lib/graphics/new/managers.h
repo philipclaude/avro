@@ -14,6 +14,7 @@ namespace graphics
 
 class VertexAttributeObject;
 class ShaderProgram;
+class Shaders;
 
 class OpenGL4_Manager {
 public:
@@ -28,7 +29,10 @@ private:
 	std::vector<gl_index> textures_;
 	std::vector<gl_index> vao_;
 
-  std::map< std::string , std::shared_ptr<ShaderProgram> > shaders_;
+  //std::map< std::string , std::shared_ptr<ShaderProgram> > shaders_;
+
+public:
+	static std::shared_ptr<Shaders> shaders;
 };
 
 
