@@ -231,7 +231,7 @@ UT_TEST_CASE( simplices_2d_test )
   window.init();
   win = window.window();
 
-  VertexAttributeObject vao(number,1);
+  VertexAttributeObject vao;
   vao.build(curvilinear);
   window.manager().write(vao);
 
@@ -272,7 +272,7 @@ UT_TEST_CASE( simplices_2d_test )
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
 
   // set the tessellation level for the TCS
-  int level = 8;
+  int level = 10;
 
   tshader.use();
   tshader.setUniform( "u_level" , level );

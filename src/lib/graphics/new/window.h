@@ -68,8 +68,6 @@ public:
   GLFWwindow* window() { return window_; }
   OpenGL4_Manager& manager() { return manager_; }
 
-  bool picking() { return (picked_plot_ >= 0 && picked_object_ >= 0); }
-
   void mouse_down();
   void mouse_up();
   void mouse_move() {
@@ -81,23 +79,16 @@ public:
     // compute the translation/rotation matrix from the trackball
     mat4 T;
 
-    if (picking()) {
-      // apply the transformation to each object's model matrix
+    // apply the transformation to the plots (or a single picked plot)
+    if (picked_ < 0) {
+      // apply the transformation to each plot's model matrix
       for (index_t k = 0; k < plot_.size(); k++) {
-        plot_[k]->apply_transformation(T);
+        plot_[k]->transform(T,false);
       }
     }
     else {
-      // determine which object we are rotating from the picking number
-
-      // translate the object to the origin
-
-      // apply the transformation
-
-      // translate back
-
       // apply the transformation to the particular object
-      plot_[picked_plot_]->apply_transformation(T,picked_object_);
+      plot_[picked_]->transform(T,true);
     }
 
   }
@@ -116,8 +107,7 @@ private:
 
 	std::vector<Plot*> plot_;
 
-	int picked_plot_;
-  int picked_object_;
+	int picked_;
 
   Trackball trackball_;
   Camera camera_;

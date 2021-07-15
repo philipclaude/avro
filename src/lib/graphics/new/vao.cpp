@@ -221,6 +221,9 @@ template<>
 void
 VertexAttributeObject::_build( const Topology<Simplex>& topology ) {
 
+  number_ = topology.number();
+  order_  = topology.element().order();
+
   // get the canonical representation of the facets of the element
   const Simplex& element = topology.element();
   std::vector<CanonicalFacet> canonical;
@@ -295,6 +298,9 @@ triangulate( const Points& points , const index_t* v , index_t nv , std::vector<
 template<>
 void
 VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
+
+  number_ = topology.number();
+  order_  = topology.element().order();
 
   // only linear polytope meshes are supported
   avro_assert( topology.element().order() == 1 );

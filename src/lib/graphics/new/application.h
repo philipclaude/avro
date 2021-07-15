@@ -23,7 +23,6 @@ namespace graphics
 
 class Plot;
 
-
 class OpenGL_Application {
 
 public:

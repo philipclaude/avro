@@ -87,7 +87,7 @@ UT_TEST_CASE(test1)
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.fields().make( "test" , field );
 
-  VertexAttributeObject vao(number,1);
+  VertexAttributeObject vao;
   vao.build(curvilinear);
 
   // grab the decomposed primitives for webglpp

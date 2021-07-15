@@ -26,14 +26,13 @@ struct MeshFacet;
 class VertexAttributeObject {
 
 public:
-  VertexAttributeObject( coord_t number , coord_t order ) :
-    number_(number),
-    order_(order),
+  VertexAttributeObject() :
     show_field_(true)
   {}
 
   void build( const TopologyBase& topology );
 
+	void draw();
   void draw_triangles( ShaderProgram& );
   void draw_edges( ShaderProgram& );
   void draw_points( ShaderProgram& );

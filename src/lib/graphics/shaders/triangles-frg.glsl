@@ -23,6 +23,9 @@ get_color( float u , out vec3 color ) {
 
     int indx = int(ncolor*(u - umin)/(umax - umin));
 
+    if (indx < 0) indx = 0;
+    if (indx > 255) indx = 255;
+
     float r0 = texelFetch( colormap , 3*(indx) + 0 ).x;
     float g0 = texelFetch( colormap , 3*(indx) + 1 ).x;
     float b0 = texelFetch( colormap , 3*(indx) + 2 ).x;
