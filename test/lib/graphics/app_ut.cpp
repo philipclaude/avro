@@ -75,7 +75,7 @@ UT_TEST_CASE( simplices_2d_test )
   std::vector<real_t> lengths(number,1.0);
   EGADS::Cube geometry(&context,lengths);
 
-  std::vector<index_t> dims(number,20);
+  std::vector<index_t> dims(number,10);
   //dims[1] = 2;
   CKF_Triangulation topology( dims );
   topology.element().set_basis( BasisFunctionCategory_Lagrange );

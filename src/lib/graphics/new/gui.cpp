@@ -12,6 +12,8 @@ namespace avro
 namespace graphics
 {
 
+index_t label_counter;
+
 GUI::GUI( Window& window ) :
  window_(window),
  count_(5)
@@ -36,6 +38,38 @@ GUI::GUI( Window& window ) :
   ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
+std::string
+empty_label() {
+  return "##" + std::to_string(label_counter++);
+}
+
+std::string
+header( const std::string& name) {
+  return "[" + name + "]";
+}
+
+template<typename T> std::string make_string( const T& x ) {
+  return std::to_string(x);
+}
+
+template<> std::string make_string( const std::string& x ) { return x; }
+
+template<typename T>
+static std::vector<const char*>
+convert_to_char( const std::vector<T>& s , const std::string& H = std::string() ) {
+  std::vector<const char*> cs( s.size() );
+
+  index_t idx = 0;
+  if (!H.empty()) {
+    cs.insert(cs.begin() , H.c_str() );
+    idx = 1;
+  }
+
+  for (index_t k = 0; k < s.size(); k++)
+    cs[idx++] = make_string<T>(s[k]).c_str();
+  return cs;
+}
+
 void
 GUI::draw() {
 
@@ -46,7 +80,6 @@ GUI::draw() {
   //window_flags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
 
   bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
-
   window_.needs_drawing(true);
   window_.enable_controls( !capture_mouse );
 
@@ -63,22 +96,128 @@ GUI::draw() {
   bool active = true;
   ImGui::SetNextItemWidth(200);
 
+  label_counter = 0;
+
   if (ImGui::Begin("Controls",&active,window_flags))
   {
-    ImGui::Text("hello");
+    if (ImGui::Button("PNG")) {
+      ImGui::Text("enter file name");
+      ImGui::SameLine();
+      ImGui::Button("save file!");
 
-    index_t nb_plots = 3;
-    for (index_t i = 0; i < nb_plots; i++) {
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("EPS")) {
+
+      ImGui::OpenPopup("eps-save");
+    }
+
+    if (ImGui::BeginPopup("eps-save")) {
+
+      ImGui::Button("save");
+      ImGui::EndPopup();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("View")) {
+      printf("load view matrix (or parameters)\n");
+    }
+    ImGui::Separator();
+
+    ImGui::Text("Plots");
+    ImGui::SameLine();
+    if (ImGui::Button("Hide All")) {
+      printf("hide all plots\n");
+    }
+    ImGui::Separator();
+
+    for (index_t i = 0; i < window_.nb_plots(); i++) {
+
+      // get the active vao information
+      const nlohmann::json& info = window_.plot(i).active_vao().get_info();
+      //std::cout << info.dump() << std::endl;
 
       std::string label = "Plot" + std::to_string(i);
-      if (ImGui::CollapsingHeader(label.c_str())) {
+      if (ImGui::TreeNode(label.c_str())) {
+
+        static int current_mesh = 1;
+
+        const std::vector<std::string>& vao_labels = window_.plot(i).vao_labels();
+        std::vector<const char*> c_vao_labels = convert_to_char(vao_labels,header("mesh"));
+
+        for (index_t k = 0; k < c_vao_labels.size(); k++)
+          printf("label %lu = %s\n",k,c_vao_labels[k]);
+
+        ImGui::SetNextItemWidth(100);
+        if (ImGui::Combo(empty_label().c_str(),&current_mesh,c_vao_labels.data(),c_vao_labels.size())) {
+          // pick which vao we need to render
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Hide")) {
+          // completely turn off the plot
+        }
+
+        static int current_field = 0;
+        static int current_field_rank = 0;
+        std::vector<std::string> fields = info["fields"];
+        std::vector<int> ranks = info["ranks"];
+
+        std::vector<const char*> field_labels = convert_to_char(fields,header("field"));
+        std::vector<const char*> rank_labels = convert_to_char(ranks,header("rank"));
+
+        ImGui::SetNextItemWidth(100);
+        if (ImGui::Combo("##1",&current_field,field_labels.data(),field_labels.size())) {
+
+        }
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100);
+        if (ImGui::Combo("##2",&current_field_rank,rank_labels.data(),rank_labels.size())) {
+
+        }
+
+        ImGui::Separator();
+        static int level = 1;
+        ImGui::SetNextItemWidth(50);
+        ImGui::SliderInt("tessellation##1",&level,1,20);
+
+        static bool show_clip = false;
+        static bool modify_clip = false;
+
+        ImGui::SetNextItemWidth(100);
+        const char* clip_styles[] = {"[off]","pixel","primitive"};
+        static int current_clip_style = 0;
+        if (ImGui::Combo("clipping##3",&current_clip_style,clip_styles,3)) {
+
+        }
+        if (ImGui::Checkbox("show##1",&show_clip)) {
+
+        }
+        ImGui::SameLine();
+        if (ImGui::Checkbox("modify##1",&modify_clip)) {
+
+        }
+        ImGui::Separator();
+
+        for (index_t j = 0; j < entities.size(); j++) {
 
 
+          if (ImGui::TreeNode(entities[j].c_str())) {
+
+            // get all the entities from the plot vao
+
+            ImGui::TreePop();
+          }
+        }
+
+        ImGui::TreePop();
       }
     }
+    ImGui::Separator();
 
     ImGui::Text("FPS %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("Draw count: %lu" , window_.draw_count());
+
+    ImGui::Separator();
 
     ImGui::End();
   }

@@ -245,6 +245,11 @@ Window::resize(int width, int height) {
   height_ = height;
   camera_.compute_projection(width_,height_);
   needs_drawing_ = true;
+  #if __APPLE__
+  #else
+  glViewport(0,0,width_,height_);
+  #endif
+  //glfwSetWindowSize(window_,width_,height_);
 }
 
 void

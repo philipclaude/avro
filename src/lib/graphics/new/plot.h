@@ -62,6 +62,7 @@ public:
       vao_.push_back( std::make_shared<VertexAttributeObject>() );
       active_vao_ = vao_[0].get();
       active_vao_->build(topology_);
+			vao_labels_.push_back("group 0");
     }
     compute_center();
 	}
@@ -147,6 +148,8 @@ public:
   const VertexAttributeObject& active_vao() const { return *active_vao_; }
   VertexAttributeObject& active_vao() { return *active_vao_; }
 
+	const std::vector<std::string>& vao_labels() const { return vao_labels_; }
+
 private:
 
 	const TopologyBase& topology_;
@@ -164,6 +167,8 @@ private:
   ShaderProgram* edge_shader_;
   ShaderProgram* point_shader_;
   float length_scale_;
+
+	std::vector<std::string> vao_labels_;
 };
 
 } // graphics

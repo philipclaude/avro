@@ -115,6 +115,9 @@ public:
       manager_.write(plot->vao(k));
   }
 
+  index_t nb_plots() const { return plot_.size(); }
+  const Plot& plot( index_t k ) const { return *plot_[k]; }
+
   void draw(bool swap_buffers=true);
 
   index_t width() const { return width_; }

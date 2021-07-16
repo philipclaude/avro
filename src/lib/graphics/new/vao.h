@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include <json/json.hpp>
+
 namespace avro
 {
 
@@ -61,6 +63,8 @@ public:
 
   void apply_transformation( const mat4& m );
 
+  const nlohmann::json& get_info() const { return info_; }
+
 private:
   template<typename type>
   void get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets );
@@ -81,6 +85,8 @@ private:
   std::vector< std::shared_ptr<FieldPrimitive> > solution_;
 
   mat4 model_matrix_;
+
+  nlohmann::json info_;
 };
 
 } // graphics

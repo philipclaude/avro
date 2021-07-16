@@ -617,6 +617,43 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       color[i] = u[i];
     triangles_[k]->set_color(color);
   }
+
+
+  // set the info for this vao
+  std::vector<nlohmann::json> jtriangles;
+  for (index_t k = 0; k < triangles_.size(); k++) {
+    json jt;
+    if (k == 0) {
+      jt["name"]  = "interior";
+      jt["order"] = triangles_[k]->order();
+    }
+    else {
+      jt["name"] = "bnd" + std::to_string(k);
+      jt["order"] = triangles_[k]->order();
+    }
+
+    jtriangles.push_back(jt);
+  }
+  info_["triangles"] = jtriangles;
+
+  std::vector<nlohmann::json> jedges;
+  for (index_t k = 0; k < edges_.size(); k++) {
+    json je;
+    if (k == 0) {
+      je["name"]  = "interior";
+      je["order"] = edges_[k]->order();
+    }
+    else {
+      je["name"] = "bnd" + std::to_string(k);
+      je["order"] = edges_[k]->order();
+    }
+
+    jedges.push_back(je);
+  }
+  info_["edges"] = jtriangles;
+
+  // TODO Nodes
+
 }
 
 void
