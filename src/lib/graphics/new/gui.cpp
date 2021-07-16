@@ -6,6 +6,9 @@
 #include <imgui/GL/imgui_impl_glfw.h>
 #include <imgui/GL/imgui_impl_opengl3.h>
 
+#define EMPTY_LABEL empty_label().c_str()
+#define UNIQUE_LABEL(X) unique_label(X).c_str()
+
 namespace avro
 {
 
@@ -44,22 +47,15 @@ empty_label() {
 }
 
 std::string
-header( const std::string& name) {
-  return "[" + name + "]";
+unique_label( const std::string& s ) {
+  return s + "##" + std::to_string(label_counter++);
 }
 
 static std::vector<const char*>
-convert_to_char( const std::vector<std::string>& s , const std::string& H = std::string() ) {
+convert_to_char( const std::vector<std::string>& s ) {
   std::vector<const char*> cs( s.size() );
-
-  index_t idx = 0;
-  if (!H.empty()) {
-    cs.insert(cs.begin() , H.c_str() );
-    idx = 1;
-  }
-
   for (index_t k = 0; k < s.size(); k++)
-    cs[idx++] = s[k].c_str();
+    cs[k] = s[k].c_str();
   return cs;
 }
 
@@ -82,9 +78,9 @@ GUI::draw() {
 
   // set the controls at the top-left of the window
   ImGui::SetNextWindowPos( ImVec2( 0 , 0 ) );
-  ImGui::SetNextWindowSize( ImVec2( 200 , window_.height() ) );
+  ImGui::SetNextWindowSize( ImVec2( 256 , window_.height() ) );
 
-  std::vector<std::string> entities = {"Faces","Edges","Nodes"};
+  std::vector<std::string> entities = {"Faces","Edges"};//,"Nodes"};
 
   bool active = true;
   ImGui::SetNextItemWidth(200);
@@ -124,34 +120,55 @@ GUI::draw() {
     }
     ImGui::Separator();
 
+    std::string label;
     for (index_t i = 0; i < window_.nb_plots(); i++) {
 
       // get the active vao information
       const nlohmann::json& info = window_.plot(i).active_vao().get_info();
-      //std::cout << info.dump() << std::endl;
 
       std::string label = "Plot" + std::to_string(i);
       if (ImGui::TreeNode(label.c_str())) {
 
         static int current_mesh = 1;
 
-        const std::vector<std::string>& vao_labels = window_.plot(i).vao_labels();
-        std::vector<const char*> c_vao_labels = convert_to_char(vao_labels,header("mesh"));
-
-        for (index_t k = 0; k < c_vao_labels.size(); k++)
-          printf("label %lu = %s\n",k,c_vao_labels[k]);
+        std::vector<std::string> vao_labels = window_.plot(i).vao_labels();
+        vao_labels.insert( vao_labels.begin() , "[group]");
+        std::vector<const char*> c_vao_labels = convert_to_char(vao_labels);
 
         ImGui::SetNextItemWidth(100);
-        if (ImGui::Combo(empty_label().c_str(),&current_mesh,c_vao_labels.data(),c_vao_labels.size())) {
+        label = empty_label();
+        if (ImGui::Combo(label.c_str(),&current_mesh,c_vao_labels.data(),c_vao_labels.size())) {
           // pick which vao we need to render
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Hide")) {
-          // completely turn off the plot
+          if (current_mesh == 0) current_mesh = 1;
+          window_.plot(i).set_active( current_mesh-1 );
         }
 
-        static int current_field = 0;
-        static int current_field_rank = 0;
+        VertexAttributeObject& vao = window_.plot(i).active_vao();
+
+        ImGui::SameLine();
+        if (!window_.plot(i).hidden()) {
+          if (ImGui::Button("Hide")) {
+            // completely turn off the plot
+            for (index_t k = 0; k < vao.nb_triangles(); k++)
+              vao.triangles(k).visible() = false;
+            for (index_t k = 0; k < vao.nb_edges(); k++)
+              vao.edges(k).visible() = false;
+            window_.plot(i).hidden() = true;
+          }
+        }
+        else {
+          if (ImGui::Button("Show")) {
+            // completely turn on the plot
+            for (index_t k = 0; k < vao.nb_triangles(); k++)
+              vao.triangles(k).visible() = true;
+            for (index_t k = 0; k < vao.nb_edges(); k++)
+              vao.edges(k).visible() = true;
+            window_.plot(i).hidden() = false;
+          }
+        }
+
+        int current_field = 1;
+        int current_field_rank = 1;
         std::vector<nlohmann::json> fields = info["fields"];
 
         std::vector<std::string> field_names = info["field_names"];
@@ -166,24 +183,42 @@ GUI::draw() {
           rank_index.assign(tmpi.begin(),tmpi.end());
         }
 
-        std::vector<const char*> field_labels = convert_to_char(field_names,header("field"));
-        std::vector<const char*> rank_labels = convert_to_char(field_ranks,header("rank"));
+        field_names.insert( field_names.begin() , "[field]" );
+        field_ranks.insert( field_ranks.begin() , "[rank]" );
+
+        std::vector<const char*> field_labels = convert_to_char(field_names);
+        std::vector<const char*> rank_labels = convert_to_char(field_ranks);
 
         ImGui::SetNextItemWidth(100);
-        if (ImGui::Combo("##1",&current_field,field_labels.data(),field_labels.size())) {
+        label = empty_label();
+        if (ImGui::Combo(label.c_str(),&current_field,field_labels.data(),field_labels.size())) {
 
+          if (vao.nb_fields() > 0) {
+            if (current_field == 0) current_field = 1;
+            vao.set_field(field_names[current_field]);
+
+            nlohmann::json jf = fields[current_field-1];
+            std::vector<std::string> tmps = jf.at("ranks");
+            field_ranks.assign( tmps.begin() , tmps.end() );
+
+            std::vector<int> tmpi = jf.at("rank_index");
+            rank_index.assign(tmpi.begin(),tmpi.end());
+          }
         }
         ImGui::SameLine();
         ImGui::SetNextItemWidth(100);
-        if (ImGui::Combo("##2",&current_field_rank,rank_labels.data(),rank_labels.size())) {
-
+        label = empty_label();
+        if (ImGui::Combo(label.c_str(),&current_field_rank,rank_labels.data(),rank_labels.size())) {
+          if (vao.nb_fields() > 0) {
+            if (current_field_rank == 0) current_field_rank = 1;
+            vao.set_rank(rank_index[current_field_rank-1]);
+          }
         }
 
-
         ImGui::Separator();
-        static int level = 1;
         ImGui::SetNextItemWidth(50);
-        ImGui::SliderInt("tessellation##1",&level,1,20);
+        label = unique_label("tessellation");
+        ImGui::SliderInt(label.c_str(),&vao.tessellation_level(),1,20);
 
         static bool show_clip = false;
         static bool modify_clip = false;
@@ -191,27 +226,47 @@ GUI::draw() {
         ImGui::SetNextItemWidth(100);
         const char* clip_styles[] = {"[off]","pixel","primitive"};
         static int current_clip_style = 0;
-        if (ImGui::Combo("clipping##3",&current_clip_style,clip_styles,3)) {
+        label = unique_label("clipping");
+        if (ImGui::Combo(label.c_str(),&current_clip_style,clip_styles,3)) {
 
         }
-        if (ImGui::Checkbox("show##1",&show_clip)) {
+        label = unique_label("show");
+        if (ImGui::Checkbox(label.c_str(),&show_clip)) {
 
         }
         ImGui::SameLine();
-        if (ImGui::Checkbox("modify##1",&modify_clip)) {
+        label = unique_label("modify");
+        if (ImGui::Checkbox(label.c_str(),&modify_clip)) {
 
         }
         ImGui::Separator();
 
-        for (index_t j = 0; j < entities.size(); j++) {
+        if (ImGui::TreeNode("Faces")) {
 
+          // get all the entities from the plot vao
+          std::vector<nlohmann::json> facets = info["triangles"];
+          for (index_t k = 0; k < facets.size(); k++) {
 
-          if (ImGui::TreeNode(entities[j].c_str())) {
-
-            // get all the entities from the plot vao
-
-            ImGui::TreePop();
+            std::string s = facets[k]["name"];
+            label = unique_label(s);
+            if (ImGui::Checkbox(label.c_str(),&vao.triangles(k).visible())) {
+            }
           }
+          ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("Edges")) {
+
+          // get all the entities from the plot vao
+          std::vector<nlohmann::json> facets = info["edges"];
+          for (index_t k = 0; k < facets.size(); k++) {
+
+            std::string s = facets[k]["name"];
+            label = unique_label(s);
+            if (ImGui::Checkbox(label.c_str(),&vao.edges(k).visible())) {
+            }
+          }
+          ImGui::TreePop();
         }
 
         ImGui::TreePop();

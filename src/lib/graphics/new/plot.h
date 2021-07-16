@@ -147,9 +147,12 @@ public:
 
   const VertexAttributeObject& active_vao() const { return *active_vao_; }
   VertexAttributeObject& active_vao() { return *active_vao_; }
+	void set_active( index_t k ) { active_vao_ = vao_[k].get(); }
 
 	const std::vector<std::string>& vao_labels() const { return vao_labels_; }
 
+	bool& hidden() { return hidden_; }
+	
 private:
 
 	const TopologyBase& topology_;
@@ -169,6 +172,7 @@ private:
   float length_scale_;
 
 	std::vector<std::string> vao_labels_;
+	bool hidden_;
 };
 
 } // graphics

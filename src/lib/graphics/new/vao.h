@@ -29,7 +29,8 @@ class VertexAttributeObject {
 
 public:
   VertexAttributeObject() :
-    show_field_(true)
+    show_field_(true),
+    tessellation_level_(8)
   {}
 
   void build( const TopologyBase& topology );
@@ -40,6 +41,7 @@ public:
   void draw_points( ShaderProgram& );
 
   void set_rank( index_t rank );
+  void set_field( const std::string& name );
   bool& show_field() { return show_field_; }
 
   coord_t order() const { return order_; }
@@ -64,6 +66,7 @@ public:
   void apply_transformation( const mat4& m );
 
   const nlohmann::json& get_info() const { return info_; }
+  int& tessellation_level() { return tessellation_level_; }
 
 private:
   template<typename type>
@@ -87,6 +90,7 @@ private:
   mat4 model_matrix_;
 
   nlohmann::json info_;
+  int tessellation_level_;
 };
 
 } // graphics

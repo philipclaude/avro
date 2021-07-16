@@ -117,6 +117,7 @@ public:
 
   index_t nb_plots() const { return plot_.size(); }
   const Plot& plot( index_t k ) const { return *plot_[k]; }
+  Plot& plot( index_t k ) { return *plot_[k]; }
 
   void draw(bool swap_buffers=true);
 

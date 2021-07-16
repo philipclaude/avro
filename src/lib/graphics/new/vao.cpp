@@ -401,17 +401,28 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   printf("there are %lu entities\n",entities.size());
   bool geometryless = (entities.size() == 0);
 
-  index_t nb_Nodes = 0;
-  index_t nb_Edges = 0;
   index_t nb_Faces = 0;
-  std::map<Entity*,index_t> entity2index;
+  std::map<Entity*,index_t> entity2triangle;
+  std::map<index_t,Entity*> triangle2entity;
   for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
     Entity* entity = *it;
     index_t idx = 0;
-    if (entity->number() == 0) idx = nb_Nodes++;
-    if (entity->number() == 1) idx = nb_Edges++;
-    if (entity->number() == 2) idx = nb_Faces++;
-    entity2index.insert( {entity,idx} );
+    if (!entity->tessellatable()) continue;
+    if (entity->number() != 2) continue;
+    triangle2entity.insert( {nb_Faces,entity} );
+    entity2triangle.insert( {entity,nb_Faces++} );
+  }
+
+  index_t nb_Edges = 0;
+  std::map<Entity*,index_t> entity2edge;
+  std::map<index_t,Entity*> edge2entity;
+  for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
+    Entity* entity = *it;
+    index_t idx = 0;
+    if (!entity->tessellatable()) continue;
+    if (entity->number() < 1) continue;
+    edge2entity.insert( {nb_Edges,entity} );
+    entity2edge.insert( {entity,nb_Edges++} );
   }
 
   index_t nb_edge_primitives = nb_Edges + 1;
@@ -444,13 +455,13 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     index_t primitive_id = 0;
     if (number == 2) primitive_id = 0;
     else if (geometryless) {
-      if (f.parent.size() == 1) primitive_id = 0; // interior
-      else primitive_id = 1; // boundary
+      if (f.parent.size() == 1) primitive_id = 1; // interior
+      else primitive_id = 0; // boundary
     }
     else {
       Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
       if (entity == nullptr) primitive_id = nb_triangle_primitives -1; // interior at the end
-      else primitive_id = entity2index[entity];
+      else primitive_id = entity2triangle[entity];
     }
     avro_assert( primitive_id < nb_triangle_primitives );
 
@@ -486,17 +497,17 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     // determine if this is a geometry facet
     index_t primitive_id = 0;
     if (number == 2 && geometryless) {
-      if (f.parent.size() >= 2) primitive_id = 0; // interior
-      else primitive_id = 1; // boundary
+      if (f.parent.size() >= 2) primitive_id = 1; // interior
+      else primitive_id = 0; // boundary
     }
-    else if (number == 3) {
+    else if (number == 3 && geometryless) {
       // hard to tell if this is a geometry edge
-      primitive_id = 0;
+      primitive_id = 1;
     }
     else {
       Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
       if (entity == nullptr) primitive_id = nb_edge_primitives -1; // interior at the end
-      else primitive_id = entity2index[entity];
+      else primitive_id = entity2edge[entity];
     }
     avro_assert( primitive_id < nb_edge_primitives );
 
@@ -623,12 +634,13 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   std::vector<nlohmann::json> jtriangles;
   for (index_t k = 0; k < triangles_.size(); k++) {
     json jt;
-    if (k == 0) {
+    if (k == triangles_.size()-1) {
       jt["name"]  = "interior";
       jt["order"] = triangles_[k]->order();
+      triangles_[k]->visible() = false;
     }
     else {
-      jt["name"] = "bnd" + std::to_string(k);
+      jt["name"] = (geometryless) ? "bnd" + std::to_string(k) : "Face" + std::to_string(triangle2entity[k]->identifier());
       jt["order"] = triangles_[k]->order();
     }
 
@@ -639,18 +651,20 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   std::vector<nlohmann::json> jedges;
   for (index_t k = 0; k < edges_.size(); k++) {
     json je;
-    if (k == 0) {
+    if (k ==  edges_.size()-1) {
       je["name"]  = "interior";
       je["order"] = edges_[k]->order();
+      edges_[k]->visible() = false;
     }
     else {
-      je["name"] = "bnd" + std::to_string(k);
+      Entity* e = (geometryless) ? nullptr : edge2entity[k];
+      je["name"] = (e == nullptr) ? "bnd" + std::to_string(k) : (e->number() == 1) ? "Edge" + std::to_string(e->identifier()) : "Face" + std::to_string(e->identifier());
       je["order"] = edges_[k]->order();
     }
 
     jedges.push_back(je);
   }
-  info_["edges"] = jtriangles;
+  info_["edges"] = jedges;
 
   // TODO Nodes
 
@@ -680,6 +694,15 @@ VertexAttributeObject::set_rank( index_t rank ) {
 
   for (index_t k = 0; k < solution_.size(); k++) {
     solution_[k]->set_active_rank(rank);
+    solution_[k]->write();
+  }
+}
+
+void
+VertexAttributeObject::set_field( const std::string& name ) {
+
+  for (index_t k = 0; k < solution_.size(); k++) {
+    solution_[k]->set_active(name);
     solution_[k]->write();
   }
 }

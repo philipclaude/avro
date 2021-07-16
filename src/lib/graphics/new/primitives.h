@@ -62,6 +62,7 @@ public:
 
   bool visible() const { return visible_; }
   void set_visible(bool x) { visible_ = x; }
+  bool& visible() { return visible_; }
 
 private:
   coord_t order_;

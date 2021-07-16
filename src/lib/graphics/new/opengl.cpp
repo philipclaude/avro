@@ -156,6 +156,7 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
 
   shader.use();
   shader.setUniform( "have_tessellation_shader" , shader.has_tessellation_shader() );
+  shader.setUniform( "u_level" , tessellation_level_ );
 
   // bind which attributes we want to draw
   GL_CALL( glBindVertexArray(vertex_array_) );
@@ -193,6 +194,7 @@ VertexAttributeObject::draw_edges( ShaderProgram& shader ) {
 
   shader.use();
   shader.setUniform( "have_tessellation_shader" , shader.has_tessellation_shader() );
+  shader.setUniform( "u_level" , tessellation_level_ );
 
   // bind which attributes we want to draw
   GL_CALL( glBindVertexArray(vertex_array_) );
@@ -249,7 +251,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     shader.use();
     shader.setUniform("u_ModelViewProjectionMatrix",mvp);
     if (shader.has_tessellation_shader())
-      shader.setUniform("u_level",8);
+      shader.setUniform( "u_level" , tessellation_level_ );
     edges_[k]->draw(shader.has_tessellation_shader());
   }
 
@@ -271,7 +273,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     shader.setUniform("u_ModelViewMatrix",mv);
 
     if (shader.has_tessellation_shader())
-      shader.setUniform("u_level",8);
+      shader.setUniform( "u_level" , tessellation_level_ );
 
     // bind the desired colormap
     glActiveTexture(GL_TEXTURE0 + 1);

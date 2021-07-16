@@ -10,7 +10,7 @@ namespace graphics
 {
 
 OpenGL_Application::OpenGL_Application() :
-  window_(600,600)
+  window_(1024,768)
 {
   window_.init();
   gui_ = std::make_shared<GUI>(window_);
