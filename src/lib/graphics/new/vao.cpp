@@ -654,6 +654,25 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
   // TODO Nodes
 
+  std::vector<nlohmann::json> jfields;
+  for (index_t k = 0; k < fields.nb(); k++) {
+    const FieldHolder& fld = fields[field_names[k]];
+    std::vector<std::string> rank_names;
+    std::vector<index_t> rank_index;
+    for (index_t i = 0; i < fld.nb_rank(); i++) {
+      rank_names.push_back( fld.get_name(i) );
+      rank_index.push_back(i);
+    }
+
+    json jf;
+    jf["name"]  = field_names[k];
+    jf["ranks"] = rank_names;
+    jf["rank_index"] = rank_index;
+    jfields.push_back(jf);
+  }
+  info_["fields"]      = jfields;
+  info_["field_names"] = field_names;
+
 }
 
 void

@@ -48,15 +48,8 @@ header( const std::string& name) {
   return "[" + name + "]";
 }
 
-template<typename T> std::string make_string( const T& x ) {
-  return std::to_string(x);
-}
-
-template<> std::string make_string( const std::string& x ) { return x; }
-
-template<typename T>
 static std::vector<const char*>
-convert_to_char( const std::vector<T>& s , const std::string& H = std::string() ) {
+convert_to_char( const std::vector<std::string>& s , const std::string& H = std::string() ) {
   std::vector<const char*> cs( s.size() );
 
   index_t idx = 0;
@@ -66,7 +59,7 @@ convert_to_char( const std::vector<T>& s , const std::string& H = std::string() 
   }
 
   for (index_t k = 0; k < s.size(); k++)
-    cs[idx++] = make_string<T>(s[k]).c_str();
+    cs[idx++] = s[k].c_str();
   return cs;
 }
 
@@ -159,11 +152,22 @@ GUI::draw() {
 
         static int current_field = 0;
         static int current_field_rank = 0;
-        std::vector<std::string> fields = info["fields"];
-        std::vector<int> ranks = info["ranks"];
+        std::vector<nlohmann::json> fields = info["fields"];
 
-        std::vector<const char*> field_labels = convert_to_char(fields,header("field"));
-        std::vector<const char*> rank_labels = convert_to_char(ranks,header("rank"));
+        std::vector<std::string> field_names = info["field_names"];
+        std::vector<std::string> field_ranks;
+        std::vector<int> rank_index;
+        if (field_names.size() > 0) {
+          nlohmann::json jf = fields[0];
+          std::vector<std::string> tmps = jf.at("ranks");
+          field_ranks.assign( tmps.begin() , tmps.end() );
+
+          std::vector<int> tmpi = jf.at("rank_index");
+          rank_index.assign(tmpi.begin(),tmpi.end());
+        }
+
+        std::vector<const char*> field_labels = convert_to_char(field_names,header("field"));
+        std::vector<const char*> rank_labels = convert_to_char(field_ranks,header("rank"));
 
         ImGui::SetNextItemWidth(100);
         if (ImGui::Combo("##1",&current_field,field_labels.data(),field_labels.size())) {
@@ -174,6 +178,7 @@ GUI::draw() {
         if (ImGui::Combo("##2",&current_field_rank,rank_labels.data(),rank_labels.size())) {
 
         }
+
 
         ImGui::Separator();
         static int level = 1;
