@@ -16,7 +16,6 @@ class GUI {
 public:
   GUI( Window& window );
 
-  void begin_draw();
   void draw();
   void end_draw();
 

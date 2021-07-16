@@ -26,9 +26,6 @@ public:
       for (coord_t q = qmin; q <= qmax; q++) {
 
         // generate shaders with and without tessellation shaders
-
-        printf("generating shader for p = %u, q = %u\n",p,q);
-
         std::string base = "-p" + std::to_string(p) + "-q" + std::to_string(q);
 
         std::vector<std::string> macros = {"#define SOLUTION_ORDER " + std::to_string(p),

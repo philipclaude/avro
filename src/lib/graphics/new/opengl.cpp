@@ -1,5 +1,6 @@
 #include "graphics/new/application.h"
 #include "graphics/new/managers.h"
+#include "graphics/new/plot.h"
 #include "graphics/new/primitives.h"
 #include "graphics/new/shader_library.h"
 #include "graphics/new/vao.h"
@@ -228,6 +229,13 @@ VertexAttributeObject::draw_points( ShaderProgram& shader ) {
 void
 VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& projection ) {
 
+  if (number_ == 2) {
+    glDisable(GL_CULL_FACE);
+  }
+  else {
+    glEnable(GL_CULL_FACE);
+  }
+
   // bind which attributes we want to draw
   GL_CALL( glBindVertexArray(vertex_array_) );
 
@@ -256,7 +264,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
   }
 
   // draw the triangles
-  show_field_ = true;
+  show_field_ = (!uniform_color_ && !geometry_color_);
   if (solution_.size() == 0) show_field_ = false;
   for (index_t k = 0; k < triangles_.size(); k++) {
 
@@ -271,6 +279,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     shader.setUniform("u_ModelViewProjectionMatrix",mvp);
     shader.setUniform("u_NormalMatrix",normal_matrix);
     shader.setUniform("u_ModelViewMatrix",mv);
+    shader.setUniform("alpha",float(1.0));
 
     if (shader.has_tessellation_shader())
       shader.setUniform( "u_level" , tessellation_level_ );
@@ -280,19 +289,84 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     GLint colormap_location = glGetUniformLocation(shader.handle() , "colormap");
     glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
+    if (number_ == 2) shader.setUniform("u_lighting",-1);
+    else shader.setUniform("u_lighting",1);
+
     if (show_field_) {
       solution_[k]->activate(shader);
       shader.setUniform( "use_constant_color" , 0 );
     }
-    else {
+    else if (geometry_color_) {
       shader.setUniform( "use_constant_color" , 1 );
       shader.setUniform( "constant_color" , triangles_[k]->color() );
+    }
+    else {
+      vec3 c = {0.8,0.8,0.2};
+      shader.setUniform( "use_constant_color" , 1 );
+      shader.setUniform( "constant_color" , c );
     }
     triangles_[k]->draw( shader.has_tessellation_shader() );
   }
 
   // draw the points
+  // TODO
+}
 
+void
+ClipPlane::write() {
+
+  model_matrix_ = glm::identity();
+
+  GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
+  GL_CALL( glBindVertexArray(vertex_array_) );
+
+  gl_index buffers[2];
+  GL_CALL( glGenBuffers( 2 , buffers ) );
+  point_buffer_ = buffers[0];
+  index_buffer_ = buffers[1];
+
+  GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_ ) );
+  GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(gl_index) * indices_.size() , indices_.data() , GL_STATIC_DRAW) );
+  print_inline(indices_);
+}
+
+void
+ClipPlane::draw( const mat4& view , const mat4& projection ) const {
+
+  //if (!visible_) return;
+
+  // calculate the matrices for the shaders
+  mat4 mv = view * model_matrix_;
+  mat4 mvp = projection * mv;
+
+  // pick an appropriate program
+  ShaderProgram& program = __shaders__->get("triangles",0,1,false); // p = 0, q = 1, no tessellation shader
+  program.use();
+  program.setUniform("use_constant_color",1);
+
+  vec3 color = {0.9,0.2,0.2}; // pink
+  program.setUniform("constant_color",color);
+  program.setUniform("alpha",float(0.4));
+  program.setUniform("u_lighting",0); // no lighting
+
+  program.setUniform("u_ModelViewProjectionMatrix",mvp);
+  program.setUniform("u_ModelViewMatrix",mv);
+
+  GL_CALL( glBindVertexArray(vertex_array_) );
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, point_buffer_ ) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, sizeof(gl_float) * coordinates_.size() , coordinates_.data() , GL_STATIC_DRAW) );
+  GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
+  GL_CALL( glEnableVertexAttribArray(0) );
+
+  glDisable(GL_CULL_FACE);
+  GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, index_buffer_ ) );
+  GL_CALL( glDrawElements(GL_TRIANGLES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+}
+
+ClipPlane::~ClipPlane() {
+  glDeleteBuffers(1,&point_buffer_);
+  glDeleteBuffers(1,&index_buffer_);
+  glDeleteVertexArrays(1,&vertex_array_);
 }
 
 }

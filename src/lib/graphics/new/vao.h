@@ -30,6 +30,8 @@ class VertexAttributeObject {
 public:
   VertexAttributeObject() :
     show_field_(true),
+    uniform_color_(false),
+    geometry_color_(false),
     tessellation_level_(8)
   {}
 
@@ -67,6 +69,8 @@ public:
 
   const nlohmann::json& get_info() const { return info_; }
   int& tessellation_level() { return tessellation_level_; }
+  bool& uniform_color() { return uniform_color_; }
+  bool& geometry_color() { return geometry_color_; }
 
 private:
   template<typename type>
@@ -81,6 +85,8 @@ private:
 
   gl_index vertex_array_;
   bool show_field_;
+  bool uniform_color_;
+  bool geometry_color_;
 
   std::shared_ptr<PointPrimitive> points_;
   std::vector< std::shared_ptr<EdgePrimitive> > edges_;

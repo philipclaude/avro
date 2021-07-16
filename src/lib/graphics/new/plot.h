@@ -17,28 +17,64 @@ class TopologyBase;
 namespace graphics
 {
 
-class Plot {
+
+class ClipPlane {
+public:
+	ClipPlane() :
+		modifying_(false)
+	{
+		u_ = {1,0,0};
+		v_ = {0,1,0};
+		coordinates_.resize( 12 , 0.0 );
+		indices_ = {0,1,2,0,2,3};
+		write();
+	}
+
+	~ClipPlane();
+
+	bool visible() const   { return visible_; }
+	bool modifying() const { return modifying_; }
+
+	bool& visible()   { return visible_; }
+	bool& modifying() { return modifying_; }
+
+	void initialize( const vec3& c , float length ) {
+		center_ = c;
+		length_ = length;
+		compute();
+	}
+
+	void compute() {
+		float L = length_;
+		for (coord_t d = 0; d < 3; d++) {
+			coordinates_[3*0+d] = center_(d) + L*u_(d) - L*v_(d);
+			coordinates_[3*1+d] = center_(d) + L*u_(d) + L*v_(d);
+			coordinates_[3*2+d] = center_(d) - L*u_(d) + L*v_(d);
+			coordinates_[3*3+d] = center_(d) - L*u_(d) - L*v_(d);
+		}
+	}
+
+	void write();
+	void draw(const mat4& view , const mat4& projection) const;
 
 private:
-	class ClippingPlane {
-	public:
-		ClippingPlane() :
-			modifying_(false) {}
+	bool visible_;
+	bool modifying_;
+	vec3 center_;
+	float length_;
+	vec3 u_; // easier to maintain tangent vectors instead of normal
+	vec3 v_;
+	mat4 model_matrix_;
 
-		bool visible() const { return visible_; }
-		bool modifying() const { return modifying_; }
+	gl_index point_buffer_;
+	gl_index index_buffer_;
+	gl_index vertex_array_;
 
-		void draw();
+	std::vector<gl_float> coordinates_;
+	std::vector<gl_index> indices_;
+};
 
-	private:
-		bool visible_;
-		bool modifying_;
-		vec3 center_;
-		vec3 normal_;
-		vec3 model_matrix_;
-
-		gl_index buffer_;
-	};
+class Plot {
 
 public:
 
@@ -65,6 +101,8 @@ public:
 			vao_labels_.push_back("group 0");
     }
     compute_center();
+
+		clip_.initialize( center_ , length_scale_ );
 	}
 
   void compute_center() {
@@ -129,6 +167,8 @@ public:
 		// compound the total transformation to the model matrix
 	}
 
+	const ClipPlane& clip() const { return clip_; }
+
 
   const mat4& model_matrix() const { return model_matrix_; }
   const vec3& center() const { return center_; }
@@ -152,14 +192,14 @@ public:
 	const std::vector<std::string>& vao_labels() const { return vao_labels_; }
 
 	bool& hidden() { return hidden_; }
-	
+
 private:
 
 	const TopologyBase& topology_;
 	VertexAttributeObject* active_vao_;
 	mat4 model_matrix_;
 
-	ClippingPlane clip_;
+	ClipPlane clip_;
 	vec3 center_;
 	mat4 center_translation_;
 	mat4 inverse_center_translation_;

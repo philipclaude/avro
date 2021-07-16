@@ -271,6 +271,8 @@ Window::draw(bool swap_buffers) {
     // retrieve the model matrix from the plot
     const mat4& model_matrix = plot_[k]->model_matrix();
 
+    plot_[k]->clip().draw(view_matrix,projection_matrix);
+
     // retrieve the current vao and draw
     VertexAttributeObject& vao = plot_[k]->active_vao();
     vao.draw(model_matrix,view_matrix,projection_matrix);

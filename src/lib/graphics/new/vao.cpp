@@ -406,7 +406,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   std::map<index_t,Entity*> triangle2entity;
   for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
     Entity* entity = *it;
-    index_t idx = 0;
     if (!entity->tessellatable()) continue;
     if (entity->number() != 2) continue;
     triangle2entity.insert( {nb_Faces,entity} );
@@ -418,7 +417,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   std::map<index_t,Entity*> edge2entity;
   for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
     Entity* entity = *it;
-    index_t idx = 0;
     if (!entity->tessellatable()) continue;
     if (entity->number() < 1) continue;
     edge2entity.insert( {nb_Edges,entity} );
@@ -637,12 +635,13 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     if (k == triangles_.size()-1) {
       jt["name"]  = "interior";
       jt["order"] = triangles_[k]->order();
-      triangles_[k]->visible() = false;
+      if (number > 2) triangles_[k]->visible() = false;
     }
     else {
       jt["name"] = (geometryless) ? "bnd" + std::to_string(k) : "Face" + std::to_string(triangle2entity[k]->identifier());
       jt["order"] = triangles_[k]->order();
     }
+    if (number == 2) triangles_[k]->visible() = true;
 
     jtriangles.push_back(jt);
   }
@@ -654,7 +653,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     if (k ==  edges_.size()-1) {
       je["name"]  = "interior";
       je["order"] = edges_[k]->order();
-      edges_[k]->visible() = false;
+      if (number > 2) edges_[k]->visible() = false;
     }
     else {
       Entity* e = (geometryless) ? nullptr : edge2entity[k];

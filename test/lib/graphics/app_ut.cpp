@@ -70,7 +70,6 @@ UT_TEST_CASE( simplices_2d_test )
   coord_t number = 3;
   coord_t dim = number;
 
-
   EGADS::Context context;
   std::vector<real_t> lengths(number,1.0);
   EGADS::Cube geometry(&context,lengths);

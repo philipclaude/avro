@@ -18,7 +18,6 @@ UT_TEST_CASE( imgui_test )
   //window.set_enable_controls(false);
 
   GUI gui(window);
-  window.set_gui(&gui);
 
   window.draw();
 
@@ -27,7 +26,6 @@ UT_TEST_CASE( imgui_test )
     // wait for user input
     glfwWaitEvents();
 
-    gui.begin_draw();
     gui.draw();
 
     // determine if we should exit the render loop

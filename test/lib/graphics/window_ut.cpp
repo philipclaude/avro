@@ -120,6 +120,7 @@ UT_TEST_CASE( simplices_2d_test )
   window.add_plot(&plot2);
 
   window.compute_view();
+  window.enable_controls(true);
 
   // bind the colormap values to a buffer
   gl_index colormap_buffer;
@@ -140,6 +141,8 @@ UT_TEST_CASE( simplices_2d_test )
   // initial draw, subsequent drawing will only be performed when a callback is invoked
   window.draw();
   while (true) {
+
+    window.draw();
 
     // wait for user input
     glfwWaitEvents();

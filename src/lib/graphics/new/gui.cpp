@@ -116,7 +116,13 @@ GUI::draw() {
     ImGui::Text("Plots");
     ImGui::SameLine();
     if (ImGui::Button("Hide All")) {
-      printf("hide all plots\n");
+      for (index_t i = 0; i < window_.nb_plots(); i++) {
+        window_.plot(i).hidden() = true;
+        for (index_t k = 0; k < window_.plot(i).active_vao().nb_triangles(); k++)
+          window_.plot(i).active_vao().triangles(k).visible() = false;
+        for (index_t k = 0; k < window_.plot(i).active_vao().nb_edges(); k++)
+          window_.plot(i).active_vao().edges(k).visible() = false;
+      }
     }
     ImGui::Separator();
 
@@ -183,6 +189,8 @@ GUI::draw() {
           rank_index.assign(tmpi.begin(),tmpi.end());
         }
 
+        field_names.insert( field_names.begin() , "geometry" );
+        field_names.insert( field_names.begin() , "constant" );
         field_names.insert( field_names.begin() , "[field]" );
         field_ranks.insert( field_ranks.begin() , "[rank]" );
 
@@ -193,11 +201,23 @@ GUI::draw() {
         label = empty_label();
         if (ImGui::Combo(label.c_str(),&current_field,field_labels.data(),field_labels.size())) {
 
-          if (vao.nb_fields() > 0) {
-            if (current_field == 0) current_field = 1;
+          // prevent from picking the label
+          if (current_field == 0) current_field = 1;
+
+          if (current_field == 1) {
+            vao.geometry_color() = false;
+            vao.uniform_color()  = true;
+          }
+          else if (current_field == 2) {
+            vao.geometry_color() = true;
+            vao.uniform_color()  = false;
+          }
+          else if (vao.nb_fields() > 0) {
+            vao.geometry_color() = false;
+            vao.uniform_color()  = false;
             vao.set_field(field_names[current_field]);
 
-            nlohmann::json jf = fields[current_field-1];
+            nlohmann::json jf = fields[current_field-3];
             std::vector<std::string> tmps = jf.at("ranks");
             field_ranks.assign( tmps.begin() , tmps.end() );
 
@@ -211,7 +231,8 @@ GUI::draw() {
         if (ImGui::Combo(label.c_str(),&current_field_rank,rank_labels.data(),rank_labels.size())) {
           if (vao.nb_fields() > 0) {
             if (current_field_rank == 0) current_field_rank = 1;
-            vao.set_rank(rank_index[current_field_rank-1]);
+            if (!vao.geometry_color() && !vao.uniform_color())
+              vao.set_rank(rank_index[current_field_rank-1]);
           }
         }
 
@@ -222,6 +243,7 @@ GUI::draw() {
 
         static bool show_clip = false;
         static bool modify_clip = false;
+        static bool flip = false;
 
         ImGui::SetNextItemWidth(100);
         const char* clip_styles[] = {"[off]","pixel","primitive"};
@@ -237,6 +259,11 @@ GUI::draw() {
         ImGui::SameLine();
         label = unique_label("modify");
         if (ImGui::Checkbox(label.c_str(),&modify_clip)) {
+
+        }
+        ImGui::SameLine();
+        label = unique_label("flip");
+        if (ImGui::Checkbox(label.c_str(),&flip)) {
 
         }
         ImGui::Separator();
