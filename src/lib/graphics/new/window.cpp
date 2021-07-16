@@ -1,5 +1,8 @@
+#include "graphics/new/gui.h"
 #include "graphics/new/window.h"
 #include "graphics/new/shader_library.h"
+
+#include <imgui/imgui.h>
 
 namespace avro
 {
@@ -61,7 +64,6 @@ Window::init() {
   glfwPollEvents();
   glfwSetCursorPos(window_, width_/2, height_/2);
   glfwSetWindowSize(window_,width_,height_);
-  glViewport(0, 0, width_,height_);
 
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -79,10 +81,20 @@ Window::init() {
 
   picking_  = false;
   picked_   = 0;
+
+  needs_drawing_ = true;
 }
 
 void
 Window::mouse_button_callback(int button, int action, int modifier) {
+
+  if (!enable_controls_) return;
+  bool capture_mouse = false;
+  if (gui_ != nullptr) {
+    capture_mouse = ImGui::GetIO().WantCaptureMouse;
+    if (capture_mouse)
+      printf("imgui wants the mouse!!\n");
+  }
 
   if (action == GLFW_PRESS) {
     double x,y;
@@ -101,6 +113,8 @@ Window::mouse_button_callback(int button, int action, int modifier) {
 
 void
 Window::mouse_move_callback(double x, double y) {
+
+  if (!enable_controls_) return;
 
   // check if dragging
   if (!trackball_.dragging() && !picking_) return;
@@ -168,23 +182,28 @@ Window::mouse_move_callback(double x, double y) {
   }
 
   trackball_.set_current_position(x,y);
-  draw();
+  //draw();
+  needs_drawing_ = true;
 }
 
 void
 Window::mouse_scroll_callback(double dx, double dy) {
+
+  if (!enable_controls_) return;
 
   // move the camera eye according to the scroll
   vec3 v;
   for (coord_t d = 0; d < 3; d++)
     v(d) = camera_.eye()(d) + 0.1*dy*(camera_.lookat()(d) - camera_.eye()(d));
   camera_.set_eye(v);
-  draw();
+  //draw();
+  needs_drawing_ = true;
 }
 
 void
 Window::key_callback( int key , int scancode , int action , int mods ) {
-  // no keys are currently implemented
+
+  if (!enable_controls_) return;
 
   if (key == GLFW_KEY_P) {
     if (action == GLFW_PRESS) {
@@ -225,12 +244,17 @@ Window::resize(int width, int height) {
   width_  = width;
   height_ = height;
   camera_.compute_projection(width_,height_);
-  glViewport(0, 0, width_,height_);
-  draw();
+  //draw();
+  needs_drawing_ = true;
 }
 
 void
 Window::draw() {
+
+  if (!needs_drawing_) return;
+
+  //if (gui_ != nullptr)
+  //  gui_->begin_draw();
 
   float col = 1.0;
   glClearColor(col,col,col, 0.0);
@@ -249,7 +273,12 @@ Window::draw() {
     vao.draw(model_matrix,view_matrix,projection_matrix);
   }
 
-  glfwSwapBuffers(window_);
+  // draw the gui here?
+  if (gui_ == nullptr) {
+    glfwSwapBuffers(window_);
+  }
+
+  needs_drawing_ = false;
 }
 
 Window::~Window() {

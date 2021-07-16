@@ -15,6 +15,7 @@ namespace graphics
 {
 
 class Plot;
+class GUI;
 
 class Trackball {
 public:
@@ -88,7 +89,9 @@ public:
     width_(width),
     height_(height),
     camera_(M_PI/4.0,width,height),
-    picked_(-1)
+    picked_(-1),
+    enable_controls_(true),
+    gui_(nullptr)
   {}
 
   ~Window();
@@ -114,6 +117,12 @@ public:
 
   void draw();
 
+  index_t width() const { return width_; }
+  index_t height() const { return height_; }
+
+  void set_gui( GUI* gui ) { gui_ = gui; }
+  void set_enable_controls( bool x ) { enable_controls_ = x; }
+  void needs_drawing( bool x ) { needs_drawing_ = x; }
 
 private:
   index_t width_;
@@ -128,6 +137,11 @@ private:
   Camera camera_;
   int picked_;
   bool picking_;
+  bool enable_controls_;
+
+  // this needs to be stored in the window so the rendering order is correct
+  GUI* gui_;
+  bool needs_drawing_;
 };
 
 } // graphics

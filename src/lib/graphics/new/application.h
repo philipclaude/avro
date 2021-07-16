@@ -3,6 +3,7 @@
 
 #include "avro_params.h"
 
+#include "graphics/new/gui.h"
 #include "graphics/new/plot.h"
 #include "graphics/new/vao.h"
 #include "graphics/new/window.h"
@@ -34,6 +35,7 @@ public:
 
 private:
 	Window window_;
+	std::shared_ptr<GUI> gui_;
 	std::vector<std::shared_ptr<Plot>> plot_;
 
 };

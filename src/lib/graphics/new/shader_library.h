@@ -35,11 +35,9 @@ public:
                                            "#define GEOMETRY_ORDER " + std::to_string(q) ,
                                            "#define WITH_TESSELLATION 1" };
 
-        printf("creating shader with tess\n");
         std::shared_ptr<ShaderProgram> t0 = std::make_shared<ShaderProgram>("triangles",true,macros);
         std::shared_ptr<ShaderProgram> e0 = std::make_shared<ShaderProgram>("edges",true,macros);
 
-        printf("creating shader without tess\n");
         macros[2] = "#define WITH_TESSELLATION 0";
         std::shared_ptr<ShaderProgram> t1 = std::make_shared<ShaderProgram>("triangles",false,macros);
         std::shared_ptr<ShaderProgram> e1 = std::make_shared<ShaderProgram>("edges",false,macros);
