@@ -16,8 +16,6 @@ GUI::GUI( Window& window ) :
  window_(window),
  count_(5)
 {
-  window_.set_gui(this);
-
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   //context_ = ImGui::GetIO();
@@ -39,16 +37,7 @@ GUI::GUI( Window& window ) :
 }
 
 void
-GUI::begin_draw() {
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
-}
-
-void
 GUI::draw() {
-
-  begin_draw();
 
   //bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
   ImGuiWindowFlags window_flags = 0;
@@ -57,7 +46,13 @@ GUI::draw() {
   //window_flags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
 
   bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
-  if (capture_mouse) window_.needs_drawing(true);
+
+  window_.needs_drawing(true);
+  window_.enable_controls( !capture_mouse );
+
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
 
   // set the controls at the top-left of the window
   ImGui::SetNextWindowPos( ImVec2( 0 , 0 ) );
@@ -83,12 +78,13 @@ GUI::draw() {
     }
 
     ImGui::Text("FPS %.1f", ImGui::GetIO().Framerate);
+    ImGui::Text("Draw count: %lu" , window_.draw_count());
 
     ImGui::End();
   }
 
   ImGui::Render();
-  window_.draw();
+  window_.draw(false); // do not swap buffers, we need to render the gui first
   #if AVRO_HEADLESS_GRAPHICS == 0
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   #endif

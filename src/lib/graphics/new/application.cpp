@@ -48,10 +48,12 @@ OpenGL_Application::run() {
   gui_->draw();
   while (true) {
 
+    // our thread will be put to sleep until user interaction is detected
+    // so this does not actually redraw everything
+    gui_->draw();
+
     // wait for user input
     glfwWaitEvents();
-
-    gui_->draw();
 
     // determine if we should exit the render loop
     if (glfwWindowShouldClose(window_.window())) break;

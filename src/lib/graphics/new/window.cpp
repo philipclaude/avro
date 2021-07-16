@@ -50,7 +50,7 @@ Window::init() {
     avro_assert_not_reached;
   }
   glfwMakeContextCurrent(window_);
-  glfwSwapInterval(0); // otherwise rendering lags a bit behind cursor movement
+  glfwSwapInterval(1); // otherwise rendering lags a bit behind cursor movement
 
   // load GL functions
   gladLoadGL();
@@ -83,12 +83,14 @@ Window::init() {
   picked_   = 0;
 
   needs_drawing_ = true;
+  draw_count_ = 0;
 }
 
 void
 Window::mouse_button_callback(int button, int action, int modifier) {
 
   if (!enable_controls_) return;
+
   bool capture_mouse = false;
   if (gui_ != nullptr) {
     capture_mouse = ImGui::GetIO().WantCaptureMouse;
@@ -182,7 +184,6 @@ Window::mouse_move_callback(double x, double y) {
   }
 
   trackball_.set_current_position(x,y);
-  //draw();
   needs_drawing_ = true;
 }
 
@@ -196,7 +197,6 @@ Window::mouse_scroll_callback(double dx, double dy) {
   for (coord_t d = 0; d < 3; d++)
     v(d) = camera_.eye()(d) + 0.1*dy*(camera_.lookat()(d) - camera_.eye()(d));
   camera_.set_eye(v);
-  //draw();
   needs_drawing_ = true;
 }
 
@@ -244,17 +244,15 @@ Window::resize(int width, int height) {
   width_  = width;
   height_ = height;
   camera_.compute_projection(width_,height_);
-  //draw();
   needs_drawing_ = true;
 }
 
 void
-Window::draw() {
+Window::draw(bool swap_buffers) {
 
+  // only draw if we need to
   if (!needs_drawing_) return;
-
-  //if (gui_ != nullptr)
-  //  gui_->begin_draw();
+  draw_count_++;
 
   float col = 1.0;
   glClearColor(col,col,col, 0.0);
@@ -273,11 +271,9 @@ Window::draw() {
     vao.draw(model_matrix,view_matrix,projection_matrix);
   }
 
-  // draw the gui here?
-  if (gui_ == nullptr) {
+  if (swap_buffers) {
     glfwSwapBuffers(window_);
   }
-
   needs_drawing_ = false;
 }
 
