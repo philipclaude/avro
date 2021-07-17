@@ -1,6 +1,5 @@
 #version 410
 
-
 layout( location = 0 ) out vec4 fragColor;
 
 in vec2 v_Parameter;
@@ -24,13 +23,14 @@ flat in float g_clip;
 
 // TODO: make these uniforms
 const int ncolor = 256;
-const float umin = -1;
-const float umax =  1;
+
+uniform float u_umin;
+uniform float u_umax;
 
 void
 get_color( float u , out vec3 color ) {
 
-    int indx = int(ncolor*(u - umin)/(umax - umin));
+    int indx = int(ncolor*(u - u_umin)/(u_umax - u_umin));
 
     if (indx < 0) indx = 0;
     if (indx > 255) indx = 255;
@@ -161,7 +161,7 @@ void main() {
   get_color(f,color);
 
   #else
-  color = vec3(0.8,0.8,0.2);
+  color = vec3(0.8,0.4,0.2);
   #endif
 
   vec3 color_out = color;

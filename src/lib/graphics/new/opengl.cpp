@@ -182,6 +182,13 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
     if (show_field_) {
       solution_[k]->activate(shader);
       shader.setUniform( "use_constant_color" , 0 );
+
+      const std::vector<gl_float>& data = solution_[k]->active().data();
+      float umin = * std::min_element( data.begin() , data.end() );
+      float umax = * std::max_element( data.begin() , data.end() );
+
+      shader.setUniform( "u_umin" , umin );
+      shader.setUniform( "u_umax" , umax );
     }
     else {
       shader.setUniform( "use_constant_color" , 1 );
@@ -289,7 +296,8 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     if (solution_.size() != 0) p = solution_[k]->active().order();
     coord_t q = triangles_[k]->order();
 
-    ShaderProgram& shader = __shaders__->get("triangles",p,q, q > 1);
+    ShaderProgram& shader = (show_field_) ? __shaders__->get("triangles",p,q, q > 1) : __shaders__->get("triangles",-1,q,q>1);
+    //ShaderProgram& shader = __shaders__->get("triangles",p,q, q > 1);
     shader.use();
     shader.setUniform("u_ModelViewProjectionMatrix",mvp);
     shader.setUniform("u_NormalMatrix",normal_matrix);
@@ -309,8 +317,9 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
       shader.setUniform("u_clip",-1);
     }
 
-    if (shader.has_tessellation_shader())
+    if (shader.has_tessellation_shader()) {
       shader.setUniform( "u_level" , tessellation_level_ );
+    }
 
     // bind the desired colormap
     glActiveTexture(GL_TEXTURE0 + 1);
@@ -320,9 +329,19 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     if (number_ == 2) shader.setUniform("u_lighting",-1);
     else shader.setUniform("u_lighting",1);
 
+    //shader.setUniform("u_lighting",-1);
+
     if (show_field_) {
       solution_[k]->activate(shader);
       shader.setUniform( "use_constant_color" , 0 );
+
+      const std::vector<gl_float>& data = solution_[k]->active().data();
+      float umin = * std::min_element( data.begin() , data.end() );
+      float umax = * std::max_element( data.begin() , data.end() );
+
+      shader.setUniform( "u_umin" , umin );
+      shader.setUniform( "u_umax" , umax );
+
     }
     else if (geometry_color_) {
       shader.setUniform( "use_constant_color" , 1 );

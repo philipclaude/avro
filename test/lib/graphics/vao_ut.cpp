@@ -235,7 +235,7 @@ UT_TEST_CASE( simplices_2d_test )
   vao.build(curvilinear);
   window.manager().write(vao);
 
-  std::vector<std::string> macros = {"#define SOLUTION_ORDER " + std::to_string(field->element().order()),
+  std::vector<std::string> macros = {"#define WITH_TESSELLATION 1","#define SOLUTION_ORDER " + std::to_string(field->element().order()),
                                      "#define GEOMETRY_ORDER " + std::to_string(curvilinear.element().order()) };
 
   bool with_tess = true;

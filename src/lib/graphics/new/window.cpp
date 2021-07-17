@@ -58,7 +58,7 @@ Window::init() {
   dumpGLInfo();
 
   // initialize the shaders (must happen after the GL functions are loaded)
-  __shaders__ = std::make_shared<Shaders>(0,3,1,2);
+  __shaders__ = std::make_shared<Shaders>(-1,3,1,2);
 
   // ensure we can capture the escape key being pressed
   glfwSetInputMode(window_, GLFW_STICKY_KEYS, GL_TRUE);

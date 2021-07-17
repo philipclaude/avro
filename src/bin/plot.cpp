@@ -7,6 +7,7 @@
 #include "geometry/entity.h"
 
 #include "graphics/application.h"
+#include "graphics/new/application.h"
 
 #include "library/factory.h"
 #include "library/library.h"
@@ -102,9 +103,15 @@ plot( int nb_input , const char** inputs , bool webplot )
   }
   else
   {
+    #if 0
     graphics::Visualizer vis;
     vis.add_topology(topology);
     vis.run();
+    #else
+    graphics::OpenGL_Application app;
+    app.add(topology);
+    app.run();
+    #endif
   }
   return 0;
 }
