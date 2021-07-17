@@ -107,7 +107,7 @@ UT_TEST_CASE( simplices_2d_test )
   curvilinear.fields().make( "test" , field );
 
   OpenGL_Application app;
-  //app.add( curvilinear );
+  app.add( curvilinear );
   app.add( topology );
 
   app.run();
