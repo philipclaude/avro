@@ -49,7 +49,8 @@ ShaderProgram::ShaderProgram( const std::string& name , bool with_tess , const s
   handle_(-1),
   linked_(false),
   name_(name),
-  macros_(macros)
+  macros_(macros),
+  has_tessellation_shader_(with_tess)
 {
   std::string base = AVRO_SOURCE_DIR + "/src/lib/graphics/shaders/"+ name;
   if (name_ == "wv") {

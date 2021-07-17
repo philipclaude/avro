@@ -1,5 +1,6 @@
 #include "unit_tester.hpp"
 
+#include "graphics/new/managers.h"
 #include "graphics/new/vao.h"
 #include "graphics/new/window.h"
 
@@ -13,6 +14,8 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
+#if AVRO_HEADLESS_GRAPHICS == 0
+
 using namespace avro;
 using namespace avro::graphics;
 
@@ -22,7 +25,7 @@ class TestField : public Field<Simplex,std::vector<real_t>> {
 
 public:
   TestField( const Topology<Simplex>& topology , coord_t order ) :
-    Field( topology , order, CONTINUOUS )
+    Field( topology , order, DISCONTINUOUS )
   {
     build();
 
@@ -91,6 +94,7 @@ graphics::mat4 perspective_matrix = glm::perspective( fov , aspect , znear , zfa
 graphics::mat4 view_matrix = glm::lookAt( eye , center , up );
 graphics::mat4 mv = view_matrix * model_matrix;
 graphics::mat4 mvp = perspective_matrix * mv;
+graphics::mat4 normal_matrix = glm::transpose(glm::inverse(mv));
 
 mat4
 rotation( real_t X , real_t Y ) {
@@ -128,9 +132,12 @@ draw() {
 
   mv  = view_matrix * model_matrix;
   mvp = perspective_matrix * mv;
+  normal_matrix = glm::transpose(glm::inverse(mv));
 
   triangle_shader->use();
   triangle_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
+  triangle_shader->setUniform("u_NormalMatrix",normal_matrix);
+  triangle_shader->setUniform("u_ModelViewMatrix",mv);
 
   edge_shader->use();
   edge_shader->setUniform("u_ModelViewProjectionMatrix",mvp);
@@ -186,7 +193,8 @@ UT_TEST_CASE( simplices_2d_test )
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,3);
+  dims[1] = 2;
   CKF_Triangulation topology( dims );
 
   coord_t geometry_order = 2;
@@ -209,7 +217,7 @@ UT_TEST_CASE( simplices_2d_test )
     real_t theta = s*M_PI;
     real_t R = 0.75 + t*(1.0 - 0.75);
 
-    curvilinear.points()[k][0] = R*cos(theta);
+    curvilinear.points()[k][0] = R*cos(M_PI - theta);
     curvilinear.points()[k][1] = R*sin(theta);
   }
   #endif
@@ -223,8 +231,9 @@ UT_TEST_CASE( simplices_2d_test )
   window.init();
   win = window.window();
 
-  VertexAttributeObject vao(number,1);
+  VertexAttributeObject vao;
   vao.build(curvilinear);
+  window.manager().write(vao);
 
   std::vector<std::string> macros = {"#define SOLUTION_ORDER " + std::to_string(field->element().order()),
                                      "#define GEOMETRY_ORDER " + std::to_string(curvilinear.element().order()) };
@@ -233,6 +242,7 @@ UT_TEST_CASE( simplices_2d_test )
   ShaderProgram tshader("triangles",with_tess,macros);
   tshader.use();
   tshader.setUniform("u_ModelViewProjectionMatrix",mvp);
+  tshader.setUniform("u_NormalMatrix",normal_matrix);
 
   ShaderProgram eshader("edges",with_tess,macros);
   eshader.use();
@@ -262,7 +272,7 @@ UT_TEST_CASE( simplices_2d_test )
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
 
   // set the tessellation level for the TCS
-  int level = 4;
+  int level = 10;
 
   tshader.use();
   tshader.setUniform( "u_level" , level );
@@ -288,6 +298,7 @@ UT_TEST_CASE( simplices_2d_test )
     if (glfwGetKey(window.window() , GLFW_KEY_0) == GLFW_PRESS) change_rank(0);
     if (glfwGetKey(window.window() , GLFW_KEY_1) == GLFW_PRESS) change_rank(1);
     if (glfwGetKey(window.window() , GLFW_KEY_2) == GLFW_PRESS) change_rank(2);
+    if (glfwGetKey(window.window() , GLFW_KEY_3) == GLFW_PRESS) change_rank(3);
   }
 }
 UT_TEST_CASE_END( simplices_2d_test )
@@ -318,3 +329,9 @@ UT_TEST_CASE_END( polyhedra_test )
 
 
 UT_TEST_SUITE_END( graphics_decomposition_suite )
+
+#else
+UT_TEST_SUITE( graphics_decomposition_suite )
+UT_TEST_SUITE_END( graphics_decomposition_suite )
+
+#endif

@@ -5,8 +5,30 @@ uniform mat4 u_ModelViewProjectionMatrix;
 
 out vec3 v_Position;
 
+#if WITH_TESSELLATION == 0
+out vec3 v_Normal;
+out vec2 v_ParameterTess;
+#endif
+
+uniform int u_clip;
+uniform vec3 u_clip_center;
+uniform vec3 u_clip_normal;
+
+out float v_clip;
+
 void main()
 {
   v_Position  = a_Position; // pass the position to the geometry shader
   gl_Position = vec4(a_Position,1.0);
+
+  v_clip = 0;
+  if (u_clip == 2) {
+    float p = dot(a_Position - u_clip_center,u_clip_normal);
+    if (p < 0.0) v_clip = 1;
+  }
+
+  #if WITH_TESSELLATION == 0
+  v_Normal = vec3(0,0,1);
+  v_ParameterTess = vec2(0,0);
+  #endif
 }

@@ -13,80 +13,88 @@ class Points;
 namespace graphics
 {
 
-class PointPrimitive {
+class PrimitiveBase {
+public:
+  gl_index& buffer()       { return buffer_; }
+  gl_index  buffer() const { return buffer_; }
+
+protected:
+  gl_index buffer_;
+};
+
+class PointPrimitive : public PrimitiveBase {
 
 public:
 
 	PointPrimitive( const Points& points );
 
-  ~PointPrimitive();
-
 	void write();
 
   void draw( ShaderProgram& program );
 
-	gl_index buffer() const { return buffer_; }
-
   index_t nb() const { return coordinates_.size() / 3; }
+  const std::vector<gl_float>& coordinates() const { return coordinates_; }
 
   void print() const;
 
 private:
   const Points& points_;
 	std::vector<gl_float> coordinates_;
-	gl_index buffer_;
 	bool  visible_;
 };
 
-class EdgePrimitive {
+class EdgePrimitive : public PrimitiveBase {
 
 public:
   EdgePrimitive( coord_t order );
+
+  coord_t order() const { return order_; }
   void add( const index_t* v , index_t nv );
 
   index_t nb() const { return indices_.size() / nb_basis_; }
+  const std::vector<gl_index>& indices() const { return indices_; }
 
   void write();
 
-  void draw();
+  void draw(bool with_tess=true);
 
   void print() const;
 
-private:
-  coord_t order_;
-  index_t nb_basis_;
-  gl_index buffer_;
-  std::vector<gl_index> indices_;
-};
-
-class FieldPrimitive;
-
-class TrianglePrimitive {
-public:
-  TrianglePrimitive( coord_t order );
-
-  ~TrianglePrimitive();
-
-  void add( const index_t* v , index_t nv );
-
-  void print() const;
-
-  index_t nb() const { return indices_.size() / nb_basis_; }
-
-  void write();
-
-  void draw();
-
-  const vec3& color() const { return color_; }
-  void set_color( vec3 color ) { color_ = color; }
+  bool visible() const { return visible_; }
+  void set_visible(bool x) { visible_ = x; }
   bool& visible() { return visible_; }
 
 private:
   coord_t order_;
   index_t nb_basis_;
   std::vector<gl_index> indices_;
-  gl_index buffer_;
-  FieldPrimitive* field_;
+  bool visible_;
+};
+
+class TrianglePrimitive : public PrimitiveBase {
+public:
+  TrianglePrimitive( coord_t order );
+
+  void add( const index_t* v , index_t nv );
+
+  void print() const;
+
+  index_t nb() const { return indices_.size() / nb_basis_; }
+  const std::vector<gl_index>& indices() const { return indices_; }
+
+  void write();
+
+  void draw(bool with_tess=true);
+
+  const vec3& color() const { return color_; }
+  void set_color( vec3 color ) { color_ = color; }
+  bool& visible() { return visible_; }
+  coord_t order() const { return order_; }
+
+private:
+  coord_t order_;
+  index_t nb_basis_;
+  std::vector<gl_index> indices_;
   vec3 color_;
   bool visible_;
 };
@@ -98,6 +106,7 @@ public:
   void add( real_t* f , index_t ndof );
 
   const std::vector<gl_float>& data() const { return data_; }
+  coord_t order() const { return order_; }
 
 private:
   coord_t order_;
@@ -105,11 +114,9 @@ private:
   std::vector<gl_float> data_;
 };
 
-class FieldPrimitive {
+class FieldPrimitive : public PrimitiveBase {
 public:
-  FieldPrimitive();
-
-  ~FieldPrimitive();
+  FieldPrimitive() {}
 
   void set_active( const std::string& active , index_t rank = 0 ) {
     active_field_ = active;
@@ -129,12 +136,18 @@ public:
 
   void activate( ShaderProgram& shader );
 
+  const std::map<std::string,std::shared_ptr<FieldData>>& data() const { return data_; }
+
+  const FieldData& active() const { return *data_.at(active_name()).get(); }
+
+  gl_index& texture()       { return texture_; }
+  gl_index  texture() const { return texture_; }
+
 private:
   std::string active_field_;
   index_t active_rank_;
   std::map<std::string, std::shared_ptr<FieldData> > data_;
   gl_index texture_;
-  gl_index buffer_;
 };
 
 } // graphics

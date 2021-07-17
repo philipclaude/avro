@@ -82,8 +82,8 @@ if (avro_WITH_GL)
   endif()
 endif()
 
-set( avro_EXTERNAL_LIBRARIES_SHARED ${avro_EXTERNAL_LIBRARIES}  dl )
-set( avro_EXTERNAL_LIBRARIES_STATIC ${avro_EXTERNAL_LIBRARIES} ${ESP_LIBRARIES_STATIC} )
+set( avro_EXTERNAL_LIBRARIES_SHARED ${avro_EXTERNAL_LIBRARIES}  dl)
+set( avro_EXTERNAL_LIBRARIES_STATIC ${avro_EXTERNAL_LIBRARIES} ${ESP_LIBRARIES_STATIC})
 
 # add links to third party softwares
 if (avro_STATIC_LINK_CXX)

@@ -4,6 +4,8 @@
 layout( location = 0 ) out vec4 fragColor;
 
 in vec2 v_Parameter;
+in vec3 g_Normal;
+in vec3 g_Position;
 in vec3 x_Position;
 
 uniform samplerBuffer solution;
@@ -11,16 +13,27 @@ uniform samplerBuffer colormap;
 
 uniform vec3 constant_color;
 uniform int use_constant_color;
+uniform int have_tessellation_shader;
+uniform int u_lighting;
+uniform float u_alpha;
+uniform int u_clip;
+uniform vec3 u_clip_center;
+uniform vec3 u_clip_normal;
+
+in float g_clip;
 
 // TODO: make these uniforms
 const int ncolor = 256;
-const float umin =  -1;
-const float umax =   1;
+const float umin = -1;
+const float umax =  1;
 
 void
 get_color( float u , out vec3 color ) {
 
     int indx = int(ncolor*(u - umin)/(umax - umin));
+
+    if (indx < 0) indx = 0;
+    if (indx > 255) indx = 255;
 
     float r0 = texelFetch( colormap , 3*(indx) + 0 ).x;
     float g0 = texelFetch( colormap , 3*(indx) + 1 ).x;
@@ -29,10 +42,36 @@ get_color( float u , out vec3 color ) {
     color = vec3(r0,g0,b0);
 }
 
+void
+shading( in vec3 l , in vec3 n , in vec3 color , out vec3 color_out ) {
+
+  float diffuse = max(0.0,dot(l,n));
+  float phong = 128.0;
+  float specular = pow(max(0.0,dot(-reflect(l,n),n)),phong);
+
+  vec3 cd = color * diffuse;
+  vec3 cs = vec3(0.2) * specular;
+  vec3 ca = vec3(0.2);
+  color_out = ca + cd + cs;
+}
+
 void main() {
 
+  if (g_clip > 0) discard;
+  if (u_clip > 0) {
+
+    float p = dot(x_Position - u_clip_center,u_clip_normal);
+    if (p < 0.0)
+      discard;
+  }
+
   if (use_constant_color > 0) {
-    fragColor = vec4(constant_color,1.0);
+    vec3 color_out;
+    if (have_tessellation_shader > 0 && u_lighting > 0)
+      shading( -normalize(g_Position) , normalize(g_Normal) , constant_color , color_out );
+    else
+      color_out = constant_color; // no shading because there are no normals
+    fragColor = vec4(color_out,u_alpha);
     return;
   }
 
@@ -125,5 +164,9 @@ void main() {
   color = vec3(0.8,0.8,0.2);
   #endif
 
-  fragColor = vec4(color,1.0);
+  vec3 color_out = color;
+  if (u_lighting > 0)
+    shading( -normalize(g_Position) , normalize(g_Normal) , color , color_out );
+
+  fragColor = vec4(color_out,u_alpha);
 }
