@@ -1,4 +1,5 @@
 #include "graphics/new/gui.h"
+#include "graphics/new/vao.h"
 #include "graphics/new/window.h"
 #include "graphics/new/shader_library.h"
 
@@ -93,13 +94,6 @@ void
 Window::mouse_button_callback(int button, int action, int modifier) {
 
   if (!enable_controls_) return;
-
-  bool capture_mouse = false;
-  if (gui_ != nullptr) {
-    capture_mouse = ImGui::GetIO().WantCaptureMouse;
-    if (capture_mouse)
-      printf("imgui wants the mouse!!\n");
-  }
 
   if (action == GLFW_PRESS) {
     double x,y;

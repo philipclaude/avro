@@ -1,4 +1,6 @@
 #include "graphics/new/gui.h"
+#include "graphics/new/primitives.h"
+#include "graphics/new/vao.h"
 #include "graphics/new/window.h"
 
 #include "graphics/gl.h"

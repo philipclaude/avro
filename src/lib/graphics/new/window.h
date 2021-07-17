@@ -15,7 +15,6 @@ namespace graphics
 {
 
 class Plot;
-class GUI;
 
 class Trackball {
 public:
@@ -145,7 +144,6 @@ private:
   bool enable_controls_;
 
   // this needs to be stored in the window so the rendering order is correct
-  GUI* gui_;
   bool needs_drawing_;
   index_t draw_count_;
 };

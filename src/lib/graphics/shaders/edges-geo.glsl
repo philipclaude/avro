@@ -27,7 +27,6 @@ visible( in vec3 x ) {
   return result;
 }
 
-
 void main() {
 
   gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[0],1.0);
