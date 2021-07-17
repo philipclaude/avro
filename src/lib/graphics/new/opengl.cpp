@@ -234,7 +234,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     glDisable(GL_CULL_FACE);
   }
   else {
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
   }
 
   // bind which attributes we want to draw
@@ -261,6 +261,20 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     shader.setUniform("u_ModelViewProjectionMatrix",mvp);
     if (shader.has_tessellation_shader())
       shader.setUniform( "u_level" , tessellation_level_ );
+
+    if (clip->style() > 0) {
+      vec3 normal;
+      vec3 center;
+      clip->get(center,normal);
+
+      shader.setUniform("u_clip",clip->style());
+      shader.setUniform("u_clip_center",center);
+      shader.setUniform("u_clip_normal",normal);
+    }
+    else {
+      shader.setUniform("u_clip",-1);
+    }
+
     edges_[k]->draw(shader.has_tessellation_shader());
   }
 
@@ -286,13 +300,10 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
       vec3 normal;
       vec3 center;
       clip->get(center,normal);
+
       shader.setUniform("u_clip",clip->style());
       shader.setUniform("u_clip_center",center);
       shader.setUniform("u_clip_normal",normal);
-
-      normal.print();
-      center.print();
-      printf("clip style = %d\n",clip->style());
     }
     else {
       shader.setUniform("u_clip",-1);
@@ -332,8 +343,6 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
 void
 ClipPlane::write() {
 
-  model_matrix_ = glm::identity();
-
   GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
   GL_CALL( glBindVertexArray(vertex_array_) );
 
@@ -343,11 +352,10 @@ ClipPlane::write() {
   index_buffer_ = buffers[1];
 
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, point_buffer_ ) );
-  GL_CALL( glBufferData(GL_ARRAY_BUFFER, sizeof(gl_float) * coordinates_.size() , coordinates_.data() , GL_STATIC_DRAW) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, sizeof(gl_float) * 12 , coordinates_ , GL_STATIC_DRAW) );
 
   GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_ ) );
-  GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(gl_index) * indices_.size() , indices_.data() , GL_STATIC_DRAW) );
-  print_inline(indices_);
+  GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(gl_index) * 6 , indices_ , GL_STATIC_DRAW) );
 }
 
 void
@@ -356,18 +364,19 @@ ClipPlane::draw( const mat4& view , const mat4& projection ) const {
   if (!visible_) return;
 
   // calculate the matrices for the shaders
-  mat4 mv = view * model_matrix_;
+  mat4 mv = view * plot_.model_matrix() * transform_matrix_;
   mat4 mvp = projection * mv;
 
   // pick an appropriate program
   ShaderProgram& program = __shaders__->get("triangles",0,1,false); // p = 0, q = 1, no tessellation shader
   program.use();
-  program.setUniform("use_constant_color",1);
 
   vec3 color = {0.9,0.2,0.2}; // pink
+  program.setUniform("use_constant_color",1);
   program.setUniform("constant_color",color);
-  program.setUniform("u_alpha",float(0.25));
+  program.setUniform("u_alpha",float(0.2));
   program.setUniform("u_lighting",0); // no lighting
+  program.setUniform("u_clip",-1);
 
   program.setUniform("u_ModelViewProjectionMatrix",mvp);
   program.setUniform("u_ModelViewMatrix",mv);
@@ -379,7 +388,7 @@ ClipPlane::draw( const mat4& view , const mat4& projection ) const {
 
   glDisable(GL_CULL_FACE);
   GL_CALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, index_buffer_ ) );
-  GL_CALL( glDrawElements(GL_TRIANGLES, indices_.size() , GL_UNSIGNED_INT , 0 ) );
+  GL_CALL( glDrawElements(GL_TRIANGLES, 6 , GL_UNSIGNED_INT , 0 ) );
 }
 
 ClipPlane::~ClipPlane() {

@@ -241,28 +241,36 @@ GUI::draw() {
         label = unique_label("tessellation");
         ImGui::SliderInt(label.c_str(),&vao.tessellation_level(),1,20);
 
-        static bool flip = false;
-
-        ImGui::SetNextItemWidth(100);
-        const char* clip_styles[] = {"[off]","pixel","primitive"};
+        ImGui::SetNextItemWidth(80);
+        const char* clip_styles[] = {"[off]","pixel","prim."};
         label = unique_label("clipping");
         if (ImGui::Combo(label.c_str(),&window_.plot(i).clip().style(),clip_styles,3)) {
         }
+        ImGui::SameLine();
         label = unique_label("show");
         if (ImGui::Checkbox(label.c_str(),&window_.plot(i).clip().visible())) {
-
+          window_.plot(i).clip().update();
         }
-        ImGui::SameLine();
-        label = unique_label("modify");
-        if (ImGui::Checkbox(label.c_str(),&window_.plot(i).clip().modifying())) {
-
-        }
+        const char* clip_dims[] = {"X","Y","Z"};
+        label = empty_label();
+        ImGui::SetNextItemWidth(80);
+        if (ImGui::Combo(label.c_str(),&window_.plot(i).clip().dimension(),clip_dims,3)) {}
         ImGui::SameLine();
         label = unique_label("flip");
-        if (ImGui::Checkbox(label.c_str(),&flip)) {
-
+        if (ImGui::Button(label.c_str())) {
+          window_.plot(i).clip().flip();
         }
+
+        // slider to control the clip plane distance
+        ImGui::SetNextItemWidth(100);
+        label = unique_label("distance");
+        float length_scale = window_.plot(i).clip().length_scale();
+        ImGui::SliderFloat(label.c_str(),&window_.plot(i).clip().distance(),-length_scale,length_scale);
         ImGui::Separator();
+
+        // update the clip
+        window_.plot(i).clip().update();
+
 
         if (ImGui::TreeNode("Faces")) {
 

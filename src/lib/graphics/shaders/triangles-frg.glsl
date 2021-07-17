@@ -20,7 +20,7 @@ uniform int u_clip;
 uniform vec3 u_clip_center;
 uniform vec3 u_clip_normal;
 
-in float g_clip;
+//in float g_clip;
 
 // TODO: make these uniforms
 const int ncolor = 256;
@@ -57,7 +57,7 @@ shading( in vec3 l , in vec3 n , in vec3 color , out vec3 color_out ) {
 
 void main() {
 
-  if (g_clip > 0) discard;
+  //if (g_clip > 0) discard;
   if (u_clip > 0) {
 
     float p = dot(x_Position - u_clip_center,u_clip_normal);
@@ -168,5 +168,5 @@ void main() {
   if (u_lighting > 0)
     shading( -normalize(g_Position) , normalize(g_Normal) , color , color_out );
 
-  fragColor = vec4(color_out,u_alpha);
+  fragColor = vec4(color_out,0.2);
 }

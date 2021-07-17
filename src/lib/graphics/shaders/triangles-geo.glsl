@@ -15,8 +15,8 @@ out vec3 x_Position;
 
 in vec2 v_ParameterTess[];
 
-in float v_clip[];
-out float g_clip;
+//in float v_clip[];
+//out float g_clip;
 
 layout (triangle_strip , max_vertices = 3) out;
 
@@ -29,7 +29,7 @@ void main() {
   g_Position  = (u_ModelViewMatrix * vec4(v_Position[0],1.0)).xyz;
   g_Normal    = mat3(u_NormalMatrix) * v_Normal[0];
   x_Position  = v_Position[0];
-  g_clip      = v_clip[0];
+  //g_clip      = v_clip[0];
   EmitVertex();
 
   gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[1],1.0);
@@ -37,7 +37,7 @@ void main() {
   g_Position  = (u_ModelViewMatrix * vec4(v_Position[1],1.0)).xyz;
   g_Normal    = mat3(u_NormalMatrix) * v_Normal[1];
   x_Position  = v_Position[1];
-  g_clip      = v_clip[1];
+  //g_clip      = v_clip[1];
   EmitVertex();
 
   gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[2],1.0);
@@ -45,7 +45,7 @@ void main() {
   g_Position  = (u_ModelViewMatrix * vec4(v_Position[2],1.0)).xyz;
   g_Normal    = mat3(u_NormalMatrix) * v_Normal[2];
   x_Position  = v_Position[2];
-  g_clip      = v_clip[2];
+  //g_clip      = v_clip[2];
 
   // i'm not sure if this need to be set after every vertex, or just once before the end of the primitive
   // it at least needs to be set before the last EmitVertex()
