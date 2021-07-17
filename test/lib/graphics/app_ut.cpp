@@ -78,7 +78,7 @@ UT_TEST_CASE( simplices_2d_test )
   //dims[1] = 2;
   CKF_Triangulation topology( dims );
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
-  topology.points().attach(geometry);
+  //topology.points().attach(geometry);
 
   coord_t geometry_order = 2;
   Points nodes(dim);
@@ -107,7 +107,7 @@ UT_TEST_CASE( simplices_2d_test )
   curvilinear.fields().make( "test" , field );
 
   OpenGL_Application app;
-  app.add( curvilinear );
+  //app.add( curvilinear );
   app.add( topology );
 
   app.run();

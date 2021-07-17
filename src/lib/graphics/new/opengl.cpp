@@ -178,6 +178,7 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
   for (index_t k = 0; k < triangles_.size(); k++) {
     if (!triangles_[k]->visible()) continue;
 
+    shader.setUniform("u_alpha",float(1.0));
     if (show_field_) {
       solution_[k]->activate(shader);
       shader.setUniform( "use_constant_color" , 0 );
@@ -227,13 +228,13 @@ VertexAttributeObject::draw_points( ShaderProgram& shader ) {
 }
 
 void
-VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& projection ) {
+VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& projection , const ClipPlane* clip ) {
 
   if (number_ == 2) {
     glDisable(GL_CULL_FACE);
   }
   else {
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
   }
 
   // bind which attributes we want to draw
@@ -279,7 +280,23 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     shader.setUniform("u_ModelViewProjectionMatrix",mvp);
     shader.setUniform("u_NormalMatrix",normal_matrix);
     shader.setUniform("u_ModelViewMatrix",mv);
-    shader.setUniform("alpha",float(1.0));
+    shader.setUniform("u_alpha",float(1.0));
+
+    if (clip->style() > 0) {
+      vec3 normal;
+      vec3 center;
+      clip->get(center,normal);
+      shader.setUniform("u_clip",clip->style());
+      shader.setUniform("u_clip_center",center);
+      shader.setUniform("u_clip_normal",normal);
+
+      normal.print();
+      center.print();
+      printf("clip style = %d\n",clip->style());
+    }
+    else {
+      shader.setUniform("u_clip",-1);
+    }
 
     if (shader.has_tessellation_shader())
       shader.setUniform( "u_level" , tessellation_level_ );
@@ -301,7 +318,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
       shader.setUniform( "constant_color" , triangles_[k]->color() );
     }
     else {
-      vec3 c = {0.8,0.8,0.2};
+      vec3 c = {0.8,0.8,0.2}; // yellow
       shader.setUniform( "use_constant_color" , 1 );
       shader.setUniform( "constant_color" , c );
     }
@@ -325,6 +342,9 @@ ClipPlane::write() {
   point_buffer_ = buffers[0];
   index_buffer_ = buffers[1];
 
+  GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, point_buffer_ ) );
+  GL_CALL( glBufferData(GL_ARRAY_BUFFER, sizeof(gl_float) * coordinates_.size() , coordinates_.data() , GL_STATIC_DRAW) );
+
   GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_ ) );
   GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(gl_index) * indices_.size() , indices_.data() , GL_STATIC_DRAW) );
   print_inline(indices_);
@@ -333,7 +353,7 @@ ClipPlane::write() {
 void
 ClipPlane::draw( const mat4& view , const mat4& projection ) const {
 
-  //if (!visible_) return;
+  if (!visible_) return;
 
   // calculate the matrices for the shaders
   mat4 mv = view * model_matrix_;
@@ -346,7 +366,7 @@ ClipPlane::draw( const mat4& view , const mat4& projection ) const {
 
   vec3 color = {0.9,0.2,0.2}; // pink
   program.setUniform("constant_color",color);
-  program.setUniform("alpha",float(0.4));
+  program.setUniform("u_alpha",float(0.25));
   program.setUniform("u_lighting",0); // no lighting
 
   program.setUniform("u_ModelViewProjectionMatrix",mvp);
@@ -354,7 +374,6 @@ ClipPlane::draw( const mat4& view , const mat4& projection ) const {
 
   GL_CALL( glBindVertexArray(vertex_array_) );
   GL_CALL( glBindBuffer( GL_ARRAY_BUFFER, point_buffer_ ) );
-  GL_CALL( glBufferData(GL_ARRAY_BUFFER, sizeof(gl_float) * coordinates_.size() , coordinates_.data() , GL_STATIC_DRAW) );
   GL_CALL( glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 0 which holds coordinates
   GL_CALL( glEnableVertexAttribArray(0) );
 

@@ -33,6 +33,15 @@ mat4( float a ) {
   return m;
 }
 
+class vec3
+to_vec3( const vec4& v) {
+  vec3 x;
+  x(0) = v(0);
+  x(1) = v(1);
+  x(2) = v(2);
+  return x;
+}
+
 class vec4
 to_vec4( const vec3& v , float h ) {
   vec4 x;

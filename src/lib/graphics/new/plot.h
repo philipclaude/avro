@@ -21,13 +21,16 @@ namespace graphics
 class ClipPlane {
 public:
 	ClipPlane() :
-		modifying_(false)
+		visible_(false),
+		modifying_(false),
+		direction_(1),
+		style_(0)
 	{
 		u_ = {1,0,0};
 		v_ = {0,1,0};
 		coordinates_.resize( 12 , 0.0 );
 		indices_ = {0,1,2,0,2,3};
-		write();
+		transform_matrix_ = glm::identity();
 	}
 
 	~ClipPlane();
@@ -52,10 +55,35 @@ public:
 			coordinates_[3*2+d] = center_(d) - L*u_(d) + L*v_(d);
 			coordinates_[3*3+d] = center_(d) - L*u_(d) - L*v_(d);
 		}
+		write();
 	}
 
 	void write();
 	void draw(const mat4& view , const mat4& projection) const;
+
+	void transform( const mat4& m , bool centered ) {
+		if (centered) {
+			mat4 Tc = glm::translate( glm::identity() , center_ );
+			mat4 Tc_inv = glm::inverse( Tc );
+			model_matrix_ = Tc * m * Tc_inv * model_matrix_;
+			if (modifying_) transform_matrix_ = Tc * m * Tc_inv * transform_matrix_;
+		}
+		else {
+			model_matrix_ = m * model_matrix_;
+			if (modifying_) transform_matrix_ = m * transform_matrix_;
+		}
+	}
+
+	void get( vec3& c , vec3& n ) const {
+		c = glm::to_vec3( transform_matrix_ * glm::to_vec4(center_,1.0) );
+		vec3 u = glm::to_vec3( transform_matrix_ * glm::to_vec4(u_,0.0) );
+		vec3 v = glm::to_vec3( transform_matrix_ * glm::to_vec4(v_,0.0) );
+		if (direction_ < 0) n = glm::cross(v,u);
+		else n = glm::cross(u,v);
+	}
+
+	int& style() { return style_; }
+	int style() const { return style_; }
 
 private:
 	bool visible_;
@@ -64,7 +92,10 @@ private:
 	float length_;
 	vec3 u_; // easier to maintain tangent vectors instead of normal
 	vec3 v_;
-	mat4 model_matrix_;
+	mat4 model_matrix_; // transformation used for rendering
+	mat4 transform_matrix_; // transformation of the clipping plane in physical space
+	short direction_;
+	int style_; // 0 for none, 1 for pixel, 2 for primitive
 
 	gl_index point_buffer_;
 	gl_index index_buffer_;
@@ -120,6 +151,7 @@ public:
       if (x < xmin(d)) xmin(d) = x;
       if (x > xmax(d)) xmax(d) = x;
     }
+		center_.print();
 
     length_scale_ = -1;
     for (coord_t d = 0; d < 3; d++) {
@@ -127,6 +159,7 @@ public:
       float L = (xmax(d) - xmin(d));
       if (L > length_scale_) length_scale_ = L;
     }
+		center_.print();
 
     // store the center translation and its inverse
     center_translation_ =  glm::translate( glm::identity() , center_ );
@@ -158,16 +191,11 @@ public:
   }
 
 	void transform_clip( const mat4& m , bool centered ) {
-		// translate clip to origin
-
-		// apply transformation
-
-		// translate backwards
-
-		// compound the total transformation to the model matrix
+		clip_.transform(m,centered);
 	}
 
 	const ClipPlane& clip() const { return clip_; }
+	      ClipPlane& clip()       { return clip_; }
 
 
   const mat4& model_matrix() const { return model_matrix_; }

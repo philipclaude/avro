@@ -241,24 +241,20 @@ GUI::draw() {
         label = unique_label("tessellation");
         ImGui::SliderInt(label.c_str(),&vao.tessellation_level(),1,20);
 
-        static bool show_clip = false;
-        static bool modify_clip = false;
         static bool flip = false;
 
         ImGui::SetNextItemWidth(100);
         const char* clip_styles[] = {"[off]","pixel","primitive"};
-        static int current_clip_style = 0;
         label = unique_label("clipping");
-        if (ImGui::Combo(label.c_str(),&current_clip_style,clip_styles,3)) {
-
+        if (ImGui::Combo(label.c_str(),&window_.plot(i).clip().style(),clip_styles,3)) {
         }
         label = unique_label("show");
-        if (ImGui::Checkbox(label.c_str(),&show_clip)) {
+        if (ImGui::Checkbox(label.c_str(),&window_.plot(i).clip().visible())) {
 
         }
         ImGui::SameLine();
         label = unique_label("modify");
-        if (ImGui::Checkbox(label.c_str(),&modify_clip)) {
+        if (ImGui::Checkbox(label.c_str(),&window_.plot(i).clip().modifying())) {
 
         }
         ImGui::SameLine();

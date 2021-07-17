@@ -69,6 +69,9 @@ Window::init() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   // save the window for performing callbacks with the correct trackball
   glfwSetWindowUserPointer(window_, this);
 
@@ -275,7 +278,8 @@ Window::draw(bool swap_buffers) {
 
     // retrieve the current vao and draw
     VertexAttributeObject& vao = plot_[k]->active_vao();
-    vao.draw(model_matrix,view_matrix,projection_matrix);
+    const ClipPlane& clip = plot_[k]->clip();
+    vao.draw(model_matrix,view_matrix,projection_matrix,&clip);
   }
 
   if (swap_buffers) {

@@ -430,6 +430,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   coord_t number = topology.number();
   if (nb_triangle_primitives == 1 && number > 2) nb_triangle_primitives = 2;
   if (nb_edge_primitives == 1 && number >= 2) nb_edge_primitives = 2;
+  if (number == 3 && geometryless) nb_edge_primitives = 1;
 
   // allocate the primitives
   edges_.resize( nb_edge_primitives );
@@ -453,8 +454,8 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     index_t primitive_id = 0;
     if (number == 2) primitive_id = 0;
     else if (geometryless) {
-      if (f.parent.size() == 1) primitive_id = 1; // interior
-      else primitive_id = 0; // boundary
+      if (f.parent.size() == 1) primitive_id = 0; // boundary
+      else primitive_id = 1; // interior
     }
     else {
       Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
@@ -500,7 +501,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     }
     else if (number == 3 && geometryless) {
       // hard to tell if this is a geometry edge
-      primitive_id = 1;
+      primitive_id = 0;
     }
     else {
       Entity* entity = BoundaryUtils::geometryFacet( topology.points() , f.indices.data() , f.indices.size() );
@@ -654,6 +655,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       je["name"]  = "interior";
       je["order"] = edges_[k]->order();
       if (number > 2) edges_[k]->visible() = false;
+      if (number == 3 && geometryless) edges_[k]->visible() = true;
     }
     else {
       Entity* e = (geometryless) ? nullptr : edge2entity[k];

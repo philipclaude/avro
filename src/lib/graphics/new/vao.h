@@ -22,6 +22,7 @@ class PointPrimitive;
 class EdgePrimitive;
 class TrianglePrimitive;
 class FieldPrimitive;
+class ClipPlane;
 
 struct MeshFacet;
 
@@ -37,7 +38,7 @@ public:
 
   void build( const TopologyBase& topology );
 
-	void draw( const mat4& model , const mat4& view , const mat4& projection );
+	void draw( const mat4& model , const mat4& view , const mat4& projection , const ClipPlane* clip=nullptr );
   void draw_triangles( ShaderProgram& );
   void draw_edges( ShaderProgram& );
   void draw_points( ShaderProgram& );

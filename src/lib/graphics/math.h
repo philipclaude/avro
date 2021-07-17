@@ -156,6 +156,7 @@ public:
 namespace glm {
 
 class mat4 mat4( float a );
+class vec3 to_vec3( const vec4& x );
 class vec4 to_vec4( const vec3& x , float h );
 class mat4 identity();
 class mat4 perspective( float fov , float aspect , float znear , float zfar );
@@ -166,6 +167,7 @@ class mat4 scale( const class mat4& m , const vec3& s );
 class mat4 inverse( const class mat4& m );
 class mat4 transpose( const class mat4& m );
 std::string to_string( const class mat4& m );
+class vec3 cross( const vec3& u , const vec3& v );
 
 }
 

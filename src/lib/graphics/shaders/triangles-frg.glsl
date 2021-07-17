@@ -6,6 +6,7 @@ layout( location = 0 ) out vec4 fragColor;
 in vec2 v_Parameter;
 in vec3 g_Normal;
 in vec3 g_Position;
+in vec3 x_Position;
 
 uniform samplerBuffer solution;
 uniform samplerBuffer colormap;
@@ -14,7 +15,12 @@ uniform vec3 constant_color;
 uniform int use_constant_color;
 uniform int have_tessellation_shader;
 uniform int u_lighting;
-uniform float alpha;
+uniform float u_alpha;
+uniform int u_clip;
+uniform vec3 u_clip_center;
+uniform vec3 u_clip_normal;
+
+in float g_clip;
 
 // TODO: make these uniforms
 const int ncolor = 256;
@@ -51,13 +57,21 @@ shading( in vec3 l , in vec3 n , in vec3 color , out vec3 color_out ) {
 
 void main() {
 
+  if (g_clip > 0) discard;
+  if (u_clip > 0) {
+
+    float p = dot(x_Position - u_clip_center,u_clip_normal);
+    if (p < 0.0)
+      discard;
+  }
+
   if (use_constant_color > 0) {
     vec3 color_out;
     if (have_tessellation_shader > 0 && u_lighting > 0)
       shading( -normalize(g_Position) , normalize(g_Normal) , constant_color , color_out );
     else
       color_out = constant_color; // no shading because there are no normals
-    fragColor = vec4(color_out,alpha);
+    fragColor = vec4(color_out,u_alpha);
     return;
   }
 
@@ -154,5 +168,5 @@ void main() {
   if (u_lighting > 0)
     shading( -normalize(g_Position) , normalize(g_Normal) , color , color_out );
 
-  fragColor = vec4(color_out,1.0);
+  fragColor = vec4(color_out,u_alpha);
 }
