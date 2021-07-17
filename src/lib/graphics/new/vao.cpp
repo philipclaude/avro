@@ -27,23 +27,6 @@ namespace avro
 namespace graphics
 {
 
-typedef struct
-{
-  coord_t dim;
-  std::vector<index_t> indices;
-} Facet;
-
-struct CanonicalFacet : Facet
-{
-  index_t local;
-};
-
-struct MeshFacet : Facet
-{
-  std::vector<index_t> parent;
-  std::vector<index_t> local;
-  std::vector<int>     orientation;
-};
 
 
 // needed to create a set/map of Facet
@@ -291,66 +274,11 @@ VertexAttributeObject::_build( const Topology<Simplex>& topology ) {
 }
 
 void
-triangulate( const Points& points , const index_t* v , index_t nv , std::vector<index_t>& triangles ) {
-  avro_implement;
-}
-
-template<>
-void
-VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
-
-  number_ = topology.number();
-  order_  = topology.element().order();
-
-  // only linear polytope meshes are supported
-  avro_assert( topology.element().order() == 1 );
-
-  std::vector<index_t> edges;
-  topology.get_edges(edges);
-
-  // TODO: loop through the fields and make sure all fields are either zeroth or first order
-  Topology<Simplex> simplices( topology.points() , 2 );
-
-  std::vector<index_t> triangles;
-  if (topology.number() == 2) {
-
-    for (index_t k = 0; k < topology.nb(); k++) {
-      triangles.clear();
-      triangulate( topology.points() , topology(k) , topology.nv(k) , triangles );
-
-      index_t nb_triangles = triangles.size()/3;
-      for (index_t j = 0; j < nb_triangles; j++)
-        simplices.add( triangles.data()+3*j , 3 );
-    }
-  }
-  else if (topology.number() == 3) {
-
-    std::vector<int> hrep;
-    std::vector<index_t> vrep;
-    for (index_t k = 0; k < topology.nb(); k++) {
-      hrep.clear();
-      topology.element().hrep( topology(k) , topology.nv(k) , hrep );
-
-      for (index_t i = 0; i < hrep.size(); i++) {
-        triangles.clear();
-        vrep.clear();
-        topology.element().vrep( topology(k) , topology.nv(k) , hrep[i] , vrep );
-
-        avro_assert( vrep.size() > 2 );
-        triangulate( topology.points() , vrep.data() , vrep.size() , triangles );
-
-        index_t nb_triangles = triangles.size()/3;
-        for (index_t j = 0; j < nb_triangles; j++)
-          simplices.add( triangles.data()+3*j , 3 );
-      }
-    }
-  }
-}
-
-void
 VertexAttributeObject::build( const TopologyBase& topology ) {
   if (topology.type_name() == "simplex")
     _build( static_cast<const Topology<Simplex>&>(topology) );
+  else if (topology.type_name() == "polytope")
+    _build( static_cast<const Topology<Polytope>&>(topology) );
   else
     avro_implement;
 }
@@ -565,6 +493,8 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
           index_t face = f.local[0];
           int orientation = f.orientation[0];
 
+          // todo account for different types for trace2cell
+          // for now it's okay because polytopes should only be p = 0
           CanonicalTraceToCell trace(elem,face,orientation);
           TraceToCellRefCoord trace2cell(simplex);
 
@@ -712,6 +642,8 @@ void
 VertexAttributeObject::apply_transformation( const mat4& m ) {
   model_matrix_ = m * model_matrix_;
 }
+
+template void VertexAttributeObject::get_primitives( const Topology<Polytope>& topology , const std::vector<std::vector<MeshFacet>>& facets );
 
 } // graphics
 

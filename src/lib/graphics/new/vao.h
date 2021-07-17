@@ -24,7 +24,23 @@ class TrianglePrimitive;
 class FieldPrimitive;
 class ClipPlane;
 
-struct MeshFacet;
+typedef struct
+{
+  coord_t dim;
+  std::vector<index_t> indices;
+} Facet;
+
+struct CanonicalFacet : Facet
+{
+  index_t local;
+};
+
+struct MeshFacet : Facet
+{
+  std::vector<index_t> parent;
+  std::vector<index_t> local;
+  std::vector<int>     orientation;
+};
 
 class VertexAttributeObject {
 
