@@ -51,7 +51,9 @@ private:
 
 class WebGL_Application : public ViewerBase {
 
+public:
 	void run();
+	void run_thread();
 	void add( const TopologyBase& topology );
 
 private:

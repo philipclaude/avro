@@ -1,7 +1,10 @@
+#include "common/parallel_for.h"
 #include "graphics/application.h"
 #include "graphics/window.h"
 
 #include "graphics/colormap.h"
+
+#include <unistd.h>
 
 namespace avro
 {
@@ -30,6 +33,11 @@ OpenGL_Application::run() {
   // initial draw, subsequent drawing will only be performed when a callback is invoked
   window_.compute_view();
   gui_->draw();
+
+  #if AVRO_HEADLESS_GRAPHICS
+  return;
+  #endif
+
   while (true) {
 
     // our thread will be put to sleep until user interaction is detected
@@ -52,6 +60,43 @@ WebGL_Application::add( const TopologyBase& topology ) {
   plot_.push_back(plot);
 }
 
+class RunThread
+{
+public:
+  typedef RunThread thisclass;
+
+  RunThread(WebGL_Application& app) :
+    app_(app) {}
+
+  void run( index_t i )
+  {
+    if (i == 0) {
+      app_.run_thread();
+    }
+    else if (i == 1) {
+      usleep(1000);
+      std::string cmd = "open " + AVRO_SOURCE_DIR + "/app/avro.html";
+      system(cmd.c_str());
+    }
+  }
+
+  void runapp( const index_t nthread )
+  {
+    ProcessCPU::parallel_for (
+      parallel_for_member_callback( this , &thisclass::run ),
+      0,nthread
+    );
+  }
+private:
+  WebGL_Application& app_;
+};
+
+void
+WebGL_Application::run_thread() {
+
+  manager_.send(7681);
+}
+
 void
 WebGL_Application::run() {
 
@@ -60,7 +105,10 @@ WebGL_Application::run() {
       manager_.write( plot_[k]->vao(j) );
   }
 
-  manager_.send(7681);
+  // we will start up two threads, one to write, and one to call the browser (after waiting a bit)
+
+  RunThread runner(*this);
+  runner.runapp(2);
 }
 
 Viewer::Viewer(bool web) {
