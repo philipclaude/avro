@@ -61,7 +61,7 @@ class Plot {
 
 public:
 
-	Plot( const TopologyBase& topology );
+	Plot( const TopologyBase& topology , bool with_clip=true );
 
 	void build();
 
@@ -69,8 +69,8 @@ public:
   void transform_center(const mat4& m);
 	void transform( const mat4& m , bool centered);
 
-	const ClipPlane& clip() const { return clip_; }
-	      ClipPlane& clip()       { return clip_; }
+	const ClipPlane& clip() const { return *clip_.get(); }
+	      ClipPlane& clip()       { return *clip_.get(); }
 
   const mat4& model_matrix() const { return model_matrix_; }
   const vec3& center() const { return center_; }
@@ -93,7 +93,7 @@ private:
 	VertexAttributeObject* active_vao_;
 	mat4 model_matrix_;
 
-	ClipPlane clip_;
+	std::shared_ptr<ClipPlane> clip_;
 	vec3 center_;
 	mat4 center_translation_;
 	mat4 inverse_center_translation_;

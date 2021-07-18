@@ -23,6 +23,9 @@ public:
 
 	void write( VertexAttributeObject& vao );
 
+	void track_buffer(gl_index b) { buffers_.push_back(b); }
+	void track_texture(gl_index t) { textures_.push_back(t); }
+
 private:
 	// keep track of things to delete
 	std::vector<gl_index> buffers_;

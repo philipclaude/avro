@@ -80,7 +80,7 @@ UT_TEST_CASE( simplices_2d_test )
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   //topology.points().attach(geometry);
 
-  coord_t geometry_order = 2;
+  coord_t geometry_order = 1;
   Points nodes(dim);
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   Topology<Simplex> curvilinear(nodes,topology,geometry_order);
@@ -106,7 +106,7 @@ UT_TEST_CASE( simplices_2d_test )
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.fields().make( "test" , field );
 
-  OpenGL_Application app;
+  Viewer app(true);
   app.add( curvilinear );
   app.add( topology );
 

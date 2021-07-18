@@ -18,8 +18,12 @@ public:
   gl_index& buffer()       { return buffer_; }
   gl_index  buffer() const { return buffer_; }
 
+  index_t  memory() const { return memory_; }
+  index_t& memory()       { return memory_; }
+
 protected:
   gl_index buffer_;
+  index_t  memory_;
 };
 
 class PointPrimitive : public PrimitiveBase {

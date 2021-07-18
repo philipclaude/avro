@@ -73,6 +73,12 @@ Window::init() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1.5);
+
   // save the window for performing callbacks with the correct trackball
   glfwSetWindowUserPointer(window_, this);
 
@@ -88,6 +94,8 @@ Window::init() {
 
   needs_drawing_ = true;
   draw_count_ = 0;
+
+  select_colormap("viridis");
 }
 
 void

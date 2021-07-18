@@ -130,6 +130,15 @@ GUI::draw() {
           window_.plot(i).active_vao().edges(k).visible() = false;
       }
     }
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(100);
+    static int colormap_index = 0;
+    const char* colormaps[] = {"[colormap]","viridis","parula","giraffe","bwr","hsv","jet"};
+    if (ImGui::Combo(empty_label().c_str(),&colormap_index,colormaps,7)) {
+      if (colormap_index == 0) colormap_index = 1;
+      window_.select_colormap(colormaps[colormap_index]);
+    }
     ImGui::Separator();
 
     std::string label;
@@ -311,8 +320,15 @@ GUI::draw() {
     }
     ImGui::Separator();
 
+    index_t memory = 0;
+    for (index_t k = 0; k < window_.nb_plots(); k++) {
+      for (index_t j = 0; j < window_.plot(k).nb_vao(); j++)
+        memory += window_.plot(k).vao(j).get_memory();
+    }
+
     ImGui::Text("FPS %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("Draw count: %lu" , window_.draw_count());
+    ImGui::Text("GPU mem. in use: %.1f MB" ,real_t(memory)/1e6);
 
     ImGui::Separator();
 

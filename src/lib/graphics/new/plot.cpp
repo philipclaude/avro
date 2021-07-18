@@ -64,11 +64,12 @@ ClipPlane::update() {
   transform_matrix_ = glm::translate( glm::identity() , t ) * glm::rotate(glm::identity(),M_PI/2.0,axis);
 }
 
-Plot::Plot( const TopologyBase& topology ) :
+Plot::Plot( const TopologyBase& topology , bool with_clip ) :
 	topology_(topology),
-	clip_(*this),
+	clip_(nullptr),
 	length_scale_(1.0),
 	hidden_(false) {
+	if (with_clip) clip_ = std::make_shared<ClipPlane>(*this);
   model_matrix_ = glm::identity();
 }
 
@@ -89,7 +90,8 @@ Plot::build() {
   }
   compute_center();
 
-  clip_.initialize( center_ , length_scale_ );
+	if (clip_ != nullptr)
+  	clip_->initialize( center_ , length_scale_ );
 }
 
 void

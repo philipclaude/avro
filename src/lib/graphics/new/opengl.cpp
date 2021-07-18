@@ -1,3 +1,4 @@
+#include "graphics/colormap.h"
 #include "graphics/new/application.h"
 #include "graphics/new/managers.h"
 #include "graphics/new/plot.h"
@@ -40,6 +41,7 @@ OpenGL4_Manager::write( VertexAttributeObject& vao ) {
   GL_CALL( glBufferData(GL_ARRAY_BUFFER, sizeof(gl_float) * vao.points().coordinates().size() , vao.points().coordinates().data() , GL_STATIC_DRAW) );
   GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, 0) );
   buffers_.push_back( points_buffer );
+  vao.points().memory() = sizeof(gl_float) * vao.points().coordinates().size();
 
   for (index_t k = 0; k < vao.nb_triangles(); k++) {
 
@@ -51,6 +53,7 @@ OpenGL4_Manager::write( VertexAttributeObject& vao ) {
     GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(gl_index) * vao.triangles(k).indices().size() , vao.triangles(k).indices().data() , GL_STATIC_DRAW) );
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
     buffers_.push_back(triangle_buffer);
+    vao.triangles(k).memory() = sizeof(gl_index) * vao.triangles(k).indices().size();
   }
 
   for (index_t k = 0; k < vao.nb_edges(); k++) {
@@ -63,6 +66,7 @@ OpenGL4_Manager::write( VertexAttributeObject& vao ) {
     GL_CALL( glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(gl_index) * vao.edges(k).indices().size() , vao.edges(k).indices().data() , GL_STATIC_DRAW) );
     GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
     buffers_.push_back(edge_buffer);
+    vao.edges(k).memory() = sizeof(gl_index) * vao.edges(k).indices().size();
   }
 
   for (index_t k = 0; k < vao.nb_fields(); k++) {
@@ -136,6 +140,8 @@ FieldPrimitive::write() {
   GL_CALL( glActiveTexture( GL_TEXTURE0 + 0 ) ); // fields are always in texture 0
   GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , texture_) );
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , buffer_ ) );
+
+  memory_ = sizeof(gl_float) * field->data().size();
 }
 
 void
@@ -353,7 +359,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
       shader.setUniform( "constant_color" , triangles_[k]->color() );
     }
     else {
-      vec3 c = {0.8,0.8,0.2}; // yellow
+      vec3 c = {1.0,1.0,0.8}; // yellow
       shader.setUniform( "use_constant_color" , 1 );
       shader.setUniform( "constant_color" , c );
     }
@@ -419,6 +425,29 @@ ClipPlane::~ClipPlane() {
   glDeleteBuffers(1,&point_buffer_);
   glDeleteBuffers(1,&index_buffer_);
   glDeleteVertexArrays(1,&vertex_array_);
+}
+
+void
+Window::select_colormap(const std::string& name) {
+
+  // bind the colormap values to a buffer
+  gl_index colormap_buffer;
+  GL_CALL( glGenBuffers( 1 , &colormap_buffer ) );
+  Colormap colormap;
+  colormap.change_style(name);
+  index_t ncolor = 256*3;
+  GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , colormap_buffer) );
+  GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * ncolor , colormap.data() , GL_STATIC_DRAW) );
+
+  // generate a texture to hold the colormap buffer
+  GLuint colormap_texture;
+  GL_CALL( glGenTextures( 1 , &colormap_texture) );
+  GL_CALL( glActiveTexture( GL_TEXTURE0 + 1 ) );
+  GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , colormap_texture) );
+  GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
+
+  manager_.track_texture(colormap_texture);
+  manager_.track_buffer(colormap_buffer);
 }
 
 }

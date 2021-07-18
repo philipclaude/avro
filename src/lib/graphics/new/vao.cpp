@@ -615,6 +615,18 @@ VertexAttributeObject::apply_transformation( const mat4& m ) {
   model_matrix_ = m * model_matrix_;
 }
 
+index_t
+VertexAttributeObject::get_memory() const {
+	index_t memory = points_->memory();
+	for (index_t k = 0; k < triangles_.size(); k++)
+		memory += triangles_[k]->memory();
+	for (index_t k = 0; k < edges_.size(); k++)
+		memory += edges_[k]->memory();
+	for (index_t k = 0; k < solution_.size(); k++)
+		memory += solution_[k]->memory();
+	return memory;
+}
+
 template void VertexAttributeObject::get_primitives( const Topology<Polytope>& topology , const std::vector<std::vector<MeshFacet>>& facets );
 
 } // graphics

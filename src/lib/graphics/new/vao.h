@@ -117,6 +117,7 @@ public:
   bool& uniform_color() { return uniform_color_; }
   bool& geometry_color() { return geometry_color_; }
   void set_lighting( bool x ) { lighting_ = x; }
+  index_t get_memory() const;
 
 private:
   template<typename type>

@@ -130,6 +130,8 @@ public:
   index_t draw_count() const { return draw_count_; }
   bool& lighting() { return lighting_; }
 
+  void select_colormap(const std::string& name);
+
 private:
   index_t width_;
   index_t height_;

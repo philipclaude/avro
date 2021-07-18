@@ -45,7 +45,7 @@ UT_TEST_CASE( vao_polytopes_test )
   typedef Polytope type;
   coord_t number = 3;
   coord_t dim = number;
-  index_t nb_points = 1e2;
+  index_t nb_points = 1e3;
 
   // create random delaunay vertices
   CubeDomain<type> domain(dim,dim,10);
@@ -73,7 +73,7 @@ UT_TEST_CASE( vao_polytopes_test )
   std::shared_ptr<TestField> fld = std::make_shared<TestField>(diagram);
   diagram.fields().make("test",fld);
 
-  OpenGL_Application app;
+  Viewer app;
   app.add(diagram);
   app.run();
 

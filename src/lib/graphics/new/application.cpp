@@ -27,22 +27,6 @@ OpenGL_Application::add( const TopologyBase& topology ) {
 void
 OpenGL_Application::run() {
 
-  // bind the colormap values to a buffer
-  gl_index colormap_buffer;
-  GL_CALL( glGenBuffers( 1 , &colormap_buffer ) );
-  Colormap colormap;
-  colormap.change_style("giraffe");
-  index_t ncolor = 256*3;
-  GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , colormap_buffer) );
-  GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(float) * ncolor , colormap.data() , GL_STATIC_DRAW) );
-
-  // generate a texture to hold the colormap buffer
-  GLuint colormap_texture;
-  GL_CALL( glGenTextures( 1 , &colormap_texture) );
-  GL_CALL( glActiveTexture( GL_TEXTURE0 + 1 ) );
-  GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , colormap_texture) );
-  GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , colormap_buffer ) );
-
   // initial draw, subsequent drawing will only be performed when a callback is invoked
   window_.compute_view();
   gui_->draw();
@@ -59,6 +43,49 @@ OpenGL_Application::run() {
     if (glfwWindowShouldClose(window_.window())) break;
     if (glfwGetKey(window_.window(), GLFW_KEY_ESCAPE ) == GLFW_PRESS) break;
   }
+}
+
+void
+WebGL_Application::add( const TopologyBase& topology ) {
+  std::shared_ptr<Plot> plot = std::make_shared<Plot>(topology,false);
+  plot->build();
+  plot_.push_back(plot);
+}
+
+void
+WebGL_Application::run() {
+
+  for (index_t k = 0; k < plot_.size(); k++) {
+    for (index_t j = 0; j < plot_[k]->nb_vao(); j++)
+      manager_.write( plot_[k]->vao(j) );
+  }
+
+  manager_.send(7681);
+}
+
+Viewer::Viewer(bool web) {
+
+  if (!web) {
+    try {
+      app_ = std::make_shared<OpenGL_Application>();
+    }
+    catch (...) {
+      printf("[warning] it doesn't seem OpenGL4 is supported, using the web viewer");
+      web = true;
+    }
+  }
+
+  if (web) app_ = std::make_shared<WebGL_Application>();
+}
+
+void
+Viewer::add( const TopologyBase& topology ) {
+  app_->add(topology);
+}
+
+void
+Viewer::run() {
+  app_->run();
 }
 
 } // graphics
