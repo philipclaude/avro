@@ -6,6 +6,9 @@
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
+#include <memory>
+#include <vector>
+
 namespace avro
 {
 
