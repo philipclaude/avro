@@ -136,7 +136,7 @@ UT_TEST_CASE( test1 )
   triangulation.fields().make("e",te);
 */
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
 
   std::shared_ptr<SliceSites> ts = std::make_shared<SliceSites>(slice.tetrahedra(),slice.tet2site());
   slice.tetrahedra().fields().make("sites",ts);
@@ -152,11 +152,11 @@ UT_TEST_CASE( test1 )
     slice.tetrahedra().fields().make("m",mfld);
   }
 
-  vis.add_topology( slice.tetrahedra() );
-  vis.add_topology( slice.edges() );
+  vis.add( slice.tetrahedra() );
+  vis.add( slice.edges() );
 
   std::string viewfile = "";//"/Users/pcaplan/Dropbox/Codes/mach-II/avro/test/view.json";
-  vis.run(viewfile);
+  vis.run();
 }
 UT_TEST_CASE_END( test1 )
 

@@ -1,6 +1,6 @@
-#include "graphics/new/plot.h"
-#include "graphics/new/primitives.h"
-#include "graphics/new/vao.h"
+#include "graphics/plot.h"
+#include "graphics/primitives.h"
+#include "graphics/vao.h"
 
 #include "mesh/topology.h"
 

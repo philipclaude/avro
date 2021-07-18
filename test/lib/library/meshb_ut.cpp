@@ -41,10 +41,10 @@ UT_TEST_CASE( test1 )
 
   mesh.write( mesh_in2 , "tmp/cc3.mesh" , true );
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
 
   for (index_t k=0;k<mesh_in.nb_topologies();k++)
-    vis.add_topology(mesh_in.topology(k));
+    vis.add(mesh_in.topology(k));
 
   vis.run();
 }

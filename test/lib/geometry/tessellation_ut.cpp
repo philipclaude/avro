@@ -46,9 +46,9 @@ UT_TEST_CASE(test1)
       UT_ASSERT( tess.points().u(k,1) < 1e10 );
   }
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
 
-  vis.add_topology( tess.topology(0) );
+  vis.add( tess.topology(0) );
 
   vis.run();
 }

@@ -1,7 +1,7 @@
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
-#include "graphics/new/application.h"
+#include "graphics/application.h"
 
 #include "library/ckf.h"
 
@@ -86,9 +86,9 @@ UT_TEST_CASE( test_nd_polytope )
 
     #if 0
     if (number > 3 || (nb_points >= 1e6)) continue;
-    graphics::Visualizer vis;
-    vis.add_topology(triangulation);
-    //vis.add_topology(diagram);
+    graphics::Viewer vis;
+    vis.add(triangulation);
+    //vis.add(diagram);
     vis.run();
     #elif 1
     graphics::OpenGL_Application app;

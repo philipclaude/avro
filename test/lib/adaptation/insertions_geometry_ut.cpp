@@ -114,8 +114,8 @@ UT_TEST_CASE(test1)
     UT_ASSERT( accept) ;
   }
 
-  graphics::Visualizer vis;
-  vis.add_topology(topology);
+  graphics::Viewer vis;
+  vis.add(topology);
 
   //vis.run();
 

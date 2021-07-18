@@ -6,8 +6,8 @@
 #include "geometry/entity.h"
 
 #include "graphics/colormap.h"
-#include "graphics/new/primitives.h"
-#include "graphics/new/vao.h"
+#include "graphics/primitives.h"
+#include "graphics/vao.h"
 #include "graphics/gl.h"
 
 #include "mesh/boundary.h"

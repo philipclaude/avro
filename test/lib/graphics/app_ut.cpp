@@ -1,8 +1,8 @@
 #include "unit_tester.hpp"
 
-#include "graphics/new/managers.h"
-#include "graphics/new/vao.h"
-#include "graphics/new/application.h"
+#include "graphics/managers.h"
+#include "graphics/vao.h"
+#include "graphics/application.h"
 
 #include "graphics/colormap.h"
 #include "graphics/shader.h"

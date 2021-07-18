@@ -4,6 +4,7 @@
 #include "avro_types.h"
 
 #include "graphics/gl.h"
+#include "graphics/math.h"
 
 #include <vector>
 

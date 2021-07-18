@@ -7,7 +7,6 @@
 #include "geometry/entity.h"
 
 #include "graphics/application.h"
-#include "graphics/new/application.h"
 
 #include "library/factory.h"
 #include "library/library.h"
@@ -94,25 +93,10 @@ plot( int nb_input , const char** inputs , bool webplot )
     //bplot = std::make_shared<library::BoundaryPlot<type>>(boundary);
   }
 
-  std::shared_ptr<graphics::ApplicationBase> app;
-  if (webplot)
-  {
-    graphics::WebVisualizer vis;
-    vis.add_topology(topology);
-    vis.run();
-  }
-  else
-  {
-    #if 0
-    graphics::Visualizer vis;
-    vis.add_topology(topology);
-    vis.run();
-    #else
-    graphics::OpenGL_Application app;
-    app.add(topology);
-    app.run();
-    #endif
-  }
+  graphics::Viewer app(webplot);
+  app.add(topology);
+  app.run();
+
   return 0;
 }
 

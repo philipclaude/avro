@@ -148,8 +148,8 @@ UT_TEST_CASE(test1)
 
   }
 
-  graphics::Visualizer vis;
-  vis.add_topology(topology);
+  graphics::Viewer vis;
+  vis.add(topology);
 
   //vis.run();
 

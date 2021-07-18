@@ -1,6 +1,6 @@
-#include "graphics/new/primitives.h"
-#include "graphics/new/vao.h"
-#include "graphics/new/webglpp.h"
+#include "graphics/primitives.h"
+#include "graphics/vao.h"
+#include "graphics/webglpp.h"
 
 #include <iostream>
 #include <vector>

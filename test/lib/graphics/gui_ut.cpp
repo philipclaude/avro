@@ -1,8 +1,8 @@
 #include "unit_tester.hpp"
 
 #include "graphics/gl.h"
-#include "graphics/new/gui.h"
-#include "graphics/new/window.h"
+#include "graphics/gui.h"
+#include "graphics/window.h"
 
 using namespace avro;
 using namespace avro::graphics;

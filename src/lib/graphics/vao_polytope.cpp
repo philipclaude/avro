@@ -3,8 +3,8 @@
 #include "element/polytope.h"
 #include "element/simplex.h"
 
-#include "graphics/new/primitives.h"
-#include "graphics/new/vao.h"
+#include "graphics/primitives.h"
+#include "graphics/vao.h"
 
 #include "mesh/points.h"
 #include "mesh/topology.h"

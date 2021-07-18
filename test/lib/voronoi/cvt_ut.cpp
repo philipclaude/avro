@@ -63,10 +63,10 @@ UT_TEST_CASE( test1 )
   //rvd.compute(true);
   rvd.optimise(10);
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
 
-  //vis.add_topology(topology);
-  vis.add_topology(rvd);
+  //vis.add(topology);
+  vis.add(rvd);
 
   vis.run();
 }

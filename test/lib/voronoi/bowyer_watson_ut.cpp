@@ -45,8 +45,8 @@ UT_TEST_CASE( test0)
     delaunay.compute();
 
     #if 1
-    graphics::Visualizer vis;
-    vis.add_topology(delaunay);
+    graphics::Viewer vis;
+    vis.add(delaunay);
 
     vis.run();
     #endif
@@ -90,8 +90,8 @@ UT_TEST_CASE( test1 )
   //fclose(fid);
 
   #if 0
-  graphics::Visualizer vis;
-  vis.add_topology(delaunay);
+  graphics::Viewer vis;
+  vis.add(delaunay);
 
   vis.run();
   #endif

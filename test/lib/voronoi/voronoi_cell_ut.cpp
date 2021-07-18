@@ -75,8 +75,8 @@ UT_TEST_CASE( test_2d )
   diagram.compute(false);
 
   #if 0
-  graphics::Visualizer vis;
-  vis.add_topology(diagram);
+  graphics::Viewer vis;
+  vis.add(diagram);
 
   vis.run();
   #endif
@@ -133,8 +133,8 @@ UT_TEST_CASE( test_2d_simplex )
   */
 
   #if 0
-  graphics::Visualizer vis;
-  vis.add_topology(diagram);
+  graphics::Viewer vis;
+  vis.add(diagram);
 
   if (number<4)
     vis.run();

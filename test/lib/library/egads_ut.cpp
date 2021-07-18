@@ -81,9 +81,9 @@ UT_TEST_CASE( solid_bodies )
 
   ModelTessellation tess(model,params);
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
   for (index_t j=0;j<tess.nb_topologies();j++)
-    vis.add_topology(tess.topology(j));
+    vis.add(tess.topology(j));
 
   //vis.run();
 
@@ -104,9 +104,9 @@ UT_TEST_CASE( smiley_test )
 
   ModelTessellation tess(model,params);
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
   for (index_t j=0;j<tess.nb_topologies();j++)
-    vis.add_topology(tess.topology(j));
+    vis.add(tess.topology(j));
   vis.run();
 }
 UT_TEST_CASE_END( smiley_test )

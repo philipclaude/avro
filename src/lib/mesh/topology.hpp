@@ -9,9 +9,6 @@
 //
 #include "common/tools.h"
 
-#include "graphics/clipping.h"
-#include "graphics/primitive.h"
-
 #include "mesh/topology.h"
 #include "mesh/points.h"
 
@@ -36,14 +33,7 @@ Topology<type>::construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<
 
 template<typename type>
 void
-Topology<type>::construct( std::shared_ptr<graphics::Primitive>& node , graphics::Primitive& root ) const
-{
-  node = std::make_shared<graphics::Primitive>(*this,root.scene());
-}
-
-template<typename type>
-void
-Topology<type>::get_edges( std::vector<index_t>& edges , const graphics::ClippingPlane* plane ) const
+Topology<type>::get_edges( std::vector<index_t>& edges ) const
 {
   std::vector<index_t> ek;
 
@@ -55,12 +45,6 @@ Topology<type>::get_edges( std::vector<index_t>& edges , const graphics::Clippin
 
 
     const index_t* v0 = operator()(k);
-
-    if (plane!=nullptr)
-    {
-      if (!plane->visible(points_,v0,nv(k))) continue;
-    }
-
 
     // get the edges of this cell
     element_.get_edges( v0 , nv(k) , ek );

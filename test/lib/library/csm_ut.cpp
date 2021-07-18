@@ -40,8 +40,8 @@ UT_TEST_CASE(test1)
   }
 
 #if 1
-  graphics::Visualizer vis;
-  vis.add_topology( tess.topology(0) );
+  graphics::Viewer vis;
+  vis.add( tess.topology(0) );
 
 #else
   graphics::WebVisualizer vis;
@@ -53,7 +53,7 @@ UT_TEST_CASE(test1)
   tess.topology(0).Table<index_t>::print();
 
   for (index_t k=0;k<15;k++)//topology.nb_children();k++)
-    vis.add_topology( topology.child(k) );
+    vis.add( topology.child(k) );
 
 #endif
 

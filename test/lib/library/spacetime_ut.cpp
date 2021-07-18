@@ -26,8 +26,8 @@ UT_TEST_CASE( test1 )
   Topology_Spacetime<Simplex> spacetime(topology);
   spacetime.extract();
 
-  graphics::Visualizer vis;
-  vis.add_topology( spacetime );
+  graphics::Viewer vis;
+  vis.add( spacetime );
 
   vis.run();
 }

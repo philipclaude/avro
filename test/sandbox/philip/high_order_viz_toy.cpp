@@ -1,9 +1,9 @@
 #include "unit_tester.hpp"
 
+#include "graphics/colormap.h"
 #include "graphics/gl.h"
 #include "graphics/math.h"
-
-#include "graphics/colormap.h"
+#include "graphics/shader.h"
 
 using namespace avro;
 using namespace avro::graphics;

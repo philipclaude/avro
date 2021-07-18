@@ -131,8 +131,8 @@ UT_TEST_CASE(test1)
     if (nb_collapse==0) break;
   }
 
-  graphics::Visualizer vis;
-  vis.add_topology(topology);
+  graphics::Viewer vis;
+  vis.add(topology);
 
   //vis.run();
 

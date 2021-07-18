@@ -23,6 +23,7 @@ using namespace avro::graphics;
 
 UT_TEST_SUITE( voronoi_test_suite )
 
+#if 0
 UT_TEST_CASE( line_test )
 {
   coord_t number = 1;
@@ -83,16 +84,17 @@ UT_TEST_CASE( line_test )
   rvd.extract(dt);
   printf("delaunay triangulation has %lu simplices\n",dt.nb());
 
-  Visualizer vis;
+  Viewer vis;
 
-  //vis.add_topology(topology);
-  vis.add_topology(rvd);
-  vis.add_topology(dt);
-  //vis.add_topology(T);
+  //vis.add(topology);
+  vis.add(rvd);
+  vis.add(dt);
+  //vis.add(T);
 
   vis.run();
 }
 UT_TEST_CASE_END( line_test )
+#endif
 
 UT_TEST_CASE( test0 )
 {
@@ -134,11 +136,11 @@ UT_TEST_CASE( test0 )
   rvd.extract(dt);
   printf("delaunay triangulation has %lu simplices\n",dt.nb());
 
-  Visualizer vis;
+  Viewer vis;
 
-  //vis.add_topology(topology);
-  vis.add_topology(rvd);
-  //vis.add_topology(T);
+  //vis.add(topology);
+  vis.add(rvd);
+  //vis.add(T);
 
   vis.run();
 }

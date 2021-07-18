@@ -78,11 +78,11 @@ UT_TEST_CASE( test_2d )
 
   library::Plot<Simplex> point_plot(delaunay);
 
-  Visualizer vis;
+  Viewer vis;
 
-  vis.add_topology(geometry_rvd);
-  vis.add_topology(geometry_rvd.triangulation());
-  vis.add_topology(point_plot);
+  vis.add(geometry_rvd);
+  vis.add(geometry_rvd.triangulation());
+  vis.add(point_plot);
   vis.run();
 }
 UT_TEST_CASE_END( test_2d )

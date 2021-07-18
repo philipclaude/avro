@@ -1,4 +1,4 @@
-#include "graphics/new/camera.h"
+#include "graphics/camera.h"
 
 namespace avro
 {

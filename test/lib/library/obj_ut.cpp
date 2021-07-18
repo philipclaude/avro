@@ -23,8 +23,8 @@ UT_TEST_CASE( test1 )
   objFile topology( BASE_TEST_DIR+"/geometry/obj/suzanne.obj" );
   //objFile topology( "/Users/pcaplan/Google Drive/teaching/cs461w21/assignments/project/giraffe/model/giraffe.obj" );
 
-  graphics::Visualizer vis;
-  vis.add_topology(topology);
+  graphics::Viewer vis;
+  vis.add(topology);
   vis.run();
 
 }

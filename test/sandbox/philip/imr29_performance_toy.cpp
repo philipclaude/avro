@@ -125,8 +125,8 @@ UT_TEST_CASE( test1 )
 
   // if (number > 3) return;
   //
-  // graphics::Visualizer vis;
-  // vis.add_topology( transport.diagram() );
+  // graphics::Viewer vis;
+  // vis.add( transport.diagram() );
   // vis.run();
 
 }

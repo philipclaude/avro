@@ -1,7 +1,7 @@
-#include "graphics/new/gui.h"
-#include "graphics/new/primitives.h"
-#include "graphics/new/vao.h"
-#include "graphics/new/window.h"
+#include "graphics/gui.h"
+#include "graphics/primitives.h"
+#include "graphics/vao.h"
+#include "graphics/window.h"
 
 #include "graphics/gl.h"
 

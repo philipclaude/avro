@@ -37,9 +37,6 @@
 #include <set>
 #include <vector>
 
-#include "graphics/manager.h"
-#include "graphics/shader.h"
-
 namespace avro
 {
 
@@ -90,129 +87,6 @@ void dumpGLInfo(bool dumpExtensions = false);
   } \
   avro_assert(!error); \
 }
-
-class TransformFeedbackResult
-{
-public:
-
-  void append_triangles( const GLfloat* buffer , index_t nb_triangles )
-  {
-    index_t n = 0;
-    for (index_t k=0;k<nb_triangles;k++)
-    {
-      //printf("primitve %lu\n",k);
-      for (index_t j=0;j<3;j++)
-      {
-        for (coord_t d=0;d<3;d++)
-          triangle_points_.push_back( buffer[n+d] );
-        for (coord_t d=0;d<3;d++)
-          triangle_colors_.push_back( buffer[n+4+d] );
-
-        /*printf("v = (%g,%g,%g,%g), c = (%g,%g,%g,%g)\n",
-                buffer[n  ],buffer[n+1],buffer[n+2],buffer[n+3] ,
-                buffer[n+4],buffer[n+5],buffer[n+6],buffer[n+7]);*/
-        n += 8;
-      }
-    }
-  }
-
-  void append_edges( const GLfloat* buffer , index_t nb_edges )
-  {
-    index_t n = 0;
-    for (index_t k=0;k<nb_edges;k++)
-    {
-      //printf("primitve %lu\n",k);
-      for (index_t j=0;j<2;j++)
-      {
-        for (coord_t d=0;d<3;d++)
-          edge_points_.push_back( buffer[n+d] );
-        for (coord_t d=0;d<3;d++)
-          edge_colors_.push_back( buffer[n+4+d] );
-
-        /*printf("v = (%g,%g,%g,%g), c = (%g,%g,%g,%g)\n",
-                buffer[n  ],buffer[n+1],buffer[n+2],buffer[n+3] ,
-                buffer[n+4],buffer[n+5],buffer[n+6],buffer[n+7]);*/
-        n += 8;
-      }
-    }
-  }
-
-  const std::vector<real_t>& triangle_points() const { return triangle_points_; }
-  const std::vector<real_t>& triangle_colors() const { return triangle_colors_; }
-
-  const std::vector<real_t>& edge_points() const { return edge_points_; }
-  const std::vector<real_t>& edge_colors() const { return edge_colors_; }
-
-private:
-  std::vector<real_t> triangle_points_;
-  std::vector<real_t> triangle_colors_;
-
-  std::vector<real_t> edge_points_;
-  std::vector<real_t> edge_colors_;
-
-  std::vector<real_t> vertex_points_;
-  std::vector<real_t> vertex_colors_;
-};
-
-class OpenGL_Manager : public GraphicsManager
-{
-  template<typename type> friend class Application;
-
-//private:
-public:
-  OpenGL_Manager();
-
-public:
-  void write( Primitive& primitive );
-  void write( const std::string& name , coord_t number , const std::vector<real_t>& points , const std::vector<index_t>& edges , const std::vector<index_t>& triangles , const std::vector<real_t>& colors );
-
-  void draw( SceneGraph& scene , TransformFeedbackResult* feedback=nullptr );
-  void draw( const std::string& name , coord_t number , const DrawingParameters& params );
-
-  void remove( const std::string& ) { avro_assert_not_reached; }
-
-  void select_shader( Primitive& primitive , const std::string& name );
-  void select_shader( const std::string& name , const std::string& shader_name );
-  void create_shaders();
-  ShaderLibrary& shaders() { return *shaders_.get(); }
-
-private:
-
-  void set_matrices( SceneGraph& scene );
-  void draw( Primitive& primitive , TransformFeedbackResult* feedback=nullptr );
-
-  // map from primitive to vbo
-  std::set<Primitive*> primitive_;
-
-  std::map<Primitive*,index_t> vbo_points_;
-  std::map<Primitive*,index_t> vbo_edges_;
-  std::map<Primitive*,index_t> vbo_triangles_;
-  std::map<Primitive*,index_t> vbo_colors_;
-  std::map<Primitive*,index_t> vbo_normals_;
-
-  std::map<Primitive*,index_t> vbo_feedback_points_;
-  std::map<Primitive*,index_t> vbo_feedback_edges_;
-  std::map<Primitive*,index_t> vbo_feedback_triangles_;
-
-  // map from primitive to vao
-  std::map<Primitive*,index_t> vao_points_;
-  std::map<Primitive*,index_t> vao_edges_;
-  std::map<Primitive*,index_t> vao_triangles_;
-
-  std::map<Primitive*,index_t> vao_feedback_points_;
-  std::map<Primitive*,index_t> vao_feedback_edges_;
-  std::map<Primitive*,index_t> vao_feedback_triangles_;
-
-  std::map<Primitive*,ShaderProgram*> shader_;
-  std::shared_ptr<ShaderLibrary> shaders_;
-
-  // extra vao's to draw
-  std::map<std::string,GLuint> aux_vao_;
-  std::map<std::string,coord_t> aux_vao_number_;
-  std::map<std::string,index_t> aux_vao_size_;
-  std::map<std::string,ShaderProgram*> aux_vao_shader_;
-};
-
 
 } // graphics
 

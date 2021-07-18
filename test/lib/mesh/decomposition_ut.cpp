@@ -43,8 +43,8 @@ UT_TEST_CASE( voronoi_tests )
   delaunay::RestrictedVoronoiDiagram rvd(topology,z);
   rvd.compute();
 
-  graphics::Visualizer vis;
-  vis.add_topology(rvd);
+  graphics::Viewer vis;
+  vis.add(rvd);
   //vis.run();
 }
 UT_TEST_CASE_END( voronoi_tests )

@@ -4,6 +4,7 @@
 #include "common/error.h"
 
 #include "graphics/gl.h"
+#include "graphics/math.h"
 
 namespace avro
 {

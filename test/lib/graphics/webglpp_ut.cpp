@@ -1,11 +1,11 @@
 #include "unit_tester.hpp"
 
-#include "graphics/new/vao.h"
-#include "graphics/new/window.h"
+#include "graphics/vao.h"
+#include "graphics/window.h"
 
 #include "graphics/colormap.h"
 #include "graphics/shader.h"
-#include "graphics/new/webglpp.h"
+#include "graphics/webglpp.h"
 
 #include "library/ckf.h"
 #include "library/egads.h"

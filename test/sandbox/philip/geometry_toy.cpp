@@ -50,10 +50,10 @@ UT_TEST_CASE( test1 )
 
   ModelTessellation tess(model,params);
 
-  graphics::WebVisualizer vis;
+  graphics::Viewer vis(true);
 
-  vis.add_topology( topology );
-  vis.add_topology( tess.topology(0) );
+  vis.add( topology );
+  vis.add( tess.topology(0) );
 
   vis.run();
 

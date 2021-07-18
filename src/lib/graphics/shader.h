@@ -21,8 +21,6 @@ namespace avro
 namespace graphics
 {
 
-class SceneGraph;
-
 #if AVRO_WITH_GL
 
 enum GLSLShaderType
@@ -86,36 +84,6 @@ private:
   std::string name_;
   std::vector<std::string> macros_;
   bool has_tessellation_shader_;
-};
-
-class ShaderLibrary
-{
-public:
-  ShaderLibrary()
-  {
-    // generate all the shaders!!
-  }
-
-  const ShaderProgram& operator[] ( const std::string& name ) const
-  {
-    avro_assert( shaders_.find(name)!=shaders_.end() );
-    return shaders_.at(name);
-  }
-
-  ShaderProgram& operator[] ( const std::string& name )
-  {
-    avro_assert( shaders_.find(name)!=shaders_.end() );
-    return shaders_.at(name);
-  }
-
-  void set_matrices( SceneGraph& scene );
-
-  void create();
-
-private:
-
-  // store all the shaders
-  std::map<std::string,ShaderProgram> shaders_;
 };
 
 #endif

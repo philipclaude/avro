@@ -1,10 +1,10 @@
 #include "graphics/colormap.h"
-#include "graphics/new/application.h"
-#include "graphics/new/managers.h"
-#include "graphics/new/plot.h"
-#include "graphics/new/primitives.h"
-#include "graphics/new/shader_library.h"
-#include "graphics/new/vao.h"
+#include "graphics/application.h"
+#include "graphics/managers.h"
+#include "graphics/plot.h"
+#include "graphics/primitives.h"
+#include "graphics/shader_library.h"
+#include "graphics/vao.h"
 
 namespace avro
 {
