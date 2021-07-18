@@ -38,7 +38,6 @@ if (AVRO_NO_ESP)
   set( ESP_LIBRARIES )
   set( OCC_LIBRARIES )
   include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/egads )
-  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/wv )
   add_definitions( -DAVRO_NO_ESP )
 endif()
 
