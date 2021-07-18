@@ -90,7 +90,8 @@ public:
     camera_(M_PI/4.0,width,height),
     picked_(-1),
     enable_controls_(true),
-    needs_drawing_(true)
+    needs_drawing_(true),
+    lighting_(false)
   {}
 
   ~Window();
@@ -127,6 +128,7 @@ public:
   void needs_drawing( bool x ) { needs_drawing_ = x; }
 
   index_t draw_count() const { return draw_count_; }
+  bool& lighting() { return lighting_; }
 
 private:
   index_t width_;
@@ -146,6 +148,7 @@ private:
   // this needs to be stored in the window so the rendering order is correct
   bool needs_drawing_;
   index_t draw_count_;
+  bool lighting_;
 };
 
 } // graphics

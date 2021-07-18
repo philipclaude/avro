@@ -269,7 +269,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     if (shader.has_tessellation_shader())
       shader.setUniform( "u_level" , tessellation_level_ );
 
-    if (clip->style() > 0) {
+    if (clip != nullptr && clip->style() > 0) {
       vec3 normal;
       vec3 center;
       clip->get(center,normal);
@@ -304,7 +304,7 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     shader.setUniform("u_ModelViewMatrix",mv);
     shader.setUniform("u_alpha",float(1.0));
 
-    if (clip->style() > 0) {
+    if (clip != nullptr && clip->style() > 0) {
       vec3 normal;
       vec3 center;
       clip->get(center,normal);
@@ -327,7 +327,12 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
     glUniform1i(colormap_location, 1); // second sampler in fragment shader
 
     if (number_ == 2) shader.setUniform("u_lighting",-1);
-    else shader.setUniform("u_lighting",1);
+    else {
+      if (lighting_)
+        shader.setUniform("u_lighting",1);
+      else
+        shader.setUniform("u_lighting",-1);
+    }
 
     //shader.setUniform("u_lighting",-1);
 

@@ -98,21 +98,18 @@ Plot::compute_center() {
   vec3 xmin = { 1e20, 1e20, 1e20};
   vec3 xmax = {-1e20,-1e20,-1e20};
 
-  // compute the center
-  center_.zero();
+  // compute the bounding box
   const std::vector<gl_float>& coordinates = active_vao_->points().coordinates();
   for (index_t k = 0; k < coordinates.size()/3; k++)
   for (coord_t d = 0; d < 3; d++) {
     gl_float x = coordinates[3*k+d];
-    center_(d) += x;
-
     if (x < xmin(d)) xmin(d) = x;
     if (x > xmax(d)) xmax(d) = x;
   }
 
   length_scale_ = -1;
   for (coord_t d = 0; d < 3; d++) {
-    center_(d) *= (3./coordinates.size());
+    center_(d) = (xmax(d) - xmin(d))/2.0;
     float L = (xmax(d) - xmin(d));
     if (L > length_scale_) length_scale_ = L;
   }

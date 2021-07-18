@@ -66,7 +66,7 @@ GUI::draw() {
 
   //bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
   ImGuiWindowFlags window_flags = 0;
-  //window_flags |= ImGuiWindowFlags_NoCollapse;
+  window_flags |= ImGuiWindowFlags_NoCollapse;
   window_flags |= ImGuiWindowFlags_NoResize;
   //window_flags |= ImGuiWindowFlags_AlwaysHorizontalScrollbar;
 
@@ -113,6 +113,10 @@ GUI::draw() {
     if (ImGui::Button("View")) {
       printf("load view matrix (or parameters)\n");
     }
+
+    ImGui::SameLine();
+    ImGui::Checkbox("lighting",&window_.lighting());
+
     ImGui::Separator();
 
     ImGui::Text("Plots");

@@ -27,34 +27,6 @@ namespace avro
 namespace graphics
 {
 
-
-
-// needed to create a set/map of Facet
-bool
-operator<( const Facet& f , const Facet& g )
-{
-  // first check the topological dimension
-  if (f.dim < g.dim)
-    return true;
-
-  // lexicographically compare the indices
-  return std::lexicographical_compare(f.indices.begin(), f.indices.end(),
-                                      g.indices.begin(), g.indices.end());
-}
-
-// needed to create a set/map of elements
-bool
-operator==( const Facet& fx , const Facet& fy )
-{
-  // assumes fx and fy have the same topological dimension
-  // and that the indices are sorted
-  avro_assert( fx.dim == fy.dim );
-  for (index_t j = 0; j < fx.dim; j++)
-    if (fx.indices[j] != fy.indices[j])
-      return false;
-  return true;
-}
-
 void
 get_canonical_simplex_facets( coord_t number , std::vector<CanonicalFacet>& facets )
 {

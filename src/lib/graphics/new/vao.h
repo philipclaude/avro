@@ -42,6 +42,33 @@ struct MeshFacet : Facet
   std::vector<int>     orientation;
 };
 
+
+// needed to create a set/map of Facet
+inline bool
+operator<( const Facet& f , const Facet& g )
+{
+  // first check the topological dimension
+  if (f.dim < g.dim)
+    return true;
+
+  // lexicographically compare the indices
+  return std::lexicographical_compare(f.indices.begin(), f.indices.end(),
+                                      g.indices.begin(), g.indices.end());
+}
+
+// needed to create a set/map of elements
+inline bool
+operator==( const Facet& fx , const Facet& fy )
+{
+  // assumes fx and fy have the same topological dimension
+  // and that the indices are sorted
+  avro_assert( fx.dim == fy.dim );
+  for (index_t j = 0; j < fx.dim; j++)
+    if (fx.indices[j] != fy.indices[j])
+      return false;
+  return true;
+}
+
 class VertexAttributeObject {
 
 public:
@@ -49,7 +76,8 @@ public:
     show_field_(true),
     uniform_color_(false),
     geometry_color_(false),
-    tessellation_level_(8)
+    tessellation_level_(8),
+    lighting_(false)
   {}
 
   void build( const TopologyBase& topology );
@@ -88,6 +116,7 @@ public:
   int& tessellation_level() { return tessellation_level_; }
   bool& uniform_color() { return uniform_color_; }
   bool& geometry_color() { return geometry_color_; }
+  void set_lighting( bool x ) { lighting_ = x; }
 
 private:
   template<typename type>
@@ -114,6 +143,7 @@ private:
 
   nlohmann::json info_;
   int tessellation_level_;
+  bool lighting_;
 };
 
 } // graphics
