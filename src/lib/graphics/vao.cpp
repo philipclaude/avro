@@ -191,6 +191,7 @@ VertexAttributeObject::_build( const Topology<Simplex>& topology ) {
   std::vector<index_t> g;
   for (index_t k = 0; k < topology.nb(); k++)
   {
+		if (topology.ghost(k)) continue;
     for (index_t j = 0; j < canonical.size(); j++)
     {
       avro_assert( canonical[j].indices.size() == index_t(canonical[j].dim+1) );
@@ -288,6 +289,32 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
   // first add all the points
   points_ = std::make_shared<PointPrimitive>(topology.points());
+
+	/*
+	if (topology.number() == 1) {
+
+		// edge primitives
+	  edges_.resize(1);
+	  edges_[0] = std::make_shared<EdgePrimitive>(order_);
+		std::vector<index_t> edges;
+		topology.get_edges(edges);
+	  for (index_t k = 0; k < edges.size()/2; k++)
+	    edges_[0]->add( &edges[2*k] , 2 );
+
+		std::vector<nlohmann::json> jedges;
+	  for (index_t k = 0; k < edges_.size(); k++) {
+	    json je;
+	    je["name"] = "edges" + std::to_string(k);
+	    je["order"] = edges_[k]->order();
+	    edges_[k]->visible() = true;
+	    jedges.push_back(je);
+	  }
+	  info_["edges"] = jedges;
+		info_["triangles"] = std::vector<nlohmann::json>();
+		info_["fields"] = std::vector<nlohmann::json>();
+		info_["field_names"] = std::vector<std::string>();
+		return;
+	}*/
 
   // count how many geometry entities there are
   std::set<Entity*> entities;
@@ -529,7 +556,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       color[i] = u[i];
     triangles_[k]->set_color(color);
   }
-
 
   // set the info for this vao
   std::vector<nlohmann::json> jtriangles;

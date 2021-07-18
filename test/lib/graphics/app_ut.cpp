@@ -106,7 +106,7 @@ UT_TEST_CASE( simplices_2d_test )
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.fields().make( "test" , field );
 
-  Viewer app(true);
+  Viewer app;//(true);
   app.add( curvilinear );
   app.add( topology );
 

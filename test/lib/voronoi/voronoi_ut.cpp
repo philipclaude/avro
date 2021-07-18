@@ -23,7 +23,7 @@ using namespace avro::graphics;
 
 UT_TEST_SUITE( voronoi_test_suite )
 
-#if 0
+#if 1
 UT_TEST_CASE( line_test )
 {
   coord_t number = 1;

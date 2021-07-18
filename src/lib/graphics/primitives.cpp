@@ -16,8 +16,17 @@ PointPrimitive::PointPrimitive( const Points& points ) :
 
   coord_t nb_dim = points.dim();
   if (nb_dim > 3) nb_dim = 3;
-  avro_assert( points.nb_ghost() == 0 );
+  //avro_assert( points.nb_ghost() == 0 );
   for (index_t k = 0; k < points.nb(); k++) {
+    if (k < points.nb_ghost()) {
+      // just add the first non-ghost point,
+      // real elements in the topology should not reference this point
+      for (coord_t d = 0; d < nb_dim; d++)
+        coordinates_.push_back( points[points_.nb_ghost()][d] );
+      for (coord_t d = nb_dim; d < 3; d++)
+        coordinates_.push_back( 0.0 );
+      continue;
+    }
     for (coord_t d = 0; d < nb_dim; d++)
       coordinates_.push_back( points[k][d] );
     for (coord_t d = nb_dim; d < 3; d++)

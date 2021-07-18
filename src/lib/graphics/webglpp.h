@@ -56,7 +56,7 @@ public:
   void get( std::vector<T>& data ) const {
     int nelem = bytes_.size() / bytes_per_elem_;
     data.resize(nelem);
-    printf("nbytes per elem = %d, nelem = %d\n",bytes_per_elem_,nelem);
+    //printf("nbytes per elem = %d, nelem = %d\n",bytes_per_elem_,nelem);
     for (int i = 0; i < nelem; i++) {
       data[i] = *reinterpret_cast<const T*>(&bytes_[i*bytes_per_elem_]);
     }
