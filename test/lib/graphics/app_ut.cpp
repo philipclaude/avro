@@ -1,8 +1,8 @@
 #include "unit_tester.hpp"
 
-#include "graphics/new/managers.h"
-#include "graphics/new/vao.h"
-#include "graphics/new/application.h"
+#include "graphics/managers.h"
+#include "graphics/vao.h"
+#include "graphics/application.h"
 
 #include "graphics/colormap.h"
 #include "graphics/shader.h"
@@ -19,7 +19,7 @@
 using namespace avro;
 using namespace avro::graphics;
 
-UT_TEST_SUITE( graphics_decomposition_suite )
+UT_TEST_SUITE( graphics_app_suite )
 
 class TestField : public Field<Simplex,std::vector<real_t>> {
 
@@ -110,12 +110,12 @@ UT_TEST_CASE( simplices_2d_test )
   app.add( curvilinear );
   app.add( topology );
 
-  app.run();
+  app.run(AVRO_FULL_UNIT_TEST);
 
 }
 UT_TEST_CASE_END( simplices_2d_test )
 
-UT_TEST_SUITE_END( graphics_decomposition_suite )
+UT_TEST_SUITE_END( graphics_app_suite )
 
 #else // AVRO_HEADLESS_GRAPHICS is equal to 1
 UT_TEST_SUITE( graphics_decomposition_suite )

@@ -13,6 +13,8 @@ UT_TEST_SUITE( gui_test_suite )
 UT_TEST_CASE( imgui_test )
 {
 
+  if (AVRO_FULL_UNIT_TEST) return;
+
   Window window(600,600);
   window.init();
   //window.set_enable_controls(false);

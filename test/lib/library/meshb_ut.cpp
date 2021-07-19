@@ -46,7 +46,7 @@ UT_TEST_CASE( test1 )
   for (index_t k=0;k<mesh_in.nb_topologies();k++)
     vis.add(mesh_in.topology(k));
 
-  vis.run();
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test1 )
 

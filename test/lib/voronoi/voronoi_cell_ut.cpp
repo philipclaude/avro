@@ -78,7 +78,7 @@ UT_TEST_CASE( test_2d )
   graphics::Viewer vis;
   vis.add(diagram);
 
-  vis.run();
+  vis.run(AVRO_FULL_UNIT_TEST);
   #endif
 }
 UT_TEST_CASE_END( test_2d )
@@ -137,7 +137,7 @@ UT_TEST_CASE( test_2d_simplex )
   vis.add(diagram);
 
   if (number<4)
-    vis.run();
+    vis.run(AVRO_FULL_UNIT_TEST);
   #endif
 }
 UT_TEST_CASE_END( test_2d_simplex )

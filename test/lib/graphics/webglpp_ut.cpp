@@ -70,7 +70,7 @@ UT_TEST_CASE(test1)
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,50);
+  std::vector<index_t> dims(number,5);
   CKF_Triangulation topology( dims );
 
   coord_t geometry_order = 1;
@@ -89,6 +89,7 @@ UT_TEST_CASE(test1)
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.fields().make( "test" , field );
 
+  if (AVRO_FULL_UNIT_TEST) return;
 
   Viewer viewer(false);
   viewer.add(curvilinear);

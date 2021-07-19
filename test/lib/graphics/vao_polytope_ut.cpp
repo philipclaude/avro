@@ -45,7 +45,7 @@ UT_TEST_CASE( vao_polytopes_test )
   typedef Polytope type;
   coord_t number = 3;
   coord_t dim = number;
-  index_t nb_points = 1e3;
+  index_t nb_points = 1e2;
 
   // create random delaunay vertices
   CubeDomain<type> domain(dim,dim,10);
@@ -67,15 +67,14 @@ UT_TEST_CASE( vao_polytopes_test )
   delaunay::LaguerreDiagram<type> diagram( delaunay , domain );
   diagram.set_elements( elems );
 
-  delaunay::IntegrationSimplices triangulation(number,number);
-  diagram.compute(false,&triangulation);
+  diagram.compute(false,nullptr);
 
   std::shared_ptr<TestField> fld = std::make_shared<TestField>(diagram);
   diagram.fields().make("test",fld);
 
   Viewer app;
   app.add(diagram);
-  app.run();
+  app.run(AVRO_FULL_UNIT_TEST);
 
 }
 UT_TEST_CASE_END( vao_polytopes_test )

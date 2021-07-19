@@ -89,11 +89,11 @@ UT_TEST_CASE( test_nd_polytope )
     graphics::Viewer vis;
     vis.add(triangulation);
     //vis.add(diagram);
-    vis.run();
+    vis.run(AVRO_FULL_UNIT_TEST);
     #elif 1
     graphics::OpenGL_Application app;
     app.add( triangulation );
-    app.run();
+    app.run(AVRO_FULL_UNIT_TEST);
     #endif
 
   } // loop over number

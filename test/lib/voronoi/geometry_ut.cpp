@@ -79,11 +79,12 @@ UT_TEST_CASE( test_2d )
   library::Plot<Simplex> point_plot(delaunay);
 
   Viewer vis;
-
+#if 0 // this are broken in the new graphics framework
   vis.add(geometry_rvd);
   vis.add(geometry_rvd.triangulation());
   vis.add(point_plot);
-  vis.run();
+  vis.run(AVRO_FULL_UNIT_TEST);
+#endif
 }
 UT_TEST_CASE_END( test_2d )
 

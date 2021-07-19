@@ -57,7 +57,7 @@ UT_TEST_CASE( test_simplex )
   vis.add(diagram);
 
   if (number<4)
-    vis.run();
+    vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test_simplex )
 

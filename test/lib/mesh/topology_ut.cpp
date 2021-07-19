@@ -124,7 +124,7 @@ UT_TEST_CASE( topology_move_to_front )
 
   graphics::Viewer vis;
   vis.add(topology);
-  vis.run();
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( topology_move_to_front )
 

@@ -85,7 +85,7 @@ UT_TEST_CASE( solid_bodies )
   for (index_t j=0;j<tess.nb_topologies();j++)
     vis.add(tess.topology(j));
 
-  //vis.run();
+  //vis.run(AVRO_FULL_UNIT_TEST);
 
 }
 UT_TEST_CASE_END( solid_bodies )
@@ -107,7 +107,7 @@ UT_TEST_CASE( smiley_test )
   graphics::Viewer vis;
   for (index_t j=0;j<tess.nb_topologies();j++)
     vis.add(tess.topology(j));
-  vis.run();
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( smiley_test )
 

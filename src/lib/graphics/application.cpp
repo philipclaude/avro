@@ -28,20 +28,19 @@ OpenGL_Application::add( const TopologyBase& topology ) {
 }
 
 void
-OpenGL_Application::run() {
+OpenGL_Application::run(bool quit) {
+
+  if (quit)
+    return;
 
   // initial draw, subsequent drawing will only be performed when a callback is invoked
   window_.compute_view();
   gui_->draw();
 
-  #if AVRO_HEADLESS_GRAPHICS
-  return;
-  #endif
-
   while (true) {
 
     // our thread will be put to sleep until user interaction is detected
-    // so this does not actually redraw everything
+    // so this does not actually redraw everything, unless interaction is detected
     gui_->draw();
 
     // wait for user input
@@ -65,18 +64,19 @@ class RunThread
 public:
   typedef RunThread thisclass;
 
-  RunThread(WebGL_Application& app) :
-    app_(app) {}
+  RunThread(WebGL_Application& app,bool quit) :
+    app_(app),
+    quit_(quit) {}
 
   void run( index_t i )
   {
     if (i == 0) {
-      app_.run_thread();
+      app_.run_thread(quit_);
     }
     else if (i == 1) {
       usleep(1000);
       std::string cmd = "open " + AVRO_SOURCE_DIR + "/app/avro.html";
-      //system(cmd.c_str());
+      system(cmd.c_str());
     }
   }
 
@@ -89,16 +89,17 @@ public:
   }
 private:
   WebGL_Application& app_;
+  bool quit_;
 };
 
 void
-WebGL_Application::run_thread() {
-
+WebGL_Application::run_thread(bool quit) {
+  if (quit) return;
   manager_.send(7681);
 }
 
 void
-WebGL_Application::run() {
+WebGL_Application::run(bool quit) {
 
   for (index_t k = 0; k < plot_.size(); k++) {
     for (index_t j = 0; j < plot_[k]->nb_vao(); j++)
@@ -106,8 +107,7 @@ WebGL_Application::run() {
   }
 
   // we will start up two threads, one to write, and one to call the browser (after waiting a bit)
-
-  RunThread runner(*this);
+  RunThread runner(*this,quit);
   runner.runapp(2);
 }
 
@@ -132,8 +132,8 @@ Viewer::add( const TopologyBase& topology ) {
 }
 
 void
-Viewer::run() {
-  app_->run();
+Viewer::run(bool quit) {
+  app_->run(quit);
 }
 
 } // graphics

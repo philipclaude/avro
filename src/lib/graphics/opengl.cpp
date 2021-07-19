@@ -71,7 +71,7 @@ OpenGL4_Manager::write( VertexAttributeObject& vao ) {
 
   for (index_t k = 0; k < vao.nb_fields(); k++) {
 
-    // initialize the buffer
+    // retrieve the buffer indices, so we write to the correct buffer
     gl_index& field_buffer = vao.field(k).buffer();
     gl_index& field_texture = vao.field(k).texture();
 
@@ -79,8 +79,10 @@ OpenGL4_Manager::write( VertexAttributeObject& vao ) {
     GL_CALL( glGenBuffers( 1 , &field_buffer ) );
     GL_CALL( glGenTextures( 1 , &field_texture) );
 
+    // write the data
     vao.field(k).write();
 
+    // keep track of which buffers we have (so the manager knows what to free)
     buffers_.push_back(field_buffer);
     textures_.push_back(field_texture);
   }
@@ -190,8 +192,8 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
       shader.setUniform( "use_constant_color" , 0 );
 
       const std::vector<gl_float>& data = solution_[k]->active().data();
-      float umin = * std::min_element( data.begin() , data.end() );
-      float umax = * std::max_element( data.begin() , data.end() );
+      float umin = (data.size() > 0) ? * std::min_element( data.begin() , data.end() ) : 0.0;
+      float umax = (data.size() > 1) ? * std::max_element( data.begin() , data.end() ) : 1.0;
 
       shader.setUniform( "u_umin" , umin );
       shader.setUniform( "u_umax" , umax );
@@ -345,8 +347,8 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
       shader.setUniform( "use_constant_color" , 0 );
 
       const std::vector<gl_float>& data = solution_[k]->active().data();
-      float umin = * std::min_element( data.begin() , data.end() );
-      float umax = * std::max_element( data.begin() , data.end() );
+      float umin = (data.size() > 0) ? * std::min_element( data.begin() , data.end() ) : 0.0;
+      float umax = (data.size() > 1) ? * std::max_element( data.begin() , data.end() ) : 1.0;
 
       if (fabs(umax-umin) < 1e-8) {
         umin = 0.0;

@@ -48,7 +48,7 @@ UT_TEST_CASE( test0)
     graphics::Viewer vis;
     vis.add(delaunay);
 
-    vis.run();
+    vis.run(AVRO_FULL_UNIT_TEST);
     #endif
 
   }
@@ -93,7 +93,7 @@ UT_TEST_CASE( test1 )
   graphics::Viewer vis;
   vis.add(delaunay);
 
-  vis.run();
+  vis.run(AVRO_FULL_UNIT_TEST);
   #endif
 
 }

@@ -187,7 +187,7 @@ UT_TEST_CASE( test1 )
     graphics::Viewer vis;
     vis.add(topology_out);
     if (number<4)
-      vis.run();
+      vis.run(AVRO_FULL_UNIT_TEST);
   }
 
 }

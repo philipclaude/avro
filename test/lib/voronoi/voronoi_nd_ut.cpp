@@ -168,7 +168,7 @@ UT_TEST_CASE( test_nd )
           if (number > 3 || (nb_points >= 1e4) || generate_mode) continue;
           graphics::Viewer vis;
           vis.add(diagram);
-          vis.run();
+          vis.run(AVRO_FULL_UNIT_TEST);
         }
       } // loop over power
     }

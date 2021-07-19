@@ -49,8 +49,7 @@ UT_TEST_CASE(test1)
   graphics::Viewer vis;
 
   vis.add( tess.topology(0) );
-
-  vis.run();
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END(test1)
 

@@ -91,7 +91,7 @@ UT_TEST_CASE( line_test )
   vis.add(dt);
   //vis.add(T);
 
-  vis.run();
+  //vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( line_test )
 #endif
@@ -142,7 +142,7 @@ UT_TEST_CASE( test0 )
   vis.add(rvd);
   //vis.add(T);
 
-  vis.run();
+  //vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test0 )
 

@@ -871,7 +871,7 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
     // add the vertex-to-facet information
     const Table<int>& vf = cell.element().incidence();
     for (index_t j=0;j<vf.nb();j++) {
-      
+
       std::vector<int> f = vf.get(j);
 
       // map the bisctors to a global numbering

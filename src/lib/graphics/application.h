@@ -28,7 +28,7 @@ class Plot;
 class ViewerBase {
 public:
 	virtual void add( const TopologyBase& topology ) = 0;
-	virtual void run() = 0;
+	virtual void run(bool quit) = 0;
 	virtual ~ViewerBase() {};
 };
 
@@ -37,7 +37,7 @@ class OpenGL_Application : public ViewerBase {
 public:
 	OpenGL_Application();
 
-	void run();
+	void run(bool quit = false);
 	void add( const TopologyBase& topology );
 
 	const Window& window() const { return window_; }
@@ -52,8 +52,8 @@ private:
 class WebGL_Application : public ViewerBase {
 
 public:
-	void run();
-	void run_thread();
+	void run(bool quit = false);
+	void run_thread(bool quit = false);
 	void add( const TopologyBase& topology );
 
 private:
@@ -65,7 +65,7 @@ class Viewer {
 public:
 	Viewer( bool web=false );
 
-	void run();
+	void run(bool quit = false);
 	void add( const TopologyBase& topology );
 
 private:

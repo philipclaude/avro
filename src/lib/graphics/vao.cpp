@@ -290,7 +290,6 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
   // first add all the points
   points_ = std::make_shared<PointPrimitive>(topology.points());
 
-	/*
 	if (topology.number() == 1) {
 
 		// edge primitives
@@ -314,7 +313,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 		info_["fields"] = std::vector<nlohmann::json>();
 		info_["field_names"] = std::vector<std::string>();
 		return;
-	}*/
+	}
 
   // count how many geometry entities there are
   std::set<Entity*> entities;
@@ -567,7 +566,9 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
       if (number > 2) triangles_[k]->visible() = false;
     }
     else {
-      jt["name"] = (geometryless) ? "bnd" + std::to_string(k) : "Face" + std::to_string(triangle2entity[k]->identifier());
+			Entity* e = triangle2entity[k];
+			index_t id = (e == nullptr) ? k : e->identifier();
+      jt["name"] = (geometryless) ? "bnd" + std::to_string(k) : "Face" + std::to_string(id);
       jt["order"] = triangles_[k]->order();
     }
     if (number == 2) triangles_[k]->visible() = true;

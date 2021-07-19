@@ -27,9 +27,12 @@ UT_TEST_CASE( test1 )
   spacetime.extract();
 
   graphics::Viewer vis;
-  vis.add( spacetime );
+  //for (index_t k = 0; k < 8; k++)
+  //  vis.add( spacetime.topology(k) );
 
-  vis.run();
+  vis.add(topology);
+
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test1 )
 

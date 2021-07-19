@@ -2,6 +2,8 @@
 #include "graphics/primitives.h"
 #include "graphics/vao.h"
 
+#include "library/spacetime.h"
+
 #include "mesh/topology.h"
 
 namespace avro
@@ -80,7 +82,15 @@ Plot::build() {
 
     // we discard the spacetime topology, but hold on to the actual 4d topology
     // in case the final vao (the slice) needs to be recomputed from the 4d topology
-    avro_implement;
+		Topology_Spacetime<Simplex> spacetime( static_cast<const Topology<Simplex>&>(topology_));
+		spacetime.extract();
+
+		for (index_t j = 0; j < 8; j++) {
+			vao_.push_back( std::make_shared<VertexAttributeObject>() );
+			vao_[j]->build(spacetime.topology(j));
+			active_vao_ = vao_[0].get();
+			vao_labels_.push_back("group " + std::to_string(j));
+		}
   }
   else {
     vao_.push_back( std::make_shared<VertexAttributeObject>() );

@@ -222,6 +222,11 @@ UT_TEST_CASE( simplices_2d_test )
   }
   #endif
 
+  VertexAttributeObject vao;
+  vao.build(curvilinear);
+
+  if (AVRO_FULL_UNIT_TEST) return;
+
   coord_t solution_order = 3;
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear,solution_order);
   field->element().set_basis( BasisFunctionCategory_Lagrange );
@@ -231,8 +236,6 @@ UT_TEST_CASE( simplices_2d_test )
   window.init();
   win = window.window();
 
-  VertexAttributeObject vao;
-  vao.build(curvilinear);
   window.manager().write(vao);
 
   std::vector<std::string> macros = {"#define WITH_TESSELLATION 1","#define SOLUTION_ORDER " + std::to_string(field->element().order()),

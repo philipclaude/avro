@@ -107,7 +107,7 @@ UT_TEST_CASE(adapt_test)
       //vis.add(topology);
       vis.add(topology_out);
 
-      //vis.run();
+      //vis.run(AVRO_FULL_UNIT_TEST);
 
     }
 
