@@ -1,5 +1,6 @@
 #include "unit_tester.hpp"
 
+#include "graphics/application.h"
 #include "graphics/vao.h"
 #include "graphics/window.h"
 
@@ -54,6 +55,7 @@ public:
 
         x[3] = 0.95*sin( 10*x[0]*M_PI )*sin( 10*x[1]*M_PI ) +
                0.95*sin( 10*x[1]*M_PI )*sin( 10*x[2]*M_PI );
+        if (x[3] < 0) x[3] = 0;
         this->value(idx) = x[3];
       }
     }
@@ -87,14 +89,10 @@ UT_TEST_CASE(test1)
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.fields().make( "test" , field );
 
-  VertexAttributeObject vao;
-  vao.build(curvilinear);
 
-  // grab the decomposed primitives for webglpp
-  WebGL_Manager manager;
-  manager.write( vao );
-
-  manager.send(7681);
+  Viewer viewer(false);
+  viewer.add(curvilinear);
+  viewer.run();
 }
 UT_TEST_CASE_END(test1)
 

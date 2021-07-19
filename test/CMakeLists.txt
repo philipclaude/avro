@@ -101,11 +101,7 @@ endforeach()
 avro_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
 target_compile_definitions( unit_exe PUBLIC -DTEST_NUM_PROCS=4 )
 target_link_libraries( unit_exe avro_shared )
-target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
-
-# target for running all unit tests independently
-#add_custom_target( check_tests )
-#add_dependencies( check_tests ${CHECK_TESTS} )
+target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" -DFULL_UNIT_TEST )
 
 # target for running all unit tests from a single executable
 if (AVRO_WITH_MPI)

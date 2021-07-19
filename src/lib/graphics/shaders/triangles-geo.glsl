@@ -41,6 +41,9 @@ void main() {
   g_Normal    = mat3(u_NormalMatrix) * v_Normal[0];
   x_Position  = v_Position[0];
   g_clip      = (u_clip == 2) ? v_clip[0] : (u_clip == 1) ? visible( v_Position[0] ) : 0;
+  #if WITH_TESSELLATION == 0
+  v_Parameter = vec2(0,0);
+  #endif
   EmitVertex();
 
   gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[1],1.0);
@@ -49,6 +52,9 @@ void main() {
   g_Normal    = mat3(u_NormalMatrix) * v_Normal[1];
   x_Position  = v_Position[1];
   g_clip      = (u_clip == 2) ? v_clip[1] : (u_clip == 1) ? visible( v_Position[1] ) : 0;
+  #if WITH_TESSELLATION == 0
+  v_Parameter = vec2(1,0);
+  #endif
   EmitVertex();
 
   gl_Position = u_ModelViewProjectionMatrix*vec4(v_Position[2],1.0);
@@ -57,6 +63,9 @@ void main() {
   g_Normal    = mat3(u_NormalMatrix) * v_Normal[2];
   x_Position  = v_Position[2];
   g_clip      = (u_clip == 2) ? v_clip[2] : (u_clip == 1) ? visible( v_Position[2] ) : 0;
+  #if WITH_TESSELLATION == 0
+  v_Parameter = vec2(0,1);
+  #endif
 
   // i'm not sure if this need to be set after every vertex, or just once before the end of the primitive
   // it at least needs to be set before the last EmitVertex()

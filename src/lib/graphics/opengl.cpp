@@ -340,8 +340,6 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
         shader.setUniform("u_lighting",-1);
     }
 
-    //shader.setUniform("u_lighting",-1);
-
     if (show_field_) {
       solution_[k]->activate(shader);
       shader.setUniform( "use_constant_color" , 0 );

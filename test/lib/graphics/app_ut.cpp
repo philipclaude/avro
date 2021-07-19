@@ -80,14 +80,14 @@ UT_TEST_CASE( simplices_2d_test )
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   //topology.points().attach(geometry);
 
-  coord_t geometry_order = 1;
+  coord_t geometry_order = 2;
   Points nodes(dim);
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   Topology<Simplex> curvilinear(nodes,topology,geometry_order);
   curvilinear.element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.points().attach(geometry);
 
-  #if 1
+  #if 0
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {
 
     real_t s = curvilinear.points()[k][0];
@@ -101,14 +101,14 @@ UT_TEST_CASE( simplices_2d_test )
   }
   #endif
 
-  coord_t solution_order = 3;
+  coord_t solution_order = 2;
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear,solution_order);
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.fields().make( "test" , field );
 
-  Viewer app(true);
+  Viewer app(false);
   app.add( curvilinear );
-  app.add( topology );
+  //app.add( topology );
 
   app.run();
 

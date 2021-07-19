@@ -320,7 +320,7 @@ GUI::draw() {
     }
     ImGui::Separator();
 
-    index_t memory = 0;
+    real_t memory = 0;
     for (index_t k = 0; k < window_.nb_plots(); k++) {
       for (index_t j = 0; j < window_.plot(k).nb_vao(); j++)
         memory += window_.plot(k).vao(j).get_memory();
@@ -328,7 +328,11 @@ GUI::draw() {
 
     ImGui::Text("FPS %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("Draw count: %lu" , window_.draw_count());
-    ImGui::Text("GPU mem. in use: %.1f MB" ,real_t(memory)/1e6);
+
+    if (memory < 1e6)
+      ImGui::Text("GPU mem. in use: %.1f kB" ,real_t(memory)/1e3);
+    else
+      ImGui::Text("GPU mem. in use: %.1f MB" ,real_t(memory)/1e6);    
 
     ImGui::Separator();
 
