@@ -18,10 +18,19 @@ OpenGL4_Manager::OpenGL4_Manager() {
 
   // initialize GLFW
   avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
+  #if AVRO_HEADLESS_GRAPHICS == 0
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  #else
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  #endif
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  #if AVRO_HEADLESS_GRAPHICS
+  glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+  #endif
 
   glfwWindowHint(GLFW_RESIZABLE , GLFW_TRUE );
 }
@@ -69,6 +78,7 @@ OpenGL4_Manager::write( VertexAttributeObject& vao ) {
     vao.edges(k).memory() = sizeof(gl_index) * vao.edges(k).indices().size();
   }
 
+  float umin = 1e20, umax = -1e20;
   for (index_t k = 0; k < vao.nb_fields(); k++) {
 
     // retrieve the buffer indices, so we write to the correct buffer
@@ -85,7 +95,18 @@ OpenGL4_Manager::write( VertexAttributeObject& vao ) {
     // keep track of which buffers we have (so the manager knows what to free)
     buffers_.push_back(field_buffer);
     textures_.push_back(field_texture);
+
+    if (vao.field(k).umin() < umin) umin = vao.field(k).umin();
+    if (vao.field(k).umax() > umax) umax = vao.field(k).umax();
   }
+
+  if (umin > umax) {
+    umin = -1;
+    umax =  1;
+  }
+
+  vao.umin() = umin;
+  vao.umax() = umax;
 }
 
 OpenGL4_Manager::~OpenGL4_Manager() {
@@ -144,6 +165,13 @@ FieldPrimitive::write() {
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_R32F , buffer_ ) );
 
   memory_ = sizeof(gl_float) * field->data().size();
+
+  umin_ =  1e20;
+  umax_ = -1e20;
+  if (field->data().size() > 0) {
+    umin_ = * std::min_element( field->data().begin() , field->data().end() );
+    umax_ = * std::max_element( field->data().begin() , field->data().end() );
+  }
 }
 
 void
@@ -190,13 +218,8 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
     if (show_field_) {
       solution_[k]->activate(shader);
       shader.setUniform( "use_constant_color" , 0 );
-
-      const std::vector<gl_float>& data = solution_[k]->active().data();
-      float umin = (data.size() > 0) ? * std::min_element( data.begin() , data.end() ) : 0.0;
-      float umax = (data.size() > 1) ? * std::max_element( data.begin() , data.end() ) : 1.0;
-
-      shader.setUniform( "u_umin" , umin );
-      shader.setUniform( "u_umax" , umax );
+      shader.setUniform( "u_umin" , umin_ );
+      shader.setUniform( "u_umax" , umax_ );
     }
     else {
       shader.setUniform( "use_constant_color" , 1 );
@@ -296,6 +319,9 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
   // draw the triangles
   show_field_ = (!uniform_color_ && !geometry_color_);
   if (solution_.size() == 0) show_field_ = false;
+
+
+
   for (index_t k = 0; k < triangles_.size(); k++) {
 
     if (!triangles_[k]->visible()) continue;
@@ -346,17 +372,8 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
       solution_[k]->activate(shader);
       shader.setUniform( "use_constant_color" , 0 );
 
-      const std::vector<gl_float>& data = solution_[k]->active().data();
-      float umin = (data.size() > 0) ? * std::min_element( data.begin() , data.end() ) : 0.0;
-      float umax = (data.size() > 1) ? * std::max_element( data.begin() , data.end() ) : 1.0;
-
-      if (fabs(umax-umin) < 1e-8) {
-        umin = 0.0;
-        umax = 1.0;
-      }
-
-      shader.setUniform( "u_umin" , umin );
-      shader.setUniform( "u_umax" , umax );
+      shader.setUniform( "u_umin" , umin_ );
+      shader.setUniform( "u_umax" , umax_ );
 
     }
     else if (geometry_color_) {

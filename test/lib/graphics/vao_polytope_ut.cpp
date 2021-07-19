@@ -43,7 +43,7 @@ public:
 UT_TEST_CASE( vao_polytopes_test )
 {
   typedef Polytope type;
-  coord_t number = 3;
+  coord_t number = 2;
   coord_t dim = number;
   index_t nb_points = 1e2;
 

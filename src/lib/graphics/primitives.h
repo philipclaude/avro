@@ -151,11 +151,16 @@ public:
   gl_index& texture()       { return texture_; }
   gl_index  texture() const { return texture_; }
 
+  float umin() const { return umin_; }
+  float umax() const { return umax_; }
+
 private:
   std::string active_field_;
   index_t active_rank_;
   std::map<std::string, std::shared_ptr<FieldData> > data_;
   gl_index texture_;
+
+  float umin_, umax_;
 };
 
 } // graphics

@@ -241,7 +241,7 @@ GUI::draw() {
           }
         }
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(100);
+        ImGui::SetNextItemWidth(80);
         label = empty_label();
         if (ImGui::Combo(label.c_str(),&current_field_rank,rank_labels.data(),rank_labels.size())) {
           if (vao.nb_fields() > 0) {
@@ -250,6 +250,15 @@ GUI::draw() {
               vao.set_rank(rank_index[current_field_rank-1]);
           }
         }
+
+        label = unique_label("min");
+        ImGui::SetNextItemWidth(75);
+        ImGui::InputFloat(label.c_str(),&window_.plot(i).active_vao().umin(),-1e20,1e20,"%.1f");
+
+        ImGui::SameLine();
+        label = unique_label("max");
+        ImGui::SetNextItemWidth(75);
+        ImGui::InputFloat(label.c_str(),&window_.plot(i).active_vao().umax(),-1e20,1e20,"%.1f");
 
         ImGui::Separator();
         ImGui::SetNextItemWidth(50);
@@ -332,7 +341,7 @@ GUI::draw() {
     if (memory < 1e6)
       ImGui::Text("GPU mem. in use: %.1f kB" ,real_t(memory)/1e3);
     else
-      ImGui::Text("GPU mem. in use: %.1f MB" ,real_t(memory)/1e6);    
+      ImGui::Text("GPU mem. in use: %.1f MB" ,real_t(memory)/1e6);
 
     ImGui::Separator();
 

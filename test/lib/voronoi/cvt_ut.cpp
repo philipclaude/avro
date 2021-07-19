@@ -24,7 +24,7 @@ UT_TEST_SUITE( cvt_test_suite )
 UT_TEST_CASE( test1 )
 {
   coord_t number = 3;
-  index_t N = 2;
+  index_t N = 4;
 
   std::vector<index_t> dims(number,N);
   CKF_Triangulation topology( dims );
@@ -61,13 +61,13 @@ UT_TEST_CASE( test1 )
   rvd.parallel() = true;
 
   //rvd.compute(true);
-  rvd.optimise(10);
+  rvd.optimise(1);
 
   graphics::Viewer vis;
 
   //vis.add(topology);
-  //vis.add(rvd);
-  //vis.run(AVRO_FULL_UNIT_TEST);
+  vis.add(rvd);
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test1 )
 

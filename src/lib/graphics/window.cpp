@@ -39,6 +39,9 @@ _resize_callback( GLFWwindow* window, int width, int height) {
 void
 Window::init() {
 
+  #if AVRO_HEADLESS_GRAPHICS
+  glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+  #endif
   window_ = glfwCreateWindow( width_ , height_ , "avro" , NULL, NULL);
   if (!window_) {
     const char* description;

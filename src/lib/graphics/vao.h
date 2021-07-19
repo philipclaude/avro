@@ -78,7 +78,9 @@ public:
     uniform_color_(false),
     geometry_color_(false),
     tessellation_level_(8),
-    lighting_(false)
+    lighting_(false),
+    umin_(0),
+    umax_(1)
   {}
 
   void build( const TopologyBase& topology );
@@ -120,6 +122,9 @@ public:
   void set_lighting( bool x ) { lighting_ = x; }
   index_t get_memory() const;
 
+  float& umin() { return umin_; }
+  float& umax() { return umax_; }
+
 private:
   template<typename type>
   void get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets );
@@ -146,6 +151,7 @@ private:
   nlohmann::json info_;
   int tessellation_level_;
   bool lighting_;
+  float umin_, umax_;
 };
 
 } // graphics

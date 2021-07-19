@@ -631,10 +631,26 @@ VertexAttributeObject::set_rank( index_t rank ) {
 void
 VertexAttributeObject::set_field( const std::string& name ) {
 
+	umin_ =  1e20;
+	umax_ = -1e20;
   for (index_t k = 0; k < solution_.size(); k++) {
     solution_[k]->set_active(name);
     solution_[k]->write();
+
+		const std::vector<gl_float>& data = solution_[k]->active().data();
+		if (data.size() == 0) continue;
+		gl_float umin = * std::min_element(data.begin(),data.end());
+		gl_float umax = * std::max_element(data.begin(),data.end());
+
+		if (umin < umin_) umin_ = umin;
+		if (umax > umax_) umax_ = umax;
   }
+
+	if (umin_ > umax_) {
+		umin_ = 0;
+		umax_ = 1;
+	}
+	printf("field limits = [%g,%g]\n",umin_,umax_);
 }
 
 void
