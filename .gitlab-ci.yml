@@ -74,8 +74,8 @@ release_tests:
   script:
     - source util/commit.sh release_gnu7 4
     - cd build/release_gnu7
-    #- Xvfb :6 -screen 0 1280x1280x24 &
-    #- export DISPLAY=:6
+    - Xvfb :6 -screen 0 1280x1280x24 &
+    - export DISPLAY=:6
     - make unit
     - cd ../../
     - mkdir unit_test_output

@@ -1,4 +1,4 @@
-#version 410 core
+//#version 410 core
 
 layout (triangles) in;
 uniform mat4 u_ModelViewProjectionMatrix;

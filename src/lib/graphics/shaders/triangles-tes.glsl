@@ -1,4 +1,4 @@
-#version 410
+//#version 410
 
 layout (triangles, equal_spacing, ccw) in;
 

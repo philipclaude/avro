@@ -1,4 +1,4 @@
-#version 410 core
+//#version 410 core
 
 layout (lines) in;
 uniform mat4 u_ModelViewProjectionMatrix;

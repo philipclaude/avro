@@ -21,6 +21,11 @@ public:
 
   void generate( int pmin , int pmax , int qmin , int qmax) {
 
+    #if AVRO_HEADLESS_GRAPHICS == 0
+    std::string version = "410";
+    #else
+    std::string version = "330";
+    #endif
     for (int p = pmin; p <= pmax; p++) {
 
       for (int q = qmin; q <= qmax; q++) {
@@ -28,30 +33,26 @@ public:
         // generate shaders with and without tessellation shaders
         std::string base = "-p" + std::to_string(p) + "-q" + std::to_string(q);
 
-        std::vector<std::string> macros = {"#define SOLUTION_ORDER " + std::to_string(p),
+        std::vector<std::string> macros = {"#version " + version, "#define SOLUTION_ORDER " + std::to_string(p),
                                            "#define GEOMETRY_ORDER " + std::to_string(q) ,
                                            "#define WITH_TESSELLATION 1" , "#define WITH_FIELD 1"};
 
+        #if AVRO_HEADLESS_GRAPHICS == 0
         std::shared_ptr<ShaderProgram> t0 = std::make_shared<ShaderProgram>("triangles",true,macros);
         std::shared_ptr<ShaderProgram> e0 = std::make_shared<ShaderProgram>("edges",true,macros);
         shaders_.insert( {"triangles" + base + "-tess=on" , t0 } );
         shaders_.insert( {"edges" + base + "-tess=on" , e0 } );
+        #endif
 
-        macros[2] = "#define WITH_TESSELLATION 0";
+        macros[3] = "#define WITH_TESSELLATION 0";
         std::shared_ptr<ShaderProgram> t1 = std::make_shared<ShaderProgram>("triangles",false,macros);
         std::shared_ptr<ShaderProgram> e1 = std::make_shared<ShaderProgram>("edges",false,macros);
         shaders_.insert( {"triangles" + base + "-tess=off" , t1 } );
         shaders_.insert( {"edges" + base + "-tess=off" , e1 } );
-
-        /*
-        macros[3] = "#define WITH_FIELD 0";
-        std::shared_ptr<ShaderProgram> t2 = std::make_shared<ShaderProgram>("triangles",false,macros);
-        std::shared_ptr<ShaderProgram> e2 = std::make_shared<ShaderProgram>("edges",false,macros);
-        shaders_.insert( {"triangles" + base + "-tess=off-field=off" , t1 } );
-        shaders_.insert( {"edges" + base + "-tess=off-field=off" , e1 } );*/
       }
     }
-    shaders_.insert( {"points" , std::make_shared<ShaderProgram>("points") } );
+    std::vector<std::string> macros = {"#version " + version};
+    shaders_.insert( {"points" , std::make_shared<ShaderProgram>("points",false,macros) } );
   }
 
   ShaderProgram& get( const std::string& type , int p , int q , bool with_tess=true ) {

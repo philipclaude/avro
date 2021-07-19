@@ -32,6 +32,9 @@ if [[ `hostname` == *"wazowski"* ]]; then
   #export METIS_DIR=/home/gitlab-runner/parmetis/metis-5.1.0/install
   #export PATH=/home/gitlab-runner/lcov/lcov-1.13/bin:$PATH
 
+elif [[ `hostname` == *"midd-19641"* ]]; then
+  # hope that everything is fine
+  echo "assuming libraries are installed"
 else
   if [ -z "$LAPACK_DIR" ]; then
     echo "Please set LAPACK_DIR in your environment."

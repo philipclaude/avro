@@ -1,4 +1,4 @@
-#version 410
+//#version 410
 
 uniform int u_clip;
 uniform vec3 u_clip_center;
