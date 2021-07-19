@@ -17,6 +17,9 @@ namespace avro
 namespace graphics
 {
 
+
+
+
 index_t label_counter;
 
 GUI::GUI( Window& window ) :

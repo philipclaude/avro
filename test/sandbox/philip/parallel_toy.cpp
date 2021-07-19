@@ -91,7 +91,7 @@ UT_TEST_CASE( test1 )
   coord_t dim = number;
 
   EGADS::Context context;
-  #if 0
+  #if 1
   dim = number = 3;
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);

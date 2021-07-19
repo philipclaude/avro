@@ -23,7 +23,8 @@ Facet::Facet( Body* body , std::vector<std::shared_ptr<Entity>>& facets ) :
   Object(facets.size()/2,body->dim()),
   V_(dim_,number_),
   B_(number_,number_),
-  x0_(dim_)
+  x0_(dim_),
+  dimension_(-1)
 {
   avro_assert( number_>0 );
   for (index_t k=0;k<facets.size();k++)
@@ -82,6 +83,17 @@ Facet::build_basis()
     V_.dump();
     B_.dump();
     avro_assert_not_reached;
+  }
+
+  // determine the dimension if any
+  for (index_t k = 0; k < V_.m(); k++) {
+    real_t sum = 0.0;
+    for (index_t j = 0; j < V_.n(); j++)
+      sum += V_(k,j);
+    if (fabs(sum) < 1e-12) {
+      dimension_ = k;
+      break;
+    }
   }
 }
 

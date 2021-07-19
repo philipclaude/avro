@@ -76,16 +76,6 @@ Topology_Spacetime<type>::extract()
       std::vector<real_t> U( 3 );
       entity->inverse( X , U );
 
-      if (ep->number() == 3) {
-        PSC::Facet* fp = static_cast<PSC::Facet*>(ep);
-        const matd<real_t>& B = fp->basis();
-
-        B.print();
-
-        vecd<real_t> u0(3,U.data());
-        //vecd<real_t> u1 = B * u0;
-      }
-
       points_.create( U.data() );
       points_.set_entity( idx , entity );
       identifier.insert( {*it,idx} );
