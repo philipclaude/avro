@@ -6,7 +6,7 @@ sys.path.insert(0,'../../../build/release/lib/')
 # import pyavro
 import pyavro
 
-number = 2
+number = 4
 dim    = number
 udim   = dim -1
 ctx    = pyavro.Context(number,dim,udim)

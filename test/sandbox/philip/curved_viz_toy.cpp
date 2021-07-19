@@ -2,6 +2,7 @@
 
 #include "graphics/gl.h"
 #include "graphics/math.h"
+#include "graphics/shader.h"
 
 #include "graphics/colormap.h"
 

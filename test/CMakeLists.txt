@@ -38,7 +38,6 @@ if (AVRO_NO_ESP)
   set( ESP_LIBRARIES )
   set( OCC_LIBRARIES )
   include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/egads )
-  include_directories( ${CMAKE_SOURCE_DIR}/src/third_party/wv )
   add_definitions( -DAVRO_NO_ESP )
 endif()
 
@@ -67,7 +66,7 @@ foreach( test_src ${TEST_FILES} )
   # the actual executable: target for simply building
   avro_add_executable( ${test_exe} ${test_src} )
   target_link_libraries( ${test_exe} ut_common_lib )
-  target_compile_definitions( ${test_exe} PUBLIC -DSTANDALONE )
+  target_compile_definitions( ${test_exe} PUBLIC -DSTANDALONE -DAVRO_FULL_UNIT_TEST=false )
 
   # default to 0 processors, unless the test is found in the list of MPI tests
   set(numprocs -1)
@@ -102,11 +101,7 @@ endforeach()
 avro_add_executable( unit_exe ${MASTER_UNIT} ${TEST_FILES} )
 target_compile_definitions( unit_exe PUBLIC -DTEST_NUM_PROCS=4 )
 target_link_libraries( unit_exe avro_shared )
-target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" )
-
-# target for running all unit tests independently
-#add_custom_target( check_tests )
-#add_dependencies( check_tests ${CHECK_TESTS} )
+target_compile_definitions( unit_exe PUBLIC -DSTDOUT_REDIRECT="${CMAKE_BINARY_DIR}/unit_tests_output.txt" -DAVRO_FULL_UNIT_TEST=true )
 
 # target for running all unit tests from a single executable
 if (AVRO_WITH_MPI)

@@ -131,10 +131,9 @@ UT_TEST_CASE(test1)
     if (nb_collapse==0) break;
   }
 
-  graphics::Visualizer vis;
-  vis.add_topology(topology);
-
-  //vis.run();
+  graphics::Viewer vis;
+  vis.add(topology);
+  vis.run(AVRO_FULL_UNIT_TEST);
 
 }
 UT_TEST_CASE_END(test1)

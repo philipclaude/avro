@@ -1,9 +1,12 @@
-#version 410
+//#version 410
 
 layout (isolines, equal_spacing) in;
 
 out vec3 v_Position;
 out vec2 v_ParameterTess;
+
+flat in float t_clip[];
+flat out float v_clip;
 
 void main() {
 
@@ -28,5 +31,6 @@ void main() {
   #error "unsupported geometry order"
   #endif
 
+  v_clip = t_clip[0];
   v_ParameterTess = vec2(s,t);
 }

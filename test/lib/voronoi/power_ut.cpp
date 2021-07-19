@@ -53,11 +53,11 @@ UT_TEST_CASE( test_simplex )
   printf("optimizing transport map:\n");
   diagram.optimize_otm();
 
-  graphics::Visualizer vis;
-  vis.add_topology(diagram);
+  graphics::Viewer vis;
+  vis.add(diagram);
 
   if (number<4)
-    vis.run();
+    vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test_simplex )
 

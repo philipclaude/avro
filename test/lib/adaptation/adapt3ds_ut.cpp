@@ -133,9 +133,9 @@ UT_TEST_CASE(test1)
 
     if (iter==niter)
     {
-      graphics::Visualizer vis;
-      vis.add_topology(topology_out);
-      //vis.run();
+      graphics::Viewer vis;
+      vis.add(topology_out);
+      //vis.run(AVRO_FULL_UNIT_TEST);
     }
 
     params.set("has uv", true);

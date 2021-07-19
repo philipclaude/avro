@@ -1,20 +1,10 @@
-//
-// avro - Adaptive Voronoi Remesher
-//
-// Copyright 2017-2020, Philip Claude Caplan
-// All rights reserved
-//
-// Licensed under The GNU Lesser General Public License, version 2.1
-// See http://www.opensource.org/licenses/lgpl-2.1.php
-//
+#include "common/parallel_for.h"
 #include "graphics/application.h"
-#include "graphics/gl.h"
-#include "graphics/user_interface.h"
 #include "graphics/window.h"
 
-#include <wsserver.h>
+#include "graphics/colormap.h"
 
-#include <limits>
+#include <unistd.h>
 
 namespace avro
 {
@@ -22,198 +12,129 @@ namespace avro
 namespace graphics
 {
 
-void
-ApplicationBase::write()
+OpenGL_Application::OpenGL_Application() :
+  window_(1024,768)
 {
-  // write all the data present in the scene graph
-  for (index_t k=0;k<scenes_.size();k++)
-    scenes_[k]->write(manager_);
+  window_.init();
+  gui_ = std::make_shared<GUI>(window_);
 }
 
 void
-ApplicationBase::focus_scenes()
-{
-  // initialize the bounding box to something really far away
-  bounding_box_[0] = bounding_box_[1] = bounding_box_[2] = std::numeric_limits<real_t>::max();
-  bounding_box_[3] = bounding_box_[4] = bounding_box_[5] = std::numeric_limits<real_t>::min();
+OpenGL_Application::add( const TopologyBase& topology ) {
+  std::shared_ptr<Plot> plot = std::make_shared<Plot>(topology);
+  plot->build();
+  plot_.push_back(plot);
+  window_.add_plot(plot.get());
+}
 
-  for (index_t k=0;k<scenes_.size();k++)
+void
+OpenGL_Application::run(bool quit) {
+
+  if (quit)
+    return;
+
+  // initial draw, subsequent drawing will only be performed when a callback is invoked
+  window_.compute_view();
+  gui_->draw();
+
+  while (true) {
+
+    // our thread will be put to sleep until user interaction is detected
+    // so this does not actually redraw everything, unless interaction is detected
+    gui_->draw();
+
+    // wait for user input
+    glfwWaitEvents();
+
+    // determine if we should exit the render loop
+    if (glfwWindowShouldClose(window_.window())) break;
+    if (glfwGetKey(window_.window(), GLFW_KEY_ESCAPE ) == GLFW_PRESS) break;
+  }
+}
+
+void
+WebGL_Application::add( const TopologyBase& topology ) {
+  std::shared_ptr<Plot> plot = std::make_shared<Plot>(topology,false);
+  plot->build();
+  plot_.push_back(plot);
+}
+
+class RunThread
+{
+public:
+  typedef RunThread thisclass;
+
+  RunThread(WebGL_Application& app,bool quit) :
+    app_(app),
+    quit_(quit) {}
+
+  void run( index_t i )
   {
-    // update the bounding box based on the points in each scene topology
-    scenes_[k]->get_bounding_box(bounding_box_);
+    if (i == 0) {
+      app_.run_thread(quit_);
+    }
+    else if (i == 1) {
+      //usleep(1000);
+      //std::string cmd = "open " + AVRO_SOURCE_DIR + "/app/avro.html";
+      //system(cmd.c_str());
+    }
   }
 
-  printf("--> bounding box: x = (%g,%g), y = (%g,%g), z = (%g,%g)\n",
-              bounding_box_[0],bounding_box_[3],
-              bounding_box_[1],bounding_box_[4],
-              bounding_box_[2],bounding_box_[5]);
-
-
-  // calculate the focus
-  focus_[0] = 0.5*( bounding_box_[0] + bounding_box_[3] );
-  focus_[1] = 0.5*( bounding_box_[1] + bounding_box_[4] );
-  focus_[2] = 0.5*( bounding_box_[2] + bounding_box_[5] );
-  focus_[3] = std::sqrt( (bounding_box_[3] - bounding_box_[0])*(bounding_box_[3] - bounding_box_[0])
-                        +(bounding_box_[4] - bounding_box_[1])*(bounding_box_[4] - bounding_box_[1])
-                        +(bounding_box_[5] - bounding_box_[2])*(bounding_box_[5] - bounding_box_[2]) );
-
-  printf("--> focus: center = (%g,%g,%g), scale = %g\n",focus_[0],focus_[1],focus_[2],focus_[3]);
-
-  // focus all the scenes
-  for (index_t k=0;k<scenes_.size();k++)
+  void runapp( const index_t nthread )
   {
-    // update the bounding box based on the points in each scene topology
-    scenes_[k]->set_focus(focus_);
+    ProcessCPU::parallel_for (
+      parallel_for_member_callback( this , &thisclass::run ),
+      0,nthread
+    );
   }
+private:
+  WebGL_Application& app_;
+  bool quit_;
+};
+
+void
+WebGL_Application::run_thread(bool quit) {
+  if (quit) return;
+  manager_.send(7681);
 }
 
 void
-Application<Web_Interface>::send( const std::string& response ) const
-{
-  wv_broadcastText( const_cast<char*>(response.c_str()) );
+WebGL_Application::run(bool quit) {
+
+  for (index_t k = 0; k < plot_.size(); k++) {
+    for (index_t j = 0; j < plot_[k]->nb_vao(); j++)
+      manager_.write( plot_[k]->vao(j) );
+  }
+
+  // we will start up two threads, one to write, and one to call the browser (after waiting a bit)
+  RunThread runner(*this,quit);
+  runner.runapp(2);
+}
+
+Viewer::Viewer(bool web) {
+
+  if (!web) {
+    try {
+      app_ = std::make_shared<OpenGL_Application>();
+    }
+    catch (...) {
+      printf("[warning] it doesn't seem OpenGL4 is supported, using the web viewer");
+      web = true;
+    }
+  }
+
+  if (web) app_ = std::make_shared<WebGL_Application>();
 }
 
 void
-Application<Web_Interface>::save_eps()
-{
-  #if AVRO_WITH_GL
-  // first set the transformation to the scene
-  OpenGL_Manager manager_gl;
-  scene_->write(manager_gl);
-  TransformFeedbackResult feedback;
-  manager_gl.draw(*scene_.get(),&feedback);
-  #else
-  avro_assert_not_reached;
-  #endif
+Viewer::add( const TopologyBase& topology ) {
+  app_->add(topology);
 }
 
-#if AVRO_WITH_GL
-
-template<typename API_t>
-Application<GLFW_Interface<API_t>>::Application() :
-  ApplicationBase(manager_),
-  restart_(false)
-{
-  // initialize OpenGL
-  avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
-
-  // set the version
-  #if AVRO_HEADLESS_GRAPHICS // core 3.3 supported by wazowski's drivers
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);
-  #else
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-  #endif
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-}
-
-template<typename API_t>
 void
-Application<GLFW_Interface<API_t>>::initialize()
-{
-  avro_assert( window_.size()!=0 );
-  window_[0]->make_current();
-
-  // load gl stuff and print info
-  gladLoadGL();
-  dumpGLInfo();
-
-  manager_.create_shaders();
+Viewer::run(bool quit) {
+  app_->run(quit);
 }
-
-template<typename API_t>
-void
-Application<GLFW_Interface<API_t>>::run( const std::string& view )
-{
-  if (!restart_)
-  {
-    for (index_t k=0;k<window_.size();k++)
-      window_[k]->setup();
-  }
-  else
-    printf("restarting..\n");
-
-  restart_ = false;
-
-  focus_scenes();
-  write();
-
-  for (index_t k=0;k<window_.size();k++)
-  {
-    window_[k]->write_axes();
-    window_[k]->clip_plane().set_coordinates( bounding_box_ );
-    window_[k]->update_view();
-  }
-
-  // option to load existing view
-  if (!view.empty())
-    window_[0]->controls().load(view);
-
-  // draw everything before entering the event loop
-  for (index_t k = 0; k < window_.size(); k++) {
-    window_[k]->draw();
-    window_[k]->draw(); // draw twice fo ImGui
-  }
-
-   // start the event loop
-   bool done = false;
-   while (!done)
-   {
-     for (index_t k=0;k<window_.size();k++)
-     {
-			 bool active = false;
-       if (window_[k]->has_interface()) {
-         window_[k]->interface().begin_draw();
-         window_[k]->interface().end_draw();
-         if (window_[k]->interface().active()) {
-					 active = true;
-        }
-       }
-	   window_[k]->interface().active() = false;
-       window_[k]->poll(); // poll for events
-       if (window_[k]->should_close())
-       {
-         printf("window %lu requested close\n",k);
-         done = true;
-       }
-       glfwSwapBuffers(window_[k]->window());
-
-     }
-
-     if (restart_) break;
-
-     #if AVRO_HEADLESS_GRAPHICS
-     break;
-     #endif
-   }
-
-   printf("done\n");
-
-   if (restart_) run();
-}
-
-Visualizer::Visualizer()
-{
-  main_ = std::make_shared<GLFW_Window>(manager_,1024,1024,"avro");
-  add_window( main_.get() );
-  //add_window( &side_ );
-
-  initialize();
-
-  main_->create_interface();
-
-  toolbar_ = std::make_shared<Toolbar>(*main_.get(),*this);
-  main_->interface().add_widget( toolbar_ );
-
-}
-
-template class Application<GLFW_Interface<OpenGL_Manager>>;
-template class Application<GLFW_Interface<Vulkan_Manager>>;
-
-#endif // AVRO_WITH_GL
 
 } // graphics
 

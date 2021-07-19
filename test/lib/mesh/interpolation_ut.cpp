@@ -69,12 +69,12 @@ UT_TEST_CASE( test1 )
 
   printf("tp = %g, f = %g \n",tp , fcn(points[0]));
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
 
-  //vis.add_topology(topology);
-  vis.add_topology(topology);
+  //vis.add(topology);
+  vis.add(topology);
 
-  vis.run();
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test1 )
 

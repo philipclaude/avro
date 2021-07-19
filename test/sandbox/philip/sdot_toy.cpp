@@ -105,7 +105,7 @@ UT_TEST_CASE( test1 )
   std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
   triangulation.fields().make("e",te);
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
   library::Plot<Simplex> point_plot(transport.delaunay());
   //for (index_t k = 0; k < point_plot.points().nb(); k++)
   //for (coord_t d = number; d < point_plot.points().dim(); d++)
@@ -114,13 +114,13 @@ UT_TEST_CASE( test1 )
   {
     std::shared_ptr<SliceSites> ts = std::make_shared<SliceSites>(slice.tetrahedra(),slice.tet2site());
     slice.tetrahedra().fields().make("sites",ts);
-    vis.add_topology( slice.tetrahedra() );
+    vis.add( slice.tetrahedra() );
   }
   else
   {
-    //vis.add_topology(triangulation);
-    vis.add_topology(point_plot);
-    vis.add_topology(transport.diagram());
+    //vis.add(triangulation);
+    vis.add(point_plot);
+    vis.add(transport.diagram());
   }
   vis.run();
 }

@@ -1,8 +1,8 @@
 #include "unit_tester.hpp"
 
-#include "graphics/new/managers.h"
-#include "graphics/new/vao.h"
-#include "graphics/new/window.h"
+#include "graphics/managers.h"
+#include "graphics/vao.h"
+#include "graphics/window.h"
 
 #include "graphics/colormap.h"
 #include "graphics/shader.h"
@@ -19,7 +19,7 @@
 using namespace avro;
 using namespace avro::graphics;
 
-UT_TEST_SUITE( graphics_decomposition_suite )
+UT_TEST_SUITE( graphics_window_suite )
 
 class TestField : public Field<Simplex,std::vector<real_t>> {
 
@@ -70,7 +70,6 @@ UT_TEST_CASE( simplices_2d_test )
   coord_t number = 3;
   coord_t dim = number;
 
-
   EGADS::Context context;
   std::vector<real_t> lengths(number,1.0);
   EGADS::Cube geometry(&context,lengths);
@@ -101,6 +100,8 @@ UT_TEST_CASE( simplices_2d_test )
     curvilinear.points()[k][1] = R*sin(theta);
   }
   #endif
+
+  if (AVRO_FULL_UNIT_TEST) return;
 
   coord_t solution_order = 3;
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear,solution_order);
@@ -154,7 +155,7 @@ UT_TEST_CASE( simplices_2d_test )
 }
 UT_TEST_CASE_END( simplices_2d_test )
 
-UT_TEST_SUITE_END( graphics_decomposition_suite )
+UT_TEST_SUITE_END( graphics_window_suite )
 
 #else // AVRO_HEADLESS_GRAPHICS is equal to 1
 UT_TEST_SUITE( graphics_decomposition_suite )

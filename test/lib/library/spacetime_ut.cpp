@@ -26,10 +26,13 @@ UT_TEST_CASE( test1 )
   Topology_Spacetime<Simplex> spacetime(topology);
   spacetime.extract();
 
-  graphics::Visualizer vis;
-  vis.add_topology( spacetime );
+  graphics::Viewer vis;
+  //for (index_t k = 0; k < 8; k++)
+  //  vis.add( spacetime.topology(k) );
 
-  vis.run();
+  vis.add(topology);
+
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test1 )
 

@@ -1,5 +1,4 @@
-#version 410
-
+//#version 410
 
 layout( location = 0 ) out vec4 fragColor;
 
@@ -20,15 +19,19 @@ uniform int u_clip;
 uniform vec3 u_clip_center;
 uniform vec3 u_clip_normal;
 
-in float g_clip;
+flat in float g_clip;
 
 // TODO: make these uniforms
 const int ncolor = 256;
-const float umin = -1;
-const float umax =  1;
+
+uniform float u_umin;
+uniform float u_umax;
 
 void
 get_color( float u , out vec3 color ) {
+
+  float umin = u_umin;
+  float umax = u_umax;
 
     int indx = int(ncolor*(u - umin)/(umax - umin));
 
@@ -57,7 +60,7 @@ shading( in vec3 l , in vec3 n , in vec3 color , out vec3 color_out ) {
 
 void main() {
 
-  if (g_clip > 0) discard;
+  if (u_clip == 2 && g_clip < 0.0) discard;
   if (u_clip > 0) {
 
     float p = dot(x_Position - u_clip_center,u_clip_normal);
@@ -133,35 +136,23 @@ void main() {
   float f8 = texelFetch( solution , idx + 8 ).x;
   float f9 = texelFetch( solution , idx + 9 ).x;
 
-  float u[10];
-  u[0] = f0; u[1] = f1; u[2] = f2; u[3] = f3; u[4] = f4; u[5] = f5; u[6] = f6; u[7] = f7; u[8] = f8; u[9] = f9;
-  float phi[10];
-  phi[0] =  s*(-1.1E1/2.0)-t*(1.1E1/2.0)+s*t*1.8E1-s*(t*t)*(2.7E1/2.0)-(s*s)*t*(2.7E1/2.0)+(s*s)*9.0-
+  float phi0 =  s*(-1.1E1/2.0)-t*(1.1E1/2.0)+s*t*1.8E1-s*(t*t)*(2.7E1/2.0)-(s*s)*t*(2.7E1/2.0)+(s*s)*9.0-
               (s*s*s)*(9.0/2.0)+(t*t)*9.0-(t*t*t)*(9.0/2.0)+1.0;
+  float phi1 =  s-(s*s)*(9.0/2.0)+(s*s*s)*(9.0/2.0);
+  float phi2 =  t-(t*t)*(9.0/2.0)+(t*t*t)*(9.0/2.0);
+  float phi3 =  s*t*(-9.0/2.0)+(s*s)*t*(2.7E1/2.0);
+  float phi4 =  s*t*(-9.0/2.0)+s*(t*t)*(2.7E1/2.0);
+  float phi5 =  t*(-9.0/2.0)+s*t*(9.0/2.0)-s*(t*t)*(2.7E1/2.0)+(t*t)*1.8E1-(t*t*t)*(2.7E1/2.0);
+  float phi6 =  t*9.0-s*t*(4.5E1/2.0)+s*(t*t)*2.7E1+(s*s)*t*(2.7E1/2.0)-(t*t)*(4.5E1/2.0)+(t*t*t)*(2.7E1/2.0);
+  float phi7 =  s*9.0-s*t*(4.5E1/2.0)+s*(t*t)*(2.7E1/2.0)+(s*s)*t*2.7E1-(s*s)*(4.5E1/2.0)+(s*s*s)*(2.7E1/2.0);
+  float phi8 =  s*(-9.0/2.0)+s*t*(9.0/2.0)-(s*s)*t*(2.7E1/2.0)+(s*s)*1.8E1-(s*s*s)*(2.7E1/2.0);
+  float phi9 =  s*t*2.7E1-s*(t*t)*2.7E1-(s*s)*t*2.7E1;
 
-  phi[1] =  s-(s*s)*(9.0/2.0)+(s*s*s)*(9.0/2.0);
-
-  phi[2] =  t-(t*t)*(9.0/2.0)+(t*t*t)*(9.0/2.0);
-
-  phi[3] =  s*t*(-9.0/2.0)+(s*s)*t*(2.7E1/2.0);
-
-  phi[4] =  s*t*(-9.0/2.0)+s*(t*t)*(2.7E1/2.0);
-
-  phi[5] =  t*(-9.0/2.0)+s*t*(9.0/2.0)-s*(t*t)*(2.7E1/2.0)+(t*t)*1.8E1-(t*t*t)*(2.7E1/2.0);
-
-  phi[6] =  t*9.0-s*t*(4.5E1/2.0)+s*(t*t)*2.7E1+(s*s)*t*(2.7E1/2.0)-(t*t)*(4.5E1/2.0)+(t*t*t)*(2.7E1/2.0);
-
-  phi[7] =  s*9.0-s*t*(4.5E1/2.0)+s*(t*t)*(2.7E1/2.0)+(s*s)*t*2.7E1-(s*s)*(4.5E1/2.0)+(s*s*s)*(2.7E1/2.0);
-
-  phi[8] =  s*(-9.0/2.0)+s*t*(9.0/2.0)-(s*s)*t*(2.7E1/2.0)+(s*s)*1.8E1-(s*s*s)*(2.7E1/2.0);
-
-  phi[9] =  s*t*2.7E1-s*(t*t)*2.7E1-(s*s)*t*2.7E1;
-
-  f = u[0]*phi[0] + u[1]*phi[1] + u[2]*phi[2] + u[3]*phi[3] + u[4]*phi[4] + u[5]*phi[5] + u[6]*phi[6] + u[7]*phi[7] + u[8]*phi[8] + u[9]*phi[9];
+  f = f0*phi0 + f1*phi1 + f2*phi2 + f3*phi3 + f4*phi4 + f5*phi5 + f6*phi6 + f7*phi7 + f8*phi8 + f9*phi9;
   get_color(f,color);
 
   #else
-  color = vec3(0.8,0.8,0.2);
+  color = vec3(0.8,0.4,0.2);
   #endif
 
   vec3 color_out = color;

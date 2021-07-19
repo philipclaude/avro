@@ -80,12 +80,12 @@ UT_TEST_CASE( test1 )
   std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
   triangulation.fields().make("e",te);
 
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
   library::Plot<Simplex> point_plot(transport.delaunay());
 
-  vis.add_topology(triangulation);
-  //vis.add_topology(point_plot);
-  //vis.add_topology(transport.diagram());
+  vis.add(triangulation);
+  //vis.add(point_plot);
+  //vis.add(transport.diagram());
   vis.run();
 }
 UT_TEST_CASE_END( test1 )

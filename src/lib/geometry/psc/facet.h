@@ -33,6 +33,8 @@ public:
     { inverse(x,u); }
   void evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const;
 
+  const matd<real_t>& basis() const { return V_; }
+
 private:
   matd<real_t> V_;
   matd<real_t> B_;

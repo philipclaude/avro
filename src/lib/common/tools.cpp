@@ -48,8 +48,6 @@ initialize_avro()
   printf(  "| avro -- (c) Philip Claude Caplan (2017-2020) |\n");
   printf("================================================\n");
 
-  //graphics::dumpGLInfo();
-
   // initialize the process managers
   ProcessMPI::initialize();
   ProcessCPU::initialize();

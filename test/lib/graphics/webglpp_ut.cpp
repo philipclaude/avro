@@ -1,11 +1,12 @@
 #include "unit_tester.hpp"
 
-#include "graphics/new/vao.h"
-#include "graphics/new/window.h"
+#include "graphics/application.h"
+#include "graphics/vao.h"
+#include "graphics/window.h"
 
 #include "graphics/colormap.h"
 #include "graphics/shader.h"
-#include "graphics/new/webglpp.h"
+#include "graphics/webglpp.h"
 
 #include "library/ckf.h"
 #include "library/egads.h"
@@ -54,6 +55,7 @@ public:
 
         x[3] = 0.95*sin( 10*x[0]*M_PI )*sin( 10*x[1]*M_PI ) +
                0.95*sin( 10*x[1]*M_PI )*sin( 10*x[2]*M_PI );
+        if (x[3] < 0) x[3] = 0;
         this->value(idx) = x[3];
       }
     }
@@ -68,7 +70,7 @@ UT_TEST_CASE(test1)
 {
   coord_t number = 3;
   coord_t dim = number;
-  std::vector<index_t> dims(number,20);
+  std::vector<index_t> dims(number,5);
   CKF_Triangulation topology( dims );
 
   coord_t geometry_order = 1;
@@ -87,14 +89,11 @@ UT_TEST_CASE(test1)
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.fields().make( "test" , field );
 
-  VertexAttributeObject vao;
-  vao.build(curvilinear);
+  if (AVRO_FULL_UNIT_TEST) return;
 
-  // grab the decomposed primitives for webglpp
-  WebGL_Manager manager;
-  manager.write( vao );
-
-  manager.send(7681);
+  Viewer viewer(false);
+  viewer.add(curvilinear);
+  viewer.run();
 }
 UT_TEST_CASE_END(test1)
 

@@ -41,3 +41,5 @@ for bgroup in faces:
     nb_faces_in_group = int(len(bgroup)/number)
     print('boundary on entity',geometry[k],'has ',nb_faces_in_group,'faces')
     k += 1
+
+ctx.plot()

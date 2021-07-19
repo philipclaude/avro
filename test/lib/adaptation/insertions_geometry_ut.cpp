@@ -114,10 +114,9 @@ UT_TEST_CASE(test1)
     UT_ASSERT( accept) ;
   }
 
-  graphics::Visualizer vis;
-  vis.add_topology(topology);
-
-  //vis.run();
+  graphics::Viewer vis;
+  vis.add(topology);
+  vis.run(AVRO_FULL_UNIT_TEST);
 
 }
 UT_TEST_CASE_END(test1)

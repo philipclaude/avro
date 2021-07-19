@@ -119,9 +119,6 @@ Facet::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   vecd<real_t> b = numerics::transpose(V_)*( x0 - x0_ );
 
   // solve VtV * alpha = Vt * (x - x0)
-  //vecd<real_t> alpha = tinymat::DLA::InverseLUP::Solve(B_,b);
-  //avro_assert( alpha.m() == number_ );
-
   vecd<real_t> alpha(number_);
   numerics::solveLUP(B_,b,alpha);
 

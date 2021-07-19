@@ -102,12 +102,12 @@ UT_TEST_CASE(adapt_test)
 
     if (iter==niter)
     {
-      graphics::Visualizer vis;
+      graphics::Viewer vis;
 
-      //vis.add_topology(topology);
-      vis.add_topology(topology_out);
+      //vis.add(topology);
+      vis.add(topology_out);
 
-      //vis.run();
+      //vis.run(AVRO_FULL_UNIT_TEST);
 
     }
 

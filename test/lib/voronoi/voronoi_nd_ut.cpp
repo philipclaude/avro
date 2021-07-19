@@ -166,9 +166,9 @@ UT_TEST_CASE( test_nd )
           #endif
 
           if (number > 3 || (nb_points >= 1e4) || generate_mode) continue;
-          graphics::Visualizer vis;
-          vis.add_topology(diagram);
-          vis.run();
+          graphics::Viewer vis;
+          vis.add(diagram);
+          vis.run(AVRO_FULL_UNIT_TEST);
         }
       } // loop over power
     }

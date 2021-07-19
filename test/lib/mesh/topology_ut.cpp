@@ -122,9 +122,9 @@ UT_TEST_CASE( topology_move_to_front )
 
   UT_ASSERT( topology.all_points_accounted() );
 
-  graphics::Visualizer vis;
-  vis.add_topology(topology);
-  vis.run();
+  graphics::Viewer vis;
+  vis.add(topology);
+  vis.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( topology_move_to_front )
 

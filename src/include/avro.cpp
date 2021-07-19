@@ -585,9 +585,9 @@ Context::compute_optimal_transport( const std::vector<real_t>& sites , const std
 
 void
 Context::plot() const {
-  graphics::Visualizer vis;
+  graphics::Viewer vis;
 
-  vis.add_topology( *topology_.get() );
+  vis.add( *topology_.get() );
   vis.run();
 }
 

@@ -837,6 +837,7 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
 
   // accumulate the result
   sites_.clear();
+  std::map<Bisector,int> bisectors;
   for (index_t k=0;k<cells_.size();k++) {
 
     // retrieve the voronoi cell
@@ -853,8 +854,7 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
     #if 1 // turn off for lower memory usage
 
     // add the cells
-    for (index_t j=0;j<cell.nb();j++)
-    {
+    for (index_t j=0;j<cell.nb();j++) {
       sites_.push_back( k );
       std::vector<index_t> polytope = cell.get(j);
 
@@ -864,16 +864,33 @@ LaguerreDiagram<type>::compute( bool exact , IntegrationSimplices* triangulation
     }
 
     // add the points
-    for (index_t j=0;j<cell.points().nb();j++)
-    {
+    for (index_t j=0;j<cell.points().nb();j++) {
       points_.create( cell.points()[j] );
     }
 
     // add the vertex-to-facet information
     const Table<int>& vf = cell.element().incidence();
-    for (index_t j=0;j<vf.nb();j++)
-    {
+    for (index_t j=0;j<vf.nb();j++) {
+
       std::vector<int> f = vf.get(j);
+
+      // map the bisctors to a global numbering
+      for (index_t j = 0; j < f.size(); j++) {
+        if (f[j] < 0) continue; // mesh facets are in global numbering
+        index_t pi, pj;
+        cell.get_bisector( f[j] , pi , pj );
+        Bisector b(pi,pj);
+        int h;
+        if (bisectors.find(b) == bisectors.end()) {
+          h = bisectors.size();
+          bisectors.insert({b,h});
+        }
+        else {
+          h = bisectors.at(b);
+        }
+        f[j] = h;
+      }
+
       points_.incidence().add( f.data() , f.size() );
     }
     #endif

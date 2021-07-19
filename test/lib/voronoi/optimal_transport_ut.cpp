@@ -1,6 +1,7 @@
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
+#include "graphics/application.h"
 
 #include "library/ckf.h"
 
@@ -17,8 +18,8 @@ UT_TEST_CASE( test_nd_polytope )
 {
   typedef Polytope type;
   //typedef Simplex type;
-  coord_t numberL = 2;
-  coord_t numberH = 2;
+  coord_t numberL = 3;
+  coord_t numberH = 3;
 
   index_t nb_points = 1e2;
 
@@ -83,12 +84,16 @@ UT_TEST_CASE( test_nd_polytope )
     std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
     triangulation.fields().make("e",te);
 
-    #if 1
+    #if 0
     if (number > 3 || (nb_points >= 1e6)) continue;
-    graphics::Visualizer vis;
-    vis.add_topology(triangulation);
-    //vis.add_topology(diagram);
-    vis.run();
+    graphics::Viewer vis;
+    vis.add(triangulation);
+    //vis.add(diagram);
+    vis.run(AVRO_FULL_UNIT_TEST);
+    #elif 1
+    graphics::OpenGL_Application app;
+    app.add( triangulation );
+    app.run(AVRO_FULL_UNIT_TEST);
     #endif
 
   } // loop over number

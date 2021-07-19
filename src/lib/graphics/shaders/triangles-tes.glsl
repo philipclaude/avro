@@ -1,10 +1,13 @@
-#version 410
+//#version 410
 
 layout (triangles, equal_spacing, ccw) in;
+
+flat in float t_clip[];
 
 out vec3 v_Position;
 out vec2 v_ParameterTess;
 out vec3 v_Normal;
+flat out float v_clip;
 
 void main() {
 
@@ -48,9 +51,12 @@ void main() {
 
   v_Position = phi0 * p0 + phi1 * p1 + phi2*p2 + phi3*p3 + phi4*p4 + phi5*p5;
   v_Normal   = normalize(cross(phis,phit));
+
   #else
   #error "unsupported geometry order"
   #endif
+
+  v_clip = t_clip[0];
 
   v_ParameterTess = vec2(s,t);
 }

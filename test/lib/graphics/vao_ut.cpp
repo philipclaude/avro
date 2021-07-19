@@ -1,8 +1,8 @@
 #include "unit_tester.hpp"
 
-#include "graphics/new/managers.h"
-#include "graphics/new/vao.h"
-#include "graphics/new/window.h"
+#include "graphics/managers.h"
+#include "graphics/vao.h"
+#include "graphics/window.h"
 
 #include "graphics/colormap.h"
 #include "graphics/shader.h"
@@ -124,6 +124,7 @@ real_t zc = 0.5;
 mat4 T = glm::translate( glm::identity() , {xc,yc,zc} );
 mat4 Tinv = glm::translate( glm::identity() , {-xc,-yc,-zc} );
 
+index_t draw_count = 0;
 void
 draw() {
   float col = 1.0;
@@ -151,6 +152,8 @@ draw() {
 
   glfwSwapBuffers(win);
 
+  draw_count++;
+
 }
 
 static void
@@ -177,8 +180,6 @@ mouse_move_callback(GLFWwindow* window, double x, double y)
   mat4 R = rotation( -(x - xm)/width , (y - ym)/height );
   model_matrix = T * R * Tinv * model_matrix;
 
-  draw();
-
   xm = x;
   ym = y;
 }
@@ -186,7 +187,6 @@ mouse_move_callback(GLFWwindow* window, double x, double y)
 void
 change_rank(index_t rank) {
   vao_ptr->set_rank(rank);
-  draw();
 }
 
 UT_TEST_CASE( simplices_2d_test )
@@ -222,6 +222,11 @@ UT_TEST_CASE( simplices_2d_test )
   }
   #endif
 
+  VertexAttributeObject vao;
+  vao.build(curvilinear);
+
+  if (AVRO_FULL_UNIT_TEST) return;
+
   coord_t solution_order = 3;
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear,solution_order);
   field->element().set_basis( BasisFunctionCategory_Lagrange );
@@ -231,11 +236,9 @@ UT_TEST_CASE( simplices_2d_test )
   window.init();
   win = window.window();
 
-  VertexAttributeObject vao;
-  vao.build(curvilinear);
   window.manager().write(vao);
 
-  std::vector<std::string> macros = {"#define SOLUTION_ORDER " + std::to_string(field->element().order()),
+  std::vector<std::string> macros = {"#define WITH_TESSELLATION 1","#define SOLUTION_ORDER " + std::to_string(field->element().order()),
                                      "#define GEOMETRY_ORDER " + std::to_string(curvilinear.element().order()) };
 
   bool with_tess = true;
@@ -287,6 +290,8 @@ UT_TEST_CASE( simplices_2d_test )
   draw();
 
   while (true) {
+
+    draw();
 
     // wait for user input
     glfwWaitEvents();

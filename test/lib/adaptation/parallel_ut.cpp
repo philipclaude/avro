@@ -184,10 +184,10 @@ UT_TEST_CASE( test1 )
     // but this will only pass if no adaptation is performed
     //UT_ASSERT_EQUALS( topology_out.points().nb() , topology.points().nb() );
 
-    graphics::Visualizer vis;
-    vis.add_topology(topology_out);
+    graphics::Viewer vis;
+    vis.add(topology_out);
     if (number<4)
-      vis.run();
+      vis.run(AVRO_FULL_UNIT_TEST);
   }
 
 }

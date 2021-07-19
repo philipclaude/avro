@@ -19,8 +19,6 @@ add_source_directories(SOURCES "Source Files\\numerics" lib/numerics )
 add_source_directories(SOURCES "Source Files\\numerics\\predicates" lib/numerics/predicates)
 add_source_directories(SOURCES "Source Files\\voronoi" lib/voronoi)
 
-add_source_directories(SOURCES "Source Files\\graphics" lib/graphics/new)
-
 # add the bin sources but remove the avro.cpp (main) executable source
 add_source_directories(SOURCES "Source Files\\bin" bin)
 list(REMOVE_ITEM SOURCES bin/avro.cpp )
@@ -47,14 +45,10 @@ include_directories( ${THIRD_PARTY_INCLUDE_DIRS} )
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )
 
-# add the symbolic links for the webplot application
-#install_symlink( ${ESP_WV_DIR} ${CMAKE_SOURCE_DIR}/app/WebViewer )
-
 if (AVRO_NO_ESP)
   set( ESP_LIBRARIES )
   set (OCC_LIBRARIES )
   include_directories( third_party/egads )
-  include_directories( third_party/wv )
   add_definitions( -DAVRO_NO_ESP )
 endif()
 
