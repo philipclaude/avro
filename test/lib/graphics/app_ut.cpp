@@ -1,8 +1,8 @@
 #include "unit_tester.hpp"
 
-#include "graphics/managers.h"
-#include "graphics/vao.h"
-#include "graphics/application.h"
+#include "graphics/new/managers.h"
+#include "graphics/new/vao.h"
+#include "graphics/new/application.h"
 
 #include "graphics/colormap.h"
 #include "graphics/shader.h"
@@ -78,7 +78,7 @@ UT_TEST_CASE( simplices_2d_test )
   //dims[1] = 2;
   CKF_Triangulation topology( dims );
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
-  //topology.points().attach(geometry);
+  topology.points().attach(geometry);
 
   coord_t geometry_order = 2;
   Points nodes(dim);
@@ -87,7 +87,7 @@ UT_TEST_CASE( simplices_2d_test )
   curvilinear.element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.points().attach(geometry);
 
-  #if 0
+  #if 1
   for (index_t k = 0; k < curvilinear.points().nb(); k++) {
 
     real_t s = curvilinear.points()[k][0];
@@ -101,14 +101,14 @@ UT_TEST_CASE( simplices_2d_test )
   }
   #endif
 
-  coord_t solution_order = 2;
+  coord_t solution_order = 3;
   std::shared_ptr<TestField> field = std::make_shared<TestField>(curvilinear,solution_order);
   field->element().set_basis( BasisFunctionCategory_Lagrange );
   curvilinear.fields().make( "test" , field );
 
-  Viewer app(false);
+  OpenGL_Application app;
   app.add( curvilinear );
-  //app.add( topology );
+  app.add( topology );
 
   app.run();
 

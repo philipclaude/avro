@@ -348,6 +348,11 @@ VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& 
       float umin = * std::min_element( data.begin() , data.end() );
       float umax = * std::max_element( data.begin() , data.end() );
 
+      if (fabs(umax-umin) < 1e-8) {
+        umin = 0.0;
+        umax = 1.0;
+      }
+
       shader.setUniform( "u_umin" , umin );
       shader.setUniform( "u_umax" , umax );
 

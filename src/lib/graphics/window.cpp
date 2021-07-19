@@ -95,7 +95,7 @@ Window::init() {
   needs_drawing_ = true;
   draw_count_ = 0;
 
-  select_colormap("viridis");
+  select_colormap("bwr");
 }
 
 void

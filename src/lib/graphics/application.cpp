@@ -76,7 +76,7 @@ public:
     else if (i == 1) {
       usleep(1000);
       std::string cmd = "open " + AVRO_SOURCE_DIR + "/app/avro.html";
-      system(cmd.c_str());
+      //system(cmd.c_str());
     }
   }
 
