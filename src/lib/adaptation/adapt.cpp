@@ -51,12 +51,13 @@ AdaptationParameters::set_defaults() {
   register_parameter( "allow serial" , false , "whether to allow serial adaptation when running in parallel" );
   register_parameter( "has uv" , false , "whether parameter space coordinates are specified for geometry points in the mesh" );
   register_parameter( "smoothing exponent" , index_t(1) , "smoothing exponent" );
-  register_parameter( "elems per processor" , index_t(10000) , "number of elements for each processor" );
+  register_parameter( "elems per processor" , index_t(10000) , "target number of elements for each processor" );
   register_parameter( "adapt iter" , index_t(1) , "adaptation iteration" );
   register_parameter( "has interior boundaries" , false , "whether there are geometry entities which are embedded interior to the mesh" );
   register_parameter( "export boundary" , false , "should the boundary be included in the exported mesh" );
   register_parameter( "write conformity" , false , "whether metric conformity information should be written when adaptation finishes" );
   register_parameter( "partitioned" , false , "whether the incoming mesh is already partitioned" );
+  register_parameter( "force partition count" , index_t(0) , "whether the number of partitions should be forced during every pass" );
 }
 
 template<typename type>

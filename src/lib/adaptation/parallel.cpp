@@ -24,6 +24,7 @@
 
 #include "numerics/mat.h"
 
+#include <fstream>
 #include <time.h>
 #include <unistd.h>
 
@@ -1741,15 +1742,23 @@ AdaptationManager<type>::adapt() {
   // clear any previous processor-processor pairs that may have been stored
   pairs_.clear();
 
-  // perform the passes, alternating between doing an interface migration
-  // and a load balance
-  const std::string method = "default";
+  // setup some parameters
   bool limit_metric = params_["limit metric"];
   index_t max_passes = params_["max parallel passes"];
   index_t nb_part = mpi::size();
   index_t pass = 0;
   bool done = false;
   bool freeze_conforming = false;
+  index_t force_partition_count = params_["force partition count"];
+  index_t debug_level = params_["debug level"];
+  bool write_mesh = params_["write mesh"];
+
+  clock_t TIMER = clock();
+  time_process_     = 0.0;
+  time_synchronize_ = 0.0;
+  time_adapt_       = 0.0;
+
+  // loop over number of passes
   while (!done) {
 
     if (rank_ == 0) printf("\n*** pass %lu ***\n\n",pass);
@@ -1757,35 +1766,35 @@ AdaptationManager<type>::adapt() {
 
     // fix the boundary of the topology
     // and move the fixed points to the beginning of the points structure
+    if (rank_ == 0) TIMER = clock();
     if (rank_ == 0) printf("--> fixing partition boundaries\n");
     mpi::barrier();
     fix_boundary();
+    mpi::barrier();
 
-    // option to limit the metrics - do not limit the metrics in the call to the mesh adapter
+    // option to limit the metrics
     try {
-    if (pass == 0 && params_["limit metric"]) {
-      MetricAttachment attachment( topology_.points() , metrics_ );
-      attachment.limit(topology_,2.0,true);
-      for (index_t k = 0; k < attachment.nb(); k++)
-        metrics_[k] = attachment[k];
+      // only limit metrics if this is the first pass (if limiting is used at all)
+      if (pass == 0 && params_["limit metric"]) {
+        MetricAttachment attachment( topology_.points() , metrics_ );
+        attachment.limit(topology_,2.0,true);
+        for (index_t k = 0; k < attachment.nb(); k++)
+          metrics_[k] = attachment[k];
 
-      // we need to synchronize the metrics across processors that may have been modified by metric limiting
-      synchronize_metrics( topology_.points() , metrics_ );
-    }
-    params_.set("limit metric", false);
+        // we need to synchronize the metrics across processors that may have been modified by metric limiting
+        synchronize_metrics( topology_.points() , metrics_ );
+      }
+      // do not limit the metrics in the call to the mesh adaptation below
+      params_.set("limit metric", false);
     }
     catch(...) {
       printf("pass %lu: there was an error limiting the metric on processor %lu :(\n",pass,rank_);
       mpi::abort(1);
     }
 
-    // in recursive mode, fix any vertices that touch edges/elements of good quality
-    // this is important so that we don't adapt the full mesh
-    if (method == "recursive" && pass > 0) {
-      //fix_conforming( topology_ , metrics_ );
-    }
+    // check if we want to freeze points in the topology whose surrounding edge lengths are metric conforming
+    // this gives a bit of a performance boost, but should be used with caution
     if (freeze_conforming) fix_conforming( topology_ , metrics_ );
-
 
     // create the mesh we will write to
     Mesh mesh(number,dim);
@@ -1797,21 +1806,22 @@ AdaptationManager<type>::adapt() {
 
     // option to write out the input mesh (for debugging)
     library::meshb writer;
-    if (number < 4)
+    if (number < 4 && debug_level > 0)
       writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
     params_.set("output redirect" , "adaptation-output-proc"+std::to_string(rank_)+".txt" );
-    params_.set("swapout" , false ); // I think there are some bugs with swapout in parallel (maybe with setting fixed)
+    params_.set("swapout" , false );
     params_.set("export boundary", false);
     params_.set("prefix" , "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass) );
+    params_.set("write mesh" , false ); // we don't want each processor to write the mesh it generates
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
+    if (rank_ == 0) time_process_ += real_t( clock() - TIMER )/real_t(CLOCKS_PER_SEC);
     try {
-
       // do the adaptation!
       clock_t t0 = 0, t1;
       if (rank_ == 0) {
-        printf("--> adapting mesh!\n");
+        printf("--> adapting mesh on %lu partitions...\n",nb_part);
         t0 = clock();
       }
       ::avro::adapt<type>( problem );
@@ -1819,9 +1829,11 @@ AdaptationManager<type>::adapt() {
       if (rank_ == 0) {
         t1 = clock();
         printf("--> time = %4.3g seconds.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
+        time_adapt_ += real_t(t1-t0)/real_t(CLOCKS_PER_SEC);
       }
 
       // clear the topology and copy in the output topology
+      TIMER = clock();
       topology_.clear();
       topology_.points().clear();
       topology_.TopologyBase::copy( mesh_out.template retrieve<type>(0) );
@@ -1832,6 +1844,7 @@ AdaptationManager<type>::adapt() {
         if (topology_.points().fixed(k)) continue;
         topology_.points().set_global( k , 0 );
       }
+      if (rank_ == 0) time_process_ += real_t(clock() - TIMER)/real_t(CLOCKS_PER_SEC);
     }
     catch(...) {
       printf("there was an error adapting the mesh on processor %lu :(\n",rank_);
@@ -1840,23 +1853,32 @@ AdaptationManager<type>::adapt() {
     mpi::barrier();
 
     // synchronize all the global point indices
+    TIMER = clock();
     synchronize();
+    time_synchronize_ += real_t( clock() - TIMER) / real_t(CLOCKS_PER_SEC);
 
     // option to retrieve and export the full mesh
+    // we do not count this towards the time
     Mesh m(number,dim);
     std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
     retrieve(*topology_out.get());
-    if (rank_ == 0) {
+    if (rank_ == 0 && write_mesh) {
       index_t adapt_iter = params_["adapt iter"];
-      if (number < 4) {
-        m.add(topology_out);
-        writer.write(m,"mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".mesh",false,true);
-      }
-      else {
-        Topology_Spacetime<type> spacetime(*topology_out.get());
-        spacetime.extract();
-        spacetime.write( "mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".mesh" );
-      }
+
+      nlohmann::json jm;
+      jm["type"]     = topology_out->type_name();
+      jm["dim"]      = topology_out->points().dim();
+      jm["number"]   = topology_out->number();
+      jm["vertices"] = topology_out->points().data();
+      jm["elements"] = topology_out->data();
+      jm["geometry"] = params_["geometry"];
+
+      std::ofstream file("mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".avro");
+      file << jm;
+    }
+
+    // report the min and max volumes in the mesh (this helps determine if something bad is happening...)
+    if (rank_ == 0) {
       std::vector<real_t> volumes( topology_out->nb() );
       real_t v0 = topology_out->volume();
       topology_out->get_volumes(volumes);
@@ -1865,26 +1887,10 @@ AdaptationManager<type>::adapt() {
       printf("--> volume = %g, min = %g, max = %g\n",v0,min_v0,max_v0);
     }
 
-    // count vertex age (currently debugging info)
-    index_t max_age = 5;
-    std::vector<index_t> age_count(max_age);
-    for (index_t k = 0; k < topology_.points().nb(); k++) {
-      if (topology_.points().age(k) >= max_age) age_count[max_age-1]++;
-      else age_count[topology_.points().age(k)]++;
-    }
-    mpi::barrier();
+    // check if the user is forcing a number of partitions
+    if (force_partition_count == 0) {
 
-    if (method == "recursive") {
-      // recursive approach
-      nb_part = nb_part / 2;
-      if (nb_part == 0) {
-        nb_part = mpi::size();
-        done = true;
-      }
-    }
-    else {
-
-      // standard, hope the interfaces are migrated to the interior
+      // how many elements should we target per processor?
       index_t nb_elem_per_core = params_["elems per processor"];
 
       index_t nb_elem = topology_out->nb();
@@ -1911,13 +1917,22 @@ AdaptationManager<type>::adapt() {
       }
       if (nb_part > index_t(mpi::size())) nb_part = mpi::size();
     }
+    else {
+      nb_part = force_partition_count;
+      if (pass == max_passes-1) break;
+    }
 
+    // balance the mesh for the next pass, or for the user
+    TIMER = clock();
     if (rank_ == 0) printf("--> performing load balance & interface migration for %lu elements on %lu partitions\n",topology_out->nb(),nb_part);
     migrate_balance( nb_part );
+    if (rank_ == 0) time_synchronize_ += real_t( clock() - TIMER ) / real_t(CLOCKS_PER_SEC);
     pass++;
   }
 
+  // reset some parameters to their original values
   params_.set("limit metric" , limit_metric );
+  params_.set("write mesh" , write_mesh );
 }
 
 template<typename type>

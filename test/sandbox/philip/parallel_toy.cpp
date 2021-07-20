@@ -90,8 +90,10 @@ UT_TEST_CASE( test1 )
   coord_t number = 2;
   coord_t dim = number;
 
+  std::string geometry_name;
   EGADS::Context context;
   #if 1
+  geometry_name = "box";
   dim = number = 3;
   std::vector<real_t> lens(number,1.);
   EGADS::Cube geometry(&context,lens);
@@ -100,12 +102,14 @@ UT_TEST_CASE( test1 )
   //library::MetricField_UGAWG_Linear2 analytic;
   library::MetricField_UGAWG_Polar1 analytic;
   #elif 0
-  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  geometry_name = BASE_TEST_DIR+"/geometry/cube-cylinder.egads";
+  EGADS::Model model(&context,geometry_name);
   Body& geometry = model.body(0);
   library::meshb mesh(BASE_TEST_DIR+"/meshes/cube-cylinder.mesh");
   std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
   Topology<Simplex>& topology = *ptopology.get();
   #elif 0
+  geometry_name = "square";
   dim = number = 2;
   std::vector<real_t> lens(number,10.);
   EGADS::Cube geometry(&context,lens);
@@ -116,6 +120,7 @@ UT_TEST_CASE( test1 )
     topology.points()[k][d] *= 10.;
   library::MetricField_UGAWG_sin analytic;
   #else
+  geometry_name = "tesseract";
   dim = number = 4;
   std::vector<real_t> c(4,0.5);
   std::vector<real_t> lengths(4,1.0);
@@ -145,7 +150,9 @@ UT_TEST_CASE( test1 )
   params.set( "elems per processor" , index_t(5000) );
   params.set("has uv", true);
   params.set( "swapout" , false);
-
+  params.set( "force partition count" , index_t(mpi::size()) );
+  params.set( "debug level" , index_t(0) );
+  params.set( "geometry" , geometry_name );
 
   topology.build_structures();
 
@@ -173,6 +180,10 @@ UT_TEST_CASE( test1 )
       metrics[k] = analytic( manager.topology().points()[k] );
 
     manager.reassign_metrics(metrics);
+
+    if (rank == 0)
+    printf("==> timing: process = %4.3g sec., adapt = %4.3g sec., synchronize = %4.3g sec.\n",
+            manager.time_process(),manager.time_adapt(),manager.time_synchronize());
 
     mpi::barrier();
   }

@@ -25,7 +25,7 @@
 #include "mesh/mesh.h"
 #include "mesh/points.h"
 
-
+#include <fstream>
 
 namespace avro
 {
@@ -65,6 +65,11 @@ get_metric( const std::string& name , Points& points , bool& is_analytic ,
       h   = params[1];
     }
     MetricField_Uniform analytic(dim,h);
+    return std::make_shared<MetricAttachment>(analytic,points);
+  }
+  if (name=="Linear-2d")
+  {
+    MetricField_UGAWG_Linear2d analytic;
     return std::make_shared<MetricAttachment>(analytic,points);
   }
   if (name=="Linear-3d")
@@ -170,15 +175,37 @@ get_mesh( const std::string& name , std::shared_ptr<TopologyBase>& ptopology , c
     }
     return pmesh;
   }
-  if (ext=="json")
-  {
-    /*
-    std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,number);
-    io::readMesh(name,*pmesh);
-    ptopology = pmesh->topology_ptr(0);
+  if (ext == "avro" || ext == "json") {
+
+    std::ifstream file(name);
+    nlohmann::json jm;
+    file >> jm;
+
+    coord_t dim = jm["dim"];
+    number = jm["number"];
+    std::shared_ptr<Mesh> pmesh  = std::make_shared<Mesh>(number,number);
+
+    std::vector<real_t> vertices = jm["vertices"];
+    index_t nb_vertices = vertices.size() / dim;
+    for (index_t k = 0; k < nb_vertices; k++)
+      pmesh->points().create( vertices.data() + k*dim );
+
+    if (jm["type"] == "simplex") {
+      ptopology = std::make_shared<Topology<Simplex>>(pmesh->points(),number);
+
+      std::vector<index_t> simplices = jm["elements"];
+      index_t nb_simplices = simplices.size()/(number+1);
+      for (index_t k = 0; k < nb_simplices; k++)
+        ptopology->add( simplices.data() + k*(number+1) , number+1 );
+    }
+    else {
+      printf("unsupported element type %s\n",std::string(jm["type"]).c_str());
+      avro_implement;
+    }
+
+    pmesh->add(ptopology);
     return pmesh;
-    */
-    avro_implement;
+
   }
 
   if (ext.empty())

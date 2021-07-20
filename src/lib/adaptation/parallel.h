@@ -58,6 +58,10 @@ public:
   Topology_Partition<type>& topology() { return topology_; }
   void reassign_metrics( const std::vector<VertexMetric>& metrics );
 
+  real_t time_process() const { return time_process_; }
+  real_t time_synchronize() const { return time_synchronize_; }
+  real_t time_adapt() const { return time_adapt_; }
+
 private:
 
   void migrate_balance( index_t nb_part );
@@ -84,6 +88,10 @@ private:
   library::MetricField_Analytic* analytic_;
 
   std::vector<bool> active_;
+
+  real_t time_process_;
+  real_t time_synchronize_;
+  real_t time_adapt_;
 };
 
 } // avro
