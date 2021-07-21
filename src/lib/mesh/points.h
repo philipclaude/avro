@@ -124,9 +124,11 @@ public:
   #endif
 
   void move_to( index_t k0 , index_t k1 );
+  void move_to_front( const std::vector<index_t>& idx );
 
   void reserve( index_t n );
   void shrink_to_fit();
+  void batch_erase( index_t n );
 
 protected:
 

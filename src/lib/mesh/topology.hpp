@@ -13,6 +13,7 @@
 #include "mesh/points.h"
 
 #include <algorithm>
+#include <list>
 #include <set>
 
 namespace avro
@@ -380,8 +381,38 @@ Topology<type>::remove_elements( const std::vector<index_t>& elems0 )
   // make a copy so we can sort
   std::vector<index_t> elems(elems0.begin(),elems0.end());
   std::sort( elems.begin() , elems.end() );
+
+  #if 0
   for (index_t k=0;k<elems.size();k++)
     remove( elems[k]-k );
+  #elif 1
+  std::vector<index_t> data0;
+  index_t n = 0;
+  std::set<index_t> selem( elems.begin() , elems.end() );
+  data0.reserve( data_.size() );
+  for (index_t k = 0; k < nb(); k++) {
+    if (selem.find(k) != selem.end() )
+      continue;
+    for (index_t j = 0 ; j < nv(k); j++)
+      data0.push_back( (*this)(k,j) );
+  }
+  data0.shrink_to_fit();
+  //avro_assert_msg( n == (number()+1)*(nb() - elems.size()) , "n = %lu, ndata = %lu" , n , (number()+1)*(nb()-elems.size()) );
+  data_.assign( data0.begin() , data0.end() );
+  #else
+  std::list<index_t> ldata( data_.begin() , data_.end() );
+  std::list<index_t>::iterator it = ldata.begin();
+  for (index_t k = 0; k < elems.size(); k++) {
+    advance(it,(number()+1)*(elems[k] -k));
+    for (index_t j = 0; j < number()+1; j++) {
+      advance(it,1);
+      ldata.erase(it);
+    }
+    it = ldata.begin();
+  }
+  data_.assign( ldata.begin() , ldata.end() );
+
+  #endif
 }
 
 template<typename type>
@@ -471,8 +502,24 @@ Topology<type>::remove_unused( std::vector<index_t>* pidx0 )
     }
   }
 
+#if 0
   for (index_t k=0;k<pts->size();k++)
     remove_point( (*pts)[k]-k);
+#elif 1
+
+  // this is inefficient
+  move_to_front( *pts );
+
+  // batch erase the points
+  index_t n = pts->size();
+  for (index_t j = 0; j < data_.size(); j++) {
+    avro_assert( data_[j] >= n );
+    data_[j] -= n;
+  }
+  points_.batch_erase(n);
+#else
+
+#endif
 }
 
 template<typename type>
@@ -507,10 +554,14 @@ Topology<type>::move_to_front( const std::vector<index_t>& pts , std::map<index_
     data_[j] = pidx->at(data_[j]);
 
   // now move all the points to the front
+  #if 0
   for (index_t k=0;k<pts.size();k++)
   {
     points_.move_to( pts[k] , k );
   }
+  #else
+  points_.move_to_front( pts );
+  #endif
 
 }
 

@@ -15,6 +15,7 @@
 #include "avro_types.h"
 
 #include <algorithm>
+#include <set>
 #include <vector>
 
 namespace avro
@@ -223,6 +224,42 @@ public:
     data_.shrink_to_fit();
     first_.shrink_to_fit();
     last_.shrink_to_fit();
+  }
+
+  void batch_erase( index_t n ) {
+    if (layout_ == TableLayout_Rectangular) {
+      std::vector<type> data0(data_.begin()+n*rank_,data_.end());
+      data_.assign(data0.begin(),data0.end());
+    }
+    else
+      avro_implement;
+  }
+
+  void move_to_front( const std::vector<index_t>& idx ) {
+
+    // the following is only implemented for rectangular tables
+    if (layout_ != TableLayout_Rectangular) avro_implement;
+
+    // make enough space for the data
+    std::vector<type> data;
+    data.reserve(data_.size());
+
+    // move the requested indices to the front
+    for (index_t k = 0; k < idx.size(); k++) {
+      for (index_t j = 0; j < rank_; j++)
+        data.push_back(data_[idx[k]*rank_+j]);
+    }
+
+    // now add the other data behind the stuff we moved to the front
+    std::set<index_t> sidx(idx.begin(),idx.end());
+    for (index_t k = 0; k < nb(); k++) {
+
+      if (sidx.find(k) != sidx.end()) continue; // this element was moved to the front
+      for (index_t j = 0; j < rank_; j++)
+        data.push_back(data_[k*rank_+j]);
+    }
+    avro_assert( data_.size() == data.size() );
+    data_.assign(data.begin(),data.end());
   }
 
 private:

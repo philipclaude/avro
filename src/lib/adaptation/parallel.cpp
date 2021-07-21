@@ -25,6 +25,8 @@
 #include "numerics/mat.h"
 
 #include <fstream>
+#include <list>
+#include <unordered_map>
 #include <time.h>
 #include <unistd.h>
 
@@ -740,6 +742,8 @@ public:
     for (index_t k = 0; k < topology.points().nb(); k++)
       global.insert( {topology.points().global(k) , k} );
 
+    topology.points().reserve( topology.points().nb() + points_.nb() );
+    metric_.reserve( metric_.size() + points_.nb() );
     for (index_t k = 0; k < this->nb(); k++) {
 
       std::vector<index_t> s = this->get(k);
@@ -769,6 +773,8 @@ public:
       }
       topology.add( s.data() , s.size() );
     }
+    topology.points().shrink_to_fit();
+    metric_.shrink_to_fit();
   }
 
   const std::vector<index_t>& partition() const { return partition_; }
@@ -776,7 +782,7 @@ public:
 
 private:
   using Topology_Partition<type>::points_;
-  std::map<index_t,index_t> global_;
+  std::unordered_map<index_t,index_t> global_;
   std::vector<index_t> partition_;
   std::vector<index_t> metric_;
 };
@@ -827,7 +833,10 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   coord_t udim = topology_.points().udim();
   coord_t number = topology_.number();
 
+  clock_t TIME0, TIME1;
+
   // accumulate the elements to send away
+  TIME0 = clock();
   MigrationChunk<type> goodbye(dim,udim,number);
   goodbye.set_entities(topology_.entities());
   for (index_t j = 0; j < nb_rank; j++) {
@@ -835,8 +844,11 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     goodbye.extract( topology_ , repartition , j );
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> extract time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // receive chunks on the root processor so we can send the combined chunks away
+  TIME0 = clock();
   std::vector< std::shared_ptr<MigrationChunk<type>> > pieces( nb_rank );
   if (rank_ == 0) {
 
@@ -870,8 +882,11 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     mpi::send( mpi::blocking{} , goodbye.partition() , 0 , TAG_MISC );
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> chunk sending to root time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // send the chunks to the corresponding processors
+  TIME0 = clock();
   MigrationChunk<type> chunk(dim,udim,number);
   chunk.set_entities( topology_.entities() );
   if (rank_ == 0) {
@@ -889,6 +904,9 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     chunk.receive(0);
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> chunk send to proc time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
+
 
   std::vector<index_t> removals;
   for (index_t k = 0; k < repartition.size(); k++) {
@@ -896,15 +914,18 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
       removals.push_back( k );
   }
 
-  std::map<index_t,index_t> metrics_owned;
+  std::unordered_map<index_t,index_t> metrics_owned;
   for (index_t k = 0; k < topology_.points().nb(); k++)
     metrics_owned.insert( {topology_.points().global(k),k} );
 
   // add the received chunk to the topology
+  TIME0 = clock();
   index_t nb_elem = topology_.nb() - removals.size();
   topology_.reserve( topology_.nb() + chunk.nb() );
   chunk.add_to( topology_ );
   topology_.shrink_to_fit();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> chunk addition time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   crust_.clear();
   crust_.resize( chunk.nb() );
@@ -912,11 +933,15 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     crust_[k] = nb_elem + k;
     //crust_.push_back( nb_elem + k );
 
+  TIME0 = clock();
   topology_.remove_elements( removals );
   for (index_t k = 0; k < crust_.size(); k++)
     avro_assert_msg( crust_[k] < topology_.nb(), "crust = %lu, |topology| = %lu on rank %lu",crust_[k],topology_.nb(),rank_);
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> element removal time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // determine which metrics need to be added
+  TIME0 = clock();
   std::set<index_t> idx( chunk.metric().begin() , chunk.metric().end() );
   std::vector<index_t> metric;
   metric.reserve( chunk.metric().size() );
@@ -951,7 +976,10 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     mpi::send( mpi::blocking{} , metric , 0 , TAG_MISC );
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> metric accumulation (on root) time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
+  TIME0 = clock();
   // now gather the data from all the processors
   if (rank_ == 0) {
     for (index_t k = 1; k < nb_rank; k++)
@@ -961,8 +989,11 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     metric_requests = mpi::receive<std::vector<index_t>>(0,TAG_MISC);
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> accumulated metric receive time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // create the metric data to send for the points we own
+  TIME0 = clock();
   std::vector<real_t> metric_data;
   std::vector<index_t> metric_idx;
   metric_data.reserve( metric_requests.size() * number * (number+1 ) );
@@ -1041,14 +1072,44 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   }
   avro_assert( metrics_.size() == topology_.points().nb() );
   metrics_.shrink_to_fit();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> other metric time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // remove points that are not referenced by the topology
+  TIME0 = clock();
   std::vector<index_t> point_map;
-  topology_.remove_unused(&point_map);
+  topology_.remove_unused(&point_map); // i think this is a bottleneck but it's really hard to improve
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> topology unused removal time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // map the metrics too
+  TIME0 = clock();
+  #if 0
   for (index_t k = 0; k < point_map.size(); k++)
     metrics_.erase( metrics_.begin() + point_map[k]-k );
+  #elif 0
+  std::list<VertexMetric> lmetrics(metrics_.begin(),metrics_.end());
+  std::list<VertexMetric>::iterator it = lmetrics.begin();
+  for (index_t k = 0; k < point_map.size(); k++) {
+    advance(it,point_map[k]-k);
+    lmetrics.erase( it );
+    it = lmetrics.begin();
+  }
+  metrics_.assign( lmetrics.begin() , lmetrics.end() );
+  #else
+  std::set<index_t> spoint_map(point_map.begin(),point_map.end());
+  std::vector<VertexMetric> metrics0;
+  metrics0.reserve( metrics_.size() );
+  for (index_t k = 0; k < metrics_.size(); k++) {
+    if (spoint_map.find(k) != spoint_map.end()) continue;
+    metrics0.push_back(metrics_[k]);
+  }
+  metrics0.shrink_to_fit();
+  metrics_.assign(metrics0.begin(),metrics0.end());
+  #endif
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> metric removal time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
+
 
   avro_assert( metrics_.size() == topology_.points().nb() );
   for (index_t k = 0; k < topology_.nb(); k++) {
@@ -1945,10 +2006,10 @@ AdaptationManager<type>::adapt() {
     }
     else {
       nb_part = force_partition_count;
-      if (pass == max_passes-1) break;
+      if (pass == max_passes-1) done = true;
     }
 
-    // balance the mesh for the next pass, or for the user
+    // balance the mesh for the next pass, or for the caller
     if (rank_ == 0) TIMER = clock();
     if (rank_ == 0) printf("--> performing load balance & interface migration for %lu elements on %lu partitions\n",topology_out->nb(),nb_part);
     migrate_balance( nb_part );
