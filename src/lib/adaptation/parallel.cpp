@@ -944,6 +944,7 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
       for (index_t j = 0; j < metric_k.size(); j++)
         metric_requests.push_back(metric_k[j]);
     }
+    metric_requests.shrink_to_fit();
     uniquify(metric_requests);
   }
   else {
@@ -964,6 +965,8 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   // create the metric data to send for the points we own
   std::vector<real_t> metric_data;
   std::vector<index_t> metric_idx;
+  metric_data.reserve( metric_requests.size() * number * (number+1 ) );
+  metric_idx.reserve( metric_requests.size() );
   for (index_t k = 0; k < metric_requests.size(); k++) {
 
     // determine if we own this metric
@@ -976,6 +979,8 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     for (index_t i = j; i < number; i++)
       metric_data.push_back( metrics_[q](i,j) );
   }
+  metric_data.shrink_to_fit();
+  metric_idx.shrink_to_fit();
 
   if (rank_ == 0) {
 
@@ -1016,6 +1021,7 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   mpi::barrier();
 
   // find the data we need and append it into our array
+  metrics_.reserve( metric_idx.size() + metrics_.size() );
   index_t N = number*(number+1)/2;
   for (index_t k = 0; k < metric.size(); k++) {
     bool found = false;
@@ -1034,6 +1040,7 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     avro_assert( found );
   }
   avro_assert( metrics_.size() == topology_.points().nb() );
+  metrics_.shrink_to_fit();
 
   // remove points that are not referenced by the topology
   std::vector<index_t> point_map;
