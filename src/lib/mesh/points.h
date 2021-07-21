@@ -125,6 +125,9 @@ public:
 
   void move_to( index_t k0 , index_t k1 );
 
+  void reserve( index_t n );
+  void shrink_to_fit();
+
 protected:
 
   coord_t dim_;  // dimension of ambient space the vertices live in

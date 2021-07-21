@@ -83,6 +83,14 @@ public:
     avro_implement;
   }
 
+  void reserve( index_t n ) {
+    data_.reserve(n);
+  }
+
+  void shrink_to_fit() {
+    data_.shrink_to_fit();
+  }
+
 private:
 
   void remove( index_t start , index_t end )

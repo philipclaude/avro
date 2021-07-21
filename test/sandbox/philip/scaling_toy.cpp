@@ -101,16 +101,18 @@ UT_TEST_CASE( test1 )
     // scale the metrics by 2 with respect to the previous iteration
     for (index_t k = 0; k < metrics.size(); k++) {
       for (index_t j = 0; j < metrics[k].m(); j++)
-        for (index_t i = 0; i < metrics[k].n(); i++)
-          metrics[k](i,j) *= std::pow(2.0,iter);
+        for (index_t i = j; i < metrics[k].n(); i++)
+          metrics[k](i,j) *= std::pow(2.0,real_t(iter));
     }
 
     manager.reassign_metrics(metrics);
 
-    if (rank == 0)
+    if (rank == 0) {
     printf("==> timing: process = %4.3g sec., adapt = %4.3g sec., synchronize = %4.3g sec.\n",
             manager.time_process(),manager.time_adapt(),manager.time_synchronize());
-
+    printf("            migrate = %4.3g sec., partition = %4.3g sec., exchange = %4.3g sec.\n",
+            manager.time_migrate(),manager.time_partition(),manager.time_exchange());
+    }
     mpi::barrier();
   }
   fflush(stdout);

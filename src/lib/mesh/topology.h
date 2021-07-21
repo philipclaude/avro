@@ -201,6 +201,7 @@ public:
   void determine_unused( std::vector<index_t>& pts ) const;
 
   void build_structures();
+  void reserve( index_t n );
 
 private:
   type element_;

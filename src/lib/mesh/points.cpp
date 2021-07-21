@@ -582,4 +582,27 @@ Points::clear()
 	age_.clear();
 }
 
+void
+Points::reserve( index_t n ) {
+
+	DOF<real_t>::reserve(n*dim_);
+	u_.reserve(n*udim_);
+	body_.reserve(n);
+	primitive_.reserve(n);
+	fixed_.reserve(n);
+	global_.reserve(n);
+	age_.reserve(n);
+}
+
+void
+Points::shrink_to_fit() {
+	DOF<real_t>::shrink_to_fit();
+	u_.shrink_to_fit();
+	body_.shrink_to_fit();
+	primitive_.shrink_to_fit();
+	fixed_.shrink_to_fit();
+	global_.shrink_to_fit();
+	age_.shrink_to_fit();
+}
+
 } // avro

@@ -702,6 +702,8 @@ public:
   {
     // first add any element that stays in our partition
     // keep track of the global indices that have been added
+    partition_.reserve( topology.nb() );
+    Topology<type>::reserve( topology.nb() );
     for (index_t k=0;k<topology.nb();k++)
     {
       if (partition[k] != rank) continue;
@@ -727,6 +729,8 @@ public:
       this->add(s.data(),s.size());
       partition_.push_back(rank);
     }
+    partition_.shrink_to_fit();
+    Topology<type>::shrink_to_fit();
 
     avro_assert_msg( global_.size() == points_.nb() , "|global| = %lu, |points| = %lu" , global_.size() , points_.nb() );
   }
@@ -898,11 +902,15 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
 
   // add the received chunk to the topology
   index_t nb_elem = topology_.nb() - removals.size();
+  topology_.reserve( topology_.nb() + chunk.nb() );
   chunk.add_to( topology_ );
+  topology_.shrink_to_fit();
 
   crust_.clear();
+  crust_.resize( chunk.nb() );
   for (index_t k = 0; k < chunk.nb(); k++)
-    crust_.push_back( nb_elem + k );
+    crust_[k] = nb_elem + k;
+    //crust_.push_back( nb_elem + k );
 
   topology_.remove_elements( removals );
   for (index_t k = 0; k < crust_.size(); k++)
@@ -911,11 +919,13 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   // determine which metrics need to be added
   std::set<index_t> idx( chunk.metric().begin() , chunk.metric().end() );
   std::vector<index_t> metric;
+  metric.reserve( chunk.metric().size() );
   for (index_t k = 0; k < chunk.metric().size(); k++) {
     index_t p = chunk.metric()[k];
     if (metrics_owned.find(p) == metrics_owned.end())
       metric.push_back(p);
   }
+  metric.shrink_to_fit();
 
   // accumulate the requested metrics on the root processor
   std::vector<std::set<index_t>> metric_send_idx(nb_rank);
@@ -924,6 +934,8 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   {
     // initialize the full list of metrics on the root processor
     metric_requests = metric;
+
+    metric_requests.reserve( metric.size() * nb_rank );
 
     // append the metric requests received from other processors
     for (index_t k = 1; k < nb_rank; k++) {
@@ -1093,11 +1105,15 @@ AdaptationManager<type>::migrate_balance( index_t nb_part ) {
   PartitionGraph<type> graph( topology_ , boundary , element_offset_ , metrics_ );
 
   // call parmetis to perform the load balance
+  clock_t TIMER = clock();
   std::vector<index_t> repartition;
   graph.repartition(repartition,nb_part);
+  if (rank_ == 0) time_partition_ += real_t(clock() - TIMER)/real_t(CLOCKS_PER_SEC);
 
   // exchange the elements between partitions
+  TIMER = clock();
   exchange(repartition);
+  if (rank_ == 0) time_exchange_ += real_t(clock() - TIMER)/real_t(CLOCKS_PER_SEC);
 }
 
 template<typename type>
@@ -1757,6 +1773,9 @@ AdaptationManager<type>::adapt() {
   time_process_     = 0.0;
   time_synchronize_ = 0.0;
   time_adapt_       = 0.0;
+  time_migrate_     = 0.0;
+  time_partition_   = 0.0;
+  time_exchange_    = 0.0;
 
   // loop over number of passes
   while (!done) {
@@ -1833,7 +1852,7 @@ AdaptationManager<type>::adapt() {
       }
 
       // clear the topology and copy in the output topology
-      TIMER = clock();
+      if (rank_ == 0) TIMER = clock();
       topology_.clear();
       topology_.points().clear();
       topology_.TopologyBase::copy( mesh_out.template retrieve<type>(0) );
@@ -1853,9 +1872,9 @@ AdaptationManager<type>::adapt() {
     mpi::barrier();
 
     // synchronize all the global point indices
-    TIMER = clock();
+    if (rank_ == 0) TIMER = clock();
     synchronize();
-    time_synchronize_ += real_t( clock() - TIMER) / real_t(CLOCKS_PER_SEC);
+    if (rank_ == 0) time_synchronize_ += real_t( clock() - TIMER) / real_t(CLOCKS_PER_SEC);
 
     // option to retrieve and export the full mesh
     // we do not count this towards the time
@@ -1923,10 +1942,10 @@ AdaptationManager<type>::adapt() {
     }
 
     // balance the mesh for the next pass, or for the user
-    TIMER = clock();
+    if (rank_ == 0) TIMER = clock();
     if (rank_ == 0) printf("--> performing load balance & interface migration for %lu elements on %lu partitions\n",topology_out->nb(),nb_part);
     migrate_balance( nb_part );
-    if (rank_ == 0) time_synchronize_ += real_t( clock() - TIMER ) / real_t(CLOCKS_PER_SEC);
+    if (rank_ == 0) time_migrate_ += real_t( clock() - TIMER ) / real_t(CLOCKS_PER_SEC);
     pass++;
   }
 

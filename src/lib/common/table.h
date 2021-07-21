@@ -213,6 +213,18 @@ public:
     }
   }
 
+  void reserve( index_t n ) {
+    data_.reserve(n);
+    first_.reserve(n);
+    last_.reserve(n);
+  }
+
+  void shrink_to_fit() {
+    data_.shrink_to_fit();
+    first_.shrink_to_fit();
+    last_.shrink_to_fit();
+  }
+
 private:
 
   std::vector<index_t> first() const { return first_; }

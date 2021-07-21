@@ -61,6 +61,9 @@ public:
   real_t time_process() const { return time_process_; }
   real_t time_synchronize() const { return time_synchronize_; }
   real_t time_adapt() const { return time_adapt_; }
+  real_t time_migrate() const { return time_migrate_; }
+  real_t time_partition() const { return time_partition_; }
+  real_t time_exchange() const { return time_exchange_; }
 
 private:
 
@@ -92,6 +95,9 @@ private:
   real_t time_process_;
   real_t time_synchronize_;
   real_t time_adapt_;
+  real_t time_migrate_;
+  real_t time_partition_;
+  real_t time_exchange_;
 };
 
 } // avro

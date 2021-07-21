@@ -226,6 +226,12 @@ Topology<Simplex>::get_boundary( Topology<Simplex>& bnd ) const
   }
 }
 
+template<>
+void
+Topology<Simplex>::reserve( index_t n ) {
+  Table<index_t>::reserve( n * element_.nb_basis() );
+}
+
 template class Topology<Simplex>;
 template class Tree<Topology<Simplex>>;
 template void Topology<Simplex>::construct( std::shared_ptr<Topology<Polytope>>& node , Topology<Polytope>& ) const;
