@@ -11,6 +11,8 @@
 
 #include "geometry/egads/object.h"
 
+#include "graphics/math.h"
+
 #include "library/metric.h"
 
 #include <egads.h>
@@ -132,19 +134,170 @@ MetricField_Tesseract_Linear::operator()( const real_t* x ) const {
   return m;
 }
 
+void
+normalize( graphics::vec3& v ) {
+  float n = std::sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+  v[0] /= n;
+  v[1] /= n;
+  v[2] /=n;
+}
+
+symd<real_t>
+MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
+
+#if 1
+  // rotation about z-axis, dependent on time
+  real_t t = x[2];
+  real_t theta = t*M_PI/4;
+
+  real_t hmin = 0.0025;
+  real_t hx = 100*hmin;
+  real_t hy = 100*hmin;
+  real_t h0 = hmin;
+  real_t ht = 100*hmin;
+
+  // distance to rotated line
+  real_t d = fabs( -x[0]*sin(theta) + x[1]*cos(theta) + 0.5*(sin(theta) - cos(theta)) );
+
+  // size perpendicular to the line
+  hy = h0 +2.*(hx -h0)*d;
+
+  vecd<real_t> L(3);
+  L(0) = 1./(hx*hx);
+  L(1) = 1./(hy*hy);
+  L(2) = 1./(ht*ht);
+
+  real_t alpha = atan2( 0.5 , 1.0 );
+  if (x[0] > 0.5) alpha *= -1.0;
+
+  matd<real_t> Q(3,3);
+
+  Q(0,0) =   cos(theta);
+  Q(1,0) =   sin(theta)*sin(alpha);
+  Q(2,0) =   cos(alpha);
+
+  Q(0,1) =  -sin(theta);
+  Q(1,1) =   cos(theta)*cos(alpha);
+  Q(2,1) =   sin(alpha);
+
+  Q(0,2) =  0.0;
+  Q(1,2) =  sin(alpha);
+  Q(2,2) =  cos(alpha);
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
+  symd<real_t> m(decomp);
+
+#elif 0
+
+  using namespace graphics;
+
+  float u = float(x[0]), v = float(x[2]);
+  vec3 n = {-v   , -1.0f, 0.5f-u};
+  vec3 s = {-1.0f,     v, 0.0f  };
+
+  normalize(n);
+  normalize(s);
+
+  vec3 t = glm::cross(n,s);
+
+  real_t hmin = 0.0025;
+  real_t hx = 100*hmin;
+  real_t hy = 100*hmin;
+  real_t h0 = hmin;
+  real_t ht = 100*hmin;
+  real_t d = fabs( 0.5*v - u*v + 0.5 );
+  hy = h0 +2.*(hx -h0)*d;
+
+  vecd<real_t> L(3);
+  matd<real_t> Q(3,3);
+
+  L[0] = 1./(hx*hx);
+  L[1] = 1./(hy*hy);
+  L[2] = 1./(ht*ht);
+
+  Q(0,0) = s[0];
+  Q(0,1) = s[1];
+  Q(0,2) = s[2];
+
+  Q(1,0) = t[0];
+  Q(1,1) = t[1];
+  Q(1,2) = t[2];
+
+  Q(2,0) = n[0];
+  Q(2,1) = n[1];
+  Q(2,2) = n[2];
+
+  Q = numerics::transpose(Q);
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
+  symd<real_t> m(decomp);
+#else
+  using namespace graphics;
+
+  float u = float(x[0]), v = float(x[2]);
+  float w = x[1];
+  vec3 n  = {-v   , -1.0f, 0.5f-u};
+  vec3 s  = {-1.0f,     v, 0.0f  };
+
+  normalize(n);
+  normalize(s);
+
+  vec3 t = glm::cross(n,s);
+
+  real_t hmin = 0.0025;
+  real_t hx = 100*hmin;
+  real_t hy = 100*hmin;
+  real_t h0 = hmin;
+  real_t ht = 100*hmin;
+  real_t d = fabs( 0.5*v - u*v + 0.5 - w);
+  hy = h0 +2.*(hx -h0)*d;
+
+  vecd<real_t> L(3);
+  matd<real_t> Q(3,3);
+
+  L[0] = 1./(hx*hx);
+  L[1] = 1./(hy*hy);
+  L[2] = 1./(ht*ht);
+
+  Q(0,0) = s[0];
+  Q(0,1) = s[1];
+  Q(0,2) = s[2];
+
+  Q(1,0) = t[0];
+  Q(1,1) = t[1];
+  Q(1,2) = t[2];
+
+  Q(2,0) = n[0];
+  Q(2,1) = n[1];
+  Q(2,2) = n[2];
+
+//  Q = numerics::transpose(Q);
+
+#endif
+
+
+
+
+  return m;
+}
+
 symd<real_t>
 MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const {
+
+  // rotation about z-axis, dependent on time
+  real_t t = x[3];
+  real_t theta = t*M_PI/4;
+
   real_t hmin = 0.0025;
   real_t hx = 100*hmin;
   real_t hy = 100*hmin;
   real_t hz = 100*hmin;
   real_t h0 = hmin;
   real_t ht = 100*hmin;
-  hy = h0 +2.*(hx -h0)*fabs( x[0] -0.5 );
+  real_t d = fabs( -x[0]*sin(theta) + x[1]*cos(theta) + 0.5*(sin(theta) - cos(theta)) );
+  hy = h0 +2.*(hx -h0)*d;
 
-  // rotation about z-axis, dependent on time
-  real_t t = x[3];
-  real_t theta = t*M_PI/4;
+
 
   vecd<real_t> L(4);
   L(0) = 1./(hx*hx);
@@ -158,12 +311,45 @@ MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const
   Q(0,1) =  sin(theta);
   Q(1,1) =  cos(theta);
   Q(2,2) =  1.0;
-  Q(3,3) = 1;
+  Q(3,3) =  1.0;
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
   symd<real_t> m(decomp);
 
   return m;
+}
+
+symd<real_t>
+MetricField_Cube_Wave::operator()( const real_t* X ) const {
+
+  real_t x = X[0] + 1e-3;
+  real_t y = X[1] + 1e-3;
+  real_t t = X[2];
+
+  real_t uxx = 0.67032004603563933*pow(x, 2)*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/(pow(x, 2) + pow(y, 2)) - 0.67032004603563933*pow(x, 2)*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/pow(pow(x, 2) + pow(y, 2), 3.0/2.0) + 0.67032004603563933*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/sqrt(pow(x, 2) + pow(y, 2));
+  real_t uxy = 0.67032004603563933*x*y*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/(pow(x, 2) + pow(y, 2)) - 0.67032004603563933*x*y*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/pow(pow(x, 2) + pow(y, 2), 3.0/2.0);
+  real_t uxt = -0.67032004603563933*x*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/sqrt(pow(x, 2) + pow(y, 2));
+  real_t uyy = 0.67032004603563933*pow(y, 2)*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/(pow(x, 2) + pow(y, 2)) - 0.67032004603563933*pow(y, 2)*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/pow(pow(x, 2) + pow(y, 2), 3.0/2.0) + 0.67032004603563933*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/sqrt(pow(x, 2) + pow(y, 2));
+  real_t uyt = -0.67032004603563933*y*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/sqrt(pow(x, 2) + pow(y, 2));
+  real_t utt = 0.67032004603563933*exp(-t + sqrt(pow(x, 2) + pow(y, 2)));
+
+  real_t f = 1e1;
+
+  symd<real_t> m(3);
+
+  m(0,0) = f * uxx;
+  m(0,1) = f * uxy;
+  m(0,2) = f * uxt;
+
+  m(1,1) = f * uyy;
+  m(1,2) = f * uyt;
+
+  m(2,2) = f * utt;
+
+  m.display();
+
+  return m;
+
 }
 
 symd<real_t>

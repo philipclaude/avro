@@ -100,7 +100,7 @@ UT_TEST_CASE( test3 )
 
   graphics::Viewer app;
   app.add(topology);
-  app.run();
+  app.run(AVRO_FULL_UNIT_TEST);
 }
 UT_TEST_CASE_END( test3 )
 

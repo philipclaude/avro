@@ -186,6 +186,30 @@ public:
   symd<real_t> operator()( const real_t* x ) const;
 };
 
+class MetricField_Cube_RotatingBoundaryLayer : public MetricField_Analytic
+{
+public:
+  static constexpr real_t hmin_default = 0.0025;
+
+  MetricField_Cube_RotatingBoundaryLayer() :
+    MetricField_Analytic(3)
+  {}
+
+  symd<real_t> operator()( const real_t* x ) const;
+};
+
+
+class MetricField_Cube_Wave : public MetricField_Analytic
+{
+public:
+  MetricField_Cube_Wave() :
+    MetricField_Analytic(3)
+  {}
+
+  symd<real_t> operator()( const real_t* x ) const;
+};
+
+
 class MetricField_Tesseract_Wave : public MetricField_Analytic
 {
 public:
