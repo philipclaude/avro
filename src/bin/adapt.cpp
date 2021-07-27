@@ -15,10 +15,13 @@
 #include "common/directory.h"
 #include "common/tools.h"
 
+#include "geometry/model.h"
+
 #include "graphics/application.h"
 
 #include "library/factory.h"
 #include "library/library.h"
+#include "library/tesseract.h"
 
 #include "mesh/mesh.h"
 #include "avro.h"
@@ -102,6 +105,27 @@ adapt( int nb_input , const char** inputs )
   std::string metricname( inputs[2] );
   std::shared_ptr<MetricAttachment> pfld;
 
+  // check if we should map the points
+  if (number == 4) {
+
+    library::Tesseract& body = static_cast<library::Tesseract&>(pmodel->body(0));
+    std::string map_name = lookfor(options,nb_options,"map");
+    if (!map_name.empty()) {
+
+      if (map_name == "expansion") {
+        body.map_to( &library::Tesseract::expansion , &pmesh->points() );
+      }
+      else if (map_name == "closingwall") {
+        body.map_to( &library::Tesseract::closingwall , &pmesh->points() );
+      }
+      else {
+        printf("unknown map\n");
+        avro_assert_not_reached;
+      }
+      geometryname += "-" + map_name;
+    }
+  }
+
   std::vector<real_t> metric_params;
   if (metricname=="Uniform")
     metric_params.push_back(number);
@@ -123,6 +147,7 @@ adapt( int nb_input , const char** inputs )
   params.set("write conformity", false);
   params.set("swapout" , false);
   params.set("use smoothing" , true);
+  params.set("geometry" , geometryname );
 
   std::string outputfile(inputs[3]);
   std::vector<std::string> s = split(outputfile,".");

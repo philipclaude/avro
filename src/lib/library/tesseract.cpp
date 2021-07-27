@@ -409,7 +409,6 @@ Tesseract::build()
     avro_assert( count[2]==6 ); // six squares touch this node
     avro_assert( count[3]==4 ); // four cubes touch this node
   }
-
 }
 
 } // library

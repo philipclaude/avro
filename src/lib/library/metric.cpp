@@ -133,6 +133,40 @@ MetricField_Tesseract_Linear::operator()( const real_t* x ) const {
 }
 
 symd<real_t>
+MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const {
+  real_t hmin = 0.0025;
+  real_t hx = 100*hmin;
+  real_t hy = 100*hmin;
+  real_t hz = 100*hmin;
+  real_t h0 = hmin;
+  real_t ht = 100*hmin;
+  hy = h0 +2.*(hx -h0)*fabs( x[0] -0.5 );
+
+  // rotation about z-axis, dependent on time
+  real_t t = x[3];
+  real_t theta = t*M_PI/4;
+
+  vecd<real_t> L(4);
+  L(0) = 1./(hx*hx);
+  L(1) = 1./(hy*hy);
+  L(2) = 1./(hz*hz);
+  L(3) = 1./(ht*ht);
+
+  matd<real_t> Q(4,4);
+  Q(0,0) =  cos(theta);
+  Q(1,0) = -sin(theta);
+  Q(0,1) =  sin(theta);
+  Q(1,1) =  cos(theta);
+  Q(2,2) =  1.0;
+  Q(3,3) = 1;
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
+  symd<real_t> m(decomp);
+
+  return m;
+}
+
+symd<real_t>
 MetricField_Tesseract_Wave::operator()( const real_t* x ) const {
   real_t eps = 0.001; // offset for singularity at origin
   real_t X = x[0] +eps;
@@ -198,8 +232,8 @@ MetricField_Tesseract_Wave::operator()( const real_t* x ) const {
   L[2] = 1./(hphi*hphi);
   L[3] = 1./(ht*ht);
 
-  for (coord_t d = 0; d < 4; d++)
-    L[d] *= 2;
+  //for (coord_t d = 0; d < 4; d++)
+  //  L[d] *= 2;
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
   symd<real_t> m(decomp);

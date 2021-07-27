@@ -5,11 +5,13 @@
 #include "common/tools.h"
 
 #include "geometry/entity.h"
+#include "geometry/model.h"
 
 #include "graphics/application.h"
 
 #include "library/factory.h"
 #include "library/library.h"
+#include "library/tesseract.h"
 
 #include "mesh/boundary.h"
 #include "mesh/mesh.h"
@@ -75,7 +77,7 @@ plot( int nb_input , const char** inputs , bool webplot )
 
   if (geometryname.empty()) {
 
-    // check if this is an avro file, and if a geomeetyr was specified
+    // check if this is an avro file, and if a geometry was specified
     std::string ext = get_file_ext(meshname);
     if (ext == "avro") {
 

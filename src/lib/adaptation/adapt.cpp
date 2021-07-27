@@ -28,6 +28,8 @@ typedef avro::real_t REAL;
 
 #include <triangle/predicates.h>
 
+#include <json/json.hpp>
+
 #include <unistd.h>
 #include <fstream>
 
@@ -532,6 +534,24 @@ adapt( AdaptationProblem& problem )
 
       std::string filename = directory + "/" + prefix + "_" + stringify(adapt_iter) + ".mesh";
       spacetime.write( filename );
+    }
+    else if (topology.number() == 4) {
+
+      nlohmann::json jm;
+
+      const TopologyBase& t = problem.mesh_out.topology(0);
+
+      jm["type"]     = mesh_topology.type_name();
+      jm["dim"]      = t.points().dim();
+      jm["number"]   = mesh_topology.number();
+      jm["elements"] = t.data();
+      jm["geometry"] = params["geometry"];
+      jm["nb_ghost"] = t.points().nb_ghost();
+      jm["vertices"] = t.points().data();
+
+
+      std::ofstream file("mesh-adapt"+std::to_string(adapt_iter)+".avro");
+      file << jm;
     }
 
     if (topology.number()==3 && has_interior_boundaries)

@@ -32,6 +32,14 @@ public:
     return x_[d];
   }
 
+  real_t& operator()(coord_t d)
+  {
+    avro_assert( d<dim_ );
+    return x_[d];
+  }
+
+  const real_t* x() const { return x_.data(); }
+
   void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
   void inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
   { inverse(x,u); }

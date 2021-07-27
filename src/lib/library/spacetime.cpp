@@ -89,6 +89,7 @@ Topology_Spacetime<type>::extract()
         simplex[j] = identifier[ bk(k,j) ];
       tk.add( simplex.data() , simplex.size() );
     }
+    tk.orient();
   }
 }
 

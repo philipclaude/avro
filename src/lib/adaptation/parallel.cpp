@@ -1950,6 +1950,7 @@ AdaptationManager<type>::adapt() {
     std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
     retrieve(*topology_out.get());
     if (rank_ == 0 && write_mesh) {
+
       index_t adapt_iter = params_["adapt iter"];
 
       nlohmann::json jm;
@@ -1959,6 +1960,7 @@ AdaptationManager<type>::adapt() {
       jm["vertices"] = topology_out->points().data();
       jm["elements"] = topology_out->data();
       jm["geometry"] = params_["geometry"];
+      jm["nb_ghost"] = topology_out->points().nb_ghost();
 
       std::ofstream file("mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".avro");
       file << jm;
