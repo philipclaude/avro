@@ -88,12 +88,6 @@ Cache<type>::generate( const std::vector<index_t>& f ) const
   print_inline(f,"unknown facet dimension");
   avro_implement;
   return "";
-  /*for (index_t i=0;i<f.size();i++)
-  {
-    s += stringify<index_t>(f[i]);
-    if (i<f.size()-1) s += "|";
-  }
-  return s;*/
 }
 
 template<typename type>
@@ -104,13 +98,6 @@ Cache<type>::generate( const index_t element, const index_t j )
   topology_.facet(element,j,buffer_);
   std::sort( buffer_.begin() , buffer_.end() );
   return generate(buffer_);
-  /*std::string s;
-  for (index_t i=0;i<buffer_.size();i++)
-  {
-    s += stringify<index_t>(buffer_[i]);
-    if (i<buffer_.size()-1) s += "|";
-  }
-  return s;*/
 }
 
 template<typename type>

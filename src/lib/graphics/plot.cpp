@@ -1,3 +1,5 @@
+#include "geometry/entity.h"
+
 #include "graphics/plot.h"
 #include "graphics/primitives.h"
 #include "graphics/vao.h"
@@ -89,7 +91,7 @@ Plot::build() {
 			vao_.push_back( std::make_shared<VertexAttributeObject>() );
 			vao_[j]->build(spacetime.topology(j));
 			active_vao_ = vao_[0].get();
-			vao_labels_.push_back("group " + std::to_string(j));
+			vao_labels_.push_back( spacetime.entity(&spacetime.topology(j))->name() );
 		}
   }
   else {

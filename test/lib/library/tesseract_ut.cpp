@@ -70,19 +70,18 @@ squeeze_in_time( const real_t* x , real_t* y ) {
   std::vector<real_t> X(x,x+4);
 
   // translate to the center of the domain (0.5)^4
-  for (coord_t d = 0; d < 4; d++)
-    X[d] -= 0.5;
+  //for (coord_t d = 0; d < 4; d++)
+  //  X[d] -= 0.5;
 
   // scale in time
   real_t t = x[3]; // time between 0 and 1
   real_t s = 1 - 0.5*t;
-  for (coord_t d = 0; d < 1; d++)
-    X[d] *= s;
-  X[3] *= 5;
+  X[2] *= s;
+  X[3] *= 2;
 
   // translate back
   for (coord_t d = 0; d < 4; d++)
-    y[d] = X[d] + 0.5;
+    y[d] = X[d];// + 0.5;
 }
 
 

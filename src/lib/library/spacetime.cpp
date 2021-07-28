@@ -31,6 +31,7 @@ Topology_Spacetime<type>::Topology_Spacetime( const Topology<type>& topology ) :
   {
     std::shared_ptr<Topology<type>> t = std::make_shared<Topology<type>>(points_,3);
     entity2topology_.insert( {*it,t.get()} );
+    topology2entity_.insert( {t.get(),*it} );
     this->add_child(t);
   }
 }

@@ -71,8 +71,8 @@ public:
     std::vector<real_t> X(x,x+4);
 
     // translate to the center of the domain (0.5)^4
-    for (coord_t d = 0; d < 4; d++)
-      X[d] -= 0.5;
+    //for (coord_t d = 0; d < 4; d++)
+    //  X[d] -= 0.5;
 
     // scale in time
     real_t t = x[3]; // time between 0 and 1
@@ -82,7 +82,7 @@ public:
 
     // translate back
     for (coord_t d = 0; d < 4; d++)
-      y[d] = X[d] + 0.5;
+      y[d] = X[d];// + 0.5;
   }
 
   template<typename F>
@@ -95,16 +95,12 @@ public:
     std::vector<Entity*> entities;
     get_entities(entities);
 
-    printf("nb entitiess = %lu\n",entities.size());
-
     // map the nodes
     for (index_t k = 0; k < entities.size(); k++) {
 
       if (entities[k]->number() != 0) continue;
       PSC::Node& node = *static_cast<PSC::Node*>(entities[k]);
       function( node.x() , x.data() );
-
-      print_inline(x,"node " + std::to_string(entities[k]->identifier()));
 
       for (coord_t d = 0; d < x.size(); d++)
         node(d) = x[d];

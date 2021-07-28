@@ -233,7 +233,7 @@ MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
 symd<real_t>
 MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const {
 
-  real_t alpha = atan2( 0.25 , 1.0 );
+  real_t alpha = atan2( -0.25 , 1.0 );
 
   real_t hmin = 0.0025;
   real_t hx = 100*hmin;
