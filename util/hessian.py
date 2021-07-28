@@ -4,8 +4,8 @@ from sympy import diff, exp, sqrt, simplify, expand
 from sympy.abc import x, y, z, t, pi
 from sympy.printing.c import ccode
 
-r = 0.4 + 1 * t
-u = exp( -1 * ( r - sqrt( x*x + y*y ) ) )
+r = 0.4 + 0.4 * t
+u = exp( -20 * ( r*r - x*x + y*y )**2 )
 
 ux = diff( u , x )
 uy = diff( u , y )

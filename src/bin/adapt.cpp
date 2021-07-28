@@ -69,10 +69,9 @@ adapt( int nb_input , const char** inputs )
   real_t href = 2.0;
   if (nb_input>4)
     found = parse<real_t>(lookfor(options,nb_options,"href"),href);
-  printf("limiting metric with href = %g\n",href);
 
   // if the metric is analytic, iterate...
-  index_t nb_iter = 20;
+  index_t nb_iter = 10;
   if (nb_input>4)
     found = parse(lookfor(options,nb_options,"nb_iter"),nb_iter);
 

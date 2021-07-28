@@ -322,32 +322,93 @@ MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const
 symd<real_t>
 MetricField_Cube_Wave::operator()( const real_t* X ) const {
 
-  real_t x = X[0] + 1e-3;
-  real_t y = X[1] + 1e-3;
-  real_t t = X[2];
+  real_t eps = 1e-3;
+  real_t x = X[0] + eps;
+  real_t y = X[1] + eps;
+  real_t T = X[2] + eps;
 
-  real_t uxx = 0.67032004603563933*pow(x, 2)*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/(pow(x, 2) + pow(y, 2)) - 0.67032004603563933*pow(x, 2)*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/pow(pow(x, 2) + pow(y, 2), 3.0/2.0) + 0.67032004603563933*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/sqrt(pow(x, 2) + pow(y, 2));
-  real_t uxy = 0.67032004603563933*x*y*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/(pow(x, 2) + pow(y, 2)) - 0.67032004603563933*x*y*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/pow(pow(x, 2) + pow(y, 2), 3.0/2.0);
-  real_t uxt = -0.67032004603563933*x*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/sqrt(pow(x, 2) + pow(y, 2));
-  real_t uyy = 0.67032004603563933*pow(y, 2)*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/(pow(x, 2) + pow(y, 2)) - 0.67032004603563933*pow(y, 2)*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/pow(pow(x, 2) + pow(y, 2), 3.0/2.0) + 0.67032004603563933*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/sqrt(pow(x, 2) + pow(y, 2));
-  real_t uyt = -0.67032004603563933*y*exp(-t + sqrt(pow(x, 2) + pow(y, 2)))/sqrt(pow(x, 2) + pow(y, 2));
-  real_t utt = 0.67032004603563933*exp(-t + sqrt(pow(x, 2) + pow(y, 2)));
+  #if 0
 
-  real_t f = 1e1;
+  real_t uxx = 6400*pow(x, 2)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) - 160*pow(x, 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + (-80*pow(x, 2) + 80*pow(y, 2) + 12.800000000000002*pow(t + 1, 2))*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t uxy = -6400*x*y*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + 160*x*y*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t uxt = 80*x*(0.32000000000000006*t + 0.32000000000000006)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) - 1600*x*(0.64000000000000012*t + 0.64000000000000012)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t uyy = 6400*pow(y, 2)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) - 160*pow(y, 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + (80*pow(x, 2) - 80*pow(y, 2) - 12.800000000000002*pow(t + 1, 2))*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t uyt = -80*y*(0.32000000000000006*t + 0.32000000000000006)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + 1600*y*(0.64000000000000012*t + 0.64000000000000012)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t utt = (-12.800000000000002*t - 12.800000000000002)*(0.32000000000000006*t + 0.32000000000000006)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) - 20*(-12.800000000000002*t - 12.800000000000002)*(0.64000000000000012*t + 0.64000000000000012)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + (12.800000000000002*pow(x, 2) - 12.800000000000002*pow(y, 2) - 2.0480000000000009*pow(t + 1, 2))*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
 
-  symd<real_t> m(3);
+  symd<real_t> h(3);
 
-  m(0,0) = f * uxx;
-  m(0,1) = f * uxy;
-  m(0,2) = f * uxt;
+  real_t f = 1e2;
 
-  m(1,1) = f * uyy;
-  m(1,2) = f * uyt;
+  h(0,0) = f * uxx;
+  h(0,1) = f * uxy;
+  h(0,2) = f * uxt;
 
-  m(2,2) = f * utt;
+  h(1,1) = f * uyy;
+  h(1,2) = f * uyt;
 
-  m.display();
+  h(2,2) = f * utt;
 
+//  h = h * pow( numerics::det(h) , -1/(5) );
+
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = numerics::eig(h);
+
+  for (int i = 0; i < 3; i++)
+    decomp.first[i] = fabs(decomp.first[i]);
+
+  #else
+
+  real_t r = sqrt( x*x + y*y ) +0.0001; // meh
+  real_t t = atan2( y , x );
+
+  // initial and final blast radii
+  real_t r0 = 0.4;
+  real_t rf = 0.8;
+
+  // cone angle
+  real_t alpha = atan2(1.0,(rf-r0));
+
+  // eigenvectors are normal and tangents to the cone
+  matd<real_t> Q(3,3);
+  Q(0,0) =  sin(alpha)*cos(t);
+  Q(0,1) = -sin(t);
+  Q(0,2) =  cos(alpha)*cos(t);
+
+  Q(1,0) =  sin(alpha)*sin(t);
+  Q(1,1) =  cos(t);
+  Q(1,2) =  cos(alpha)*sin(t);
+
+  Q(2,0) = -cos(alpha);
+  Q(2,1) =  0.0;
+  Q(2,2) =  sin(alpha);
+
+  real_t hz = 0.5; // controls anisotropy in temporal direction
+  real_t hu = 0.1; // uniform spacing
+  real_t h0 = 0.001;
+  real_t hmin = 0.01; // minimum thickness in gradation layer
+  real_t delta = 0.1; // thickness of gradation layer
+
+  //real_t T = x[2];
+  real_t rho0 = r0 +(rf-r0)*T; // blast speed is derivative wrt T
+
+  // spacing in radial direction
+  real_t hr = h0 +2*(hu-h0)*abs(r-rho0);
+
+  // spacing in tangential direction, nicely graded
+  real_t ht = hu;
+  if (fabs(r-rho0)<=delta)
+    ht = (hu -hmin)*fabs(r-rho0)/delta +hmin;
+
+  // set the eigenvalues
+  vecd<real_t> L(3);
+  L(0) = 1./(hr*hr);
+  L(1) = 1./(ht*ht);
+  L(2) = 1./(hz*hz);
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
+
+  #endif
+  symd<real_t> m(decomp);
   return m;
 
 }
