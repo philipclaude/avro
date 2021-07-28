@@ -392,7 +392,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     done = true;
 
     int vacant_index = -1;
-    #define NO_DELETE 1
+    #define NO_DELETE 0
 
     // setup the insertion filter
     Filter filter( topology_.points().dim() );
