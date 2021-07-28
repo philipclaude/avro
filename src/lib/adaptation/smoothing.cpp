@@ -471,7 +471,8 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   // evaluate the new quality
   if (Q0>0.0)
   {
-    if (worst_quality(*this,metric)<Q0)
+    this->cavity_quality_.resize( this->nb() );
+    if (worst_quality(*this,metric,this->cavity_quality_.data())<Q0)
     {
       // revert the coordinates and re-assign the metric
       for (index_t d=0;d<dim;d++)

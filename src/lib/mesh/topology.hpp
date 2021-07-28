@@ -364,7 +364,11 @@ template<typename type>
 void
 Topology<type>::remove_point( const index_t k )
 {
+  // is this the last point?
+  //bool last = ( k >= (points_.nb()-1) );
   points_.remove(k);
+
+  //if (last) avro_implement;
 
   // decrement any indices higher than the original index
   for (index_t i=0;i<data_.size();i++)
@@ -387,7 +391,7 @@ Topology<type>::remove_elements( const std::vector<index_t>& elems0 )
     remove( elems[k]-k );
   #elif 1
   std::vector<index_t> data0;
-  index_t n = 0;
+  //index_t n = 0;
   std::set<index_t> selem( elems.begin() , elems.end() );
   data0.reserve( data_.size() );
   for (index_t k = 0; k < nb(); k++) {

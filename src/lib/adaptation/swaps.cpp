@@ -97,7 +97,8 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
     if (lmin0>0 && lmin<lmin0) continue;
     if (lmax0>0 && lmax>lmax0) continue;
 
-    real_t qws = worst_quality(edge_swapper_,metric_);
+    edge_swapper_.cavity_quality().resize( edge_swapper_.nb() );
+    real_t qws = worst_quality(edge_swapper_,metric_ , edge_swapper_.cavity_quality().data() );
     if (qws>qw)
     {
       if (!edge_swapper_.has_unique_elems()) continue;
@@ -185,7 +186,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       // skip fixed edges (when working in parallel)
       if (topology_.points().fixed(e0) && topology_.points().fixed(e1)) {
         topology_.points().age( e0 )++;
-        topology_.points().age( e1 )++;  
+        topology_.points().age( e1 )++;
         continue;
       }
 
@@ -251,7 +252,8 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
           }
         }
 
-        real_t qw_swap = worst_quality(edge_swapper_,metric_);
+        edge_swapper_.cavity_quality().resize( edge_swapper_.nb() );
+        real_t qw_swap = worst_quality(edge_swapper_,metric_,edge_swapper_.cavity_quality().data() );
         if (qw_swap>qw)
         {
           // check that no elements (ghosts) become duplicated

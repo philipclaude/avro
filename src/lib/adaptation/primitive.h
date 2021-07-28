@@ -81,6 +81,8 @@ public:
   const std::vector<index_t>& S() const { return S_; }
   const std::vector<index_t>& u2v() const { return u2v_; }
 
+  std::vector<real_t>& cavity_quality() { return cavity_quality_; }
+
 protected:
   std::vector<index_t> C_; // saved cavity
 
@@ -95,6 +97,8 @@ protected:
   bool delay_;                       // delay the application of the primitive operator to the topology
   bool curved_;                      // if the problem is curved so that we check visiblity in parameter space
   bool debug_;                       // whether we should debug
+
+  std::vector<real_t> cavity_quality_;
 
 };
 
@@ -142,7 +146,7 @@ public:
   // initial shell of elements on edge may be provided
   // option to delay the operator in the full mesh topology
   bool apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u ,
-              const std::vector<index_t>& shell=std::vector<index_t>() );
+              const std::vector<index_t>& shell=std::vector<index_t>() , int ns=-1 );
 
   // check if the insertion x is visible to the cavity boundary in
   // the parameter space

@@ -105,7 +105,7 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
 
 template<typename type>
 bool
-Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell )
+Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell , int ns0 )
 {
   elems_.clear();
 
@@ -128,10 +128,13 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   if (elems_.size()==0) return false;
 
   // index of the vertex to be inserted
-  index_t ns = this->topology_.points().nb();
-
-  // we need to add the vertex
-  this->topology_.points().create(x);
+  index_t ns;
+  if (ns0 < 0) {
+    // we need to add the vertex
+    ns = this->topology_.points().nb();
+    this->topology_.points().create(x);
+  }
+  else ns = index_t(ns0);
 
   // this might be a boundary insertion,
   // compute intersection of geometry entities of each vertex
@@ -377,6 +380,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
     done = true;
 
+    int vacant_index = -1;
+    #define NO_DELETE 1
+
     // setup the insertion filter
     Filter filter( topology_.points().dim() );
 
@@ -429,22 +435,43 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // the metric needs to be interpolated for the filter to evaluate lengths
       // so we need to add the vertex and also add the interpolated metric
-      index_t ns = topology_.points().nb();
+      index_t ns;
+      #if NO_DELETE
+      if (vacant_index >= 0) {
+        // there is a vacant point we can use
+        ns = vacant_index;
+        for (coord_t d = 0; d < topology_.points().dim(); d++)
+          topology_.points()[ns][d] = filter[idx][d];
+      }
+      else {
+        // there is no vacant point, so we will create one
+        ns = topology_.points().nb();
+        topology_.points().create(filter[idx]);
+      }
+      #else
+      ns = topology_.points().nb();
       topology_.points().create(filter[idx]);
+      #endif
       topology_.points().set_entity(ns, inserter_.geometry(n0,n1) );
       topology_.points().set_param( ns , filter.u(idx) );
-      bool interp_result = metric_.add(n0,n1,ns,filter[idx]);
+      bool interp_result = metric_.add(n0,n1,ns,filter[idx],vacant_index);
       if (!interp_result)
       {
         // something bad happened in the metric interpolation...
         // probably because of a curved geometry
         topology_.points().remove(ns);
         nb_bad_interp++;
+        vacant_index = -1; // this shouldn't happen often, so it's not the end of the world to delete the added point
         continue;
       }
 
       // notify the inverse topology that we want to store extra data
+      #if NO_DELETE
+      if (vacant_index < 0) topology_.inverse().create(1);
+
+      #else
       topology_.inverse().create(1);
+      #endif
 
       // check the distance to nearby points
       shell.clear();
@@ -506,9 +533,13 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       if (bad && limitlength)
       {
         // remove the interpolated tensor with its associated vertex
+        #if NO_DELETE
+        vacant_index = ns;
+        #else
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
+        #endif
         nb_length_rejected++;
 
         // option to swap out of the rejected configuration
@@ -523,13 +554,13 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
       // the vertex needs to be removed because the inserter will add it again
       // TODO clean up this inefficiency
-      topology_.points().remove(ns);
+      //topology_.points().remove(ns);
 
       // apply the insertion
       inserter_.clear();
       inserter_.restart();
       inserter_.delay() = true;
-      bool result = inserter_.apply( n0 , n1 , filter[idx] , filter.u(idx) );
+      bool result = inserter_.apply( n0 , n1 , filter[idx] , filter.u(idx) , shell , ns );
       if (!result)
       {
         // the metric needs to be removed because the vertex was rejected.
@@ -542,36 +573,46 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       }
 
       // if the inserter was enlarged, don't be too restrictive with quality
-      real_t qwi = worst_quality(inserter_,metric_);
+      inserter_.cavity_quality().resize( inserter_.nb() );
+      real_t qwi = worst_quality(inserter_,metric_ , inserter_.cavity_quality().data() );
       if (qwi < Q0) {
+        #if NO_DELETE
+        vacant_index = ns;
+        #else
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
+        #endif
         nb_quality_rejected++;
         continue;
       }
 
       // check if the metric volume is respected
-      real_t vol = 0.0;
-      for (index_t k=0;k<inserter_.nb();k++)
-        vol += metric_.volume( inserter_ , k );
-      index_t count = index_t(vol/topology_.element().reference().unit_volume());
-      if (dof_factor>0 && dof_factor*count<inserter_.nb_real())
-      {
-        if (ge==NULL || ge->number()>2)
+      if (dof_factor > 0) {
+        real_t vol = 0.0;
+        for (index_t k=0;k<inserter_.nb();k++)
+          vol += metric_.volume( inserter_ , k );
+        index_t count = index_t(vol/topology_.element().reference().unit_volume());
+        if (dof_factor*count<inserter_.nb_real())
         {
-          // it's going to be really hard to come back from something like this
-          topology_.points().remove(ns);
-          metric_.remove(ns);
-          topology_.inverse().remove(ns);
-          nb_count_rejected++;
-          continue;
+          if (ge==NULL || ge->number()>2)
+          {
+            // it's going to be really hard to come back from something like this
+            avro_implement;
+            topology_.points().remove(ns);
+            metric_.remove(ns);
+            topology_.inverse().remove(ns);
+            nb_count_rejected++;
+            continue;
+          }
         }
       }
 
 
+      #if 0
       if (!inserter_.closed_boundary())
       {
+        avro_implement;
         // it's going to be really hard to come back from something like this
         topology_.points().remove(ns);
         metric_.remove(ns);
@@ -579,6 +620,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         problem = true;
         continue;
       }
+      #endif
 
       // apply the insertion into the topology
       topology_.apply(inserter_);
@@ -608,6 +650,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // the filter is happy
       filter.accept( idx , ns );
       done = false; // since an insertion was performed
+      vacant_index = -1;
 
       nb_inserted++;
     }
@@ -623,6 +666,13 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       topology_.remove_point( j );
       metric_.remove(j);
       topology_.inverse().remove(j);
+    }
+
+    if (vacant_index >= 0) {
+      topology_.remove_point( vacant_index );
+      metric_.remove(vacant_index);
+      topology_.inverse().remove(vacant_index);
+      //avro_implement;
     }
 
     printf("\t\tinserted %lu, swapped %lu, lrej = %lu, qrej = %lu, vrej = %lu, prej = %lu/%lu, dof_rej = %lu, interp_rej = %lu\n",

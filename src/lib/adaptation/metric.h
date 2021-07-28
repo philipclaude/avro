@@ -163,7 +163,7 @@ public:
 
 	real_t quality( const Topology<type>& topology , index_t k );
   int  find( index_t n0 , index_t n1 , real_t*  x );
-  bool add( index_t n0 , index_t n1 , index_t ns , real_t*  x );
+  bool add( index_t n0 , index_t n1 , index_t ns , real_t*  x , int idx=-1 );
   bool recompute( index_t p , real_t*  x );
 	index_t element_containing( index_t p )
 		{ return attachment_[p].elem(); }
@@ -195,15 +195,20 @@ private:
 
 template<typename type>
 real_t
-worst_quality( const Topology<type>& topology , MetricField<type>& metric ) {
-  std::vector<real_t> quality(topology.nb());
+worst_quality( const Topology<type>& topology , MetricField<type>& metric , real_t* pquality=nullptr ) {
+  std::vector<real_t> quality;//(topology.nb());
+  if (pquality == nullptr) {
+    quality.resize( topology.nb() );
+    pquality = quality.data();
+  }
   for (index_t k = 0; k < topology.nb(); k++) {
     if (topology.ghost(k))
-      quality[k] = 1e20;
+      (pquality)[k] = 1e20;
     else
-      quality[k] = metric.quality( topology , k );
+      (pquality)[k] = metric.quality( topology , k );
   }
-  return *std::min_element(quality.begin(),quality.end());
+  return *std::min_element(pquality,pquality + topology.nb());
+  //return *std::min_element(quality.begin(),quality.end());
 }
 
 } // avro

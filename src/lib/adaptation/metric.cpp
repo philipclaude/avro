@@ -322,13 +322,17 @@ MetricField<type>::find( index_t n0 , index_t n1 , real_t* x ) {
 
 template<typename type>
 bool
-MetricField<type>::add( index_t n0 , index_t n1 , index_t ns , real_t* x ) {
+MetricField<type>::add( index_t n0 , index_t n1 , index_t ns , real_t* x , int idx ) {
 	Metric mp(number_);
 	index_t g0 = attachment_[n0].elem();
 	index_t g1 = attachment_[n1].elem();
 	int ielem = interpolation_->eval( attachment_.points() , ns , {g0,g1} , mp );
 	if (ielem<0) return false;
-	attachment_.add( mp , index_t(ielem) );
+
+	if (idx < 0)
+		attachment_.add( mp , index_t(ielem) );
+	else
+		attachment_.assign( ns , mp , index_t(ielem) );
 
 	// note: this check will fail if the vertex is intended to be added after
   // its corresponding tensor is computed
