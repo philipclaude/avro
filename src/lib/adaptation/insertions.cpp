@@ -20,6 +20,8 @@
 
 #include <unordered_set>
 
+#include <time.h>
+
 namespace avro
 {
 
@@ -356,6 +358,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
   real_t lmin0 = *std::min_element( lens.begin() , lens.end() );
   real_t lmax0 = *std::max_element( lens.begin() , lens.end() );
 
+
   index_t pass = 0;
   bool done = false;
   bool problem = false;
@@ -369,6 +372,14 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       printf("warning: too many insertions, metric too far from current mesh.\n");
       break;
     }
+
+    real_t metric_time = 0.0;
+    real_t shell_time = 0.0;
+    real_t apply_time = 0.0;
+    real_t accept_time = 0.0;
+    real_t interp_time = 0.0;
+    clock_t TIME0,TIME1;
+    clock_t TOTAL_TIME0 = clock();
 
     nb_inserted = 0;
     nb_swaps = 0;
@@ -411,7 +422,10 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       index_t n0 = filter.edge( idx , 0 );
       index_t n1 = filter.edge( idx , 1 );
 
+      TIME0 = clock();
       real_t lk = metric_.length( topology_.points() , n0 , n1 );
+      TIME1 = clock();
+      metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
@@ -454,7 +468,10 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       #endif
       topology_.points().set_entity(ns, inserter_.geometry(n0,n1) );
       topology_.points().set_param( ns , filter.u(idx) );
+      TIME0 = clock();
       bool interp_result = metric_.add(n0,n1,ns,filter[idx],vacant_index);
+      TIME1 = clock();
+      interp_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
       if (!interp_result)
       {
         // something bad happened in the metric interpolation...
@@ -468,12 +485,12 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // notify the inverse topology that we want to store extra data
       #if NO_DELETE
       if (vacant_index < 0) topology_.inverse().create(1);
-
       #else
       topology_.inverse().create(1);
       #endif
 
       // check the distance to nearby points
+      TIME0 = clock();
       shell.clear();
       topology_.intersect( {n0,n1} , shell );
       N.clear();
@@ -483,6 +500,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           N.push_back( topology_(shell[j],i) );
       }
       uniquify(N);
+      TIME1 = clock();
+      shell_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
       bool bad = false;
 
       // set the minimum length any insertion can create
@@ -499,6 +518,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // set the geometry entity for the inserted point
       topology_.points().set_entity(ns,ge);
 
+      TIME0 = clock();
       for (index_t j=0;j<N.size();j++)
       {
         real_t lj = metric_.length( topology_.points() , N[j] , ns );
@@ -508,7 +528,10 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           break;
         }
       }
+      TIME1 = clock();
+      metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
+      #if 1
       // trying something (philip june 22, 2021)
       real_t l0 = metric_.length( topology_.points() , n0 , ns );
       real_t l1 = metric_.length( topology_.points() , n1 , ns );
@@ -528,6 +551,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         }
       }
       // end
+      #endif
 
       bool swapped;
       if (bad && limitlength)
@@ -560,7 +584,10 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       inserter_.clear();
       inserter_.restart();
       inserter_.delay() = true;
+      TIME0 = clock();
       bool result = inserter_.apply( n0 , n1 , filter[idx] , filter.u(idx) , shell , ns );
+      TIME1 = clock();
+      apply_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
       if (!result)
       {
         // the metric needs to be removed because the vertex was rejected.
@@ -648,9 +675,12 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       }
 
       // the filter is happy
+      TIME0 = clock();
       filter.accept( idx , ns );
+      TIME1 = clock();
+      accept_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
       done = false; // since an insertion was performed
-      vacant_index = -1;
+      vacant_index = -1; // there is no longer a vacant index
 
       nb_inserted++;
     }
@@ -668,17 +698,23 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       topology_.inverse().remove(j);
     }
 
+    // if a vacant index is left over, then we need to delete it
     if (vacant_index >= 0) {
       topology_.remove_point( vacant_index );
       metric_.remove(vacant_index);
       topology_.inverse().remove(vacant_index);
-      //avro_implement;
     }
 
     printf("\t\tinserted %lu, swapped %lu, lrej = %lu, qrej = %lu, vrej = %lu, prej = %lu/%lu, dof_rej = %lu, interp_rej = %lu\n",
                 nb_inserted,nb_swaps,nb_length_rejected,nb_quality_rejected,nb_visiblity_rejected,
                 inserter_.nb_parameter_rejections(),inserter_.nb_parameter_tests(),nb_count_rejected,nb_bad_interp);
     nb_inserted_total += nb_inserted;
+    printf("\t\t--> metric time = %g\n",metric_time);
+    printf("\t\t--> shell time = %g\n",shell_time);
+    printf("\t\t--> apply time = %g\n",apply_time);
+    printf("\t\t--> accept time = %g\n",accept_time);
+    printf("\t\t--> interp time = %g\n",interp_time);
+    printf("\t\t--> total time = %g\n",real_t(clock()-TOTAL_TIME0)/real_t(CLOCKS_PER_SEC));
 
     pass++;
   }

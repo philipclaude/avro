@@ -46,7 +46,7 @@ ElementSearch<type>::ElementSearch( const Topology<type>& _topology ) :
       nb_search_(0),
       time_(0),
       nb_steps_(0),
-      brute_(true) // enable brute force search by default
+      brute_(false) // enable brute force search by default
 {}
 
 template<typename type>
