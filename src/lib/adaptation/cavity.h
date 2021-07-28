@@ -17,6 +17,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace avro
@@ -120,6 +121,8 @@ private:
   std::vector<index_t> idx_; // index of the star for each boundary facet
   std::vector<index_t> inserted_; // index of the insertion in the topology
   std::vector<bool> removes_; // whether the cavity element is actually removed from the topology
+
+  std::unordered_set<index_t> cavity_set_;
 
   // minimum volume the cavity elements can create
   real_t minvol_;

@@ -152,6 +152,9 @@ Cavity<type>::compute_boundary()
   const index_t nf = topology_.number()+1;
   std::vector<index_t> b(nf-1);
 
+  cavity_set_.clear();
+  std::copy( cavity_.begin() , cavity_.end() , std::inserter(cavity_set_,cavity_set_.end() ) );
+
   // loop through all cavity elements
   for (index_t k=0;k<nb_cavity();k++)
   {
@@ -174,7 +177,8 @@ Cavity<type>::compute_boundary()
         avro_assert( neighbour>=0 );
 
       // skip neighbours that are already in the cavity
-      if (contains(index_t(neighbour)) && topology_.closed())
+      if (topology_.closed() && cavity_set_.find(index_t(neighbour)) != cavity_set_.end() )
+      //if (contains(index_t(neighbour)) && topology_.closed())
       {
         continue;
       }
@@ -406,6 +410,9 @@ Cavity<type>::enlarge( bool verbose )
   std::vector<index_t> C; // new cavity elements
   avro_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
 
+  cavity_set_.clear();
+  std::copy( cavity_.begin() , cavity_.end() , std::inserter(cavity_set_,cavity_set_.end() ) );
+
   // loop through the current cavity
   for (index_t k=0;k<nb_cavity();k++)
   {
@@ -425,7 +432,8 @@ Cavity<type>::enlarge( bool verbose )
 
       // skip neighbours that are already in the cavity
       // because then this is not a boundary facet
-      if (contains(index_t(neighbour)) && topology_.closed())
+      //if (contains(index_t(neighbour)) && topology_.closed())
+      if (topology_.closed() && cavity_set_.find(index_t(neighbour)) != cavity_set_.end() )
       {
         if (verbose) printf("topology is closed and neighbour %d already in cavity\n",neighbour);
         continue;

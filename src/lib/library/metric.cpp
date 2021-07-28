@@ -134,14 +134,6 @@ MetricField_Tesseract_Linear::operator()( const real_t* x ) const {
   return m;
 }
 
-void
-normalize( graphics::vec3& v ) {
-  float n = std::sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-  v[0] /= n;
-  v[1] /= n;
-  v[2] /=n;
-}
-
 symd<real_t>
 MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
 
@@ -235,8 +227,6 @@ MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
 #endif
 
 
-
-
   return m;
 }
 
@@ -256,10 +246,10 @@ MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const
   real_t a = cos(alpha);
   real_t b = -sin(alpha);
   real_t c = -0.5*cos(alpha);
-  real_t d = fabs( a*x[1] + b*x[3] + c );
+  real_t d = fabs( a*x[2] + b*x[3] + c );
 
-  // size perpendicular to the line
-  hy = h0 +2.*(hx -h0)*d;
+  // size perpendicular to the plane
+  hz = h0 +2.*(hx -h0)*d;
 
   vecd<real_t> L(4);
   L(0) = 1./(hx*hx);
@@ -269,24 +259,24 @@ MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const
 
   matd<real_t> Q(4,4);
 
-  Q(0,0) =   1.0;
-  Q(1,0) =   0.0;
-  Q(2,0) =   0.0;
-  Q(3,0) =   0.0;
+  Q(0,0) = 1.0;
+  Q(1,0) = 0.0;
+  Q(2,0) = 0.0;
+  Q(3,0) = 0.0;
 
-  Q(0,1) =   0.0;
-  Q(1,1) =   cos(-alpha);
-  Q(2,1) =   0.0;
-  Q(3,1) =   sin(-alpha);
+  Q(0,1) = 0.0;
+  Q(1,1) = 1.0;
+  Q(2,1) = 0.0;
+  Q(3,1) = 0.0;
 
-  Q(0,2) = 0.0;
-  Q(1,2) = 0.0;
-  Q(2,2) = 1.0;
-  Q(3,2) = 0.0;
+  Q(0,2) =   0.0;
+  Q(1,2) =   0.0;
+  Q(2,2) =   cos(-alpha);
+  Q(3,2) =   sin(-alpha);
 
   Q(0,3) =  0.0;
-  Q(1,3) =  sin(-alpha);
-  Q(2,3) =  0.0;
+  Q(1,3) =  0.0;
+  Q(2,3) =  sin(-alpha);
   Q(3,3) =  cos(-alpha);
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};

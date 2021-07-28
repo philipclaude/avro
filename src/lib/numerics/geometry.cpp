@@ -111,8 +111,22 @@ volume( const std::vector<const real_t*>& x , const coord_t dim )
 }
 
 real_t
-simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
+simplex_volume_inexact( const std::vector<const real_t*>& x , const coord_t dim ) {
+
+  matd<real_t> J(dim,dim);
+
+  for (index_t j = 0; j < dim; j++)
+  for (index_t d = 0; d < dim; d++)
+    J(d,j) = x[j+1][d] -x[0][d];
+  return numerics::det(J)/numerics::factorial(dim);
+}
+
+real_t
+simplex_volume( const std::vector<const real_t*>& x , const coord_t dim , bool exact )
 {
+  if (!exact) {
+    return simplex_volume_inexact(x,dim);
+  }
   coord_t n = x.size() -1;
   if (n==2 && dim==2) return volume2(x);
   if (n==3 && dim==3) return volume3(x);

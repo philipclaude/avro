@@ -33,6 +33,7 @@ AdaptThread<type>::smooth_points( index_t nb_iter )
 
   // loop over smoothing iterations
   printf("-> performing vertex smoothing:\n");
+  real_t initial_objective;
   for (index_t iter=0;iter<nb_iter;iter++)
   {
 
@@ -52,6 +53,7 @@ AdaptThread<type>::smooth_points( index_t nb_iter )
       smoother_.apply( k , metric_ , Q0 );
     }
     smoother_.objective() /= (topology_.points().nb()/topology_.points().dim());
+    if (iter == 0) initial_objective = smoother_.objective();
 
     printf("\titer[%lu]: dx = %3.2e, min = %3.2e, max = %3.2e -> accepted %lu\n",iter,smoother_.delta()/topology_.points().nb(),smoother_.delta_min(),smoother_.delta_max(),
           smoother_.nb_accepted());
@@ -59,6 +61,7 @@ AdaptThread<type>::smooth_points( index_t nb_iter )
       smoother_.nb_visibility_rejections(),smoother_.nb_implied_metric_rejections(),
       smoother_.nb_enlarged_rejections(),smoother_.nb_geometry(),index_t(smoother_.Ntot()/topology_.points().nb()));
       printf("\t\tobjective = %1.12e, nb_error = %lu, nb_interp_outside = %lu\n",smoother_.objective(),smoother_.nb_zero_valency(),smoother_.nb_interpolated_outside());
+    if (iter > 0 && smoother_.objective() < initial_objective/10) break;
   }
   printf("\tdone %lu iterations of smoothing.\n\tnb_elem = %lu, nb_vert = %lu. parameter rej = (%lu/%lu)\n",
     nb_iter,topology_.nb(),topology_.points().nb(),
@@ -300,8 +303,10 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 
 
   // check if the cavity needs to be enlarged
-  this->enlarge_ = true;
-  if (ep!=NULL)
+  if (this->curved_) this->enlarge_ = true;
+  else this->enlarge_ = false;
+
+  if (ep != nullptr)
   {
     for (index_t d=0;d<udim;d++)
       params0[d] = params[d] = this->topology_.points().u(p,d);
@@ -327,23 +332,25 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     }
 
     // make sure the cavity is not enlarged
-    std::vector<index_t> C0 = this->C_;
-    this->find_geometry( x.data() , this->C_ );
-    if (this->C_.size()!=C0.size())
-    {
-      nb_enlarged_rejections_++;
-      return false;
-    }
-
-    // there are more efficient ways of doing this but this is okay for now...
-    std::sort( this->C_.begin() , this->C_.end() );
-    std::sort( C0.begin() , C0.end() );
-    for (index_t j=0;j<C0.size();j++)
-    {
-      if (this->C_[j]!=C0[j])
+    if (this->curved_) {
+      std::vector<index_t> C0 = this->C_;
+      this->find_geometry( x.data() , this->C_ );
+      if (this->C_.size()!=C0.size())
       {
         nb_enlarged_rejections_++;
         return false;
+      }
+
+      // there are more efficient ways of doing this but this is okay for now...
+      std::sort( this->C_.begin() , this->C_.end() );
+      std::sort( C0.begin() , C0.end() );
+      for (index_t j=0;j<C0.size();j++)
+      {
+        if (this->C_[j]!=C0[j])
+        {
+          nb_enlarged_rejections_++;
+          return false;
+        }
       }
     }
 

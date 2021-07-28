@@ -637,7 +637,7 @@ Simplex::physical_to_reference( const Points& points , const index_t* v , index_
       if (i==j) xk[i] = xp;
       else xk[i] = points[ v[i] ];
     }
-    x0[j] = v0 * numerics::simplex_volume( xk , points.dim() );
+    x0[j] = v0 * numerics::simplex_volume( xk , points.dim() , false );
   }
 }
 

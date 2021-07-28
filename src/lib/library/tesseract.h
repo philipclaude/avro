@@ -61,7 +61,7 @@ public:
     real_t s = 1 + t;
     for (coord_t d = 0; d < 3; d++)
       X[d] *= s;
-    X[3] *= 5;
+    X[3] *= 3;
 
     // translate back
     for (coord_t d = 0; d < 4; d++)
@@ -77,7 +77,7 @@ public:
     // scale in time
     real_t t = x[3]; // time between 0 and 1
     real_t s = 1 - 0.5*t;
-    X[0] *= s;
+    X[2] *= s;
     X[3] *= 1;
 
     // translate back

@@ -24,6 +24,7 @@
 #include "library/egads.h"
 #include "library/meshb.h"
 #include "library/metric.h"
+#include "library/tesseract.h"
 
 #include "mesh/mesh.h"
 
@@ -34,41 +35,22 @@ UT_TEST_SUITE(insertions_geometry_suite)
 UT_TEST_CASE(test1)
 {
   // setup the topology
-  coord_t number = 2;
-  coord_t dim = 3;
+  coord_t number = 4;
 
   // parameters
-  library::MetricField_Uniform analytic(2,0.1);
+  library::MetricField_Uniform analytic(number,0.1);
 
   // geometry
-  EGADS::Context context;
-  EGADS::Model model(&context,BASE_TEST_DIR+"/geometry/cube-cylinder.egads");
+  std::vector<real_t> lens(number,1.0);
+  std::vector<real_t> x0(number,0.5);
+  library::Tesseract body(x0,lens);
 
-  TessellationParameters tess_params;
-  tess_params.set("min size" , 0.2 );
-  tess_params.set("min angle", 20.0);
+  // structured grid
+  std::vector<index_t> dims(number,3);
+  CKF_Triangulation topology(dims);
 
-  ModelTessellation tess(model,tess_params);
-
-  // create a mesh and add the topology
-  std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,dim);
-  pmesh->points().set_parameter_dim(number);
-
-  // convert all the points to parameter space
-  for (index_t k=0;k<tess.points().nb();k++)
-  {
-    std::vector<real_t> u = { tess.points().u(k,0) , tess.points().u(k,1) };
-    pmesh->points().create( tess.points()[k] );
-    pmesh->points().u(k,0) = u[0];
-    pmesh->points().u(k,1) = u[1];
-    pmesh->points().set_entity(k,tess.points().entity(k));
-  }
-  pmesh->points().print(true);
-
-  // retrieve all the triangles
-  Topology<Simplex> topology(pmesh->points(),2);
-  tess.retrieve<Simplex>(0).get_elements( topology );
-  topology.element().set_parameter(true);
+  // tag the points onto the body
+  topology.points().attach( body );
 
   topology.close();
   topology.neighbours().compute();
@@ -82,24 +64,25 @@ UT_TEST_CASE(test1)
   MetricAttachment attachment(topology.points(),fld);
   MetricField<Simplex> metric(topology,attachment);
 
-  Smooth<Simplex> smoother(topology);
-  UT_ASSERT( smoother.element().parameter() );
+  FieldInterpolation<Simplex,Metric> interpolation(&metric);
+  metric.set_interpolation(&interpolation);
+  topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
-  printf("smoothing...\n");
+  Smooth<Simplex> smoother(topology);
+  UT_ASSERT( !smoother.element().parameter() );
+  smoother.curved() = false;
 
   // loop through every edge, extract the cavity and ensure every edge end point is visible
   for (index_t iter=0;iter<10;iter++)
   for (index_t k=0;k<topology.points().nb();k++)
   {
     if (k < topology.points().nb_ghost()) continue;
-    Entity* entity = topology.points().entity(k);
-    if (entity->number()!=2) continue;
     bool accept = smoother.apply( k , metric , -1 );
     UNUSED(accept);
   }
 
-  graphics::Viewer vis;
-  vis.add(topology);
+  //graphics::Viewer vis;
+  //vis.add(topology);
 
   //vis.run(AVRO_FULL_UNIT_TEST);
 
