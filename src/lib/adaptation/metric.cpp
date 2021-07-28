@@ -180,7 +180,7 @@ MetricField<type>::volume( const Topology<type>& topology , const index_t k ) {
 	}
 
 	real_t sqrtdetM = dmax;
-	real_t v = sqrtdetM*element.volume(topology.points(),V,NV);
+	real_t v = sqrtdetM*element.volume(topology.points(),V,NV,false);
 	return v;
 }
 
@@ -254,7 +254,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k ) {
   }
 
 	// compute the volume under m
-	real_t v = sqrtdetM*element.volume(topology.points(),V,NV);
+	real_t v = sqrtdetM*element.volume(topology.points(),V,NV,false);
 	if (v < 0)
 	{
 		for (index_t j = 0;j < NV; j++)
