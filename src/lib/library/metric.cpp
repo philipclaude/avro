@@ -145,8 +145,8 @@ normalize( graphics::vec3& v ) {
 symd<real_t>
 MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
 
-#if 1
-  // rotation about z-axis, dependent on time
+#if 0
+  // this gives a decent looking mesh, but metric conformity isn't the greatest
   real_t t = x[2];
   real_t theta = t*M_PI/4;
 
@@ -162,14 +162,17 @@ MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
   // size perpendicular to the line
   hy = h0 +2.*(hx -h0)*d;
 
+  // eigenvalues
   vecd<real_t> L(3);
   L(0) = 1./(hx*hx);
   L(1) = 1./(hy*hy);
   L(2) = 1./(ht*ht);
 
+  // this is probably why metric conformity isn't the greatest
   real_t alpha = atan2( 0.5 , 1.0 );
   if (x[0] > 0.5) alpha *= -1.0;
 
+  // eigenvectors
   matd<real_t> Q(3,3);
 
   Q(0,0) =   cos(theta);
@@ -187,91 +190,47 @@ MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
   std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
   symd<real_t> m(decomp);
 
-#elif 0
+#else
 
-  using namespace graphics;
-
-  float u = float(x[0]), v = float(x[2]);
-  vec3 n = {-v   , -1.0f, 0.5f-u};
-  vec3 s = {-1.0f,     v, 0.0f  };
-
-  normalize(n);
-  normalize(s);
-
-  vec3 t = glm::cross(n,s);
+  real_t alpha = atan2( 0.25 , 1.0 );
 
   real_t hmin = 0.0025;
   real_t hx = 100*hmin;
   real_t hy = 100*hmin;
   real_t h0 = hmin;
   real_t ht = 100*hmin;
-  real_t d = fabs( 0.5*v - u*v + 0.5 );
+
+  // distance to rotated line
+  real_t a = cos(alpha);
+  real_t b = -sin(alpha);
+  real_t c = -0.5*cos(alpha);
+  real_t d = fabs( a*x[1] + b*x[2] + c );
+
+  // size perpendicular to the line
   hy = h0 +2.*(hx -h0)*d;
 
   vecd<real_t> L(3);
+  L(0) = 1./(hx*hx);
+  L(1) = 1./(hy*hy);
+  L(2) = 1./(ht*ht);
+
+
   matd<real_t> Q(3,3);
 
-  L[0] = 1./(hx*hx);
-  L[1] = 1./(hy*hy);
-  L[2] = 1./(ht*ht);
+  Q(0,0) =   1.0;
+  Q(1,0) =   0.0;
+  Q(2,0) =   0.0;
 
-  Q(0,0) = s[0];
-  Q(0,1) = s[1];
-  Q(0,2) = s[2];
+  Q(0,1) =   0.0;
+  Q(1,1) =   cos(-alpha);
+  Q(2,1) =   sin(-alpha);
 
-  Q(1,0) = t[0];
-  Q(1,1) = t[1];
-  Q(1,2) = t[2];
-
-  Q(2,0) = n[0];
-  Q(2,1) = n[1];
-  Q(2,2) = n[2];
-
-  Q = numerics::transpose(Q);
+  Q(0,2) =  0.0;
+  Q(1,2) =  sin(-alpha);
+  Q(2,2) =  cos(-alpha);
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
   symd<real_t> m(decomp);
-#else
-  using namespace graphics;
-
-  float u = float(x[0]), v = float(x[2]);
-  float w = x[1];
-  vec3 n  = {-v   , -1.0f, 0.5f-u};
-  vec3 s  = {-1.0f,     v, 0.0f  };
-
-  normalize(n);
-  normalize(s);
-
-  vec3 t = glm::cross(n,s);
-
-  real_t hmin = 0.0025;
-  real_t hx = 100*hmin;
-  real_t hy = 100*hmin;
-  real_t h0 = hmin;
-  real_t ht = 100*hmin;
-  real_t d = fabs( 0.5*v - u*v + 0.5 - w);
-  hy = h0 +2.*(hx -h0)*d;
-
-  vecd<real_t> L(3);
-  matd<real_t> Q(3,3);
-
-  L[0] = 1./(hx*hx);
-  L[1] = 1./(hy*hy);
-  L[2] = 1./(ht*ht);
-
-  Q(0,0) = s[0];
-  Q(0,1) = s[1];
-  Q(0,2) = s[2];
-
-  Q(1,0) = t[0];
-  Q(1,1) = t[1];
-  Q(1,2) = t[2];
-
-  Q(2,0) = n[0];
-  Q(2,1) = n[1];
-  Q(2,2) = n[2];
-
-//  Q = numerics::transpose(Q);
 
 #endif
 
@@ -284,9 +243,7 @@ MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
 symd<real_t>
 MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const {
 
-  // rotation about z-axis, dependent on time
-  real_t t = x[3];
-  real_t theta = t*M_PI/4;
+  real_t alpha = atan2( 0.25 , 1.0 );
 
   real_t hmin = 0.0025;
   real_t hx = 100*hmin;
@@ -294,10 +251,15 @@ MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const
   real_t hz = 100*hmin;
   real_t h0 = hmin;
   real_t ht = 100*hmin;
-  real_t d = fabs( -x[0]*sin(theta) + x[1]*cos(theta) + 0.5*(sin(theta) - cos(theta)) );
+
+  // distance to rotated line
+  real_t a = cos(alpha);
+  real_t b = -sin(alpha);
+  real_t c = -0.5*cos(alpha);
+  real_t d = fabs( a*x[1] + b*x[3] + c );
+
+  // size perpendicular to the line
   hy = h0 +2.*(hx -h0)*d;
-
-
 
   vecd<real_t> L(4);
   L(0) = 1./(hx*hx);
@@ -306,12 +268,26 @@ MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const
   L(3) = 1./(ht*ht);
 
   matd<real_t> Q(4,4);
-  Q(0,0) =  cos(theta);
-  Q(1,0) = -sin(theta);
-  Q(0,1) =  sin(theta);
-  Q(1,1) =  cos(theta);
-  Q(2,2) =  1.0;
-  Q(3,3) =  1.0;
+
+  Q(0,0) =   1.0;
+  Q(1,0) =   0.0;
+  Q(2,0) =   0.0;
+  Q(3,0) =   0.0;
+
+  Q(0,1) =   0.0;
+  Q(1,1) =   cos(-alpha);
+  Q(2,1) =   0.0;
+  Q(3,1) =   sin(-alpha);
+
+  Q(0,2) = 0.0;
+  Q(1,2) = 0.0;
+  Q(2,2) = 1.0;
+  Q(3,2) = 0.0;
+
+  Q(0,3) =  0.0;
+  Q(1,3) =  sin(-alpha);
+  Q(2,3) =  0.0;
+  Q(3,3) =  cos(-alpha);
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
   symd<real_t> m(decomp);
