@@ -38,11 +38,12 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
   bool success;
 
   int ielem = -1;
-  for (index_t iguess=0;iguess<guesses.size();iguess++)
+  for (index_t iguess = 0; iguess < guesses.size(); iguess++)
   {
     ielem = searcher_->find( points[p] , guesses[iguess] );
-    if (ielem<0)
+    if (ielem < 0)
     {
+      printf("outside\n");
       // point is probably outside domain
   		// let's make sure by first brute forcing the check
       ielem = searcher_->brute( points[p] );

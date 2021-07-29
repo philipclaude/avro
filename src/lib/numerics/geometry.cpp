@@ -113,12 +113,17 @@ volume( const std::vector<const real_t*>& x , const coord_t dim )
 real_t
 simplex_volume_inexact( const std::vector<const real_t*>& x , const coord_t dim ) {
 
+  #if 0
+  // this only works in 4d!
+  return orient4dfast(x[0],x[1],x[2],x[3],x[4])/numerics::factorial(dim);
+  #else
   matd<real_t> J(dim,dim);
 
   for (index_t j = 0; j < dim; j++)
   for (index_t d = 0; d < dim; d++)
     J(d,j) = x[j+1][d] -x[0][d];
   return numerics::det(J)/numerics::factorial(dim);
+  #endif
 }
 
 real_t

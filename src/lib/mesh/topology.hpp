@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <list>
 #include <set>
+#include <unordered_set>
 
 namespace avro
 {

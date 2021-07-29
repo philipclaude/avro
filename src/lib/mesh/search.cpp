@@ -20,7 +20,7 @@
 
 // tolerance used in the element search
 // we may need to adjust this to deal with real geometries
-#define TOLER 0.0
+#define TOLER -1e-12 //0.0
 
 namespace avro
 {

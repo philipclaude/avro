@@ -326,8 +326,14 @@ MetricField<type>::add( index_t n0 , index_t n1 , index_t ns , real_t* x , int i
 	Metric mp(number_);
 	index_t g0 = attachment_[n0].elem();
 	index_t g1 = attachment_[n1].elem();
-	int ielem = interpolation_->eval( attachment_.points() , ns , {g0,g1} , mp );
-	if (ielem<0) return false;
+	int ielem;
+	#if 1
+	ielem = interpolation_->eval( attachment_.points() , ns , {g0,g1} , mp );
+	#else
+	ielem = g0;
+	mp = attachment_[n0];
+	#endif
+	if (ielem < 0) return false;
 
 	if (idx < 0)
 		attachment_.add( mp , index_t(ielem) );

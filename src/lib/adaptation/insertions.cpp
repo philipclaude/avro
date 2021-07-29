@@ -378,6 +378,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     real_t apply_time = 0.0;
     real_t accept_time = 0.0;
     real_t interp_time = 0.0;
+    real_t filter_time = 0.0;
+    real_t topology_apply_time = 0.0;
     clock_t TIME0,TIME1;
     clock_t TOTAL_TIME0 = clock();
 
@@ -392,9 +394,10 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     done = true;
 
     int vacant_index = -1;
-    #define NO_DELETE 0
+    #define NO_DELETE 1
 
     // setup the insertion filter
+    TIME0 = clock();
     Filter filter( topology_.points().dim() );
 
     // add the current points in the topology
@@ -403,6 +406,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
     // create the candidates on edges longer than lt in the target space
     filter.generateCandidates( topology_ , metric_ , lt , inserter_ );
+    TIME1 = clock();
+    filter_time += real_t(TIME1 - TIME0)/real_t(CLOCKS_PER_SEC);
 
     printf("\t pass %lu: long = %lu, l = [%3.4f,%3.4f] -> insert %lu\n",
                 pass,filter.nb_long(),filter.minlength(),filter.maxlength(),
@@ -528,8 +533,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           break;
         }
       }
-      TIME1 = clock();
-      metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
+
 
       #if 1
       // trying something (philip june 22, 2021)
@@ -552,6 +556,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       }
       // end
       #endif
+      TIME1 = clock();
+      metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
       bool swapped;
       if (bad && limitlength)
@@ -600,6 +606,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       }
 
       // if the inserter was enlarged, don't be too restrictive with quality
+      TIME0 = clock();
       inserter_.cavity_quality().resize( inserter_.nb() );
       real_t qwi = worst_quality(inserter_,metric_ , inserter_.cavity_quality().data() );
       if (qwi < Q0) {
@@ -634,7 +641,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           }
         }
       }
-
+      TIME1 = clock();
+      metric_time += real_t(TIME1 - TIME0)/real_t(CLOCKS_PER_SEC);
 
       #if 0
       if (!inserter_.closed_boundary())
@@ -650,8 +658,11 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       #endif
 
       // apply the insertion into the topology
+      TIME0 = clock();
       topology_.apply(inserter_);
       avro_assert( metric_.check(topology_) );
+      TIME1 = clock();
+      topology_apply_time += real_t(TIME1 - TIME0)/real_t(CLOCKS_PER_SEC);
 
       // set the age of the endpoint vertices to 0 since a split was performed
       topology_.points().set_age( n0 , 0 );
@@ -714,6 +725,8 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     printf("\t\t--> apply time = %g\n",apply_time);
     printf("\t\t--> accept time = %g\n",accept_time);
     printf("\t\t--> interp time = %g\n",interp_time);
+    printf("\t\t--> filter time = %g\n",filter_time);
+    printf("\t\t--> topology apply time = %g\n",topology_apply_time);
     printf("\t\t--> total time = %g\n",real_t(clock()-TOTAL_TIME0)/real_t(CLOCKS_PER_SEC));
 
     pass++;
