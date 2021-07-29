@@ -73,6 +73,7 @@ template<typename T> std::pair< vecd<T> , matd<T> > eig( const symd<T>& m );
 template<typename T> std::pair< vecd<T> , matd<T> > eign( const symd<T>& m);
 template<typename T> symd<T> interp( const std::vector<real_t>& alpha , const std::vector<symd<T>>& tensors);
 template<typename type> type quadratic_form( const symd<type>& M , const vecd<real_t>& e );
+template<typename type> type quadratic_form( const symd<type>& M , const type* e );
 
 } // numerics
 

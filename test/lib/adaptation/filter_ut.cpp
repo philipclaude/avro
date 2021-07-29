@@ -22,9 +22,12 @@ UT_TEST_SUITE( insertion_filter_suite )
 
 UT_TEST_CASE(filter3d)
 {
-  const coord_t number = 3;
-  std::vector<index_t> dims( number , 4 );
+  const coord_t number = 4;
+  std::vector<index_t> dims( number , 8 );
   CKF_Triangulation cube( dims );
+
+  cube.build_structures();
+  printf("nb elems = %lu\n",cube.nb());
 
   const coord_t dim = cube.points().dim();
 
@@ -35,7 +38,7 @@ UT_TEST_CASE(filter3d)
 
   // add some points along the edges
   std::vector<index_t> edges;
-  cube.get_edges(edges);
+  //cube.get_edges(edges);
   for (index_t k=0;k<edges.size()/2;k++)
   {
     real_t s = random_within( 0. , 1. );
@@ -68,10 +71,10 @@ UT_TEST_CASE(filter3d)
   for (index_t k=0;k<filter.nb_candidates();k++)
   {
     // remember to insert this vertex for later
-    insertions.push_back( filter.candidate(k) );
+    //insertions.push_back( filter.candidate(k) );
 
     // accept the candidate
-    filter.accept( filter.candidate(k) ,idx++ );
+    //filter.accept( filter.candidate(k) ,idx++ );
   }
 }
 UT_TEST_CASE_END(filter3d)

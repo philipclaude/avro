@@ -191,6 +191,9 @@ private:
   ElementSearch<type> searcher_;
   real_t normalization_;
   FieldInterpolation<type,Metric>* interpolation_;
+
+  mutable std::vector<real_t> edge_;
+
 };
 
 template<typename type>

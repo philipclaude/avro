@@ -35,8 +35,48 @@ Topology<type>::construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<
 
 template<typename type>
 void
+get_edges_using_ball( const Topology<type>& topology , std::vector<index_t>& edges )
+{
+  std::vector<index_t> ball;
+  std::vector<index_t> N;
+
+  for (index_t k = 0; k < topology.points().nb(); k++) {
+
+    if (k < topology.points().nb_ghost()) continue;
+    ball.clear();
+    N.clear();
+
+    index_t p = k;
+    topology.inverse().ball(p,ball);
+
+    for (index_t j = 0; j < ball.size(); j++) {
+      for (index_t i = 0; i < topology.nv(ball[j]); i++) {
+        index_t q = topology(ball[j],i);
+        if (q < topology.points().nb_ghost()) continue;
+        if (p == q) continue;
+        if (p > q) continue;
+        N.push_back(q);
+      }
+    }
+    uniquify(N);
+
+    for (index_t j = 0; j < N.size(); j++) {
+      edges.push_back(p);
+      edges.push_back(N[j]);
+    }
+  }
+}
+
+template<typename type>
+void
 Topology<type>::get_edges( std::vector<index_t>& edges ) const
 {
+
+  if (inverse_.created()) {
+    get_edges_using_ball(*this,edges);
+    return;
+  }
+
   std::vector<index_t> ek;
 
   std::set< std::pair<index_t,index_t> > table;
@@ -44,7 +84,6 @@ Topology<type>::get_edges( std::vector<index_t>& edges ) const
   for (index_t k=0;k<nb();k++)
   {
     if (ghost(k)) continue;
-
 
     const index_t* v0 = operator()(k);
 

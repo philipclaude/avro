@@ -13,6 +13,8 @@
 
 #include "mesh/topology.h"
 
+#include <time.h>
+
 namespace avro
 {
 
@@ -121,30 +123,30 @@ void
 AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 {
   index_t pass = 0;
-  real_t lmin0 = -1;
-  real_t lmax0 = -1;
-  if (lcheck)
-  {
-    // compute the min and max lengths coming in
-    std::vector<real_t> lens;
-    metric_.lengths( topology_ , lens );
-    lmin0 = * std::min_element( lens.begin() , lens.end() );
-    lmax0 = * std::max_element( lens.begin() , lens.end() );
-  }
 
   printf("-> performing edge swaps with target qt < %g:\n",qt);
   while (true)
   {
     if (pass>npass) break;
 
+    clock_t TIME0,TIME1;
+    clock_t PASS_T0 = clock();
+
+    real_t candidate_time = 0.0;
+    real_t metric_time = 0.0;
+    real_t shell_time = 0.0;
+    real_t apply_time = 0.0;
+
     // evaluate the quality on the current topology
+    TIME0 = clock();
     real_t qmin = worst_quality(topology_,metric_);
     index_t count = 0;
-    for (index_t k=0;k<topology_.nb();k++)
-    {
+    for (index_t k=0;k<topology_.nb();k++) {
       if (topology_.ghost(k)) continue;
       if (metric_.quality(topology_,k)<qt) count++;
     }
+    TIME1 = clock();
+    metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
     printf("\tpass %lu: qmin = %g, nb_simplices < %g = %lu / %lu\n",
             pass,qmin,qt,count,topology_.nb_real());
 
@@ -156,7 +158,10 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
     nb_swaps = 0;
     nb_length_rejected = 0;
     std::vector<index_t> edges;
+    TIME0 = clock();
     lengths_in_bounds( metric_ , topology_ , edges , 0.8 );
+    TIME1 = clock();
+    metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
     printf("\tnb_elem = %lu, nb_edges = %lu, nb_vert = %lu\n",
             topology_.nb(),edges.size()/2,topology_.points().nb());
@@ -177,6 +182,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       elems.clear();
       candidates.clear();
       edge_swapper_.restart();
+      edge_swapper_.save_boundary() = false;
 
       // swapping an edge doesn't change the other edges we might want to swap
       // it will affect the visibility of each swap so they might not be accepted
@@ -190,26 +196,32 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         continue;
       }
 
+      TIME0 = clock();
       std::vector<index_t> edge = {e0,e1};
       topology_.intersect(edge,elems);
+      TIME1 = clock();
+      shell_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
       if (elems.size()==0) continue;
 
       // initial worst quality
+      TIME0 = clock();
       real_t q0 = -1;
-      for (index_t j=0;j<elems.size();j++)
-      {
+      for (index_t j=0;j<elems.size();j++) {
         if (topology_.ghost( elems[j] ) )
           continue;
-        if (q0<0 || metric_.quality(topology_,elems[j])<q0)
+        if (q0 < 0 || metric_.quality(topology_,elems[j]) < q0)
           q0 = metric_.quality(topology_,elems[j]);
       }
-      if (q0>qt) continue;
+      if (q0 > qt) continue;
+      TIME1 = clock();
+      metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
       nb_edges_considered++;
 
+      TIME0 = clock();
       // list all the vertices in elems
-      for (index_t j=0;j<elems.size();j++)
-      for (index_t i=0;i<topology_.nv(elems[j]);i++)
+      for (index_t j = 0; j < elems.size(); j++)
+      for (index_t i = 0; i < topology_.nv(elems[j]); i++)
         candidates.push_back(topology_(elems[j],i));
       uniquify(candidates);
 
@@ -220,60 +232,49 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       // loop through all candidates
       int m = -1;
       real_t qw = q0;
-      for (index_t j=0;j<candidates.size();j++)
-      {
+      for (index_t j = 0; j < candidates.size(); j++) {
 
         // skip candidates that are endpoints of the initial edge
-        if (candidates[j]==e0 || candidates[j]==e1) continue;
+        if (candidates[j] == e0 || candidates[j] == e1) continue;
 
+        //printf("trying edge (%lu,%lu) with candidate %lu\n",e0,e1,candidates[j]);
         // try the swap
         bool accept = edge_swapper_.apply( candidates[j] , e0 , e1 );
-        if (!accept)
-        {
+        if (!accept) {
           // it was rejected because of geometry topology or visiblity
           continue;
         }
 
-        // option to check the produced lengths
-        if (lcheck)
-        {
-          lens.clear();
-          metric_.lengths( edge_swapper_ , lens );
-          if (lens.size()==0)
-          {
-            continue;
-          }
-          real_t lmin = * std::min_element( lens.begin() , lens.end() );
-          real_t lmax = * std::max_element( lens.begin() , lens.end() );
-          if (lmin<lmin0 || lmax>lmax0)
-          {
-            nb_length_rejected++;
-            continue;
-          }
-        }
-
         edge_swapper_.cavity_quality().resize( edge_swapper_.nb() );
         real_t qw_swap = worst_quality(edge_swapper_,metric_,edge_swapper_.cavity_quality().data() );
-        if (qw_swap>qw)
+        if (qw_swap > qw)
         {
           // check that no elements (ghosts) become duplicated
-          if (!edge_swapper_.has_unique_elems()) continue;
-          if (!edge_swapper_.closed_boundary()) continue;
+          //if (!edge_swapper_.has_unique_elems()) continue;
+          //if (!edge_swapper_.closed_boundary()) continue;
           m  = candidates[j];
           qw = qw_swap;
         }
-
       }
+      TIME1 = clock();
+      candidate_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
-      if (m<0) continue;
+      // check if there was no candidate
+      if (m < 0) continue;
 
-
+      // an acceptable swap was found, reset the age of the vertices involved
       topology_.points().age(e0) = 0;
       topology_.points().age(e1) = 0;
 
+      TIME0 = clock();
       nb_swaps++;
       edge_swapper_.apply( index_t(m) , e0 , e1 );
       topology_.apply(edge_swapper_);
+      TIME1 = clock();
+      apply_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
+
+      edge_swapper_.save_boundary() = false;
+      edge_swapper_.boundary().clear();
 
     } // loop over edges
 
@@ -287,6 +288,12 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
     printf("\n");
     if (nb_swaps==0) break;
     pass++;
+
+    printf("\t\tcandidate time = %g\n",candidate_time);
+    printf("\t\tmetric time = %g\n",metric_time);
+    printf("\t\tshell time = %g\n",shell_time);
+    printf("\t\tapply time = %g\n",apply_time);
+    printf("\t\tpass time = %g\n",real_t(clock()-PASS_T0)/real_t(CLOCKS_PER_SEC));
 
   } // loop over passes
 
@@ -512,6 +519,7 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
   // apply the operator, checking visibility
   this->enlarge_ = false;
   bool accept = this->compute( p , this->topology_.points()[p] , this->C_ );
+  //this->save_boundary_ = true;
   if (!accept) return false;
 
   // check if all produce elements have a positive determinant of implied metric

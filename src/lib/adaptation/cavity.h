@@ -102,6 +102,7 @@ public:
 
   bool fixed() const;
   bool closed_boundary();
+  bool& save_boundary() { return save_boundary_; }
 
 protected:
   Topology<type>& topology_;
@@ -109,6 +110,7 @@ protected:
   bool enlarge_;
   bool check_visibility_;
   std::string info_;
+  bool save_boundary_;
 
 private:
   index_t star_;

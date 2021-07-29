@@ -18,9 +18,8 @@
 #include "common/tools.h"
 #include "avro_types.h"
 
-#include <unordered_set>
-
 #include <time.h>
+#include <unordered_set>
 
 namespace avro
 {
@@ -107,7 +106,7 @@ Insert<type>::visible_geometry( real_t* x , real_t* params , Entity* ep , const 
 
 template<typename type>
 bool
-Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell , int ns0 )
+Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u , const std::vector<index_t>& shell , int idx )
 {
   elems_.clear();
 
@@ -130,13 +129,10 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   if (elems_.size()==0) return false;
 
   // index of the vertex to be inserted
-  index_t ns;
-  if (ns0 < 0) {
-    // we need to add the vertex
-    ns = this->topology_.points().nb();
-    this->topology_.points().create(x);
-  }
-  else ns = index_t(ns0);
+  index_t ns = this->topology_.points().nb();
+
+  // we need to add the vertex
+  this->topology_.points().create(x);
 
   // this might be a boundary insertion,
   // compute intersection of geometry entities of each vertex
@@ -334,70 +330,47 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
   real_t dof_factor = params_["insertion volume factor"];
 
-  index_t nb_swaps;
   index_t nb_inserted,nb_inserted_total = 0;
   index_t nb_length_rejected = 0;
   index_t nb_quality_rejected = 0;
   index_t nb_visiblity_rejected = 0;
-  index_t nb_count_rejected = 0;
   index_t nb_bad_interp = 0;
+  index_t nb_high_valency = 0;
   real_t lmin1,lmax1;
 
   inserter_.nb_parameter_rejections() = 0;
   inserter_.nb_parameter_tests() = 0;
 
-  //topology_.evaluate(metric);
-  real_t Q0 = worst_quality(topology_,metric_);
-
   // don't be too restrictive with insertions when the quality is already good
+  real_t Q0 = worst_quality(topology_,metric_);
   if (Q0 > 0.4)  Q0 = 0.1;
   if (Q0 < 1e-3) Q0 = 1e-3;
-
-  std::vector<real_t> lens;
-  metric_.lengths(topology_,lens);
-  real_t lmin0 = *std::min_element( lens.begin() , lens.end() );
-  real_t lmax0 = *std::max_element( lens.begin() , lens.end() );
-
 
   index_t pass = 0;
   bool done = false;
   bool problem = false;
   printf("-> performing edge splits on edges with lt > %1.3f and dof_factor %g:\n",lt,dof_factor);
-  while (!done && !problem)
-  {
-    // anything beyond 20 passes is borderline ridiculous
+  while (!done && !problem) {
+
+    // anything beyond 20 passes is a bit much,
     // the metric is probably way off from the current mesh
-    if (pass>20)
-    {
+    if (pass > 20) {
       printf("warning: too many insertions, metric too far from current mesh.\n");
       break;
     }
 
-    real_t metric_time = 0.0;
-    real_t shell_time = 0.0;
-    real_t apply_time = 0.0;
-    real_t accept_time = 0.0;
-    real_t interp_time = 0.0;
-    real_t filter_time = 0.0;
-    real_t topology_apply_time = 0.0;
-    clock_t TIME0,TIME1;
-    clock_t TOTAL_TIME0 = clock();
-
     nb_inserted = 0;
-    nb_swaps = 0;
     nb_length_rejected = 0;
     nb_quality_rejected = 0;
     nb_visiblity_rejected = 0;
-    nb_count_rejected = 0;
     nb_bad_interp = 0;
+    nb_high_valency = 0;
+
+    clock_t PASS_T0 = clock();
 
     done = true;
 
-    int vacant_index = -1;
-    #define NO_DELETE 1
-
     // setup the insertion filter
-    TIME0 = clock();
     Filter filter( topology_.points().dim() );
 
     // add the current points in the topology
@@ -406,15 +379,12 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
     // create the candidates on edges longer than lt in the target space
     filter.generateCandidates( topology_ , metric_ , lt , inserter_ );
-    TIME1 = clock();
-    filter_time += real_t(TIME1 - TIME0)/real_t(CLOCKS_PER_SEC);
 
     printf("\t pass %lu: long = %lu, l = [%3.4f,%3.4f] -> insert %lu\n",
                 pass,filter.nb_long(),filter.minlength(),filter.maxlength(),
                 filter.nb_candidates());
 
     // insert the points
-    std::unordered_set<index_t> removed;
     std::unordered_set<index_t> flagged;
     std::vector<index_t> shell;
     std::vector<index_t> N;
@@ -426,11 +396,6 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // get the edge along which this insertion takes place
       index_t n0 = filter.edge( idx , 0 );
       index_t n1 = filter.edge( idx , 1 );
-
-      TIME0 = clock();
-      real_t lk = metric_.length( topology_.points() , n0 , n1 );
-      TIME1 = clock();
-      metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
       // insertions on the edges with fixed nodes are not allowed
       // as these are partition boundaries
@@ -445,57 +410,29 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           n1 < topology_.points().nb_ghost())
         continue;
 
-      // check if the points were removed or flagged
-      if (removed.find(n0) != removed.end() || removed.find(n1) != removed.end())
-        continue;
-
+      // do not insert on edges with vertices that have been flagged
       if (flagged.find(n0) != flagged.end() || flagged.find(n1) != flagged.end())
         continue;
 
       // the metric needs to be interpolated for the filter to evaluate lengths
       // so we need to add the vertex and also add the interpolated metric
-      index_t ns;
-      #if NO_DELETE
-      if (vacant_index >= 0) {
-        // there is a vacant point we can use
-        ns = vacant_index;
-        for (coord_t d = 0; d < topology_.points().dim(); d++)
-          topology_.points()[ns][d] = filter[idx][d];
-      }
-      else {
-        // there is no vacant point, so we will create one
-        ns = topology_.points().nb();
-        topology_.points().create(filter[idx]);
-      }
-      #else
-      ns = topology_.points().nb();
+      index_t ns = topology_.points().nb();
       topology_.points().create(filter[idx]);
-      #endif
       topology_.points().set_entity(ns, inserter_.geometry(n0,n1) );
       topology_.points().set_param( ns , filter.u(idx) );
-      TIME0 = clock();
-      bool interp_result = metric_.add(n0,n1,ns,filter[idx],vacant_index);
-      TIME1 = clock();
-      interp_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
-      if (!interp_result)
-      {
+      bool interp_result = metric_.add(n0,n1,ns,filter[idx]);
+      if (!interp_result) {
         // something bad happened in the metric interpolation...
         // probably because of a curved geometry
         topology_.points().remove(ns);
         nb_bad_interp++;
-        vacant_index = -1; // this shouldn't happen often, so it's not the end of the world to delete the added point
         continue;
       }
 
       // notify the inverse topology that we want to store extra data
-      #if NO_DELETE
-      if (vacant_index < 0) topology_.inverse().create(1);
-      #else
       topology_.inverse().create(1);
-      #endif
 
       // check the distance to nearby points
-      TIME0 = clock();
       shell.clear();
       topology_.intersect( {n0,n1} , shell );
       N.clear();
@@ -505,9 +442,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
           N.push_back( topology_(shell[j],i) );
       }
       uniquify(N);
-      TIME1 = clock();
-      shell_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
-      bool bad = false;
+      bool too_short = false;
 
       // set the minimum length any insertion can create
       real_t Lmin = sqrt(0.5);
@@ -523,79 +458,36 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // set the geometry entity for the inserted point
       topology_.points().set_entity(ns,ge);
 
-      TIME0 = clock();
-      for (index_t j=0;j<N.size();j++)
-      {
-        real_t lj = metric_.length( topology_.points() , N[j] , ns );
-        if (lj<Lmin)
-        {
-          bad = true;
-          break;
-        }
-      }
-
-
-      #if 1
-      // trying something (philip june 22, 2021)
-      real_t l0 = metric_.length( topology_.points() , n0 , ns );
-      real_t l1 = metric_.length( topology_.points() , n1 , ns );
-      //if (l0 >= lk && l1 >= lk) bad = true;
-      UNUSED(lk);
-      UNUSED(l0);
-      UNUSED(l1);
-
-      std::vector<index_t> surrounding;
       for (index_t j = 0; j < N.size(); j++) {
-        if (N[j] < topology_.points().nb_ghost()) continue;
-        surrounding.clear();
-        topology_.inverse().ball( N[j] , surrounding );
-        if (surrounding.size() > MAX_VALENCY[topology_.number()]) {
-          bad = true;
+        real_t lj = metric_.length( topology_.points() , N[j] , ns );
+        if (lj < Lmin) {
+          too_short = true;
           break;
         }
       }
-      // end
-      #endif
-      TIME1 = clock();
-      metric_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
-      bool swapped;
-      if (bad && limitlength)
-      {
+      if (too_short && limitlength) {
         // remove the interpolated tensor with its associated vertex
-        #if NO_DELETE
-        vacant_index = ns;
-        #else
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
-        #endif
         nb_length_rejected++;
-
-        // option to swap out of the rejected configuration
-        if (swapout)
-        {
-          swapped = swap_edge(n0,n1,Q0,lmin0,lmax0);
-          if (swapped) nb_swaps++;
-        }
         continue;
       }
       avro_assert( metric_.check(topology_) );
 
       // the vertex needs to be removed because the inserter will add it again
-      // TODO clean up this inefficiency
-      //topology_.points().remove(ns);
+      // note: this might seem inefficient because we are calling std::erase for every candidate edge
+      // but I (philip) profiled this and it's not that bad - plus, std::erase isn't too bad when deleting
+      // things from the back of a list (which we are doing here)
+      topology_.points().remove(ns);
 
       // apply the insertion
       inserter_.clear();
       inserter_.restart();
       inserter_.delay() = true;
-      TIME0 = clock();
-      bool result = inserter_.apply( n0 , n1 , filter[idx] , filter.u(idx) , shell , ns );
-      TIME1 = clock();
-      apply_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
-      if (!result)
-      {
+      bool result = inserter_.apply( n0 , n1 , filter[idx] , filter.u(idx) , shell );
+      if (!result) {
         // the metric needs to be removed because the vertex was rejected.
         // for curverd geometries, the cavity might need to be enlarged.
         // the vertex was already removed (above)
@@ -605,130 +497,81 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         continue;
       }
 
-      // if the inserter was enlarged, don't be too restrictive with quality
-      TIME0 = clock();
+      // check that quality didn't degrade below the requested limit
       inserter_.cavity_quality().resize( inserter_.nb() );
       real_t qwi = worst_quality(inserter_,metric_ , inserter_.cavity_quality().data() );
       if (qwi < Q0) {
-        #if NO_DELETE
-        vacant_index = ns;
-        #else
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
-        #endif
         nb_quality_rejected++;
         continue;
       }
 
-      // check if the metric volume is respected
-      if (dof_factor > 0) {
-        real_t vol = 0.0;
-        for (index_t k=0;k<inserter_.nb();k++)
-          vol += metric_.volume( inserter_ , k );
-        index_t count = index_t(vol/topology_.element().reference().unit_volume());
-        if (dof_factor*count<inserter_.nb_real())
-        {
-          if (ge==NULL || ge->number()>2)
-          {
-            // it's going to be really hard to come back from something like this
-            avro_implement;
-            topology_.points().remove(ns);
-            metric_.remove(ns);
-            topology_.inverse().remove(ns);
-            nb_count_rejected++;
-            continue;
-          }
-        }
-      }
-      TIME1 = clock();
-      metric_time += real_t(TIME1 - TIME0)/real_t(CLOCKS_PER_SEC);
-
-      #if 0
-      if (!inserter_.closed_boundary())
-      {
-        avro_implement;
+      // we always need to maintain a closed boundary
+      if (!inserter_.closed_boundary()) {
         // it's going to be really hard to come back from something like this
+        avro_assert_not_reached; // is this even possible?
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);
         problem = true;
         continue;
       }
-      #endif
+
+      // check that we do not create valencies which are too large
+      bool high_valency = false;
+      std::vector<index_t> surrounding;
+      for (index_t j = 0; j < N.size(); j++) {
+        if (N[j] < topology_.points().nb_ghost()) continue;
+        surrounding.clear();
+        topology_.inverse().ball( N[j] , surrounding );
+        if (surrounding.size() > MAX_VALENCY[topology_.number()]) {
+          high_valency = true;
+          break;
+        }
+      }
+      if (high_valency) {
+        topology_.points().remove(ns);
+        metric_.remove(ns);
+        topology_.inverse().remove(ns);
+        nb_high_valency++;
+        continue;
+      }
 
       // apply the insertion into the topology
-      TIME0 = clock();
       topology_.apply(inserter_);
       avro_assert( metric_.check(topology_) );
-      TIME1 = clock();
-      topology_apply_time += real_t(TIME1 - TIME0)/real_t(CLOCKS_PER_SEC);
 
       // set the age of the endpoint vertices to 0 since a split was performed
+      // this information is needed to penalize interfaces which border elements
+      // that want to be adapted (when migrating interfaces in parallel)
       topology_.points().set_age( n0 , 0 );
       topology_.points().set_age( n1 , 0 );
 
-      // determine if any points were removed
-      for (index_t j=0;j<inserter_.nb_removed_nodes();j++) {
-        index_t removed_node = inserter_.removed_node(j);
-        if (removed.find(removed_node)==removed.end()) {
-          printf("vertex %lu was removed!\n",removed_node);
-          removed.insert( removed_node );
-        }
-      }
+      // ensure no vertices were removed (even if the cavity was enlarged)
+      avro_assert( inserter_.nb_removed_nodes() == 0);
 
       // check if the cavity was enlarged to turn off some of the existing edges
       if (inserter_.enlarged()) {
         // turn off points in the cavity, we can attempt them on the next pass
         const std::vector<index_t>& nodes = inserter_.nodes();
-        for (index_t j=0;j<nodes.size();j++)
+        for (index_t j = 0; j < nodes.size(); j++)
           flagged.insert( nodes[j] );
       }
 
       // the filter is happy
-      TIME0 = clock();
       filter.accept( idx , ns );
-      TIME1 = clock();
-      accept_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
       done = false; // since an insertion was performed
-      vacant_index = -1; // there is no longer a vacant index
 
       nb_inserted++;
     }
 
-    // delete the points that were removed during cavity enlargements
-    std::vector<index_t> removed_indices;
-    for (std::unordered_set<index_t>::iterator it=removed.begin();it!=removed.end();it++)
-      removed_indices.push_back( *it );
-
-    std::sort( removed_indices.begin() , removed_indices.end() );
-    std::reverse( removed_indices.begin() , removed_indices.end() );
-    for (index_t j = 0; j < removed_indices.size(); j++) {
-      topology_.remove_point( j );
-      metric_.remove(j);
-      topology_.inverse().remove(j);
-    }
-
-    // if a vacant index is left over, then we need to delete it
-    if (vacant_index >= 0) {
-      topology_.remove_point( vacant_index );
-      metric_.remove(vacant_index);
-      topology_.inverse().remove(vacant_index);
-    }
-
-    printf("\t\tinserted %lu, swapped %lu, lrej = %lu, qrej = %lu, vrej = %lu, prej = %lu/%lu, dof_rej = %lu, interp_rej = %lu\n",
-                nb_inserted,nb_swaps,nb_length_rejected,nb_quality_rejected,nb_visiblity_rejected,
-                inserter_.nb_parameter_rejections(),inserter_.nb_parameter_tests(),nb_count_rejected,nb_bad_interp);
+    printf("\t\tinserted %lu, lrej = %lu, qrej = %lu, vrej = %lu, prej = %lu/%lu, val_rej = %lu, interp_rej = %lu\n",
+                nb_inserted,nb_length_rejected,nb_quality_rejected,nb_visiblity_rejected,
+                inserter_.nb_parameter_rejections(),inserter_.nb_parameter_tests(),nb_high_valency,nb_bad_interp);
     nb_inserted_total += nb_inserted;
-    printf("\t\t--> metric time = %g\n",metric_time);
-    printf("\t\t--> shell time = %g\n",shell_time);
-    printf("\t\t--> apply time = %g\n",apply_time);
-    printf("\t\t--> accept time = %g\n",accept_time);
-    printf("\t\t--> interp time = %g\n",interp_time);
-    printf("\t\t--> filter time = %g\n",filter_time);
-    printf("\t\t--> topology apply time = %g\n",topology_apply_time);
-    printf("\t\t--> total time = %g\n",real_t(clock()-TOTAL_TIME0)/real_t(CLOCKS_PER_SEC));
-
+    printf("\t\tpass time = %g\n",real_t(clock()-PASS_T0)/real_t(CLOCKS_PER_SEC));
     pass++;
   }
 
