@@ -235,7 +235,7 @@ MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const
 
   real_t alpha = atan2( -0.25 , 1.0 );
 
-  real_t hmin = 0.0025;
+  real_t hmin = 0.0020;
   real_t hx = 100*hmin;
   real_t hy = 100*hmin;
   real_t hz = 100*hmin;
@@ -424,11 +424,20 @@ MetricField_Tesseract_Wave::operator()( const real_t* x ) const {
   Q(3,3) =  sin(alpha);
 
   real_t rho0 = r0 +(rf-r0)*T; // blast speed is derivative wrt T
+
+  #if 0
   real_t h0 = 0.0025;
   real_t hu = 0.125;
   real_t hmin = 0.05;
   real_t delta = 0.1;
   real_t ht = 0.5;
+  #else
+  real_t h0 = 0.004;
+  real_t hu = 100*h0;
+  real_t hmin = 0.05;
+  real_t delta = 0.1;
+  real_t ht = 0.25;
+  #endif
 
   vecd<real_t> L(4);
   real_t hrho = h0 +2*(hu-h0)*fabs(RHO-rho0);

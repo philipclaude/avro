@@ -318,6 +318,34 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 }
 
 template<typename type>
+void
+AdaptThread<type>::swap_cells( real_t qt , index_t npass )
+{
+
+  printf("-> performing edge swaps with target qt < %g:\n",qt);
+  index_t pass = 0;
+
+  while (true) {
+
+    if (pass > npass) break;
+    index_t nb_swaps = 0;
+
+    // create a list of elements that can be swapped based on their quality
+    // sorted from worst quality to best quality
+
+
+    // go through each element
+
+
+
+    if (nb_swaps == 0) break;
+
+  }
+
+
+}
+
+template<typename type>
 EdgeSwap<type>::EdgeSwap( Topology<type>& _topology ) :
   Primitive<type>(_topology)
 {
@@ -442,7 +470,6 @@ EdgeSwap<type>::valid( const index_t p , const index_t e0 , const index_t e1 )
 
   std::vector<index_t> edge = {e0,e1};
   if (this->C_.empty()) {
-    avro_assert_not_reached;
     this->topology_.intersect(edge,this->C_);
   }
   if (this->C_.size()==0) return false;
