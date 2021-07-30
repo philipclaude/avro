@@ -410,6 +410,7 @@ Cavity<type>::enlarge( bool verbose )
   std::vector<const real_t*> xk(nf);
 
   std::vector<index_t> C; // new cavity elements
+  C.reserve( nb_cavity() );
   avro_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
 
   cavity_set_.clear();

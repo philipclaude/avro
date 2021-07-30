@@ -43,10 +43,9 @@ FieldInterpolation<type,T>::eval( const Points& points ,  index_t p , const std:
     ielem = searcher_->find( points[p] , guesses[iguess] );
     if (ielem < 0)
     {
-      printf("outside\n");
       // point is probably outside domain
   		// let's make sure by first brute forcing the check
-      ielem = searcher_->brute( points[p] );
+      //ielem = searcher_->brute( points[p] );
       if (ielem<0)
       {
         // get the reference coordinates of the closest element

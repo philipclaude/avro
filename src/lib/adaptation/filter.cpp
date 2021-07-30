@@ -147,13 +147,13 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
   topology.get_edges( edges );
   TIME1 = clock();
 
-  printf("edge retrieval time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
+  //printf("edge retrieval time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
 	// prioritize geometry edges
   TIME0 = clock();
   prioritizeGeometry(edges,topology.points(),inserter);
   TIME1 = clock();
-  printf("geometry prioritization time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
+  //printf("geometry prioritization time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   nb_long_ = 0;
 
@@ -172,13 +172,13 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
     lengths[k] = metric.length(topology.points(),n0,n1);
   }
   TIME1 = clock();
-  printf("metric time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
+  //printf("metric time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
 	// prioritize by longest length
   TIME0 = clock();
 	prioritizeLongest( edges , topology.points() , lengths , inserter );
   TIME1 = clock();
-  printf("length prioritization time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
+  //printf("length prioritization time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   real_t Lmax = *std::max_element(lengths.begin(),lengths.end());
 
