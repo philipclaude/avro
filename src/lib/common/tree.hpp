@@ -23,6 +23,7 @@ template<typename Node_t>
 bool
 Tree<Node_t>::above( const Node_t* node ) const
 {
+  #if 1
   for (index_t k=0;k<nb_children();k++)
   {
     const Node_t* ck = child_ptr(k);
@@ -30,6 +31,12 @@ Tree<Node_t>::above( const Node_t* node ) const
     if ( ck->above(node) ) return true;
   }
   return false;
+  #else
+  for (index_t k = 0; k < children_.size(); k++) {
+		if (children_[k] == node) return true;
+	}
+	return false;
+  #endif
 }
 
 template<typename Node_t>
@@ -54,6 +61,14 @@ Tree<Node_t>::build_parents()
     child(k).build_parents();
   }
   uniquify(parents_);
+}
+
+template<typename Node_t>
+void
+Tree<Node_t>::build_children()
+{
+  children_.clear();
+  get_children(children_);
 }
 
 template<typename Node_t>

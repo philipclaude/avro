@@ -470,7 +470,7 @@ Cavity<type>::enlarge( bool verbose )
       xk[j] = point_.data();
 
       // check the orientation
-      real_t vol = numerics::simplex_volume(xk,dim);
+      real_t vol = numerics::simplex_volume(xk,topology_.points().dim());
 #else
       real_t vol = get_volume( topology_ , entity_ , cavity_[k] , j , point_.data() );
 #endif
@@ -486,8 +486,9 @@ Cavity<type>::enlarge( bool verbose )
         }
 
         // add the neighbour
-        if (neighbour>=0)
+        if (neighbour>=0) {
           C.push_back( index_t(neighbour) );
+        }
       }
     }
   }

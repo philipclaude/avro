@@ -262,6 +262,7 @@ Entity::intersect( Entity* e1 , Entity* e2 , Entity* e3 )
 bool
 Entity::above( const Entity* e ) const
 {
+	#if 1
 	for (index_t k=0;k<nb_children();k++)
 	{
 		if (child_ptr(k)==e) return true;
@@ -269,6 +270,12 @@ Entity::above( const Entity* e ) const
 			return true;
 	}
 	return false;
+	#else
+	for (index_t k = 0; k < children_.size(); k++) {
+		if (children_[k] == e) return true;
+	}
+	return false;
+	#endif
 }
 
 template<typename type>

@@ -59,6 +59,7 @@ public:
   bool has_child( const Node_t* c ) const;
 
   void build_parents();
+  void build_children();
   void add_parent( Node_t* parent );
   bool has_parent( const Node_t* P ) const;
 
@@ -80,6 +81,7 @@ public:
 protected:
   std::vector<Node_ptr> child_;
   std::vector<Node_t*> parents_; // list of all parents owning this
+  std::vector<Node_t*> children_; // list of all children below this
 
   Node_t* derived() { return static_cast<Node_t*>(this); }
   const Node_t* derived() const { return static_cast<const Node_t*>(this); }

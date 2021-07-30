@@ -136,6 +136,8 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
     real_t metric_time = 0.0;
     real_t shell_time = 0.0;
     real_t apply_time = 0.0;
+    real_t candidate_apply_time = 0.0;
+    real_t candidate_metric_time = 0.0;
 
     // evaluate the quality on the current topology
     TIME0 = clock();
@@ -182,7 +184,6 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       elems.clear();
       candidates.clear();
       edge_swapper_.restart();
-      edge_swapper_.save_boundary() = false;
 
       // swapping an edge doesn't change the other edges we might want to swap
       // it will affect the visibility of each swap so they might not be accepted
@@ -229,6 +230,18 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       // for all candidates
       edge_swapper_.set_cavity( elems );
 
+      // new
+      // the boundary of the swapper is also the same, so compute it once
+      // and let the swapper know that the boundary is saved
+      edge_swapper_.save_boundary() = false;
+      edge_swapper_.boundary().clear();
+      edge_swapper_.clear();
+      for (index_t j = 0; j < elems.size(); j++)
+        edge_swapper_.add_cavity(elems[j]);
+      edge_swapper_.compute_boundary();
+      edge_swapper_.save_boundary() = true;
+      // end new
+
       // loop through all candidates
       int m = -1;
       real_t qw = q0;
@@ -237,24 +250,29 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         // skip candidates that are endpoints of the initial edge
         if (candidates[j] == e0 || candidates[j] == e1) continue;
 
-        //printf("trying edge (%lu,%lu) with candidate %lu\n",e0,e1,candidates[j]);
         // try the swap
+        clock_t A0 = clock();
         bool accept = edge_swapper_.apply( candidates[j] , e0 , e1 );
+        clock_t A1 = clock();
+        candidate_apply_time += real_t(A1 - A0)/real_t(CLOCKS_PER_SEC);
         if (!accept) {
           // it was rejected because of geometry topology or visiblity
           continue;
         }
 
+        A0 = clock();
         edge_swapper_.cavity_quality().resize( edge_swapper_.nb() );
         real_t qw_swap = worst_quality(edge_swapper_,metric_,edge_swapper_.cavity_quality().data() );
-        if (qw_swap > qw)
-        {
+        if (qw_swap > qw) {
           // check that no elements (ghosts) become duplicated
+          // this might only be needed for curved geometries
           //if (!edge_swapper_.has_unique_elems()) continue;
           //if (!edge_swapper_.closed_boundary()) continue;
           m  = candidates[j];
           qw = qw_swap;
         }
+        A1 = clock();
+        candidate_metric_time += real_t(A1-A0)/real_t(CLOCKS_PER_SEC);
       }
       TIME1 = clock();
       candidate_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
@@ -273,9 +291,6 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       TIME1 = clock();
       apply_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
-      edge_swapper_.save_boundary() = false;
-      edge_swapper_.boundary().clear();
-
     } // loop over edges
 
     printf("\t--> performed %lu edge swaps (out of %lu), lrej = %lu\n",nb_swaps,nb_edges_considered,nb_length_rejected);
@@ -293,6 +308,9 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
     printf("\t\tmetric time = %g\n",metric_time);
     printf("\t\tshell time = %g\n",shell_time);
     printf("\t\tapply time = %g\n",apply_time);
+    printf("\t\tcandidate apply time = %g\n",candidate_apply_time);
+    printf("\t\tcandidate metric time = %g\n",candidate_metric_time);
+
     printf("\t\tpass time = %g\n",real_t(clock()-PASS_T0)/real_t(CLOCKS_PER_SEC));
 
   } // loop over passes
@@ -423,8 +441,10 @@ EdgeSwap<type>::valid( const index_t p , const index_t e0 , const index_t e1 )
   if (e1<this->topology_.points().nb_ghost()) return false;
 
   std::vector<index_t> edge = {e0,e1};
-  if (this->C_.empty())
+  if (this->C_.empty()) {
+    avro_assert_not_reached;
     this->topology_.intersect(edge,this->C_);
+  }
   if (this->C_.size()==0) return false;
 
   // check if the two points lie on an Edge entity
@@ -519,7 +539,6 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
   // apply the operator, checking visibility
   this->enlarge_ = false;
   bool accept = this->compute( p , this->topology_.points()[p] , this->C_ );
-  //this->save_boundary_ = true;
   if (!accept) return false;
 
   // check if all produce elements have a positive determinant of implied metric

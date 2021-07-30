@@ -73,8 +73,8 @@ Topology<type>::get_edges( std::vector<index_t>& edges ) const
 {
 
   if (inverse_.created()) {
-    get_edges_using_ball(*this,edges);
-    return;
+    //get_edges_using_ball(*this,edges);
+    //return;
   }
 
   std::vector<index_t> ek;
