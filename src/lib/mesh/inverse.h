@@ -32,6 +32,7 @@ public:
   void build();
 
   index_t elem( const index_t k ) const { return elem_[k]; }
+  std::unordered_set<index_t> ball( index_t k ) const { return ball_[k]; }
 
   void ball( index_t k , std::vector<index_t>& B ) const;
   void getball( index_t p , index_t k , std::unordered_set<index_t>& B ) const;
@@ -65,6 +66,7 @@ private:
 
   const Topology<type>& topology_;
   std::vector<index_t> elem_;
+  std::vector<std::unordered_set<index_t>> ball_;
 
 };
 

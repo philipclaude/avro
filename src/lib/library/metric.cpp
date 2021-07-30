@@ -436,7 +436,7 @@ MetricField_Tesseract_Wave::operator()( const real_t* x ) const {
   real_t hu = 100*h0;
   real_t hmin = 0.05;
   real_t delta = 0.1;
-  real_t ht = 0.25;
+  real_t ht = 0.5;
   #endif
 
   vecd<real_t> L(4);

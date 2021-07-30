@@ -71,8 +71,7 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
   // loop through all candidates
   int m = -1;
   real_t qw = Q0;
-  for (index_t j=0;j<candidates.size();j++)
-  {
+  for (index_t j = 0; j < candidates.size(); j++) {
 
     if (candidates[j]==p || candidates[j]==q) continue;
 
@@ -85,12 +84,12 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
 
     // check if the swap is valid in terms of visibility
     accept = edge_swapper_.apply( candidates[j] , p , q );
-    if (!accept)
-    {
+    if (!accept) {
       continue;
     }
 
     // option to check the produced lengths
+    #if 0
     std::vector<real_t> lens;
     metric_.lengths( edge_swapper_ , lens );
     if (lens.size()==0) return false;
@@ -98,19 +97,18 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
     real_t lmax = * std::max_element( lens.begin() , lens.end() );
     if (lmin0>0 && lmin<lmin0) continue;
     if (lmax0>0 && lmax>lmax0) continue;
+    #endif
 
     edge_swapper_.cavity_quality().resize( edge_swapper_.nb() );
     real_t qws = worst_quality(edge_swapper_,metric_ , edge_swapper_.cavity_quality().data() );
-    if (qws>qw)
-    {
+    if (qws > qw) {
       if (!edge_swapper_.has_unique_elems()) continue;
       m  = candidates[j];
       qw = qws;
     }
-
   }
 
-  if (m<0) return false;
+  if (m < 0) return false;
 
   edge_swapper_.apply( index_t(m) , p , q );
   topology_.apply(edge_swapper_);
@@ -122,6 +120,8 @@ template<typename type>
 void
 AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 {
+  //swap_cells(qt,npass);return;
+
   index_t pass = 0;
 
   printf("-> performing edge swaps with target qt < %g:\n",qt);
@@ -323,25 +323,85 @@ AdaptThread<type>::swap_cells( real_t qt , index_t npass )
 {
 
   printf("-> performing edge swaps with target qt < %g:\n",qt);
-  index_t pass = 0;
 
+  index_t nb_swaps_total = 0;
+  index_t pass = 0;
   while (true) {
 
-    if (pass > npass) break;
     index_t nb_swaps = 0;
 
-    // create a list of elements that can be swapped based on their quality
-    // sorted from worst quality to best quality
+    std::unordered_set<index_t> flagged;
 
+    std::vector<index_t> ball;
+    for (index_t p = 0; p < topology_.points().nb(); p++) {
 
-    // go through each element
+      if (p < topology_.points().nb_ghost()) continue;
+      if (flagged.find(p) != flagged.end()) continue;
 
+      // get the ball of this vertex
+      ball.clear();
+      topology_.inverse().ball( p , ball );
 
+      real_t qw = -1;
+      index_t elem = topology_.nb();
+      for (index_t k = 0; k < ball.size(); k++) {
 
+        real_t q = metric_.quality( topology_ , ball[k] );
+        if (qw < 0 || q < qw) {
+          qw   = q;
+          elem = ball[k];
+        }
+      }
+
+      // skip if the worst quality attached to this vertex is ok
+      if (qw > qt) continue;
+
+      // try to swap with the element
+      std::vector<index_t> edges;
+      topology_.element().get_edges( topology_(elem) , topology_.nv(elem) , edges );
+      for (index_t j = 0; j < edges.size()/2; j++) {
+
+        index_t e0 = edges[2*j  ];
+        index_t e1 = edges[2*j+1];
+
+        if (e0 == p || e1 == p) continue;
+        if (flagged.find(e0) != flagged.end() || flagged.find(e1) != flagged.end()) continue;
+
+        // check if the swap is valid in terms of geometry topology
+        bool accept = edge_swapper_.valid( p , e0 , e1 );
+        if (!accept) {
+          continue; // go to the next edge
+        }
+
+        // check if the swap is valid in terms of visibility
+        accept = edge_swapper_.apply( p , e0 , e1 );
+        if (!accept) {
+          continue;
+        }
+
+        // check if quality improves
+        edge_swapper_.cavity_quality().resize( edge_swapper_.nb() );
+        real_t qws = worst_quality(edge_swapper_,metric_ , edge_swapper_.cavity_quality().data() );
+        if (qws <= qw) continue;
+        if (!edge_swapper_.has_unique_elems()) continue;
+
+        // if we made it here, then a swap is valid
+        flagged.insert(e0);
+        flagged.insert(e1);
+        flagged.insert(p);
+        topology_.apply(edge_swapper_);
+        nb_swaps++;
+
+        printf("pass %lu, swapped edge (%lu,%lu) on element %lu with vertex %lu\n",pass,e0,e1,elem,p);
+
+        break;
+      } // loop over edges
+    } // loop over points
     if (nb_swaps == 0) break;
-
+    pass++;
   }
 
+  printf("performed %lu swaps\n",nb_swaps_total);
 
 }
 
