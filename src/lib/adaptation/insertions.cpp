@@ -370,6 +370,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
 
     done = true;
 
+    topology_.inverse().build();
+    topology_.inverse().use_ball(true);
+
     // setup the insertion filter
     Filter filter( topology_.points().dim() );
 
@@ -574,6 +577,9 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
     printf("\t\tpass time = %g\n",real_t(clock()-PASS_T0)/real_t(CLOCKS_PER_SEC));
     pass++;
   }
+
+  topology_.inverse().use_ball(false);
+
 
   // analyze the resulting edge lengths
   std::vector<index_t> edges;

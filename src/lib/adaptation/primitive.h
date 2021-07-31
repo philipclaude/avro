@@ -237,6 +237,8 @@ public:
 
   index_t& exponent() { return exponent_; }
 
+  void set_inverse( std::vector<std::vector<index_t>>* inverse) { inverse_ = inverse; }
+
 private:
   real_t delta_,delta_min_,delta_max_;
   index_t nb_parameter_tests_;
@@ -255,6 +257,8 @@ private:
   index_t nb_interpolated_outside_;
 
   index_t exponent_; // 1 for avro-style, 4 for bossen-heckbert style
+
+  std::vector< std::vector<index_t> >* inverse_;
 };
 
 } // avro

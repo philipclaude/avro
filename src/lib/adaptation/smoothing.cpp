@@ -31,6 +31,13 @@ AdaptThread<type>::smooth_points( index_t nb_iter )
 
   real_t Q0 = worst_quality(topology_,metric_);
 
+  // pre-compute the inverse since this doesn't change
+  std::vector<std::vector<index_t>> inverse( topology_.points().nb() );
+  for (index_t k = 0; k < topology_.nb(); k++)
+  for (index_t j = 0; j < topology_.nv(k); j++)
+    inverse[topology_(k,j)].push_back(k);
+  smoother_.set_inverse( &inverse );
+
   // loop over smoothing iterations
   printf("-> performing vertex smoothing:\n");
   real_t initial_objective;
@@ -75,7 +82,8 @@ Smooth<type>::Smooth( Topology<type>& _topology ) :
   delta_min_(1e20),
   delta_max_(-1),
   M0_(_topology.number()),
-  exponent_(1)
+  exponent_(1),
+  inverse_(nullptr)
 {
   this->setName("smoother");
   resetRejections();
@@ -151,7 +159,10 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 
   // compute the cavity around p
   this->C_.clear();
-  this->topology_.intersect( {p} , this->C_ );
+  if (inverse_ == nullptr)
+    this->topology_.intersect( {p} , this->C_ );
+  else
+    this->C_.assign( (*inverse_)[p].begin() , (*inverse_)[p].end() );
 
   const coord_t dim = this->topology_.points().dim();
   std::vector<real_t> F( dim,0. );

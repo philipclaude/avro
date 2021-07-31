@@ -27,6 +27,7 @@
 #include "avro.h"
 
 #include <stdio.h>
+#include <time.h>
 
 namespace avro
 {
@@ -155,7 +156,8 @@ adapt( int nb_input , const char** inputs )
   if (number<4)
     params.set("insertion volume factor", -1.0 );
 
-  for (index_t iter=0;iter<nb_iter;iter++)
+  clock_t TIME0 = clock();
+  for (index_t iter = 0; iter < nb_iter; iter++)
   {
     // get the mesh and the metric field
     Mesh& mesh = *pmesh;
@@ -194,6 +196,8 @@ adapt( int nb_input , const char** inputs )
 
     if (params["curved"]) params.set("has uv", true);
   }
+  clock_t TIME1 = clock();
+  printf("--> time = %g seconds\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   Library* lib = Library::get();
   lib->add_mesh_ptr(pmesh);

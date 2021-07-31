@@ -25,7 +25,8 @@ namespace avro
 
 template<typename type>
 InverseTopology<type>::InverseTopology( const Topology<type>& topology ) :
-  topology_(topology)
+  topology_(topology),
+  use_ball_(false)
 {}
 
 template<typename type>
@@ -46,14 +47,16 @@ template<typename type>
 void
 InverseTopology<type>::build()
 {
+  ball_.clear();
   elem_.resize( topology_.points().nb() , topology_.nb()+1 );
-  ball_.resize( topology_.points().nb() );
+  ball_.resize( topology_.points().nb() , std::unordered_set<index_t>() );
 
   for (index_t k=0;k<topology_.nb();k++)
   {
     for (index_t j=0;j<topology_.nv(k);j++)
     {
       index_t p = topology_(k,j);
+      avro_assert_msg( p < topology_.points().nb() , "p = %lu, nb_points = %lu" , p , topology_.points().nb() );
       ball_[p].insert(k);
 
       // skip ghosts
@@ -96,12 +99,11 @@ template<typename type>
 void
 InverseTopology<type>::ball( index_t p , std::vector<index_t>& B ) const
 {
-  #if STORE_BALL
-  const std::unordered_set<index_t>& b = ball_[p];
-  #else
   std::unordered_set<index_t> b;
-  getball( p , elem_[p] , b );
-  #endif
+  if (use_ball_)
+    b = ball_[p];
+  else
+    getball( p , elem_[p] , b );
 
   B.resize( b.size() );
   std::unordered_set<index_t>::const_iterator it;

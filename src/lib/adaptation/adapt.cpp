@@ -85,6 +85,8 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
 const real_t nb_smooth = 10;
 const real_t qt_max = 0.8;
 const bool limit_collapse_lmax = false;
+const index_t nb_swap_pass_qt_min = 5;
+const index_t nb_swap_pass_qt_max = 2;
 
 template<typename type>
 int
@@ -190,8 +192,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // swap edges to improve quality
   properties.compute( mesh_topology , metric );
   properties.print("pre-swap" );
-  adaptation.swap_edges(0.4,10); // no length limit
-  adaptation.swap_edges(qt_max,4); // no length limit
+  adaptation.swap_edges(0.4,nb_swap_pass_qt_min); // no length limit
+  adaptation.swap_edges(qt_max,nb_swap_pass_qt_max); // no length limit
   adaptation.check("swaps");
 
   // perform some vertex smoothing to drive lengths to 1
@@ -205,8 +207,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
     // swap edges to improve quality
     properties.compute( mesh_topology , metric );
     properties.print("pre-swap" );
-    adaptation.swap_edges(0.4,10,true); // limit length
-    adaptation.swap_edges(qt_max,4,true); // limit length
+    adaptation.swap_edges(0.4,nb_swap_pass_qt_min,true); // limit length
+    adaptation.swap_edges(qt_max,nb_swap_pass_qt_max,true); // limit length
     adaptation.check("swaps");
   }
 
@@ -223,7 +225,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // swap facets then edges to improve quality
   properties.compute( mesh_topology , metric );
   properties.print("pre-swap" );
-  adaptation.swap_edges(0.4,10); // no length limit
+  adaptation.swap_edges(0.4,nb_swap_pass_qt_min); // no length limit
   adaptation.swap_edges(qt_max,2); // no length limit
   adaptation.check("swaps");
 
@@ -247,8 +249,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // swap edges to improve quality
   properties.compute( mesh_topology , metric );
   properties.print("pre-swap" );
-  adaptation.swap_edges(0.4,10,true); // limit length
-  adaptation.swap_edges(qt_max,4,true); // limit length
+  adaptation.swap_edges(0.4,nb_swap_pass_qt_min,true); // limit length
+  adaptation.swap_edges(qt_max,nb_swap_pass_qt_max,true); // limit length
   adaptation.check("swaps");
 
   // perform some vertex smoothing to drive lengths to 1
@@ -280,8 +282,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // swap edges to improve quality
   properties.compute( mesh_topology , metric );
   properties.print("pre-swap" );
-  adaptation.swap_edges(0.4,10,true); // limit length
-  adaptation.swap_edges(qt_max,4,true); // limit length
+  adaptation.swap_edges(0.4,nb_swap_pass_qt_min,true); // limit length
+  adaptation.swap_edges(qt_max,nb_swap_pass_qt_max,true); // limit length
   adaptation.check("swaps");
 
 done:

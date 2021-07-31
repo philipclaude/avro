@@ -127,7 +127,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
   printf("-> performing edge swaps with target qt < %g:\n",qt);
   while (true)
   {
-    if (pass>npass) break;
+    if (pass > npass) break;
 
     clock_t TIME0,TIME1;
     clock_t PASS_T0 = clock();
@@ -153,12 +153,10 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
             pass,qmin,qt,count,topology_.nb_real());
 
     index_t nb_swaps = 0;
-    index_t nb_length_rejected = 0;
     index_t nb_edges_considered = 0;
 
     // now try edge swaps
     nb_swaps = 0;
-    nb_length_rejected = 0;
     std::vector<index_t> edges;
     TIME0 = clock();
     lengths_in_bounds( metric_ , topology_ , edges , 0.8 );
@@ -177,12 +175,13 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
     std::vector<index_t> elems;
     std::vector<index_t> candidates;
+    std::unordered_set<index_t> candidate_set;
     std::vector<real_t> lens;
-    for (index_t k=0;k<edges.size()/2;k++)
-    {
+    for (index_t k = 0; k < edges.size()/2; k++) {
 
       elems.clear();
       candidates.clear();
+      candidate_set.clear();
       edge_swapper_.restart();
 
       // swapping an edge doesn't change the other edges we might want to swap
@@ -197,6 +196,10 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         continue;
       }
 
+      // we can skip a shell calculation since this swap is never valid
+      Entity* g = edge_swapper_.geometry(e0,e1);
+      if (g != nullptr && g->number() == 1) continue;
+
       TIME0 = clock();
       std::vector<index_t> edge = {e0,e1};
       topology_.intersect(edge,elems);
@@ -207,11 +210,17 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       // initial worst quality
       TIME0 = clock();
       real_t q0 = -1;
+      index_t worst_elem;
+      std::unordered_set<index_t> bad_elems;
       for (index_t j=0;j<elems.size();j++) {
         if (topology_.ghost( elems[j] ) )
           continue;
-        if (q0 < 0 || metric_.quality(topology_,elems[j]) < q0)
-          q0 = metric_.quality(topology_,elems[j]);
+        real_t q = metric_.quality(topology_,elems[j]);
+        if (q0 < 0 || q  < q0) {
+          q0 = q;
+          worst_elem = elems[j];
+        }
+        if (q < qt) bad_elems.insert(elems[j]);
       }
       if (q0 > qt) continue;
       TIME1 = clock();
@@ -220,18 +229,30 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       nb_edges_considered++;
 
       TIME0 = clock();
-      // list all the vertices in elems
-      for (index_t j = 0; j < elems.size(); j++)
-      for (index_t i = 0; i < topology_.nv(elems[j]); i++)
-        candidates.push_back(topology_(elems[j],i));
-      uniquify(candidates);
+
+      // list all the swap candidates
+      for (index_t i = 0; i < topology_.nv(worst_elem); i++) {
+        candidates.push_back( topology_(worst_elem,i) );
+        candidate_set.insert( topology_(worst_elem,i) );
+      }
+
+      #if 0
+      for (index_t j = 0; j < elems.size(); j++) {
+        if (bad_elems.find(elems[j]) == bad_elems.end()) continue; // only consider bad elements
+        for (index_t i = 0; i < topology_.nv(elems[j]); i++) {
+          index_t m = topology_(elems[j],i);
+          if (candidate_set.find(m) != candidate_set.end()) continue;
+          candidate_set.insert(m);
+          candidates.push_back(m);
+        }
+      }
+      #endif
 
       // assign the cavity used by the swapper since this is the same
       // for all candidates
       edge_swapper_.set_cavity( elems );
 
-      // new
-      // the boundary of the swapper is also the same, so compute it once
+      // the boundary of the swapper is the same for all candidates, so compute it once
       // and let the swapper know that the boundary is saved
       edge_swapper_.save_boundary() = false;
       edge_swapper_.boundary().clear();
@@ -240,7 +261,6 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         edge_swapper_.add_cavity(elems[j]);
       edge_swapper_.compute_boundary();
       edge_swapper_.save_boundary() = true;
-      // end new
 
       // loop through all candidates
       int m = -1;
@@ -273,6 +293,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         }
         A1 = clock();
         candidate_metric_time += real_t(A1-A0)/real_t(CLOCKS_PER_SEC);
+        if (m >= 0) break; // if we found a swap candidate, we're done (save extra computation)
       }
       TIME1 = clock();
       candidate_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
@@ -286,14 +307,14 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 
       TIME0 = clock();
       nb_swaps++;
-      edge_swapper_.apply( index_t(m) , e0 , e1 );
+      //edge_swapper_.apply( index_t(m) , e0 , e1 ); // not needed if we immediately break when a swap is found
       topology_.apply(edge_swapper_);
       TIME1 = clock();
       apply_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
 
     } // loop over edges
 
-    printf("\t--> performed %lu edge swaps (out of %lu), lrej = %lu\n",nb_swaps,nb_edges_considered,nb_length_rejected);
+    printf("\t--> performed %lu edge swaps (out of %lu)\n",nb_swaps,nb_edges_considered);
     printf("\t\tgeometry rejections: ");
     printf("Invalid (%lu)",edge_swapper_.nb_invalid_geometry());
     if (topology_.number()>1) printf(", Edges (%lu)",edge_swapper_.nb_geometry_rejections(1));
@@ -326,82 +347,140 @@ AdaptThread<type>::swap_cells( real_t qt , index_t npass )
 
   index_t nb_swaps_total = 0;
   index_t pass = 0;
+
+  std::unordered_set<index_t> candidate_set;
+  std::vector<index_t> candidates;
+
+  index_t nb_candidates_avg = 0;
+  index_t counter = 0;
+
+  std::vector<index_t> shell;
+  index_t nb_swaps0 = 0;
   while (true) {
 
     index_t nb_swaps = 0;
 
-    std::unordered_set<index_t> flagged;
+    std::unordered_set<std::string> edges_considered;
 
-    std::vector<index_t> ball;
-    for (index_t p = 0; p < topology_.points().nb(); p++) {
+    for (index_t k = 0; k < topology_.nb(); k++) {
 
-      if (p < topology_.points().nb_ghost()) continue;
-      if (flagged.find(p) != flagged.end()) continue;
+      if (topology_.ghost(k)) continue;
 
-      // get the ball of this vertex
-      ball.clear();
-      topology_.inverse().ball( p , ball );
+      // evaluate the quality of this element
+      real_t q0 = metric_.quality( topology_ , k );
+      if (q0 > qt) continue;
 
-      real_t qw = -1;
-      index_t elem = topology_.nb();
-      for (index_t k = 0; k < ball.size(); k++) {
-
-        real_t q = metric_.quality( topology_ , ball[k] );
-        if (qw < 0 || q < qw) {
-          qw   = q;
-          elem = ball[k];
-        }
-      }
-
-      // skip if the worst quality attached to this vertex is ok
-      if (qw > qt) continue;
-
-      // try to swap with the element
+      // loop through the edges of this element
       std::vector<index_t> edges;
-      topology_.element().get_edges( topology_(elem) , topology_.nv(elem) , edges );
+      topology_.element().get_edges( topology_(k) , topology_.nv(k) , edges );
+
       for (index_t j = 0; j < edges.size()/2; j++) {
 
-        index_t e0 = edges[2*j  ];
+        index_t e0 = edges[2*j];
         index_t e1 = edges[2*j+1];
 
-        if (e0 == p || e1 == p) continue;
-        if (flagged.find(e0) != flagged.end() || flagged.find(e1) != flagged.end()) continue;
+        if (e0 < topology_.points().nb_ghost()) continue;
+        if (e1 < topology_.points().nb_ghost()) continue;
 
-        // check if the swap is valid in terms of geometry topology
-        bool accept = edge_swapper_.valid( p , e0 , e1 );
-        if (!accept) {
-          continue; // go to the next edge
+        if (e0 > e1) std::swap(e0,e1);
+
+        // only loop through edges that have yet to be considered
+        std::string label = std::to_string(e0) + "-" + std::to_string(e1);
+        if (edges_considered.find(label) != edges_considered.end()) continue;
+        edges_considered.insert(label);
+
+        //real_t lj = metric_.length( topology_.points() , e0 , e1 );
+        //if (lj < 1.2 && lj > 0.8) continue;
+
+        // get the shell
+        shell.clear();
+        topology_.intersect({e0,e1},shell);
+        if (shell.size() == 0) continue; // this probably isn't possible, but just being safe
+
+        // list all the swap candidates
+        candidate_set.clear();
+        candidates.clear();
+        for (index_t i = 0; i < shell.size(); i++) {
+          //if (shell[i] != k) continue;
+          if (topology_.ghost(shell[i])) continue;
+          for (index_t p = 0; p < topology_.nv(shell[i]); p++) {
+            index_t m = topology_(shell[i],p);
+            if (m < topology_.points().nb_ghost()) continue;
+            if (candidate_set.find(m) != candidate_set.end()) continue;
+            candidate_set.insert(m);
+            candidates.push_back(m);
+          }
         }
+        nb_candidates_avg += candidates.size();
+        counter++;
 
-        // check if the swap is valid in terms of visibility
-        accept = edge_swapper_.apply( p , e0 , e1 );
-        if (!accept) {
-          continue;
-        }
+        // assign the cavity used by the swapper since this is the same
+        // for all candidates
+        edge_swapper_.set_cavity( shell );
 
-        // check if quality improves
-        edge_swapper_.cavity_quality().resize( edge_swapper_.nb() );
-        real_t qws = worst_quality(edge_swapper_,metric_ , edge_swapper_.cavity_quality().data() );
-        if (qws <= qw) continue;
-        if (!edge_swapper_.has_unique_elems()) continue;
+        // the boundary of the swapper is the same for all candidates, so compute it once
+        // and let the swapper know that the boundary is saved
+        edge_swapper_.save_boundary() = false;
+        edge_swapper_.boundary().clear();
+        edge_swapper_.clear();
+        for (index_t i = 0; i < shell.size(); i++)
+          edge_swapper_.add_cavity(shell[i]);
+        edge_swapper_.compute_boundary();
+        edge_swapper_.save_boundary() = true;
 
-        // if we made it here, then a swap is valid
-        flagged.insert(e0);
-        flagged.insert(e1);
-        flagged.insert(p);
-        topology_.apply(edge_swapper_);
+        // loop through all candidates
+        int m = -1;
+        real_t qw = q0;
+        for (index_t i = 0; i < candidates.size(); i++) {
+
+          // skip candidates that are endpoints of the initial edge
+          if (candidates[i] == e0 || candidates[i] == e1) continue;
+
+          // try the swap
+          bool accept = edge_swapper_.apply( candidates[i] , e0 , e1 );
+          if (!accept) {
+            // it was rejected because of geometry topology or visiblity
+            continue;
+          }
+
+          edge_swapper_.cavity_quality().resize( edge_swapper_.nb() );
+          real_t qw_swap = worst_quality(edge_swapper_,metric_,edge_swapper_.cavity_quality().data() );
+          if (qw_swap > qw) {
+            // check that no elements (ghosts) become duplicated
+            // this might only be needed for curved geometries
+            //if (!edge_swapper_.has_unique_elems()) continue;
+            //if (!edge_swapper_.closed_boundary()) continue;
+            m  = candidates[i];
+            qw = qw_swap;
+          }
+          if (m >= 0) break; // if we found a swap candidate, we're done (save some computation)
+        } // loop over candidates
+
+        // check if there was no candidate
+        if (m < 0) continue;
+
+        // an acceptable swap was found, reset the age of the vertices involved
+        topology_.points().age(e0) = 0;
+        topology_.points().age(e1) = 0;
+
         nb_swaps++;
-
-        printf("pass %lu, swapped edge (%lu,%lu) on element %lu with vertex %lu\n",pass,e0,e1,elem,p);
-
+        topology_.apply(edge_swapper_);
         break;
       } // loop over edges
-    } // loop over points
+    }
+
+    if (pass == 0) nb_swaps0 = nb_swaps;
+
+    printf("--> pass %lu, performed %lu swaps\n",pass,nb_swaps);
     if (nb_swaps == 0) break;
+    if (100*nb_swaps < nb_swaps0) break;
+    nb_swaps_total += nb_swaps;
     pass++;
+    if (pass > npass) break;
   }
 
-  printf("performed %lu swaps\n",nb_swaps_total);
+  printf("performed %lu swaps in total\n",nb_swaps_total);
+  printf("average number of candidates = %g\n",real_t(nb_candidates_avg)/counter);
 
 }
 

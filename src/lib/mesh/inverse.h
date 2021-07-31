@@ -58,6 +58,8 @@ public:
 
   void print( bool balls=true ) const;
 
+  void use_ball( bool x ) { use_ball_ = x; }
+
 
 private:
 
@@ -67,6 +69,8 @@ private:
   const Topology<type>& topology_;
   std::vector<index_t> elem_;
   std::vector<std::unordered_set<index_t>> ball_;
+
+  bool use_ball_;
 
 };
 
