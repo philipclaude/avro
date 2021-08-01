@@ -17,15 +17,13 @@ namespace avro
 namespace graphics
 {
 
-
-
-
 index_t label_counter;
 
 GUI::GUI( Window& window ) :
  window_(window),
  count_(5)
 {
+  #if AVRO_WITH_GL
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   //context_ = ImGui::GetIO();
@@ -44,6 +42,8 @@ GUI::GUI( Window& window ) :
   // setup Platform/Renderer bindings
   ImGui_ImplGlfw_InitForOpenGL(window_.window(), true);
   ImGui_ImplOpenGL3_Init(glsl_version);
+
+  #endif
 }
 
 std::string
@@ -66,6 +66,8 @@ convert_to_char( const std::vector<std::string>& s ) {
 
 void
 GUI::draw() {
+
+  #if AVRO_WITH_GL
 
   //bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
   ImGuiWindowFlags window_flags = 0;
@@ -358,6 +360,8 @@ GUI::draw() {
   #endif
 
   glfwSwapBuffers(window_.window());
+
+  #endif
 }
 
 

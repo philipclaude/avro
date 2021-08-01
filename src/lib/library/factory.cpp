@@ -104,6 +104,11 @@ get_metric( const std::string& name , Points& points , bool& is_analytic ,
     MetricField_Tesseract_RotatingBoundaryLayer analytic;
     return std::make_shared<MetricAttachment>(analytic,points);
   }
+  if (name=="MovingCylinder-4d")
+  {
+    MetricField_Tesseract_MovingCylinder analytic;
+    return std::make_shared<MetricAttachment>(analytic,points);
+  }
   if (name=="Wave-3d")
   {
     MetricField_Cube_Wave analytic;

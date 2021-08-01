@@ -220,6 +220,16 @@ public:
   symd<real_t> operator()( const real_t* x ) const;
 };
 
+class MetricField_Tesseract_MovingCylinder : public MetricField_Analytic
+{
+public:
+  MetricField_Tesseract_MovingCylinder() :
+    MetricField_Analytic(4)
+  {}
+
+  symd<real_t> operator()( const real_t* x ) const;
+};
+
 template<typename type>
 class MetricField_UniformGeometry : public MetricField_Analytic, public FieldInterpolation<type,Metric>
 {

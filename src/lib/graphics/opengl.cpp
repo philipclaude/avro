@@ -16,6 +16,8 @@ std::shared_ptr<Shaders> __shaders__;
 
 OpenGL4_Manager::OpenGL4_Manager() {
 
+  #if AVRO_WITH_GL
+
   // initialize GLFW
   avro_assert_msg( glfwInit() , "problem initializing OpenGL!" );
   #if AVRO_HEADLESS_GRAPHICS == 0
@@ -33,6 +35,10 @@ OpenGL4_Manager::OpenGL4_Manager() {
   #endif
 
   glfwWindowHint(GLFW_RESIZABLE , GLFW_TRUE );
+
+  #else
+  avro_assert_not_reached;
+  #endif
 }
 
 void

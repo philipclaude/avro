@@ -32,7 +32,7 @@ public:
 
 private:
   Window& window_;
-  ImGuiIO context_;
+  //ImGuiIO context_;
 
   int count_;
 };

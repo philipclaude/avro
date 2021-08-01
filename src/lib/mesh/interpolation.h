@@ -33,6 +33,11 @@ public:
   virtual int eval( const Points& points , index_t p , const std::vector<index_t>& guesses , T& tp );
 
   bool analytic() const { return analytic_; }
+  const ElementSearch<type>& searcher() const {
+    return *searcher_.get();
+  }
+
+  const Field<type,T>& field() const { return *pfield_; }
 
 protected:
   bool analytic_;

@@ -11,6 +11,8 @@ namespace avro
 namespace graphics
 {
 
+#if AVRO_WITH_GL
+
 static void
 _mouse_button_callback(GLFWwindow* window ,int button,int action,int mods) {
   static_cast<Window*>(glfwGetWindowUserPointer(window))->mouse_button_callback(button,action,mods);
@@ -36,8 +38,12 @@ _resize_callback( GLFWwindow* window, int width, int height) {
   static_cast<Window*>(glfwGetWindowUserPointer(window))->resize(width,height);
 }
 
+#endif
+
 void
 Window::init() {
+
+  #if AVRO_WITH_GL
 
   #if AVRO_HEADLESS_GRAPHICS
   glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -99,6 +105,10 @@ Window::init() {
   draw_count_ = 0;
 
   select_colormap("bwr");
+
+  #else
+  avro_assert_not_reached;
+  #endif
 }
 
 void

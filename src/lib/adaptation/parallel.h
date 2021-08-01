@@ -65,6 +65,8 @@ public:
   real_t time_partition() const { return time_partition_; }
   real_t time_exchange() const { return time_exchange_; }
 
+  const std::vector<VertexMetric>& metrics() const { return metrics_; }
+
 private:
 
   void migrate_balance( index_t nb_part );

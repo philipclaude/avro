@@ -1,7 +1,9 @@
 #include "unit_tester.hpp"
 
 #include "adaptation/adapt.h"
+#include "adaptation/metric.h"
 #include "adaptation/parallel.h"
+#include "adaptation/properties.h"
 
 #include "common/mpi.hpp"
 #include "common/process.h"
@@ -12,13 +14,18 @@
 
 #include "library/ckf.h"
 #include "library/egads.h"
+#include "library/factory.h"
 #include "library/meshb.h"
 #include "library/metric.h"
 #include "library/tesseract.h"
 
+#include "mesh/interpolation.h"
 #include "mesh/partition.h"
 
 #include "numerics/geometry.h"
+
+#include <fstream>
+#include <time.h>
 
 using namespace avro;
 
@@ -26,48 +33,95 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 
 #if AVRO_MPI
 
-UT_TEST_CASE( test1 )
-{
-  coord_t number = 0, dim = 0;
+template<typename F>
+void
+evaluate_metric( const F& field , const Points& points , std::vector<VertexMetric>& metrics , bool initial_eval ) {
+  metrics.resize( points.nb() );
+  for (index_t k = 0; k < metrics.size(); k++)
+    metrics[k] = field( points[k] );
+}
 
-  EGADS::Context context;
+template<>
+void
+evaluate_metric( const MetricAttachment& attachment , const Points& points , std::vector<VertexMetric>& metrics , bool initial_eval ) {
 
-  std::string geometry_name;
-  std::string mesh_name;
-  #if 1
-  dim = number = 3;
-  geometry_name = "box";
-  mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/ccp2-box_9.mesh";
-  library::MetricField_UGAWG_Polar2 analytic;
-  #elif 0
-  dim = number = 2;
-  geometry_name = "square";
-  mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/sl_19.mesh";
-  library::MetricField_UGAWG_Linear2d analytic;
-  #else
-  #error "unknown test case"
-  #endif
+#if 0
+  const ElementSearch<Simplex>& searcher = field.searcher();
+  const Field<Simplex,Metric> metric_field = field.field();
+  const Topology<Simplex>& topology = metric_field.topology();
+  std::vector<real_t> phi( metric_field.element().nb_basis() , 0. );
+  std::vector<real_t> xref( topology.element().number() + 1 );
 
-  std::vector<real_t> lens(number,1.0);
-  EGADS::Cube geometry(&context,lens);
-  library::meshb mesh(mesh_name);
-  std::shared_ptr<Topology<Simplex>> ptopology = mesh.retrieve_ptr<Simplex>(0);
-  Topology<Simplex>& topology = *ptopology.get();
+  index_t n = topology.number();
+  index_t nb_rank = n*(n+1)/2;
 
-  avro_assert_msg( number > 0 && dim > 0 , "bad dimension" );
+  clock_t TIME0, TIME1;
+  real_t search_time = 0.0;
 
-  topology.points().attach(geometry);
+  metrics.resize( points.nb() , VertexMetric(n) );
+  for (index_t k = 0; k < metrics.size(); k++) {
+
+    // get the reference coordinates of the closest element
+    TIME0 = clock();
+    int ielem = searcher.closest( points[k] , xref );
+    TIME1 = clock();
+    search_time += real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC);
+    topology.element().reference().basis().evaluate( xref.data() , phi.data() );
+
+    // perform the interpolation and return the element containing the point
+    index_t elem = index_t(ielem);
+
+    Metric mk(topology.element().number());
+    bool success = metric_field.dof().interpolate( metric_field[elem] , metric_field.nv(elem) , phi , &mk );
+    avro_assert( success );
+
+    VertexMetric m(n);
+    for (index_t j = 0; j < nb_rank; j++)
+      m.data(j) = mk.data(j);
+    metrics[k] = m;
+  }
+  printf("search time = %g\n",search_time);
+#else
+  if (initial_eval) {
+    metrics.resize( points.nb() );
+    for (index_t k = 0; k < metrics.size(); k++)
+      metrics[k] = attachment[k];
+  }
+#endif
+}
+
+template<typename F>
+void
+adapt( const F& metric_field , const std::string& mesh_name , const std::string& geometry_name ) {
+
+  typedef Simplex type;
+
+  // get the original input mesh
+  std::shared_ptr<TopologyBase> ptopology = nullptr;
+  std::shared_ptr<Mesh> pmesh = library::get_mesh(mesh_name,ptopology);
+
+  // get the topology and add it to the input mesh
+  Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
+  topology.orient();
+
+  // get the input geometry
+  bool curved;
+  std::shared_ptr<Model> pmodel;
+  pmodel = library::get_geometry( geometry_name , curved );
+  Model& model = *pmodel;
+
+  // attach the input points to the geometry
+  topology.points().attach(model);
 
   std::vector<VertexMetric> metrics(topology.points().nb());
-  for (index_t k = 0; k < topology.points().nb(); k++)
-    metrics[k] = analytic( topology.points()[k] );
+  evaluate_metric( metric_field , topology.points() , metrics , true );
 
   AdaptationParameters params;
   params.set( "directory" , std::string("tmp/"));
   params.set( "insertion volume factor" ,  -1.0 );
-  params.set( "curved" , false);
+  params.set( "curved" , curved);
   params.set( "limit metric" , false );
-  params.set( "max parallel passes" , index_t(3) );
+  params.set( "max parallel passes" , index_t(2) );
   params.set( "elems per processor" , index_t(5000) );
   params.set( "has uv", true);
   params.set( "swapout" , false);
@@ -95,16 +149,16 @@ UT_TEST_CASE( test1 )
 
     // re-evaluate the metrics
     metrics.resize( manager.topology().points().nb() );
-    for (index_t k = 0; k < metrics.size(); k++)
-      metrics[k] = analytic( manager.topology().points()[k] );
+    metrics = manager.metrics();
+    evaluate_metric( metric_field , manager.topology().points() , metrics , false );
+
 
     // scale the metrics by 2 with respect to the previous iteration
     for (index_t k = 0; k < metrics.size(); k++) {
       for (index_t j = 0; j < metrics[k].m(); j++)
         for (index_t i = j; i < metrics[k].n(); i++)
-          metrics[k](i,j) *= std::pow(2.0,real_t(iter));
+          metrics[k](i,j) *= std::pow(sqrt(2.0),real_t(iter+1)); // factor of 2 maybe too high for 4d
     }
-
     manager.reassign_metrics(metrics);
 
     if (rank == 0) {
@@ -116,6 +170,59 @@ UT_TEST_CASE( test1 )
     mpi::barrier();
   }
   fflush(stdout);
+
+}
+
+UT_TEST_CASE( test1 )
+{
+
+  #if 0
+  std::string geometry_name = "box";
+  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release/ccp2_9.mesh";
+  library::MetricField_UGAWG_Polar2 metric_field;
+
+  #else
+
+  std::string geometry_name = "tesseract";
+  std::string mesh_name = "/Users/pcaplan/Desktop/error-cases/sw-p1-1024.avro";
+
+  // read in the mesh
+  std::shared_ptr<TopologyBase> ptopology = nullptr;
+  std::shared_ptr<Mesh> pmesh = library::get_mesh(mesh_name,ptopology);
+  Topology<Simplex>& topology = *static_cast<Topology<Simplex>*>(ptopology.get());
+  index_t n = topology.number();
+  index_t nb_rank = n*(n+1)/2;
+
+  // read in the metric
+  nlohmann::json jin;
+  std::ifstream file_in(mesh_name);
+  file_in >> jin;
+  std::vector<real_t> data = jin["metric"];
+
+  // create a list of metric tensors
+  std::vector<symd<real_t>> metrics( topology.points().nb() );
+  avro_assert( data.size() == topology.points().nb()*nb_rank );
+  index_t count = 0;
+  for (index_t k = 0; k < metrics.size(); k++) {
+    symd<real_t> metric(n);
+    for (index_t j = 0; j < nb_rank; j++)
+      metric.data(j) = data[count++];
+    metrics[k] = metric;
+  }
+  topology.build_structures();
+  topology.element().set_basis( BasisFunctionCategory_Lagrange );
+
+  // create the discrete metric field defined on the input mesh
+  MetricAttachment metric_field( topology.points() , metrics );
+  MetricField<Simplex> field( topology , metric_field );
+  //FieldInterpolation<Simplex,Metric> metric_field(&field);
+
+  Properties properties( topology , field );
+  properties.print( "initial metric conformity" );
+
+  #endif
+
+  adapt( metric_field , mesh_name , geometry_name );
 
 }
 UT_TEST_CASE_END( test1 )

@@ -6,6 +6,7 @@
 #include "graphics/gl.h"
 #include "graphics/math.h"
 
+#include <map>
 #include <memory>
 #include <vector>
 

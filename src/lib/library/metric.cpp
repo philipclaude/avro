@@ -379,6 +379,8 @@ MetricField_Cube_Wave::operator()( const real_t* X ) const {
 
 }
 
+#define MIN(a,b) ((a < b) ? (a) : (b));
+
 symd<real_t>
 MetricField_Tesseract_Wave::operator()( const real_t* x ) const {
   real_t eps = 0.001; // offset for singularity at origin
@@ -432,30 +434,35 @@ MetricField_Tesseract_Wave::operator()( const real_t* x ) const {
   real_t delta = 0.1;
   real_t ht = 0.5;
   #else
-  real_t h0 = 0.004;
-  real_t hu = 100*h0;
-  real_t hmin = 0.05;
-  real_t delta = 0.1;
+  real_t h0 = 0.0025;
+  real_t hu = 0.25;
+  real_t hmin = h0;
+  real_t delta = 0.25;
   real_t ht = 0.5;
   #endif
 
   vecd<real_t> L(4);
   real_t hrho = h0 +2*(hu-h0)*fabs(RHO-rho0);
+
+  #if 0
   real_t htheta = hu;
   real_t hphi = hu;
-
   if (fabs(RHO-rho0)>delta)
     htheta = hu;
   else htheta = (hu -hmin)*fabs(RHO-rho0)/delta +hmin;
   hphi = htheta;
+  #else
+  delta = 0.1;
+  real_t d0 = 10*MIN( fabs(RHO - rho0) , delta );
+  real_t htheta = 0.025 + d0 *(39./400.);
+  real_t hphi   = htheta;
+  #endif
 
   L[0] = 1./(hrho*hrho);
   L[1] = 1./(htheta*htheta);
   L[2] = 1./(hphi*hphi);
   L[3] = 1./(ht*ht);
 
-  //for (coord_t d = 0; d < 4; d++)
-  //  L[d] *= 2;
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
   symd<real_t> m(decomp);
@@ -504,19 +511,20 @@ MetricField_UGAWG_Polar1::operator()( const real_t* X ) const {
   return m;
 }
 
-#define MIN(a,b) (a < b) ? (a) : (b);
 
 symd<real_t>
 MetricField_UGAWG_Polar2::operator()( const real_t* X ) const {
   real_t eps = 1e-3;
+  real_t c[3] = { 0.4 , 0.4 , 0.0 };
   real_t x[3] = { X[0]+eps, X[1]+eps, X[2] };
+  for (coord_t d = 0; d < 3; d++) x[d] -= c[d];
   real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
   real_t t = atan2( x[1] , x[0] );
 
   real_t hz = 0.1;
-  real_t ht = 0.1;
-  real_t h0 = 1e-3;
-  real_t hr = h0 +2.*(0.1 -h0)*fabs( r -0.5 );
+  real_t ht = hz;
+  real_t h0 = hz/100.0;
+  real_t hr = h0 +2.*(hz -h0)*fabs( r -0.5 );
 
   #if 0
   real_t d = 10*(0.6 -r);
@@ -540,10 +548,69 @@ MetricField_UGAWG_Polar2::operator()( const real_t* X ) const {
   Q(2,1) = 0.0;
   Q(2,2) = 1.0;
 
+  hz = 0.5;
   vecd<real_t> lambda(3);
   lambda[0] = 1./(hr*hr);
   lambda[1] = 1./(ht*ht);
   lambda[2] = 1./(hz*hz);
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {lambda,Q};
+  symd<real_t> m(decomp);
+  return m;
+}
+
+symd<real_t>
+MetricField_Tesseract_MovingCylinder::operator()( const real_t* X ) const {
+  real_t eps = 1e-3;
+  real_t T = X[3];
+  real_t c[3] = { 0.2*T , 0.2*T , 0.0 };
+  real_t x[3] = { X[0]+eps, X[1]+eps, X[2] };
+  for (coord_t d = 0; d < 3; d++) x[d] -= c[d];
+  real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
+  real_t t = atan2( x[1] , x[0] );
+
+  real_t hz = 0.125; // 0.1
+  real_t ht = hz;
+  real_t h0 = hz/100.0;
+  real_t hr = h0 +2.*(hz -h0)*fabs( r -0.5 );
+  real_t htime = 0.5;
+
+  #if 0
+  real_t d = 10*(0.6 -r);
+  if (d < 0.0) ht = 0.1;
+  else ht = d/40. +0.1*(1. -d);
+  #else
+  real_t d0 = MIN( 10.0 * fabs(r - 0.5) , 1.0 );
+  ht = 0.1*d0 + 0.025*(1.0 -d0);
+  #endif
+
+  matd<real_t> Q(4,4);
+  Q(0,0) = cos(t);
+  Q(0,1) = -sin(t);
+  Q(0,2) = 0.0;
+  Q(0,3) = 0.0;
+
+  Q(1,0) = sin(t);
+  Q(1,1) = cos(t);
+  Q(1,2) = 0.0;
+  Q(1,3) = 0.0;
+
+  Q(2,0) = 0.0;
+  Q(2,1) = 0.0;
+  Q(2,2) = 1.0;
+  Q(2,3) = 0.0;
+
+  Q(3,0) = 0.0;
+  Q(3,1) = 0.0;
+  Q(3,2) = 0.0;
+  Q(3,3) = 1.0;
+
+  hz = 0.5;
+  vecd<real_t> lambda(4);
+  lambda[0] = 1./(hr*hr);
+  lambda[1] = 1./(ht*ht);
+  lambda[2] = 1./(hz*hz);
+  lambda[3] = 1./(htime*htime);
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {lambda,Q};
   symd<real_t> m(decomp);
