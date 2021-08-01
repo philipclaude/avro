@@ -83,7 +83,7 @@ set( avro_EXTERNAL_LIBRARIES_STATIC ${avro_EXTERNAL_LIBRARIES} ${ESP_LIBRARIES_S
 if (avro_STATIC_LINK_CXX)
   target_link_libraries( avro_shared ${avro_EXTERNAL_LIBRARIES_SHARED} -static-libgcc -static-libstdc++ )
 else()
-  target_link_libraries( avro_shared ${avro_EXTERNAL_LIBRARIES_SHARED})
+  target_link_libraries( avro_shared ${avro_EXTERNAL_LIBRARIES_SHARED} )
 endif()
 target_link_libraries( avro_static ${avro_EXTERNAL_LIBRARIES_STATIC} )
 

@@ -184,7 +184,7 @@ UT_TEST_CASE( test1 )
   #else
 
   std::string geometry_name = "tesseract";
-  std::string mesh_name = "/Users/pcaplan/Desktop/error-cases/sw-p1-1024.avro";
+  std::string mesh_name = "/home/pcaplan/jobs/adapt/sw-p1-1024.avro";
 
   // read in the mesh
   std::shared_ptr<TopologyBase> ptopology = nullptr;

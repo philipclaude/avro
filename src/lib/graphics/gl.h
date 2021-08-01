@@ -105,7 +105,7 @@ namespace graphics
 class Primitive;
 class ShaderLibrary;
 
-typedef index_t gl_index;
+typedef unsigned int gl_index;
 typedef float   gl_float;
 typedef gl_index GLint;
 typedef gl_index GLuint;
@@ -147,7 +147,7 @@ inline void glActiveTexture( gl_index ) { avro_assert_not_reached; }
 inline void glUniform1i( gl_index , int ) { avro_assert_not_reached; }
 inline gl_index glGetUniformLocation( gl_index , const std::string& ) { avro_assert_not_reached; }
 inline void glClearColor( float , float , float , float ) { avro_assert_not_reached; }
-
+inline void glViewport( int , int , int , int ) { avro_assert_not_reached; }
 
 #define glEnable(x)
 #define glDisable(x)
