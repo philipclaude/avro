@@ -1904,6 +1904,7 @@ AdaptationManager<type>::adapt() {
     params_.set("write mesh" , false ); // we don't want each processor to write the mesh it generates
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     if (rank_ == 0) time_process_ += real_t( clock() - TIMER )/real_t(CLOCKS_PER_SEC);
+    bool abort = false;
     try {
       // do the adaptation!
       clock_t t0 = 0, t1;
@@ -1935,9 +1936,12 @@ AdaptationManager<type>::adapt() {
     }
     catch(...) {
       printf("there was an error adapting the mesh on processor %lu :(\n",rank_);
-      mpi::abort(1);
+      abort = true;
     }
     mpi::barrier();
+    if (abort) {
+	    mpi::abort(1);
+    }
 
     // synchronize all the global point indices
     if (rank_ == 0) TIMER = clock();

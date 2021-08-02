@@ -210,7 +210,7 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
       // initial worst quality
       TIME0 = clock();
       real_t q0 = -1;
-      index_t worst_elem;
+      index_t worst_elem = 0;
       std::unordered_set<index_t> bad_elems;
       for (index_t j=0;j<elems.size();j++) {
         if (topology_.ghost( elems[j] ) )
@@ -286,8 +286,8 @@ AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
         if (qw_swap > qw) {
           // check that no elements (ghosts) become duplicated
           // this might only be needed for curved geometries
-          //if (!edge_swapper_.has_unique_elems()) continue;
-          //if (!edge_swapper_.closed_boundary()) continue;
+          if (!edge_swapper_.has_unique_elems()) continue;
+          if (!edge_swapper_.closed_boundary()) continue;
           m  = candidates[j];
           qw = qw_swap;
         }

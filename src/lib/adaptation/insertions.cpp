@@ -514,7 +514,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       // we always need to maintain a closed boundary
       if (!inserter_.closed_boundary()) {
         // it's going to be really hard to come back from something like this
-        avro_assert_not_reached; // is this even possible?
+        //avro_assert_not_reached; // is this even possible?
         topology_.points().remove(ns);
         metric_.remove(ns);
         topology_.inverse().remove(ns);

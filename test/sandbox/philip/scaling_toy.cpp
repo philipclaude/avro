@@ -150,14 +150,14 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
     // re-evaluate the metrics
     metrics.resize( manager.topology().points().nb() );
     metrics = manager.metrics();
-    evaluate_metric( metric_field , manager.topology().points() , metrics , false );
+//    evaluate_metric( metric_field , manager.topology().points() , metrics , false );
 
 
     // scale the metrics by 2 with respect to the previous iteration
     for (index_t k = 0; k < metrics.size(); k++) {
       for (index_t j = 0; j < metrics[k].m(); j++)
         for (index_t i = j; i < metrics[k].n(); i++)
-          metrics[k](i,j) *= std::pow(sqrt(2.0),real_t(iter+1)); // factor of 2 maybe too high for 4d
+          metrics[k](i,j) *= std::pow(sqrt(2.0),1.0);//real_t(iter+1)); // factor of 2 maybe too high for 4d
     }
     manager.reassign_metrics(metrics);
 
@@ -176,9 +176,9 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 UT_TEST_CASE( test1 )
 {
 
-  #if 0
+  #if 1
   std::string geometry_name = "box";
-  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release/ccp2_9.mesh";
+  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/ccp2_9.mesh";
   library::MetricField_UGAWG_Polar2 metric_field;
 
   #else
