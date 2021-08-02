@@ -1900,7 +1900,7 @@ AdaptationManager<type>::adapt() {
     params_.set("output redirect" , "adaptation-output-proc"+std::to_string(rank_)+".txt" );
     params_.set("swapout" , false );
     params_.set("export boundary", false);
-    params_.set("prefix" , "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass) );
+    params_.set("prefix" , "processor"+std::to_string(rank_)+"_pass"+std::to_string(pass) );
     params_.set("write mesh" , false ); // we don't want each processor to write the mesh it generates
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
     if (rank_ == 0) time_process_ += real_t( clock() - TIMER )/real_t(CLOCKS_PER_SEC);

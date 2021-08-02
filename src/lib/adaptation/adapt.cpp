@@ -294,9 +294,10 @@ done:
     properties.compute( mesh_topology , metric );
     properties.print("final metric conformity" );
     std::string directory = params["directory"];
+    std::string prefix = params["prefix"];
     index_t adapt_iter = params["adapt iter"];
     if (params["write conformity"])
-      properties.dump( directory + "/properties_" + stringify(adapt_iter) + ".json");
+      properties.dump( prefix + "_properties_" + stringify(adapt_iter) + ".json");
   }
   else avro_implement;
 

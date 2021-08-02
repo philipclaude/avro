@@ -129,12 +129,16 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
   params.set( "debug level" , index_t(0) );
   params.set( "geometry" , geometry_name );
   params.set( "allow serial" , false );
+  params.set( "write conformity" , true );
 
   topology.build_structures();
 
   AdaptationManager<Simplex> manager( topology , metrics , params );
 
   index_t rank = mpi::rank();
+
+  index_t n = topology.number();
+  index_t nb_metric_rank = n*(n+1)/2;
 
   index_t niter = 10;
   for (index_t iter = 0; iter <= niter; iter++) {
@@ -152,6 +156,27 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
     metrics = manager.metrics();
 //    evaluate_metric( metric_field , manager.topology().points() , metrics , false );
 
+   // save the metric data for this processor
+   // the metrics have been migrated so each processor own the metrics for the vertices it needs
+   // we need to save the global id for vertex
+   std::vector<real_t> metric_data( nb_metric_rank * metrics.size() );
+   index_t count = 0;
+   for (index_t k = 0; k < metrics.size(); k++)
+   for (index_t j = 0; j < nb_metric_rank; j++)
+    metric_data[count++] = metrics[k].data(j);
+
+    avro_assert( metrics.size() == manager.topology().points().nb() );
+    std::vector<index_t> global( metrics.size() );
+    for (index_t k = 0; k < metrics.size(); k++)
+      global[k] = manager.topology().points().global(k);
+
+    nlohmann::json jm;
+    jm["metrics"] = metric_data;
+    jm["global"]  = global;
+
+    std::ofstream file("metric-proc"+std::to_string(rank)+"-iter"+std::to_string(iter)+".metric");
+    file << jm;
+    file.close();
 
     // scale the metrics by 2 with respect to the previous iteration
     for (index_t k = 0; k < metrics.size(); k++) {
@@ -173,15 +198,26 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 
 }
 
+// which test case to run?
+#define CASE_CC 0
+#define CASE_BL 1
+#define CASE_SW 0
+
 UT_TEST_CASE( test1 )
 {
 
-  #if 1
+  #if CASE_CC
   std::string geometry_name = "box";
   std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/ccp2_9.mesh";
   library::MetricField_UGAWG_Polar2 metric_field;
 
-  #else
+  #elif CASE_BL
+
+  std::string geometry_name = "tesseract-closingwall";
+  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/mbl_19.avro";
+  library::MetricField_Tesseract_RotatingBL metric_field;
+
+  #elif CASE_SW
 
   std::string geometry_name = "tesseract";
   std::string mesh_name = "/home/pcaplan/jobs/adapt/sw-p1-1024.avro";
@@ -215,7 +251,6 @@ UT_TEST_CASE( test1 )
   // create the discrete metric field defined on the input mesh
   MetricAttachment metric_field( topology.points() , metrics );
   MetricField<Simplex> field( topology , metric_field );
-  //FieldInterpolation<Simplex,Metric> metric_field(&field);
 
   Properties properties( topology , field );
   properties.print( "initial metric conformity" );
