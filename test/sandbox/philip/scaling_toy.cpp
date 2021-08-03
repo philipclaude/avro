@@ -36,6 +36,9 @@ UT_TEST_SUITE( adaptation_parallel_test_suite )
 template<typename F>
 void
 evaluate_metric( const F& field , const Points& points , std::vector<VertexMetric>& metrics , bool initial_eval ) {
+  index_t rank = mpi::rank();
+  if (rank == 0)
+    printf("evaluating analytic metric\n");
   metrics.resize( points.nb() );
   for (index_t k = 0; k < metrics.size(); k++)
     metrics[k] = field( points[k] );
@@ -92,7 +95,7 @@ evaluate_metric( const MetricAttachment& attachment , const Points& points , std
 
 template<typename F>
 void
-adapt( const F& metric_field , const std::string& mesh_name , const std::string& geometry_name ) {
+adapt( const F& metric_field , const std::string& mesh_name , const std::string& geometry_name , bool analytic ) {
 
   typedef Simplex type;
 
@@ -154,7 +157,12 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
     // re-evaluate the metrics
     metrics.resize( manager.topology().points().nb() );
     metrics = manager.metrics();
-//    evaluate_metric( metric_field , manager.topology().points() , metrics , false );
+    real_t scale = sqrt(2.0);
+    if (analytic) {
+      // we will scale the analytic metric, not the one from the previous adaptation
+      scale = std::pow( scale , real_t(iter+1) );
+      evaluate_metric( metric_field , manager.topology().points() , metrics , false );
+   }
 
    // save the metric data for this processor
    // the metrics have been migrated so each processor own the metrics for the vertices it needs
@@ -182,15 +190,27 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
     for (index_t k = 0; k < metrics.size(); k++) {
       for (index_t j = 0; j < metrics[k].m(); j++)
         for (index_t i = j; i < metrics[k].n(); i++)
-          metrics[k](i,j) *= std::pow(sqrt(2.0),1.0);//real_t(iter+1)); // factor of 2 maybe too high for 4d
+          metrics[k](i,j) *= scale;
     }
     manager.reassign_metrics(metrics);
 
     if (rank == 0) {
-    printf("==> timing: process = %4.3g sec., adapt = %4.3g sec., synchronize = %4.3g sec.\n",
-            manager.time_process(),manager.time_adapt(),manager.time_synchronize());
-    printf("            migrate = %4.3g sec., partition = %4.3g sec., exchange = %4.3g sec.\n",
-            manager.time_migrate(),manager.time_partition(),manager.time_exchange());
+      printf("==> timing: process = %4.3g sec., adapt = %4.3g sec., synchronize = %4.3g sec.\n",
+              manager.time_process(),manager.time_adapt(),manager.time_synchronize());
+      printf("            migrate = %4.3g sec., partition = %4.3g sec., exchange = %4.3g sec.\n",
+              manager.time_migrate(),manager.time_partition(),manager.time_exchange());
+
+      nlohmann::json jt;
+      jt["process"] = manager.time_process();
+      jt["adapt"]   = manager.time_adapt();
+      jt["synchronize"] = manager.time_synchronize();
+      jt["migrate"] = manager.time_migrate();
+      jt["partition"] = manager.time_partition();
+      jt["exchange"] = manager.time_exchange();
+
+      std::ofstream tfile("timing-iter" + std::to_string(iter) + ".json" );
+      tfile << jt;
+      tfile.close();
     }
     mpi::barrier();
   }
@@ -206,19 +226,22 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 UT_TEST_CASE( test1 )
 {
 
+  bool analytic = true;
   #if CASE_CC
   std::string geometry_name = "box";
-  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/ccp2_9.mesh";
+  //std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/ccp2_9.mesh";
+  std::string mesh_name = "/home/pcaplan/jobs/adapt/ccp2-initial.mesh";
   library::MetricField_UGAWG_Polar2 metric_field;
 
   #elif CASE_BL
 
-  std::string geometry_name = "tesseract-closingwall";
-  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/mbl_19.avro";
-  library::MetricField_Tesseract_RotatingBL metric_field;
+  std::string geometry_name = "tesseract-closingwall"; 
+  std::string mesh_name = "/home/pcaplan/jobs/adapt/mbl-initial.avro"; 
+  library::MetricField_Tesseract_RotatingBoundaryLayer metric_field;
 
   #elif CASE_SW
 
+  analytic = false;
   std::string geometry_name = "tesseract";
   std::string mesh_name = "/home/pcaplan/jobs/adapt/sw-p1-1024.avro";
 
@@ -257,7 +280,7 @@ UT_TEST_CASE( test1 )
 
   #endif
 
-  adapt( metric_field , mesh_name , geometry_name );
+  adapt( metric_field , mesh_name , geometry_name , analytic );
 
 }
 UT_TEST_CASE_END( test1 )
