@@ -1970,6 +1970,31 @@ AdaptationManager<type>::adapt() {
       file << jm;
     }
 
+    #if 0
+    // save the metric data for this processor
+    // the metrics have been migrated so each processor own the metrics for the vertices it needs
+    // we need to save the global id for vertex
+    std::vector<real_t> metric_data( nb_metric_rank * metrics_.size() );
+    index_t count = 0;
+    for (index_t k = 0; k < metrics_.size(); k++)
+    for (index_t j = 0; j < nb_metric_rank; j++)
+     metric_data[count++] = metrics[k].data(j);
+
+     avro_assert( metrics.size() == manager.topology().points().nb() );
+     std::vector<index_t> global( metrics.size() );
+     for (index_t k = 0; k < metrics.size(); k++)
+       global[k] = manager.topology().points().global(k);
+
+     nlohmann::json jm;
+     jm["metrics"] = metric_data;
+     jm["global"]  = global;
+
+     std::ofstream file("metric-proc"+std::to_string(rank)+"-iter"+std::to_string(iter)+".metric");
+     file << jm;
+     file.close();
+
+    #endif
+
     // report the min and max volumes in the mesh (this helps determine if something bad is happening...)
     if (rank_ == 0) {
       std::vector<real_t> volumes( topology_out->nb() );

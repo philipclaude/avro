@@ -219,15 +219,23 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 }
 
 // which test case to run?
+#define CASE_SL 1
 #define CASE_CC 0
-#define CASE_BL 1
+#define CASE_BL 0
 #define CASE_SW 0
 
 UT_TEST_CASE( test1 )
 {
 
   bool analytic = true;
-  #if CASE_CC
+  #if CASE_SL
+
+  std::string geometry_name = "square";
+  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/sl_9.mesh";
+  //std::string mesh_name = "/home/pcaplan/jobs/adapt/ccp2-initial.mesh";
+  library::MetricField_UGAWG_Linear2d metric_field;
+
+  #elif CASE_CC
   std::string geometry_name = "box";
   //std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/ccp2_9.mesh";
   std::string mesh_name = "/home/pcaplan/jobs/adapt/ccp2-initial.mesh";
@@ -235,8 +243,8 @@ UT_TEST_CASE( test1 )
 
   #elif CASE_BL
 
-  std::string geometry_name = "tesseract-closingwall"; 
-  std::string mesh_name = "/home/pcaplan/jobs/adapt/mbl-initial.avro"; 
+  std::string geometry_name = "tesseract-closingwall";
+  std::string mesh_name = "/home/pcaplan/jobs/adapt/mbl-initial.avro";
   library::MetricField_Tesseract_RotatingBoundaryLayer metric_field;
 
   #elif CASE_SW
