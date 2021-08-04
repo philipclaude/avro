@@ -235,7 +235,7 @@ MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const
 
   real_t alpha = atan2( -0.25 , 1.0 );
 
-  real_t hmin = 0.0020;
+  real_t hmin = 0.0020;//0.0020;
   real_t hx = 100*hmin;
   real_t hy = 100*hmin;
   real_t hz = 100*hmin;

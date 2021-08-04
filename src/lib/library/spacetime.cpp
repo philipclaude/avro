@@ -6,6 +6,8 @@
 
 #include "mesh/boundary.h"
 
+#include "numerics/linear_algebra.h"
+
 namespace avro
 {
 
@@ -49,11 +51,19 @@ Topology_Spacetime<type>::extract()
 
   // loop through the entities on the boundary
   const std::vector<Entity*>& entities = boundary.entities();
+
   for (index_t k=0;k<entities.size();k++)
   {
     Entity* entity = entities[k];
     Topology<type>& tk = *entity2topology_.at(entity);
     Topology<type>& bk = boundary.child( boundary.indexof(entity) );
+
+    const matd<real_t>& B = static_cast<PSC::Facet*>(entity)->basis();
+    B.print();
+
+    matd<real_t> K;
+    numerics::kernel(B,K);
+    K.print();
 
     // create a vertex for every vertex on the boundary
     std::set<index_t> vertices;

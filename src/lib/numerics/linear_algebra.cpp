@@ -86,6 +86,7 @@ kernel( const matd<real_t>& A , matd<real_t>& K ) {
 	for (int i = 0; i < int(s.size()); i++) {
 		if (s[i]>tol) r++;
 	}
+  printf("rank = %d\n",r);
 
 	matd<real_t> v(N,N);
 	for (int i = 0; i < n;i++)
@@ -260,8 +261,8 @@ eign( const symd<real_t>& A ) {
   avro_assert_msg( INFO == 0, "INFO == %d", INFO );
 
   index_t k = 0;
-  for (index_t j = 0; j < n; j++) // through columns
-  for (index_t i = 0; i < n; i++) // through rows
+  for (int j = 0; j < n; j++) // through columns
+  for (int i = 0; i < n; i++) // through rows
     Q(i,j) = vr[k++];
   #endif
   return {L,Q};
@@ -785,7 +786,7 @@ template matd<float> inverse( const matd<float>& );
   template void eig( const symd<T>& m , vecd<T>& L , matd<T>& Q ); \
   template std::pair< vecd<T> , matd<T> > eig( const symd<T>& m );
 INSTANTIATE_EIG( real_t )
-INSTANTIATE_EIG( SurrealS<1> );
+INSTANTIATE_EIG( SurrealS<1> )
 #undef INSTANTIATE_EIG
 
 // compiling takes really long with surreals
