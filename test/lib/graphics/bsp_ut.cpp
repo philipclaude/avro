@@ -33,6 +33,8 @@ UT_TEST_CASE( test1 )
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
   topology.points().attach(geometry);
 
+  topology.points()[0][0] = 0.1;
+
   if (AVRO_FULL_UNIT_TEST) return;
 
   int width = 400, height = width;
