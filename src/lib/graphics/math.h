@@ -168,6 +168,9 @@ class mat4 inverse( const class mat4& m );
 class mat4 transpose( const class mat4& m );
 std::string to_string( const class mat4& m );
 class vec3 cross( const vec3& u , const vec3& v );
+float norm( const vec3& u );
+class vec3 normalize( const vec3& u );
+float dot( const vec3& u , const vec3& v);
 
 }
 

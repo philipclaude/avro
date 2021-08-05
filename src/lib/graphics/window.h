@@ -133,6 +133,9 @@ public:
 
   void select_colormap(const std::string& name);
 
+  const Camera& camera() const { return camera_; }
+  const mat4& screen_matrix() const { return screen_matrix_; }
+
 
 private:
   index_t width_;
@@ -153,6 +156,8 @@ private:
   bool needs_drawing_;
   index_t draw_count_;
   bool lighting_;
+
+  mat4 screen_matrix_;
 };
 
 } // graphics

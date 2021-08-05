@@ -109,6 +109,13 @@ Window::init() {
   #else
   avro_assert_not_reached;
   #endif
+
+  screen_matrix_(0,0) = width_/2.0;
+  screen_matrix_(1,1) = height_/2.0;
+  screen_matrix_(0,3) = (width_-1)/2.0;
+  screen_matrix_(1,3) = (height_-1)/2.0;
+  screen_matrix_(2,2) = 1.0;
+  screen_matrix_(3,3) = 1.0;
 }
 
 void
