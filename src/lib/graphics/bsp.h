@@ -133,10 +133,9 @@ public:
 
   std::shared_ptr<BSPTriangle> operator[] (index_t k) { return triangles_[k]; }
 
-  void classify( index_t k , const BSPPlane& plane , BSPClassification& classification  ) {
+  void classify( index_t k , const BSPPlane& plane , BSPTriangles& front , BSPTriangles& back  ) {
 
-    classification.nb_triangles = 0;
-    classification.swap = false;
+    BSPClassification classification;
 
     // compute the side for all three vertices
     int s0 = plane.side( triangles_[k]->point(0) );
@@ -144,13 +143,13 @@ public:
     int s2 = plane.side( triangles_[k]->point(2) );
 
     if (s0 >= 0 && s1 >= 0 && s2 >= 0) {
-      // triangle is entirealy on the positive side
-      classification.side = 1;
+      // triangle is entirely on the positive side
+      front.add( triangles_[k] );
       return;
     }
     if (s0 <= 0 && s1 <= 0 && s2 <= 0) {
       // triangle is entirely on the negative side
-      classification.side = -1;
+      back.add( triangles_[k] );
       return;
     }
 
@@ -173,6 +172,9 @@ public:
 
     #if 0
 
+    #define ADD_ONE(s) if (s > 0) { front.add(triangles_[k]); } else { back.add(triangles_[k]); }
+    #define ADD_TWO(s) if (s < 0) { back.add(t0); front.add(t1); } else { back.add(t1); front.add(t0); }
+
     // there is an intersection
     int i0 = 0, i1 = 1;
     classification.side = 0;
@@ -187,15 +189,27 @@ public:
           classification.nb_triangles = 2;
           vec3 q = plane.intersect( triangles_[k]->point(1) , triangles_[k]->point(2) );
 
+          std::shared_ptr<BSPTriangle> t0 = std::make_shared<BSPTriangle>( triangles_[k]->point(0) , triangles_[k]->point(1) , q );
+          std::shared_ptr<BSPTriangle> t1 = std::make_shared<BSPTriangle>( q , triangles_[k]->point(2) , triangles_[k]->point(0) );
+
+          ADD_TWO(s1);
+          /*
           if (s1 < 0) {
             avro_assert( s2 > 0);
-            std::swap(i0,i1);
+            back.add(  t0 );
+            front.add( t1 );
           }
-          classification.triangle[i0] = std::make_shared<BSPTriangle>( triangles_[k]->point(0) , triangles_[k]->point(1) , q );
-          classification.triangle[i1] = std::make_shared<BSPTriangle>( q , triangles_[k]->point(2) , triangles_[k]->point(0) );
+          else {
+            front.add( t0 );
+            back.add(  t1 );
+          }*/
         }
-        else
-          classification.side = s1; // entirely on side1
+        else {
+          ADD_ONE(s1);
+          /*
+          if (s1 > 0) front.add( triangles_[k] );
+          else        back.add( triangles_[k] );*/
+        }
       }
       else if (s1 == 0) {
         if (s0*s2 < 0) {
@@ -203,15 +217,27 @@ public:
           classification.nb_triangles = 2;
           vec3 q = plane.intersect( triangles_[k]->point(0) , triangles_[k]->point(2) );
 
+          std::shared_ptr<BSPTriangle> t0 = std::make_shared<BSPTriangle>( triangles_[k]->point(1) , triangles_[k]->point(2) , q );
+          std::shared_ptr<BSPTriangle> t1 = std::make_shared<BSPTriangle>( q , triangles_[k]->point(0) , triangles_[k]->point(1) );
+
+          ADD_TWO( s2 );
+          /*
           if (s2 < 0) {
-            std::swap(i0,i1);
             avro_assert( s0 > 0 );
+            back.add(  t0 );
+            front.add( t1 );
           }
-          classification.triangle[i0] = std::make_shared<BSPTriangle>( triangles_[k]->point(1) , triangles_[k]->point(2) , q );
-          classification.triangle[i1] = std::make_shared<BSPTriangle>( q , triangles_[k]->point(0) , triangles_[k]->point(1) );
+          else {
+            front.add( t0 );
+            back.add(  t1 );
+          }
+          */
         }
-        else
-          classification.side = s0;
+        else {
+          ADD_ONE( s0 );
+          /*if (s0 > 0) front.add( triangles_[k] );
+          else        back.add(  triangles_[k] );*/
+        }
       }
       else if (s2 == 0) {
         if (s1*s2 < 0) {
@@ -219,15 +245,27 @@ public:
           classification.nb_triangles = 2;
           vec3 q = plane.intersect( triangles_[k]->point(0) , triangles_[k]->point(1) );
 
+          std::shared_ptr<BSPTriangle> t0 = std::make_shared<BSPTriangle>( triangles_[k]->point(2) , triangles_[k]->point(0) , q );
+          std::shared_ptr<BSPTriangle> t1 = std::make_shared<BSPTriangle>( q , triangles_[k]->point(1) , triangles_[k]->point(2) );
+
+          ADD_TWO(s0);
+          /*
           if (s0 < 0) {
-            std::swap(i0,i1);
             avro_assert( s1 > 0 );
+            back.add(  t0 );
+            front.add( t1 );
           }
-          classification.triangle[i0] = std::make_shared<BSPTriangle>( triangles_[k]->point(2) , triangles_[k]->point(0) , q );
-          classification.triangle[i1] = std::make_shared<BSPTriangle>( q , triangles_[k]->point(1) , triangles_[k]->point(2) );
+          else {
+            front.add( t0 );
+            back.add(  t1 );
+          }*/
         }
-        else
-          classification.side = s1;
+        else {
+          ADD_ONE(s1);
+          /*
+          if (s1 > 0) front.add( triangles_[k] );
+          else        back.add(  triangles_[k] );*/
+        }
       }
       else
         avro_assert_not_reached;
@@ -254,49 +292,6 @@ public:
 
       avro_assert( nb_coincident == 0 );
 
-      // none of the vertices are coincident, and there is a general intersection
-      classification.nb_triangles = 3;
-
-      // which side is different from the other two?
-      int idx[3] = {0,1,2};
-      if      (s0 < 0 && s1 > 0 && s2 > 0) {}
-      else if (s0 > 0 && s1 < 0 && s2 < 0) classification.swap = true;
-      else if (s1 < 0 && s0 > 0 && s2 > 0) {
-        idx[0] = 1;
-        idx[1] = 2;
-        idx[2] = 0;
-      }
-      else if (s1 > 0 && s0 < 0 && s2 < 0) classification.swap = true;
-      else if (s2 < 0 && s0 > 0 && s1 > 0) {
-        idx[0] = 2;
-        idx[1] = 0;
-        idx[2] = 1;
-      }
-      else if (s2 > 0 && s0 < 0 && s1 < 0) classification.swap = true;
-      else {
-        printf("s0 = %d, s1 = %d, s2 = %d\n",s0,s1,s2);
-        avro_assert_not_reached;
-      }
-
-      printf("idx = (%d,%d,%d)\n",idx[0],idx[1],idx[2]);
-
-      // determine the two intersection points
-      vec3 q0 = plane.intersect( triangles_[k]->point(idx[0]) , triangles_[k]->point(idx[1]) );
-      vec3 q1 = plane.intersect( triangles_[k]->point(idx[0]) , triangles_[k]->point(idx[2]) );
-
-      q0.print();
-      q1.print();
-
-      printf("creating 3 triangles..\n");
-
-      // front triangles
-      classification.triangle[0] = std::make_shared<BSPTriangle>( triangles_[k]->point(idx[1]) , triangles_[k]->point(idx[2]) , q1 );
-      classification.triangle[1] = std::make_shared<BSPTriangle>( triangles_[k]->point(idx[1]) , q1 , q0 );
-
-      // single back triangle
-      classification.triangle[2] = std::make_shared<BSPTriangle>( triangles_[k]->point(idx[0]) , q0 , q1 );
-
-      //avro_implement;
     }
 
     #endif
