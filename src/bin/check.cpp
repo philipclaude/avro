@@ -108,8 +108,10 @@ check( int nb_input , const char** inputs )
     mesh.points().attach(*pmodel);
   }
 
+  #if AVRO_MPI
   PartitionBoundary<Simplex> boundary(topology.number()-1);
   boundary.compute(topology,0);
+  #endif
 
   return 0;
 }

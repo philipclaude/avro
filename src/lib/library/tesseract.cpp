@@ -270,6 +270,7 @@ Tesseract::build()
       cube_squares[ii] = square_entities[square_index[ii]];
     cube_entities[k] = std::make_shared<PSC::Facet>( this, cube_squares );
     cube_entities[k]->set_name( names[k] );
+    static_cast<PSC::Facet*>(cube_entities[k].get())->set_basis_by_name();
   }
   avro_assert( cubes.nb()==8 );
   avro_assert( squares.nb()==24 );

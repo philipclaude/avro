@@ -167,6 +167,7 @@ GUI::draw() {
           // pick which vao we need to render
           if (current_mesh == 0) current_mesh = 1;
           window_.plot(i).set_active( current_mesh-1 );
+          window_.plot(i).compute_center();
         }
 
         VertexAttributeObject& vao = window_.plot(i).active_vao();
