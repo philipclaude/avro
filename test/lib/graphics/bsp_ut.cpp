@@ -10,8 +10,10 @@
 
 #include "library/ckf.h"
 #include "library/egads.h"
+#include "library/factory.h"
 
 #include "mesh/field.hpp"
+#include "mesh/mesh.h"
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
@@ -22,20 +24,16 @@ UT_TEST_SUITE( graphics_bsp_suite )
 
 UT_TEST_CASE( test1 )
 {
-  coord_t number = 3;
+  typedef Simplex type;
+  std::string mesh_name = "CKF-3-3-3";//AVRO_SOURCE_DIR + "/build/release/cl_0.mesh";
 
-  EGADS::Context context;
-  std::vector<real_t> lengths(number,1.0);
-  EGADS::Cube geometry(&context,lengths);
+  // get the original input mesh
+  std::shared_ptr<TopologyBase> ptopology = nullptr;
+  std::shared_ptr<Mesh> pmesh = library::get_mesh(mesh_name,ptopology);
 
-  std::vector<index_t> dims(number,3);
-  CKF_Triangulation topology( dims );
-  topology.element().set_basis( BasisFunctionCategory_Lagrange );
-  topology.points().attach(geometry);
-
-  topology.points()[0][0] = 0.1;
-
-  if (AVRO_FULL_UNIT_TEST) return;
+  // get the topology and add it to the input mesh
+  Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
+  topology.orient();
 
   int width = 400, height = width;
   Window window(width,height);
