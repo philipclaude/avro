@@ -2,6 +2,7 @@
 
 #include "graphics/bsp.h"
 #include "graphics/managers.h"
+#include "graphics/postscript.h"
 #include "graphics/vao.h"
 #include "graphics/window.h"
 
@@ -17,6 +18,8 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
+#include <time.h>
+
 using namespace avro;
 using namespace avro::graphics;
 
@@ -25,7 +28,7 @@ UT_TEST_SUITE( graphics_bsp_suite )
 UT_TEST_CASE( test1 )
 {
   typedef Simplex type;
-  std::string mesh_name = "CKF-3-3-3";//AVRO_SOURCE_DIR + "/build/release/cl_0.mesh";
+  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/ccp2-box_9.mesh";
 
   // get the original input mesh
   std::shared_ptr<TopologyBase> ptopology = nullptr;
@@ -57,8 +60,22 @@ UT_TEST_CASE( test1 )
 
   triangles.build( plot , view_matrix , projection_matrix , screen_matrix );
 
+  clock_t t0 = clock();
   BSPTree tree;
   tree.build(triangles);
+  clock_t t1 = clock();
+  printf("BSP time = %g sec.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
+
+  std::vector<BSPTriangle*> T;
+
+  const vec3& eye = window.camera().eye();
+  tree.get_triangles( eye , T );
+
+  printf("retrieved %lu triangles\n",T.size());
+  PostScriptWriter writer(AVRO_SOURCE_DIR + "/build/release/test.eps");
+  writer.begin( window.width() , window.height() );
+  writer.write( T , view_matrix , projection_matrix );
+  writer.end();
 
 }
 UT_TEST_CASE_END( test1 )
