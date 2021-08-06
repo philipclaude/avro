@@ -28,7 +28,7 @@ UT_TEST_SUITE( graphics_bsp_suite )
 UT_TEST_CASE( test1 )
 {
   typedef Simplex type;
-  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release_mpi/ccp2-box_9.mesh";
+  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release/ccp2_9.mesh";
 
   // get the original input mesh
   std::shared_ptr<TopologyBase> ptopology = nullptr;

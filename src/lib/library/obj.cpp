@@ -68,6 +68,8 @@ objFile::read()
   std::shared_ptr<FieldType_idx> nt_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
   std::shared_ptr<FieldType_idx> ut_fld = std::make_shared<FieldType_idx>(*this,0,DISCONTINUOUS);
 
+  this->set_sorted(false);
+
   // read the file
   std::ifstream file( filename_.c_str() , std::ios::in );
   avro_assert( file.good() );

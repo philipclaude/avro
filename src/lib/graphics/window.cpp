@@ -4,6 +4,9 @@
 #include "graphics/shader_library.h"
 
 #include <imgui/imgui.h>
+#include <json/json.hpp>
+
+#include <fstream>
 
 namespace avro
 {
@@ -274,7 +277,7 @@ Window::resize(int width, int height) {
   #else
   glViewport(0,0,width_,height_);
   #endif
-  //glfwSetWindowSize(window_,width_,height_);
+  glfwSetWindowSize(window_,width_,height_);
 }
 
 void
@@ -309,6 +312,63 @@ Window::draw(bool swap_buffers) {
     glfwSwapBuffers(window_);
   }
   needs_drawing_ = false;
+}
+
+void
+Window::load_view( const std::string& filename ) {
+
+  nlohmann::json jv;
+  std::ifstream file_in(filename);
+  file_in >> jv;
+
+  float fov = jv["fov"];
+  float width = jv["width"];
+  float height = jv["height"];
+
+  std::vector<float> eye_data = jv["eye"];
+  std::vector<float> lookat_data = jv["lookat"];
+  std::vector<float> model_matrix_data = jv["model_matrix"];
+
+  vec3 eye(eye_data);
+  vec3 lookat(lookat_data);
+  mat4 model_matrix(model_matrix_data);
+
+  resize(width,height);
+  camera_.set_fov(fov);
+  camera_.set_eye(eye);
+  camera_.set_lookat(lookat);
+  camera_.compute_projection(width,height);
+
+  // set each plot to have the same model matrix
+  // (this way we don't need to make sure the same scene is loaded)
+  for (index_t k = 0; k < nb_plots(); k++)
+    plot_[k]->set_model_matrix(model_matrix);
+
+}
+
+void
+Window::save_view( const std::string& filename ) {
+
+  nlohmann::json jv;
+
+  // only grab the first model matrix
+  avro_assert( nb_plots() > 0 );
+  const mat4& model_matrix = plot_[0]->model_matrix();
+  std::vector<float> model_matrix_data( model_matrix.data() , model_matrix.data()+16 );
+  jv["model_matrix"] = model_matrix_data;
+
+  std::vector<float> eye( camera_.eye().data() , camera_.eye().data()+3 );
+  std::vector<float> lookat( camera_.lookat().data() , camera_.lookat().data()+3 );
+  jv["eye"] = eye;
+  jv["lookat"] = lookat;
+
+  jv["fov"] = camera_.fov();
+  jv["width"] = width_;
+  jv["height"] = height_;
+
+  std::ofstream file(filename);
+  file << jv;
+  file.close();
 }
 
 Window::~Window() {

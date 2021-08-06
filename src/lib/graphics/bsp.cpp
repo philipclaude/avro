@@ -34,7 +34,7 @@ BSPTriangle::BSPTriangle( const vec3& p0 , const vec3& p1 , const vec3& p2 ) {
     p1.print();
     p2.print();
     ignore_ = true;
-    avro_assert_not_reached;
+    //avro_assert_not_reached;
   }
 }
 
@@ -62,6 +62,7 @@ BSPTriangles::build( const Plot& plot , const mat4& view_matrix , const mat4& pr
   for (index_t k = 0; k < vao.nb_triangles(); k++) {
 
     const TrianglePrimitive& prim = vao.triangles(k);
+    if (!prim.visible()) continue;
 
     const std::vector<gl_index>& indices = prim.indices();
     for (index_t j = 0; j < indices.size()/3; j++) {

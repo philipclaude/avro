@@ -191,7 +191,7 @@ PostScriptWriter::begin( index_t width , index_t height ) {
   fprintf(fid_,"%%%%EndPageSetup\n"
                 "mark\n"
                 "gsave\n"
-                "%1.1f 1.0 scale\n",float(width)/float(height));
+                "%1.1f 1.0 scale\n",1.0 /*float(width)/float(height)*/);
 
 
   // calculate the screen transformation matrix

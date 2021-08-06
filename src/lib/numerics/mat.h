@@ -190,6 +190,8 @@ public:
         std::cout << "(" + std::to_string(i) + "," + std::to_string(j) + "): " << (*this)(i,j) << std::endl;
   }
 
+  const T* data() const { return data_; }
+
 protected:
   T data_[M*N];
 };

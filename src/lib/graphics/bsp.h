@@ -23,7 +23,7 @@ namespace avro
 namespace graphics
 {
 
-#define BSP_TOL 1e-3
+#define BSP_TOL 1e-7
 
 typedef struct {
 
@@ -43,13 +43,16 @@ typedef struct {
     float den = glm::dot( normal , p0 - p1 );
     float d = num/den;
     if (d < -BSP_TOL || d > 1.0+BSP_TOL) {
+      /*
       p0.print();
       p1.print();
       normal.print();
       center.print();
       printf("numerator = %g, denominator = %g\n",num,den);
+      */
+      return p0;
     }
-    avro_assert_msg( d >= -BSP_TOL && d <= (1.0+BSP_TOL) , "d = %g" , d );
+    //avro_assert_msg( d >= -BSP_TOL && d <= (1.0+BSP_TOL) , "d = %g" , d );
     return p0 + d*(p1 - p0);
   }
 } BSPPlane;

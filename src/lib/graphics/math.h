@@ -85,6 +85,14 @@ public:
     operator=( {v0,v1,v2} );
   }
 
+  template<typename R>
+  vec3( const std::vector<R>& v ) {
+    avro_assert( v.size() == 3 );
+    (*this)(0) = v[0];
+    (*this)(1) = v[1];
+    (*this)(2) = v[2];
+  }
+
   vec3& operator= (const std::initializer_list<float>& v ) {
     avro_assert( v.size() == 3 );
     index_t i = 0;
@@ -147,6 +155,13 @@ public:
     for (int i = 0; i < 4; i++)
     for (int j = 0; j < 4; j++)
       (*this)(i,j) = m(i,j);
+  }
+
+  template<typename R>
+  mat4( const std::vector<R>& m ) {
+    avro_assert( m.size() == 16 );
+    for (int i = 0; i < 16; i++)
+      data_[i] = m[i];
   }
 
   float* operator[] (index_t i) { return &(*this)(i,0); }
