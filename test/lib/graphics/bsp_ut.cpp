@@ -30,9 +30,10 @@ UT_TEST_CASE( test1 )
   // get the original input mesh
   std::shared_ptr<TopologyBase> ptopology = nullptr;
   std::shared_ptr<Mesh> pmesh = library::get_mesh(mesh_name,ptopology);
-
-  // get the topology and add it to the input mesh
   Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
+
+  //topology.points()[0][0] += 0.1;
+
   topology.orient();
 
   int width = 400, height = width;

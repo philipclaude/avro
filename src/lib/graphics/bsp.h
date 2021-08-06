@@ -23,6 +23,9 @@ namespace avro
 namespace graphics
 {
 
+#define BSP_TOL 1e-8
+#define BSP_CALL(X) try {X} catch( ... ) { printf("error calling %s on line %d of %s\n",#X,__LINE__,__FILE__); avro_assert_not_reached; }
+
 typedef struct {
   vec3 normal;
   vec3 center;
@@ -30,20 +33,23 @@ typedef struct {
   int side( const vec3& p ) const {
 
     float dp = glm::dot( p - center , normal );
-    if (fabs(dp) < 1e-12) return 0;
+    if (fabs(dp) < BSP_TOL) return 0;
     if (dp > 0) return 1;
     return -1;
   }
 
   vec3 intersect( const vec3& p0 , const vec3& p1 ) const {
-    float d = glm::dot( p0 - center , normal )/glm::dot(normal,p0-p1);
-    return p0 + d*(p1-p0);
+    float d = glm::dot( p0 - center , normal )/glm::dot( normal , p0 - p1 );
+    avro_assert_msg( d >= 0.0 && d <= 1.0 , "d = %g" , d );
+    return p0 + d*(p1 - p0);
   }
 } BSPPlane;
 
 class BSPTriangle {
 public:
   BSPTriangle( const vec3& p0 , const vec3& p1 , const vec3& p2 ) {
+
+    // save the vertices defining this triangle
     points_[0] = p0;
     points_[1] = p1;
     points_[2] = p2;
@@ -52,9 +58,10 @@ public:
     plane_.center = p0;
     plane_.normal = glm::cross( p1 - p0 , p2 - p0 );
 
+    // check if the normal has a zero length (zero area triangle)
     ignore_ = false;
     real_t l = glm::norm( plane_.normal );
-    if (l < 1e-8) {
+    if (l < BSP_TOL) {
       ignore_ = true;
     }
     else {
@@ -62,7 +69,11 @@ public:
     }
 
     if (std::isnan(plane_.normal[0]) || std::isnan(plane_.normal[1]) || std::isnan(plane_.normal[2])) {
+      p0.print();
+      p1.print();
+      p2.print();
       ignore_ = true;
+      avro_assert_not_reached;
     }
   }
 
@@ -150,7 +161,7 @@ public:
       return false;
     }
 
-    // see if any vertices lie exactly on the plane
+    // count how many vertices lie exactly on the plane
     int nb_coincident = 0;
     if (s0 == 0) nb_coincident++;
     if (s1 == 0) nb_coincident++;
@@ -166,15 +177,17 @@ public:
     #define ADD_TWO(s,t) if (s < 0) { avro_assert( t > 0 ); if (!t0->ignore()) back.add(t0); if (!t1->ignore()) front.add(t1); } else { if (!t1->ignore()) back.add(t1); if (!t0->ignore()) front.add(t0); }
 
     // one vertex is coincident to the plane
+    vec3 q;
     if (nb_coincident == 1) {
 
       // determine if the other two are on opposite sides
       if (s0 == 0) {
 
+        avro_assert( s1*s2 != 0 );
         if (s1*s2 < 0) { // different signs for vertices 1 & 2
 
           // split the triangle in two
-          vec3 q = plane.intersect( triangles_[k]->point(1) , triangles_[k]->point(2) );
+          BSP_CALL( q = plane.intersect( triangles_[k]->point(1) , triangles_[k]->point(2) ); );
 
           std::shared_ptr<BSPTriangle> t0 = std::make_shared<BSPTriangle>( triangles_[k]->point(0) , triangles_[k]->point(1) , q );
           std::shared_ptr<BSPTriangle> t1 = std::make_shared<BSPTriangle>( q , triangles_[k]->point(2) , triangles_[k]->point(0) );
@@ -185,10 +198,12 @@ public:
         }
       }
       else if (s1 == 0) {
+
+        avro_assert( s0*s2 != 0 );
         if (s0*s2 < 0) { // different signs for vertices 0 & 2
 
           // split the triangle in two
-          vec3 q = plane.intersect( triangles_[k]->point(0) , triangles_[k]->point(2) );
+          BSP_CALL( q = plane.intersect( triangles_[k]->point(0) , triangles_[k]->point(2) ); );
 
           std::shared_ptr<BSPTriangle> t0 = std::make_shared<BSPTriangle>( triangles_[k]->point(1) , triangles_[k]->point(2) , q );
           std::shared_ptr<BSPTriangle> t1 = std::make_shared<BSPTriangle>( q , triangles_[k]->point(0) , triangles_[k]->point(1) );
@@ -199,10 +214,12 @@ public:
         }
       }
       else if (s2 == 0) {
+
+        avro_assert( s0*s1 != 0 );
         if (s0*s1 < 0) { // different signs for vertices 0 & 1
 
           // split the triangle in two
-          vec3 q = plane.intersect( triangles_[k]->point(0) , triangles_[k]->point(1) );
+          BSP_CALL( q = plane.intersect( triangles_[k]->point(0) , triangles_[k]->point(1) ); );
 
           std::shared_ptr<BSPTriangle> t0 = std::make_shared<BSPTriangle>( triangles_[k]->point(2) , triangles_[k]->point(0) , q );
           std::shared_ptr<BSPTriangle> t1 = std::make_shared<BSPTriangle>( q , triangles_[k]->point(1) , triangles_[k]->point(2) );
@@ -258,8 +275,14 @@ public:
         std::swap( a , b );
       }
 
-      vec3 A = plane.intersect( a , b );
-      vec3 B = plane.intersect( b , c );
+      a.print();
+      b.print();
+
+      plane.normal.print();
+
+      vec3 A, B;
+      BSP_CALL( A = plane.intersect( a , b ); );
+      BSP_CALL( B = plane.intersect( b , c ); );
 
       std::shared_ptr<BSPTriangle> T1 = std::make_shared<BSPTriangle>(a,b,A);
       std::shared_ptr<BSPTriangle> T2 = std::make_shared<BSPTriangle>(b,B,A);
