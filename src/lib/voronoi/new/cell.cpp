@@ -24,17 +24,10 @@ Cell::Cell( index_t site , const Points& delaunay ,
 {}
 
 void
-Cell::compute( index_t elem ) {
+Cell::compute( const std::vector<index_t>& candidates ) {
 
   triangles_.clear();
   simplices_.clear();
-
-  // do the clipping
-  clip(elem);
-}
-
-void
-Cell::clip( index_t elem ) {
 
   if (delaunay_.nb() < 10)
     neighbours_.resize(delaunay_.nb());
@@ -43,16 +36,22 @@ Cell::clip( index_t elem ) {
   std::vector<double> dist2(neighbours_.size(),0.0);
   search_.get_nearest_neighbors( neighbours_.size() , site_ , neighbours_.data() , dist2.data() );
 
-  // clip by the closest simplex
-  // this will march into simplex neighbours until no more clipping is needed
-  clip_simplex(elem);
+  // do the clipping
+  bool clipped = false;
+  for (index_t k = 0; k < candidates.size(); k++) {
+    if (clip_simplex(candidates[k])) {
+      clipped = true;
+      break;
+    }
+  }
+  if (!clipped) printf("no clipping?\n");
 }
 
-void
+bool
 Cell::clip_simplex( index_t elem ) {
 
   // check if this element has already been visited
-  if (visited_.find(elem) != visited_.end()) return;
+  if (visited_.find(elem) != visited_.end()) return false;
 
   // initialize the edges and bisectors
   visited_.insert( elem );
@@ -77,7 +76,7 @@ Cell::clip_simplex( index_t elem ) {
     if (j == delaunay_.nb()) break;
   }
 
-  if (polytope_.size() == 0) return;
+  if (polytope_.size() == 0) return false;
 
   // decompose the simplices (integration and visualization)
   generate_simplices();
@@ -95,13 +94,16 @@ Cell::clip_simplex( index_t elem ) {
   // add the polytope
   add( polytope_.data() , polytope_.size() );
 
-  return;
+  //return true;
+
   // move to the neighbours of the current element
   for (index_t j = 0; j < domain_.number()+1; j++) {
     int n = domain_.neighbours()(elem,j);
     if (n < 0) continue; // do not step into boundaries
     clip_simplex( index_t(n) );
   }
+
+  return true;
 }
 
 void
@@ -132,8 +134,6 @@ Cell::initialize( index_t elem ) {
       vertex_[j].add_bisector(facets[i]);
     }
   }
-
-  printf("--> intersecting with elem %lu\n",elem);
 
   // initialize the polytope
   polytope_ = linspace(domain_.nv(elem));
@@ -172,7 +172,7 @@ Cell::enlarge_neighbours() {
 }
 
 void
-fan_triangulation( const std::vector<real_t>& points , const std::vector<index_t>& edges , std::vector<index_t>& triangles ) {
+fan_triangulation( const std::vector<index_t>& edges , std::vector<index_t>& triangles ) {
 
   const index_t nb_edges = edges.size()/2;
 
@@ -210,14 +210,9 @@ Cell::generate_simplices() {
   // so we can triangulate the "unlifted" points
   if (number_ == 2) {
 
-    std::vector<real_t> coordinates;
-    for (index_t k = 0; k < polytope_.size(); k++)
-    for (coord_t d = 0; d < 2; d++)
-      coordinates.push_back( vertex_[polytope_[k]][d] );
-
     // produce a fan triangulation
     std::vector<index_t> ptriangles;
-    fan_triangulation( coordinates , pedges_ , ptriangles );
+    fan_triangulation( pedges_ , ptriangles );
 
     // add the triangles
     for (index_t j = 0; j < ptriangles.size(); j++)
@@ -233,97 +228,16 @@ Cell::generate_simplices() {
 
     // produce a fan triangulation of the polygon on each bisector
     std::set<int> bisectors;
-    std::map<int,std::vector<index_t>> bisector_vertices;
     for (index_t k = 0; k < polytope_.size(); k++) {
       const std::vector<int>& b = vertex_[polytope_[k]].bisectors();
       for (index_t j = 0; j < b.size(); j++) {
         bisectors.insert( b[j] );
-        bisector_vertices[b[j]].push_back( polytope_[k]);
       }
     }
 
     for (std::set<int>::iterator it = bisectors.begin(); it != bisectors.end(); ++it) {
 
-      vecs<3,real_t> u,v;
-      mats<2,2,real_t> A;
-      vecs<2,real_t> b; // rhs
-
       int h = *it;
-
-      // get the equation for this bisector
-      if (h < 0) {
-        // this is a mesh facet, so we need to use the mesh element to determine the plane equation
-        index_t f = -h - 1; // map back to facet index
-
-        const real_t* p[3];
-        index_t j = 0;
-        for (index_t i = 0; i < 4; i++) {
-          if (i == f) continue;
-          p[j++] = domain_.points()[ domain_(elem_,i) ];
-        }
-
-        for (coord_t d = 0; d < 3; d++) {
-          u[d] = p[1][d] - p[0][d];
-          v[d] = p[2][d] - p[0][d];
-        }
-        printf("basis for mesh facet:\n");
-        u.print();
-        v.print();
-      }
-      else {
-
-        // decode the bisector
-        index_t pi, pj;
-        get_bisector( h , pi , pj );
-
-        // this is a voronoi bisector, so we need to use pi-pj to determine the plane equation
-        vecs<3,real_t> n, c;
-        for (coord_t d = 0; d < 3; d++) {
-          c[d] = 0.5*( delaunay_[pi][d] + delaunay_[pj][d] );
-          n[d] = delaunay_[pj][d] - delaunay_[pi][d];
-        }
-        numerics::normalize(n);
-
-        // get a vector perpendicular to n
-        u[0] = -n[1];
-        u[1] = -n[0];
-        u[2] = 0.0;
-        numerics::normalize(u);
-        v = numerics::cross(u,n);
-
-        printf("basis for voronoi bisector:\n");
-        u.print();
-        v.print();
-      }
-
-      A(0,0) = dot( u , u );
-      A(0,1) = dot( u , v );
-      A(1,0) = A(0,1);
-      A(1,1) = dot( v , v );
-      A = numerics::inverse(A);
-      A.print();
-
-      // get all the vertices on this bisector
-      const std::vector<index_t>& idx = bisector_vertices.at(*it);
-
-      // project each vertex onto the bisector
-      std::vector<real_t> coordinates;
-      for (index_t k = 0; k < idx.size(); k++) {
-
-        vecs<3,real_t> x;
-        for (coord_t d = 0; d < 3; d++)
-          x(d) = vertex_[idx[k]][d];
-
-        b(0) = dot(u,x);
-        b(1) = dot(v,x);
-
-        // this is really a vector but i'm a bit lazy right now
-        mats<2,1,real_t> w = A * b;
-        coordinates.push_back( w(0,0) );
-        coordinates.push_back( w(1,0) );
-      }
-
-      print_inline(coordinates);
 
       // retrieve the edges along this bisector
       std::vector<index_t> bedges;
@@ -359,26 +273,23 @@ Cell::generate_simplices() {
 
       // compute the fan triangulation of the polygon on this bisector
       std::vector<index_t> ptriangles;
-      fan_triangulation( coordinates , bedges , ptriangles );
+      fan_triangulation( bedges , ptriangles );
 
-      // add the triangles
+      // save the visualization triangles
+      // we only save visualization triangles if they are voronoi bisectors, or if they are boundary mesh facets
       for (index_t j = 0; j < ptriangles.size(); j++)
         triangles_.push_back( point_map.at(ptriangles[j]) );
 
       // add the edges
+      // we only save visualization edges if they are voronoi bisectors, or if they are boundary mesh facets
       for (index_t j = 0; j < pedges_.size(); j++)
         edges_.push_back( point_map.at(pedges_[j]) );
-
-      // save the visualization triangles
-      // we only save visualization triangles if they are voronoi bisectors, or if they are boundary mesh facets
 
       // if we just want the mass and first moment, then calculate these on the fly and save the result
 
       // if we want the integration tetrahedra
       // connect every triangle in the fan to the centroid
     }
-
-
   }
   else if (number_ == 4) {
     // we can decompose the polytope into integration pentatopes
@@ -416,16 +327,12 @@ Cell::clip_by_bisector( index_t j , index_t bj ) {
   // retrieve the bisector
   int b = add_bisector( site_ , bj );
 
-  printf("  ==> clipping by bisector %d\n",b);
-  delaunay_.print(  bj );
-
   // initialize the clipped polytope
   qpolytope_.clear();
   qedges_.clear();
   qplane_.clear();
 
   // retrieve the edges
-  std::set< std::pair<index_t,index_t> > E;
   for (index_t i = 0; i < pedges_.size()/2; i++){
 
     // retrieve edge indices
@@ -435,28 +342,14 @@ Cell::clip_by_bisector( index_t j , index_t bj ) {
     // can probably turn this off since it adds computation
     avro_assert( element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) );
 
-    printf("\tclipping with edge (%lu,%lu)\n",e0,e1);
-
     // clip the edge by the bisector
     int q0 = -1, q1 = -1;
     int qs = clip_edge(e0,e1,b,qpolytope_,q0,q1);
     if (q0 < 0 || q1 < 0) continue;
 
-    if (qs < 0) {
-      printf("\t --> edge (%lu,%lu) is on the same side\n",e0,e1);
-    }
-    else {
-      printf("\t--> edge( %lu,%lu) is intersected!\n",e0,e1);
-      vertex_[e0].print("\t--> e0",true);
-      vertex_[e1].print("\t--> e1",true);
-      vertex_[qs].print("\t--> intersection",true);
-    }
-
     // add the vertices to the new polytope
     qedges_.push_back( q0 );
     qedges_.push_back( q1 );
-
-    E.insert( {q0,q1} );
 
     // add the vertex to the list on the bisector
     if (qs >= 0) qplane_.push_back(qs);
@@ -470,7 +363,6 @@ Cell::clip_by_bisector( index_t j , index_t bj ) {
     if (element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) ) {
       qedges_.push_back(e0);
       qedges_.push_back(e1);
-      avro_assert( E.find( {e0,e1} ) == E.end() );
     }
   }
 

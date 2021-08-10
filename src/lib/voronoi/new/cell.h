@@ -26,7 +26,7 @@ public:
         const Topology<Simplex>& domain , GEO::NearestNeighborSearch& searcher );
 
   void set_parameters( const Parameters& params );
-  void compute( index_t elem );
+  void compute( const std::vector<index_t>& candidates );
 
   real_t get_mass() const;       // for gradient
   real_t get_moment() const;     // for gradient
@@ -47,8 +47,7 @@ protected:
   void initialize( index_t elem );
   void enlarge_neighbours();
 
-  void clip( index_t elem );
-  void clip_simplex( index_t elem );
+  bool clip_simplex( index_t elem );
   void clip_by_bisector( index_t j , index_t bj );
   int  clip_edge( index_t e0 , index_t e1 , const int b , std::vector<index_t>& q ,int& q0, int& q1  );
   bool security_radius_reached( index_t bj ) const;

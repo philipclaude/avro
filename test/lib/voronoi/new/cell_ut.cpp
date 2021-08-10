@@ -40,11 +40,13 @@ public:
       vertices_.incidence().add( b.data() , b.size() );
     }
 
+    // add the polytope
     for (index_t j = 0; j < cell.nb(); j++) {
       std::vector<index_t> polytope = cell.get(j);
       for (index_t i = 0; i < polytope.size(); i++)
         polytope[i] += nb_points;
       add( polytope.data() , polytope.size() );
+      polytope2site_.push_back(cell.site());
     }
 
     // add the triangle data
@@ -61,20 +63,41 @@ public:
       edges_.push_back(e[j]+nb_points);
   }
 
+  index_t polytope2site( index_t k ) const { return polytope2site_[k]; }
+
+  void create_field() {
+    site_field_ = std::make_shared<SiteField>(*this);
+    fields().make("sites",site_field_);
+  }
+
 private:
   Points vertices_;
   std::vector<index_t> triangles_; // for visualization
   std::vector<index_t> triangle2site_;
   std::vector<index_t> edges_;
+
+  class SiteField : public Field<Polytope,real_t> {
+  public:
+    SiteField( PowerDiagram& diagram ) :
+      Field(diagram,0,DISCONTINUOUS)
+    {
+      build();
+      for (index_t k = 0; k < diagram.nb(); k++)
+        this->value(k) = real_t(diagram.polytope2site(k));
+    }
+  };
+
+  std::vector<index_t> polytope2site_;
+  std::shared_ptr<SiteField> site_field_;
 };
 
 UT_TEST_CASE( test_2d )
 {
   GEO::PCK::initialize();
 
-  static coord_t number = 3;
+  static coord_t number = 2;
   static coord_t dim = number;
-  index_t nb_points = 1e3;
+  index_t nb_points = 1e2;
 
   std::vector<index_t> dims(number,10);
   CKF_Triangulation ckf(dims);
@@ -87,9 +110,13 @@ UT_TEST_CASE( test_2d )
     real_t x3[] = {0,0,1}; points.create(x3);
   }
 
+  #if 0
   Topology<Simplex> topology(points,number);
   index_t t[] = {0,1,2,3};
   topology.add(t,number+1);
+  #else
+  Topology<Simplex>& topology = ckf;
+  #endif
   topology.build_structures();
 
   Points sites(dim);
@@ -105,9 +132,6 @@ UT_TEST_CASE( test_2d )
   }
   #endif
 
-  // all points are clipped against element 0
-  index_t elem = 0;
-
   GEO::NearestNeighborSearch* searcher = GEO::NearestNeighborSearch::create(dim,"ANN");
   std::vector<real_t> X(sites.nb()*dim);
   for (index_t k = 0; k < sites.nb(); k++) {
@@ -118,17 +142,33 @@ UT_TEST_CASE( test_2d )
 
   PowerDiagram diagram(number,dim);
 
+  // create a search tree for the domain points
+  GEO::NearestNeighborSearch* domain_searcher = GEO::NearestNeighborSearch::create(dim,"ANN");
+  std::vector<real_t> Y( topology.points().nb()*dim );
+  for (index_t k = 0; k < topology.points().nb(); k++)
+  for (index_t d = 0; d < dim; d++)
+    Y[k*dim+d] = topology.points()[k][d];
+  domain_searcher->set_points( topology.points().nb() , Y.data() );
+
   printf("computing cells\n");
   for (index_t k = 0; k < nb_points; k++) {
 
-    printf("computing voronoi cell for site %lu\n",k);
-    sites.print(k);
+    // find the closest vertex in the domain to this site
+    real_t distance;
+    index_t nearest;
+    domain_searcher->get_nearest_neighbors( 1 , sites[k] , &nearest , &distance );
+    //printf("nearest = %lu at distance %g\n",nearest,distance);
+
+    std::vector<index_t> ball;
+    topology.inverse().ball( nearest , ball );
+    //print_inline(ball,"ball");
 
     voronoi::Cell cell( k , sites , topology , *searcher );
-    cell.compute(elem);
+    cell.compute(ball);
     diagram.add_cell( cell );
   }
   printf("done computing cells\n");
+  diagram.create_field();
 
   graphics::Viewer vis;
   vis.add(diagram);
