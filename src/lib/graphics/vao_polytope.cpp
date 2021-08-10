@@ -214,28 +214,18 @@ VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
 
   exactinit(0,0,0,10,10,10);
 
-
   number_ = topology.number();
   order_  = topology.element().order();
 
   // only linear polytope meshes are supported
   avro_assert( topology.element().order() == 1 );
 
-  std::vector<index_t> edges;
-  topology.get_edges(edges);
-
-  Triangulator triangulator( topology.number() , topology.points() );
-  for (index_t k = 0; k < topology.nb(); k++) {
-    triangulator.add_polytope( topology(k) , topology.nv(k) , k );
-  }
-
-  // triangulate the polygons
-  triangulator.triangulate();
-
-  // build the primitives
+  // build the points
   points_ = std::make_shared<PointPrimitive>(topology.points());
 
-  // edge primitives
+  // extract the edges
+  std::vector<index_t> edges;
+  topology.get_edges(edges);
   edges_.resize(1);
   edges_[0] = std::make_shared<EdgePrimitive>(order_);
   for (index_t k = 0; k < edges.size()/2; k++)
@@ -245,16 +235,35 @@ VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
   triangles_.resize(1);
   triangles_[0] = std::make_shared<TrianglePrimitive>(order_);
 
+  // extract the triangles
   std::vector<index_t> polytopes;
-  for (index_t k = 0; k < triangulator.nb(); k++) {
-
-    const PolytopeDecomposition& polytope = triangulator.polytope(k);
-    const std::vector<index_t>& triangles = polytope.triangles();
-    for (index_t j = 0; j < triangles.size()/3; j++) {
-      triangles_[0]->add( triangles.data() + 3*j , 3);
-      polytopes.push_back( triangulator.parent(k) );
+  std::vector<index_t> triangles;
+  if (topology.get_triangles(triangles,polytopes)) {
+    // the topology provides its own method for extracting triangles
+    for (index_t k = 0; k < triangles.size()/3; k++) {
+      triangles_[0]->add( triangles.data() + 3*k , 3 );
     }
   }
+  else {
+    // we will extract the triangles ourself
+    Triangulator triangulator( topology.number() , topology.points() );
+    for (index_t k = 0; k < topology.nb(); k++) {
+      triangulator.add_polytope( topology(k) , topology.nv(k) , k );
+    }
+
+    // triangulate the polytopes
+    triangulator.triangulate();
+    for (index_t k = 0; k < triangulator.nb(); k++) {
+
+      const PolytopeDecomposition& polytope = triangulator.polytope(k);
+      const std::vector<index_t>& triangles = polytope.triangles();
+      for (index_t j = 0; j < triangles.size()/3; j++) {
+        triangles_[0]->add( triangles.data() + 3*j , 3);
+        polytopes.push_back( triangulator.parent(k) );
+      }
+    }
+  }
+
   vec3 color = {0.8,0.8,0.2};
   triangles_[0]->set_color(color);
 
@@ -361,6 +370,8 @@ VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
   info_["fields"]      = jfields;
   info_["field_names"] = field_names;
 
+  // disable culling because triangles may not be ordered
+  enable_culling_ = false;
 }
 
 

@@ -37,6 +37,11 @@ public:
   //void get_edges( std::vector<index_t>& edges ) const;
   //void get_triangles( std::vector<index_t>& triangles ) const;
 
+  const std::vector<index_t>& triangles() const { return triangles_; }
+  const std::vector<index_t>& edges() const { return edges_; }
+
+  index_t site() const { return site_; }
+
 protected:
 
   void initialize( index_t elem );
@@ -75,6 +80,11 @@ private:
   std::vector<index_t> qedges_;    // temporary polytopes edges used while clipping
   std::vector<index_t> qplane_;    // points on the hyperplane of the current clipped polytope
 
+  std::vector<index_t> triangles_;
+  std::vector<index_t> simplices_;
+  std::vector<index_t> edges_;
+
+  index_t elem_;
   Points points_;
   bool exact_;
 };

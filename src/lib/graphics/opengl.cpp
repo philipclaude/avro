@@ -274,7 +274,7 @@ VertexAttributeObject::draw_points( ShaderProgram& shader ) {
 void
 VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& projection , const ClipPlane* clip ) {
 
-  if (number_ == 2) {
+  if (number_ == 2 || !enable_culling_) {
     glDisable(GL_CULL_FACE);
   }
   else {
