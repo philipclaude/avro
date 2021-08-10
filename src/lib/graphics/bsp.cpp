@@ -6,6 +6,7 @@ namespace avro
 namespace graphics
 {
 
+// this helped while debugging
 #define BSP_CALL(X) try {X} catch( ... ) { printf("error calling %s on line %d of %s\n",#X,__LINE__,__FILE__); avro_assert_not_reached; }
 
 BSPTriangle::BSPTriangle( const vec3& p0 , const vec3& p1 , const vec3& p2 ) {
@@ -14,6 +15,9 @@ BSPTriangle::BSPTriangle( const vec3& p0 , const vec3& p1 , const vec3& p2 ) {
   points_[0] = p0;
   points_[1] = p1;
   points_[2] = p2;
+
+  // initialize edges to be non-ghost
+  ghost_[0] = ghost_[1] = ghost_[2] = false;
 
   // initialize the plane of this triangle
   plane_.center = p0;
@@ -198,19 +202,19 @@ BSPTriangles::classify( index_t k , const BSPPlane& plane , BSPTriangles& front 
 
     int fc;
     vec3 a, b, c;
-    if (s0* s1 > 0) {
+    if (s0 * s1 >= 0) {
       a  = p0;
       b  = p1;
       c  = p2;
       fc = s2;
     }
-    else if (s0 * s2 > 0) {
+    else if (s0 * s2 >= 0) {
       a  = p2;
       b  = p0;
       c  = p1;
       fc = s1;
     }
-    else if (s1 * s2 > 0) {
+    else if (s1 * s2 >= 0) {
       a  = p1;
       b  = p2;
       c  = p0;
@@ -229,6 +233,13 @@ BSPTriangles::classify( index_t k , const BSPPlane& plane , BSPTriangles& front 
     BSP_CALL( T1 = std::make_shared<BSPTriangle>(a,b,A); )
     BSP_CALL( T2 = std::make_shared<BSPTriangle>(b,B,A); )
     BSP_CALL( T3 = std::make_shared<BSPTriangle>(A,B,c); )
+
+    // set the ghost edges
+    T1->set_ghost(1,true);
+    T2->set_ghost(1,true);
+    T2->set_ghost(2,true);
+    T3->set_ghost(0,true);
+    T3->set_ghost(0,true);
 
     if (fc >= 0) {
       if (!T1->ignore()) back.add(T1);
@@ -297,12 +308,16 @@ BSPTree::get_triangles( const vec3& e , std::vector<BSPTriangle*>& triangles ) c
 
   if (side < 0) {
     front_->get_triangles(e,triangles);
-    triangles.push_back( root );
+    for (index_t j = 0; j < triangles_.nb(); j++)
+      triangles.push_back(triangles_[j].get());
+    //triangles.push_back( root );
     back_->get_triangles(e,triangles);
   }
   else {
     back_->get_triangles(e,triangles);
-    triangles.push_back(root);
+    for (index_t j = 0; j < triangles_.nb(); j++)
+      triangles.push_back(triangles_[j].get());
+    //triangles.push_back(root);
     front_->get_triangles(e,triangles);
   }
 

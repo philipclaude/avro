@@ -42,8 +42,6 @@ public:
 
 	const Window& window() const { return window_; }
 
-	void load_view( const std::string& filename );
-
 private:
 	Window window_;
 	std::shared_ptr<GUI> gui_;

@@ -18,6 +18,8 @@ namespace PCK {
 Sign avro_side1_nd_exact_pck(const double* p0, const double* p1, const double* q0 ,unsigned short dim
 ){
 
+  printf("side 1 exact!\n");
+
  expansion& l = expansion_sq_dist(p0,p1,dim);
  expansion& a = expansion_dot_at(p1,q0,p0,dim).scale_fast(2.0);
  expansion& r = expansion_diff(l,a);

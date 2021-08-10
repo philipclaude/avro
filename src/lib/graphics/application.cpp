@@ -62,37 +62,6 @@ OpenGL_Application::run(bool quit) {
 }
 
 void
-OpenGL_Application::load_view( const std::string& filename ) {
-
-  nlohmann::json jv;
-  std::ifstream file_in(filename);
-  file_in >> jv;
-
-  float fov = jv["fov"];
-  float width = jv["width"];
-  float height = jv["height"];
-
-  std::vector<float> eye_data = jv["eye"];
-  std::vector<float> lookat_data = jv["lookat"];
-  std::vector<float> model_matrix_data = jv["model_matrix"];
-
-  vec3 eye(eye_data);
-  vec3 lookat(lookat_data);
-  mat4 model_matrix(model_matrix_data);
-
-  window_.resize(width,height);
-  window_.camera().set_fov(fov);
-  window_.camera().set_eye(eye);
-  window_.camera().set_lookat(lookat);
-  window_.camera().compute_projection(width,height);
-
-  // set each plot to have the same model matrix
-  // (this way we don't need to make sure the same scene is loaded)
-  for (index_t k = 0; k < window_.nb_plots(); k++)
-    window_.plot(k).set_model_matrix(model_matrix);
-}
-
-void
 WebGL_Application::add( const TopologyBase& topology ) {
   std::shared_ptr<Plot> plot = std::make_shared<Plot>(topology,false);
   plot->build();

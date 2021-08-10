@@ -65,10 +65,14 @@ public:
   const BSPPlane& plane() const { return plane_; }
   bool ignore() const { return ignore_; }
 
+  void set_ghost( index_t j , bool x ) { ghost_[j] = x; }
+  bool ghost( index_t j ) const { return ghost_[j]; }
+
 private:
   vec3 points_[3];
   BSPPlane plane_;
   bool ignore_;
+  bool ghost_[3];
 };
 
 class BSPTriangles {

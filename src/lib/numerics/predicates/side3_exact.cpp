@@ -19,6 +19,9 @@ Sign avro_side3_nd_exact_pck(const double* p0,const double* p1,const double* p2,
  const double* q0,const double* q1,const double* q2 ,unsigned short dim
 ){
 
+  printf("side 3 exact!\n");
+
+
  expansion& l1 = expansion_sq_dist(p1,p0,dim);
  expansion& l2 = expansion_sq_dist(p2,p0,dim);
  expansion& l3 = expansion_sq_dist(p3,p0,dim);

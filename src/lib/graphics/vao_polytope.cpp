@@ -13,9 +13,6 @@
 #include <tetgen1.5.0/tetgen.h>
 
 extern "C" {
-#define REAL avro::real_t
-#define VOID void
-#define ANSI_DECLARATORS
 #include <triangle/triangle.h>
 }
 
@@ -90,7 +87,8 @@ public:
       input.numberofpoints = nb_vertices_;
       input.pointlist = coordinates_.data();
 
-      ::triangulate("zQN", &input, &output, NULL);
+      std::string switches = "zQN";
+      ::triangulate( (char*)switches.c_str() , &input, &output, NULL);
 
       avro_assert( input.numberofpoints == output.numberofpoints );
       for (int k = 0; k < output.numberoftriangles; k++) {
@@ -100,31 +98,59 @@ public:
     }
     else if (dim_ == 3) {
 
-      // compute the tetrahedralization of the polyhedron
-      tetgenio input,output;
+      if (coordinates_.size()/3 > 4) {
 
-      // fill the vertices
-      input.numberofpoints = coordinates_.size() / 3;
+        // compute the tetrahedralization of the polyhedron
+        tetgenio input,output;
 
-      input.pointlist = new REAL[input.numberofpoints*3];
-      for (index_t i = 0; i < coordinates_.size(); i++)
-        input.pointlist[i] = coordinates_[i];
+        // fill the vertices
+        input.numberofpoints = coordinates_.size() / 3;
 
-      std::string switches = "fnnQ";
-      tetrahedralize( (char*)switches.c_str() , &input , &output );
+        input.pointlist = new REAL[input.numberofpoints*3];
+        for (index_t i = 0; i < coordinates_.size(); i++)
+          input.pointlist[i] = coordinates_[i];
 
-      avro_assert( input.numberofpoints == output.numberofpoints );
-      for (int i = 0; i < output.numberoftrifaces; i++) {
+        std::string switches = "zfnnVC";
 
-        int t0 = output.adjtetlist[2*i  ];
-        int t1 = output.adjtetlist[2*i+1];
-
-        if (t0 == -1 || t1 == -1) {
-          // boundary triangle
-          for (coord_t d = 0; d < 3; d++)
-            triangles_.push_back( indices_[output.trifacelist[3*i+d]] );
+        try {
+          tetrahedralize( (char*)switches.c_str() , &input , &output , NULL , NULL );
+        }
+        catch (...) {
+          printf("could not tetrahedralize these points:\n");
+          for (index_t j = 0; j < coordinates_.size()/3; j++)
+            printf("point (%lu) = (%g,%g,%g)\n",j,coordinates_[3*j],coordinates_[3*j+1],coordinates_[3*j+2]);
+          avro_assert_not_reached;
         }
 
+        if (input.numberofpoints != output.numberofpoints) {
+          printf("tetgen added points? nb_original = %d, nb_output = %d\n",input.numberofpoints,output.numberofpoints);
+          for (index_t j = 0; j < coordinates_.size()/3; j++)
+            printf("input (%lu) = (%g,%g,%g)\n",j,coordinates_[3*j],coordinates_[3*j+1],coordinates_[3*j+2]);
+
+            for (index_t j = 0; j < output.numberofpoints; j++)
+              printf("output (%lu) = (%g,%g,%g)\n",j,output.pointlist[3*j],output.pointlist[3*j+1],output.pointlist[3*j+2]);
+          avro_assert_not_reached;
+        }
+        avro_assert( input.numberofpoints == output.numberofpoints );
+        for (int i = 0; i < output.numberoftrifaces; i++) {
+
+          int t0 = output.adjtetlist[2*i  ];
+          int t1 = output.adjtetlist[2*i+1];
+
+          if (t0 == -1 || t1 == -1) {
+            // boundary triangle
+            for (coord_t d = 0; d < 3; d++)
+              triangles_.push_back( indices_[output.trifacelist[3*i+d]] );
+          }
+        }
+      }
+      else if (coordinates_.size() == 12) {
+        for (index_t j = 0; j < 4; j++) {
+          for (index_t i = 0; i < 4; i++) {
+            if (i == j) continue;
+            triangles_.push_back( indices_[i] );
+          }
+        }
       }
     }
   }
@@ -160,9 +186,14 @@ public:
   }
 
   void triangulate() {
+    #if 0
     ProcessCPU::parallel_for(
       parallel_for_member_callback( this , &thisclass::triangulate_polytope ),
       0,polytopes_.size() );
+    #else
+    for (index_t k = 0; k < polytopes_.size(); k++)
+      triangulate_polytope(k);
+    #endif
   }
 
   index_t nb() const { return polytopes_.size(); }
@@ -180,6 +211,9 @@ private:
 template<>
 void
 VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
+
+  exactinit(0,0,0,10,10,10);
+
 
   number_ = topology.number();
   order_  = topology.element().order();

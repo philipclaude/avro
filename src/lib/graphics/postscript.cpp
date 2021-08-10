@@ -177,7 +177,9 @@ PostScriptWriter::begin( index_t width , index_t height ) {
                 "{ /ST { STnoshfill } BD }\n"
                 "ifelse\n");
 
-  fprintf(fid_,"/TRI { newpath moveto lineto lineto closepath gsave 0.5 setgray fill grestore 0.0 setgray stroke } BD\n");
+  fprintf(fid_,"/TRI  { newpath moveto lineto lineto closepath gsave 0.5 setgray fill grestore 0.0 setgray stroke } BD\n");
+  fprintf(fid_,"/TRIF { newpath moveto lineto lineto closepath 0.5 setgray fill } BD\n");
+  fprintf(fid_,"/EDGF { newpath moveto lineto closepath 0.0 setgray stroke } BD\n");
 
   fprintf(fid_,"end\n"
                 "%%%%EndProlog\n"
@@ -224,65 +226,23 @@ PostScriptWriter::write( const std::vector<BSPTriangle*>& triangles , const mat4
     vec4 q1 = transformation * glm::to_vec4(p1,1.0);
     vec4 q2 = transformation * glm::to_vec4(p2,1.0);
 
+    // adjust for perspective projection
     q0[0] /= q0[3]; q0[1] /= q0[3];
     q1[0] /= q1[3]; q1[1] /= q1[3];
     q2[0] /= q2[3]; q2[1] /= q2[3];
 
-    #if 0
-
-    fprintf(fid_,"0.5 0.5 0.5 C\n"); // grey
-    fprintf(fid_,"%g %g %g %g %g %g T\n",
-        q0[0], q0[1] ,
-        q1[0], q1[1] ,
-        q2[0], q2[1] );
-
-
-    fprintf(fid_,"0.0 0.0 0.0 C\n"); // black
-    fprintf(fid_,"%g %g LS\n",q0[0],q0[1]);
-    fprintf(fid_,"%g %g LE\n",q1[0],q1[1]);
-
-    fprintf(fid_,"%g %g LS\n",q0[0],q0[1]);
-    fprintf(fid_,"%g %g LE\n",q2[0],q2[1]);
-
-    fprintf(fid_,"%g %g LS\n",q2[0],q2[1]);
-    fprintf(fid_,"%g %g LE\n",q1[0],q1[1]);
-    #else
-
     fprintf(fid_,"%d %d %d %d %d %d TRI\n",int(q0[0]),int(q0[1]),int(q1[0]),int(q1[1]),int(q2[0]),int(q2[1]));
 
+    #if 0
+    bool g0 = triangles[k]->ghost(0);
+    bool g1 = triangles[k]->ghost(1);
+    bool g2 = triangles[k]->ghost(2);
+
+    if (!g0) fprintf(fid_,"%d %d %d %d EDGF\n",int(q0[0]),int(q0[1]),int(q1[0]),int(q1[1]));
+    if (!g1) fprintf(fid_,"%d %d %d %d EDGF\n",int(q1[0]),int(q1[1]),int(q2[0]),int(q2[1]));
+    if (!g2) fprintf(fid_,"%d %d %d %d EDGF\n",int(q0[0]),int(q0[1]),int(q2[0]),int(q2[1]));
     #endif
-
   }
-
-  #if 0
-  // draw the edges
-  fprintf(fid_,"0.1 W\n");
-  fprintf(fid_,"0.0 0.0 0.0 C\n"); // black
-  for (index_t k = 0; k < triangles.size(); k++) {
-
-    const vec3& p0 = triangles[k]->point(0);
-    const vec3& p1 = triangles[k]->point(1);
-    const vec3& p2 = triangles[k]->point(2);
-
-    // transform each point
-    vec4 q0 = transformation * glm::to_vec4(p0,1.0);
-    vec4 q1 = transformation * glm::to_vec4(p1,1.0);
-    vec4 q2 = transformation * glm::to_vec4(p2,1.0);
-
-    q0[0] /= q0[3]; q0[1] /= q0[3];
-    q1[0] /= q0[3]; q1[1] /= q1[3];
-    q2[0] /= q0[3]; q2[1] /= q2[3];
-
-    fprintf(fid_,"%g %g LS\n",q0[0],q0[1]);
-    fprintf(fid_,"%g %g LE\n",q1[0],q1[1]);
-
-    fprintf(fid_,"%g %g LS\n",q0[0],q0[1]);
-    fprintf(fid_,"%g %g LE\n",q2[0],q2[1]);
-
-    fprintf(fid_,"%g %g LS\n",q2[0],q2[1]);
-    fprintf(fid_,"%g %g LE\n",q1[0],q1[1]);
-  }
-  #endif
 
 }
 
