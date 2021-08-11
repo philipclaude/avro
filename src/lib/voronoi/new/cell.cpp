@@ -20,23 +20,20 @@ Cell::Cell( index_t site , const Points& delaunay ,
   domain_(domain),
   search_(searcher),
   points_(delaunay.dim()),
-  exact_(true)
+  exact_(false)
 {}
 
 void
 Cell::compute( const std::vector<index_t>& candidates ) {
 
-  triangles_.clear();
-  simplices_.clear();
-  moment_.resize( delaunay_.dim() );
-  for (coord_t d = 0; d < moment_.size(); d++)
-    moment_[d] = 0.0;
-  volume_ = 0.0;
+  clear();
 
-  if (delaunay_.nb() < 10)
+  // compute nearest neighbours
+  index_t nb_nns = 50;
+  if (delaunay_.nb() < nb_nns)
     neighbours_.resize(delaunay_.nb());
   else
-    neighbours_.resize(10);
+    neighbours_.resize(nb_nns);
   std::vector<double> dist2(neighbours_.size(),0.0);
   search_.get_nearest_neighbors( neighbours_.size() , site_ , neighbours_.data() , dist2.data() );
 
@@ -47,6 +44,27 @@ Cell::compute( const std::vector<index_t>& candidates ) {
       clipped = true;
       break;
     }
+  }
+}
+
+void
+Cell::clear( bool free ) {
+  Topology<Polytope>::clear();
+  points_.clear();
+  visited_.clear();
+  triangles_.clear();
+  edges_.clear();
+  simplices_.clear();
+  moment_.resize( delaunay_.dim() );
+  for (coord_t d = 0; d < moment_.size(); d++)
+    moment_[d] = 0.0;
+  volume_ = 0.0;
+
+  if (free) {
+    points_.data().shrink_to_fit();
+    this->data().shrink_to_fit();
+    triangles_.shrink_to_fit();
+    edges_.shrink_to_fit();
   }
 }
 
@@ -114,8 +132,10 @@ Cell::initialize( index_t elem ) {
 
   // get the list of facets of this element
   std::vector<int> facets(n+1);
-  for (index_t j = 0; j < n+1; j++)
-    facets[j] = -j - 1; // TODO use the mesh facets which have global numbering (may be needed for boundary conditions)
+  for (index_t j = 0; j < n+1; j++) {
+    int id = encode_mesh_facet(j);
+    facets[j] = id;//-j - 1; // TODO use the mesh facets which have global numbering (may be needed for boundary conditions)
+  }
 
   // create the initial points
   vertex_.clear();
@@ -295,7 +315,8 @@ Cell::generate_simplices() {
       // we only save visualization triangles/edges if they are voronoi bisectors, or if they are boundary mesh facets
       bool interior = false;
       if (h < 0) {
-        index_t f = -h -1; // decode which local facet in the tetrahedron this is
+        //index_t f = -h -1; // decode which local facet in the tetrahedron this is
+        index_t f = decode_mesh_facet(h);
         if (domain_.neighbours()(elem_,f) >= 0) interior = true;
       }
 
@@ -315,16 +336,31 @@ Cell::generate_simplices() {
 
       // if we just want the volume and first moment, then calculate these on the fly and save the result
       std::vector<const real_t*> X(4);
+      std::vector<const real_t*> Y(3);
       X[0] = centroid.data();
+      real_t Aij = 0.0;
+      int k_basis = -1;
+      real_t aij_max = -1;
       for (index_t k = 0; k < ptriangles.size()/3; k++) {
 
         // compute the volume of the tetrahedron
-        for (coord_t i = 0; i < 3; i++)
+        for (coord_t i = 0; i < 3; i++) {
           X[i+1] = vertex_[ptriangles[3*k+i]].X();
+          Y[i]   = vertex_[ptriangles[3*k+i]].X();
+        }
 
         // add the volume term
         real_t vk = fabs(numerics::simplex_volume( X , 3 , false ));
         volume_ += vk;
+
+        real_t aij = fabs(numerics::simplex_volume( Y , 2 , false ) );
+        Aij += aij;
+
+        if (aij > aij_max) {
+          // compute a basis using this triangle
+          k_basis = k;
+          aij_max = aij;
+        }
 
         // compute the centroid of this tetrahedron
         std::vector<real_t> ck( delaunay_.dim() , 0.0 );
@@ -336,13 +372,44 @@ Cell::generate_simplices() {
         for (index_t d = 0; d < delaunay_.dim(); d++)
           moment_[d] += ck[d]*vk;
       }
+      if (aij_max == 0.0) {
+        for (index_t j = 0; j < polytope_.size(); j++)
+          vertex_[polytope_[j]].print("v");
+      }
+      avro_assert_msg( aij_max > 0.0 , "aij_max = %g, nb_triangles = %lu" , aij_max , ptriangles.size()/3 );
 
       // add the face terms
       // i.e. compute dij: the distance between this site and the bisector
       //              lij: the distance between this site and the opposite site
       //              Aij: the area of the polygon on this bisector
       //              bij: the centroid of the polygon on the bisector
-      // TODO
+
+      // this should be computed in 3d
+      std::vector<real_t> bij(delaunay_.dim());
+      real_t dij = 0.0, lij = 0.0;
+      if (facets_.find(h) == facets_.end()) {
+        CellFacet facet;
+
+        facet.Aij = Aij;
+        facet.bij = bij;
+        facet.dij = dij;
+        facet.Abij = bij;
+        for (coord_t d = 0; d < bij.size(); d++)
+          facet.Abij[d] *= Aij;
+        facets_.insert( {h,facet} );
+      }
+      else {
+        CellFacet& facet = facets_.at(h);
+
+        // add to the Aij term
+        facet.Aij += Aij;
+
+        // and to the bij term
+        for (coord_t d = 0; d < delaunay_.dim(); d++)
+          facet.Abij[d] += Aij*bij[d];
+
+        // should we check that dij is the same?
+      }
 
       // if we want the integration tetrahedra
       // connect every triangle in the fan to the centroid

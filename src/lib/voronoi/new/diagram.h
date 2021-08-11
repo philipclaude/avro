@@ -1,6 +1,10 @@
 #ifndef AVRO_VORONOI_NEW_DIAGRAM_H_
 #define AVRO_VORONOI_NEW_DIAGRAM_H_
 
+#include "common/parallel_for.h"
+
+#include "mesh/field.hpp"
+
 #include "voronoi/new/cell.h"
 
 #include <nnsearch/nn_search.h>
@@ -24,18 +28,15 @@ public:
     // copy the points, padding zeros to the additional dimensions if necessary
     avro_assert( dim >= topology.points().dim() );
     std::vector<real_t> x(dim,0.0);
-    std::vector<real_t> X( topology.points().nb()*dim , 0.0 );
     for (index_t k = 0; k < topology.points().nb(); k++) {
-      for (coord_t d = 0; d < topology.points().dim(); d++) {
+      for (coord_t d = 0; d < topology.points().dim(); d++)
         x[d] = topology.points()[k][d];
-        X[k*dim+d] = x[d];
-      }
       lifted_points_.create(x.data());
     }
 
     // create the search structures
     search_ = GEO::NearestNeighborSearch::create(dim,"ANN");
-    search_->set_points( lifted_points_.nb() , X.data() );
+    search_->set_points( lifted_points_.nb() , lifted_points_[0] );
     build_structures(); // populates neighbours and inverse
   }
 
@@ -61,38 +62,50 @@ public:
     sites_(dim),
     vertices_(dim),
     domain_(topology,dim),
+    search_(nullptr),
     volume_(0.0)
-  {
-    search_ = GEO::NearestNeighborSearch::create(dim,"ANN");
-  }
+  {}
 
-  void initialize( index_t nb_cells ) {
-    cell_.resize( nb_cells );
-    for (index_t k = 0; k < nb_cells; k++)
+  void initialize() {
+    cell_.resize( sites_.nb() );
+    for (index_t k = 0; k < sites_.nb(); k++)
       cell_[k] = std::make_shared<Cell>( k , sites_ , domain_ , *search_ );
   }
 
-  void set_sites( const real_t* x );
-  void set_sites( const Points& p ) {
+  void set_sites( const real_t* x ) {
+    avro_implement;
+  }
 
-    p.copy(sites_);
+  void set_sites( const Points& p ) {
 
     coord_t dim = p.dim();
     avro_assert( dim == sites_.dim() );
-    std::vector<real_t> X( sites_.nb()*dim , 0.0 );
-    for (index_t k = 0; k < sites_.nb(); k++) {
-      for (coord_t d = 0; d < dim; d++) {
-        X[k*dim+d] = sites_[k][d];
-      }
-    }
-    search_->set_points( sites_.nb() , X.data() );
+
+    // copy the points and set the search structure
+    p.copy(sites_);
+    if (search_ == nullptr)
+      search_ = GEO::NearestNeighborSearch::create(dim,"ANN");
+    search_->set_points( sites_.nb() , sites_[0] );
   }
   void set_weights( const real_t* x );
 
   void compute() {
+
+    clock_t t0 = clock();
+
+    #if 0
+    typedef PowerDiagram thisclass;
+    ProcessCPU::parallel_for(
+      parallel_for_member_callback( this , &thisclass::compute ), 0,cell_.size()
+    );
+    #else
     for (index_t k = 0; k < cell_.size(); k++) {
       compute(k);
     }
+    #endif
+
+    clock_t t1 = clock();
+    printf("--> t_clip = %g\n",(real_t(t1-t0)/real_t(CLOCKS_PER_SEC))/ProcessCPU::maximum_concurrent_threads());
   }
 
   void compute( index_t k ) {
@@ -102,8 +115,11 @@ public:
   }
 
   void accumulate() {
-    for (index_t k = 0; k < cell_.size(); k++)
+    for (index_t k = 0; k < cell_.size(); k++) {
       add_cell( *cell_[k].get() );
+      cell_[k]->clear();
+    }
+
   }
 
   bool get_triangles( std::vector<index_t>& triangles , std::vector<index_t>& parent ) const override {
@@ -126,10 +142,8 @@ public:
 
     // add the polytope
     for (index_t j = 0; j < cell.nb(); j++) {
-      std::vector<index_t> polytope = cell.get(j);
-      for (index_t i = 0; i < polytope.size(); i++)
-        polytope[i] += nb_points;
-      add( polytope.data() , polytope.size() );
+      index_t dummy = 0;
+      add( &dummy , 1 );
       polytope2site_.push_back(cell.site());
     }
 
@@ -164,11 +178,11 @@ private:
   std::vector<index_t> triangle2site_;
   std::vector<index_t> edges_;
 
-  real_t volume_;
-
   Domain domain_;
   std::vector<std::shared_ptr<Cell>> cell_;
   GEO::NearestNeighborSearch* search_;
+
+  real_t volume_;
 
   class SiteField : public Field<Polytope,real_t> {
   public:
@@ -178,6 +192,7 @@ private:
       build();
       for (index_t k = 0; k < diagram.nb(); k++)
         this->value(k) = real_t(diagram.polytope2site(k));
+      //this->dof().print();
     }
 
     index_t nb_rank() const { return 1; }

@@ -4,11 +4,10 @@
 
 #include "library/ckf.h"
 
-#include "mesh/field.hpp"
-
 #include "voronoi/new/cell.h"
 #include "voronoi/new/diagram.h"
 
+#define SPHERE 0
 
 using namespace avro;
 
@@ -18,12 +17,40 @@ UT_TEST_CASE( test_2d )
 {
   GEO::PCK::initialize();
 
-  static coord_t number = 2;
+  static coord_t number = 3;
   static coord_t dim = number;
-  index_t nb_points = 1e2;
+  index_t nb_points = 2e3;
 
-  std::vector<index_t> dims(number,10);
+  index_t N = 20;
+  std::vector<index_t> dims(number,N);
   CKF_Triangulation ckf(dims);
+
+  #if SPHERE
+  Points sphere_points(3);
+  real_t p[3];
+  for (index_t k = 0; k < ckf.points().nb(); k++) {
+
+    real_t theta = ckf.points()[k][0]*2.0*M_PI;
+    real_t phi = ckf.points()[k][1]*M_PI;
+
+    p[0] = cos(theta)*sin(phi);
+    p[1] = sin(theta)*sin(phi);
+    p[2] = cos(phi);
+    sphere_points.create(p);
+  }
+  ckf.points().clear();
+  ckf.points().set_dim(3);
+  sphere_points.copy(ckf.points());
+
+  // stitch together the 0 and 2pi boundaries
+  for (index_t k = 0; k < N-1; k++) {
+
+    // TODO
+
+  }
+
+  dim = 3;
+  #endif
 
   Points points(dim);
   real_t x0[] = {0,0,0}; points.create(x0);
@@ -40,29 +67,40 @@ UT_TEST_CASE( test_2d )
   #else
   Topology<Simplex>& topology = ckf;
   #endif
-  topology.build_structures();
 
   Points sites(dim);
 
-  #if 1
+  #if 0
   ckf.points().copy( sites );
   nb_points = sites.nb();
-  #else
+  #elif SPHERE == 0
   for (index_t k = 0; k < nb_points; k++) {
     for (coord_t d = 0; d < dim; d++)
       x0[d] = random_within(0.0,1.0);
     sites.create(x0);
   }
+  #else
+  for (index_t k = 0; k < nb_points; k++) {
+    real_t theta = random_within(0.0,2.0*M_PI);
+    real_t phi = random_within(0.0,M_PI);
+
+    p[0] = cos(theta)*sin(phi);
+    p[1] = sin(theta)*sin(phi);
+    p[2] = cos(phi);
+
+    sites.create(p);
+  }
   #endif
 
   voronoi::PowerDiagram diagram(topology,dim);
   diagram.set_sites( sites );
-  diagram.initialize( sites.nb() );
-
+  diagram.initialize();
 
   printf("computing cells\n");
   diagram.compute();
   printf("done computing cells\n");
+
+  if (nb_points > 3e5 && number > 2) return;
   diagram.accumulate();
   diagram.create_field();
 

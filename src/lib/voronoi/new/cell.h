@@ -19,6 +19,26 @@ class Parameters;
 namespace voronoi
 {
 
+typedef struct {
+
+  int pi_; // nonnegative
+  int pj_; // could be negative if a boundary face
+
+  std::vector<real_t> qi; // site coordinates
+  std::vector<real_t> bi; // cell centroid
+  std::vector<real_t> Abij; // cell moment (Aij * bij)
+
+  real_t Aij; // area of the face
+  real_t dij; // distance from qi to face
+  real_t lij; // distance from qi to qj
+  std::vector<real_t> bij;
+
+} CellFacet;
+
+typedef struct {
+
+} Face;
+
 class Cell : public Topology<Polytope> {
 
 public:
@@ -37,6 +57,20 @@ public:
 
   index_t site() const { return site_; }
   real_t volume() const { return volume_; }
+
+  void clear( bool free=false );
+
+  index_t decode_mesh_facet( int b ) {
+    index_t id = -b - 1;
+    avro_assert( id / (domain_.number()+1) == elem_ );
+    index_t f = id % (domain_.number()+1);
+    return f;
+  }
+
+  int encode_mesh_facet( index_t f ) {
+    index_t id = elem_ * (domain_.number()+1) + f;
+    return -id -1;
+  }
 
 protected:
 
@@ -84,7 +118,7 @@ private:
   std::vector<real_t> moment_;
 
   // face terms
-  std::map<int,real_t> face_area_;
+  std::map<int,CellFacet> facets_;
 };
 
 } // voronoi

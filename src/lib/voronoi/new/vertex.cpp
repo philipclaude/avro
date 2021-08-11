@@ -160,9 +160,9 @@ Vertex::side(const real_t *zi , const real_t *zj , const bool exact )
 {
   // fast version
 	GEO::Sign result;
-  //if (!exact) {
-  //  return side_inexact( zi , zj );
-  //}
+  if (!exact) {
+    return side_inexact( zi , zj );
+  }
 
 	if (simplex_.size() != site_.size()+1)
 		print("v",true);
