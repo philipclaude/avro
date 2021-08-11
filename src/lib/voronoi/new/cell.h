@@ -32,15 +32,11 @@ public:
   real_t get_moment() const;     // for gradient
   real_t get_face_terms() const; // for hessian
 
-  // for plotting the resulting power diagram
-  //void get_points( std::vector<real_t>& points ) const;
-  //void get_edges( std::vector<index_t>& edges ) const;
-  //void get_triangles( std::vector<index_t>& triangles ) const;
-
   const std::vector<index_t>& triangles() const { return triangles_; }
   const std::vector<index_t>& edges() const { return edges_; }
 
   index_t site() const { return site_; }
+  real_t volume() const { return volume_; }
 
 protected:
 
@@ -57,15 +53,11 @@ protected:
 
   void generate_simplices();
 
-  template<typename Integrand>
-  void integrate( const Integrand& integrand );
-
 private:
   index_t site_; // the index of the voronoi site we are computing the cell of (gl_PrimitiveID)
   const Points& delaunay_;             // the delaunay vertices/voronoi sites (texture)
   const Topology<Simplex>& domain_; // topology from which we will grab an element to clip against (texture)
   GEO::NearestNeighborSearch& search_; // search structure through delaunay points that may need to be enlarged (texture)
-  //const Facets& facets_; // mesh facets (in global numbering) (texture)
 
   std::vector<index_t> neighbours_;     // current list of nearest neighbours to the site
   std::unordered_set<index_t> visited_; // set of elements which have been visited
@@ -86,6 +78,13 @@ private:
   index_t elem_;
   Points points_;
   bool exact_;
+
+  // cell terms
+  real_t volume_;
+  std::vector<real_t> moment_;
+
+  // face terms
+  std::map<int,real_t> face_area_;
 };
 
 } // voronoi

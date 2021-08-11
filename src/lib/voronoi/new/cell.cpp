@@ -28,6 +28,10 @@ Cell::compute( const std::vector<index_t>& candidates ) {
 
   triangles_.clear();
   simplices_.clear();
+  moment_.resize( delaunay_.dim() );
+  for (coord_t d = 0; d < moment_.size(); d++)
+    moment_[d] = 0.0;
+  volume_ = 0.0;
 
   if (delaunay_.nb() < 10)
     neighbours_.resize(delaunay_.nb());
@@ -44,7 +48,6 @@ Cell::compute( const std::vector<index_t>& candidates ) {
       break;
     }
   }
-  if (!clipped) printf("no clipping?\n");
 }
 
 bool
@@ -86,15 +89,11 @@ Cell::clip_simplex( index_t elem ) {
   for (index_t j = 0; j < polytope_.size(); j++) {
     // save the coordinates and bisector information
     points_.create( vertex_[polytope_[j]].X() );
-    const std::vector<int>& bisectors = vertex_[ polytope_[j]].bisectors();
-    points_.incidence().add( bisectors.data() , bisectors.size() );
     polytope_[j] = nb_points + j;
   }
 
   // add the polytope
   add( polytope_.data() , polytope_.size() );
-
-  //return true;
 
   // move to the neighbours of the current element
   for (index_t j = 0; j < domain_.number()+1; j++) {
@@ -135,29 +134,18 @@ Cell::initialize( index_t elem ) {
     }
   }
 
-  // initialize the polytope
-  polytope_ = linspace(domain_.nv(elem));
+  // initialize the polytope to the simplex
+  polytope_.resize(n+1);
+  for (index_t j = 0; j < n+1; j++)
+    polytope_[j] = j;
 
   // initialize the polytope edges
   pedges_.clear();
-  #if 0
-  for (index_t ii = 0; ii < polytope_.size(); ii++)
-  for (index_t jj = ii+1; jj < polytope_.size(); jj++) {
-    index_t e0 = polytope_[ii];
-    index_t e1 = polytope_[jj];
-    if (element().is_edge( vertex_[e0].bisectors() , vertex_[e1].bisectors() ) ) {
-      pedges_.push_back(e0);
-      pedges_.push_back(e1);
-    }
-  }
-
-  #else
   for (index_t ii = 0; ii < n+1; ii++)
   for (index_t jj = ii+1; jj < n+1; jj++) {
     pedges_.push_back(ii);
     pedges_.push_back(jj);
   }
-  #endif
 }
 
 void
@@ -200,14 +188,12 @@ fan_triangulation( const std::vector<index_t>& edges , std::vector<index_t>& tri
 void
 Cell::generate_simplices() {
 
+  // compute the map from the points to what they will be in the final saved polytope
   index_t nb_points = points_.nb();
   std::map<index_t,index_t> point_map;
   for (index_t k = 0; k < polytope_.size(); k++)
     point_map.insert( {polytope_[k] , nb_points+k} );
 
-  // take advantage of the fact that the RVD will always be lifted (if at all),
-  // with the first number_ coordinates being in the original space
-  // so we can triangulate the "unlifted" points
   if (number_ == 2) {
 
     // produce a fan triangulation
@@ -221,10 +207,45 @@ Cell::generate_simplices() {
     // add the edges
     for (index_t j = 0; j < pedges_.size(); j++)
       edges_.push_back( point_map.at(pedges_[j]) );
+
+    // add the volume terms
+    // if we just want the volume and first moment, then calculate these on the fly and save the result
+    std::vector<const real_t*> X(3);
+    for (index_t k = 0; k < ptriangles.size()/3; k++) {
+
+      // compute the volume of the triangle
+      for (coord_t i = 0; i < 3; i++)
+        X[i] = vertex_[ptriangles[3*k+i]].X();
+
+      // add the volume term
+      real_t vk = fabs(numerics::simplex_volume( X , 2 , false ));
+      volume_ += vk;
+
+      // compute the centroid of this tetrahedron
+      std::vector<real_t> ck( delaunay_.dim() , 0.0 );
+      for (coord_t i = 0; i < X.size(); i++)
+      for (coord_t d = 0; d < delaunay_.dim(); d++)
+        ck[d] += X[i][d]/X.size();
+
+      // compute the first moment
+      for (index_t d = 0; d < delaunay_.dim(); d++)
+        moment_[d] += ck[d]*vk;
+    }
+
+    // add the face terms
+    // i.e. compute dij: the distance between this site and the bisector
+    //              lij: the distance between this site and the opposite site
+    //              Aij: the area of the polygon on this bisector
+    //              bij: the centroid of the polygon on the bisector
+    // TODO
   }
   else if (number_ == 3) {
 
     // compute the centroid of the polyhedrons
+    std::vector<real_t> centroid(delaunay_.dim());
+    for (index_t k = 0; k < polytope_.size(); k++)
+    for (coord_t d = 0; d < delaunay_.dim(); d++)
+      centroid[d] += vertex_[polytope_[k]][d] / polytope_.size();
 
     // produce a fan triangulation of the polygon on each bisector
     std::set<int> bisectors;
@@ -271,24 +292,61 @@ Cell::generate_simplices() {
         bedges.push_back(e1);
       }
 
+      // we only save visualization triangles/edges if they are voronoi bisectors, or if they are boundary mesh facets
+      bool interior = false;
+      if (h < 0) {
+        index_t f = -h -1; // decode which local facet in the tetrahedron this is
+        if (domain_.neighbours()(elem_,f) >= 0) interior = true;
+      }
+
       // compute the fan triangulation of the polygon on this bisector
       std::vector<index_t> ptriangles;
       fan_triangulation( bedges , ptriangles );
 
-      // save the visualization triangles
-      // we only save visualization triangles if they are voronoi bisectors, or if they are boundary mesh facets
-      for (index_t j = 0; j < ptriangles.size(); j++)
-        triangles_.push_back( point_map.at(ptriangles[j]) );
+      if (!interior) {
+        // save the visualization triangles
+        for (index_t j = 0; j < ptriangles.size(); j++)
+          triangles_.push_back( point_map.at(ptriangles[j]) );
 
-      // add the edges
-      // we only save visualization edges if they are voronoi bisectors, or if they are boundary mesh facets
-      for (index_t j = 0; j < pedges_.size(); j++)
-        edges_.push_back( point_map.at(pedges_[j]) );
+        // save the visualization edges
+        for (index_t j = 0; j < pedges_.size(); j++)
+          edges_.push_back( point_map.at(pedges_[j]) );
+      }
 
-      // if we just want the mass and first moment, then calculate these on the fly and save the result
+      // if we just want the volume and first moment, then calculate these on the fly and save the result
+      std::vector<const real_t*> X(4);
+      X[0] = centroid.data();
+      for (index_t k = 0; k < ptriangles.size()/3; k++) {
+
+        // compute the volume of the tetrahedron
+        for (coord_t i = 0; i < 3; i++)
+          X[i+1] = vertex_[ptriangles[3*k+i]].X();
+
+        // add the volume term
+        real_t vk = fabs(numerics::simplex_volume( X , 3 , false ));
+        volume_ += vk;
+
+        // compute the centroid of this tetrahedron
+        std::vector<real_t> ck( delaunay_.dim() , 0.0 );
+        for (coord_t i = 0; i < 4; i++)
+        for (coord_t d = 0; d < delaunay_.dim(); d++)
+          ck[d] += 0.25*X[i][d];
+
+        // compute the first moment
+        for (index_t d = 0; d < delaunay_.dim(); d++)
+          moment_[d] += ck[d]*vk;
+      }
+
+      // add the face terms
+      // i.e. compute dij: the distance between this site and the bisector
+      //              lij: the distance between this site and the opposite site
+      //              Aij: the area of the polygon on this bisector
+      //              bij: the centroid of the polygon on the bisector
+      // TODO
 
       // if we want the integration tetrahedra
       // connect every triangle in the fan to the centroid
+      // TODO
     }
   }
   else if (number_ == 4) {

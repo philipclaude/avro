@@ -4,6 +4,8 @@
 
 #include "library/ckf.h"
 
+#include "mesh/field.hpp"
+
 #include "voronoi/new/cell.h"
 
 #include <nnsearch/nn_search.h>
@@ -17,7 +19,8 @@ class PowerDiagram : public Topology<Polytope> {
 public:
   PowerDiagram( coord_t number , coord_t dim ) :
     Topology<Polytope>(vertices_,number),
-    vertices_(dim)
+    vertices_(dim),
+    volume_(0.0)
   {}
 
   ~PowerDiagram() {}
@@ -33,11 +36,11 @@ public:
 
   void add_cell( const voronoi::Cell& cell ) {
 
+    volume_ += cell.volume();
+
     index_t nb_points = vertices_.nb();
     for (index_t j = 0; j < cell.points().nb(); j++) {
       vertices_.create( cell.points()[j] );
-      std::vector<int> b = cell.points().incidence().get(j);
-      vertices_.incidence().add( b.data() , b.size() );
     }
 
     // add the polytope
@@ -70,21 +73,27 @@ public:
     fields().make("sites",site_field_);
   }
 
+  real_t volume() const { return volume_; }
+
 private:
   Points vertices_;
   std::vector<index_t> triangles_; // for visualization
   std::vector<index_t> triangle2site_;
   std::vector<index_t> edges_;
 
+  real_t volume_;
+
   class SiteField : public Field<Polytope,real_t> {
   public:
     SiteField( PowerDiagram& diagram ) :
-      Field(diagram,0,DISCONTINUOUS)
+      Field<Polytope,real_t>(diagram,0,DISCONTINUOUS)
     {
       build();
       for (index_t k = 0; k < diagram.nb(); k++)
         this->value(k) = real_t(diagram.polytope2site(k));
     }
+
+    index_t nb_rank() const { return 1; }
   };
 
   std::vector<index_t> polytope2site_;
@@ -97,7 +106,7 @@ UT_TEST_CASE( test_2d )
 
   static coord_t number = 2;
   static coord_t dim = number;
-  index_t nb_points = 1e2;
+  index_t nb_points = 1e3;
 
   std::vector<index_t> dims(number,10);
   CKF_Triangulation ckf(dims);
@@ -169,6 +178,8 @@ UT_TEST_CASE( test_2d )
   }
   printf("done computing cells\n");
   diagram.create_field();
+
+  printf("volume = %g\n",diagram.volume());
 
   graphics::Viewer vis;
   vis.add(diagram);
