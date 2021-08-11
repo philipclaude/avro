@@ -20,7 +20,8 @@ Cell::Cell( index_t site , const Points& delaunay ,
   domain_(domain),
   search_(searcher),
   points_(delaunay.dim()),
-  exact_(false)
+  exact_(false),
+  ambient_dim_(domain.number())
 {}
 
 void
@@ -38,13 +39,16 @@ Cell::compute( const std::vector<index_t>& candidates ) {
   search_.get_nearest_neighbors( neighbours_.size() , site_ , neighbours_.data() , dist2.data() );
 
   // do the clipping
-  bool clipped = false;
   for (index_t k = 0; k < candidates.size(); k++) {
+    // break as soon as we found an element (from the candidates) to clip with
+    // it's possible that there is no intersection when weights are used
     if (clip_simplex(candidates[k])) {
-      clipped = true;
       break;
     }
   }
+
+  // finish off the facet calculation
+  finish_facets();
 }
 
 void
@@ -55,10 +59,12 @@ Cell::clear( bool free ) {
   triangles_.clear();
   edges_.clear();
   simplices_.clear();
-  moment_.resize( delaunay_.dim() );
+  moment_.resize( ambient_dim_ );
   for (coord_t d = 0; d < moment_.size(); d++)
     moment_[d] = 0.0;
   volume_ = 0.0;
+  boundary_area_ = 0.0;
+  facets_.clear();
 
   if (free) {
     points_.data().shrink_to_fit();
@@ -114,7 +120,7 @@ Cell::clip_simplex( index_t elem ) {
   add( polytope_.data() , polytope_.size() );
 
   // move to the neighbours of the current element
-  for (index_t j = 0; j < domain_.number()+1; j++) {
+  for (int j = 0; j < domain_.number()+1; j++) {
     int n = domain_.neighbours()(elem,j);
     if (n < 0) continue; // do not step into boundaries
     clip_simplex( index_t(n) );
@@ -132,9 +138,9 @@ Cell::initialize( index_t elem ) {
 
   // get the list of facets of this element
   std::vector<int> facets(n+1);
-  for (index_t j = 0; j < n+1; j++) {
+  for (int j = 0; j < n+1; j++) {
     int id = encode_mesh_facet(j);
-    facets[j] = id;//-j - 1; // TODO use the mesh facets which have global numbering (may be needed for boundary conditions)
+    facets[j] = id;
   }
 
   // create the initial points
@@ -156,13 +162,13 @@ Cell::initialize( index_t elem ) {
 
   // initialize the polytope to the simplex
   polytope_.resize(n+1);
-  for (index_t j = 0; j < n+1; j++)
+  for (int j = 0; j < n+1; j++)
     polytope_[j] = j;
 
   // initialize the polytope edges
   pedges_.clear();
-  for (index_t ii = 0; ii < n+1; ii++)
-  for (index_t jj = ii+1; jj < n+1; jj++) {
+  for (int ii = 0; ii < n+1; ii++)
+  for (int jj = ii+1; jj < n+1; jj++) {
     pedges_.push_back(ii);
     pedges_.push_back(jj);
   }
@@ -238,17 +244,17 @@ Cell::generate_simplices() {
         X[i] = vertex_[ptriangles[3*k+i]].X();
 
       // add the volume term
-      real_t vk = fabs(numerics::simplex_volume( X , 2 , false ));
+      real_t vk = fabs(numerics::simplex_volume( X , ambient_dim_ , false ));
       volume_ += vk;
 
-      // compute the centroid of this tetrahedron
-      std::vector<real_t> ck( delaunay_.dim() , 0.0 );
+      // compute the centroid of this triangle
+      std::vector<real_t> ck( ambient_dim_ , 0.0 );
       for (coord_t i = 0; i < X.size(); i++)
-      for (coord_t d = 0; d < delaunay_.dim(); d++)
+      for (coord_t d = 0; d < ambient_dim_; d++)
         ck[d] += X[i][d]/X.size();
 
       // compute the first moment
-      for (index_t d = 0; d < delaunay_.dim(); d++)
+      for (index_t d = 0; d < ambient_dim_; d++)
         moment_[d] += ck[d]*vk;
     }
 
@@ -257,7 +263,82 @@ Cell::generate_simplices() {
     //              lij: the distance between this site and the opposite site
     //              Aij: the area of the polygon on this bisector
     //              bij: the centroid of the polygon on the bisector
-    // TODO
+    for (index_t k = 0; k < pedges_.size()/2; k++) {
+
+      index_t e0 = pedges_[2*k];
+      index_t e1 = pedges_[2*k+1];
+
+      // bisectors of each vertex
+      const std::vector<int>& b0 = vertex_[e0].bisectors();
+      const std::vector<int>& b1 = vertex_[e1].bisectors();
+      avro_assert( b0.size() == 2 && b1.size() == 2 );
+
+      // determine which bisector this edge is on
+      int h;
+      if      (b0[0] == b1[0]) h = b0[0];
+      else if (b0[0] == b1[1]) h = b0[0];
+      else if (b0[1] == b1[0]) h = b0[1];
+      else if (b0[1] == b1[1]) h = b0[1];
+      else avro_assert_not_reached;
+
+      // we only save power facets if they are voronoi bisectors, or if they are boundary mesh facets
+      bool interior = false;
+      if (h < 0) {
+        index_t f = decode_mesh_facet(elem_,h);
+        if (domain_.neighbours()(elem_,f) >= 0) interior = true;
+      }
+
+      // this should be computed in the ambient dimension (either 2d or 3d)
+      avro_assert( ambient_dim_ == 2 || ambient_dim_ == 3);
+      if (!interior) {
+
+        // compute the length of this edge
+        real_t Aij = numerics::distance( vertex_[e0].X() , vertex_[e1].X() , ambient_dim_ );
+
+        // the last coordinate will be 0 if the ambient dimension is 2d
+        vecs<3,real_t> x0,x1,x2;
+        for (coord_t d = 0; d < ambient_dim_; d++) {
+          x0(d) = delaunay_[site_][d];
+          x1(d) = vertex_[e0][d];
+          x2(d) = vertex_[e1][d];
+        }
+        real_t dij = norm( numerics::cross(x0-x1,x0-x2) ) / norm(x2-x1);
+        vecs<3,real_t> abij = Aij * 0.5 * ( x1 + x2 );
+
+        if (facets_.find(h) == facets_.end()) {
+
+          PowerFacet facet;
+
+          facet.Aij = Aij;
+          facet.dij = dij;
+          facet.Abij.resize(ambient_dim_);
+          facet.bij.resize(ambient_dim_);
+          facet.normal.resize(ambient_dim_);
+          facet.elem = elem_;
+
+          for (coord_t d = 0; d < ambient_dim_; d++) {
+            facet.Abij[d]   = abij(d);
+            facet.normal[d] = (x2(d) - x1(d))/Aij; // i'm not really sure about this one
+          }
+
+          facets_.insert( {h,facet} );
+        }
+        else {
+
+          PowerFacet& facet = facets_.at(h);
+
+          facet.Aij += Aij;
+          for (coord_t d = 0; d < ambient_dim_; d++)
+            facet.Abij[d] += abij(d);
+
+          // should we check that dij is close to the previous value?
+          //avro_assert_msg( fabs(facet.dij - dij) < 1e-8 , "|dij - f.dij| = %g" , fabs(facet.dij-dij) );
+        }
+      }
+
+    }
+
+
   }
   else if (number_ == 3) {
 
@@ -315,8 +396,7 @@ Cell::generate_simplices() {
       // we only save visualization triangles/edges if they are voronoi bisectors, or if they are boundary mesh facets
       bool interior = false;
       if (h < 0) {
-        //index_t f = -h -1; // decode which local facet in the tetrahedron this is
-        index_t f = decode_mesh_facet(h);
+        index_t f = decode_mesh_facet(elem_,h);
         if (domain_.neighbours()(elem_,f) >= 0) interior = true;
       }
 
@@ -339,8 +419,9 @@ Cell::generate_simplices() {
       std::vector<const real_t*> Y(3);
       X[0] = centroid.data();
       real_t Aij = 0.0;
-      int k_basis = -1;
+      int k_max = -1;
       real_t aij_max = -1;
+      vecs<3,real_t> abij;
       for (index_t k = 0; k < ptriangles.size()/3; k++) {
 
         // compute the volume of the tetrahedron
@@ -353,12 +434,13 @@ Cell::generate_simplices() {
         real_t vk = fabs(numerics::simplex_volume( X , 3 , false ));
         volume_ += vk;
 
-        real_t aij = fabs(numerics::simplex_volume( Y , 2 , false ) );
+        // compute the area in 3d
+        real_t aij = fabs(numerics::simplex_volume( Y , 3 , false ) );
         Aij += aij;
 
         if (aij > aij_max) {
           // compute a basis using this triangle
-          k_basis = k;
+          k_max   = k;
           aij_max = aij;
         }
 
@@ -371,44 +453,73 @@ Cell::generate_simplices() {
         // compute the first moment
         for (index_t d = 0; d < delaunay_.dim(); d++)
           moment_[d] += ck[d]*vk;
+
+        // compute the centroid of this triangle
+        for (index_t d = 0; d < 3; d++)
+          abij(d) += aij*(Y[0][d] + Y[1][d] + Y[2][d])/3.0;
       }
       if (aij_max == 0.0) {
         for (index_t j = 0; j < polytope_.size(); j++)
           vertex_[polytope_[j]].print("v");
       }
+      // it may still be possible to have a zero area due to precision issues
       avro_assert_msg( aij_max > 0.0 , "aij_max = %g, nb_triangles = %lu" , aij_max , ptriangles.size()/3 );
 
-      // add the face terms
+      avro_assert( ambient_dim_ == 3 );
+      vecs<3,real_t> u,v,n,c,qi;
+      index_t i0 = ptriangles[3*k_max];
+      index_t i1 = ptriangles[3*k_max+1];
+      index_t i2 = ptriangles[3*k_max+2];
+
+      for (coord_t d = 0; d < ambient_dim_; d++) {
+        u(d)  = vertex_[i1][d] - vertex_[i0][d];
+        v(d)  = vertex_[i2][d] - vertex_[i0][d];
+        c(d)  = vertex_[i0][d];
+        qi(d) = delaunay_[site_][d];
+      }
+      n = numerics::cross(u,v);
+      numerics::normalize(n);
+
+      // distance from the site to the plane
+      real_t dij = fabs(dot( n , qi - c ));
+
+      // compute the face terms in the actual ambient dimension that we will need to compute the discrete operators
       // i.e. compute dij: the distance between this site and the bisector
       //              lij: the distance between this site and the opposite site
       //              Aij: the area of the polygon on this bisector
       //              bij: the centroid of the polygon on the bisector
+      //              normal: normal to the facet
 
       // this should be computed in 3d
-      std::vector<real_t> bij(delaunay_.dim());
-      real_t dij = 0.0, lij = 0.0;
-      if (facets_.find(h) == facets_.end()) {
-        CellFacet facet;
+      if (!interior) {
+        if (facets_.find(h) == facets_.end()) {
+          PowerFacet facet;
+          facet.elem = elem_;
 
-        facet.Aij = Aij;
-        facet.bij = bij;
-        facet.dij = dij;
-        facet.Abij = bij;
-        for (coord_t d = 0; d < bij.size(); d++)
-          facet.Abij[d] *= Aij;
-        facets_.insert( {h,facet} );
-      }
-      else {
-        CellFacet& facet = facets_.at(h);
+          facet.normal.resize(ambient_dim_);
+          for (coord_t d = 0; d < ambient_dim_; d++)
+            facet.normal[d] = n(d);
 
-        // add to the Aij term
-        facet.Aij += Aij;
+          facet.Aij = Aij;
+          facet.dij = dij;
+          facet.Abij.resize(ambient_dim_);
+          for (coord_t d = 0; d < ambient_dim_; d++)
+            facet.Abij[d] = abij(d);
+          facets_.insert( {h,facet} );
+        }
+        else {
+          PowerFacet& facet = facets_.at(h);
 
-        // and to the bij term
-        for (coord_t d = 0; d < delaunay_.dim(); d++)
-          facet.Abij[d] += Aij*bij[d];
+          // add to the Aij term
+          facet.Aij += Aij;
 
-        // should we check that dij is the same?
+          // and to the moment term
+          for (coord_t d = 0; d < ambient_dim_; d++)
+            facet.Abij[d] += abij(d);
+
+          // should we check that dij is close to the previous value?
+          avro_assert_msg( fabs(facet.dij - dij) < 1e-8 , "|dij - f.dij| = %g" , fabs(facet.dij-dij) );
+        }
       }
 
       // if we want the integration tetrahedra
@@ -424,6 +535,51 @@ Cell::generate_simplices() {
   }
   else
     avro_assert_not_reached;
+}
+
+void
+Cell::finish_facets() {
+
+  boundary_area_ = 0.0;
+  for (std::map<int,PowerFacet>::iterator it = facets_.begin(); it != facets_.end(); ++it) {
+
+    // retrieve the facet
+    int h = it->first;
+    PowerFacet& facet = it->second;
+
+    // save the site information
+    facet.pi = site_;
+
+    // save the opposite site information, as well as the distance lij
+    if (h >= 0) {
+      index_t pi, pj;
+      get_bisector(h,pi,pj);
+      facet.lij = numerics::distance( delaunay_[pi] , delaunay_[pj] , ambient_dim_ );
+
+      if (pi == site_) facet.pj = pj;
+      else {
+        avro_assert( pj == site_ );
+        facet.pj = pi;
+      }
+    }
+    else {
+      facet.lij = facet.dij;
+    }
+
+    // finish off the centroid calculation by dividing by the area
+    facet.bij.resize(ambient_dim_);
+    for (coord_t d = 0; d < ambient_dim_; d++)
+      facet.bij[d] = facet.Abij[d] / facet.Aij;
+
+    if (h < 0) {
+      // this is a mesh element facet
+      index_t f = decode_mesh_facet(facet.elem,h);
+      int n = domain_.neighbours()(facet.elem,f);
+
+      // only add the contribution to the boundary area if the mesh element at this facet has no neighbour (n < 0)
+      if (n < 0) boundary_area_ += facet.Aij;
+    }
+  }
 }
 
 int
@@ -533,7 +689,7 @@ Cell::clip_edge( const index_t e0 , const index_t e1 , const int b , std::vector
 
     Vertex v2(delaunay_.dim(),domain_.number());
 
-    // perform the symbolic intersection of the bisectors, simplices, meshes
+    // perform the symbolic intersection of the bisectors and simplex vertices
     v2.set_base_site(delaunay_[site_]);
     v2.intersect_symbolic( &v0 , &v1 );
     v2.set_sites( delaunay_ , ids_ );
@@ -542,10 +698,10 @@ Cell::clip_edge( const index_t e0 , const index_t e1 , const int b , std::vector
     v2.add_bisector( b );
     v2.add_site( zj );
 
-    // compute the geometric intersection
+    // compute the geometric intersection (i.e. the coordinates of the intersection point)
     v2.intersect_geometric( v0.X() , v1.X() , zi , zj );
 
-    avro_assert_msg( v0.nb_bisectors()==domain_.number() ,
+    avro_assert_msg( v0.nb_bisectors() == domain_.number() ,
                 "nb_bisectors = %lu, number = %u",v0.nb_bisectors(),number_ );
 
     // add the vertex after saving its location

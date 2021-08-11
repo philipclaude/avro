@@ -63,13 +63,19 @@ public:
     vertices_(dim),
     domain_(topology,dim),
     search_(nullptr),
-    volume_(0.0)
+    volume_(0.0),
+    boundary_area_(0.0),
+    ambient_dim_(topology.number())
   {}
+
+  void set_ambient_dimension( coord_t dim ) { ambient_dim_ = dim; }
 
   void initialize() {
     cell_.resize( sites_.nb() );
-    for (index_t k = 0; k < sites_.nb(); k++)
+    for (index_t k = 0; k < sites_.nb(); k++) {
       cell_[k] = std::make_shared<Cell>( k , sites_ , domain_ , *search_ );
+      cell_[k]->set_ambient_dimension(ambient_dim_);
+    }
   }
 
   void set_sites( const real_t* x ) {
@@ -93,7 +99,10 @@ public:
 
     clock_t t0 = clock();
 
-    #if 0
+    dc_dx_.resize( sites_.nb() * ambient_dim_ );
+    dc_dw_.resize( sites_.nb() );
+
+    #if 1
     typedef PowerDiagram thisclass;
     ProcessCPU::parallel_for(
       parallel_for_member_callback( this , &thisclass::compute ), 0,cell_.size()
@@ -119,7 +128,6 @@ public:
       add_cell( *cell_[k].get() );
       cell_[k]->clear();
     }
-
   }
 
   bool get_triangles( std::vector<index_t>& triangles , std::vector<index_t>& parent ) const override {
@@ -134,6 +142,7 @@ public:
   void add_cell( const voronoi::Cell& cell ) {
 
     volume_ += cell.volume();
+    boundary_area_ += cell.boundary_area();
 
     index_t nb_points = vertices_.nb();
     for (index_t j = 0; j < cell.points().nb(); j++) {
@@ -169,6 +178,7 @@ public:
   }
 
   real_t volume() const { return volume_; }
+  real_t boundary_area() const { return boundary_area_; }
 
 private:
 
@@ -183,6 +193,12 @@ private:
   GEO::NearestNeighborSearch* search_;
 
   real_t volume_;
+  real_t boundary_area_;
+  coord_t ambient_dim_;
+
+  std::vector<real_t> weights_;
+  std::vector<real_t> de_dx_;
+  std::vector<real_t> de_dw_;
 
   class SiteField : public Field<Polytope,real_t> {
   public:

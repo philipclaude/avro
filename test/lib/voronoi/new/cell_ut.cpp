@@ -7,7 +7,7 @@
 #include "voronoi/new/cell.h"
 #include "voronoi/new/diagram.h"
 
-#define SPHERE 0
+#define SPHERE 1
 
 using namespace avro;
 
@@ -17,11 +17,11 @@ UT_TEST_CASE( test_2d )
 {
   GEO::PCK::initialize();
 
-  static coord_t number = 3;
+  static coord_t number = 2;
   static coord_t dim = number;
   index_t nb_points = 2e3;
 
-  index_t N = 20;
+  index_t N = 100;
   std::vector<index_t> dims(number,N);
   CKF_Triangulation ckf(dims);
 
@@ -93,6 +93,11 @@ UT_TEST_CASE( test_2d )
   #endif
 
   voronoi::PowerDiagram diagram(topology,dim);
+
+  #if SPHERE == 1
+  diagram.set_ambient_dimension(3);
+  #endif
+
   diagram.set_sites( sites );
   diagram.initialize();
 
@@ -105,6 +110,7 @@ UT_TEST_CASE( test_2d )
   diagram.create_field();
 
   printf("volume = %g\n",diagram.volume());
+  printf("boundary area = %g\n",diagram.boundary_area());
 
   graphics::Viewer vis;
   vis.add(diagram);

@@ -21,8 +21,10 @@ namespace voronoi
 
 typedef struct {
 
-  int pi_; // nonnegative
-  int pj_; // could be negative if a boundary face
+  index_t elem; // background mesh element
+
+  int pi; // nonnegative
+  int pj; // could be negative if a boundary face
 
   std::vector<real_t> qi; // site coordinates
   std::vector<real_t> bi; // cell centroid
@@ -33,11 +35,9 @@ typedef struct {
   real_t lij; // distance from qi to qj
   std::vector<real_t> bij;
 
-} CellFacet;
+  std::vector<real_t> normal;
 
-typedef struct {
-
-} Face;
+} PowerFacet;
 
 class Cell : public Topology<Polytope> {
 
@@ -47,6 +47,7 @@ public:
 
   void set_parameters( const Parameters& params );
   void compute( const std::vector<index_t>& candidates );
+  void set_ambient_dimension( coord_t dim ) { ambient_dim_ = dim; }
 
   real_t get_mass() const;       // for gradient
   real_t get_moment() const;     // for gradient
@@ -60,9 +61,9 @@ public:
 
   void clear( bool free=false );
 
-  index_t decode_mesh_facet( int b ) {
+  index_t decode_mesh_facet( index_t elem , int b ) {
     index_t id = -b - 1;
-    avro_assert( id / (domain_.number()+1) == elem_ );
+    avro_assert( id / (domain_.number()+1) == elem );
     index_t f = id % (domain_.number()+1);
     return f;
   }
@@ -71,6 +72,9 @@ public:
     index_t id = elem_ * (domain_.number()+1) + f;
     return -id -1;
   }
+
+  void finish_facets();
+  real_t boundary_area() const { return boundary_area_; }
 
 protected:
 
@@ -118,7 +122,11 @@ private:
   std::vector<real_t> moment_;
 
   // face terms
-  std::map<int,CellFacet> facets_;
+  std::map<int,PowerFacet> facets_;
+
+  coord_t ambient_dim_;
+
+  real_t boundary_area_;
 };
 
 } // voronoi

@@ -113,17 +113,14 @@ volume( const std::vector<const real_t*>& x , const coord_t dim )
 real_t
 simplex_volume_inexact( const std::vector<const real_t*>& x , const coord_t dim ) {
 
-  #if 0
-  // this only works in 4d!
-  return orient4dfast(x[0],x[1],x[2],x[3],x[4])/numerics::factorial(dim);
-  #else
-  matd<real_t> J(dim,dim);
+  coord_t n = x.size() - 1;
+  if (n != dim) return numerics::volume_nd(x,dim);
 
+  matd<real_t> J(dim,dim);
   for (index_t j = 0; j < dim; j++)
   for (index_t d = 0; d < dim; d++)
     J(d,j) = x[j+1][d] -x[0][d];
   return numerics::det(J)/numerics::factorial(dim);
-  #endif
 }
 
 real_t
@@ -142,10 +139,24 @@ simplex_volume( const std::vector<const real_t*>& x , const coord_t dim , bool e
 }
 
 real_t
+heron( const real_t* x0 , const real_t* x1 , const real_t* x2 , coord_t dim ) {
+
+  real_t a = distance(x0,x1,dim);
+  real_t b = distance(x0,x2,dim);
+  real_t c = distance(x1,x2,dim);
+  real_t s = 0.5*(a+b+c);
+  return std::sqrt(s*(s-a)*(s-b)*(s-c));
+}
+
+real_t
 volume_nd( const std::vector<const real_t*>& x , const coord_t dim )
 {
   // assume this is a simplex because there's no other way to compute it
   coord_t n = x.size() -1;
+
+  if (n == 2) {
+    return heron(x[0],x[1],x[2],dim);
+  }
 
   matd<real_t> B(n+2,n+2);
   B(0,0) = 0;
