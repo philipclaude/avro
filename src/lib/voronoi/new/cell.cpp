@@ -53,13 +53,14 @@ Cell::compute( const std::vector<index_t>& candidates ) {
 }
 
 void
-Cell::clear( bool free ) {
+Cell::clear() {
   Topology<Polytope>::clear();
   points_.clear();
   visited_.clear();
   triangles_.clear();
   edges_.clear();
-  simplices_.clear();
+  bisector_.clear();
+  ids_.clear();
   moment_.resize( ambient_dim_ );
   for (coord_t d = 0; d < moment_.size(); d++)
     moment_[d] = 0.0;
@@ -67,13 +68,6 @@ Cell::clear( bool free ) {
   boundary_area_ = 0.0;
   facets_.clear();
   energy_ = 0.0;
-
-  if (free) {
-    points_.data().shrink_to_fit();
-    this->data().shrink_to_fit();
-    triangles_.shrink_to_fit();
-    edges_.shrink_to_fit();
-  }
 }
 
 bool
@@ -277,6 +271,7 @@ Cell::generate_simplices() {
       real_t vk = fabs(numerics::simplex_volume( X , ambient_dim_ , false ));
       volume_ += vk;
 
+      // add the energy
       energy_ += compute_energy(X)*vk;
 
       // compute the centroid of this triangle
@@ -364,13 +359,11 @@ Cell::generate_simplices() {
             facet.Abij[d] += abij(d);
 
           // should we check that dij is close to the previous value?
+          // this may not be accurate for general 3d meshes
           //avro_assert_msg( fabs(facet.dij - dij) < 1e-8 , "|dij - f.dij| = %g" , fabs(facet.dij-dij) );
         }
       }
-
     }
-
-
   }
   else if (number_ == 3) {
 
@@ -554,10 +547,6 @@ Cell::generate_simplices() {
           avro_assert_msg( fabs(facet.dij - dij) < 1e-8 , "|dij - f.dij| = %g" , fabs(facet.dij-dij) );
         }
       }
-
-      // if we want the integration tetrahedra
-      // connect every triangle in the fan to the centroid
-      // TODO
     }
   }
   else if (number_ == 4) {

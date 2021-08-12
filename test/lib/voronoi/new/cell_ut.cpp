@@ -7,7 +7,7 @@
 #include "voronoi/new/cell.h"
 #include "voronoi/new/diagram.h"
 
-#define SPHERE 0
+#define SPHERE 1
 
 using namespace avro;
 
@@ -18,12 +18,16 @@ UT_TEST_CASE( test_2d )
   GEO::PCK::initialize();
 
   static coord_t number = 2;
-  static coord_t dim = number;
-  index_t nb_points = 1e2;
+  static coord_t dim = number+0;
+  index_t nb_points = 1e3;
 
-  index_t N = 10;
+  index_t N = 25;
   std::vector<index_t> dims(number,N);
   CKF_Triangulation ckf(dims);
+
+  real_t point[dim+1];
+  for (coord_t d = 0; d < dim+1; d++)
+    point[d] = 0.0;
 
   #if SPHERE
   // stitch together the 0 and 2pi boundaries
@@ -64,63 +68,53 @@ UT_TEST_CASE( test_2d )
   }
   ckf.remove_unused();
 
-  Points sphere_points(3);
-  real_t p[3];
+  Points sphere_points(dim+1);
   for (index_t k = 0; k < ckf.points().nb(); k++) {
 
     real_t theta = ckf.points()[k][0]*2.0*M_PI;
     real_t phi = ckf.points()[k][1]*M_PI;
 
-    p[0] = cos(theta)*sin(phi);
-    p[1] = sin(theta)*sin(phi);
-    p[2] = cos(phi);
-    sphere_points.create(p);
+    point[0] = cos(theta)*sin(phi);
+    point[1] = sin(theta)*sin(phi);
+    point[2] = cos(phi);
+    sphere_points.create(point);
   }
   ckf.points().clear();
-  ckf.points().set_dim(3);
+  ckf.points().set_dim(dim+1);
   sphere_points.copy(ckf.points());
 
-  dim = 3;
+  dim += 1;
   #endif
 
-  Points points(dim);
-  real_t x0[] = {0,0,0}; points.create(x0);
-  real_t x1[] = {1,0,0}; points.create(x1);
-  real_t x2[] = {0,1,0}; points.create(x2);
-  if (number > 2) {
-    real_t x3[] = {0,0,1}; points.create(x3);
-  }
-
-  #if 0
-  Topology<Simplex> topology(points,number);
-  index_t t[] = {0,1,2,3};
-  topology.add(t,number+1);
-  #else
+  // the domain which will be used to clip the voronoi diagram
   Topology<Simplex>& topology = ckf;
-  #endif
 
   Points sites(dim);
-
-  #if 0
+  #if 0 // test exactness
   ckf.points().copy( sites );
   nb_points = sites.nb();
   #elif SPHERE == 0
   for (index_t k = 0; k < nb_points; k++) {
-    for (coord_t d = 0; d < dim; d++)
-      x0[d] = random_within(0.0,1.0);
-    sites.create(x0);
+    for (coord_t d = 0; d < number; d++)
+      point[d] = random_within(0.0,1.0);
+    sites.create(point);
   }
   #else
   for (index_t k = 0; k < nb_points; k++) {
+
+    // compute a random point in the parameter space of the sphere
     real_t theta = random_within(0.0,2.0*M_PI);
     real_t phi = random_within(0.0,M_PI);
 
-    p[0] = cos(theta)*sin(phi);
-    p[1] = sin(theta)*sin(phi);
-    p[2] = cos(phi);
+    // map the point to the sphere
+    point[0] = cos(theta)*sin(phi);
+    point[1] = sin(theta)*sin(phi);
+    point[2] = cos(phi);
 
-    sites.create(p);
+    // create the delaunay site
+    sites.create(point);
   }
+
   #endif
 
   voronoi::PowerDiagram diagram(topology,dim);
@@ -132,18 +126,23 @@ UT_TEST_CASE( test_2d )
   diagram.set_sites( sites );
   diagram.initialize();
 
-  printf("computing cells\n");
-  diagram.compute();
-  printf("done computing cells\n");
+  diagram.optimize_points_lloyd(20);
 
-  //diagram.optimize_points(10);
-
-  if (nb_points > 3e5 && number > 2) return;
   diagram.accumulate();
   diagram.create_field();
 
-  printf("volume = %g\n",diagram.volume());
-  printf("boundary area = %g\n",diagram.boundary_area());
+  real_t volume = diagram.volume();
+  real_t area = diagram.area();
+  printf("volume = %g\n",volume);
+  printf("area   = %g\n",area);
+
+  #if SPHERE == 0
+  UT_ASSERT_NEAR( volume , 1.0 , 1e-12 );
+  UT_ASSERT_NEAR( area , 2.0*number , 1e-12 );
+  #else
+  UT_ASSERT_NEAR( volume , 4.*M_PI , 1e-12 );
+  UT_ASSERT_NEAR( area , 0.0 , 1e-12 );
+  #endif
 
   graphics::Viewer vis;
   vis.add(diagram);

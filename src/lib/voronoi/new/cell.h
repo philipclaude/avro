@@ -21,7 +21,7 @@ namespace voronoi
 
 typedef struct {
 
-  index_t elem; // background mesh element
+  index_t elem; // background mesh element from which the facet originated
 
   int pi; // nonnegative
   int pj; // could be negative if a boundary face
@@ -33,9 +33,8 @@ typedef struct {
   real_t Aij; // area of the face
   real_t dij; // distance from qi to face
   real_t lij; // distance from qi to qj
-  std::vector<real_t> bij;
-
-  std::vector<real_t> normal;
+  std::vector<real_t> bij; // centroid of the face shared with site j
+  std::vector<real_t> normal; // normal to the facet
 
 } PowerFacet;
 
@@ -59,7 +58,7 @@ public:
   index_t site() const { return site_; }
   real_t volume() const { return volume_; }
 
-  void clear( bool free=false );
+  void clear();
 
   index_t decode_mesh_facet( index_t elem , int b ) {
     index_t id = -b - 1;
@@ -75,9 +74,7 @@ public:
 
   void finish_facets();
   real_t boundary_area() const { return boundary_area_; }
-
   const std::vector<real_t>& moment() { return moment_; }
-
   real_t compute_energy( const std::vector<const real_t*>& X ) const;
   real_t energy() const { return energy_; }
 
@@ -114,13 +111,14 @@ private:
   std::vector<index_t> qedges_;    // temporary polytopes edges used while clipping
   std::vector<index_t> qplane_;    // points on the hyperplane of the current clipped polytope
 
+  // visualization data
   std::vector<index_t> triangles_;
-  std::vector<index_t> simplices_;
   std::vector<index_t> edges_;
 
-  index_t elem_;
-  Points points_;
-  bool exact_;
+  index_t elem_;  // current mesh elements against which we are clipping
+  Points points_; // points used to describe the polytopes
+  bool exact_;    // whether to use exact arithmetic
+  coord_t ambient_dim_; // ambient dimension of the mesh (either 2d or 3d)
 
   // cell terms
   real_t volume_;
@@ -129,10 +127,7 @@ private:
 
   // face terms
   std::map<int,PowerFacet> facets_;
-
-  coord_t ambient_dim_;
-
-  real_t boundary_area_;
+  real_t boundary_area_; // this is only used for unit testing
 };
 
 } // voronoi
