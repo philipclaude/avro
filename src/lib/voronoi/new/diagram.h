@@ -136,7 +136,8 @@ public:
     volume_ = 0.0;
     area_   = 0.0;
 
-    // compute the power diagra
+    // compute the power diagram
+    printf("computing the power diagram in %lud\n",sites_.dim());
     clock_t t0 = clock();
     #if 0
     typedef PowerDiagram thisclass;

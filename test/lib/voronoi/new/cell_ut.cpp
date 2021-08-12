@@ -18,7 +18,7 @@ UT_TEST_CASE( test_2d )
   GEO::PCK::initialize();
 
   static coord_t number = 2;
-  static coord_t dim = number+0;
+  static coord_t dim = number+1;
   index_t nb_points = 1e3;
 
   index_t N = 25;
