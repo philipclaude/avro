@@ -86,6 +86,7 @@ kernel( const matd<real_t>& A , matd<real_t>& K ) {
 	for (int i = 0; i < int(s.size()); i++) {
 		if (s[i]>tol) r++;
 	}
+  printf("rank = %d\n",r);
 
 	matd<real_t> v(N,N);
 	for (int i = 0; i < n;i++)
@@ -260,8 +261,8 @@ eign( const symd<real_t>& A ) {
   avro_assert_msg( INFO == 0, "INFO == %d", INFO );
 
   index_t k = 0;
-  for (index_t j = 0; j < n; j++) // through columns
-  for (index_t i = 0; i < n; i++) // through rows
+  for (int j = 0; j < n; j++) // through columns
+  for (int i = 0; i < n; i++) // through rows
     Q(i,j) = vr[k++];
   #endif
   return {L,Q};
@@ -705,6 +706,32 @@ sqrtm( const symd<type>& m ) {
 
 template<typename type>
 type
+quadratic_form( const symd<type>& M , const type* e ) {
+	if (M.n() == 2) {
+		type mu = M(0,0)*e[0] + M(0,1)*e[1];
+		type mv = M(1,0)*e[0] + M(1,1)*e[1];
+		return mu*e[0] + mv*e[1];
+	}
+	else if (M.n() == 3) {
+		type mu = M(0,0)*e[0] + M(0,1)*e[1] + M(0,2)*e[2];
+		type mv = M(1,0)*e[0] + M(1,1)*e[1] + M(1,2)*e[2];
+		type mw = M(2,0)*e[0] + M(2,1)*e[1] + M(2,2)*e[2];
+		return mu*e[0] + mv*e[1] + mw*e[2];
+	}
+	else if (M.n() == 4) {
+		type mu = M(0,0)*e[0] + M(0,1)*e[1] + M(0,2)*e[2] + M(0,3)*e[3];
+		type mv = M(1,0)*e[0] + M(1,1)*e[1] + M(1,2)*e[2] + M(1,3)*e[3];
+		type mw = M(2,0)*e[0] + M(2,1)*e[1] + M(2,2)*e[2] + M(2,3)*e[3];
+		type mt = M(3,0)*e[0] + M(3,1)*e[1] + M(3,2)*e[2] + M(3,3)*e[3];
+		return mu*e[0] + mv*e[1] + mw*e[2] + mt*e[3];
+	}
+	else
+		avro_implement;
+	return -1.;
+}
+
+template<typename type>
+type
 quadratic_form( const symd<type>& M , const vecd<real_t>& e ) {
 	if (M.n() == 2) {
 		type mu = M(0,0)*e(0) + M(0,1)*e(1);
@@ -759,7 +786,7 @@ template matd<float> inverse( const matd<float>& );
   template void eig( const symd<T>& m , vecd<T>& L , matd<T>& Q ); \
   template std::pair< vecd<T> , matd<T> > eig( const symd<T>& m );
 INSTANTIATE_EIG( real_t )
-INSTANTIATE_EIG( SurrealS<1> );
+INSTANTIATE_EIG( SurrealS<1> )
 #undef INSTANTIATE_EIG
 
 // compiling takes really long with surreals
@@ -793,7 +820,8 @@ template dual   det(const matd<dual>& X);
   template symd<T> sqrtm( const symd<T>& ); \
   template symd<T> powm( const symd<T>& , real_t ); \
   template symd<T> interp( const std::vector<real_t>& , const std::vector<symd<T>>& ); \
-  template T quadratic_form( const symd<T>& , const vecd<real_t>& );
+  template T quadratic_form( const symd<T>& , const vecd<real_t>& ); \
+  template T quadratic_form( const symd<T>& , const T* );
 INSTANTIATE_SYMD_FUNC( real_t )
 INSTANTIATE_SYMD_FUNC( SurrealS<1> )
 INSTANTIATE_SYMD_FUNC( SurrealS<3> )

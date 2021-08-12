@@ -12,6 +12,8 @@
 
 #include <nlopt.hpp>
 
+#include <string>
+
 namespace avro
 {
 

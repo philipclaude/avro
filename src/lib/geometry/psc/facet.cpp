@@ -23,7 +23,8 @@ Facet::Facet( Body* body , std::vector<std::shared_ptr<Entity>>& facets ) :
   Object(facets.size()/2,body->dim()),
   V_(dim_,number_),
   B_(number_,number_),
-  x0_(dim_)
+  x0_(dim_),
+  dimension_(-1)
 {
   avro_assert( number_>0 );
   for (index_t k=0;k<facets.size();k++)
@@ -83,6 +84,52 @@ Facet::build_basis()
     B_.dump();
     avro_assert_not_reached;
   }
+
+  // determine the dimension if any
+  for (index_t k = 0; k < V_.m(); k++) {
+    real_t sum = 0.0;
+    for (index_t j = 0; j < V_.n(); j++)
+      sum += V_(k,j);
+    if (fabs(sum) < 1e-12) {
+      dimension_ = k;
+      break;
+    }
+  }
+}
+
+void
+Facet::set_basis_by_name() {
+
+  avro_assert( number_ == 3 );
+
+  V_.zero();
+  B_.zero();
+
+  if (name_ == "tmin" || name_ == "tmax") {
+    V_(0,0) = 1;
+    V_(1,1) = 1;
+    V_(2,2) = 1;
+  }
+  else if (name_ == "xmin" || name_ == "xmax") {
+    V_(1,0) = 1;
+    V_(2,1) = 1;
+    V_(3,2) = 1;
+  }
+  else if (name_ == "ymin" || name_ == "ymax") {
+    V_(2,0) = 1;
+    V_(3,1) = 1;
+    V_(0,2) = 1;
+  }
+  else if (name_ == "zmin" || name_ == "zmax") {
+    V_(3,0) = 1;
+    V_(0,1) = 1;
+    V_(1,2) = 1;
+  }
+
+  matd<real_t> VtV = numerics::transpose(V_)*V_;
+  for (coord_t i=0;i<number_;i++)
+  for (coord_t j=0;j<number_;j++)
+    B_(i,j) = VtV(i,j);
 }
 
 void

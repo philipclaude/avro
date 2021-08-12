@@ -16,6 +16,7 @@
 #include "mesh/topology.h"
 
 #include <algorithm>
+#include <time.h>
 
 namespace avro
 {
@@ -27,6 +28,7 @@ prioritizeGeometry( std::vector<index_t>& edges0 , const Points& points , Insert
   std::vector<bool> traversed( ne , false );
 
   std::vector<index_t> edges;
+  edges.reserve( edges0.size() );
   for (index_t k=0;k<ne;k++)
   {
     // check if this is a geometry edge
@@ -64,6 +66,8 @@ prioritizeLongest( std::vector<index_t>& edges0 , const Points& points , std::ve
 	// add the geometry edges first
   std::vector<index_t> edges;
 	std::vector<real_t> lengths;
+  edges.reserve( edges0.size() );
+  lengths.reserve( lengths0.size() );
   for (index_t k=0;k<ne;k++)
 	{
 		// longest edge
@@ -81,6 +85,7 @@ prioritizeLongest( std::vector<index_t>& edges0 , const Points& points , std::ve
 	}
 
 	// go back through the remaining edges
+
 	for (index_t k=0;k<ne;k++)
 	{
 		index_t e = idx[ne-k-1];
@@ -91,8 +96,10 @@ prioritizeLongest( std::vector<index_t>& edges0 , const Points& points , std::ve
 		edges.push_back( edges0[2*e+1] );
 		lengths.push_back( lengths0[e] );
 	}
-	edges0 = edges;
-	lengths0 = lengths;
+	//edges0 = edges;
+	//lengths0 = lengths;
+  edges0.assign(edges.begin(),edges.end());
+  lengths0.assign(lengths.begin(),lengths.end());
 }
 
 Filter::Filter( const coord_t dim ) :
@@ -133,16 +140,25 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
                             MetricField<Simplex>& metric , real_t lmax , Insert<Simplex>& inserter )
 {
   // get all the edges
+  clock_t TIME0, TIME1;
+
+  TIME0 = clock();
   std::vector<index_t> edges;
   topology.get_edges( edges );
+  TIME1 = clock();
+
+  //printf("edge retrieval time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
 	// prioritize geometry edges
+  TIME0 = clock();
   prioritizeGeometry(edges,topology.points(),inserter);
+  TIME1 = clock();
+  //printf("geometry prioritization time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   nb_long_ = 0;
 
+  TIME0 = clock();
   index_t ne = edges.size()/2;
-
   std::vector<real_t> lengths( ne , -1. );
   for (index_t k=0;k<ne;k++)
   {
@@ -155,9 +171,14 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
 
     lengths[k] = metric.length(topology.points(),n0,n1);
   }
+  TIME1 = clock();
+  //printf("metric time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
 	// prioritize by longest length
+  TIME0 = clock();
 	prioritizeLongest( edges , topology.points() , lengths , inserter );
+  TIME1 = clock();
+  //printf("length prioritization time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   real_t Lmax = *std::max_element(lengths.begin(),lengths.end());
 

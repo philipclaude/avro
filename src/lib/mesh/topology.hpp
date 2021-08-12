@@ -13,7 +13,9 @@
 #include "mesh/points.h"
 
 #include <algorithm>
+#include <list>
 #include <set>
+#include <unordered_set>
 
 namespace avro
 {
@@ -33,8 +35,48 @@ Topology<type>::construct( std::shared_ptr<Topology<Friend_t>>& node , Topology<
 
 template<typename type>
 void
+get_edges_using_ball( const Topology<type>& topology , std::vector<index_t>& edges )
+{
+  std::vector<index_t> ball;
+  std::vector<index_t> N;
+
+  for (index_t k = 0; k < topology.points().nb(); k++) {
+
+    if (k < topology.points().nb_ghost()) continue;
+    ball.clear();
+    N.clear();
+
+    index_t p = k;
+    topology.inverse().ball(p,ball);
+
+    for (index_t j = 0; j < ball.size(); j++) {
+      for (index_t i = 0; i < topology.nv(ball[j]); i++) {
+        index_t q = topology(ball[j],i);
+        if (q < topology.points().nb_ghost()) continue;
+        if (p == q) continue;
+        if (p > q) continue;
+        N.push_back(q);
+      }
+    }
+    uniquify(N);
+
+    for (index_t j = 0; j < N.size(); j++) {
+      edges.push_back(p);
+      edges.push_back(N[j]);
+    }
+  }
+}
+
+template<typename type>
+void
 Topology<type>::get_edges( std::vector<index_t>& edges ) const
 {
+
+  if (inverse_.created()) {
+    //get_edges_using_ball(*this,edges);
+    //return;
+  }
+
   std::vector<index_t> ek;
 
   std::set< std::pair<index_t,index_t> > table;
@@ -42,7 +84,6 @@ Topology<type>::get_edges( std::vector<index_t>& edges ) const
   for (index_t k=0;k<nb();k++)
   {
     if (ghost(k)) continue;
-
 
     const index_t* v0 = operator()(k);
 
@@ -363,7 +404,11 @@ template<typename type>
 void
 Topology<type>::remove_point( const index_t k )
 {
+  // is this the last point?
+  //bool last = ( k >= (points_.nb()-1) );
   points_.remove(k);
+
+  //if (last) avro_implement;
 
   // decrement any indices higher than the original index
   for (index_t i=0;i<data_.size();i++)
@@ -380,8 +425,38 @@ Topology<type>::remove_elements( const std::vector<index_t>& elems0 )
   // make a copy so we can sort
   std::vector<index_t> elems(elems0.begin(),elems0.end());
   std::sort( elems.begin() , elems.end() );
+
+  #if 0
   for (index_t k=0;k<elems.size();k++)
     remove( elems[k]-k );
+  #elif 1
+  std::vector<index_t> data0;
+  //index_t n = 0;
+  std::set<index_t> selem( elems.begin() , elems.end() );
+  data0.reserve( data_.size() );
+  for (index_t k = 0; k < nb(); k++) {
+    if (selem.find(k) != selem.end() )
+      continue;
+    for (index_t j = 0 ; j < nv(k); j++)
+      data0.push_back( (*this)(k,j) );
+  }
+  data0.shrink_to_fit();
+  //avro_assert_msg( n == (number()+1)*(nb() - elems.size()) , "n = %lu, ndata = %lu" , n , (number()+1)*(nb()-elems.size()) );
+  data_.assign( data0.begin() , data0.end() );
+  #else
+  std::list<index_t> ldata( data_.begin() , data_.end() );
+  std::list<index_t>::iterator it = ldata.begin();
+  for (index_t k = 0; k < elems.size(); k++) {
+    advance(it,(number()+1)*(elems[k] -k));
+    for (index_t j = 0; j < number()+1; j++) {
+      advance(it,1);
+      ldata.erase(it);
+    }
+    it = ldata.begin();
+  }
+  data_.assign( ldata.begin() , ldata.end() );
+
+  #endif
 }
 
 template<typename type>
@@ -471,8 +546,24 @@ Topology<type>::remove_unused( std::vector<index_t>* pidx0 )
     }
   }
 
+#if 0
   for (index_t k=0;k<pts->size();k++)
     remove_point( (*pts)[k]-k);
+#elif 1
+
+  // this is inefficient
+  move_to_front( *pts );
+
+  // batch erase the points
+  index_t n = pts->size();
+  for (index_t j = 0; j < data_.size(); j++) {
+    avro_assert( data_[j] >= n );
+    data_[j] -= n;
+  }
+  points_.batch_erase(n);
+#else
+
+#endif
 }
 
 template<typename type>
@@ -507,10 +598,14 @@ Topology<type>::move_to_front( const std::vector<index_t>& pts , std::map<index_
     data_[j] = pidx->at(data_[j]);
 
   // now move all the points to the front
+  #if 0
   for (index_t k=0;k<pts.size();k++)
   {
     points_.move_to( pts[k] , k );
   }
+  #else
+  points_.move_to_front( pts );
+  #endif
 
 }
 

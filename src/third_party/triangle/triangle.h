@@ -279,6 +279,10 @@ struct triangulateio {
   int numberofedges;                                             /* Out only */
 };
 
+#define REAL double
+#define VOID void
+#define ANSI_DECLARATORS
+
 #ifdef ANSI_DECLARATORS
 void triangulate(char *, struct triangulateio *, struct triangulateio *,
                  struct triangulateio *);

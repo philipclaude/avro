@@ -85,6 +85,8 @@ UT_TEST_CASE(test1)
   Smooth<Simplex> smoother(topology);
   UT_ASSERT( smoother.element().parameter() );
 
+  printf("smoothing...\n");
+
   // loop through every edge, extract the cavity and ensure every edge end point is visible
   for (index_t iter=0;iter<10;iter++)
   for (index_t k=0;k<topology.points().nb();k++)

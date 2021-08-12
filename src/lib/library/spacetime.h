@@ -25,11 +25,14 @@ public:
 
   void clear();
 
+  Entity* entity( Topology<type>* t ) const { return topology2entity_.at(t); }
+
 private:
   Points points_;
   const Topology<type>& topology_;
   //Topology<type> slice_;
   std::map<Entity*,Topology<type>*> entity2topology_;
+  std::map<Topology<type>*,Entity*> topology2entity_;
 };
 
 } // avro

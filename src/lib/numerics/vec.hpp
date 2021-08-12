@@ -101,6 +101,23 @@ dot( const vecs<M,R>& u , const vecs<M,S>& v ) { \
   return result; \
 }
 
+template<index_t M, typename T>
+T norm( const vecs<M,T>& u ) {
+  return sqrt( dot(u,u) );
+}
+
+namespace numerics
+{
+#define INSTANTIATE_NORMALIZE(T) \
+template<index_t M> \
+void normalize( vecs<M,T>& u ) { \
+  T n = norm(u); \
+  for (index_t i = 0; i < M; i++) \
+    u(i) /= n; \
+}
+
+} // numerics
+
 #define COMMA ,
 
 INSTANTIATE_VECADD( real_t , real_t , real_t )
@@ -148,6 +165,11 @@ INSTANTIATE_VECSCAMUL_L( float , float , float )
 INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<1> , SurrealS<1> )
 INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<2> , SurrealS<2> )
 INSTANTIATE_VECSCAMUL_L( real_t , SurrealS<3> , SurrealS<3> )
+
+namespace numerics
+{
+INSTANTIATE_NORMALIZE( real_t )
+}
 
 #undef COMMA
 

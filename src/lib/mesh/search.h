@@ -76,6 +76,7 @@ public:
     void print() const;
 
     index_t nb_search() const { return nb_search_; }
+    index_t nb_brute_force() const { return nb_brute_force_; }
 
     real_t timing() const { return real_t(time_)/real_t(CLOCKS_PER_SEC); }
 

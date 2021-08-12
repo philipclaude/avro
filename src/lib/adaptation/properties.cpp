@@ -149,6 +149,8 @@ Properties::dump( const std::string& filename ) const
 
   std::ofstream file(filename);
   file << std::setw(2) << jfile << std::endl;
+  //file << jfile;
+  //file.close();
 }
 
 void

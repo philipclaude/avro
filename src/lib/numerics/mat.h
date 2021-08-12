@@ -93,12 +93,12 @@ public:
     data_.resize(m*n);
   }
 
-  T& operator() (index_t i, index_t j) {
+  inline T& operator() (index_t i, index_t j) {
     avro_assert_msg( i < m_ && j < n_ , "i = %lu, j = %lu of %lu x %lu matrix" , i,j,m_,n_ );
     return data_[j*m_+i];
   }
 
-  const T& operator() (index_t i, index_t j) const {
+  inline const T& operator() (index_t i, index_t j) const {
     avro_assert_msg( i < m_ && j < n_ , "i = %lu, j = %lu of %lu x %lu matrix" , i,j,m_,n_ );
     return data_[j*m_+i];
   }
@@ -189,6 +189,8 @@ public:
       for (index_t j = 0; j < N; j++)
         std::cout << "(" + std::to_string(i) + "," + std::to_string(j) + "): " << (*this)(i,j) << std::endl;
   }
+
+  const T* data() const { return data_; }
 
 protected:
   T data_[M*N];

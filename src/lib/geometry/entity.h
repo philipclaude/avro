@@ -27,6 +27,7 @@ class Entity : public Tree<Entity>
 public:
   coord_t number() const { return number_; }
   std::string name() const { return name_; }
+  void set_name( const std::string& name ) { name_ = name; }
 
   void set_identifier( index_t id ) { identifier_ = id; }
   index_t identifier() const { return identifier_; }

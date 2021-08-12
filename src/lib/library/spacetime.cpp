@@ -6,6 +6,8 @@
 
 #include "mesh/boundary.h"
 
+#include "numerics/linear_algebra.h"
+
 namespace avro
 {
 
@@ -31,6 +33,7 @@ Topology_Spacetime<type>::Topology_Spacetime( const Topology<type>& topology ) :
   {
     std::shared_ptr<Topology<type>> t = std::make_shared<Topology<type>>(points_,3);
     entity2topology_.insert( {*it,t.get()} );
+    topology2entity_.insert( {t.get(),*it} );
     this->add_child(t);
   }
 }
@@ -48,11 +51,15 @@ Topology_Spacetime<type>::extract()
 
   // loop through the entities on the boundary
   const std::vector<Entity*>& entities = boundary.entities();
+
   for (index_t k=0;k<entities.size();k++)
   {
     Entity* entity = entities[k];
     Topology<type>& tk = *entity2topology_.at(entity);
     Topology<type>& bk = boundary.child( boundary.indexof(entity) );
+
+    //const matd<real_t>& B = static_cast<PSC::Facet*>(entity)->basis();
+    //const vecd<real_t>& x0 = static_cast<PSC::Facet*>(entity)->x0();
 
     // create a vertex for every vertex on the boundary
     std::set<index_t> vertices;
@@ -64,6 +71,7 @@ Topology_Spacetime<type>::extract()
 
     std::set<index_t>::iterator it;
     std::map<index_t,index_t> identifier;
+    index_t n0 = points_.nb();
     for (it=vertices.begin();it!=vertices.end();it++)
     {
       // create a vertex for this one
@@ -76,20 +84,30 @@ Topology_Spacetime<type>::extract()
       std::vector<real_t> U( 3 );
       entity->inverse( X , U );
 
-      if (ep->number() == 3) {
-        PSC::Facet* fp = static_cast<PSC::Facet*>(ep);
-        const matd<real_t>& B = fp->basis();
-
-        B.print();
-
-        vecd<real_t> u0(3,U.data());
-        //vecd<real_t> u1 = B * u0;
-      }
-
       points_.create( U.data() );
       points_.set_entity( idx , entity );
       identifier.insert( {*it,idx} );
     }
+
+    #if 1
+    std::vector<real_t> xmin(3, 1e20);
+    std::vector<real_t> xmax(3,-1e20);
+
+    for (index_t j = n0; j < points_.nb(); j++) {
+      for (coord_t d = 0; d < 3; d++) {
+        real_t x = points_(j,d);
+        if (x < xmin[d]) xmin[d] = x;
+        if (x > xmax[d]) xmax[d] = x;
+      }
+    }
+    //printf("xmin = %g, xmax = %g\n",xmin,xmax);
+
+    for (index_t j = n0; j < points_.nb(); j++) {
+      for (coord_t d = 0; d < 3; d++) {
+        points_(j,d) = (points_(j,d) - xmin[d]) / (xmax[d] - xmin[d]);
+      }
+    }
+    #endif
 
     // create the elements in the topology
     std::vector<index_t> simplex(4);
@@ -99,7 +117,10 @@ Topology_Spacetime<type>::extract()
         simplex[j] = identifier[ bk(k,j) ];
       tk.add( simplex.data() , simplex.size() );
     }
+    tk.orient();
   }
+
+
 }
 
 template<typename type>

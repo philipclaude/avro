@@ -28,6 +28,8 @@ typedef avro::real_t REAL;
 
 #include <triangle/predicates.h>
 
+#include <json/json.hpp>
+
 #include <unistd.h>
 #include <fstream>
 
@@ -51,12 +53,13 @@ AdaptationParameters::set_defaults() {
   register_parameter( "allow serial" , false , "whether to allow serial adaptation when running in parallel" );
   register_parameter( "has uv" , false , "whether parameter space coordinates are specified for geometry points in the mesh" );
   register_parameter( "smoothing exponent" , index_t(1) , "smoothing exponent" );
-  register_parameter( "elems per processor" , index_t(10000) , "number of elements for each processor" );
+  register_parameter( "elems per processor" , index_t(10000) , "target number of elements for each processor" );
   register_parameter( "adapt iter" , index_t(1) , "adaptation iteration" );
   register_parameter( "has interior boundaries" , false , "whether there are geometry entities which are embedded interior to the mesh" );
   register_parameter( "export boundary" , false , "should the boundary be included in the exported mesh" );
   register_parameter( "write conformity" , false , "whether metric conformity information should be written when adaptation finishes" );
   register_parameter( "partitioned" , false , "whether the incoming mesh is already partitioned" );
+  register_parameter( "force partition count" , index_t(0) , "whether the number of partitions should be forced during every pass" );
 }
 
 template<typename type>
@@ -82,6 +85,8 @@ AdaptThread<type>::AdaptThread( Topology<type>& topology , MetricField<type>& me
 const real_t nb_smooth = 10;
 const real_t qt_max = 0.8;
 const bool limit_collapse_lmax = false;
+const index_t nb_swap_pass_qt_min = 5;
+const index_t nb_swap_pass_qt_max = 2;
 
 template<typename type>
 int
@@ -187,8 +192,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // swap edges to improve quality
   properties.compute( mesh_topology , metric );
   properties.print("pre-swap" );
-  adaptation.swap_edges(0.4,10); // no length limit
-  adaptation.swap_edges(qt_max,4); // no length limit
+  adaptation.swap_edges(0.4,nb_swap_pass_qt_min); // no length limit
+  adaptation.swap_edges(qt_max,nb_swap_pass_qt_max); // no length limit
   adaptation.check("swaps");
 
   // perform some vertex smoothing to drive lengths to 1
@@ -202,8 +207,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
     // swap edges to improve quality
     properties.compute( mesh_topology , metric );
     properties.print("pre-swap" );
-    adaptation.swap_edges(0.4,10,true); // limit length
-    adaptation.swap_edges(qt_max,4,true); // limit length
+    adaptation.swap_edges(0.4,nb_swap_pass_qt_min,true); // limit length
+    adaptation.swap_edges(qt_max,nb_swap_pass_qt_max,true); // limit length
     adaptation.check("swaps");
   }
 
@@ -220,7 +225,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // swap facets then edges to improve quality
   properties.compute( mesh_topology , metric );
   properties.print("pre-swap" );
-  adaptation.swap_edges(0.4,10); // no length limit
+  adaptation.swap_edges(0.4,nb_swap_pass_qt_min); // no length limit
   adaptation.swap_edges(qt_max,2); // no length limit
   adaptation.check("swaps");
 
@@ -244,8 +249,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // swap edges to improve quality
   properties.compute( mesh_topology , metric );
   properties.print("pre-swap" );
-  adaptation.swap_edges(0.4,10,true); // limit length
-  adaptation.swap_edges(qt_max,4,true); // limit length
+  adaptation.swap_edges(0.4,nb_swap_pass_qt_min,true); // limit length
+  adaptation.swap_edges(qt_max,nb_swap_pass_qt_max,true); // limit length
   adaptation.check("swaps");
 
   // perform some vertex smoothing to drive lengths to 1
@@ -277,8 +282,8 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
   // swap edges to improve quality
   properties.compute( mesh_topology , metric );
   properties.print("pre-swap" );
-  adaptation.swap_edges(0.4,10,true); // limit length
-  adaptation.swap_edges(qt_max,4,true); // limit length
+  adaptation.swap_edges(0.4,nb_swap_pass_qt_min,true); // limit length
+  adaptation.swap_edges(qt_max,nb_swap_pass_qt_max,true); // limit length
   adaptation.check("swaps");
 
 done:
@@ -289,9 +294,10 @@ done:
     properties.compute( mesh_topology , metric );
     properties.print("final metric conformity" );
     std::string directory = params["directory"];
+    std::string prefix = params["prefix"];
     index_t adapt_iter = params["adapt iter"];
     if (params["write conformity"])
-      properties.dump( directory + "/properties_" + stringify(adapt_iter) + ".json");
+      properties.dump( prefix + "_properties_" + stringify(adapt_iter) + ".json");
   }
   else avro_implement;
 
@@ -531,6 +537,24 @@ adapt( AdaptationProblem& problem )
 
       std::string filename = directory + "/" + prefix + "_" + stringify(adapt_iter) + ".mesh";
       spacetime.write( filename );
+    }
+    else if (topology.number() == 4) {
+
+      nlohmann::json jm;
+
+      const TopologyBase& t = problem.mesh_out.topology(0);
+
+      jm["type"]     = mesh_topology.type_name();
+      jm["dim"]      = t.points().dim();
+      jm["number"]   = mesh_topology.number();
+      jm["elements"] = t.data();
+      jm["geometry"] = params["geometry"];
+      jm["nb_ghost"] = t.points().nb_ghost();
+      jm["vertices"] = t.points().data();
+
+
+      std::ofstream file("mesh-adapt"+std::to_string(adapt_iter)+".avro");
+      file << jm;
     }
 
     if (topology.number()==3 && has_interior_boundaries)

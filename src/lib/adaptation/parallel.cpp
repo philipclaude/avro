@@ -24,6 +24,9 @@
 
 #include "numerics/mat.h"
 
+#include <fstream>
+#include <list>
+#include <unordered_map>
 #include <time.h>
 #include <unistd.h>
 
@@ -701,6 +704,8 @@ public:
   {
     // first add any element that stays in our partition
     // keep track of the global indices that have been added
+    partition_.reserve( topology.nb() );
+    Topology<type>::reserve( topology.nb() );
     for (index_t k=0;k<topology.nb();k++)
     {
       if (partition[k] != rank) continue;
@@ -726,6 +731,8 @@ public:
       this->add(s.data(),s.size());
       partition_.push_back(rank);
     }
+    partition_.shrink_to_fit();
+    Topology<type>::shrink_to_fit();
 
     avro_assert_msg( global_.size() == points_.nb() , "|global| = %lu, |points| = %lu" , global_.size() , points_.nb() );
   }
@@ -735,6 +742,8 @@ public:
     for (index_t k = 0; k < topology.points().nb(); k++)
       global.insert( {topology.points().global(k) , k} );
 
+    topology.points().reserve( topology.points().nb() + points_.nb() );
+    metric_.reserve( metric_.size() + points_.nb() );
     for (index_t k = 0; k < this->nb(); k++) {
 
       std::vector<index_t> s = this->get(k);
@@ -764,6 +773,8 @@ public:
       }
       topology.add( s.data() , s.size() );
     }
+    topology.points().shrink_to_fit();
+    metric_.shrink_to_fit();
   }
 
   const std::vector<index_t>& partition() const { return partition_; }
@@ -771,7 +782,7 @@ public:
 
 private:
   using Topology_Partition<type>::points_;
-  std::map<index_t,index_t> global_;
+  std::unordered_map<index_t,index_t> global_;
   std::vector<index_t> partition_;
   std::vector<index_t> metric_;
 };
@@ -822,7 +833,10 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   coord_t udim = topology_.points().udim();
   coord_t number = topology_.number();
 
+  clock_t TIME0, TIME1;
+
   // accumulate the elements to send away
+  TIME0 = clock();
   MigrationChunk<type> goodbye(dim,udim,number);
   goodbye.set_entities(topology_.entities());
   for (index_t j = 0; j < nb_rank; j++) {
@@ -830,8 +844,11 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     goodbye.extract( topology_ , repartition , j );
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> extract time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // receive chunks on the root processor so we can send the combined chunks away
+  TIME0 = clock();
   std::vector< std::shared_ptr<MigrationChunk<type>> > pieces( nb_rank );
   if (rank_ == 0) {
 
@@ -865,8 +882,11 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     mpi::send( mpi::blocking{} , goodbye.partition() , 0 , TAG_MISC );
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> chunk sending to root time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // send the chunks to the corresponding processors
+  TIME0 = clock();
   MigrationChunk<type> chunk(dim,udim,number);
   chunk.set_entities( topology_.entities() );
   if (rank_ == 0) {
@@ -884,6 +904,9 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     chunk.receive(0);
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> chunk send to proc time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
+
 
   std::vector<index_t> removals;
   for (index_t k = 0; k < repartition.size(); k++) {
@@ -891,30 +914,43 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
       removals.push_back( k );
   }
 
-  std::map<index_t,index_t> metrics_owned;
+  std::unordered_map<index_t,index_t> metrics_owned;
   for (index_t k = 0; k < topology_.points().nb(); k++)
     metrics_owned.insert( {topology_.points().global(k),k} );
 
   // add the received chunk to the topology
+  TIME0 = clock();
   index_t nb_elem = topology_.nb() - removals.size();
+  topology_.reserve( topology_.nb() + chunk.nb() );
   chunk.add_to( topology_ );
+  topology_.shrink_to_fit();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> chunk addition time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   crust_.clear();
+  crust_.resize( chunk.nb() );
   for (index_t k = 0; k < chunk.nb(); k++)
-    crust_.push_back( nb_elem + k );
+    crust_[k] = nb_elem + k;
+    //crust_.push_back( nb_elem + k );
 
+  TIME0 = clock();
   topology_.remove_elements( removals );
   for (index_t k = 0; k < crust_.size(); k++)
     avro_assert_msg( crust_[k] < topology_.nb(), "crust = %lu, |topology| = %lu on rank %lu",crust_[k],topology_.nb(),rank_);
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> element removal time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // determine which metrics need to be added
+  TIME0 = clock();
   std::set<index_t> idx( chunk.metric().begin() , chunk.metric().end() );
   std::vector<index_t> metric;
+  metric.reserve( chunk.metric().size() );
   for (index_t k = 0; k < chunk.metric().size(); k++) {
     index_t p = chunk.metric()[k];
     if (metrics_owned.find(p) == metrics_owned.end())
       metric.push_back(p);
   }
+  metric.shrink_to_fit();
 
   // accumulate the requested metrics on the root processor
   std::vector<std::set<index_t>> metric_send_idx(nb_rank);
@@ -924,6 +960,8 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     // initialize the full list of metrics on the root processor
     metric_requests = metric;
 
+    metric_requests.reserve( metric.size() * nb_rank );
+
     // append the metric requests received from other processors
     for (index_t k = 1; k < nb_rank; k++) {
       std::vector<index_t> metric_k = mpi::receive<std::vector<index_t>>( k , TAG_MISC );
@@ -931,13 +969,17 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
       for (index_t j = 0; j < metric_k.size(); j++)
         metric_requests.push_back(metric_k[j]);
     }
+    metric_requests.shrink_to_fit();
     uniquify(metric_requests);
   }
   else {
     mpi::send( mpi::blocking{} , metric , 0 , TAG_MISC );
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> metric accumulation (on root) time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
+  TIME0 = clock();
   // now gather the data from all the processors
   if (rank_ == 0) {
     for (index_t k = 1; k < nb_rank; k++)
@@ -947,10 +989,15 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     metric_requests = mpi::receive<std::vector<index_t>>(0,TAG_MISC);
   }
   mpi::barrier();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> accumulated metric receive time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // create the metric data to send for the points we own
+  TIME0 = clock();
   std::vector<real_t> metric_data;
   std::vector<index_t> metric_idx;
+  metric_data.reserve( metric_requests.size() * number * (number+1 ) );
+  metric_idx.reserve( metric_requests.size() );
   for (index_t k = 0; k < metric_requests.size(); k++) {
 
     // determine if we own this metric
@@ -963,6 +1010,8 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     for (index_t i = j; i < number; i++)
       metric_data.push_back( metrics_[q](i,j) );
   }
+  metric_data.shrink_to_fit();
+  metric_idx.shrink_to_fit();
 
   if (rank_ == 0) {
 
@@ -1003,6 +1052,7 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
   mpi::barrier();
 
   // find the data we need and append it into our array
+  metrics_.reserve( metric_idx.size() + metrics_.size() );
   index_t N = number*(number+1)/2;
   for (index_t k = 0; k < metric.size(); k++) {
     bool found = false;
@@ -1021,14 +1071,45 @@ AdaptationManager<type>::exchange( std::vector<index_t>& repartition ) {
     avro_assert( found );
   }
   avro_assert( metrics_.size() == topology_.points().nb() );
+  metrics_.shrink_to_fit();
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> other metric time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // remove points that are not referenced by the topology
+  TIME0 = clock();
   std::vector<index_t> point_map;
-  topology_.remove_unused(&point_map);
+  topology_.remove_unused(&point_map); // i think this is a bottleneck but it's really hard to improve
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> topology unused removal time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   // map the metrics too
+  TIME0 = clock();
+  #if 0
   for (index_t k = 0; k < point_map.size(); k++)
     metrics_.erase( metrics_.begin() + point_map[k]-k );
+  #elif 0
+  std::list<VertexMetric> lmetrics(metrics_.begin(),metrics_.end());
+  std::list<VertexMetric>::iterator it = lmetrics.begin();
+  for (index_t k = 0; k < point_map.size(); k++) {
+    advance(it,point_map[k]-k);
+    lmetrics.erase( it );
+    it = lmetrics.begin();
+  }
+  metrics_.assign( lmetrics.begin() , lmetrics.end() );
+  #else
+  std::set<index_t> spoint_map(point_map.begin(),point_map.end());
+  std::vector<VertexMetric> metrics0;
+  metrics0.reserve( metrics_.size() );
+  for (index_t k = 0; k < metrics_.size(); k++) {
+    if (spoint_map.find(k) != spoint_map.end()) continue;
+    metrics0.push_back(metrics_[k]);
+  }
+  metrics0.shrink_to_fit();
+  metrics_.assign(metrics0.begin(),metrics0.end());
+  #endif
+  TIME1 = clock();
+  if (rank_ == 0) printf("--> metric removal time: %4.3g sec.\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
+
 
   avro_assert( metrics_.size() == topology_.points().nb() );
   for (index_t k = 0; k < topology_.nb(); k++) {
@@ -1092,11 +1173,15 @@ AdaptationManager<type>::migrate_balance( index_t nb_part ) {
   PartitionGraph<type> graph( topology_ , boundary , element_offset_ , metrics_ );
 
   // call parmetis to perform the load balance
+  clock_t TIMER = clock();
   std::vector<index_t> repartition;
   graph.repartition(repartition,nb_part);
+  if (rank_ == 0) time_partition_ += real_t(clock() - TIMER)/real_t(CLOCKS_PER_SEC);
 
   // exchange the elements between partitions
+  TIMER = clock();
   exchange(repartition);
+  if (rank_ == 0) time_exchange_ += real_t(clock() - TIMER)/real_t(CLOCKS_PER_SEC);
 }
 
 template<typename type>
@@ -1741,15 +1826,26 @@ AdaptationManager<type>::adapt() {
   // clear any previous processor-processor pairs that may have been stored
   pairs_.clear();
 
-  // perform the passes, alternating between doing an interface migration
-  // and a load balance
-  const std::string method = "default";
+  // setup some parameters
   bool limit_metric = params_["limit metric"];
   index_t max_passes = params_["max parallel passes"];
   index_t nb_part = mpi::size();
   index_t pass = 0;
   bool done = false;
   bool freeze_conforming = false;
+  index_t force_partition_count = params_["force partition count"];
+  index_t debug_level = params_["debug level"];
+  bool write_mesh = params_["write mesh"];
+
+  clock_t TIMER = clock();
+  time_process_     = 0.0;
+  time_synchronize_ = 0.0;
+  time_adapt_       = 0.0;
+  time_migrate_     = 0.0;
+  time_partition_   = 0.0;
+  time_exchange_    = 0.0;
+
+  // loop over number of passes
   while (!done) {
 
     if (rank_ == 0) printf("\n*** pass %lu ***\n\n",pass);
@@ -1757,35 +1853,35 @@ AdaptationManager<type>::adapt() {
 
     // fix the boundary of the topology
     // and move the fixed points to the beginning of the points structure
+    if (rank_ == 0) TIMER = clock();
     if (rank_ == 0) printf("--> fixing partition boundaries\n");
     mpi::barrier();
     fix_boundary();
+    mpi::barrier();
 
-    // option to limit the metrics - do not limit the metrics in the call to the mesh adapter
+    // option to limit the metrics
     try {
-    if (pass == 0 && params_["limit metric"]) {
-      MetricAttachment attachment( topology_.points() , metrics_ );
-      attachment.limit(topology_,2.0,true);
-      for (index_t k = 0; k < attachment.nb(); k++)
-        metrics_[k] = attachment[k];
+      // only limit metrics if this is the first pass (if limiting is used at all)
+      if (pass == 0 && params_["limit metric"]) {
+        MetricAttachment attachment( topology_.points() , metrics_ );
+        attachment.limit(topology_,2.0,true);
+        for (index_t k = 0; k < attachment.nb(); k++)
+          metrics_[k] = attachment[k];
 
-      // we need to synchronize the metrics across processors that may have been modified by metric limiting
-      synchronize_metrics( topology_.points() , metrics_ );
-    }
-    params_.set("limit metric", false);
+        // we need to synchronize the metrics across processors that may have been modified by metric limiting
+        synchronize_metrics( topology_.points() , metrics_ );
+      }
+      // do not limit the metrics in the call to the mesh adaptation below
+      params_.set("limit metric", false);
     }
     catch(...) {
       printf("pass %lu: there was an error limiting the metric on processor %lu :(\n",pass,rank_);
       mpi::abort(1);
     }
 
-    // in recursive mode, fix any vertices that touch edges/elements of good quality
-    // this is important so that we don't adapt the full mesh
-    if (method == "recursive" && pass > 0) {
-      //fix_conforming( topology_ , metrics_ );
-    }
+    // check if we want to freeze points in the topology whose surrounding edge lengths are metric conforming
+    // this gives a bit of a performance boost, but should be used with caution
     if (freeze_conforming) fix_conforming( topology_ , metrics_ );
-
 
     // create the mesh we will write to
     Mesh mesh(number,dim);
@@ -1797,21 +1893,23 @@ AdaptationManager<type>::adapt() {
 
     // option to write out the input mesh (for debugging)
     library::meshb writer;
-    if (number < 4)
+    if (number < 4 && debug_level > 0)
       writer.write(mesh,"input-proc"+std::to_string(rank_)+".mesh",false);
 
     // setup the adaptation
     params_.set("output redirect" , "adaptation-output-proc"+std::to_string(rank_)+".txt" );
-    params_.set("swapout" , false ); // I think there are some bugs with swapout in parallel (maybe with setting fixed)
+    params_.set("swapout" , false );
     params_.set("export boundary", false);
-    params_.set("prefix" , "mesh-proc"+std::to_string(rank_)+"_pass"+std::to_string(pass) );
+    params_.set("prefix" , "processor"+std::to_string(rank_)+"_pass"+std::to_string(pass) );
+    params_.set("write mesh" , false ); // we don't want each processor to write the mesh it generates
     AdaptationProblem problem = {mesh,metrics_,params_,mesh_out};
+    if (rank_ == 0) time_process_ += real_t( clock() - TIMER )/real_t(CLOCKS_PER_SEC);
+    bool abort = false;
     try {
-
       // do the adaptation!
       clock_t t0 = 0, t1;
       if (rank_ == 0) {
-        printf("--> adapting mesh!\n");
+        printf("--> adapting mesh on %lu partitions...\n",nb_part);
         t0 = clock();
       }
       ::avro::adapt<type>( problem );
@@ -1819,9 +1917,11 @@ AdaptationManager<type>::adapt() {
       if (rank_ == 0) {
         t1 = clock();
         printf("--> time = %4.3g seconds.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
+        time_adapt_ += real_t(t1-t0)/real_t(CLOCKS_PER_SEC);
       }
 
       // clear the topology and copy in the output topology
+      if (rank_ == 0) TIMER = clock();
       topology_.clear();
       topology_.points().clear();
       topology_.TopologyBase::copy( mesh_out.template retrieve<type>(0) );
@@ -1832,31 +1932,71 @@ AdaptationManager<type>::adapt() {
         if (topology_.points().fixed(k)) continue;
         topology_.points().set_global( k , 0 );
       }
+      if (rank_ == 0) time_process_ += real_t(clock() - TIMER)/real_t(CLOCKS_PER_SEC);
     }
     catch(...) {
       printf("there was an error adapting the mesh on processor %lu :(\n",rank_);
-      mpi::abort(1);
+      abort = true;
     }
     mpi::barrier();
+    if (abort) {
+	    mpi::abort(1);
+    }
 
     // synchronize all the global point indices
+    if (rank_ == 0) TIMER = clock();
     synchronize();
+    if (rank_ == 0) time_synchronize_ += real_t( clock() - TIMER) / real_t(CLOCKS_PER_SEC);
 
     // option to retrieve and export the full mesh
+    // we do not count this towards the time
     Mesh m(number,dim);
     std::shared_ptr<Topology<type>> topology_out = std::make_shared<Topology<type>>(m.points(),number);
     retrieve(*topology_out.get());
-    if (rank_ == 0) {
+    if (rank_ == 0 && write_mesh) {
+
       index_t adapt_iter = params_["adapt iter"];
-      if (number < 4) {
-        m.add(topology_out);
-        writer.write(m,"mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".mesh",false,true);
-      }
-      else {
-        Topology_Spacetime<type> spacetime(*topology_out.get());
-        spacetime.extract();
-        spacetime.write( "mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".mesh" );
-      }
+
+      nlohmann::json jm;
+      jm["type"]     = topology_out->type_name();
+      jm["dim"]      = topology_out->points().dim();
+      jm["number"]   = topology_out->number();
+      jm["vertices"] = topology_out->points().data();
+      jm["elements"] = topology_out->data();
+      jm["geometry"] = params_["geometry"];
+      jm["nb_ghost"] = topology_out->points().nb_ghost();
+
+      std::ofstream file("mesh-adapt"+std::to_string(adapt_iter)+"-pass"+std::to_string(pass)+".avro");
+      file << jm;
+    }
+
+    #if 0
+    // save the metric data for this processor
+    // the metrics have been migrated so each processor own the metrics for the vertices it needs
+    // we need to save the global id for vertex
+    std::vector<real_t> metric_data( nb_metric_rank * metrics_.size() );
+    index_t count = 0;
+    for (index_t k = 0; k < metrics_.size(); k++)
+    for (index_t j = 0; j < nb_metric_rank; j++)
+     metric_data[count++] = metrics[k].data(j);
+
+     avro_assert( metrics.size() == manager.topology().points().nb() );
+     std::vector<index_t> global( metrics.size() );
+     for (index_t k = 0; k < metrics.size(); k++)
+       global[k] = manager.topology().points().global(k);
+
+     nlohmann::json jm;
+     jm["metrics"] = metric_data;
+     jm["global"]  = global;
+
+     std::ofstream file("metric-proc"+std::to_string(rank)+"-iter"+std::to_string(iter)+".metric");
+     file << jm;
+     file.close();
+
+    #endif
+
+    // report the min and max volumes in the mesh (this helps determine if something bad is happening...)
+    if (rank_ == 0) {
       std::vector<real_t> volumes( topology_out->nb() );
       real_t v0 = topology_out->volume();
       topology_out->get_volumes(volumes);
@@ -1865,26 +2005,10 @@ AdaptationManager<type>::adapt() {
       printf("--> volume = %g, min = %g, max = %g\n",v0,min_v0,max_v0);
     }
 
-    // count vertex age (currently debugging info)
-    index_t max_age = 5;
-    std::vector<index_t> age_count(max_age);
-    for (index_t k = 0; k < topology_.points().nb(); k++) {
-      if (topology_.points().age(k) >= max_age) age_count[max_age-1]++;
-      else age_count[topology_.points().age(k)]++;
-    }
-    mpi::barrier();
+    // check if the user is forcing a number of partitions
+    if (force_partition_count == 0) {
 
-    if (method == "recursive") {
-      // recursive approach
-      nb_part = nb_part / 2;
-      if (nb_part == 0) {
-        nb_part = mpi::size();
-        done = true;
-      }
-    }
-    else {
-
-      // standard, hope the interfaces are migrated to the interior
+      // how many elements should we target per processor?
       index_t nb_elem_per_core = params_["elems per processor"];
 
       index_t nb_elem = topology_out->nb();
@@ -1911,13 +2035,22 @@ AdaptationManager<type>::adapt() {
       }
       if (nb_part > index_t(mpi::size())) nb_part = mpi::size();
     }
+    else {
+      nb_part = force_partition_count;
+      if (pass == max_passes-1) done = true;
+    }
 
+    // balance the mesh for the next pass, or for the caller
+    if (rank_ == 0) TIMER = clock();
     if (rank_ == 0) printf("--> performing load balance & interface migration for %lu elements on %lu partitions\n",topology_out->nb(),nb_part);
     migrate_balance( nb_part );
+    if (rank_ == 0) time_migrate_ += real_t( clock() - TIMER ) / real_t(CLOCKS_PER_SEC);
     pass++;
   }
 
+  // reset some parameters to their original values
   params_.set("limit metric" , limit_metric );
+  params_.set("write mesh" , write_mesh );
 }
 
 template<typename type>

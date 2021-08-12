@@ -538,6 +538,7 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
     }
 
     // now actually delete the points
+    #if 0
     index_t count = 0;
     for (index_t k=0;k<removed.size();k++)
     {
@@ -550,6 +551,35 @@ AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
         count++;
       }
     }
+    #else
+
+    std::map<index_t,index_t> point_map;
+    index_t count = 0;
+    for (index_t k = 0; k < removed.size(); k++) {
+
+      if (removed[k]) {
+
+        // only delete the points and the metrics
+        // but do not update the topology or the inverse
+        // since they incur O(topology_.nb()) cost
+        // for *every* deletion
+        topology_.points().remove( k-count );
+        metric_.remove(k-count);
+        count++;
+      }
+      else {
+        point_map.insert( {k , k-count} );
+      }
+    }
+
+    // now we will update the topology indices and the inverse
+    // with a single O(topology_.nb()) cost
+    for (index_t k = 0; k < topology_.nb(); k++)
+    for (index_t j = 0; j < topology_.nv(k); j++)
+      topology_(k,j) = point_map.at( topology_(k,j) );
+    topology_.inverse().build();
+
+    #endif
 
     // analyze the resulting edges (and recompute for the next iteration)
     edges.clear();

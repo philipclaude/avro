@@ -1,9 +1,13 @@
 #include "common/parallel_for.h"
 #include "graphics/application.h"
+#include "graphics/camera.h"
 #include "graphics/window.h"
 
 #include "graphics/colormap.h"
 
+#include <json/json.hpp>
+
+#include <fstream>
 #include <unistd.h>
 
 namespace avro
@@ -30,6 +34,8 @@ OpenGL_Application::add( const TopologyBase& topology ) {
 void
 OpenGL_Application::run(bool quit) {
 
+  #if AVRO_WITH_GL
+
   if (quit)
     return;
 
@@ -50,6 +56,9 @@ OpenGL_Application::run(bool quit) {
     if (glfwWindowShouldClose(window_.window())) break;
     if (glfwGetKey(window_.window(), GLFW_KEY_ESCAPE ) == GLFW_PRESS) break;
   }
+  #else
+  avro_assert_not_reached;
+  #endif
 }
 
 void

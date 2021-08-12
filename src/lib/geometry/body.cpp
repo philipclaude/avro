@@ -28,8 +28,10 @@ Body::add( Entity_ptr entity )
 void
 Body::build_parents()
 {
-  for (index_t k=0;k<nb_entities();k++)
+  for (index_t k=0;k<nb_entities();k++) {
     entity_[k]->build_parents();
+    entity_[k]->build_children();
+  }
 }
 
 void

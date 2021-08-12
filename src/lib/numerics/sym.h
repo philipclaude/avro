@@ -65,11 +65,11 @@ public:
 	type& data( const index_t k ) { return data_[k]; }
 	type data( const index_t k ) const { return data_[k]; }
 
-	type& operator() ( const index_t i, const index_t j ) {
+	inline type& operator() ( const index_t i, const index_t j ) {
 		return (i>j) ? data_[i*(i+1)/2 +j] : data_[j*(j +1)/2 +i];
 	}
 
-	type operator() ( const index_t i, const index_t j ) const {
+	inline type operator() ( const index_t i, const index_t j ) const {
 		return (i>j) ? data_[i*(i+1)/2 +j] : data_[j*(j +1)/2 +i];
 	}
 

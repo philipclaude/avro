@@ -20,7 +20,7 @@
 
 // tolerance used in the element search
 // we may need to adjust this to deal with real geometries
-#define TOLER 0.0
+#define TOLER -1e-12 //0.0
 
 namespace avro
 {
@@ -46,7 +46,7 @@ ElementSearch<type>::ElementSearch( const Topology<type>& _topology ) :
       nb_search_(0),
       time_(0),
       nb_steps_(0),
-      brute_(true) // enable brute force search by default
+      brute_(false) // enable brute force search by default
 {}
 
 template<typename type>
@@ -108,7 +108,7 @@ ElementSearch<type>::step( const real_t* x , const index_t start )
     }
 
     // check the barycentric volume
-    real_t vol = numerics::simplex_volume( xj , topology_.points().dim() );
+    real_t vol = numerics::simplex_volume( xj , topology_.points().dim() , false );
 
     if (vol<TOLER)
     {
@@ -197,7 +197,7 @@ ElementSearch<type>::brute( const real_t* x )
         else xk[i] = topology_.points()[ topology_(k,i) ];
       }
       // check the volume
-      vol = numerics::simplex_volume(xk,dim);
+      vol = numerics::simplex_volume(xk,dim,false);
       if (vol<TOLER)
       {
         found = false;

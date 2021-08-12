@@ -15,15 +15,19 @@
 #include "common/directory.h"
 #include "common/tools.h"
 
+#include "geometry/model.h"
+
 #include "graphics/application.h"
 
 #include "library/factory.h"
 #include "library/library.h"
+#include "library/tesseract.h"
 
 #include "mesh/mesh.h"
 #include "avro.h"
 
 #include <stdio.h>
+#include <time.h>
 
 namespace avro
 {
@@ -66,10 +70,9 @@ adapt( int nb_input , const char** inputs )
   real_t href = 2.0;
   if (nb_input>4)
     found = parse<real_t>(lookfor(options,nb_options,"href"),href);
-  printf("limiting metric with href = %g\n",href);
 
   // if the metric is analytic, iterate...
-  index_t nb_iter = 20;
+  index_t nb_iter = 10;
   if (nb_input>4)
     found = parse(lookfor(options,nb_options,"nb_iter"),nb_iter);
 
@@ -102,6 +105,27 @@ adapt( int nb_input , const char** inputs )
   std::string metricname( inputs[2] );
   std::shared_ptr<MetricAttachment> pfld;
 
+  // check if we should map the points
+  if (number == 4) {
+
+    library::Tesseract& body = static_cast<library::Tesseract&>(pmodel->body(0));
+    std::string map_name = lookfor(options,nb_options,"map");
+    if (!map_name.empty()) {
+
+      if (map_name == "expansion") {
+        body.map_to( &library::Tesseract::expansion , &pmesh->points() );
+      }
+      else if (map_name == "closingwall") {
+        body.map_to( &library::Tesseract::closingwall , &pmesh->points() );
+      }
+      else {
+        printf("unknown map\n");
+        avro_assert_not_reached;
+      }
+      geometryname += "-" + map_name;
+    }
+  }
+
   std::vector<real_t> metric_params;
   if (metricname=="Uniform")
     metric_params.push_back(number);
@@ -123,6 +147,7 @@ adapt( int nb_input , const char** inputs )
   params.set("write conformity", false);
   params.set("swapout" , false);
   params.set("use smoothing" , true);
+  params.set("geometry" , geometryname );
 
   std::string outputfile(inputs[3]);
   std::vector<std::string> s = split(outputfile,".");
@@ -131,7 +156,8 @@ adapt( int nb_input , const char** inputs )
   if (number<4)
     params.set("insertion volume factor", -1.0 );
 
-  for (index_t iter=0;iter<nb_iter;iter++)
+  clock_t TIME0 = clock();
+  for (index_t iter = 0; iter < nb_iter; iter++)
   {
     // get the mesh and the metric field
     Mesh& mesh = *pmesh;
@@ -170,6 +196,8 @@ adapt( int nb_input , const char** inputs )
 
     if (params["curved"]) params.set("has uv", true);
   }
+  clock_t TIME1 = clock();
+  printf("--> time = %g seconds\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
   Library* lib = Library::get();
   lib->add_mesh_ptr(pmesh);

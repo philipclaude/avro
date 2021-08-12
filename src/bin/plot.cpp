@@ -5,15 +5,18 @@
 #include "common/tools.h"
 
 #include "geometry/entity.h"
+#include "geometry/model.h"
 
 #include "graphics/application.h"
 
 #include "library/factory.h"
 #include "library/library.h"
+#include "library/tesseract.h"
 
 #include "mesh/boundary.h"
 #include "mesh/mesh.h"
 
+#include <fstream>
 #include <stdio.h>
 
 namespace avro
@@ -60,7 +63,6 @@ plot( int nb_input , const char** inputs , bool webplot )
   std::shared_ptr<Mesh> pmesh = library::get_mesh(meshname,ptopology);
   Mesh& mesh = *pmesh;
   Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
-  coord_t number = mesh.number();
 
   lib->add_mesh_ptr(pmesh);
   char mesh_label[128];
@@ -73,25 +75,38 @@ plot( int nb_input , const char** inputs , bool webplot )
   if (!geometryname.empty())
     pmodel = library::get_geometry( geometryname , curved );
 
+  if (geometryname.empty()) {
+
+    // check if this is an avro file, and if a geometry was specified
+    std::string ext = get_file_ext(meshname);
+    if (ext == "avro") {
+
+      std::ifstream file(meshname);
+      nlohmann::json jm;
+      file >> jm;
+
+      try {
+        geometryname = jm["geometry"];
+        pmodel = library::get_geometry( geometryname,curved );
+        printf("--> loaded geometry: %s\n",geometryname.c_str());
+      }
+      catch (...) {
+        printf("could not load geometry from avro file");
+      }
+    }
+  }
+
+
   // check the points are on the geometry...
   if (pmodel!=nullptr)
   {
     // check if the points are already on the geometry
+    // TODO
 
     // if not...project them
     mesh.points().attach(*pmodel);
   }
 
-  // option to plot the boundary
-  Boundary<type> boundary(topology);
-  if (pmodel!=nullptr && number<4)
-  {
-    if (!all_bnd)
-      boundary.extract(); // only num-1 children
-    else
-      boundary.extractall(); // all children
-    //bplot = std::make_shared<library::BoundaryPlot<type>>(boundary);
-  }
 
   graphics::Viewer app(webplot);
   app.add(topology);

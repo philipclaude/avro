@@ -32,16 +32,24 @@ class MetricField_Analytic
 {
 public:
   MetricField_Analytic( coord_t dim ) :
-    dim_(dim)
+    dim_(dim),
+    scale_(1.0)
   {}
   virtual ~MetricField_Analytic() {}
 
   virtual symd<real_t> operator()( const real_t* x ) const = 0;
 
   coord_t dim() const { return dim_; }
+  void set_scale( real_t scale ) { scale_ = scale; }
+  void scale( matd<real_t>& m ) {
+    for (coord_t i = 0; i < dim_; i++)
+    for (coord_t j = 0; j < dim_; j++)
+      m(i,j) *= scale_;
+  }
 
 protected:
   coord_t dim_;
+  real_t scale_;
 };
 
 class MetricField_Uniform : public MetricField_Analytic
@@ -68,6 +76,30 @@ public:
 
 private:
   std::vector<real_t> h_;
+};
+
+
+class MetricField_UGAWG_Linear2d : public MetricField_Analytic
+{
+public:
+  MetricField_UGAWG_Linear2d() :
+    MetricField_Analytic(2)
+  {}
+
+  symd<real_t> operator()( const real_t* x ) const
+  {
+    symd<real_t> m(dim_);
+
+    real_t hu = 0.1;
+    real_t h0 = hu/100;
+    real_t hy = h0 +2.*(hu -h0)*fabs( x[1] -0.5 );
+    real_t hx = hu;;
+
+    m(0,0) = 1./(hx*hx);
+    m(0,1) = 0.;
+    m(1,1) = 1./(hy*hy);
+    return m;
+  }
 };
 
 class MetricField_UGAWG_Linear : public MetricField_Analytic
@@ -142,10 +174,56 @@ private:
   real_t hmin_;
 };
 
+class MetricField_Tesseract_RotatingBoundaryLayer : public MetricField_Analytic
+{
+public:
+  static constexpr real_t hmin_default = 0.0025;
+
+  MetricField_Tesseract_RotatingBoundaryLayer() :
+    MetricField_Analytic(4)
+  {}
+
+  symd<real_t> operator()( const real_t* x ) const;
+};
+
+class MetricField_Cube_RotatingBoundaryLayer : public MetricField_Analytic
+{
+public:
+  static constexpr real_t hmin_default = 0.0025;
+
+  MetricField_Cube_RotatingBoundaryLayer() :
+    MetricField_Analytic(3)
+  {}
+
+  symd<real_t> operator()( const real_t* x ) const;
+};
+
+
+class MetricField_Cube_Wave : public MetricField_Analytic
+{
+public:
+  MetricField_Cube_Wave() :
+    MetricField_Analytic(3)
+  {}
+
+  symd<real_t> operator()( const real_t* x ) const;
+};
+
+
 class MetricField_Tesseract_Wave : public MetricField_Analytic
 {
 public:
   MetricField_Tesseract_Wave() :
+    MetricField_Analytic(4)
+  {}
+
+  symd<real_t> operator()( const real_t* x ) const;
+};
+
+class MetricField_Tesseract_MovingCylinder : public MetricField_Analytic
+{
+public:
+  MetricField_Tesseract_MovingCylinder() :
     MetricField_Analytic(4)
   {}
 

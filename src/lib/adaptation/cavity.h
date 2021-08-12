@@ -17,6 +17,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace avro
@@ -101,6 +102,7 @@ public:
 
   bool fixed() const;
   bool closed_boundary();
+  bool& save_boundary() { return save_boundary_; }
 
 protected:
   Topology<type>& topology_;
@@ -108,6 +110,7 @@ protected:
   bool enlarge_;
   bool check_visibility_;
   std::string info_;
+  bool save_boundary_;
 
 private:
   index_t star_;
@@ -120,6 +123,8 @@ private:
   std::vector<index_t> idx_; // index of the star for each boundary facet
   std::vector<index_t> inserted_; // index of the insertion in the topology
   std::vector<bool> removes_; // whether the cavity element is actually removed from the topology
+
+  std::unordered_set<index_t> cavity_set_;
 
   // minimum volume the cavity elements can create
   real_t minvol_;

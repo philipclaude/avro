@@ -446,6 +446,7 @@ Simplex::closest( const Points& x , const index_t* v , const index_t nv , const 
   return distance2;
 }
 
+/*
 static real_t
 simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
 {
@@ -456,9 +457,10 @@ simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
   //avro_assert_not_reached;
   return numerics::volume_nd(x,dim);
 }
+*/
 
 real_t
-Simplex::volume( const Points& points , const index_t* v , index_t nv ) const
+Simplex::volume( const Points& points , const index_t* v , index_t nv , bool exact ) const
 {
   avro_assert( index_t(number_+1)==nv );
   std::vector<const real_t*> x(nv);
@@ -478,7 +480,7 @@ Simplex::volume( const Points& points , const index_t* v , index_t nv ) const
     geometry_params( e , points , v , nv , u.data() );
     std::vector<const real_t*> U(nv);
     for (index_t j=0;j<nv;j++) U[j] = &u[2*j];
-    real_t vol = simplex_volume(U,2) * e->sign();
+    real_t vol = numerics::simplex_volume(U,2,exact) * e->sign();
     if (vol<0)
     {
       for (index_t j=0;j<nv;j++)
@@ -489,7 +491,7 @@ Simplex::volume( const Points& points , const index_t* v , index_t nv ) const
 
   for (index_t k=0;k<nv;k++)
     x[k] = points[v[k]];
-  return simplex_volume(x,points.dim());
+  return numerics::simplex_volume(x,points.dim(),exact);
 }
 
 void
@@ -571,7 +573,7 @@ Simplex::triangulate( const index_t* v , index_t nv , SimplicialDecomposition<Si
 real_t
 Simplex::jacobian( const std::vector<const real_t*>& x , coord_t dim ) const
 {
-  return simplex_volume(x,dim);
+  return numerics::simplex_volume(x,dim);
 }
 
 void
@@ -626,7 +628,7 @@ Simplex::physical_to_reference( const Points& points , const index_t* v , index_
   avro_assert( order_==1 );
   avro_assert( nv == nb_basis() );
 
-  real_t v0 = volume( points , v , nv );
+  real_t v0 = volume( points , v , nv , false );
   v0 = 1./v0;
 
   std::vector<const real_t*> xk(nv);
@@ -637,7 +639,7 @@ Simplex::physical_to_reference( const Points& points , const index_t* v , index_
       if (i==j) xk[i] = xp;
       else xk[i] = points[ v[i] ];
     }
-    x0[j] = v0 * numerics::simplex_volume( xk , points.dim() );
+    x0[j] = v0 * numerics::simplex_volume( xk , points.dim() , false );
   }
 }
 

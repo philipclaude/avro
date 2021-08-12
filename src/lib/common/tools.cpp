@@ -45,7 +45,7 @@ void
 initialize_avro()
 {
   printf("\n================================================\n");
-  printf(  "| avro -- (c) Philip Claude Caplan (2017-2020) |\n");
+  printf(  "| avro -- (c) Philip Claude Caplan (2017-2021) |\n");
   printf("================================================\n");
 
   // initialize the process managers

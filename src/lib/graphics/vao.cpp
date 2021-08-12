@@ -317,37 +317,44 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 
   // count how many geometry entities there are
   std::set<Entity*> entities;
+	bool tesseract = false;
   for (index_t k = 0; k < topology.points().nb(); k++) {
     if (topology.points().entity(k) == nullptr) continue;
     Entity* entity = topology.points().entity(k);
     entities.insert(entity);
     for (index_t j = 0; j < entity->nb_parents(); j++)
       entities.insert( entity->parents(j) );
+		if (entity->number() == 3) tesseract = true;
   }
-  printf("there are %lu entities\n",entities.size());
   bool geometryless = (entities.size() == 0);
+	if (tesseract) geometryless = true;
 
   index_t nb_Faces = 0;
   std::map<Entity*,index_t> entity2triangle;
   std::map<index_t,Entity*> triangle2entity;
-  for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
-    Entity* entity = *it;
-    if (!entity->tessellatable()) continue;
-    if (entity->number() != 2) continue;
-    triangle2entity.insert( {nb_Faces,entity} );
-    entity2triangle.insert( {entity,nb_Faces++} );
-  }
+
+	if (!geometryless) {
+	  for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
+	    Entity* entity = *it;
+	    if (!entity->tessellatable()) continue;
+	    if (entity->number() < 2) continue;
+	    triangle2entity.insert( {nb_Faces,entity} );
+	    entity2triangle.insert( {entity,nb_Faces++} );
+	  }
+	}
 
   index_t nb_Edges = 0;
   std::map<Entity*,index_t> entity2edge;
   std::map<index_t,Entity*> edge2entity;
-  for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
-    Entity* entity = *it;
-    if (!entity->tessellatable()) continue;
-    if (entity->number() < 1) continue;
-    edge2entity.insert( {nb_Edges,entity} );
-    entity2edge.insert( {entity,nb_Edges++} );
-  }
+	if (!geometryless) {
+	  for (std::set<Entity*>::const_iterator it = entities.begin(); it != entities.end(); ++it) {
+	    Entity* entity = *it;
+	    if (!entity->tessellatable()) continue;
+	    if (entity->number() < 1) continue;
+	    edge2entity.insert( {nb_Edges,entity} );
+	    entity2edge.insert( {entity,nb_Edges++} );
+	  }
+	}
 
   index_t nb_edge_primitives = nb_Edges + 1;
   index_t nb_triangle_primitives = nb_Faces + 1;
@@ -563,7 +570,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
     if (k == triangles_.size()-1) {
       jt["name"]  = "interior";
       jt["order"] = triangles_[k]->order();
-      if (number > 2) triangles_[k]->visible() = false;
+      if (number > 2 && !tesseract) triangles_[k]->visible() = false;
     }
     else {
 			Entity* e = triangle2entity[k];

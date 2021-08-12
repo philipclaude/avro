@@ -55,8 +55,9 @@ main( int argc , const char** argv )
     result = programs::conformity(nb_inputs,inputs);
   else if (program=="convert")
     result = programs::convert(nb_inputs,inputs);
-  else
-  {
+  else if (program=="check")
+    result = programs::check(nb_inputs,inputs);
+  else {
     printf("unknown program :(\n");
     result = 1;
   }

@@ -48,6 +48,8 @@ ParameterSet::set_defaults() {
   register_parameter( "curved" , true , "controls whether an input geometry is curved (which will make for a faster adaptation if false)" );
   register_parameter( "adapt iter" , index_t(1) , "adaptation iteration" );
   register_parameter( "domain type" , "polytope" , "representation of the domain when calculating Voronoi diagrams options: polytope, simplex, mesh, sphere");
+  register_parameter( "debug level" , index_t(1) , "how much debugging info should be generated (used for writing input files in parallel)" );
+  register_parameter( "geometry" , "" , "name of the geometry used by avro, can either be an internal library name or a file name (supported by EGADS)" );
 }
 
 template<typename T>

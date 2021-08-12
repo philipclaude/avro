@@ -25,7 +25,7 @@
 #include "mesh/mesh.h"
 #include "mesh/points.h"
 
-
+#include <fstream>
 
 namespace avro
 {
@@ -67,6 +67,11 @@ get_metric( const std::string& name , Points& points , bool& is_analytic ,
     MetricField_Uniform analytic(dim,h);
     return std::make_shared<MetricAttachment>(analytic,points);
   }
+  if (name=="Linear-2d")
+  {
+    MetricField_UGAWG_Linear2d analytic;
+    return std::make_shared<MetricAttachment>(analytic,points);
+  }
   if (name=="Linear-3d")
   {
     MetricField_UGAWG_Linear analytic;
@@ -87,6 +92,26 @@ get_metric( const std::string& name , Points& points , bool& is_analytic ,
     real_t hmin = MetricField_Tesseract_Linear::hmin_default;
     if (params.size()>0) hmin = params[0];
     MetricField_Tesseract_Linear analytic(hmin);
+    return std::make_shared<MetricAttachment>(analytic,points);
+  }
+  if (name=="RotatingBL-3d")
+  {
+    MetricField_Cube_RotatingBoundaryLayer analytic;
+    return std::make_shared<MetricAttachment>(analytic,points);
+  }
+  if (name=="RotatingBL-4d")
+  {
+    MetricField_Tesseract_RotatingBoundaryLayer analytic;
+    return std::make_shared<MetricAttachment>(analytic,points);
+  }
+  if (name=="MovingCylinder-4d")
+  {
+    MetricField_Tesseract_MovingCylinder analytic;
+    return std::make_shared<MetricAttachment>(analytic,points);
+  }
+  if (name=="Wave-3d")
+  {
+    MetricField_Cube_Wave analytic;
     return std::make_shared<MetricAttachment>(analytic,points);
   }
   if (name=="Wave-4d")
@@ -116,13 +141,22 @@ get_geometry( const std::string& name , bool& curved )
   std::shared_ptr<Model> pmodel = std::make_shared<Model>(0);
   std::shared_ptr<Body> pbody = nullptr;
 
-  if (name=="tesseract")
+  if (name=="tesseract" || name == "tesseract-closingwall" || name == "tesseract-expansion")
   {
     curved = false;
     std::vector<real_t> c(4,0.5);
     std::vector<real_t> lengths(4,1.0);
     std::shared_ptr<Model> pmodel = std::make_shared<Model>(3);
     pbody = std::make_shared<library::Tesseract>(c,lengths);
+
+    library::Tesseract& body = static_cast<library::Tesseract&>(*pbody);
+    if (name == "tesseract-closingwall") {
+      body.map_to( &library::Tesseract::closingwall);
+    }
+    else if (name == "tesseract-expansion") {
+      body.map_to( &library::Tesseract::expansion );
+    }
+
   }
   if (name=="box")
   {
@@ -170,15 +204,52 @@ get_mesh( const std::string& name , std::shared_ptr<TopologyBase>& ptopology , c
     }
     return pmesh;
   }
-  if (ext=="json")
-  {
-    /*
-    std::shared_ptr<Mesh> pmesh = std::make_shared<Mesh>(number,number);
-    io::readMesh(name,*pmesh);
-    ptopology = pmesh->topology_ptr(0);
+  if (ext == "avro" || ext == "json") {
+
+    std::ifstream file(name);
+    nlohmann::json jm;
+    file >> jm;
+
+    coord_t dim = jm["dim"];
+    number = jm["number"];
+    std::shared_ptr<Mesh> pmesh  = std::make_shared<Mesh>(number,number);
+
+    index_t nb_ghost = 1;
+    try {
+      nb_ghost = jm["nb_ghost"];
+    }
+    catch (...) {
+      printf("[warning] could not read number of ghost points, setting to 1\n");
+    }
+
+    std::vector<real_t> vertices = jm["vertices"];
+    index_t nb_vertices = vertices.size() / dim;
+    for (index_t k = 0; k < nb_vertices; k++) {
+      pmesh->points().create( vertices.data() + k*dim );
+    }
+
+    if (jm["type"] == "simplex") {
+      ptopology = std::make_shared<Topology<Simplex>>(pmesh->points(),number);
+
+      std::vector<index_t> simplices = jm["elements"];
+      index_t nb_simplices = simplices.size()/(number+1);
+      for (index_t k = 0; k < nb_simplices; k++) {
+        bool ghost = false;
+        std::vector<index_t> simplex( simplices.data() + k*(number+1) , simplices.data() + (k+1)*(number+1) );
+        for (index_t j = 0; j < simplex.size(); j++)
+          if (simplex[j] < nb_ghost) ghost = true;
+        if (ghost) continue;
+        ptopology->add( simplex.data(),simplex.size());
+      }
+    }
+    else {
+      printf("unsupported element type %s\n",std::string(jm["type"]).c_str());
+      avro_implement;
+    }
+
+    pmesh->add(ptopology);
     return pmesh;
-    */
-    avro_implement;
+
   }
 
   if (ext.empty())

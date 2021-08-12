@@ -66,7 +66,10 @@ Primitive<type>::geometry( index_t p0 , index_t p1 )
 
   if (this->topology_.element().parameter()) return g;
 
-  // we need to make sure the edge is attached to some ghosts
+  // for non-curved geometries, we don't need to check the ghost condition
+  if (!this->curved_) return g;
+
+  // for curved geometries, we should check the edge is attached to some ghosts
   std::vector<index_t> shell;
   this->topology_.intersect( {p0,p1} , shell );
 

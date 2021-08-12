@@ -86,6 +86,8 @@ Tesseract::build()
   // construct the 8 bisectors with the corresponding coordinate they are on
   std::vector<int> bisector = {-1,1,-2,2,-3,3,-4,4};
 
+  std::vector< std::string > names = { "xmin" , "xmax" , "ymin" , "ymax" , "zmin" , "zmax" , "tmin" , "tmax" };
+
   // create the signs of all vertex coordinates
   Table<int> P(TableLayout_Rectangular,4);
   int X0[4] =  { 1, 1, 1, 1}; P.add(X0,4);
@@ -267,6 +269,8 @@ Tesseract::build()
     for (index_t ii=0;ii<6;ii++)
       cube_squares[ii] = square_entities[square_index[ii]];
     cube_entities[k] = std::make_shared<PSC::Facet>( this, cube_squares );
+    cube_entities[k]->set_name( names[k] );
+    static_cast<PSC::Facet*>(cube_entities[k].get())->set_basis_by_name();
   }
   avro_assert( cubes.nb()==8 );
   avro_assert( squares.nb()==24 );
@@ -409,7 +413,6 @@ Tesseract::build()
     avro_assert( count[2]==6 ); // six squares touch this node
     avro_assert( count[3]==4 ); // four cubes touch this node
   }
-
 }
 
 } // library

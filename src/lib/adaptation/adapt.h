@@ -67,6 +67,7 @@ public:
   void collapse_edges( bool limit_length=false , bool swapout=false );
   void split_edges( real_t lt , bool limit_length=true , bool swapout=false );
   void swap_edges( real_t qt , index_t npass , bool lcheck=false );
+  void swap_cells( real_t qt , index_t npass );
   void smooth_points( index_t nb_iter );
 
   bool check( const std::string& stage_name ) const { return true; }

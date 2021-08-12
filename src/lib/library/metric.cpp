@@ -11,6 +11,8 @@
 
 #include "geometry/egads/object.h"
 
+#include "graphics/math.h"
+
 #include "library/metric.h"
 
 #include <egads.h>
@@ -133,6 +135,253 @@ MetricField_Tesseract_Linear::operator()( const real_t* x ) const {
 }
 
 symd<real_t>
+MetricField_Cube_RotatingBoundaryLayer::operator()( const real_t* x ) const {
+
+#if 0
+  // this gives a decent looking mesh, but metric conformity isn't the greatest
+  real_t t = x[2];
+  real_t theta = t*M_PI/4;
+
+  real_t hmin = 0.0025;
+  real_t hx = 100*hmin;
+  real_t hy = 100*hmin;
+  real_t h0 = hmin;
+  real_t ht = 100*hmin;
+
+  // distance to rotated line
+  real_t d = fabs( -x[0]*sin(theta) + x[1]*cos(theta) + 0.5*(sin(theta) - cos(theta)) );
+
+  // size perpendicular to the line
+  hy = h0 +2.*(hx -h0)*d;
+
+  // eigenvalues
+  vecd<real_t> L(3);
+  L(0) = 1./(hx*hx);
+  L(1) = 1./(hy*hy);
+  L(2) = 1./(ht*ht);
+
+  // this is probably why metric conformity isn't the greatest
+  real_t alpha = atan2( 0.5 , 1.0 );
+  if (x[0] > 0.5) alpha *= -1.0;
+
+  // eigenvectors
+  matd<real_t> Q(3,3);
+
+  Q(0,0) =   cos(theta);
+  Q(1,0) =   sin(theta)*sin(alpha);
+  Q(2,0) =   cos(alpha);
+
+  Q(0,1) =  -sin(theta);
+  Q(1,1) =   cos(theta)*cos(alpha);
+  Q(2,1) =   sin(alpha);
+
+  Q(0,2) =  0.0;
+  Q(1,2) =  sin(alpha);
+  Q(2,2) =  cos(alpha);
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
+  symd<real_t> m(decomp);
+
+#else
+
+  real_t alpha = atan2( 0.25 , 1.0 );
+
+  real_t hmin = 0.0025;
+  real_t hx = 100*hmin;
+  real_t hy = 100*hmin;
+  real_t h0 = hmin;
+  real_t ht = 100*hmin;
+
+  // distance to rotated line
+  real_t a = cos(alpha);
+  real_t b = -sin(alpha);
+  real_t c = -0.5*cos(alpha);
+  real_t d = fabs( a*x[1] + b*x[2] + c );
+
+  // size perpendicular to the line
+  hy = h0 +2.*(hx -h0)*d;
+
+  vecd<real_t> L(3);
+  L(0) = 1./(hx*hx);
+  L(1) = 1./(hy*hy);
+  L(2) = 1./(ht*ht);
+
+
+  matd<real_t> Q(3,3);
+
+  Q(0,0) =   1.0;
+  Q(1,0) =   0.0;
+  Q(2,0) =   0.0;
+
+  Q(0,1) =   0.0;
+  Q(1,1) =   cos(-alpha);
+  Q(2,1) =   sin(-alpha);
+
+  Q(0,2) =  0.0;
+  Q(1,2) =  sin(-alpha);
+  Q(2,2) =  cos(-alpha);
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
+  symd<real_t> m(decomp);
+
+#endif
+
+
+  return m;
+}
+
+symd<real_t>
+MetricField_Tesseract_RotatingBoundaryLayer::operator()( const real_t* x ) const {
+
+  real_t alpha = atan2( -0.25 , 1.0 );
+
+  real_t hmin = 0.0020;//0.0020;
+  real_t hx = 100*hmin;
+  real_t hy = 100*hmin;
+  real_t hz = 100*hmin;
+  real_t h0 = hmin;
+  real_t ht = 100*hmin;
+
+  // distance to rotated line
+  real_t a = cos(alpha);
+  real_t b = -sin(alpha);
+  real_t c = -0.5*cos(alpha);
+  real_t d = fabs( a*x[2] + b*x[3] + c );
+
+  // size perpendicular to the plane
+  hz = h0 +2.*(hx -h0)*d;
+
+  vecd<real_t> L(4);
+  L(0) = 1./(hx*hx);
+  L(1) = 1./(hy*hy);
+  L(2) = 1./(hz*hz);
+  L(3) = 1./(ht*ht);
+
+  matd<real_t> Q(4,4);
+
+  Q(0,0) = 1.0;
+  Q(1,0) = 0.0;
+  Q(2,0) = 0.0;
+  Q(3,0) = 0.0;
+
+  Q(0,1) = 0.0;
+  Q(1,1) = 1.0;
+  Q(2,1) = 0.0;
+  Q(3,1) = 0.0;
+
+  Q(0,2) =   0.0;
+  Q(1,2) =   0.0;
+  Q(2,2) =   cos(-alpha);
+  Q(3,2) =   sin(-alpha);
+
+  Q(0,3) =  0.0;
+  Q(1,3) =  0.0;
+  Q(2,3) =  sin(-alpha);
+  Q(3,3) =  cos(-alpha);
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
+  symd<real_t> m(decomp);
+
+  return m;
+}
+
+symd<real_t>
+MetricField_Cube_Wave::operator()( const real_t* X ) const {
+
+  real_t eps = 1e-3;
+  real_t x = X[0] + eps;
+  real_t y = X[1] + eps;
+  real_t T = X[2] + eps;
+
+  #if 0
+
+  real_t uxx = 6400*pow(x, 2)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) - 160*pow(x, 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + (-80*pow(x, 2) + 80*pow(y, 2) + 12.800000000000002*pow(t + 1, 2))*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t uxy = -6400*x*y*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + 160*x*y*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t uxt = 80*x*(0.32000000000000006*t + 0.32000000000000006)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) - 1600*x*(0.64000000000000012*t + 0.64000000000000012)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t uyy = 6400*pow(y, 2)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) - 160*pow(y, 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + (80*pow(x, 2) - 80*pow(y, 2) - 12.800000000000002*pow(t + 1, 2))*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t uyt = -80*y*(0.32000000000000006*t + 0.32000000000000006)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + 1600*y*(0.64000000000000012*t + 0.64000000000000012)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+  real_t utt = (-12.800000000000002*t - 12.800000000000002)*(0.32000000000000006*t + 0.32000000000000006)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) - 20*(-12.800000000000002*t - 12.800000000000002)*(0.64000000000000012*t + 0.64000000000000012)*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2)) + (12.800000000000002*pow(x, 2) - 12.800000000000002*pow(y, 2) - 2.0480000000000009*pow(t + 1, 2))*exp(-20*pow(-pow(x, 2) + pow(y, 2) + 0.16000000000000003*pow(t + 1, 2), 2));
+
+  symd<real_t> h(3);
+
+  real_t f = 1e2;
+
+  h(0,0) = f * uxx;
+  h(0,1) = f * uxy;
+  h(0,2) = f * uxt;
+
+  h(1,1) = f * uyy;
+  h(1,2) = f * uyt;
+
+  h(2,2) = f * utt;
+
+//  h = h * pow( numerics::det(h) , -1/(5) );
+
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = numerics::eig(h);
+
+  for (int i = 0; i < 3; i++)
+    decomp.first[i] = fabs(decomp.first[i]);
+
+  #else
+
+  real_t r = sqrt( x*x + y*y ) +0.0001; // meh
+  real_t t = atan2( y , x );
+
+  // initial and final blast radii
+  real_t r0 = 0.4;
+  real_t rf = 0.8;
+
+  // cone angle
+  real_t alpha = atan2(1.0,(rf-r0));
+
+  // eigenvectors are normal and tangents to the cone
+  matd<real_t> Q(3,3);
+  Q(0,0) =  sin(alpha)*cos(t);
+  Q(0,1) = -sin(t);
+  Q(0,2) =  cos(alpha)*cos(t);
+
+  Q(1,0) =  sin(alpha)*sin(t);
+  Q(1,1) =  cos(t);
+  Q(1,2) =  cos(alpha)*sin(t);
+
+  Q(2,0) = -cos(alpha);
+  Q(2,1) =  0.0;
+  Q(2,2) =  sin(alpha);
+
+  real_t hz = 0.5; // controls anisotropy in temporal direction
+  real_t hu = 0.1; // uniform spacing
+  real_t h0 = 0.001;
+  real_t hmin = 0.01; // minimum thickness in gradation layer
+  real_t delta = 0.1; // thickness of gradation layer
+
+  //real_t T = x[2];
+  real_t rho0 = r0 +(rf-r0)*T; // blast speed is derivative wrt T
+
+  // spacing in radial direction
+  real_t hr = h0 +2*(hu-h0)*abs(r-rho0);
+
+  // spacing in tangential direction, nicely graded
+  real_t ht = hu;
+  if (fabs(r-rho0)<=delta)
+    ht = (hu -hmin)*fabs(r-rho0)/delta +hmin;
+
+  // set the eigenvalues
+  vecd<real_t> L(3);
+  L(0) = 1./(hr*hr);
+  L(1) = 1./(ht*ht);
+  L(2) = 1./(hz*hz);
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
+
+  #endif
+  symd<real_t> m(decomp);
+  return m;
+
+}
+
+#define MIN(a,b) ((a < b) ? (a) : (b));
+
+symd<real_t>
 MetricField_Tesseract_Wave::operator()( const real_t* x ) const {
   real_t eps = 0.001; // offset for singularity at origin
   real_t X = x[0] +eps;
@@ -177,29 +426,43 @@ MetricField_Tesseract_Wave::operator()( const real_t* x ) const {
   Q(3,3) =  sin(alpha);
 
   real_t rho0 = r0 +(rf-r0)*T; // blast speed is derivative wrt T
+
+  #if 0
   real_t h0 = 0.0025;
   real_t hu = 0.125;
   real_t hmin = 0.05;
   real_t delta = 0.1;
   real_t ht = 0.5;
+  #else
+  real_t h0 = 0.0025;
+  real_t hu = 0.25;
+  real_t hmin = h0;
+  real_t delta = 0.25;
+  real_t ht = 0.5;
+  #endif
 
   vecd<real_t> L(4);
   real_t hrho = h0 +2*(hu-h0)*fabs(RHO-rho0);
+
+  #if 0
   real_t htheta = hu;
   real_t hphi = hu;
-
   if (fabs(RHO-rho0)>delta)
     htheta = hu;
   else htheta = (hu -hmin)*fabs(RHO-rho0)/delta +hmin;
   hphi = htheta;
+  #else
+  delta = 0.1;
+  real_t d0 = 10*MIN( fabs(RHO - rho0) , delta );
+  real_t htheta = 0.025 + d0 *(39./400.);
+  real_t hphi   = htheta;
+  #endif
 
   L[0] = 1./(hrho*hrho);
   L[1] = 1./(htheta*htheta);
   L[2] = 1./(hphi*hphi);
   L[3] = 1./(ht*ht);
 
-  for (coord_t d = 0; d < 4; d++)
-    L[d] *= 2;
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {L,Q};
   symd<real_t> m(decomp);
@@ -248,19 +511,20 @@ MetricField_UGAWG_Polar1::operator()( const real_t* X ) const {
   return m;
 }
 
-#define MIN(a,b) (a < b) ? (a) : (b);
 
 symd<real_t>
 MetricField_UGAWG_Polar2::operator()( const real_t* X ) const {
   real_t eps = 1e-3;
+  real_t c[3] = { 0.4 , 0.4 , 0.0 };
   real_t x[3] = { X[0]+eps, X[1]+eps, X[2] };
+  for (coord_t d = 0; d < 3; d++) x[d] -= c[d];
   real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
   real_t t = atan2( x[1] , x[0] );
 
   real_t hz = 0.1;
-  real_t ht = 0.1;
-  real_t h0 = 1e-3;
-  real_t hr = h0 +2.*(0.1 -h0)*fabs( r -0.5 );
+  real_t ht = hz;
+  real_t h0 = hz/100.0;
+  real_t hr = h0 +2.*(hz -h0)*fabs( r -0.5 );
 
   #if 0
   real_t d = 10*(0.6 -r);
@@ -284,10 +548,69 @@ MetricField_UGAWG_Polar2::operator()( const real_t* X ) const {
   Q(2,1) = 0.0;
   Q(2,2) = 1.0;
 
+  hz = 0.5;
   vecd<real_t> lambda(3);
   lambda[0] = 1./(hr*hr);
   lambda[1] = 1./(ht*ht);
   lambda[2] = 1./(hz*hz);
+
+  std::pair< vecd<real_t> , matd<real_t> > decomp = {lambda,Q};
+  symd<real_t> m(decomp);
+  return m;
+}
+
+symd<real_t>
+MetricField_Tesseract_MovingCylinder::operator()( const real_t* X ) const {
+  real_t eps = 1e-3;
+  real_t T = X[3];
+  real_t c[3] = { 0.2*T , 0.2*T , 0.0 };
+  real_t x[3] = { X[0]+eps, X[1]+eps, X[2] };
+  for (coord_t d = 0; d < 3; d++) x[d] -= c[d];
+  real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
+  real_t t = atan2( x[1] , x[0] );
+
+  real_t hz = 0.125; // 0.1
+  real_t ht = hz;
+  real_t h0 = hz/100.0;
+  real_t hr = h0 +2.*(hz -h0)*fabs( r -0.5 );
+  real_t htime = 0.5;
+
+  #if 0
+  real_t d = 10*(0.6 -r);
+  if (d < 0.0) ht = 0.1;
+  else ht = d/40. +0.1*(1. -d);
+  #else
+  real_t d0 = MIN( 10.0 * fabs(r - 0.5) , 1.0 );
+  ht = 0.1*d0 + 0.025*(1.0 -d0);
+  #endif
+
+  matd<real_t> Q(4,4);
+  Q(0,0) = cos(t);
+  Q(0,1) = -sin(t);
+  Q(0,2) = 0.0;
+  Q(0,3) = 0.0;
+
+  Q(1,0) = sin(t);
+  Q(1,1) = cos(t);
+  Q(1,2) = 0.0;
+  Q(1,3) = 0.0;
+
+  Q(2,0) = 0.0;
+  Q(2,1) = 0.0;
+  Q(2,2) = 1.0;
+  Q(2,3) = 0.0;
+
+  Q(3,0) = 0.0;
+  Q(3,1) = 0.0;
+  Q(3,2) = 0.0;
+  Q(3,3) = 1.0;
+
+  hz = 0.5;
+  vecd<real_t> lambda(4);
+  lambda[0] = 1./(hr*hr);
+  lambda[1] = 1./(ht*ht);
+  lambda[2] = 1./(hz*hz);
+  lambda[3] = 1./(htime*htime);
 
   std::pair< vecd<real_t> , matd<real_t> > decomp = {lambda,Q};
   symd<real_t> m(decomp);

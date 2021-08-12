@@ -37,6 +37,7 @@ Cavity<type>::Cavity( Topology<type>& _topology ) :
   node_removal_allowed_(true),
   enlarge_(true),
   check_visibility_(true),
+  save_boundary_(false),
   star_(0),
   boundary_( topology_.points() , topology_.number()-1 ),
   minvol_(1e-10),
@@ -82,7 +83,7 @@ bool
 Cavity<type>::compute( const index_t p , real_t* x , const std::vector<index_t>& C0 ) {
 
   cavity_.clear();
-  boundary_.clear();
+  if (!save_boundary_) boundary_.clear();
   nodes_.clear();
   removed_nodes_.clear();
 
@@ -144,13 +145,17 @@ template<typename type>
 bool
 Cavity<type>::compute_boundary()
 {
-  avro_assert( boundary_.nb()==0 );
+  if (save_boundary_) return true; // assume boundary of the cavity is already computed
+  if (!save_boundary_) avro_assert( boundary_.nb()==0 );
   avro_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
 
   idx_.clear();
 
   const index_t nf = topology_.number()+1;
   std::vector<index_t> b(nf-1);
+
+  cavity_set_.clear();
+  std::copy( cavity_.begin() , cavity_.end() , std::inserter(cavity_set_,cavity_set_.end() ) );
 
   // loop through all cavity elements
   for (index_t k=0;k<nb_cavity();k++)
@@ -174,7 +179,8 @@ Cavity<type>::compute_boundary()
         avro_assert( neighbour>=0 );
 
       // skip neighbours that are already in the cavity
-      if (contains(index_t(neighbour)) && topology_.closed())
+      if (topology_.closed() && cavity_set_.find(index_t(neighbour)) != cavity_set_.end() )
+      //if (contains(index_t(neighbour)) && topology_.closed())
       {
         continue;
       }
@@ -404,7 +410,11 @@ Cavity<type>::enlarge( bool verbose )
   std::vector<const real_t*> xk(nf);
 
   std::vector<index_t> C; // new cavity elements
+  C.reserve( nb_cavity() );
   avro_assert_msg( topology_.closed() , "requires implementation + testing without closed topologies" );
+
+  cavity_set_.clear();
+  std::copy( cavity_.begin() , cavity_.end() , std::inserter(cavity_set_,cavity_set_.end() ) );
 
   // loop through the current cavity
   for (index_t k=0;k<nb_cavity();k++)
@@ -425,7 +435,8 @@ Cavity<type>::enlarge( bool verbose )
 
       // skip neighbours that are already in the cavity
       // because then this is not a boundary facet
-      if (contains(index_t(neighbour)) && topology_.closed())
+      //if (contains(index_t(neighbour)) && topology_.closed())
+      if (topology_.closed() && cavity_set_.find(index_t(neighbour)) != cavity_set_.end() )
       {
         if (verbose) printf("topology is closed and neighbour %d already in cavity\n",neighbour);
         continue;
@@ -460,7 +471,7 @@ Cavity<type>::enlarge( bool verbose )
       xk[j] = point_.data();
 
       // check the orientation
-      real_t vol = numerics::simplex_volume(xk,dim);
+      real_t vol = numerics::simplex_volume(xk,topology_.points().dim());
 #else
       real_t vol = get_volume( topology_ , entity_ , cavity_[k] , j , point_.data() );
 #endif
@@ -476,8 +487,9 @@ Cavity<type>::enlarge( bool verbose )
         }
 
         // add the neighbour
-        if (neighbour>=0)
+        if (neighbour>=0) {
           C.push_back( index_t(neighbour) );
+        }
       }
     }
   }
@@ -623,8 +635,8 @@ Cavity<type>::apply()
   // the inserted element to fill
   std::vector<index_t> t(this->number_+1);
 
-  // connect the boundary da to the candidate star_
-  avro_assert( idx_.size()==nb_bnd() );
+  // connect the boundary to the candidate star_
+  avro_assert_msg( idx_.size() == nb_bnd() , "|idx| = %lu, |bnd| = %lu" , idx_.size() , nb_bnd() );
   for (index_t k=0;k<nb_bnd();k++)
   {
     // skip cavity boundary facets which do not contain the proposed star_
@@ -754,7 +766,7 @@ Cavity<type>::clear()
   Topology<type>::clear();
   cavity_.clear();
   nodes_.clear();
-  boundary_.clear();
+  if (!save_boundary_) boundary_.clear();
 }
 
 template<typename type>

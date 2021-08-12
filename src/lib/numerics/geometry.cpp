@@ -111,15 +111,41 @@ volume( const std::vector<const real_t*>& x , const coord_t dim )
 }
 
 real_t
-simplex_volume( const std::vector<const real_t*>& x , const coord_t dim )
+simplex_volume_inexact( const std::vector<const real_t*>& x , const coord_t dim ) {
+
+  coord_t n = x.size() - 1;
+  if (n != dim) return numerics::volume_nd(x,dim);
+
+  matd<real_t> J(dim,dim);
+  for (index_t j = 0; j < dim; j++)
+  for (index_t d = 0; d < dim; d++)
+    J(d,j) = x[j+1][d] -x[0][d];
+  return numerics::det(J)/numerics::factorial(dim);
+}
+
+real_t
+simplex_volume( const std::vector<const real_t*>& x , const coord_t dim , bool exact )
 {
+  if (!exact) {
+    return simplex_volume_inexact(x,dim);
+  }
   coord_t n = x.size() -1;
   if (n==2 && dim==2) return volume2(x);
   if (n==3 && dim==3) return volume3(x);
   if (n==4 && dim==4) return volume4(x);
-  printf("requested exact %u-simplex volume with dim = %u",n,dim);
-  avro_assert_not_reached;
-  return 0.;
+  //printf("requested exact %u-simplex volume with dim = %u",n,dim);
+  //avro_assert_not_reached;
+  return numerics::volume_nd(x,dim);
+}
+
+real_t
+heron( const real_t* x0 , const real_t* x1 , const real_t* x2 , coord_t dim ) {
+
+  real_t a = distance(x0,x1,dim);
+  real_t b = distance(x0,x2,dim);
+  real_t c = distance(x1,x2,dim);
+  real_t s = 0.5*(a+b+c);
+  return std::sqrt(s*(s-a)*(s-b)*(s-c));
 }
 
 real_t
@@ -127,6 +153,10 @@ volume_nd( const std::vector<const real_t*>& x , const coord_t dim )
 {
   // assume this is a simplex because there's no other way to compute it
   coord_t n = x.size() -1;
+
+  if (n == 2) {
+    return heron(x[0],x[1],x[2],dim);
+  }
 
   matd<real_t> B(n+2,n+2);
   B(0,0) = 0;

@@ -65,6 +65,10 @@ MetricField<type>::MetricField( Topology<type>& topology , MetricAttachment& fld
 	}
 
 	this->element().set_basis( BasisFunctionCategory_Lagrange );
+
+	coord_t dim = topology_.points().dim();
+	if (topology_.element().parameter()) dim = topology_.points().udim();
+	edge_.resize(dim);
 }
 
 template<typename type>
@@ -85,7 +89,7 @@ MetricField<type>::operator() ( const Points& points , index_t p ) {
 real_t
 geometric_interpolation( const symd<real_t>& m0,
 	                       const symd<real_t>& m1,
-											   const vecd<real_t>& edge ) {
+											   const real_t* edge ) {
 	real_t l0_sqr = numerics::quadratic_form(m0,edge);
 	real_t l1_sqr = numerics::quadratic_form(m1,edge);
 	real_t l0 = std::sqrt( l0_sqr );
@@ -110,7 +114,6 @@ geometric_interpolation( const symd<real_t>& m0,
 	if (r!=r) {
 		printf("l0_sqr = %g, l1_sqr = %g\n",l0_sqr,l1_sqr);
 		printf("l0 = %g, l1 = %g\n",l0,l1);
-		edge.dump();
 	}
 	avro_assert_msg(r>0., "r = %.20e",r);
 	return lm*(r -1.)/( r*std::log(r) );
@@ -142,10 +145,10 @@ MetricField<type>::length( index_t n0 , index_t n1 ) const {
 	}
 	coord_t dim = topology_.points().dim();
 	if (topology_.element().parameter()) dim = topology_.points().udim();
-	std::vector<real_t> edge0( dim );
-	topology_.element().edge_vector( attachment_.points() , n0 , n1 , edge0.data() , entity );
-	vecd<real_t> edge(dim,edge0.data());
-  return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge );
+	//std::vector<real_t> edge0( dim );
+	topology_.element().edge_vector( attachment_.points() , n0 , n1 , edge_.data() , entity );
+	//vecd<real_t> edge(dim,edge0.data());
+  return geometric_interpolation( attachment_[n0] , attachment_[n1] , edge_.data() );
 }
 
 template<typename type>
@@ -180,7 +183,7 @@ MetricField<type>::volume( const Topology<type>& topology , const index_t k ) {
 	}
 
 	real_t sqrtdetM = dmax;
-	real_t v = sqrtdetM*element.volume(topology.points(),V,NV);
+	real_t v = sqrtdetM*element.volume(topology.points(),V,NV,false);
 	return v;
 }
 
@@ -239,22 +242,22 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k ) {
 
 	// compute the edge lengths under m
   real_t l = 0.,lj;
-	vecd<real_t> e(dim);
+	//vecd<real_t> e(dim);
   for (index_t j = 0; j < element.nb_edges(); j++) {
 		// retrieve the local edge indices
     index_t p0 = element.edge(j,0);
     index_t p1 = element.edge(j,1);
 
 		// get the edge vector and compute the length using the metric with maximum determinant
-		topology_.element().edge_vector( attachment_.points() , V[p0] , V[p1] , e.data() , entity );
-		lj = numerics::quadratic_form( M , e );
+		topology_.element().edge_vector( attachment_.points() , V[p0] , V[p1] , edge_.data() , entity );
+		lj = numerics::quadratic_form( M , edge_.data() );
 
 		// add the contribution to the denominator
     l  += lj;
   }
 
 	// compute the volume under m
-	real_t v = sqrtdetM*element.volume(topology.points(),V,NV);
+	real_t v = sqrtdetM*element.volume(topology.points(),V,NV,false);
 	if (v < 0)
 	{
 		for (index_t j = 0;j < NV; j++)
@@ -271,7 +274,11 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k ) {
 template<typename type>
 bool
 MetricField<type>::check( Topology<type>& topology ) {
-  if (topology.points().nb() != attachment_.nb()) return false;
+
+  if (topology.points().nb() != attachment_.nb()) {
+		printf("nb_points = %lu, nb_attachment = %lu\n",topology.points().nb(),attachment_.nb());
+		return false;
+	}
 
 	bool success = true;
 	for (index_t k=0;k<attachment_.nb();k++) {
@@ -322,13 +329,17 @@ MetricField<type>::find( index_t n0 , index_t n1 , real_t* x ) {
 
 template<typename type>
 bool
-MetricField<type>::add( index_t n0 , index_t n1 , index_t ns , real_t* x ) {
+MetricField<type>::add( index_t n0 , index_t n1 , index_t ns , real_t* x , int idx ) {
 	Metric mp(number_);
 	index_t g0 = attachment_[n0].elem();
 	index_t g1 = attachment_[n1].elem();
 	int ielem = interpolation_->eval( attachment_.points() , ns , {g0,g1} , mp );
-	if (ielem<0) return false;
-	attachment_.add( mp , index_t(ielem) );
+	if (ielem < 0) return false;
+
+	if (idx < 0)
+		attachment_.add( mp , index_t(ielem) );
+	else
+		attachment_.assign( ns , mp , index_t(ielem) );
 
 	// note: this check will fail if the vertex is intended to be added after
   // its corresponding tensor is computed

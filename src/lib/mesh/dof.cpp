@@ -79,7 +79,7 @@ DOF<Metric>::interpolate( const index_t* idx , index_t nv , const std::vector<re
       //std::cout << (*this)( idx[k],0 ) << std::endl;
       //std::cout << numerics::logm( (*this)(idx[k],0)) << std::endl;
     }
-    print_inline(phi);
+    //print_inline(phi);
     //std::cout << T << std::endl;
     return false;
   }

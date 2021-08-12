@@ -569,6 +569,32 @@ Points::move_to( index_t k0 , index_t k1 )
 }
 
 void
+Points::move_to_front( const std::vector<index_t>& idx ) {
+
+	DOF<real_t>::move_to_front(idx);
+	u_.move_to_front(idx);
+	body_.move_to_front(idx);
+	primitive_.move_to_front(idx);
+	fixed_.move_to_front(idx);
+	global_.move_to_front(idx);
+	age_.move_to_front(idx);
+}
+
+void
+Points::batch_erase( index_t n ) {
+
+	// remove the first n points
+
+	DOF<real_t>::batch_erase( n );
+	u_.batch_erase(n);
+	body_.batch_erase(n);
+	primitive_.batch_erase(n);
+	fixed_.batch_erase(n);
+	global_.batch_erase(n);
+	age_.batch_erase(n);
+}
+
+void
 Points::clear()
 {
 	DOF<real_t>::clear();
@@ -580,6 +606,29 @@ Points::clear()
 	fixed_.clear();
 	global_.clear();
 	age_.clear();
+}
+
+void
+Points::reserve( index_t n ) {
+
+	DOF<real_t>::reserve(n*dim_);
+	u_.reserve(n*udim_);
+	body_.reserve(n);
+	primitive_.reserve(n);
+	fixed_.reserve(n);
+	global_.reserve(n);
+	age_.reserve(n);
+}
+
+void
+Points::shrink_to_fit() {
+	DOF<real_t>::shrink_to_fit();
+	u_.shrink_to_fit();
+	body_.shrink_to_fit();
+	primitive_.shrink_to_fit();
+	fixed_.shrink_to_fit();
+	global_.shrink_to_fit();
+	age_.shrink_to_fit();
 }
 
 } // avro

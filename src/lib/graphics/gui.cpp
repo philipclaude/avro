@@ -1,4 +1,6 @@
+#include "graphics/bsp.h"
 #include "graphics/gui.h"
+#include "graphics/postscript.h"
 #include "graphics/primitives.h"
 #include "graphics/vao.h"
 #include "graphics/window.h"
@@ -23,6 +25,7 @@ GUI::GUI( Window& window ) :
  window_(window),
  count_(5)
 {
+  #if AVRO_WITH_GL
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   //context_ = ImGui::GetIO();
@@ -41,6 +44,8 @@ GUI::GUI( Window& window ) :
   // setup Platform/Renderer bindings
   ImGui_ImplGlfw_InitForOpenGL(window_.window(), true);
   ImGui_ImplOpenGL3_Init(glsl_version);
+
+  #endif
 }
 
 std::string
@@ -63,6 +68,8 @@ convert_to_char( const std::vector<std::string>& s ) {
 
 void
 GUI::draw() {
+
+  #if AVRO_WITH_GL
 
   //bool capture_mouse = ImGui::GetIO().WantCaptureMouse;
   ImGuiWindowFlags window_flags = 0;
@@ -88,6 +95,7 @@ GUI::draw() {
   ImGui::SetNextItemWidth(200);
 
   label_counter = 0;
+  std::string label;
 
   if (ImGui::Begin("Controls",&active,window_flags))
   {
@@ -99,19 +107,63 @@ GUI::draw() {
     }
     ImGui::SameLine();
     if (ImGui::Button("EPS")) {
-
       ImGui::OpenPopup("eps-save");
     }
 
     if (ImGui::BeginPopup("eps-save")) {
 
-      ImGui::Button("save");
+      label = unique_label("eps");
+      ImGui::SetNextItemWidth(window_.width());
+      char filename[128];
+      sprintf(filename,"%s/build/test.eps",AVRO_SOURCE_DIR.c_str());
+      ImGui::InputText(label.c_str(),filename,128,0);
+
+      if (ImGui::Button("save")) {
+
+        graphics::BSPTriangles bsp_triangles;
+        mat4 ms;
+        int i = 0;
+        bsp_triangles.build( window_.plot(i) , window_.camera().view_matrix() , window_.camera().projection_matrix() , ms );
+
+        BSPTree tree;
+        tree.build(bsp_triangles);
+        std::vector<BSPTriangle*> triangles;
+        const vec3& eye = window_.camera().eye();
+        tree.get_triangles( eye , triangles );
+
+        std::string eps_filename(filename);
+        PostScriptWriter writer(eps_filename);
+        writer.begin( window_.width() , window_.height() );
+        writer.write( triangles , window_.camera().view_matrix() , window_.camera().projection_matrix() );
+        writer.end();
+
+      }
+      ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopup("view-save")) {
+
+      label = unique_label("view");
+      ImGui::SetNextItemWidth(window_.width());
+      char filename[128];
+      sprintf(filename,"%s/build/view.json",AVRO_SOURCE_DIR.c_str());
+      ImGui::InputText(label.c_str(),filename,128,0);
+
+      std::string view_filename(filename);
+
+      if (ImGui::Button("save")) {
+        window_.save_view(filename);
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("load")) {
+        window_.load_view(filename);
+      }
       ImGui::EndPopup();
     }
 
     ImGui::SameLine();
     if (ImGui::Button("View")) {
-      printf("load view matrix (or parameters)\n");
+      ImGui::OpenPopup("view-save");
     }
 
     ImGui::SameLine();
@@ -141,7 +193,6 @@ GUI::draw() {
     }
     ImGui::Separator();
 
-    std::string label;
     for (index_t i = 0; i < window_.nb_plots(); i++) {
 
       // get the active vao information
@@ -162,6 +213,7 @@ GUI::draw() {
           // pick which vao we need to render
           if (current_mesh == 0) current_mesh = 1;
           window_.plot(i).set_active( current_mesh-1 );
+          window_.plot(i).compute_center();
         }
 
         VertexAttributeObject& vao = window_.plot(i).active_vao();
@@ -355,6 +407,8 @@ GUI::draw() {
   #endif
 
   glfwSwapBuffers(window_.window());
+
+  #endif
 }
 
 
