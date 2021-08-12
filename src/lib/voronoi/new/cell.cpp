@@ -1,6 +1,7 @@
 #include "mesh/points.h"
 #include "numerics/geometry.h"
 #include "numerics/mat.hpp"
+#include "element/quadrature.h"
 #include "numerics/vec.hpp"
 #include "voronoi/new/cell.h"
 
@@ -65,6 +66,7 @@ Cell::clear( bool free ) {
   volume_ = 0.0;
   boundary_area_ = 0.0;
   facets_.clear();
+  energy_ = 0.0;
 
   if (free) {
     points_.data().shrink_to_fit();
@@ -211,6 +213,34 @@ fan_triangulation( const std::vector<index_t>& edges , std::vector<index_t>& tri
   }
 }
 
+real_t
+Cell::compute_energy( const std::vector<const real_t*>& X ) const {
+
+  coord_t n = domain_.number();
+  avro_assert( X.size() == n+1 );
+
+  int quad_order = 2;
+  const matd<real_t>& B = __store_simplex_lagrange__.get_basis(n,1,quad_order);
+  const Quadrature& Q = __store_simplex_lagrange__.quadrature(n,quad_order);
+  avro_assert( B.m() == X.size() );
+
+  real_t e = 0.0;
+  for (index_t k = 0; k < B.n(); k++) {
+
+    // evaluate the coordinate at this quadrature point
+    std::vector<real_t> p(ambient_dim_,0.0);
+    for (index_t i = 0; i < B.m(); i++)
+    for (coord_t d = 0; d < ambient_dim_; d++)
+      p[d] += B(i,k)*X[i][d];
+
+    // evaluate the energy integrand
+    real_t w = Q.w(k); // quadrature weight
+    e += w*numerics::distance2( p.data() , delaunay_[site_] , ambient_dim_ );
+  }
+
+  return e;
+}
+
 void
 Cell::generate_simplices() {
 
@@ -246,6 +276,8 @@ Cell::generate_simplices() {
       // add the volume term
       real_t vk = fabs(numerics::simplex_volume( X , ambient_dim_ , false ));
       volume_ += vk;
+
+      energy_ += compute_energy(X)*vk;
 
       // compute the centroid of this triangle
       std::vector<real_t> ck( ambient_dim_ , 0.0 );
@@ -433,6 +465,7 @@ Cell::generate_simplices() {
         // add the volume term
         real_t vk = fabs(numerics::simplex_volume( X , 3 , false ));
         volume_ += vk;
+        energy_ += compute_energy(X)*vk;
 
         // compute the area in 3d
         real_t aij = fabs(numerics::simplex_volume( Y , 3 , false ) );

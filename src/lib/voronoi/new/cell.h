@@ -76,6 +76,11 @@ public:
   void finish_facets();
   real_t boundary_area() const { return boundary_area_; }
 
+  const std::vector<real_t>& moment() { return moment_; }
+
+  real_t compute_energy( const std::vector<const real_t*>& X ) const;
+  real_t energy() const { return energy_; }
+
 protected:
 
   void initialize( index_t elem );
@@ -120,6 +125,7 @@ private:
   // cell terms
   real_t volume_;
   std::vector<real_t> moment_;
+  real_t energy_;
 
   // face terms
   std::map<int,PowerFacet> facets_;

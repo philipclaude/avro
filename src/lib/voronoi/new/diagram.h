@@ -76,10 +76,19 @@ public:
       cell_[k] = std::make_shared<Cell>( k , sites_ , domain_ , *search_ );
       cell_[k]->set_ambient_dimension(ambient_dim_);
     }
+    nu_.resize(sites_.nb() , 0.0 );
+    weights_.resize( sites_.nb() , 0.0 );
   }
 
   void set_sites( const real_t* x ) {
-    avro_implement;
+    index_t i = 0;
+    for (index_t k = 0; k < sites_.nb(); k++)
+    for (coord_t d = 0; d < sites_.dim(); d++)
+      sites_[k][d] = x[i++];
+
+    if (search_ == nullptr)
+      search_ = GEO::NearestNeighborSearch::create(sites_.dim(),"ANN");
+    search_->set_points( sites_.nb() , sites_[0] );
   }
 
   void set_sites( const Points& p ) {
@@ -95,12 +104,22 @@ public:
   }
   void set_weights( const real_t* x );
 
+  void set_target_mass( const std::vector<real_t>& nu ) { nu_ = nu; }
+
   void compute() {
+
+    Topology<Polytope>::clear();
+    vertices_.clear();
+    triangles_.clear();
+    triangle2site_.clear();
+    edges_.clear();
+    polytope2site_.clear();
 
     clock_t t0 = clock();
 
-    dc_dx_.resize( sites_.nb() * ambient_dim_ );
-    dc_dw_.resize( sites_.nb() );
+    de_dx_.resize( sites_.nb() * ambient_dim_ , 0.0 );
+    de_dw_.resize( sites_.nb() , 0.0 );
+    energy_ = 0.0;
 
     #if 1
     typedef PowerDiagram thisclass;
@@ -114,13 +133,22 @@ public:
     #endif
 
     clock_t t1 = clock();
-    printf("--> t_clip = %g\n",(real_t(t1-t0)/real_t(CLOCKS_PER_SEC))/ProcessCPU::maximum_concurrent_threads());
+    time_voronoi_ = real_t(t1-t0)/real_t(CLOCKS_PER_SEC)/ProcessCPU::maximum_concurrent_threads();
   }
 
   void compute( index_t k ) {
     std::vector<index_t> ball;
     domain_.get_candidate_elems( sites_[k] , ball );
     cell_[k]->compute( ball );
+
+    const std::vector<real_t>& moment = cell_[k]->moment();
+    real_t mass = cell_[k]->volume();
+
+    for (coord_t d = 0; d < ambient_dim_; d++)
+      de_dx_[k*ambient_dim_+d] = 2.0*( mass*sites_[k][d] - moment[d] );
+
+    de_dw_[k] = mass - nu_[k];
+    energy_ += cell_[k]->energy() + weights_[k] * (mass - nu_[k]);
   }
 
   void accumulate() {
@@ -180,6 +208,14 @@ public:
   real_t volume() const { return volume_; }
   real_t boundary_area() const { return boundary_area_; }
 
+  void start();
+  void optimize_points( index_t nb_iter );
+  void optimize_weights( index_t nb_iter , const std::vector<real_t>& mass );
+
+  index_t& iteration() { return iteration_; }
+
+  real_t evaluate_objective( index_t n , const real_t* x , real_t* grad );
+
 private:
 
   Points sites_;
@@ -196,9 +232,14 @@ private:
   real_t boundary_area_;
   coord_t ambient_dim_;
 
+  real_t energy_;
+  std::vector<real_t> nu_; // target mass
   std::vector<real_t> weights_;
   std::vector<real_t> de_dx_;
   std::vector<real_t> de_dw_;
+  index_t mode_;
+  index_t iteration_;
+  real_t time_voronoi_;
 
   class SiteField : public Field<Polytope,real_t> {
   public:

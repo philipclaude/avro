@@ -7,7 +7,7 @@
 #include "voronoi/new/cell.h"
 #include "voronoi/new/diagram.h"
 
-#define SPHERE 1
+#define SPHERE 0
 
 using namespace avro;
 
@@ -19,9 +19,9 @@ UT_TEST_CASE( test_2d )
 
   static coord_t number = 2;
   static coord_t dim = number;
-  index_t nb_points = 2e3;
+  index_t nb_points = 1e3;
 
-  index_t N = 100;
+  index_t N = 2;
   std::vector<index_t> dims(number,N);
   CKF_Triangulation ckf(dims);
 
@@ -104,6 +104,8 @@ UT_TEST_CASE( test_2d )
   printf("computing cells\n");
   diagram.compute();
   printf("done computing cells\n");
+
+  diagram.optimize_points(10);
 
   if (nb_points > 3e5 && number > 2) return;
   diagram.accumulate();
