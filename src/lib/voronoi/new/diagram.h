@@ -46,12 +46,12 @@ public:
     real_t distance;
     index_t nearest;
     search_->get_nearest_neighbors( 1 , x , &nearest , &distance );
-    if (nearest >= nb()) {
+    if (nearest >= lifted_points_.nb()) {
       lifted_points_.print();
       for (coord_t d = 0; d < lifted_points_.dim(); d++)
         printf("x[%u] = %g\n",d,x[d]);
     }
-    avro_assert( nearest < nb() );
+    avro_assert_msg( nearest < lifted_points_.nb() , "nearest = %lu" , nearest );
     inverse().ball( nearest , ball );
   }
 
@@ -74,6 +74,7 @@ public:
 
   // sets the ambient dimension (2d or 3d)
   void set_ambient_dimension( coord_t dim ) { ambient_dim_ = dim; }
+  coord_t ambient_dimension() const { return ambient_dim_; }
 
   // creates voronoi cells and sites the target mass and weight arrays
   // should only be called once
@@ -130,6 +131,7 @@ public:
     de_dx_.resize( sites_.nb() * ambient_dim_ , 0.0 );
     de_dw_.resize( sites_.nb() , 0.0 );
     centroid_.resize( sites_.nb() * ambient_dim_ , 0.0 );
+    cell_volume_.resize( sites_.nb() , 0.0 );
 
     // reset the energy, volume and area
     energy_ = 0.0;
@@ -137,9 +139,9 @@ public:
     area_   = 0.0;
 
     // compute the power diagram
-    printf("computing the power diagram in %lud\n",sites_.dim());
+    //printf("computing the power diagram in %ud\n",sites_.dim());
     clock_t t0 = clock();
-    #if 0
+    #if 1
     typedef PowerDiagram thisclass;
     ProcessCPU::parallel_for(
       parallel_for_member_callback( this , &thisclass::compute ), 0,cell_.size()
@@ -167,6 +169,7 @@ public:
     // retrieve the mass and moment data
     const std::vector<real_t>& moment = cell_[k]->moment();
     real_t volume_k = cell_[k]->volume();
+    cell_volume_[k] = volume_k;
 
     #if 0 // this check should only be used when weights are 0, oterwise cells could indeed vanish
     if (volume_k <= 0.0) {
@@ -194,10 +197,10 @@ public:
       de_dx_[k*ambient_dim_+d] = 2.0*( volume_k*sites_[k][d] - moment[d] );
 
     // compute the gradient of the energy with respect to the weights
-    de_dw_[k] = volume_k - nu_[k];
+    de_dw_[k] = nu_[k] - volume_k;
 
     // add the contribution of the cell energy to the total
-    energy_   += cell_[k]->energy() + weight_[k] * (volume_k - nu_[k]);
+    energy_   += cell_[k]->energy() + weight_[k] * (nu_[k] - volume_k );
   }
 
   void accumulate() {
@@ -258,16 +261,22 @@ public:
   // returns the volume and boundary area so that we can check these in unit tests
   real_t volume() const { return volume_; }
   real_t area() const { return area_; }
+  const std::vector<real_t>& cell_volume() const { return cell_volume_; }
 
   // optimizers
   void optimize_points( index_t nb_iter );
   void optimize_points_lloyd( index_t nb_iter );
   void optimize_weights( index_t nb_iter , const std::vector<real_t>& mass );
+  void optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>& mass );
 
   // optimization-related functions
   void start();
   index_t& iteration() { return iteration_; }
   real_t evaluate_objective( index_t n , const real_t* x , real_t* grad );
+
+  const Points& sites() const { return sites_; }
+  index_t nb_cells() const { return cell_.size(); }
+  const Cell& cell( index_t k ) const { return *cell_[k].get(); }
 
 private:
 
@@ -289,6 +298,7 @@ private:
   std::vector<real_t> de_dx_;    // deriv. of CVT energy w.r.t. site coordinates
   std::vector<real_t> de_dw_;    // deriv. of CVT energy w.r.t. site weights
   std::vector<real_t> centroid_; // centroids of the power cells
+  std::vector<real_t> cell_volume_;
 
   // optimization-related data
   index_t mode_;         // mode = 0 for coordinate optimiation, mode = 1 for weight optimization

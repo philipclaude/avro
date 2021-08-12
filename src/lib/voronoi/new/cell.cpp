@@ -586,6 +586,7 @@ Cell::finish_facets() {
     }
     else {
       facet.lij = facet.dij;
+      facet.pj  = h;
     }
 
     // finish off the centroid calculation by dividing by the area

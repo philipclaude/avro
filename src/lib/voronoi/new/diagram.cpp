@@ -1,9 +1,13 @@
+#include "numerics/geometry.h"
 #include "numerics/nlopt_result.h"
 
 #include "voronoi/new/diagram.h"
 
 #include <nlopt.hpp>
 #include <HLBFGS/HLBFGS.h>
+
+#include <Eigen/SparseLU>
+#include<Eigen/IterativeLinearSolvers>
 
 namespace avro
 {
@@ -59,18 +63,23 @@ PowerDiagram::evaluate_objective( index_t n , const real_t* x , real_t* grad ) {
 		real_t wmax = * std::max_element( weight_.begin() , weight_.end() );
 		for (index_t k = 0; k < sites_.nb(); k++)
 			sites_[k][lifted_dim] = std::sqrt( wmax - weight_[k] );
+		if (search_ == nullptr)
+			search_ = GEO::NearestNeighborSearch::create(sites_.dim(),"ANN");
+		search_->set_points( sites_.nb() , sites_[0] );
 	}
 
   compute();
 
+	real_t multiplier = 1.0;
 	if (grad != nullptr) {
 	  if (mode_ == 0) {
 	    for (index_t i = 0; i < de_dx_.size(); i++)
 	      grad[i] = de_dx_[i];
 	  }
 		else if (mode_ == 1) {
+			multiplier = -1.0;
 			for (index_t i = 0; i < de_dw_.size(); i++)
-				grad[i] = de_dw_[i];
+				grad[i] = multiplier*de_dw_[i];
 		}
 	}
 
@@ -78,14 +87,17 @@ PowerDiagram::evaluate_objective( index_t n , const real_t* x , real_t* grad ) {
 	if      (mode_ == 0) gnorm = calculate_norm(de_dx_.data() , de_dx_.size() );
 	else if (mode_ == 1) gnorm = calculate_norm(de_dw_.data() , de_dw_.size() );
 
-  printf("%8lu|%12.3e|%12.3e|%12.3e\n",
+	real_t min_vol = *std::min_element( cell_volume_.begin() , cell_volume_.end() );
+
+  printf("%8lu|%12.3e|%12.3e|%12.3e|%12.3e\n",
     iteration_,
     energy_,
     gnorm,
-    time_voronoi_
+    time_voronoi_,
+		min_vol
   );
 
-  return energy_;
+  return multiplier*energy_;
 }
 
 void
@@ -184,9 +196,9 @@ PowerDiagram::optimize_weights( index_t nb_iter , const std::vector<real_t>& mas
   // set the lower and upper bounds on the weights
   #if 1
   std::vector<real_t> lower_bound( n , 0.0 );
-  std::vector<real_t> upper_bound( n ,  1e6 );
-  opt.set_lower_bounds(lower_bound);
-  opt.set_upper_bounds(upper_bound);
+	opt.set_lower_bounds(lower_bound);
+  //std::vector<real_t> upper_bound( n ,  1e6 );
+  //opt.set_upper_bounds(upper_bound);
   #endif
 
   real_t f_opt;
@@ -201,7 +213,137 @@ PowerDiagram::optimize_weights( index_t nb_iter , const std::vector<real_t>& mas
 		std::cout << e.what() << std::endl;
 		printf("runtime error\n");
 	}
+}
 
+class NewtonStep {
+
+public:
+	NewtonStep( const PowerDiagram& diagram ) :
+		diagram_(diagram)
+	{}
+
+	void build() {
+
+		index_t n = diagram_.sites().nb();
+		coord_t dim = diagram_.ambient_dimension();
+
+		// allocate the hessian matrix
+		hessian_.setZero();
+		hessian_.resize(n,n);
+		hessian_.reserve(n*20 ); // TODO count maximum number of facets to estimate size
+
+		// loop through the power cells
+		printf("--> building hessian..\n");
+		for (index_t k = 0; k < n; k++) {
+
+			const real_t* xi = diagram_.sites()[k];
+			real_t Hii = 0.0;
+
+			// get the voronoi cell
+			const Cell& cell = diagram_.cell(k);
+
+			// get the power facets
+			const std::map<int,PowerFacet>& facets = cell.facets();
+
+			for (std::map<int,PowerFacet>::const_iterator it = facets.begin(); it != facets.end(); ++it) {
+
+				const PowerFacet& facet = it->second;
+				if (facet.pj < 0) continue; // skip boundary facets
+
+				int pi = facet.pi;
+				int pj = facet.pj;
+				avro_assert_msg( pi == k , "pi = %d, k = %lu" , pi , k );
+				avro_assert_msg( pi != pj , "pi = %d, pj = %d" , pi , pj );
+
+				const real_t* xj = diagram_.sites()[pj];
+				real_t Hij = 0.5*facet.Aij / numerics::distance(xi,xj,dim);
+
+				// set the off-diagonal term
+				hessian_.coeffRef(k,pj) = Hij;
+
+				// add the contribution to the diagonal term
+				Hii -= Hij;
+			}
+
+			// set the diagonal term
+			hessian_.coeffRef(k,k) = Hii;
+		}
+		printf("done\n");
+
+		//std::cout << Eigen::MatrixXd(hessian_) << std::endl;// avro_implement;
+	}
+
+	void solve( const std::vector<real_t>& grad , std::vector<real_t>& pk ) {
+		index_t n = diagram_.sites().nb();
+		Eigen::VectorXd b(n);
+
+		for (index_t k = 0; k < grad.size(); k++) {
+			b(k) = -grad[k];
+		}
+
+		printf("--> solving linear system..\n");
+		Eigen::SparseLU<Eigen::SparseMatrix<real_t,Eigen::ColMajor>> solver;
+		//Eigen::BiCGSTAB<Eigen::SparseMatrix<real_t>> solver;
+		//Eigen::ConjugateGradient<Eigen::SparseMatrix<real_t>> solver;
+		solver.compute(hessian_);
+
+		if (solver.info() != Eigen::Success) {
+			printf("decomposition failed\n");
+		}
+		Eigen::VectorXd dw(n);
+		dw = solver.solve(b);
+		if (solver.info() != Eigen::Success) {
+			//std::cout << Eigen::MatrixXd(hessian_) << std::endl;// avro_implement;
+			//printf("solve failed\n");
+		}
+		printf("done\n");
+
+		//printf("determinant = %g\n",solver.determinant());
+
+		//std::cout << b << std::endl;
+		//std::cout << dw << std::endl;
+
+		for (index_t k = 0; k < pk.size(); k++)
+			pk[k] = dw(k);
+	}
+
+private:
+	const PowerDiagram& diagram_;
+	Eigen::SparseMatrix<real_t> hessian_;
+};
+
+void
+PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>& mass ) {
+
+	mode_ = 1; // both the gradient and hessian are needed
+  index_t n = sites_.nb();
+
+	// set the initial weights to zero and save the target mass
+  std::vector<real_t> x(n,0.0);
+	for (index_t k = 0; k < n; k++)
+		nu_[k] = mass[k];
+
+	start();
+	for (index_t iter = 0; iter < nb_iter; iter++) {
+
+		// compute the power diagram and evaluate the objective function and gradient
+		evaluate_objective( n , x.data() , nullptr );
+
+		// build the hessian matrix
+		NewtonStep newton(*this);
+		newton.build();
+
+		// determine the descent direction
+		std::vector<real_t> pk( n );
+		newton.solve( de_dw_ , pk );
+
+		// update the weights
+		real_t alpha = 1e-1;
+		for (index_t k = 0; k < n; k++)
+			x[k] = x[k] + alpha*pk[k];
+
+		iteration_++;
+	}
 
 }
 

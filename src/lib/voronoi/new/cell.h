@@ -78,6 +78,8 @@ public:
   real_t compute_energy( const std::vector<const real_t*>& X ) const;
   real_t energy() const { return energy_; }
 
+  const std::map<int,PowerFacet>& facets() const { return facets_; }
+
 protected:
 
   void initialize( index_t elem );

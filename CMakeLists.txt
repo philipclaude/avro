@@ -55,6 +55,10 @@ endif()
 include(cmake/FindNLOPT.cmake)
 include(cmake/FindGraphics.cmake)
 
+find_package(Eigen3 3.3 REQUIRED)
+include_directories( ${EIGEN3_INCLUDE_DIR} )
+message("found eigen at ${EIGEN3_INCLUDE_DIR}" )
+
 # compiler flags
 include(cmake/flags.cmake)
 
