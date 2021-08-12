@@ -19,13 +19,51 @@ UT_TEST_CASE( test_2d )
 
   static coord_t number = 2;
   static coord_t dim = number;
-  index_t nb_points = 1e3;
+  index_t nb_points = 1e2;
 
-  index_t N = 2;
+  index_t N = 10;
   std::vector<index_t> dims(number,N);
   CKF_Triangulation ckf(dims);
 
   #if SPHERE
+  // stitch together the 0 and 2pi boundaries
+  std::map<index_t,index_t> point_map;
+  for (index_t k = 0; k < N; k++) {
+    index_t p = k;
+    index_t q = (N-1)*N + k;
+
+    point_map.insert( {q,p} );
+
+    p = N*k;
+    point_map.insert( {p,0} );
+
+    p += N-1;
+    point_map.insert( {p,N-1} );
+  }
+
+  for (index_t k = 0; k < ckf.nb(); k++) {
+    for (index_t j = 0; j < ckf.nv(k); j++) {
+      index_t q = ckf(k,j);
+      if (point_map.find(q) == point_map.end()) continue;
+      ckf(k,j) = point_map.at(q);
+    }
+  }
+
+  std::vector<real_t> volumes;
+  ckf.get_volumes(volumes);
+  std::vector<index_t> removals;
+  for (index_t k = 0; k < ckf.nb(); k++) {
+    if (fabs(volumes[k]) < 1e-8) {
+      removals.push_back(k);
+    }
+  }
+
+  std::sort( removals.begin() , removals.end () );
+  for (index_t k = 0; k < removals.size(); k++) {
+    ckf.remove( removals[k] - k );
+  }
+  ckf.remove_unused();
+
   Points sphere_points(3);
   real_t p[3];
   for (index_t k = 0; k < ckf.points().nb(); k++) {
@@ -41,13 +79,6 @@ UT_TEST_CASE( test_2d )
   ckf.points().clear();
   ckf.points().set_dim(3);
   sphere_points.copy(ckf.points());
-
-  // stitch together the 0 and 2pi boundaries
-  for (index_t k = 0; k < N-1; k++) {
-
-    // TODO
-
-  }
 
   dim = 3;
   #endif
@@ -105,7 +136,7 @@ UT_TEST_CASE( test_2d )
   diagram.compute();
   printf("done computing cells\n");
 
-  diagram.optimize_points(10);
+  //diagram.optimize_points(10);
 
   if (nb_points > 3e5 && number > 2) return;
   diagram.accumulate();
