@@ -7,6 +7,7 @@
 #include <HLBFGS/HLBFGS.h>
 
 #include <Eigen/SparseLU>
+#include <Eigen/SparseQR>
 #include<Eigen/IterativeLinearSolvers>
 
 namespace avro
@@ -284,37 +285,41 @@ public:
 	}
 
 	void solve( const std::vector<real_t>& grad , std::vector<real_t>& pk ) {
+
 		index_t n = diagram_.sites().nb();
 		Eigen::VectorXd b(n);
-
 		for (index_t k = 0; k < grad.size(); k++) {
 			b(k) = -grad[k];
 		}
 
 		printf("--> solving linear system..\n");
-    hessian_.makeCompressed();
-		Eigen::SparseLU<Eigen::SparseMatrix<real_t>,Eigen::COLAMDOrdering<int> > solver;
-		//Eigen::BiCGSTAB<Eigen::SparseMatrix<real_t> , Eigen::IncompleteLUT<real_t> > solver;
-		//Eigen::ConjugateGradient<Eigen::SparseMatrix<real_t>> solver;
-		solver.compute(hessian_);
+    //hessian_.makeCompressed();
+		//Eigen::SparseLU<Eigen::SparseMatrix<real_t> > solver;
+		//igen::BiCGSTAB<Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver; //Eigen::IncompleteLUT<real_t> > solver;
+		//Eigen::ConjugateGradient<Eigen::SparseMatrix<real_t> , Eigen::Lower | Eigen::Upper , Eigen::DiagonalPreconditioner<real_t> > solver;
+    //Eigen::SparseQR<Eigen::SparseMatrix<real_t> , Eigen::COLAMDOrdering<int> > solver;
+    Eigen::LeastSquaresConjugateGradient< Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver;
 
+    solver.setTolerance(1e-8);
+    solver.setMaxIterations(10000);
+
+		solver.compute(hessian_);
 		if (solver.info() != Eigen::Success) {
 			printf("decomposition failed\n");
       avro_assert_not_reached;
 		}
 		Eigen::VectorXd dw(n);
 		dw = solver.solve(b);
-    //solver.setTolerance(1e-3);
 		if (solver.info() != Eigen::Success) {
 			//std::cout << Eigen::MatrixXd(hessian_) << std::endl;// avro_implement;
 			printf("solve failed\n");
       std::cout << eigen_error_message(solver.info()) << std::endl;
-      //printf("iterations = %d, error = %g",solver.iterations(),solver.error());
+      printf("iterations = %d, error = %g",solver.iterations(),solver.error());
       avro_assert_not_reached;
 		}
 		printf("done\n");
 
-		//printf("determinant = %g\n",solver.determinant());
+	//	printf("determinant = %g\n",solver.determinant());
 
 		//std::cout << b << std::endl;
 		//std::cout << dw << std::endl;
@@ -370,7 +375,7 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
     real_t gnorm0 = calculate_norm( de_dw_.data() , n );
 
     sub_iteration_ = 0;
-    while (sub_iteration_ < 40) {
+    while (sub_iteration_ < 25) {
 
       sub_iteration_++;
 

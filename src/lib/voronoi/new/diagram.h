@@ -303,7 +303,7 @@ private:
   // optimization-related data
   index_t mode_;         // mode = 0 for coordinate optimiation, mode = 1 for weight optimization
   index_t iteration_;    // objective function evaluation counter
-  index_t sub_iteration_; 
+  index_t sub_iteration_;
   real_t time_voronoi_;  // time spent computing the voronoi diagram (seconds)
 
   // a helper field class to visualize the colour of each voronoi cell
