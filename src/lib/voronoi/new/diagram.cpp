@@ -8,7 +8,9 @@
 
 #include <Eigen/SparseLU>
 #include <Eigen/SparseQR>
-#include<Eigen/IterativeLinearSolvers>
+#include <Eigen/IterativeLinearSolvers>
+
+#include <geogram/nl.h>
 
 namespace avro
 {
@@ -72,6 +74,7 @@ PowerDiagram::evaluate_objective( index_t n , const real_t* x , real_t* grad ) {
 
   compute();
 
+	real_t regularization_total = 0.0;
 	real_t multiplier = 1.0;
 	if (grad != nullptr) {
 	  if (mode_ == 0) {
@@ -85,18 +88,29 @@ PowerDiagram::evaluate_objective( index_t n , const real_t* x , real_t* grad ) {
 		}
 	}
 
+	if (mode_ == 1) {
+		// add a regularization term so that the hessian is not singular
+		real_t epsilon = regularization();
+		for (index_t k = 0; k < n; k++) {
+			real_t dg = epsilon * nu_[k] * weight_[k];
+			regularization_total += dg;
+			de_dw_[k] += dg;
+		}
+	}
+
   gnorm = 1.0;
 	if      (mode_ == 0) gnorm = calculate_norm(de_dx_.data() , de_dx_.size() );
 	else if (mode_ == 1) gnorm = calculate_norm(de_dw_.data() , de_dw_.size() );
 
 	real_t min_vol = *std::min_element( cell_volume_.begin() , cell_volume_.end() );
+	real_t max_vol = *std::max_element( cell_volume_.begin() , cell_volume_.end() );
 
-  printf("%5lu-%3u|%12.3e|%12.3e|%12.3e|%12.3e\n",
+  printf("%5lu-%3lu|%12.3e|%12.3e|%12.3e|%12.3e|%12.3e|%12.3e\n",
     iteration_,sub_iteration_,
     energy_,
     gnorm,
     time_voronoi_,
-		min_vol
+		min_vol,max_vol,regularization_total
   );
 
   return multiplier*energy_;
@@ -226,25 +240,216 @@ eigen_error_message( const Eigen::ComputationInfo& info ) {
   return "unknown error";
 }
 
+class LinearSolver_Eigen {
+
+public:
+
+	void initialize( index_t m , index_t n , index_t nnz ) {
+		matrix_.setZero();
+		matrix_.resize(m,n);
+		matrix_.reserve(nnz);
+	}
+
+	void fill( const std::vector< std::tuple<index_t,index_t,real_t>>& values ) {
+
+		typedef Eigen::Triplet<real_t> T;
+		std::vector<T> triplets(values.size());
+		for (index_t k = 0; k < values.size(); k++) {
+			index_t i = std::get<0>(values[k]);
+			index_t j = std::get<1>(values[k]);
+			real_t  v = std::get<2>(values[k]);
+			triplets[k] = T(i,j,v);
+		}
+		matrix_.setFromTriplets(triplets.begin(),triplets.end());
+	}
+
+	void begin_matrix() {}
+	void end_matrix() {}
+
+	void set_rhs( const std::vector<real_t>& b ) {
+		rhs_ = b;
+	}
+
+	void add_entry( index_t i , index_t j , real_t value ) {
+		matrix_.coeffRef(i,j) = value;
+	}
+
+	void solve( std::vector<real_t>& x ) {
+
+		// set the right-hand-side vector
+		index_t n = rhs_.size();
+		Eigen::VectorXd b(n);
+		for (index_t k = 0; k < n; k++)
+			b(k) = rhs_[k];
+
+    //matrix_.makeCompressed();
+		//Eigen::SparseLU<Eigen::SparseMatrix<real_t> > solver;
+		//Eigen::BiCGSTAB<Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver; //Eigen::IncompleteLUT<real_t> > solver;
+		Eigen::ConjugateGradient<Eigen::SparseMatrix<real_t> , Eigen::Lower | Eigen::Upper , Eigen::DiagonalPreconditioner<real_t> > solver;
+    //Eigen::SparseQR<Eigen::SparseMatrix<real_t> , Eigen::COLAMDOrdering<int> > solver;
+    //Eigen::LeastSquaresConjugateGradient< Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver;
+
+		// set some parameters
+    solver.setTolerance(1e-6);
+    solver.setMaxIterations(1000);
+
+		// factorize/precondition the matrix
+		clock_t t0 = clock();
+		solver.compute(matrix_);
+		if (solver.info() != Eigen::Success) {
+			printf("decomposition failed\n");
+      avro_assert_not_reached;
+		}
+
+		// solve the system
+		Eigen::VectorXd dw(n);
+		dw = solver.solve(b);
+		if (solver.info() != Eigen::Success) {
+			printf("solve failed\n");
+      std::cout << eigen_error_message(solver.info()) << std::endl;
+      //printf("iterations = %d, error = %g",solver.iterations(),solver.error());
+      avro_assert_not_reached;
+		}
+		clock_t t1 = clock();
+		printf("--> linear solve time = %g sec.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
+
+		// save the result
+		for (index_t k = 0; k < n; k++)
+			x[k] = dw(k);
+	}
+
+private:
+	Eigen::SparseMatrix<real_t> matrix_;
+	std::vector<real_t> rhs_;
+};
+
+#if 1
+class LinearSolver_OpenNL {
+
+public:
+
+	void initialize( index_t m , index_t n , index_t nnz ) {
+		avro_assert(m == n); // for now
+		nlNewContext();
+
+		nlSolverParameteri( NL_NB_VARIABLES,NLint(n) );
+		nlSolverParameteri( NL_SOLVER , NL_CG );
+		nlSolverParameteri( NL_PRECONDITIONER , NL_PRECOND_JACOBI );
+		nlSolverParameteri( NL_SYMMETRIC , NL_TRUE );
+		//nlSolverParameteri( NL_THRESHOLD , 1e-5 );
+		//nlSolverParameteri( NL_MAX_ITERATIONS , 10000 );
+
+		//nlEnable( NL_VARIABLES_BUFFER );
+		//nlEnable( NL_NO_VARIABLES_INDIRECTION );
+
+		nlBegin(NL_SYSTEM);
+	}
+
+	void begin_matrix() {
+		nlBegin(NL_MATRIX);
+	}
+
+	void end_matrix() {
+		nlEnd(NL_MATRIX);
+	}
+
+	void set_rhs( const std::vector<real_t>& b ) {
+
+		//nlBindBuffer(NL_VARIABLES_BUFFER,0,x_.data(),NLuint(sizeof(real_t)));
+		for (index_t k = 0; k < b.size(); k++)
+			nlAddIRightHandSide(k,b[k]);
+		printf("added rhs\n");
+	}
+
+	void add_entry( index_t i , index_t j , real_t value ) {
+		nlAddIJCoefficient(i,j,value);
+	}
+
+	void solve( std::vector<real_t>& x ) {
+
+		nlEnd(NL_SYSTEM);
+		nlSolve();
+
+		index_t n = x.size();
+		for (index_t k = 0; k < n; k++)
+			x[k] = nlGetVariable(k);
+
+		print_inline(x);
+
+		nlDeleteContext(nlGetCurrent());
+
+	}
+
+private:
+	std::vector<real_t> x_;
+
+};
+#endif
+
+template<typename LinearSolver>
 class NewtonStep {
 
 public:
 	NewtonStep( const PowerDiagram& diagram ) :
-		diagram_(diagram)
+		diagram_(diagram),
+		regularization_(diagram.regularization())
 	{}
 
-	void build() {
+	void set_gradient( const std::vector<real_t>& grad ) {
+		gradient_ = grad;
+	}
+
+	void set_regularization( real_t x ) {
+		regularization_ = x;
+	}
+
+	void get_pattern( std::vector< std::vector<index_t> >& pattern ) {
+
+		index_t n = diagram_.sites().nb();
+
+		// get the list of all i,j entries
+		std::vector< std::vector<index_t> > rows( n );
+
+		for (index_t k = 0; k < n; k++) {
+
+			rows[k].reserve(20*k);
+			rows[k].push_back(k);
+
+			// get the power facets
+			const std::map<int,PowerFacet>& facets = diagram_.cell(k).facets();
+			for (std::map<int,PowerFacet>::const_iterator it = facets.begin(); it != facets.end(); ++it) {
+
+				const PowerFacet& facet = it->second;
+				if (facet.pj < 0) continue; // skip boundary facets
+
+				int pi = facet.pi;
+				int pj = facet.pj;
+				avro_assert_msg( pi == int(k) , "pi = %d, k = %lu" , pi , k );
+				avro_assert_msg( pi != pj , "pi = %d, pj = %d" , pi , pj );
+
+				rows[k].push_back(pj);
+			}
+		}
+	}
+
+	void build_hessian() {
 
 		index_t n = diagram_.sites().nb();
 		coord_t dim = diagram_.ambient_dimension();
 
 		// allocate the hessian matrix
-		hessian_.setZero();
-		hessian_.resize(n,n);
-		hessian_.reserve(n*20 ); // TODO count maximum number of facets to estimate size
+		linear_solver_.initialize( n , n , 20*n );
+
+		std::vector<std::vector<index_t>> pattern;
+		get_pattern(pattern);
+
+		linear_solver_.begin_matrix();
+		linear_solver_.set_rhs( gradient_ );
 
 		// loop through the power cells
-		printf("--> building hessian..\n");
+		std::vector< std::tuple<index_t,index_t,real_t> > triplets;
+		triplets.reserve(20*n);
+
 		for (index_t k = 0; k < n; k++) {
 
 			const real_t* xi = diagram_.sites()[k];
@@ -263,74 +468,44 @@ public:
 
 				int pi = facet.pi;
 				int pj = facet.pj;
-				avro_assert_msg( pi == k , "pi = %d, k = %lu" , pi , k );
+				avro_assert_msg( pi == int(k) , "pi = %d, k = %lu" , pi , k );
 				avro_assert_msg( pi != pj , "pi = %d, pj = %d" , pi , pj );
 
 				const real_t* xj = diagram_.sites()[pj];
 				real_t Hij = 0.5*facet.Aij / numerics::distance(xi,xj,dim);
 
 				// set the off-diagonal term
-				hessian_.coeffRef(k,pj) = Hij;
+				triplets.push_back( std::tuple<index_t,index_t,real_t>(k,pj,Hij) );
 
 				// add the contribution to the diagonal term
 				Hii -= Hij;
 			}
 
-			// set the diagonal term
-			hessian_.coeffRef(k,k) = Hii;
-		}
-		printf("done\n");
+			// add a regularization term
+			real_t dh = regularization_ * diagram_.nu(k);
+			Hii += dh;
 
-		//std::cout << Eigen::MatrixXd(hessian_) << std::endl;// avro_implement;
+			// set the diagonal term
+			triplets.push_back( std::tuple<index_t,index_t,real_t>(k,k,Hii) );
+		}
+		linear_solver_.end_matrix();
+		linear_solver_.fill(triplets);
 	}
 
-	void solve( const std::vector<real_t>& grad , std::vector<real_t>& pk ) {
+	void solve( std::vector<real_t>& pk ) {
 
 		index_t n = diagram_.sites().nb();
-		Eigen::VectorXd b(n);
-		for (index_t k = 0; k < grad.size(); k++) {
-			b(k) = -grad[k];
-		}
-
-		printf("--> solving linear system..\n");
-    //hessian_.makeCompressed();
-		//Eigen::SparseLU<Eigen::SparseMatrix<real_t> > solver;
-		//igen::BiCGSTAB<Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver; //Eigen::IncompleteLUT<real_t> > solver;
-		//Eigen::ConjugateGradient<Eigen::SparseMatrix<real_t> , Eigen::Lower | Eigen::Upper , Eigen::DiagonalPreconditioner<real_t> > solver;
-    //Eigen::SparseQR<Eigen::SparseMatrix<real_t> , Eigen::COLAMDOrdering<int> > solver;
-    Eigen::LeastSquaresConjugateGradient< Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver;
-
-    solver.setTolerance(1e-8);
-    solver.setMaxIterations(10000);
-
-		solver.compute(hessian_);
-		if (solver.info() != Eigen::Success) {
-			printf("decomposition failed\n");
-      avro_assert_not_reached;
-		}
-		Eigen::VectorXd dw(n);
-		dw = solver.solve(b);
-		if (solver.info() != Eigen::Success) {
-			//std::cout << Eigen::MatrixXd(hessian_) << std::endl;// avro_implement;
-			printf("solve failed\n");
-      std::cout << eigen_error_message(solver.info()) << std::endl;
-      printf("iterations = %d, error = %g",solver.iterations(),solver.error());
-      avro_assert_not_reached;
-		}
-		printf("done\n");
-
-	//	printf("determinant = %g\n",solver.determinant());
-
-		//std::cout << b << std::endl;
-		//std::cout << dw << std::endl;
-
-		for (index_t k = 0; k < pk.size(); k++)
-			pk[k] = dw(k);
+		linear_solver_.solve(pk);
+		for (index_t k = 0; k < n; k++)
+			pk[k] *= -1.0;
 	}
 
 private:
 	const PowerDiagram& diagram_;
-	Eigen::SparseMatrix<real_t> hessian_;
+	LinearSolver linear_solver_;
+	std::vector<real_t> gradient_;
+
+	real_t regularization_;
 };
 
 void
@@ -355,17 +530,19 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
   real_t mmin = *std::min_element( nu_.begin() , nu_.end() );
   real_t gnorm = -1.0;
   real_t a0 = 0.5*( std::min(vmin,mmin) );
-  printf("a0 = %g\n",a0);
+  printf("--> determined a0 = %g\n",a0);
 
 	for (index_t iter = 0; iter < nb_iter; iter++) {
 
 		// build the hessian matrix
-		NewtonStep newton(*this);
-		newton.build();
+		NewtonStep<LinearSolver_Eigen> newton(*this);
+		//NewtonStep<LinearSolver_OpenNL> newton(*this);
+		newton.set_gradient(de_dw_);
+		newton.build_hessian();
 
 		// determine the descent direction
 		std::vector<real_t> pk( n );
-		newton.solve( de_dw_ , pk );
+		newton.solve(pk);
 
     // determine the step size
     real_t alpha = 1.0;
@@ -375,7 +552,8 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
     real_t gnorm0 = calculate_norm( de_dw_.data() , n );
 
     sub_iteration_ = 0;
-    while (sub_iteration_ < 25) {
+		bool failed = false;
+    while (true) {
 
       sub_iteration_++;
 
@@ -397,11 +575,12 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
       // try halving the step size
       alpha = alpha / 2.0;
 
-      printf("alpha = %g\n",alpha);
-
-      if (alpha < 1e-7) avro_assert_not_reached;
+      if (alpha < 1e-7 || sub_iteration_ > 10) {
+				failed = true;
+				break;
+			}
     }
-
+		if (failed) break;
     if (gnorm < 1e-12) break;
 
 		iteration_++;

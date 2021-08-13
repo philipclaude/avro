@@ -11,7 +11,7 @@
 #include <memory>
 #include <queue>
 
-#include "nnsearch/nn_search.h"
+#include <geogram/nn_search.h>
 
 namespace avro
 {

@@ -36,8 +36,8 @@ else()
 	set( IMGUI_SOURCES )
 endif()
 
-# nearest neighbours
-add_source_directories( NNSEARCH_SOURCES "nnsearch" nnsearch )
+# some utilities from geogram
+add_source_directories( GEOGRAM_SOURCES "geogram" geogram )
 
 # libmeshb
 add_source_directories( MESHB_SOURCES "gmf source" libmeshb )
@@ -69,4 +69,4 @@ endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${NUMPACK_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${NNSEARCH_SOURCES} ${HLBFGS_SOURCES} ${QHULL_SOURCES} )
+add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${GEOGRAM_SOURCES} ${HLBFGS_SOURCES} ${QHULL_SOURCES} )

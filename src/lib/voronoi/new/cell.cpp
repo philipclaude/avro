@@ -211,7 +211,7 @@ real_t
 Cell::compute_energy( const std::vector<const real_t*>& X ) const {
 
   coord_t n = domain_.number();
-  avro_assert( X.size() == n+1 );
+  avro_assert( X.size() == index_t(n+1) );
 
   int quad_order = 2;
   const matd<real_t>& B = __store_simplex_lagrange__.get_basis(n,1,quad_order);
@@ -471,13 +471,13 @@ Cell::generate_simplices() {
         }
 
         // compute the centroid of this tetrahedron
-        std::vector<real_t> ck( delaunay_.dim() , 0.0 );
+        std::vector<real_t> ck( ambient_dim_ , 0.0 );
         for (coord_t i = 0; i < 4; i++)
-        for (coord_t d = 0; d < delaunay_.dim(); d++)
+        for (coord_t d = 0; d < ambient_dim_; d++)
           ck[d] += 0.25*X[i][d];
 
         // compute the first moment
-        for (index_t d = 0; d < delaunay_.dim(); d++)
+        for (index_t d = 0; d < ambient_dim_; d++)
           moment_[d] += ck[d]*vk;
 
         // compute the centroid of this triangle

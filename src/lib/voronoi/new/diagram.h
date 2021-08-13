@@ -7,7 +7,7 @@
 
 #include "voronoi/new/cell.h"
 
-#include <nnsearch/nn_search.h>
+#include <geogram/nn_search.h>
 
 namespace avro
 {
@@ -277,6 +277,11 @@ public:
   const Points& sites() const { return sites_; }
   index_t nb_cells() const { return cell_.size(); }
   const Cell& cell( index_t k ) const { return *cell_[k].get(); }
+
+  real_t nu( index_t k ) const { return nu_[k]; }
+  real_t weight( index_t k ) const { return weight_[k]; }
+
+  real_t regularization() const { return 1e-3; }
 
 private:
 

@@ -7,7 +7,7 @@
 #include "voronoi/new/facets.h"
 #include "voronoi/new/vertex.h"
 
-#include <nnsearch/nn_search.h>
+#include <geogram/nn_search.h>
 
 namespace avro
 {

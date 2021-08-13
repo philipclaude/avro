@@ -9,7 +9,7 @@
 
 #include <memory>
 
-#include "nnsearch/nn_search.h"
+#include <geogram/nn_search.h>
 
 namespace avro
 {
