@@ -37,6 +37,7 @@ PowerDiagram::start() {
   printf("%8s|%12s|%12s|%12s\n","iter  "," energy "," gradient "," time (s)");
   printf("-------------------------------------------------\n");
   iteration_ = 0;
+  sub_iteration_ = 0;
 }
 
 real_t
@@ -89,8 +90,8 @@ PowerDiagram::evaluate_objective( index_t n , const real_t* x , real_t* grad ) {
 
 	real_t min_vol = *std::min_element( cell_volume_.begin() , cell_volume_.end() );
 
-  printf("%8lu|%12.3e|%12.3e|%12.3e|%12.3e\n",
-    iteration_,
+  printf("%5lu-%3u|%12.3e|%12.3e|%12.3e|%12.3e\n",
+    iteration_,sub_iteration_,
     energy_,
     gnorm,
     time_voronoi_,
@@ -215,6 +216,15 @@ PowerDiagram::optimize_weights( index_t nb_iter , const std::vector<real_t>& mas
 	}
 }
 
+std::string
+eigen_error_message( const Eigen::ComputationInfo& info ) {
+  if (info == Eigen::Success) return "success";
+  if (info == Eigen::NumericalIssue) return "numerical issue";
+  if (info == Eigen::InvalidInput) return "invalid input";
+  if (info == Eigen::NoConvergence) return "no convergence";
+  return "unknown error";
+}
+
 class NewtonStep {
 
 public:
@@ -282,19 +292,25 @@ public:
 		}
 
 		printf("--> solving linear system..\n");
-		Eigen::SparseLU<Eigen::SparseMatrix<real_t,Eigen::ColMajor>> solver;
-		//Eigen::BiCGSTAB<Eigen::SparseMatrix<real_t>> solver;
+    hessian_.makeCompressed();
+		Eigen::SparseLU<Eigen::SparseMatrix<real_t>,Eigen::COLAMDOrdering<int> > solver;
+		//Eigen::BiCGSTAB<Eigen::SparseMatrix<real_t> , Eigen::IncompleteLUT<real_t> > solver;
 		//Eigen::ConjugateGradient<Eigen::SparseMatrix<real_t>> solver;
 		solver.compute(hessian_);
 
 		if (solver.info() != Eigen::Success) {
 			printf("decomposition failed\n");
+      avro_assert_not_reached;
 		}
 		Eigen::VectorXd dw(n);
 		dw = solver.solve(b);
+    //solver.setTolerance(1e-3);
 		if (solver.info() != Eigen::Success) {
 			//std::cout << Eigen::MatrixXd(hessian_) << std::endl;// avro_implement;
-			//printf("solve failed\n");
+			printf("solve failed\n");
+      std::cout << eigen_error_message(solver.info()) << std::endl;
+      //printf("iterations = %d, error = %g",solver.iterations(),solver.error());
+      avro_assert_not_reached;
 		}
 		printf("done\n");
 
@@ -315,19 +331,28 @@ private:
 void
 PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>& mass ) {
 
-	mode_ = 1; // both the gradient and hessian are needed
-  index_t n = sites_.nb();
+	mode_ = 1; // we are in site-optimization mode
+  index_t n = sites_.nb(); // number of design variables
 
 	// set the initial weights to zero and save the target mass
   std::vector<real_t> x(n,0.0);
 	for (index_t k = 0; k < n; k++)
 		nu_[k] = mass[k];
 
+  // print the optimization header
 	start();
-	for (index_t iter = 0; iter < nb_iter; iter++) {
 
-		// compute the power diagram and evaluate the objective function and gradient
-		evaluate_objective( n , x.data() , nullptr );
+  // compute the voronoi diagram (weights = 0) which also evaluates the gradient
+  evaluate_objective( n , x.data() , nullptr );
+
+  // determine the a0 constant in the Kitagawa algorithm
+  real_t vmin = *std::min_element( cell_volume_.begin() , cell_volume_.end() );
+  real_t mmin = *std::min_element( nu_.begin() , nu_.end() );
+  real_t gnorm = -1.0;
+  real_t a0 = 0.5*( std::min(vmin,mmin) );
+  printf("a0 = %g\n",a0);
+
+	for (index_t iter = 0; iter < nb_iter; iter++) {
 
 		// build the hessian matrix
 		NewtonStep newton(*this);
@@ -337,10 +362,42 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
 		std::vector<real_t> pk( n );
 		newton.solve( de_dw_ , pk );
 
-		// update the weights
-		real_t alpha = 1e-1;
-		for (index_t k = 0; k < n; k++)
-			x[k] = x[k] + alpha*pk[k];
+    // determine the step size
+    real_t alpha = 1.0;
+
+    // copy the original weights, and calculate the current norm of the energy gradient
+    std::vector<real_t> x0(x.begin(),x.end());
+    real_t gnorm0 = calculate_norm( de_dw_.data() , n );
+
+    sub_iteration_ = 0;
+    while (sub_iteration_ < 40) {
+
+      sub_iteration_++;
+
+      // update the weights
+  		for (index_t k = 0; k < n; k++)
+  			x[k] = x0[k] + alpha*pk[k];
+
+      // re-evaluate at these weights
+  		evaluate_objective( n , x.data() , nullptr );
+
+      // check if we have sufficient decrease in the gradient
+      // as well as the minimum volume isn't too small
+      gnorm = calculate_norm( de_dw_.data() , n );
+      vmin  = *std::min_element( cell_volume_.begin() , cell_volume_.end() );
+
+      // check for sufficient decrease in the gradient, and the volume isn't too small
+      if (gnorm <= (1.0 - alpha/2.0)*gnorm0 && vmin > a0) break;
+
+      // try halving the step size
+      alpha = alpha / 2.0;
+
+      printf("alpha = %g\n",alpha);
+
+      if (alpha < 1e-7) avro_assert_not_reached;
+    }
+
+    if (gnorm < 1e-12) break;
 
 		iteration_++;
 	}
