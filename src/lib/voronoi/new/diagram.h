@@ -88,6 +88,13 @@ public:
     weight_.resize( sites_.nb() , 0.0 );
   }
 
+  void allocate_sites( index_t n ) {
+    sites_.clear();
+    std::vector<real_t> x(sites_.dim());
+    for (index_t k = 0; k < n; k++)
+      sites_.create(x.data());
+  }
+
   void set_sites( const real_t* x ) {
 
     // copy the points
@@ -262,6 +269,7 @@ public:
   real_t volume() const { return volume_; }
   real_t area() const { return area_; }
   const std::vector<real_t>& cell_volume() const { return cell_volume_; }
+  const std::vector<real_t>& centroids() const { return centroid_; }
 
   // optimizers
   void optimize_points( index_t nb_iter );
@@ -275,6 +283,7 @@ public:
   real_t evaluate_objective( index_t n , const real_t* x , real_t* grad );
 
   const Points& sites() const { return sites_; }
+  Points& sites() { return sites_; }
   index_t nb_cells() const { return cell_.size(); }
   const Cell& cell( index_t k ) const { return *cell_[k].get(); }
 
@@ -311,6 +320,7 @@ private:
   index_t sub_iteration_;
   real_t time_voronoi_;  // time spent computing the voronoi diagram (seconds)
 
+public:
   // a helper field class to visualize the colour of each voronoi cell
   class SiteField : public Field<Polytope,real_t> {
   public:
@@ -325,6 +335,10 @@ private:
     index_t nb_rank() const { return 1; }
   };
 
+  SiteField& site_field() { return *site_field_.get(); }
+  const std::vector<index_t>& polytope2site() const { return polytope2site_; }
+
+private:
   // visualization-related data
   std::vector<index_t> triangles_;
   std::vector<index_t> triangle2site_;

@@ -290,8 +290,8 @@ public:
     //Eigen::LeastSquaresConjugateGradient< Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver;
 
 		// set some parameters
-    solver.setTolerance(1e-6);
-    solver.setMaxIterations(1000);
+    solver.setTolerance(1e-3);
+    solver.setMaxIterations(10000);
 
 		// factorize/precondition the matrix
 		clock_t t0 = clock();
@@ -307,7 +307,7 @@ public:
 		if (solver.info() != Eigen::Success) {
 			printf("solve failed\n");
       std::cout << eigen_error_message(solver.info()) << std::endl;
-      //printf("iterations = %d, error = %g",solver.iterations(),solver.error());
+      printf("iterations = %lu, error = %g",solver.iterations(),solver.error());
       avro_assert_not_reached;
 		}
 		clock_t t1 = clock();
@@ -550,6 +550,7 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
     // copy the original weights, and calculate the current norm of the energy gradient
     std::vector<real_t> x0(x.begin(),x.end());
     real_t gnorm0 = calculate_norm( de_dw_.data() , n );
+		if (gnorm0 < 1e-16) break;
 
     sub_iteration_ = 0;
 		bool failed = false;
