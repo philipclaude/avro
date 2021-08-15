@@ -19,7 +19,6 @@
 
 #include "numerics/geometry.h"
 
-#include "voronoi/delaunay.h"
 #include "measures.h"
 
 using namespace avro;

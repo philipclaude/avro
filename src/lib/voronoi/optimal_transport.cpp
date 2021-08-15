@@ -6,9 +6,7 @@
 #include "numerics/integration_rank.h"
 #include "numerics/nlopt_result.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
-//#include "voronoi/voronoi_cell.h"
 
 #include <nlopt.hpp>
 #include <HLBFGS/HLBFGS.h>
@@ -16,6 +14,8 @@
 
 #include <fstream>
 #include <iomanip>
+
+bool __check_capacity__ = true;
 
 namespace avro
 {

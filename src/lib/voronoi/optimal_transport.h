@@ -18,10 +18,13 @@
 namespace avro
 {
 
+namespace voronoi
+{
+class RVDFacets;
+}
+
 namespace delaunay
 {
-
-class RVDFacets;
 
 typedef Points Delaunay;
 

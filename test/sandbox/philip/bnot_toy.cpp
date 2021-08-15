@@ -9,7 +9,6 @@
 
 #include "numerics/geometry.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
 #include <fstream>

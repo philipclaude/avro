@@ -14,7 +14,6 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
 #if AVRO_HEADLESS_GRAPHICS == 0

@@ -24,8 +24,6 @@
 namespace avro
 {
 
-class Delaunay;
-class RestrictedVoronoiSimplex;
 class Entity;
 
 namespace delaunay
@@ -57,24 +55,6 @@ operator<( const SymbolicVertex& f , const SymbolicVertex& g )
   return std::lexicographical_compare(f.indices.begin(), f.indices.end(),
                                       g.indices.begin(), g.indices.end());
 }
-
-class RVDFacets
-{
-public:
-  RVDFacets( const Topology<Simplex>& topology );
-
-  void create();
-  int facet( const std::vector<index_t>& f ) const;
-  void print() const;
-
-private:
-  std::string generate( const std::vector<index_t>& f ) const;
-  int lookup( const std::string& s , int& id ) const;
-
-  std::map<std::string,int> store_;
-  const Topology<Simplex>& topology_;
-
-};
 
 class VoronoiSites : public Field<Polytope,real_t>
 {

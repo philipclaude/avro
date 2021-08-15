@@ -1,11 +1,9 @@
 #include "unit_tester.hpp"
 
 #include "graphics/application.h"
-#include "graphics/application.h"
 
 #include "library/ckf.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
 #include <fstream>

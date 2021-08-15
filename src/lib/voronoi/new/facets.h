@@ -3,8 +3,13 @@
 
 #include "avro_types.h"
 
+#include <map>
+#include <string>
+
 namespace avro
 {
+
+template<typename type> class Topology;
 
 namespace voronoi
 {
@@ -27,6 +32,24 @@ struct Bisector {
 // needed to create a set/map of bisectors
 bool operator==( const Bisector& bx , const Bisector& by );
 bool operator< ( const Bisector& f  , const Bisector& g );
+
+class RVDFacets
+{
+public:
+  RVDFacets( const Topology<Simplex>& topology );
+
+  void create();
+  int facet( const std::vector<index_t>& f ) const;
+  void print() const;
+
+private:
+  std::string generate( const std::vector<index_t>& f ) const;
+  int lookup( const std::string& s , int& id ) const;
+
+  std::map<std::string,int> store_;
+  const Topology<Simplex>& topology_;
+
+};
 
 } // voronoi
 
