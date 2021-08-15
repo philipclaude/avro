@@ -14,8 +14,6 @@ UT_TEST_SUITE( voronoi_particles_test_suite )
 
 UT_TEST_CASE( test_2d )
 {
-  #if 1
-
   index_t nb_particles = 1e3;
 
   voronoi::ParticleSimulator particles( "CKF-2-2" , nb_particles );
@@ -30,10 +28,6 @@ UT_TEST_CASE( test_2d )
   graphics::Viewer vis;
   vis.add(particles.diagram());
   vis.run(AVRO_FULL_UNIT_TEST);
-#else
-  const char* inputs[] = {"/Users/pcaplan/Codes/geocl/avro/test/particles.json"};
-  programs::animate( 1,  inputs );
-#endif
 }
 UT_TEST_CASE_END( test_2d )
 

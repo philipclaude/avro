@@ -8,6 +8,8 @@
 
 #include "voronoi/voronoi.h"
 
+#include "voronoi/new/vertex.h"
+
 #include <memory>
 #include <queue>
 
@@ -20,6 +22,10 @@ namespace delaunay
 {
 
 class RVDFacets;
+
+typedef Points Delaunay;
+
+using namespace voronoi;
 
 class IntegrationSimplices : public Topology<Simplex>
 {
@@ -180,8 +186,8 @@ protected:
   RVDFacets* domain_facets_;
   std::vector<index_t> domain_edges_;
 
-  std::map<Bisector,int> bisector_;
-  std::map<int,Bisector> ids_;
+  std::map<voronoi::Bisector,int> bisector_;
+  std::map<int,voronoi::Bisector> ids_;
 
   // decomposition-related structures
   IntegrationSimplices simplices_;

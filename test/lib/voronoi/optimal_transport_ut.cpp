@@ -31,7 +31,7 @@ UT_TEST_CASE( test_nd_polytope )
     printf("dim = %u, nb_points = %lu\n",dim,nb_points);
 
     // create random delaunay vertices
-    Delaunay delaunay( dim );
+    Points delaunay( dim );
     std::vector<index_t> elems;
     for (index_t k = 0; k < nb_points; k++) {
 

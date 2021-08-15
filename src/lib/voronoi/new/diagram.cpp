@@ -18,6 +18,190 @@ namespace avro
 namespace voronoi
 {
 
+void
+PowerDiagram::initialize() {
+  // creates voronoi cells and sites the target mass and weight arrays
+  // should only be called once
+  cell_.resize( sites_.nb() );
+  for (index_t k = 0; k < sites_.nb(); k++) {
+    cell_[k] = std::make_shared<Cell>( k , sites_ , domain_ , *search_ );
+    cell_[k]->set_ambient_dimension(ambient_dim_);
+  }
+  nu_.resize(sites_.nb() , 0.0 );
+  weight_.resize( sites_.nb() , 0.0 );
+}
+
+void
+PowerDiagram::allocate_sites( index_t n ) {
+  sites_.clear();
+  std::vector<real_t> x(sites_.dim());
+  for (index_t k = 0; k < n; k++)
+    sites_.create(x.data());
+}
+
+void
+PowerDiagram::set_sites( const real_t* x ) {
+
+  // copy the points
+  index_t i = 0;
+  for (index_t k = 0; k < sites_.nb(); k++)
+  for (coord_t d = 0; d < ambient_dim_; d++)
+    sites_[k][d] = x[i++];
+
+  // set the points into the nearest neighbour search structure
+  if (search_ == nullptr)
+    search_ = GEO::NearestNeighborSearch::create(sites_.dim(),"ANN");
+  search_->set_points( sites_.nb() , sites_[0] );
+}
+
+void
+PowerDiagram::set_sites( const Points& p ) {
+
+  coord_t dim = p.dim();
+  avro_assert( dim == sites_.dim() );
+
+  // copy the points and set the coordinates into the search structure
+  p.copy(sites_);
+  if (search_ == nullptr)
+    search_ = GEO::NearestNeighborSearch::create(dim,"ANN");
+  search_->set_points( sites_.nb() , sites_[0] );
+}
+
+void
+PowerDiagram::compute() {
+
+  // clear any previous power diagram data
+  Topology<Polytope>::clear();
+  vertices_.clear();
+  triangles_.clear();
+  triangle2site_.clear();
+  edges_.clear();
+  polytope2site_.clear();
+
+  // clear any optimization data
+  de_dx_.resize( sites_.nb() * ambient_dim_ , 0.0 );
+  de_dw_.resize( sites_.nb() , 0.0 );
+  centroid_.resize( sites_.nb() * ambient_dim_ , 0.0 );
+  cell_volume_.resize( sites_.nb() , 0.0 );
+
+  // reset the energy, volume and area
+  energy_ = 0.0;
+  volume_ = 0.0;
+  area_   = 0.0;
+
+  // compute the power diagram
+  //printf("computing the power diagram in %ud\n",sites_.dim());
+  clock_t t0 = clock();
+  #if 1
+  typedef PowerDiagram thisclass;
+  ProcessCPU::parallel_for(
+    parallel_for_member_callback( this , &thisclass::compute ), 0,cell_.size()
+  );
+  #else
+  for (index_t k = 0; k < cell_.size(); k++) {
+    compute(k);
+  }
+  #endif
+
+  // record the time it took to compute the voronoi diagram
+  time_voronoi_ = real_t(clock()-t0)/real_t(CLOCKS_PER_SEC)/ProcessCPU::maximum_concurrent_threads();
+}
+
+
+void
+PowerDiagram::compute( index_t k ) {
+
+  // get the candidate list of elements in the background mesh to clip against
+  // (only one will be used)
+  std::vector<index_t> ball;
+  domain_.get_candidate_elems( sites_[k] , ball );
+
+  // clip the voronoi cell against the mesh
+  cell_[k]->compute( ball );
+
+  // retrieve the mass and moment data
+  const std::vector<real_t>& moment = cell_[k]->moment();
+  real_t volume_k = cell_[k]->volume();
+  cell_volume_[k] = volume_k;
+
+  #if 0 // this check should only be used when weights are 0, oterwise cells could indeed vanish
+  if (volume_k <= 0.0) {
+    sites_.print(k);
+  }
+  avro_assert( volume_k > 0.0 );
+  #endif
+
+  // accumulate the total volume and boundary area (used for testing)
+  volume_ += volume_k;
+  area_   += cell_[k]->boundary_area();
+
+  // compute the centroid of the cell
+  if (volume_k > 0.0) {
+    for (coord_t d = 0; d < ambient_dim_; d++)
+      centroid_[k*ambient_dim_+d] = moment[d]/volume_k;
+  }
+  else {
+    for (coord_t d = 0; d < ambient_dim_; d++)
+      centroid_[k*ambient_dim_+d] = sites_[k][d]; // retain the previous value
+  }
+
+  // compute the gradient of the energy with respect to the site locations
+  for (coord_t d = 0; d < ambient_dim_; d++)
+    de_dx_[k*ambient_dim_+d] = 2.0*( volume_k*sites_[k][d] - moment[d] );
+
+  // compute the gradient of the energy with respect to the weights
+  de_dw_[k] = nu_[k] - volume_k;
+
+  // add the contribution of the cell energy to the total
+  energy_   += cell_[k]->energy() + weight_[k] * (nu_[k] - volume_k );
+}
+
+void
+PowerDiagram::accumulate() {
+  // accumulate all the cells into a polytope mesh that we can visualize
+  for (index_t k = 0; k < cell_.size(); k++) {
+    add_cell( *cell_[k].get() );
+    cell_[k]->clear();
+  }
+}
+
+void
+PowerDiagram::add_cell( const voronoi::Cell& cell ) {
+
+  // add the points
+  index_t nb_points = vertices_.nb();
+  for (index_t j = 0; j < cell.points().nb(); j++) {
+    vertices_.create( cell.points()[j] );
+  }
+
+  // add a dummy polytope
+  // (we don't actually need the polytope since we already have the triangles to visualize)
+  for (index_t j = 0; j < cell.nb(); j++) {
+    index_t dummy = 0;
+    add( &dummy , 1 );
+    polytope2site_.push_back(cell.site());
+  }
+
+  // add the triangle data
+  const std::vector<index_t>& t = cell.triangles();
+  for (index_t j = 0; j < t.size(); j++)
+    triangles_.push_back(t[j]+nb_points);
+  for (index_t j = 0; j < t.size()/3; j++)
+    triangle2site_.push_back(cell.site());
+
+  // add the edge data
+  const std::vector<index_t>& e = cell.edges();
+  for (index_t j = 0; j < e.size(); j++)
+    edges_.push_back(e[j]+nb_points);
+}
+
+void
+PowerDiagram::create_field() {
+  // creates a field so that we can visualize each voronoi cell with a constant colour
+  site_field_ = std::make_shared<SiteField>(*this);
+  fields().make("sites",site_field_);
+}
+
 struct nlopt_power_diagram_data {
 	PowerDiagram& diagram;
 	index_t eval_count;
@@ -297,7 +481,7 @@ public:
     //solver.setMaxIterations(10000);
 
 		// factorize/precondition the matrix
-		clock_t t0 = clock();
+		//clock_t t0 = clock();
 		solver.compute(matrix_);
 		if (solver.info() != Eigen::Success) {
 			printf("decomposition failed\n");
@@ -313,7 +497,7 @@ public:
       //printf("iterations = %lu, error = %g",solver.iterations(),solver.error());
       avro_assert_not_reached;
 		}
-		clock_t t1 = clock();
+		//clock_t t1 = clock();
 		//printf("--> linear solve time = %g sec.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
 
 		// save the result

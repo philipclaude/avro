@@ -8,8 +8,8 @@
 
 #include "numerics/geometry.h"
 
-#include "voronoi/delaunay.h"
-#include "voronoi/voronoi_cell.h"
+#include "voronoi/new/cell.h"
+#include "voronoi/new/diagram.h"
 
 #include <json/json.hpp>
 
@@ -21,8 +21,8 @@ UT_TEST_SUITE( voronoi_cell_test_suite )
 
 UT_TEST_CASE( test_nd )
 {
-  coord_t numberL = 4;
-  coord_t numberH = 4;
+  coord_t numberL = 2;
+  coord_t numberH = 3;
   coord_t powerL = 2;
   coord_t powerH = 2;
   bool generate_mode = false;
@@ -110,7 +110,7 @@ UT_TEST_CASE( test_nd )
       printf("dim = %u, nb_points = %lu\n",dim,nb_points);
 
       // create random delaunay vertices
-      Delaunay delaunay( dim );
+      Points delaunay( dim );
       std::vector<real_t> p(dim,0.);
       for (index_t k=0;k<nb_points;k++)
       {
@@ -122,8 +122,11 @@ UT_TEST_CASE( test_nd )
       index_t nb_iter = 20;
       for (index_t iter = 0; iter <= nb_iter; iter++)
       {
-        delaunay::VoronoiDiagram diagram( delaunay , domain );
-        diagram.compute(false);
+        voronoi::PowerDiagram diagram( ckf , delaunay.dim() );
+
+        diagram.set_sites(delaunay);
+        diagram.initialize();
+        diagram.compute();
 
         for (index_t k=0;k<diagram.nb();k++)
         {

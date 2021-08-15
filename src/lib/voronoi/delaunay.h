@@ -16,6 +16,7 @@
 namespace avro
 {
 
+#if 0
 class Delaunay : public Points
 {
 
@@ -29,6 +30,8 @@ public:
 
 	index_t closest( const real_t* x ) const;
 };
+
+#endif
 
 } // avro
 

@@ -8,9 +8,7 @@
 #include "mesh/points.h"
 
 #include "numerics/geometry.h"
-
-#include "voronoi/delaunay.h"
-#include "voronoi/voronoi.h"
+#include "voronoi/new/diagram.h"
 
 #include <json/json.hpp>
 
@@ -27,7 +25,7 @@ UT_TEST_CASE( test1 )
   std::vector<index_t> dims(number,N);
   CKF_Triangulation topology( dims );
 
-  Delaunay delaunay(topology.points().dim());
+  Points delaunay(topology.points().dim());
   topology.points().copy(delaunay);
 
   #if 0
@@ -38,10 +36,11 @@ UT_TEST_CASE( test1 )
 
   printf("running rvd test for %u-simplex mesh with %lu elements and %lu delaunay vertices\n",number,topology.nb(),delaunay.nb());
 
-  delaunay::RestrictedVoronoiDiagram rvd(topology,delaunay);
-  rvd.parallel() = true;
+  voronoi::PowerDiagram rvd(topology,delaunay.dim());
 
-  rvd.compute(true);
+  rvd.set_sites(delaunay);
+  rvd.initialize();
+  rvd.compute();
 
   std::vector<index_t> idx1;
   rvd.points().duplicates(idx1);

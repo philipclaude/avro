@@ -786,6 +786,6 @@ Cell::security_radius_reached( index_t bj ) const
   return false;
 }
 
-}
+} // voronoi
 
 } // avro

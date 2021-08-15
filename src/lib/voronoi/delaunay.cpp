@@ -20,6 +20,7 @@
 namespace avro
 {
 
+#if 0
 int
 Delaunay::bisector( const index_t i , const index_t j ) const
 {
@@ -56,6 +57,6 @@ Delaunay::closest( const real_t* x ) const
 	return index_t(k0);
 }
 
-
+#endif
 
 }

@@ -49,7 +49,7 @@ UT_TEST_CASE( vao_polytopes_test )
 
   // create random delaunay vertices
   CubeDomain<type> domain(dim,dim,10);
-  Delaunay delaunay( dim );
+  Points delaunay( dim );
   std::vector<index_t> elems;
   for (index_t k = 0; k < nb_points; k++) {
 

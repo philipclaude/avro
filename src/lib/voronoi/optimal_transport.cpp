@@ -8,7 +8,7 @@
 
 #include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
-#include "voronoi/voronoi_cell.h"
+//#include "voronoi/voronoi_cell.h"
 
 #include <nlopt.hpp>
 #include <HLBFGS/HLBFGS.h>
@@ -95,12 +95,12 @@ LaguerreCell<Polytope>::initialize() {
   vertex_.resize( domain_.nv(elem_) );
   for (index_t j = 0; j < domain_.nv(elem_); j++) {
     vertex_[j] = Vertex(delaunay_.dim(),domain_.number());
-    vertex_[j].setCoordinates( domain_.points()[ domain_(elem_)[j] ] , domain_.points().dim() );
-    vertex_[j].setNumber( domain_.number() );
-    vertex_[j].addSimplexVertex( domain_.points()[ domain_(elem_,j) ] );
+    vertex_[j].set_coordinates( domain_.points()[ domain_(elem_)[j] ] , domain_.points().dim() );
+    vertex_[j].set_number( domain_.number() );
+    vertex_[j].add_simplex_vertex( domain_.points()[ domain_(elem_,j) ] );
     std::vector<int> b = domain_.points().incidence().get( domain_(elem_,j) );
     for (index_t i=0;i<b.size();i++)
-      vertex_[j].addBisector(b[i]);
+      vertex_[j].add_bisector(b[i]);
   }
 
   polytope_ = linspace(domain_.nv(elem_));
@@ -208,10 +208,10 @@ LaguerreCell<Simplex>::LaguerreCell(index_t elem , const Delaunay& delaunay ,
   for (index_t j=0;j<domain_.nv(elem_);j++)
   {
     vertex_[j] = Vertex(delaunay_.dim(),number_);
-    vertex_[j].setCoordinates( domain_.points()[ domain_(elem_)[j] ] ,
+    vertex_[j].set_coordinates( domain_.points()[ domain_(elem_)[j] ] ,
                 domain_.points().dim() );
-    vertex_[j].setNumber( domain_.number() );
-    vertex_[j].addSimplexVertex( domain_.points()[ domain_(elem_,j) ] );
+    vertex_[j].set_number( domain_.number() );
+    vertex_[j].add_simplex_vertex( domain_.points()[ domain_(elem_,j) ] );
   }
 
   // create the initial simplex
@@ -231,7 +231,7 @@ LaguerreCell<Simplex>::LaguerreCell(index_t elem , const Delaunay& delaunay ,
     for (index_t i=0;i<simplex_k.size();i++)
     {
       if (i==j) continue; // skip the vertex opposite the facet
-      vertex_[i].addBisector(b);
+      vertex_[i].add_bisector(b);
     }
   }
 }
@@ -318,6 +318,25 @@ LaguerreCell<Simplex>::clip( index_t i )
   }
 }
 
+static index_t
+closest( const Points& points , const real_t* x )
+{
+	avro_assert( points.nb() > 0 );
+	int k0 = 0;
+	real_t d,dmin = numerics::distance2( x , points(0) , points.dim() );
+	for (index_t k = 1; k < points.nb(); k++)
+	{
+		d = numerics::distance2( x , points(k) , points.dim() );
+		if (d<dmin)
+		{
+			dmin = d;
+			k0   = k;
+		}
+	}
+	return index_t(k0);
+}
+
+
 void
 LaguerreCell<Simplex>::clip()
 {
@@ -328,7 +347,7 @@ LaguerreCell<Simplex>::clip()
   clipped_.resize(delaunay_.nb(),false);
 
   // find the nearest delaunay site
-  index_t s = delaunay_.closest( domain_.points()[domain_(elem_,0)] );
+  index_t s = closest( delaunay_ , domain_.points()[domain_(elem_,0)] );
   sites_.push_back(s);
   set_site(s);
 
@@ -443,7 +462,7 @@ LaguerreCellBase<type>::clip_by_bisector( index_t j , index_t bj )
   pedges_.assign( qedges_.begin() , qedges_.end() );
   uniquify(polytope_);
   for (index_t ii=0;ii<polytope_.size();ii++)
-    vertex_[ polytope_[ii] ].setBaseSite( delaunay_[site_] );
+    vertex_[ polytope_[ii] ].set_base_site( delaunay_[site_] );
 }
 
 template<typename type>
@@ -484,16 +503,16 @@ LaguerreCellBase<type>::clip_edge( const index_t e0 , const index_t e1 , const i
     Vertex v2(delaunay_.dim(),domain_.number());
 
     // perform the symbolic intersection of the bisectors, simplices, meshes
-    v2.setBaseSite(delaunay_[site_]);
-    v2.intersectSymbolic( &v0 , &v1 , delaunay_ );
-    v2.setSites( delaunay_ , ids_ );
+    v2.set_base_site(delaunay_[site_]);
+    v2.intersect_symbolic( &v0 , &v1 );
+    v2.set_sites( delaunay_ , ids_ );
 
     // this vertex lies exactly on the slicing bisector
-    v2.addBisector( b );
-    v2.addSite( zj );
+    v2.add_bisector( b );
+    v2.add_site( zj );
 
     // compute the geometric intersection
-    v2.intersectGeometric( v0.X() , v1.X() , zi , zj );
+    v2.intersect_geometric( v0.X() , v1.X() , zi , zj );
 
     avro_assert_msg( v0.nb_bisectors()==domain_.number() ,
                 "nb_bisectors = %lu, number = %u",v0.nb_bisectors(),number_ );
