@@ -75,7 +75,6 @@ private:
   const Field<type,real_t>& field_;
 };
 
-
 template<typename type>
 class LaguerreDiagram : public Topology<Polytope>
 {

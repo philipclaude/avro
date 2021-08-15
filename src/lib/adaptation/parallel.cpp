@@ -645,6 +645,7 @@ public:
       E.insert( {partL,partR} );
     }
 
+    #if 0
     PerfectMatching graph( mpi::size() , E.size() );
     graph.options.verbose = false;
     std::vector<index_t> edges;
@@ -677,6 +678,9 @@ public:
       if (graph.GetSolution(id) == 0) continue; // not an edge in the matching
       pairs_.push_back( {edges[2*k],edges[2*k+1]} );
     }
+    #else
+    printf("blossom5 was removed since this was no longer needed");
+    #endif
   }
 
   index_t nb_pairs() const { return pairs_.size(); }
