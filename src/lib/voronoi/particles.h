@@ -5,7 +5,7 @@
 
 #include "element/simplex.h"
 
-#include "voronoi/new/diagram.h"
+#include "voronoi/diagram.h"
 
 #include <memory>
 #include <string>

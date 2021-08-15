@@ -4,8 +4,8 @@
 #include "element/polytope.h"
 #include "mesh/topology.h"
 
-#include "voronoi/new/facets.h"
-#include "voronoi/new/vertex.h"
+#include "voronoi/facets.h"
+#include "voronoi/vertex.h"
 
 #include <geogram/nn_search.h>
 

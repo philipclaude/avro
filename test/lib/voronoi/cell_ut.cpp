@@ -4,8 +4,8 @@
 
 #include "library/ckf.h"
 
-#include "voronoi/new/cell.h"
-#include "voronoi/new/diagram.h"
+#include "voronoi/cell.h"
+#include "voronoi/diagram.h"
 
 #define SPHERE 0
 

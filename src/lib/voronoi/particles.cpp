@@ -3,8 +3,8 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
-#include "voronoi/new/diagram.h"
-#include "voronoi/new/particles.h"
+#include "voronoi/diagram.h"
+#include "voronoi/particles.h"
 
 #include <json/json.hpp>
 

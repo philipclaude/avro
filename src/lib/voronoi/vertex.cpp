@@ -15,7 +15,7 @@
 #include "mesh/points.h"
 
 #include "numerics/predicates.h"
-#include "voronoi/new/vertex.h"
+#include "voronoi/vertex.h"
 
 #include <triangle/predicates.h>
 

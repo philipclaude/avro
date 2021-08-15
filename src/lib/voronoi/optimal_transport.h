@@ -8,7 +8,7 @@
 
 #include "voronoi/voronoi.h"
 
-#include "voronoi/new/vertex.h"
+#include "voronoi/vertex.h"
 
 #include <memory>
 #include <queue>

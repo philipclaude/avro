@@ -16,7 +16,7 @@
 
 #include "mesh/decomposition.h"
 
-#include "voronoi/new/diagram.h"
+#include "voronoi/diagram.h"
 
 using namespace avro;
 using namespace avro::graphics;

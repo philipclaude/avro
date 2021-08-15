@@ -5,7 +5,7 @@
 
 #include "numerics/predicates.h"
 
-#include "voronoi/new/facets.h"
+#include "voronoi/facets.h"
 
 namespace avro
 {

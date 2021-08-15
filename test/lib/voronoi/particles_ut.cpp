@@ -5,8 +5,8 @@
 #include "graphics/application.h"
 
 #include "mesh/points.h"
-#include "voronoi/new/cell.h"
-#include "voronoi/new/particles.h"
+#include "voronoi/cell.h"
+#include "voronoi/particles.h"
 
 using namespace avro;
 

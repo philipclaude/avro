@@ -1,7 +1,7 @@
 #include "numerics/geometry.h"
 #include "numerics/nlopt_result.h"
 
-#include "voronoi/new/diagram.h"
+#include "voronoi/diagram.h"
 
 #include <nlopt.hpp>
 #include <HLBFGS/HLBFGS.h>

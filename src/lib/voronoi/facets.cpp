@@ -2,7 +2,7 @@
 #include "element/simplex.h"
 #include "mesh/topology.h"
 
-#include "voronoi/new/facets.h"
+#include "voronoi/facets.h"
 
 namespace avro
 {

@@ -5,7 +5,7 @@
 
 #include "mesh/field.hpp"
 
-#include "voronoi/new/cell.h"
+#include "voronoi/cell.h"
 
 #include <geogram/nn_search.h>
 

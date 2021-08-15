@@ -3,7 +3,7 @@
 #include "numerics/mat.hpp"
 #include "element/quadrature.h"
 #include "numerics/vec.hpp"
-#include "voronoi/new/cell.h"
+#include "voronoi/cell.h"
 
 #include <time.h>
 

@@ -8,7 +8,7 @@
 #include "mesh/points.h"
 
 #include "numerics/geometry.h"
-#include "voronoi/new/diagram.h"
+#include "voronoi/diagram.h"
 
 #include <json/json.hpp>
 
