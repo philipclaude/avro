@@ -64,7 +64,7 @@ UT_TEST_CASE( test1 )
         index_t nb_points = coordinates.size() / number;
         printf("--> dim = %u, imported %lu points\n",number,nb_points);
 
-        delaunay::SemiDiscreteOptimalTransport<type> transport(domain,nullptr);
+        voronoi::SemiDiscreteOptimalTransport<type> transport(domain,nullptr);
         transport.sample( nb_points );
 
         // if blue noise, use the actual samples

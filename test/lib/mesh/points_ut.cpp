@@ -36,7 +36,7 @@ UT_TEST_CASE( test1 )
 
   printf("running rvd test for %u-simplex mesh with %lu elements and %lu delaunay vertices\n",number,topology.nb(),delaunay.nb());
 
-  delaunay::LaguerreDiagram<Simplex> rvd(delaunay,topology);
+  voronoi::LaguerreDiagram<Simplex> rvd(delaunay,topology);
   rvd.compute(true);
 
   std::vector<index_t> idx1;

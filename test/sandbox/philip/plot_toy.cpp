@@ -21,10 +21,10 @@
 
 UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 
-std::shared_ptr<delaunay::DensityMeasure>
+std::shared_ptr<voronoi::DensityMeasure>
 get_density( const std::string& name , coord_t number )
 {
-  if (name == "uniform") return std::make_shared<delaunay::DensityMeasure_Uniform>(1.0);
+  if (name == "uniform") return std::make_shared<voronoi::DensityMeasure_Uniform>(1.0);
   else if (name == "shock") return std::make_shared<DensityMeasure_Shock>(number);
   else if (name == "cone") return std::make_shared<DensityMeasure_Cone>(number);
   else if (name == "gaussian")
@@ -46,7 +46,7 @@ get_density( const std::string& name , coord_t number )
 
 class DensityField : public Field<Simplex,real_t> {
 public:
-  DensityField( const Points& points , Topology<Simplex>& slice , const std::vector<index_t>& sites , delaunay::DensityMeasure& density ) :
+  DensityField( const Points& points , Topology<Simplex>& slice , const std::vector<index_t>& sites , voronoi::DensityMeasure& density ) :
     Field<Simplex,real_t>(slice,0,DISCONTINUOUS) {
     this->build();
     this->element().set_basis( BasisFunctionCategory_Lagrange );
@@ -113,7 +113,7 @@ UT_TEST_CASE( test1 )
   coord_t dim = number+1;
   CubeDomain<type> domain(number,dim,2);
 
-  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,nullptr);
+  voronoi::SemiDiscreteOptimalTransport<type> transport(domain,nullptr);
   transport.sample( coordinates.size()/number );
 
   transport.set_delaunay( coordinates.data() , number );
@@ -122,16 +122,16 @@ UT_TEST_CASE( test1 )
   transport.compute_laguerre();
 
   HyperSlice<type> slice(transport.diagram());
-  delaunay::IntegrationSimplices& triangulation = transport.simplices();
+  voronoi::IntegrationSimplices& triangulation = transport.simplices();
 
   std::vector<real_t> center(number,0.01);
   slice.compute( center , 0 );
 
 /*
-  std::shared_ptr<delaunay::TriangulationCells> tc = std::make_shared<delaunay::TriangulationCells>(triangulation);
+  std::shared_ptr<voronoi::TriangulationCells> tc = std::make_shared<voronoi::TriangulationCells>(triangulation);
   triangulation.fields().make("c",tc);
 
-  std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
+  std::shared_ptr<voronoi::TriangulationElements> te = std::make_shared<voronoi::TriangulationElements>(triangulation);
   triangulation.fields().make("e",te);
 */
 
@@ -140,7 +140,7 @@ UT_TEST_CASE( test1 )
   std::shared_ptr<SliceSites> ts = std::make_shared<SliceSites>(slice.tetrahedra(),slice.tet2site());
   slice.tetrahedra().fields().make("sites",ts);
 
-  std::shared_ptr<delaunay::DensityMeasure> density = get_density( /*J["density"]*/ "cone" , number );
+  std::shared_ptr<voronoi::DensityMeasure> density = get_density( /*J["density"]*/ "cone" , number );
   std::shared_ptr<DensityField> dfld = std::make_shared<DensityField>( transport.delaunay() , slice.tetrahedra(),slice.tet2site() , *density.get() );
   slice.tetrahedra().fields().make("d",dfld);
 

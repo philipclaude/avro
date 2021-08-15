@@ -32,18 +32,18 @@ UT_TEST_CASE( test1 )
   CubeDomain<type> domain(number,dim,2);
 
   // uniform density
-  delaunay::DensityMeasure_Uniform density1(1.0);
+  voronoi::DensityMeasure_Uniform density1(1.0);
   DensityMeasure_Sphere density2(number);
   DensityMeasure_Cone density3(number);
 
-  std::vector<delaunay::DensityMeasure*> measures = { &density3 };//&density2 , &density1 };
+  std::vector<voronoi::DensityMeasure*> measures = { &density3 };//&density2 , &density1 };
   std::vector<std::string> names = {"cone"};//"sphere","uniform"};
 
 
   for (index_t imeasure = 0; imeasure < measures.size(); imeasure++)
   {
 
-    delaunay::SemiDiscreteOptimalTransport<type> transport(domain,measures[imeasure]);
+    voronoi::SemiDiscreteOptimalTransport<type> transport(domain,measures[imeasure]);
 
     std::string prefix = "/home/pcaplan/Dropbox/research/publications/imr-2021-xxxx/optimal_transport/sdot-" + names[imeasure] + "-dim-" + std::to_string(number) + "-n-" + std::to_string(nb_points);
 

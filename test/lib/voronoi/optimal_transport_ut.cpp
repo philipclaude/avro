@@ -69,17 +69,17 @@ UT_TEST_CASE( test_nd_polytope )
     }
 
     // initialize and compute the laguerre diagram
-    delaunay::LaguerreDiagram<type> diagram( delaunay , domain );
+    voronoi::LaguerreDiagram<type> diagram( delaunay , domain );
     diagram.set_elements( elems );
 
-    delaunay::IntegrationSimplices triangulation(number,number);
+    voronoi::IntegrationSimplices triangulation(number,number);
 
     diagram.compute(false,&triangulation);
 
-    std::shared_ptr<delaunay::TriangulationCells> tc = std::make_shared<delaunay::TriangulationCells>(triangulation);
+    std::shared_ptr<voronoi::TriangulationCells> tc = std::make_shared<voronoi::TriangulationCells>(triangulation);
     triangulation.fields().make("c",tc);
 
-    std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
+    std::shared_ptr<voronoi::TriangulationElements> te = std::make_shared<voronoi::TriangulationElements>(triangulation);
     triangulation.fields().make("e",te);
 
     #if 0

@@ -86,7 +86,6 @@ kernel( const matd<real_t>& A , matd<real_t>& K ) {
 	for (int i = 0; i < int(s.size()); i++) {
 		if (s[i]>tol) r++;
 	}
-  printf("rank = %d\n",r);
 
 	matd<real_t> v(N,N);
 	for (int i = 0; i < n;i++)

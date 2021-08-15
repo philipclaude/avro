@@ -8,8 +8,7 @@
 
 #include "numerics/geometry.h"
 
-#include "voronoi/cell.h"
-#include "voronoi/diagram.h"
+#include "voronoi/optimal_transport.h"
 
 #include <json/json.hpp>
 
@@ -22,7 +21,7 @@ UT_TEST_SUITE( voronoi_cell_test_suite )
 UT_TEST_CASE( test_nd )
 {
   coord_t numberL = 2;
-  coord_t numberH = 3;
+  coord_t numberH = 4;
   coord_t powerL = 2;
   coord_t powerH = 2;
   bool generate_mode = false;
@@ -122,11 +121,8 @@ UT_TEST_CASE( test_nd )
       index_t nb_iter = 20;
       for (index_t iter = 0; iter <= nb_iter; iter++)
       {
-        voronoi::PowerDiagram diagram( ckf , delaunay.dim() );
-
-        diagram.set_sites(delaunay);
-        diagram.initialize();
-        diagram.compute();
+        voronoi::LaguerreDiagram<Polytope> diagram( delaunay , domain );
+        diagram.compute(false);
 
         for (index_t k=0;k<diagram.nb();k++)
         {
@@ -168,10 +164,12 @@ UT_TEST_CASE( test_nd )
           output << std::setw(4) << J << std::endl;
           #endif
 
+          /*
           if (number > 3 || (nb_points >= 1e4) || generate_mode) continue;
           graphics::Viewer vis;
           vis.add(diagram);
           vis.run(AVRO_FULL_UNIT_TEST);
+          */
         }
       } // loop over power
     }

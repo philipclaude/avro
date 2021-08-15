@@ -63,7 +63,7 @@ UT_TEST_CASE( vao_polytopes_test )
   }
 
   // initialize and compute the laguerre diagram
-  delaunay::LaguerreDiagram<type> diagram( delaunay , domain );
+  voronoi::LaguerreDiagram<type> diagram( delaunay , domain );
   diagram.set_elements( elems );
 
   diagram.compute(false,nullptr);

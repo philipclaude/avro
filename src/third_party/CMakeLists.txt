@@ -44,20 +44,6 @@ add_source_directories( MESHB_SOURCES "gmf source" libmeshb )
 set_source_files_properties( ${MESHB_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
 include_directories( libmeshb )
 
-# blossom
-if (NOT avro_LITE)
-	add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5 )
-	add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/GEOM )
-	add_source_directories( BLOSSOM_SOURCES "blossom source" blossom5/MinCost )
-	set_source_files_properties( ${BLOSSOM_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
-	include_directories( blossom5 )
-else()
-	set( BLOSSOM_SOURCES )
-endif()
-
-add_source_directories(HLBFGS_SOURCES "HLBFGS" HLBFGS )
-set_source_files_properties( ${HLBFGS_SOURCES} PROPERTIES COMPILE_FLAGS "-w" )
-
 # ESP
 if (AVRO_NO_ESP)
 	add_source_directories( EGLITE_SOURCES "egads" egads )
@@ -69,4 +55,4 @@ endif()
 
 set( THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
-add_library(avro_third_party OBJECT ${BLOSSOM_SOURCES} ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${GEOGRAM_SOURCES} ${HLBFGS_SOURCES} ${QHULL_SOURCES} )
+add_library(avro_third_party OBJECT ${EGLITE_SOURCES} ${TET_SOURCES} ${MESHB_SOURCES} ${TRIANGLE_SOURCES} ${JSON_SOURCES} ${GLAD_SOURCES} ${IMGUI_SOURCES} ${GEOGRAM_SOURCES} )

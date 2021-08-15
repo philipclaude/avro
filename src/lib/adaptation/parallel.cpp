@@ -33,8 +33,6 @@
 #if AVRO_MPI
 #include <parmetis.h>
 
-#include "blossom5/PerfectMatching.h"
-
 #if PARMETIS_MAJOR_VERSION == 3
 #define PARM_INT idxtype
 #define PARM_REAL float

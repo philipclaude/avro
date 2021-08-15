@@ -484,11 +484,11 @@ Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
 
 #if 0
 template<typename type>
-std::shared_ptr<delaunay::OptimalTransportBase>
+std::shared_ptr<voronoi::OptimalTransportBase>
 get_optimal_transport_solver(coord_t number, coord_t dim) {
 
   std::shared_ptr<CubeDomain<type>> domain = std::make_shared<CubeDomain<type>>(number,dim,2);
-  return std::make_shared<delaunay::SemiDiscreteOptimalTransport<type>>(*domain.get(),density.get());
+  return std::make_shared<voronoi::SemiDiscreteOptimalTransport<type>>(*domain.get(),density.get());
 }
 #endif
 
@@ -499,19 +499,19 @@ Context::compute_laguerre( const std::vector<real_t>& sites , const std::vector<
   avro_assert( nb_points == weights.size() );
 
   std::shared_ptr<TopologyBase> pdomain;
-  delaunay::DensityMeasure_Uniform density;
-  std::shared_ptr<delaunay::OptimalTransportBase> solver;
+  voronoi::DensityMeasure_Uniform density;
+  std::shared_ptr<voronoi::OptimalTransportBase> solver;
 
   std::string type = parameters_["domain type"];
   if (type == "simplex") {
     pdomain = std::make_shared<CubeDomain<Simplex>>(number_,dim_+1,2);
     const Topology<Simplex>& domain = static_cast<const Topology<Simplex>&>(*pdomain.get());
-    solver = std::make_shared<delaunay::SemiDiscreteOptimalTransport<Simplex>>(domain,&density);
+    solver = std::make_shared<voronoi::SemiDiscreteOptimalTransport<Simplex>>(domain,&density);
   }
   else if (type == "polytope") {
     pdomain = std::make_shared<CubeDomain<Polytope>>(number_,dim_+1,2);
     const Topology<Polytope>& domain = static_cast<const Topology<Polytope>&>(*pdomain.get());
-    solver = std::make_shared<delaunay::SemiDiscreteOptimalTransport<Polytope>>(domain,&density);
+    solver = std::make_shared<voronoi::SemiDiscreteOptimalTransport<Polytope>>(domain,&density);
   }
   else
     avro_implement;
@@ -543,19 +543,19 @@ Context::compute_optimal_transport( const std::vector<real_t>& sites , const std
   avro_assert( nb_points == initial_weights.size() );
 
   std::shared_ptr<TopologyBase> pdomain;
-  delaunay::DensityMeasure_Uniform density;
-  std::shared_ptr<delaunay::OptimalTransportBase> solver;
+  voronoi::DensityMeasure_Uniform density;
+  std::shared_ptr<voronoi::OptimalTransportBase> solver;
 
   std::string type = parameters_["domain type"];
   if (type == "simplex") {
     pdomain = std::make_shared<CubeDomain<Simplex>>(number_,dim_+1,2);
     const Topology<Simplex>& domain = static_cast<const Topology<Simplex>&>(*pdomain.get());
-    solver = std::make_shared<delaunay::SemiDiscreteOptimalTransport<Simplex>>(domain,&density);
+    solver = std::make_shared<voronoi::SemiDiscreteOptimalTransport<Simplex>>(domain,&density);
   }
   else if (type == "polytope") {
     pdomain = std::make_shared<CubeDomain<Polytope>>(number_,dim_+1,2);
     const Topology<Polytope>& domain = static_cast<const Topology<Polytope>&>(*pdomain.get());
-    solver = std::make_shared<delaunay::SemiDiscreteOptimalTransport<Polytope>>(domain,&density);
+    solver = std::make_shared<voronoi::SemiDiscreteOptimalTransport<Polytope>>(domain,&density);
   }
   else
     avro_implement;

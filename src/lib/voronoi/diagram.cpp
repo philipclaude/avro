@@ -4,7 +4,6 @@
 #include "voronoi/diagram.h"
 
 #include <nlopt.hpp>
-#include <HLBFGS/HLBFGS.h>
 
 #include <Eigen/SparseLU>
 #include <Eigen/SparseQR>
@@ -18,7 +17,7 @@ namespace avro
 namespace voronoi
 {
 
-#define PARALLEL 0
+#define PARALLEL 1
 
 void
 PowerDiagram::initialize() {
@@ -243,7 +242,7 @@ PowerDiagram::start() {
   sub_iteration_ = 0;
 }
 
-real_t
+static real_t
 calculate_norm( const real_t* x , index_t nb ) {
   real_t n = 0.0;
   for (index_t k = 0; k < nb; k++)

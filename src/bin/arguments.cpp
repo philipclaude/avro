@@ -24,7 +24,6 @@ help()
   // call each program to print the call usage
   adapt(-1,0);
   plot(-1,0);
-  voronoi(-1,0);
 }
 
 // look for an argument in the list and return the value
