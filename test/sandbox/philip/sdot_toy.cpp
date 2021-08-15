@@ -9,7 +9,6 @@
 
 #include "numerics/geometry.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
 #include "measures.h"
@@ -29,7 +28,7 @@ UT_TEST_CASE( test1 )
   coord_t dim = number+1;
   CubeDomain<type> domain(number,dim,2);
 
-  delaunay::DensityMeasure_Uniform density(1.0);
+  voronoi::DensityMeasure_Uniform density(1.0);
   DensityMeasure_Shock density2(number);
   DensityMeasure_Sphere density4(number);
   DensityMeasure_Cone density5(number);
@@ -45,7 +44,7 @@ UT_TEST_CASE( test1 )
   }
   DensityMeasure_Gaussian density3(mu,sigma);
 
-  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density);
+  voronoi::SemiDiscreteOptimalTransport<type> transport(domain,&density);
   transport.save_every( 1e10 , "tmp/void" );
   transport.sample( nb_points );
 
@@ -75,7 +74,7 @@ UT_TEST_CASE( test1 )
   printf("total mass = %g, min = %g, max = %g, average = %g\n",mass_total,mass_min,mass_max,mass_total/real_t(nb_points));
 
   HyperSlice<type> slice(transport.diagram());
-  delaunay::IntegrationSimplices& triangulation = transport.simplices();
+  voronoi::IntegrationSimplices& triangulation = transport.simplices();
   if (number == 4)
   {
     std::vector<real_t> center(number,0.001);
@@ -99,10 +98,10 @@ UT_TEST_CASE( test1 )
     output << std::setw(4) << J << std::endl;
   }
 
-  std::shared_ptr<delaunay::TriangulationCells> tc = std::make_shared<delaunay::TriangulationCells>(triangulation);
+  std::shared_ptr<voronoi::TriangulationCells> tc = std::make_shared<voronoi::TriangulationCells>(triangulation);
   triangulation.fields().make("c",tc);
 
-  std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
+  std::shared_ptr<voronoi::TriangulationElements> te = std::make_shared<voronoi::TriangulationElements>(triangulation);
   triangulation.fields().make("e",te);
 
   graphics::Viewer vis;

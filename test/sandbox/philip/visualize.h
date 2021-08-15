@@ -20,7 +20,7 @@ typedef void VOID;
 namespace avro
 {
 
-using namespace delaunay;
+using namespace voronoi;
 
 bool
 isclipped_kernel( const index_t* v , index_t nv , coord_t dim , const Points& points , const std::vector<real_t>& center , const std::vector<real_t>& normal )

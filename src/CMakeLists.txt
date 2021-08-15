@@ -42,6 +42,7 @@ add_custom_target( avro_lib DEPENDS avro_shared avro_static )
 include_directories( ${ESP_INCLUDE_DIRS} )
 include_directories( ${NLOPT_INCLUDE_DIRS} )
 include_directories( ${THIRD_PARTY_INCLUDE_DIRS} )
+include_directories( ${EIGEN3_INCLUDE_DIR} )
 
 include_directories( third_party/glad/include )
 include_directories( third_party/glfw/include )

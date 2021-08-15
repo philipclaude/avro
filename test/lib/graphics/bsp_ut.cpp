@@ -28,7 +28,7 @@ UT_TEST_SUITE( graphics_bsp_suite )
 UT_TEST_CASE( test1 )
 {
   typedef Simplex type;
-  std::string mesh_name = AVRO_SOURCE_DIR + "/build/release/ccp2_9.mesh";
+  std::string mesh_name = "CKF-4-4-4";//AVRO_SOURCE_DIR + "/build/release/ccp2_9.mesh";
 
   // get the original input mesh
   std::shared_ptr<TopologyBase> ptopology = nullptr;
@@ -72,7 +72,7 @@ UT_TEST_CASE( test1 )
   tree.get_triangles( eye , T );
 
   printf("retrieved %lu triangles\n",T.size());
-  PostScriptWriter writer(AVRO_SOURCE_DIR + "/build/release/test.eps");
+  PostScriptWriter writer(AVRO_SOURCE_DIR + "/test/tmp/test.eps");
   writer.begin( window.width() , window.height() );
   writer.write( T , view_matrix , projection_matrix );
   writer.end();

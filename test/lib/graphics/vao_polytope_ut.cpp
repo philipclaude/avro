@@ -14,7 +14,6 @@
 #include "mesh/points.h"
 #include "mesh/topology.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
 #if AVRO_HEADLESS_GRAPHICS == 0
@@ -49,7 +48,7 @@ UT_TEST_CASE( vao_polytopes_test )
 
   // create random delaunay vertices
   CubeDomain<type> domain(dim,dim,10);
-  Delaunay delaunay( dim );
+  Points delaunay( dim );
   std::vector<index_t> elems;
   for (index_t k = 0; k < nb_points; k++) {
 
@@ -64,7 +63,7 @@ UT_TEST_CASE( vao_polytopes_test )
   }
 
   // initialize and compute the laguerre diagram
-  delaunay::LaguerreDiagram<type> diagram( delaunay , domain );
+  voronoi::LaguerreDiagram<type> diagram( delaunay , domain );
   diagram.set_elements( elems );
 
   diagram.compute(false,nullptr);

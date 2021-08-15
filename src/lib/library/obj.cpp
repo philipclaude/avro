@@ -72,6 +72,9 @@ objFile::read()
 
   // read the file
   std::ifstream file( filename_.c_str() , std::ios::in );
+  if (!file.good()) {
+    printf("could not open file %s\n",filename_.c_str());
+  }
   avro_assert( file.good() );
   std::string line,token;
   getline(file,line);

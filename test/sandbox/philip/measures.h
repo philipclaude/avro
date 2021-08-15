@@ -9,23 +9,23 @@
 
 namespace avro
 {
-using namespace delaunay;
+using namespace voronoi;
 
-class DensityMeasure_Sin : public delaunay::DensityMeasure {
+class DensityMeasure_Sin : public voronoi::DensityMeasure {
 public:
   real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const {
     return 1e1*( 1 + sin(2*M_PI*x[0])*sin(2*M_PI*x[1]) );
   }
 };
 
-class DensityMeasure_Quadratic : public delaunay::DensityMeasure {
+class DensityMeasure_Quadratic : public voronoi::DensityMeasure {
 public:
   real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const {
     return .1 + 100*x[0]*x[0];
   }
 };
 
-class DensityMeasure_Sphere : public delaunay::DensityMeasure {
+class DensityMeasure_Sphere : public voronoi::DensityMeasure {
 public:
   DensityMeasure_Sphere( coord_t dim ) :
     dim_(dim)
@@ -40,7 +40,7 @@ private:
   coord_t dim_;
 };
 
-class DensityMeasure_Cone : public delaunay::DensityMeasure {
+class DensityMeasure_Cone : public voronoi::DensityMeasure {
 public:
   DensityMeasure_Cone( coord_t dim ) :
     dim_(dim)
@@ -65,7 +65,7 @@ private:
 };
 
 
-class DensityMeasure_Shock : public delaunay::DensityMeasure {
+class DensityMeasure_Shock : public voronoi::DensityMeasure {
 public:
   DensityMeasure_Shock( coord_t dim ) :
     dim_(dim) {
@@ -91,7 +91,7 @@ private:
 
 };
 
-class DensityMeasure_Gaussian : public delaunay::DensityMeasure {
+class DensityMeasure_Gaussian : public voronoi::DensityMeasure {
 public:
   DensityMeasure_Gaussian( const vecd<real_t>& mu , const symd<real_t>& sigma ) :
     mu_(mu),
