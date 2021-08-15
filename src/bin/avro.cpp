@@ -57,6 +57,8 @@ main( int argc , const char** argv )
     result = programs::convert(nb_inputs,inputs);
   else if (program=="check")
     result = programs::check(nb_inputs,inputs);
+  else if (program == "animate")
+    result = programs::animate(nb_inputs,inputs);
   else {
     printf("unknown program :(\n");
     result = 1;

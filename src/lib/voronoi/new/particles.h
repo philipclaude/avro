@@ -39,6 +39,9 @@ public:
   const std::vector<real_t>& density() const { return density_; }
   const std::vector<real_t>& mass() const { return mass_; }
 
+  void save_every( int x ) { save_every_ = x; }
+  void save_frames( const std::string& filename ) const;
+
 private:
 
   // a helper field class to visualize the colour of each voronoi cell
@@ -82,6 +85,13 @@ private:
   real_t eps_;
 
   std::shared_ptr<FluidField> fluid_field_;
+
+  real_t time_;
+  index_t iteration_;
+
+  int save_every_;
+  std::vector<float> frame_coordinates_;
+  std::vector<float> frame_density_;
 };
 
 }

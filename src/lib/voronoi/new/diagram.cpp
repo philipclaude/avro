@@ -36,9 +36,11 @@ nlopt_objective( unsigned n , const double* x , double* grad, void* data0 )
 
 void
 PowerDiagram::start() {
-  printf("-------------------------------------------------\n");
-  printf("%8s|%12s|%12s|%12s\n","iter  "," energy "," gradient "," time (s)");
-  printf("-------------------------------------------------\n");
+  if (verbose_) {
+    printf("-------------------------------------------------\n");
+    printf("%8s|%12s|%12s|%12s\n","iter  "," energy "," gradient "," time (s)");
+    printf("-------------------------------------------------\n");
+  }
   iteration_ = 0;
   sub_iteration_ = 0;
 }
@@ -105,6 +107,7 @@ PowerDiagram::evaluate_objective( index_t n , const real_t* x , real_t* grad ) {
 	real_t min_vol = *std::min_element( cell_volume_.begin() , cell_volume_.end() );
 	real_t max_vol = *std::max_element( cell_volume_.begin() , cell_volume_.end() );
 
+  if (verbose_)
   printf("%5lu-%3lu|%12.3e|%12.3e|%12.3e|%12.3e|%12.3e|%12.3e\n",
     iteration_,sub_iteration_,
     energy_,
@@ -283,15 +286,15 @@ public:
 			b(k) = rhs_[k];
 
     //matrix_.makeCompressed();
-		//Eigen::SparseLU<Eigen::SparseMatrix<real_t> > solver;
+		Eigen::SparseLU<Eigen::SparseMatrix<real_t> > solver;
 		//Eigen::BiCGSTAB<Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver; //Eigen::IncompleteLUT<real_t> > solver;
-		Eigen::ConjugateGradient<Eigen::SparseMatrix<real_t> , Eigen::Lower | Eigen::Upper , Eigen::DiagonalPreconditioner<real_t> > solver;
+		//Eigen::ConjugateGradient<Eigen::SparseMatrix<real_t> , Eigen::Lower | Eigen::Upper , Eigen::DiagonalPreconditioner<real_t> > solver;
     //Eigen::SparseQR<Eigen::SparseMatrix<real_t> , Eigen::COLAMDOrdering<int> > solver;
     //Eigen::LeastSquaresConjugateGradient< Eigen::SparseMatrix<real_t> , Eigen::DiagonalPreconditioner<real_t> > solver;
 
 		// set some parameters
-    solver.setTolerance(1e-3);
-    solver.setMaxIterations(10000);
+    //solver.setTolerance(1e-3);
+    //solver.setMaxIterations(10000);
 
 		// factorize/precondition the matrix
 		clock_t t0 = clock();
@@ -307,11 +310,11 @@ public:
 		if (solver.info() != Eigen::Success) {
 			printf("solve failed\n");
       std::cout << eigen_error_message(solver.info()) << std::endl;
-      printf("iterations = %lu, error = %g",solver.iterations(),solver.error());
+      //printf("iterations = %lu, error = %g",solver.iterations(),solver.error());
       avro_assert_not_reached;
 		}
 		clock_t t1 = clock();
-		printf("--> linear solve time = %g sec.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
+		//printf("--> linear solve time = %g sec.\n",real_t(t1-t0)/real_t(CLOCKS_PER_SEC));
 
 		// save the result
 		for (index_t k = 0; k < n; k++)
@@ -508,7 +511,7 @@ private:
 	real_t regularization_;
 };
 
-void
+bool
 PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>& mass ) {
 
 	mode_ = 1; // we are in site-optimization mode
@@ -528,10 +531,11 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
   // determine the a0 constant in the Kitagawa algorithm
   real_t vmin = *std::min_element( cell_volume_.begin() , cell_volume_.end() );
   real_t mmin = *std::min_element( nu_.begin() , nu_.end() );
-  real_t gnorm = -1.0;
+  real_t gnorm = -1.0, gnorm0 = -1.0;
   real_t a0 = 0.5*( std::min(vmin,mmin) );
-  printf("--> determined a0 = %g\n",a0);
+  if (verbose_) printf("--> determined a0 = %g\n",a0);
 
+  bool converged = true;
 	for (index_t iter = 0; iter < nb_iter; iter++) {
 
 		// build the hessian matrix
@@ -549,11 +553,13 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
 
     // copy the original weights, and calculate the current norm of the energy gradient
     std::vector<real_t> x0(x.begin(),x.end());
-    real_t gnorm0 = calculate_norm( de_dw_.data() , n );
-		if (gnorm0 < 1e-16) break;
+    gnorm0 = calculate_norm( de_dw_.data() , n );
+		if (gnorm0 < 1e-16) {
+      gnorm = gnorm0;
+      break;
+    }
 
     sub_iteration_ = 0;
-		bool failed = false;
     while (true) {
 
       sub_iteration_++;
@@ -577,15 +583,22 @@ PowerDiagram::optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>&
       alpha = alpha / 2.0;
 
       if (alpha < 1e-7 || sub_iteration_ > 10) {
-				failed = true;
+				converged = false;
 				break;
 			}
     }
-		if (failed) break;
-    if (gnorm < 1e-12) break;
+		if (!converged) break;
+    if (gnorm < 1e-10) {
+      converged = true;
+      break;
+    }
 
 		iteration_++;
 	}
+
+  residual_ = gnorm;
+
+  return converged;
 
 }
 

@@ -69,7 +69,8 @@ public:
     vertices_(dim),
     ambient_dim_(topology.number()),
     domain_(topology,dim),
-    search_(nullptr)
+    search_(nullptr),
+    verbose_(true)
   {}
 
   // sets the ambient dimension (2d or 3d)
@@ -275,7 +276,7 @@ public:
   void optimize_points( index_t nb_iter );
   void optimize_points_lloyd( index_t nb_iter );
   void optimize_weights( index_t nb_iter , const std::vector<real_t>& mass );
-  void optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>& mass );
+  bool optimize_weights_kmt( index_t nb_iter , const std::vector<real_t>& mass );
 
   // optimization-related functions
   void start();
@@ -291,6 +292,9 @@ public:
   real_t weight( index_t k ) const { return weight_[k]; }
 
   real_t regularization() const { return 1e-3; }
+
+  void set_verbose( bool x ) { verbose_ = x; }
+  real_t residual() const { return residual_; }
 
 private:
 
@@ -319,6 +323,8 @@ private:
   index_t iteration_;    // objective function evaluation counter
   index_t sub_iteration_;
   real_t time_voronoi_;  // time spent computing the voronoi diagram (seconds)
+  bool verbose_;
+  real_t residual_;
 
 public:
   // a helper field class to visualize the colour of each voronoi cell

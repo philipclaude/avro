@@ -1,5 +1,7 @@
 #include "unit_tester.hpp"
 
+#include "../bin/programs.h"
+
 #include "graphics/application.h"
 
 #include "mesh/points.h"
@@ -12,20 +14,26 @@ UT_TEST_SUITE( voronoi_particles_test_suite )
 
 UT_TEST_CASE( test_2d )
 {
+  #if 1
 
-  index_t nb_particles = 1e2;
+  index_t nb_particles = 1e3;
 
-  voronoi::ParticleSimulator particles( "CKF-4-4" , nb_particles );
+  voronoi::ParticleSimulator particles( "CKF-2-2" , nb_particles );
 
   particles.sample("random","lloyd");
   particles.set_density();
 
+  particles.save_every(20);
   particles.simulate(10);
+  particles.save_frames("particles.json");
 
   graphics::Viewer vis;
   vis.add(particles.diagram());
-
   vis.run(AVRO_FULL_UNIT_TEST);
+#else
+  const char* inputs[] = {"/Users/pcaplan/Codes/geocl/avro/test/particles.json"};
+  programs::animate( 1,  inputs );
+#endif
 }
 UT_TEST_CASE_END( test_2d )
 

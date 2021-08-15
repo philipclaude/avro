@@ -268,6 +268,17 @@ Window::compute_view() {
 }
 
 void
+Window::compute_view( const vec3& center , float d ) {
+
+  camera_.set_lookat(center);
+
+  // set the camera to be in the -z direction from the center (up is +y)
+  vec3 eye = center;
+  eye(2) = eye(2) - d; // multiply the distance a bit so we're not too close to the plots
+  camera_.set_eye(eye);
+}
+
+void
 Window::resize(int width, int height) {
   width_  = width;
   height_ = height;
@@ -282,6 +293,11 @@ Window::resize(int width, int height) {
 
 void
 Window::draw(bool swap_buffers) {
+
+  if (draw_callback_ != nullptr) {
+    draw_callback_(*this);
+    return;
+  }
 
   // only draw if we need to
   if (!needs_drawing_) return;
