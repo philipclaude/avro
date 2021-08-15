@@ -46,6 +46,8 @@ draw( Window& window ) {
 
   if (animating) {
 
+    printf("animate!\n");
+
     GL_CALL( glBindVertexArray(vertex_array) );
 
     for (index_t i = 0; i < nb_frames; i++) {

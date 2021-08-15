@@ -5,6 +5,7 @@ layout (location = 1 ) in float a_Color;
 uniform mat4 u_ModelViewProjectionMatrix;
 
 out float v_Color;
+out vec3 p_Position;
 
 void main()
 {
@@ -12,4 +13,5 @@ void main()
   gl_PointSize = 10.0;
 
   v_Color = a_Color;
+  p_Position = a_Position;
 }

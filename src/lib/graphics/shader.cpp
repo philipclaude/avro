@@ -79,11 +79,10 @@ ShaderProgram::ShaderProgram( const std::string& name , bool with_tess , const s
   else if (name == "particles") {
     std::string vtx_src = get_shader_src( base + "-vtx.glsl" );
     std::string frg_src = get_shader_src( base + "-frg.glsl" );
-    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling particle shader" );
+    //avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling particle shader" );
 
-    // i would like to use a geometry shader to render each particle as a sphere
-    //std::string geo_src = get_shader_src( base + "-geo.glsl" );
-    //avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling particle shader" );
+    std::string geo_src = get_shader_src( base + "-geo.glsl" );
+    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling particle shader" );
 
   }
   else {

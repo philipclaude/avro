@@ -14,7 +14,7 @@ UT_TEST_SUITE( voronoi_particles_test_suite )
 
 UT_TEST_CASE( test_2d )
 {
-  index_t nb_particles = 1e3;
+  index_t nb_particles = 1e2;
 
   voronoi::ParticleSimulator particles( "CKF-2-2" , nb_particles );
 
@@ -23,7 +23,7 @@ UT_TEST_CASE( test_2d )
 
   particles.save_every(20);
   particles.simulate(10);
-  particles.save_frames("particles.json");
+  //particles.save_frames("particles.json");
 
   graphics::Viewer vis;
   vis.add(particles.diagram());
