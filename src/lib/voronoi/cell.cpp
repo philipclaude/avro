@@ -21,7 +21,7 @@ Cell::Cell( index_t site , const Points& delaunay ,
   domain_(domain),
   search_(searcher),
   points_(delaunay.dim()),
-  exact_(false),
+  exact_(true),
   ambient_dim_(domain.number())
 {}
 

@@ -18,6 +18,8 @@ namespace avro
 namespace voronoi
 {
 
+#define PARALLEL 0
+
 void
 PowerDiagram::initialize() {
   // creates voronoi cells and sites the target mass and weight arrays
@@ -92,7 +94,7 @@ PowerDiagram::compute() {
   // compute the power diagram
   //printf("computing the power diagram in %ud\n",sites_.dim());
   clock_t t0 = clock();
-  #if 1
+  #if PARALLEL
   typedef PowerDiagram thisclass;
   ProcessCPU::parallel_for(
     parallel_for_member_callback( this , &thisclass::compute ), 0,cell_.size()
@@ -157,28 +159,40 @@ PowerDiagram::compute( index_t k ) {
 }
 
 void
-PowerDiagram::accumulate() {
+PowerDiagram::accumulate(bool complete) {
   // accumulate all the cells into a polytope mesh that we can visualize
   for (index_t k = 0; k < cell_.size(); k++) {
-    add_cell( *cell_[k].get() );
+    add_cell( *cell_[k].get() , complete );
     cell_[k]->clear();
   }
 }
 
 void
-PowerDiagram::add_cell( const voronoi::Cell& cell ) {
+PowerDiagram::add_cell( const voronoi::Cell& cell , bool complete ) {
 
   // add the points
   index_t nb_points = vertices_.nb();
   for (index_t j = 0; j < cell.points().nb(); j++) {
     vertices_.create( cell.points()[j] );
+    if (complete) {
+      std::vector<int> b = cell.points().incidence().get(j);
+      vertices_.incidence().add( b.data() , b.size() );
+    }
   }
 
   // add a dummy polytope
   // (we don't actually need the polytope since we already have the triangles to visualize)
   for (index_t j = 0; j < cell.nb(); j++) {
-    index_t dummy = 0;
-    add( &dummy , 1 );
+    if (complete) {
+      std::vector<index_t> polytope = cell.get(j);
+      for (index_t i = 0; i < polytope.size(); i++)
+        polytope[j] += nb_points;
+        add( polytope.data() , polytope.size() );
+    }
+    else {
+      index_t dummy = 0;
+      add( &dummy , 1 );
+    }
     polytope2site_.push_back(cell.site());
   }
 

@@ -98,8 +98,8 @@ public:
     edges.assign( edges_.begin() , edges_.end() );
   }
 
-  void accumulate();
-  void add_cell( const voronoi::Cell& cell );
+  void accumulate(bool complete=false);
+  void add_cell( const voronoi::Cell& cell , bool complete );
   void create_field();
 
   // returns the volume and boundary area so that we can check these in unit tests

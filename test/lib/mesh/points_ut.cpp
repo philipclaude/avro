@@ -8,7 +8,7 @@
 #include "mesh/points.h"
 
 #include "numerics/geometry.h"
-#include "voronoi/diagram.h"
+#include "voronoi/optimal_transport.h"
 
 #include <json/json.hpp>
 
@@ -36,11 +36,8 @@ UT_TEST_CASE( test1 )
 
   printf("running rvd test for %u-simplex mesh with %lu elements and %lu delaunay vertices\n",number,topology.nb(),delaunay.nb());
 
-  voronoi::PowerDiagram rvd(topology,delaunay.dim());
-
-  rvd.set_sites(delaunay);
-  rvd.initialize();
-  rvd.compute();
+  delaunay::LaguerreDiagram<Simplex> rvd(delaunay,topology);
+  rvd.compute(true);
 
   std::vector<index_t> idx1;
   rvd.points().duplicates(idx1);
