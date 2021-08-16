@@ -515,7 +515,7 @@ MetricField_UGAWG_Polar1::operator()( const real_t* X ) const {
 symd<real_t>
 MetricField_UGAWG_Polar2::operator()( const real_t* X ) const {
   real_t eps = 1e-3;
-  real_t c[3] = { 0.4 , 0.4 , 0.0 };
+  real_t c[3] = { 0.0 , 0.0 , 0.0 };
   real_t x[3] = { X[0]+eps, X[1]+eps, X[2] };
   for (coord_t d = 0; d < 3; d++) x[d] -= c[d];
   real_t r = std::sqrt( x[0]*x[0] +x[1]*x[1] );
@@ -548,7 +548,7 @@ MetricField_UGAWG_Polar2::operator()( const real_t* X ) const {
   Q(2,1) = 0.0;
   Q(2,2) = 1.0;
 
-  hz = 0.5;
+  //hz = 0.5;
   vecd<real_t> lambda(3);
   lambda[0] = 1./(hr*hr);
   lambda[1] = 1./(ht*ht);

@@ -239,15 +239,20 @@ Entity::intersect( Entity* e1 , Entity* e2 , Entity* e3 )
         // print some debug information
         vol->print();
 
+        printf("entity 0:\n"); print();
         printf("parents 0:\n");
         for (it0=p0.begin();it0!=p0.end();it0++)
           (*it0)->print();
+        printf("entity 1:\n"); e1->print();
         printf("parents 1:\n");
         for (it0=p1.begin();it0!=p1.end();it0++)
           (*it0)->print();
+        printf("entity 2:\n"); e2->print();
         printf("parents 2:\n");
         for (it0=p2.begin();it0!=p2.end();it0++)
           (*it0)->print();
+        printf("entity 3:\n"); e3->print();
+        printf("parents 3:\n");
         for (it0=p3.begin();it0!=p3.end();it0++)
           (*it0)->print();
         avro_assert_not_reached;

@@ -124,7 +124,7 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
   params.set( "insertion volume factor" ,  -1.0 );
   params.set( "curved" , curved);
   params.set( "limit metric" , false );
-  params.set( "max parallel passes" , index_t(2) );
+  params.set( "max parallel passes" , index_t(3) );
   params.set( "elems per processor" , index_t(5000) );
   params.set( "has uv", true);
   params.set( "swapout" , false);
@@ -158,6 +158,7 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
     metrics.resize( manager.topology().points().nb() );
     metrics = manager.metrics();
     real_t scale = sqrt(2.0);
+    //if (n < 4) scale = 2.0;
     if (analytic) {
       // we will scale the analytic metric, not the one from the previous adaptation
       scale = std::pow( scale , real_t(iter+1) );
@@ -219,9 +220,9 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 }
 
 // which test case to run?
-#define CASE_SL 1
+#define CASE_SL 0
 #define CASE_CC 0
-#define CASE_BL 0
+#define CASE_BL 1
 #define CASE_SW 0
 
 UT_TEST_CASE( test1 )
@@ -243,7 +244,7 @@ UT_TEST_CASE( test1 )
 
   #elif CASE_BL
 
-  std::string geometry_name = "tesseract-closingwall";
+  std::string geometry_name = "tesseract";
   std::string mesh_name = "/home/pcaplan/jobs/adapt/mbl-initial.avro";
   library::MetricField_Tesseract_RotatingBoundaryLayer metric_field;
 

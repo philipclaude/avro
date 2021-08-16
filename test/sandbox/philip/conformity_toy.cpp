@@ -37,24 +37,24 @@ UT_TEST_CASE( test1 )
 {
 
   bool analytic = true;
-  index_t iter = 2;
-  index_t nb_processors = 4;
-  real_t scale;
+  index_t iter = 6;
+  index_t nb_processors = 24;
+  real_t scale = 1.0;
 
   std::string mesh_name;
   std::string metric_name;
 
-  std::string root = "/Users/pcaplan/";
+  std::string root = "/home/pcaplan/";
 
-  mesh_name = root + "/jobs/adapt/ccp2/mesh-adapt" + std::to_string(iter)+ "-pass1.avro";
-  metric_name = "Polar2";
+  //mesh_name = root + "/jobs/adapt/ccp2/mesh-adapt" + std::to_string(iter)+ "-pass1.avro";
+  //metric_name = "Polar2";
 
-  mesh_name = root + "/jobs/adapt/results/bl-p24/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
+  mesh_name = root + "/jobs/adapt/results/sw-p24/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
   //metric_name = "RotatingBL-4d";
 
-  mesh_name = root + "/Codes/geocl/avro/build/release_mpi/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
-  std::string base = "/home/pcaplan/jobs/adapt/results/bl-p24/";
-  base = root + "/Codes/geocl/avro/build/release_mpi/";
+  //mesh_name = root + "/Codes/geocl/avro/build/release_mpi/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
+  std::string base = "/home/pcaplan/jobs/adapt/results/sw-p24/";
+  //base = root + "/Codes/geocl/avro/build/release_mpi/";
   //mesh_name = "/home/pcaplan/jobs/adapt/sw/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
   metric_name = "discrete";
 
