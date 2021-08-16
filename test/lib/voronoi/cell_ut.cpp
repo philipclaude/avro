@@ -7,7 +7,7 @@
 #include "voronoi/cell.h"
 #include "voronoi/diagram.h"
 
-#define SPHERE 1
+#define SPHERE 0
 
 using namespace avro;
 
@@ -19,7 +19,7 @@ UT_TEST_CASE( test_2d )
 
   static coord_t number = 2;
   static coord_t dim = number+1;
-  index_t nb_points = 1e5;
+  index_t nb_points = 1e2;
 
   index_t N = 50;
   std::vector<index_t> dims(number,N);

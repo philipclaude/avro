@@ -51,6 +51,8 @@ main( int argc , const char** argv )
     result = programs::plot(nb_inputs,inputs,true);
   else if (program=="conformity")
     result = programs::conformity(nb_inputs,inputs);
+  else if (program=="conformityp")
+    result = programs::conformityp(nb_inputs,inputs);
   else if (program=="convert")
     result = programs::convert(nb_inputs,inputs);
   else if (program=="check")

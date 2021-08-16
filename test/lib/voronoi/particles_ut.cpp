@@ -22,7 +22,7 @@ UT_TEST_CASE( test_2d )
   particles.set_density();
 
   particles.save_every(20);
-  particles.simulate(1200);
+  particles.simulate(10);
   //particles.save_frames("particles.json");
 
   graphics::Viewer vis;

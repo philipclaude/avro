@@ -18,10 +18,10 @@ out float g_Color;
 
 
 // total number of points = NU*NV*2*3
-#define NU 6
-#define NV 5
+//#define NU 6
+//#define NV 5
 
-layout (triangle_strip, max_vertices = 180 ) out;
+layout (triangle_strip, max_vertices = NP ) out;
 
 #define M_PI 3.1415926535897932384626433832795
 

@@ -137,7 +137,7 @@ ParticleSimulator::euler_step() {
   }
 
   // TODO start with a time step but make it smaller if the weight solver does not converge
-  tau_ = 2e-3;
+  tau_ = 2e-4;
   eps_ = 4e-2;
 
   time_ += tau_;
