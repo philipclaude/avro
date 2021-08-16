@@ -14,9 +14,11 @@ class Camera {
 public:
 	Camera(float fov , index_t width , index_t height);
 
+	float fov() const { return fov_; }
 	const vec3& eye() const { return eye_; }
   const vec3& lookat() const { return lookat_; }
 
+	void set_fov( float fov ) { fov_ = fov; }
   void set_eye( const vec3& eye ) { eye_ = eye; compute_view(); }
   void set_lookat( const vec3& lookat ) { lookat_ = lookat; compute_view(); }
 

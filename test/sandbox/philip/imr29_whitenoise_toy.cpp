@@ -9,7 +9,6 @@
 
 #include "numerics/geometry.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
 #include "measures.h"
@@ -58,8 +57,8 @@ UT_TEST_CASE( test1 )
         index_t nb_point = nb_points[i];
         printf("--> dim = %u, %lu points\n",number,nb_point);
 
-        delaunay::DensityMeasure_Uniform density(1.0);
-        delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density);
+        voronoi::DensityMeasure_Uniform density(1.0);
+        voronoi::SemiDiscreteOptimalTransport<type> transport(domain,&density);
         transport.sample( nb_point );
         transport.set_mode(0); // points mode
 

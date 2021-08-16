@@ -41,7 +41,10 @@ int adapt( int argc , const char** argv );
 int plot( int argc , const char** argv , bool webplot=false );
 int voronoi( int argc , const char** argv );
 int conformity( int argc , const char** argv );
+int conformityp( int argc , const char** argv );
 int convert( int argc , const char** argv );
+int check( int argc , const char** argv );
+int animate( int argc,  const char **argv );
 
 } // programs
 

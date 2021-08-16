@@ -20,6 +20,8 @@ UT_TEST_SUITE( obj_file_suite )
 UT_TEST_CASE( test1 )
 {
 
+  //objFile topology( AVRO_SOURCE_DIR+"/build/release/bunny.obj" );
+
   objFile topology( BASE_TEST_DIR+"/geometry/obj/suzanne.obj" );
   //objFile topology( "/Users/pcaplan/Google Drive/teaching/cs461w21/assignments/project/giraffe/model/giraffe.obj" );
 

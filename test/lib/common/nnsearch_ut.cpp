@@ -11,7 +11,7 @@
 
 #include "common/tools.h"
 
-#include "nnsearch/nn_search.h"
+#include <geogram/nn_search.h>
 
 using namespace avro;
 

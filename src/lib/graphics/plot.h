@@ -88,6 +88,8 @@ public:
 
 	bool& hidden() { return hidden_; }
 
+	void set_model_matrix( const mat4& m ) { model_matrix_ = m; }
+
 private:
 
 	const TopologyBase& topology_;

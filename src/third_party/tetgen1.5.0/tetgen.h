@@ -49,7 +49,10 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+
+// philip: uncomment second assert if debugging why I'm calling TetGen incorrectly
 #include <assert.h>
+//#define assert(X) if (!(X)) { printf("TetGen error: failed to assert %s on line %d in file %s\n",#X,__LINE__,__FILE__); throw "TetGen error"; }
 
 // The types 'intptr_t' and 'uintptr_t' are signed and unsigned integer types,
 //   respectively. They are guaranteed to be the same width as a pointer.

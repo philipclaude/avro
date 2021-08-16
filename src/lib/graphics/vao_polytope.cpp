@@ -13,9 +13,6 @@
 #include <tetgen1.5.0/tetgen.h>
 
 extern "C" {
-#define REAL avro::real_t
-#define VOID void
-#define ANSI_DECLARATORS
 #include <triangle/triangle.h>
 }
 
@@ -90,7 +87,8 @@ public:
       input.numberofpoints = nb_vertices_;
       input.pointlist = coordinates_.data();
 
-      ::triangulate("zQN", &input, &output, NULL);
+      std::string switches = "zQN";
+      ::triangulate( (char*)switches.c_str() , &input, &output, NULL);
 
       avro_assert( input.numberofpoints == output.numberofpoints );
       for (int k = 0; k < output.numberoftriangles; k++) {
@@ -100,31 +98,59 @@ public:
     }
     else if (dim_ == 3) {
 
-      // compute the tetrahedralization of the polyhedron
-      tetgenio input,output;
+      if (coordinates_.size()/3 > 4) {
 
-      // fill the vertices
-      input.numberofpoints = coordinates_.size() / 3;
+        // compute the tetrahedralization of the polyhedron
+        tetgenio input,output;
 
-      input.pointlist = new REAL[input.numberofpoints*3];
-      for (index_t i = 0; i < coordinates_.size(); i++)
-        input.pointlist[i] = coordinates_[i];
+        // fill the vertices
+        input.numberofpoints = coordinates_.size() / 3;
 
-      std::string switches = "fnnQ";
-      tetrahedralize( (char*)switches.c_str() , &input , &output );
+        input.pointlist = new REAL[input.numberofpoints*3];
+        for (index_t i = 0; i < coordinates_.size(); i++)
+          input.pointlist[i] = coordinates_[i];
 
-      avro_assert( input.numberofpoints == output.numberofpoints );
-      for (int i = 0; i < output.numberoftrifaces; i++) {
+        std::string switches = "zfnnVC";
 
-        int t0 = output.adjtetlist[2*i  ];
-        int t1 = output.adjtetlist[2*i+1];
-
-        if (t0 == -1 || t1 == -1) {
-          // boundary triangle
-          for (coord_t d = 0; d < 3; d++)
-            triangles_.push_back( indices_[output.trifacelist[3*i+d]] );
+        try {
+          tetrahedralize( (char*)switches.c_str() , &input , &output , NULL , NULL );
+        }
+        catch (...) {
+          printf("could not tetrahedralize these points:\n");
+          for (index_t j = 0; j < coordinates_.size()/3; j++)
+            printf("point (%lu) = (%g,%g,%g)\n",j,coordinates_[3*j],coordinates_[3*j+1],coordinates_[3*j+2]);
+          avro_assert_not_reached;
         }
 
+        if (input.numberofpoints != output.numberofpoints) {
+          printf("tetgen added points? nb_original = %d, nb_output = %d\n",input.numberofpoints,output.numberofpoints);
+          for (index_t j = 0; j < coordinates_.size()/3; j++)
+            printf("input (%lu) = (%g,%g,%g)\n",j,coordinates_[3*j],coordinates_[3*j+1],coordinates_[3*j+2]);
+
+            for (index_t j = 0; j < output.numberofpoints; j++)
+              printf("output (%lu) = (%g,%g,%g)\n",j,output.pointlist[3*j],output.pointlist[3*j+1],output.pointlist[3*j+2]);
+          avro_assert_not_reached;
+        }
+        avro_assert( input.numberofpoints == output.numberofpoints );
+        for (int i = 0; i < output.numberoftrifaces; i++) {
+
+          int t0 = output.adjtetlist[2*i  ];
+          int t1 = output.adjtetlist[2*i+1];
+
+          if (t0 == -1 || t1 == -1) {
+            // boundary triangle
+            for (coord_t d = 0; d < 3; d++)
+              triangles_.push_back( indices_[output.trifacelist[3*i+d]] );
+          }
+        }
+      }
+      else if (coordinates_.size() == 12) {
+        for (index_t j = 0; j < 4; j++) {
+          for (index_t i = 0; i < 4; i++) {
+            if (i == j) continue;
+            triangles_.push_back( indices_[i] );
+          }
+        }
       }
     }
   }
@@ -160,9 +186,14 @@ public:
   }
 
   void triangulate() {
+    #if 0
     ProcessCPU::parallel_for(
       parallel_for_member_callback( this , &thisclass::triangulate_polytope ),
       0,polytopes_.size() );
+    #else
+    for (index_t k = 0; k < polytopes_.size(); k++)
+      triangulate_polytope(k);
+    #endif
   }
 
   index_t nb() const { return polytopes_.size(); }
@@ -181,27 +212,20 @@ template<>
 void
 VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
 
+  exactinit(0,0,0,10,10,10);
+
   number_ = topology.number();
   order_  = topology.element().order();
 
   // only linear polytope meshes are supported
   avro_assert( topology.element().order() == 1 );
 
-  std::vector<index_t> edges;
-  topology.get_edges(edges);
-
-  Triangulator triangulator( topology.number() , topology.points() );
-  for (index_t k = 0; k < topology.nb(); k++) {
-    triangulator.add_polytope( topology(k) , topology.nv(k) , k );
-  }
-
-  // triangulate the polygons
-  triangulator.triangulate();
-
-  // build the primitives
+  // build the points
   points_ = std::make_shared<PointPrimitive>(topology.points());
 
-  // edge primitives
+  // extract the edges
+  std::vector<index_t> edges;
+  topology.get_edges(edges);
   edges_.resize(1);
   edges_[0] = std::make_shared<EdgePrimitive>(order_);
   for (index_t k = 0; k < edges.size()/2; k++)
@@ -211,16 +235,35 @@ VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
   triangles_.resize(1);
   triangles_[0] = std::make_shared<TrianglePrimitive>(order_);
 
+  // extract the triangles
   std::vector<index_t> polytopes;
-  for (index_t k = 0; k < triangulator.nb(); k++) {
-
-    const PolytopeDecomposition& polytope = triangulator.polytope(k);
-    const std::vector<index_t>& triangles = polytope.triangles();
-    for (index_t j = 0; j < triangles.size()/3; j++) {
-      triangles_[0]->add( triangles.data() + 3*j , 3);
-      polytopes.push_back( triangulator.parent(k) );
+  std::vector<index_t> triangles;
+  if (topology.get_triangles(triangles,polytopes)) {
+    // the topology provides its own method for extracting triangles
+    for (index_t k = 0; k < triangles.size()/3; k++) {
+      triangles_[0]->add( triangles.data() + 3*k , 3 );
     }
   }
+  else {
+    // we will extract the triangles ourself
+    Triangulator triangulator( topology.number() , topology.points() );
+    for (index_t k = 0; k < topology.nb(); k++) {
+      triangulator.add_polytope( topology(k) , topology.nv(k) , k );
+    }
+
+    // triangulate the polytopes
+    triangulator.triangulate();
+    for (index_t k = 0; k < triangulator.nb(); k++) {
+
+      const PolytopeDecomposition& polytope = triangulator.polytope(k);
+      const std::vector<index_t>& triangles = polytope.triangles();
+      for (index_t j = 0; j < triangles.size()/3; j++) {
+        triangles_[0]->add( triangles.data() + 3*j , 3);
+        polytopes.push_back( triangulator.parent(k) );
+      }
+    }
+  }
+
   vec3 color = {0.8,0.8,0.2};
   triangles_[0]->set_color(color);
 
@@ -327,6 +370,8 @@ VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
   info_["fields"]      = jfields;
   info_["field_names"] = field_names;
 
+  // disable culling because triangles may not be ordered
+  enable_culling_ = false;
 }
 
 

@@ -89,6 +89,17 @@ norm( const vec3& u ) {
   return std::sqrt( u[0]*u[0] + u[1]*u[1] + u[2]*u[2] );
 }
 
+class vec3
+normalize( const vec3& u ) {
+  float n = norm(u);
+  return { u[0]/n , u[1]/n , u[2]/n };
+}
+
+float
+dot( const vec3& u , const vec3& v ) {
+  return u[0]*v[0] + u[1]*v[1] + u[2]*v[2];
+}
+
 class mat4
 lookAt( const vec3& eye , const vec3& center , const vec3& up ) {
   class mat4 m;

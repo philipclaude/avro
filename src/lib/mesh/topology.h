@@ -66,6 +66,7 @@ public:
 
   virtual void get_points( std::vector<index_t>& p ) const = 0;
   virtual void get_edges( std::vector<index_t>& e ) const = 0;
+  virtual bool get_triangles( std::vector<index_t>& triangles , std::vector<index_t>& parent ) const { return false; }
   virtual void get_topologies( std::vector<const TopologyBase*>& c ) const = 0;
 
   const std::string& name() const { return name_; }

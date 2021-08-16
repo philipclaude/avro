@@ -91,13 +91,15 @@ public:
     picked_(-1),
     enable_controls_(true),
     needs_drawing_(true),
-    lighting_(false)
+    lighting_(false),
+    draw_callback_(nullptr)
   {}
 
   ~Window();
 
   void init();
   void compute_view();
+  void compute_view( const vec3& center , float d );
 
   GLFWwindow* window() { return window_; }
   OpenGL4_Manager& manager() { return manager_; }
@@ -133,6 +135,14 @@ public:
 
   void select_colormap(const std::string& name);
 
+  const Camera& camera() const { return camera_; }
+  Camera& camera() { return camera_; }
+  const mat4& screen_matrix() const { return screen_matrix_; }
+
+  void load_view( const std::string& filename );
+  void save_view( const std::string& filename );
+
+  void set_draw_callback( void(*draw_callback)(Window&) ) { draw_callback_ = draw_callback; }
 
 private:
   index_t width_;
@@ -153,6 +163,10 @@ private:
   bool needs_drawing_;
   index_t draw_count_;
   bool lighting_;
+
+  mat4 screen_matrix_;
+
+  void (*draw_callback_)( Window& window );
 };
 
 } // graphics

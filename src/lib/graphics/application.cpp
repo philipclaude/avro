@@ -1,9 +1,13 @@
 #include "common/parallel_for.h"
 #include "graphics/application.h"
+#include "graphics/camera.h"
 #include "graphics/window.h"
 
 #include "graphics/colormap.h"
 
+#include <json/json.hpp>
+
+#include <fstream>
 #include <unistd.h>
 
 namespace avro

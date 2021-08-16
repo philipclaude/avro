@@ -123,7 +123,7 @@ Plot::compute_center() {
 
   length_scale_ = -1;
   for (coord_t d = 0; d < 3; d++) {
-    center_(d) = (xmax(d) - xmin(d))/2.0;
+    center_(d) = (xmax(d) + xmin(d))/2.0;
     float L = (xmax(d) - xmin(d));
     if (L > length_scale_) length_scale_ = L;
   }

@@ -85,6 +85,14 @@ public:
     operator=( {v0,v1,v2} );
   }
 
+  template<typename R>
+  vec3( const std::vector<R>& v ) {
+    avro_assert( v.size() == 3 );
+    (*this)(0) = v[0];
+    (*this)(1) = v[1];
+    (*this)(2) = v[2];
+  }
+
   vec3& operator= (const std::initializer_list<float>& v ) {
     avro_assert( v.size() == 3 );
     index_t i = 0;
@@ -149,6 +157,13 @@ public:
       (*this)(i,j) = m(i,j);
   }
 
+  template<typename R>
+  mat4( const std::vector<R>& m ) {
+    avro_assert( m.size() == 16 );
+    for (int i = 0; i < 16; i++)
+      data_[i] = m[i];
+  }
+
   float* operator[] (index_t i) { return &(*this)(i,0); }
   const float* operator[] (index_t i) const { return &(*this)(i,0); }
 };
@@ -168,6 +183,9 @@ class mat4 inverse( const class mat4& m );
 class mat4 transpose( const class mat4& m );
 std::string to_string( const class mat4& m );
 class vec3 cross( const vec3& u , const vec3& v );
+float norm( const vec3& u );
+class vec3 normalize( const vec3& u );
+float dot( const vec3& u , const vec3& v);
 
 }
 

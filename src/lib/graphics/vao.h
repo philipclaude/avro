@@ -80,7 +80,8 @@ public:
     tessellation_level_(8),
     lighting_(false),
     umin_(0),
-    umax_(1)
+    umax_(1),
+    enable_culling_(true)
   {}
 
   void build( const TopologyBase& topology );
@@ -152,6 +153,7 @@ private:
   int tessellation_level_;
   bool lighting_;
   float umin_, umax_;
+  bool enable_culling_;
 };
 
 } // graphics

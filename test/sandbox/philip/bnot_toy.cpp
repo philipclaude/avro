@@ -9,7 +9,6 @@
 
 #include "numerics/geometry.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
 #include <fstream>
@@ -17,7 +16,7 @@
 
 UT_TEST_SUITE( sandbox_semidiscrete_ot_toy )
 
-class DensityMeasure_Test : public delaunay::DensityMeasure
+class DensityMeasure_Test : public voronoi::DensityMeasure
 {
 public:
   real_t evaluate( index_t elem , const real_t* xref , const real_t* x ) const
@@ -36,9 +35,9 @@ UT_TEST_CASE( test1 )
   coord_t dim = number+1;
   CubeDomain<type> domain(number,dim,2);
 
-  delaunay::DensityMeasure_Uniform density(1.0);
+  voronoi::DensityMeasure_Uniform density(1.0);
 
-  delaunay::SemiDiscreteOptimalTransport<type> transport(domain,&density);
+  voronoi::SemiDiscreteOptimalTransport<type> transport(domain,&density);
   transport.sample( nb_points );
 
   transport.generate_bluenoise();
@@ -73,11 +72,11 @@ UT_TEST_CASE( test1 )
   }
 
   if (number > 3 || (nb_points >= 1e6)) return;
-  delaunay::IntegrationSimplices& triangulation = transport.simplices();
-  std::shared_ptr<delaunay::TriangulationCells> tc = std::make_shared<delaunay::TriangulationCells>(triangulation);
+  voronoi::IntegrationSimplices& triangulation = transport.simplices();
+  std::shared_ptr<voronoi::TriangulationCells> tc = std::make_shared<voronoi::TriangulationCells>(triangulation);
   triangulation.fields().make("c",tc);
 
-  std::shared_ptr<delaunay::TriangulationElements> te = std::make_shared<delaunay::TriangulationElements>(triangulation);
+  std::shared_ptr<voronoi::TriangulationElements> te = std::make_shared<voronoi::TriangulationElements>(triangulation);
   triangulation.fields().make("e",te);
 
   graphics::Viewer vis;

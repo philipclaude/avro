@@ -98,6 +98,41 @@ Facet::build_basis()
 }
 
 void
+Facet::set_basis_by_name() {
+
+  avro_assert( number_ == 3 );
+
+  V_.zero();
+  B_.zero();
+
+  if (name_ == "tmin" || name_ == "tmax") {
+    V_(0,0) = 1;
+    V_(1,1) = 1;
+    V_(2,2) = 1;
+  }
+  else if (name_ == "xmin" || name_ == "xmax") {
+    V_(1,0) = 1;
+    V_(2,1) = 1;
+    V_(3,2) = 1;
+  }
+  else if (name_ == "ymin" || name_ == "ymax") {
+    V_(2,0) = 1;
+    V_(3,1) = 1;
+    V_(0,2) = 1;
+  }
+  else if (name_ == "zmin" || name_ == "zmax") {
+    V_(3,0) = 1;
+    V_(0,1) = 1;
+    V_(1,2) = 1;
+  }
+
+  matd<real_t> VtV = numerics::transpose(V_)*V_;
+  for (coord_t i=0;i<number_;i++)
+  for (coord_t j=0;j<number_;j++)
+    B_(i,j) = VtV(i,j);
+}
+
+void
 Facet::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
 {
   avro_assert( x.size() == dim_ );

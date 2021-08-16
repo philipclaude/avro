@@ -13,7 +13,7 @@ UT_TEST_SUITE( spacetime_topology_test_suite )
 UT_TEST_CASE( test1 )
 {
 
-  std::vector<index_t> dims(4,4);
+  std::vector<index_t> dims(4,3);
   CKF_Triangulation topology(dims);
 
   std::vector<real_t> x0(4,0.5);
@@ -22,14 +22,7 @@ UT_TEST_CASE( test1 )
 
   topology.points().attach(tesseract);
 
-
-  Topology_Spacetime<Simplex> spacetime(topology);
-  spacetime.extract();
-
   graphics::Viewer vis;
-  //for (index_t k = 0; k < 8; k++)
-  //  vis.add( spacetime.topology(k) );
-
   vis.add(topology);
 
   vis.run(AVRO_FULL_UNIT_TEST);

@@ -49,14 +49,17 @@ main( int argc , const char** argv )
     result = programs::plot(nb_inputs,inputs);
   else if (program=="webplot")
     result = programs::plot(nb_inputs,inputs,true);
-  else if (program=="voronoi")
-    result = programs::voronoi(nb_inputs,inputs);
   else if (program=="conformity")
     result = programs::conformity(nb_inputs,inputs);
+  else if (program=="conformityp")
+    result = programs::conformityp(nb_inputs,inputs);
   else if (program=="convert")
     result = programs::convert(nb_inputs,inputs);
-  else
-  {
+  else if (program=="check")
+    result = programs::check(nb_inputs,inputs);
+  else if (program == "animate")
+    result = programs::animate(nb_inputs,inputs);
+  else {
     printf("unknown program :(\n");
     result = 1;
   }

@@ -36,6 +36,9 @@ public:
   const matd<real_t>& basis() const { return V_; }
   int dimension() const { return dimension_; }
 
+  void set_basis_by_name();
+  const vecd<real_t>& x0() const { return x0_; }
+
 private:
   matd<real_t> V_;
   matd<real_t> B_;

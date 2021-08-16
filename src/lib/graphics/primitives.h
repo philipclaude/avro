@@ -97,7 +97,8 @@ public:
 
   const vec3& color() const { return color_; }
   void set_color( vec3 color ) { color_ = color; }
-  bool& visible() { return visible_; }
+  bool& visible()       { return visible_; }
+  bool  visible() const { return visible_; }
   coord_t order() const { return order_; }
 
 private:

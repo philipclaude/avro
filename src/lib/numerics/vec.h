@@ -152,6 +152,12 @@ public:
 template<typename R,typename S,typename T,index_t M>
 T dot( const vecs<M,R>& u , const vecs<M,S>& v );
 
+namespace numerics
+{
+template<typename T, index_t M> void normalize( vecs<M,T>& u );
+template<typename T> vecs<3,T> cross( const vecs<3,T>& u , const vecs<3,T>& v );
+}
+
 template<typename R,typename S> vecd< typename result_of<R,S>::type > operator-( const vecd<R>& x , const vecd<S>& y );
 template<typename R,typename S> vecd< typename result_of<R,S>::type > operator+( const vecd<R>& x , const vecd<S>& y );
 template<typename R,typename S> vecd< typename result_of<R,S>::type > operator*( const R& x , const vecd<S>& y );

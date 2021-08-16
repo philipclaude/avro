@@ -9,7 +9,6 @@
 
 #include "numerics/geometry.h"
 
-#include "voronoi/delaunay.h"
 #include "voronoi/optimal_transport.h"
 
 #include "measures.h"
@@ -31,7 +30,7 @@ UT_TEST_CASE( test1 )
   CubeDomain<type> domain(number,dim,2);
 
   // uniform density
-  delaunay::DensityMeasure_Uniform density1(1.0);
+  voronoi::DensityMeasure_Uniform density1(1.0);
 
   // gaussian
   vecd<real_t> mu(number);
@@ -48,10 +47,10 @@ UT_TEST_CASE( test1 )
   DensityMeasure_Cone density3(number);
 
 
-  std::vector<delaunay::DensityMeasure*> measures = { &density3 , &density2 , &density1 };
+  std::vector<voronoi::DensityMeasure*> measures = { &density3 , &density2 , &density1 };
   std::vector<std::string> names = {"cone","gaussian","uniform"};
 
-  //std::vector<delaunay::DensityMeasure*> measures = { &density2 };
+  //std::vector<voronoi::DensityMeasure*> measures = { &density2 };
   //std::vector<std::string> names = {"shock"};
 
   for (index_t ialg = 0; ialg < 2 ; ialg++)
@@ -64,7 +63,7 @@ UT_TEST_CASE( test1 )
     for (index_t imeasure = 0; imeasure < measures.size(); imeasure++)
     {
 
-      delaunay::SemiDiscreteOptimalTransport<type> transport(domain,measures[imeasure]);
+      voronoi::SemiDiscreteOptimalTransport<type> transport(domain,measures[imeasure]);
 
       std::string prefix = "/home/pcaplan/Dropbox/research/publications/imr-2021-xxxx/qntz-" + names[imeasure] + "-" + ((lloyd) ? "lloyd" : "lbfgs") + "-dim-" + std::to_string(number) + "-n-" + std::to_string(nb_points);
 
