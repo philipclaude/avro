@@ -67,7 +67,6 @@ conformityp( int nb_input , const char** inputs ) {
   Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
   topology.orient();
 
-  //topology.build_structures();
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
   index_t n = topology.number();
@@ -94,6 +93,8 @@ conformityp( int nb_input , const char** inputs ) {
   else {
 
     scale = 1.0;
+    //scale = std::pow( std::sqrt(2.0) , real_t(iter) );
+
 
    // we need to read the metrics for each processor
    std::vector< symd<real_t> > metrics( topology.points().nb() );
