@@ -51,6 +51,13 @@ Properties::compute( const Topology<type>& topology ,
     quality_.push_back( metric.quality( topology , k ) );
   }
 
+  // pcaplan reduce precision
+  for (index_t k = 0; k < length_.size(); k++) 
+    length_[k] = real_t( index_t( length_[k]*10000.0 ) ) / 10000.0;
+
+  for (index_t k = 0; k < quality_.size(); k++)
+    quality_[k] = real_t( index_t( quality_[k]*10000.0 ) ) / 10000.0;
+
   std::sort( length_.begin() , length_.end() );
   std::sort( quality_.begin() , quality_.end() );
   bin();
@@ -126,9 +133,11 @@ Properties::print( const std::string& title , index_t nt ) const
 void
 Properties::dump( const std::string& filename ) const
 {
-  nlohmann::json jfile;
-  nlohmann::json jlength;
-  nlohmann::json jquality;
+  using json_flt = nlohmann::basic_json<std::map,std::vector,std::string, bool, std::int64_t, std::uint64_t, float>;
+
+  json_flt jfile;
+  json_flt jlength;
+  json_flt jquality;
 
   jlength["values"] = length_;
   jlength["min"] = lstats_.min();
@@ -148,9 +157,10 @@ Properties::dump( const std::string& filename ) const
   jfile["quality"] = jquality;
 
   std::ofstream file(filename);
-  file << std::setw(2) << jfile << std::endl;
-  //file << jfile;
-  //file.close();
+  //file << std::setw(2) << jfile << std::endl;
+  file << jfile;
+
+  file.close();
 }
 
 void

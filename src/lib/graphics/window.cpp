@@ -288,7 +288,9 @@ Window::resize(int width, int height) {
   #else
   glViewport(0,0,width_,height_);
   #endif
+  #if AVRO_WITH_GL
   glfwSetWindowSize(window_,width_,height_);
+  #endif
 }
 
 void

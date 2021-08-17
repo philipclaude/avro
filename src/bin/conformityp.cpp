@@ -38,8 +38,8 @@ conformityp( int nb_input , const char** inputs ) {
   typedef Simplex type;
   avro_assert( nb_input == 6 );
 
-  const char **options = inputs +2;
-  int nb_options = nb_input -2;
+  const char **options = inputs +3;
+  int nb_options = nb_input -3;
 
   // read the base directory and metric name
   std::string base(inputs[0]);
