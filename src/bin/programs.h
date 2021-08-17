@@ -45,6 +45,7 @@ int conformityp( int argc , const char** argv );
 int convert( int argc , const char** argv );
 int check( int argc , const char** argv );
 int animate( int argc,  const char **argv );
+int image( int argc,  const char **argv );
 
 } // programs
 
