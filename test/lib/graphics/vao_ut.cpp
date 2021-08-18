@@ -73,7 +73,7 @@ bool dragging = false;
 int xm = -1;
 int ym = -1;
 int XM,YM;
-VertexAttributeObject* vao_ptr = nullptr;
+VertexArrayObject* vao_ptr = nullptr;
 ShaderProgram* triangle_shader = nullptr;
 ShaderProgram* edge_shader = nullptr;
 ShaderProgram* point_shader = nullptr;
@@ -222,7 +222,7 @@ UT_TEST_CASE( simplices_2d_test )
   }
   #endif
 
-  VertexAttributeObject vao;
+  VertexArrayObject vao;
   vao.build(curvilinear);
 
   if (AVRO_FULL_UNIT_TEST) return;

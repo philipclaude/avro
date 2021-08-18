@@ -174,7 +174,7 @@ find_orientation( index_t face , const std::vector<index_t>& f , const std::vect
 
 template<>
 void
-VertexAttributeObject::_build( const Topology<Simplex>& topology ) {
+VertexArrayObject::_build( const Topology<Simplex>& topology ) {
 
   number_ = topology.number();
   order_  = topology.element().order();
@@ -247,7 +247,7 @@ VertexAttributeObject::_build( const Topology<Simplex>& topology ) {
 }
 
 void
-VertexAttributeObject::build( const TopologyBase& topology ) {
+VertexArrayObject::build( const TopologyBase& topology ) {
   if (topology.type_name() == "simplex")
     _build( static_cast<const Topology<Simplex>&>(topology) );
   else if (topology.type_name() == "polytope")
@@ -281,7 +281,7 @@ static std::vector< std::vector< std::vector<index_t>> > canonical_tet_edge = {
 
 template<typename type>
 void
-VertexAttributeObject::get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets ) {
+VertexArrayObject::get_primitives( const Topology<type>& topology , const std::vector<std::vector<MeshFacet>>& facets ) {
 
   // order and number of basis functions of the elements we will create
   coord_t order = topology.element().order();
@@ -627,7 +627,7 @@ VertexAttributeObject::get_primitives( const Topology<type>& topology , const st
 }
 
 void
-VertexAttributeObject::set_rank( index_t rank ) {
+VertexArrayObject::set_rank( index_t rank ) {
 
   for (index_t k = 0; k < solution_.size(); k++) {
     solution_[k]->set_active_rank(rank);
@@ -636,7 +636,7 @@ VertexAttributeObject::set_rank( index_t rank ) {
 }
 
 void
-VertexAttributeObject::set_field( const std::string& name ) {
+VertexArrayObject::set_field( const std::string& name ) {
 
 	umin_ =  1e20;
 	umax_ = -1e20;
@@ -661,12 +661,12 @@ VertexAttributeObject::set_field( const std::string& name ) {
 }
 
 void
-VertexAttributeObject::apply_transformation( const mat4& m ) {
+VertexArrayObject::apply_transformation( const mat4& m ) {
   model_matrix_ = m * model_matrix_;
 }
 
 index_t
-VertexAttributeObject::get_memory() const {
+VertexArrayObject::get_memory() const {
 	index_t memory = points_->memory();
 	for (index_t k = 0; k < triangles_.size(); k++)
 		memory += triangles_[k]->memory();
@@ -677,7 +677,7 @@ VertexAttributeObject::get_memory() const {
 	return memory;
 }
 
-template void VertexAttributeObject::get_primitives( const Topology<Polytope>& topology , const std::vector<std::vector<MeshFacet>>& facets );
+template void VertexArrayObject::get_primitives( const Topology<Polytope>& topology , const std::vector<std::vector<MeshFacet>>& facets );
 
 } // graphics
 

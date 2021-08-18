@@ -320,7 +320,7 @@ Window::draw(bool swap_buffers) {
     plot_[k]->clip().draw(view_matrix,projection_matrix);
 
     // retrieve the current vao and draw
-    VertexAttributeObject& vao = plot_[k]->active_vao();
+    VertexArrayObject& vao = plot_[k]->active_vao();
     const ClipPlane& clip = plot_[k]->clip();
     vao.set_lighting(lighting_);
     vao.draw(model_matrix,view_matrix,projection_matrix,&clip);

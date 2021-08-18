@@ -210,7 +210,7 @@ private:
 
 template<>
 void
-VertexAttributeObject::_build( const Topology<Polytope>& topology ) {
+VertexArrayObject::_build( const Topology<Polytope>& topology ) {
 
   exactinit(0,0,0,10,10,10);
 

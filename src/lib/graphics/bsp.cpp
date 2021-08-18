@@ -45,7 +45,7 @@ BSPTriangle::BSPTriangle( const vec3& p0 , const vec3& p1 , const vec3& p2 ) {
 void
 BSPTriangles::build( const Plot& plot , const mat4& view_matrix , const mat4& projection_matrix , const mat4& screen_matrix ) {
 
-  const VertexAttributeObject& vao = plot.active_vao();
+  const VertexArrayObject& vao = plot.active_vao();
   const mat4& model_matrix = plot.model_matrix();
 
   // first map all the points using the transformation that would typically be done in the vertex shader

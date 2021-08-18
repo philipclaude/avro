@@ -14,7 +14,7 @@ namespace avro
 namespace graphics
 {
 
-class VertexAttributeObject;
+class VertexArrayObject;
 class ShaderProgram;
 class Shaders;
 
@@ -23,7 +23,7 @@ public:
 	OpenGL4_Manager();
 	~OpenGL4_Manager();
 
-	void write( VertexAttributeObject& vao );
+	void write( VertexArrayObject& vao );
 
 	void track_buffer(gl_index b) { buffers_.push_back(b); }
 	void track_texture(gl_index t) { textures_.push_back(t); }

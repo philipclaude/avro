@@ -85,7 +85,7 @@ WebGLpp::send( int port ) {
 }
 
 void
-WebGL_Manager::write( const VertexAttributeObject& vao ) {
+WebGL_Manager::write( const VertexArrayObject& vao ) {
 
   WebGLpp& gl = webglpp_; // I like to write it like in JavaScript :)
 
