@@ -20,6 +20,8 @@
 namespace avro
 {
 
+template<typename type> class Topology;
+
 namespace graphics
 {
 
@@ -80,6 +82,7 @@ class BSPTriangles {
 public:
 
   void build( const Plot& plot , const mat4& view_matrix , const mat4& projection_matrix , const mat4& screen_matrix );
+  void build( const Topology<Simplex>& topology , const mat4& model_matrix );
   void add( std::shared_ptr<BSPTriangle> triangle ) {
     triangles_.push_back(triangle);
   }

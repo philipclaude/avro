@@ -238,7 +238,7 @@ UT_TEST_CASE( simplices_2d_test )
 
   window.manager().write(vao);
 
-  std::vector<std::string> macros = {"#define WITH_TESSELLATION 1","#define SOLUTION_ORDER " + std::to_string(field->element().order()),
+  std::vector<std::string> macros = {"#version 410","#define WITH_TESSELLATION 1","#define SOLUTION_ORDER " + std::to_string(field->element().order()),
                                      "#define GEOMETRY_ORDER " + std::to_string(curvilinear.element().order()) };
 
   bool with_tess = true;
@@ -251,7 +251,7 @@ UT_TEST_CASE( simplices_2d_test )
   eshader.use();
   eshader.setUniform("u_ModelViewProjectionMatrix",mvp);
 
-  ShaderProgram pshader("points");
+  ShaderProgram pshader("points",false,macros);
   pshader.use();
   pshader.setUniform("u_ModelViewProjectionMatrix",mvp);
 

@@ -19,7 +19,7 @@ public:
   PostScriptWriter( const std::string& filename );
 
   void begin( index_t width , index_t height );
-  void write( const std::vector<BSPTriangle*>& triangles , const mat4& view_matrix , const mat4& projection_matrix );
+  void write( const std::vector<BSPTriangle*>& triangles , const mat4& view_matrix , const mat4& projection_matrix , vec3 color = {0.5,0.5,0.5} );
   void end();
 
 private:

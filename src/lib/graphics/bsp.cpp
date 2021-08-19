@@ -1,5 +1,9 @@
 #include "bsp.h"
 
+#include "element/simplex.h"
+#include "mesh/points.h"
+#include "mesh/topology.h"
+
 namespace avro
 {
 
@@ -77,6 +81,34 @@ BSPTriangles::build( const Plot& plot , const mat4& view_matrix , const mat4& pr
 
       triangles_.push_back( std::make_shared<BSPTriangle>(p0,p1,p2) );
     }
+  }
+}
+
+void
+BSPTriangles::build( const Topology<Simplex>& topology , const mat4& model_matrix ) {
+
+  avro_assert( topology.number() == 2 );
+
+  coord_t dim = topology.points().dim();
+  std::vector<vec3> points( topology.points().nb() );
+  for (index_t k = 0; k < topology.points().nb(); k++) {
+
+    vec4 p = { topology.points()[k][0] , topology.points()[k][1] , 0.0 , 1.0 };
+    if (dim == 3) p(2) = topology.points()[k][2];
+
+    vec4 q = model_matrix * p;
+    vec3 v = { q[0] , q[1] , q[2] };
+    points[k] = v;
+  }
+
+  // add every triangle in the topology
+  for (index_t k = 0; k < topology.nb(); k++) {
+
+    const vec3& p0 = points[ topology(k,0) ];
+    const vec3& p1 = points[ topology(k,1) ];
+    const vec3& p2 = points[ topology(k,2) ];
+
+    triangles_.push_back( std::make_shared<BSPTriangle>(p0,p1,p2) );
   }
 }
 
