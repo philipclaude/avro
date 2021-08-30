@@ -175,7 +175,7 @@ private:
   BufferObject* bound_texture_buffer_;
 };
 
-class VertexAttributeObject;
+class VertexArrayObject;
 
 class WebGL_Manager {
 
@@ -184,7 +184,7 @@ public:
     current_vao_index_(0)
   {}
 
-  void write( const VertexAttributeObject& vao );
+  void write( const VertexArrayObject& vao );
 
   void send(int port=7681) {
     webglpp_.send(port);

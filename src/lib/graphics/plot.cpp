@@ -88,14 +88,14 @@ Plot::build() {
 		spacetime.extract();
 
 		for (index_t j = 0; j < 8; j++) {
-			vao_.push_back( std::make_shared<VertexAttributeObject>() );
+			vao_.push_back( std::make_shared<VertexArrayObject>() );
 			vao_[j]->build(spacetime.topology(j));
 			active_vao_ = vao_[0].get();
 			vao_labels_.push_back( spacetime.entity(&spacetime.topology(j))->name() );
 		}
   }
   else {
-    vao_.push_back( std::make_shared<VertexAttributeObject>() );
+    vao_.push_back( std::make_shared<VertexArrayObject>() );
     active_vao_ = vao_[0].get();
     active_vao_->build(topology_);
   	vao_labels_.push_back("group 0");

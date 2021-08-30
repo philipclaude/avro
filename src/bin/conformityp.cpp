@@ -36,14 +36,15 @@ int
 conformityp( int nb_input , const char** inputs ) {
 
   typedef Simplex type;
-  avro_assert( nb_input == 5 );
+  avro_assert( nb_input == 6 );
 
-  const char **options = inputs +2;
-  int nb_options = nb_input -2;
+  const char **options = inputs +3;
+  int nb_options = nb_input -3;
 
   // read the base directory and metric name
   std::string base(inputs[0]);
   std::string metric_name(inputs[1]); // such as Polar2, "RotatingBL-4d" , "discrete"
+  std::string output(inputs[2]);
 
   // read the adapt iter
   index_t iter = 5, pass = 2, nb_processors = 1;
@@ -67,7 +68,6 @@ conformityp( int nb_input , const char** inputs ) {
   Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
   topology.orient();
 
-  //topology.build_structures();
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
   index_t n = topology.number();
@@ -94,6 +94,8 @@ conformityp( int nb_input , const char** inputs ) {
   else {
 
     scale = 1.0;
+    //scale = std::pow( std::sqrt(2.0) , real_t(iter) );
+
 
    // we need to read the metrics for each processor
    std::vector< symd<real_t> > metrics( topology.points().nb() );
@@ -136,6 +138,8 @@ conformityp( int nb_input , const char** inputs ) {
 
   Properties properties( topology , field );
   properties.print( "metric conformity" );
+
+  properties.dump(output);
 
   return 0;
 

@@ -55,7 +55,10 @@ endif()
 include(cmake/FindNLOPT.cmake)
 include(cmake/FindGraphics.cmake)
 
-find_package(Eigen3 3.3 REQUIRED)
+set(EIGEN3_INCLUDE_DIR "$ENV{EIGEN_DIR}" )
+if (NOT EIGEN3_INCLUDE_DIR)
+  find_package(Eigen3 3.3 REQUIRED)
+endif()
 include_directories( ${EIGEN3_INCLUDE_DIR} )
 
 # compiler flags

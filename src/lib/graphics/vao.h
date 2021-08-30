@@ -70,10 +70,10 @@ operator==( const Facet& fx , const Facet& fy )
   return true;
 }
 
-class VertexAttributeObject {
+class VertexArrayObject {
 
 public:
-  VertexAttributeObject() :
+  VertexArrayObject() :
     show_field_(true),
     uniform_color_(false),
     geometry_color_(false),

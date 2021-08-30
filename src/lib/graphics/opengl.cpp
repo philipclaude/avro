@@ -42,7 +42,7 @@ OpenGL4_Manager::OpenGL4_Manager() {
 }
 
 void
-OpenGL4_Manager::write( VertexAttributeObject& vao ) {
+OpenGL4_Manager::write( VertexArrayObject& vao ) {
 
   gl_index& vertex_array = vao.vertex_array();
 
@@ -195,7 +195,7 @@ FieldPrimitive::activate( ShaderProgram& shader ) {
 }
 
 void
-VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
+VertexArrayObject::draw_triangles( ShaderProgram& shader ) {
 
   shader.use();
   shader.setUniform( "have_tessellation_shader" , shader.has_tessellation_shader() );
@@ -236,7 +236,7 @@ VertexAttributeObject::draw_triangles( ShaderProgram& shader ) {
 }
 
 void
-VertexAttributeObject::draw_edges( ShaderProgram& shader ) {
+VertexArrayObject::draw_edges( ShaderProgram& shader ) {
 
   shader.use();
   shader.setUniform( "have_tessellation_shader" , shader.has_tessellation_shader() );
@@ -256,7 +256,7 @@ VertexAttributeObject::draw_edges( ShaderProgram& shader ) {
 }
 
 void
-VertexAttributeObject::draw_points( ShaderProgram& shader ) {
+VertexArrayObject::draw_points( ShaderProgram& shader ) {
 
   shader.use();
 
@@ -272,7 +272,7 @@ VertexAttributeObject::draw_points( ShaderProgram& shader ) {
 }
 
 void
-VertexAttributeObject::draw( const mat4& model , const mat4& view , const mat4& projection , const ClipPlane* clip ) {
+VertexArrayObject::draw( const mat4& model , const mat4& view , const mat4& projection , const ClipPlane* clip ) {
 
   if (number_ == 2 || !enable_culling_) {
     glDisable(GL_CULL_FACE);

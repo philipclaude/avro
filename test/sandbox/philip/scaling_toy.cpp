@@ -148,6 +148,14 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 
     params.set("adapt iter",index_t(iter));
 
+    if (topology.number() == 3 && iter <= 2 && mpi::size() > 16) {
+      params.set( "force partition count" , index_t(16) );
+    }
+    else if (topology.number() == 4 && iter <= 1 && mpi::size() > 4) {
+      params.set( "force partition count" , index_t(4) );
+    }
+    else params.set( "force partition count" , index_t( mpi::size() ) );
+
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);
 

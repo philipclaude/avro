@@ -1,4 +1,5 @@
 #include "graphics/bsp.h"
+#include "graphics/colormap.h"
 #include "graphics/postscript.h"
 
 namespace avro
@@ -177,6 +178,7 @@ PostScriptWriter::begin( index_t width , index_t height ) {
                 "{ /ST { STnoshfill } BD }\n"
                 "ifelse\n");
 
+  fprintf(fid_,"/TRIC  { newpath  moveto lineto lineto closepath gsave fill grestore 0.0 setgray stroke } BD\n");
   fprintf(fid_,"/TRI  { newpath moveto lineto lineto closepath gsave 0.5 setgray fill grestore 0.0 setgray stroke } BD\n");
   fprintf(fid_,"/TRIF { newpath moveto lineto lineto closepath 0.5 setgray fill } BD\n");
   fprintf(fid_,"/EDGF { newpath moveto lineto closepath 0.0 setgray stroke } BD\n");
@@ -207,13 +209,13 @@ PostScriptWriter::begin( index_t width , index_t height ) {
 }
 
 void
-PostScriptWriter::write( const std::vector<BSPTriangle*>& triangles , const mat4& view_matrix , const mat4& projection_matrix ) {
+PostScriptWriter::write( const std::vector<BSPTriangle*>& triangles , const mat4& view_matrix , const mat4& projection_matrix , vec3 color ) {
 
   // the BSP should have been constructed in world space, so the coordinates should already be transformed by the model matrix
   mat4 transformation = screen_matrix_ * projection_matrix * view_matrix;
 
   // the triangles should be ordered from back to front
-  fprintf(fid_,"0.5 0.5 0.5 C\n"); // grey
+  fprintf(fid_,"%g %g %g C\n",color(0),color(1),color(2));
   fprintf(fid_,"0.5 W\n1 setlinecap\n1 setlinejoin\n");
   for (index_t k = 0; k < triangles.size(); k++) {
 
@@ -231,7 +233,8 @@ PostScriptWriter::write( const std::vector<BSPTriangle*>& triangles , const mat4
     q1[0] /= q1[3]; q1[1] /= q1[3];
     q2[0] /= q2[3]; q2[1] /= q2[3];
 
-    fprintf(fid_,"%d %d %d %d %d %d TRI\n",int(q0[0]),int(q0[1]),int(q1[0]),int(q1[1]),int(q2[0]),int(q2[1]));
+    fprintf(fid_,"%g %g %g C\n",color(0),color(1),color(2));
+    fprintf(fid_,"%d %d %d %d %d %d TRIC\n",int(q0[0]),int(q0[1]),int(q1[0]),int(q1[1]),int(q2[0]),int(q2[1]));
 
     #if 0
     bool g0 = triangles[k]->ghost(0);

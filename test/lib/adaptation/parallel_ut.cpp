@@ -138,6 +138,7 @@ UT_TEST_CASE( test1 )
   params.set( "elems per processor" , index_t(5000) );
   params.set("has uv", true);
   params.set( "swapout" , false);
+  params.set("force partition count", index_t(mpi::size()) );
 
   std::vector<VertexMetric> metrics(topology.points().nb());
   for (index_t k = 0; k < topology.points().nb(); k++)
