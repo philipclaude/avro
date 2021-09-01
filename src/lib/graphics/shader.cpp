@@ -79,11 +79,15 @@ ShaderProgram::ShaderProgram( const std::string& name , bool with_tess , const s
   else if (name == "particles") {
     std::string vtx_src = get_shader_src( base + "-vtx.glsl" );
     std::string frg_src = get_shader_src( base + "-frg.glsl" );
-    //avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src) , "error compiling particle shader" );
-
     std::string geo_src = get_shader_src( base + "-geo.glsl" );
     avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling particle shader" );
 
+  }
+  else if (name == "raytracer") {
+    std::string vtx_src = get_shader_src( base + "-vtx.glsl" );
+    std::string frg_src = get_shader_src( base + "-frg.glsl" );
+    std::string geo_src = get_shader_src( base + "-geo.glsl" );
+    avro_assert_msg( compile(name_.c_str(),vtx_src,frg_src,geo_src) , "error compiling raytracer shader" );
   }
   else {
     printf("unknown shader %s\n",name.c_str());
@@ -450,7 +454,7 @@ ShaderProgram::compileShaderFromString( const std::string& source, GLSLShaderTyp
       delete [] c_log;
     }
 
-    std::cout << final_source << std::endl;
+    //std::cout << final_source << std::endl;
 
     return false;
   }
