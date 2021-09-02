@@ -30,15 +30,14 @@ UT_TEST_CASE( test1 )
 
   RayTracer raytracer(width,height);
 
-  raytracer.window().compute_view();
   raytracer.window().enable_controls(true);
 
   // initial draw, subsequent drawing will only be performed when a callback is invoked
-  raytracer.draw();
+  raytracer.render();
   while (true) {
 
     // draw the scene
-    raytracer.draw();
+    raytracer.render();
 
     // wait for user input
     glfwWaitEvents();

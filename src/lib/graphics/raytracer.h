@@ -98,6 +98,9 @@ public:
 
   void convert();
 
+  int width() const { return width_; }
+  int height() const { return height_; }
+
 private:
   int width_, height_;
   std::vector<vec3> pixel_;
@@ -128,26 +131,42 @@ private:
   vec3 vertex_[3];
 };
 
+class Scene {
+public:
+
+  void intersect( const Ray& ray , Intersection& ixn ) const;
+
+  void add( const TopologyBase& topology );
+  void add( const Sphere& sphere );
+
+private:
+  std::vector< std::shared_ptr<Object> > objects_;
+  BoundaryVolumeHierarchy bvh_;
+};
+
 class RayTracer {
 
 public:
   RayTracer(int width, int height);
 
-  void add_objects( const TopologyBase& topology );
-  void add_object( const Sphere& sphere );
+  vec3 pixel2world( real_t u , real_t v ) const;
 
-  void build_bvh();
-  void get_color( const Ray& ray );
-
+  void get_color( const Ray& ray , vec3& color );
   void trace( index_t k );
   void render();
-  void draw();
 
   Window& window() { return window_; }
+  Scene& scene() { return scene_; }
+
+  index_t nb_pixels() const { return window_.width() * window_.height(); }
+  void pixel( index_t k , index_t& i , index_t& j ) const {
+    i = k / window_.width();
+    j = k % window_.width();
+  }
 
 private:
-
-  BoundaryVolumeHierarchy bvh_;
+  mat3 basis_;
+  Scene scene_;
   Window window_;
   Canvas canvas_;
 };
