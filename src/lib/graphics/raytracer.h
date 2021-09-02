@@ -101,7 +101,7 @@ public:
 private:
   int width_, height_;
   std::vector<vec3> pixel_;
-  std::vector<real_t> data_;
+  std::vector<gl_float> data_;
   gl_index pixel_buffer_;
   gl_index pixel_texture_;
   gl_index vertex_array_;

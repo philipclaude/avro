@@ -23,14 +23,7 @@ Canvas::init_gl() {
 
   // bind the colormap values to a buffer
   GL_CALL( glGenBuffers( 1 , &pixel_buffer_ ) );
-  GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , pixel_buffer_) );
-  GL_CALL( glBufferData( GL_TEXTURE_BUFFER , width_ * height_ * 3 , data_.data() , GL_STATIC_DRAW) );
-
-  // generate a texture to hold the colormap buffer
   GL_CALL( glGenTextures( 1 , &pixel_texture_ ) );
-  GL_CALL( glActiveTexture( GL_TEXTURE0 + 0 ) );
-  GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , pixel_texture_ ) );
-  GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_RGB32F , pixel_buffer_ ) );
 
   // initialize the shader
   std::vector<std::string> macros = {"#version 410"};
@@ -49,15 +42,20 @@ Canvas::init_gl() {
 void
 Canvas::draw_gl() {
 
+  // clear the screen
   glClearColor(1,1,1,0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  glDisable( GL_CULL_FACE );
 
-  GL_CALL( glActiveTexture( GL_TEXTURE0 + 0 ) );
+  // write the pixel data to the pixel buffer
   GL_CALL( glBindBuffer( GL_TEXTURE_BUFFER , pixel_buffer_) );
-  GL_CALL( glBufferData( GL_TEXTURE_BUFFER , width_ * height_ * 3 , data_.data() , GL_STATIC_DRAW) );
+  GL_CALL( glBufferData( GL_TEXTURE_BUFFER , sizeof(gl_float)*data_.size() , data_.data() , GL_STATIC_DRAW) );
+
+  // bind the pixel buffer to the pixel texture
+  GL_CALL( glActiveTexture( GL_TEXTURE0 + 0 ) );
+  GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , pixel_texture_ ) );
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_RGB32F , pixel_buffer_ ) );
 
+  // nothing is actually drawn here, we just rely on the interpolation to give (u,v) coordinates to then look up the texture value
   GL_CALL( glDrawArrays( GL_POINTS , 0 , 1 ) );
 }
 
@@ -68,16 +66,18 @@ Canvas::convert() {
 
   for (index_t i = 0; i < height_; i++)
   for (index_t j = 0; j < width_; j++)
-  for (index_t d = 0; d < 1; d++)
-    data_[3*(i*width_+j)+d] = 1.0;
+  for (index_t d = 0; d < 3; d++)
+    data_[3*(i*width_+j)+d] = real_t(j)/width_;
+
+  print_inline(data_);
 }
 
 RayTracer::RayTracer( int width , int height ) :
   window_(width,height),
   canvas_(width,height)
 {
-    window_.init();
-    canvas_.init_gl();
+  window_.init();
+  canvas_.init_gl();
 }
 
 void

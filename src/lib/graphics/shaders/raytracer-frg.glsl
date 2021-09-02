@@ -11,12 +11,12 @@ uniform int u_height;
 
 void main() {
 
-  float u = v_Parameter.x * u_width;
-  float v = v_Parameter.y * u_height;
+  float j = v_Parameter.x * u_width;
+  float i = v_Parameter.y * u_height;
 
-  int idx = int(v * u_width + u);
+  int idx = int(i * u_width + j);
   vec3 color = texelFetch( pixels , idx ).xyz;
 
-  //fragColor = vec4(u,v,0.,1.);
+  fragColor = vec4(v_Parameter.x,0,0,1.0);
   fragColor = vec4(color,1.0);
 }
