@@ -140,6 +140,7 @@ public:
   void get_color( const Ray& ray );
 
   void trace( index_t k );
+  void render();
   void draw();
 
   Window& window() { return window_; }

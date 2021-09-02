@@ -26,7 +26,7 @@ UT_TEST_CASE( test1 )
   CKF_Triangulation topology( dims );
   topology.points().attach(geometry);
 
-  int width = 100, height = width;
+  int width = 500, height = width;
 
   RayTracer raytracer(width,height);
 

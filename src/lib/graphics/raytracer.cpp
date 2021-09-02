@@ -57,6 +57,8 @@ Canvas::draw_gl() {
 
   // nothing is actually drawn here, we just rely on the interpolation to give (u,v) coordinates to then look up the texture value
   GL_CALL( glDrawArrays( GL_POINTS , 0 , 1 ) );
+
+  glfwSwapBuffers(window_.window());
 }
 
 void
@@ -67,9 +69,7 @@ Canvas::convert() {
   for (index_t i = 0; i < height_; i++)
   for (index_t j = 0; j < width_; j++)
   for (index_t d = 0; d < 3; d++)
-    data_[3*(i*width_+j)+d] = real_t(j)/width_;
-
-  print_inline(data_);
+    data_[3*(i*width_+j)+d] = real_t(i)/width_;
 }
 
 RayTracer::RayTracer( int width , int height ) :
@@ -81,18 +81,26 @@ RayTracer::RayTracer( int width , int height ) :
 }
 
 void
-RayTracer::draw() {
+RayTracer::trace( index_t k ) {
 
-  printf("draw scene!\n");
+  // get the pixel coordinates
+
+}
+
+void
+RayTracer::render() {
+
+  for (index_t i = 0; i < canvas_.height(); i++)
+  for (index_t j = 0; j < canvas_.width(); j++) {
+
+    
+
+  }
 
   // determine if we want to render to the OpenGL framebuffer, or to an image
   if (true) {
-
     canvas_.convert();
     canvas_.draw_gl();
-
-    glfwSwapBuffers(window_.window());
-
   }
 }
 
