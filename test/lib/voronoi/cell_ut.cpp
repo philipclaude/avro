@@ -126,12 +126,12 @@ UT_TEST_CASE( test_2d )
   diagram.set_sites( sites );
   diagram.initialize();
 
-  diagram.optimize_points_lloyd(100);
+  diagram.optimize_points_lloyd(20);
 
   std::vector<real_t> mass( sites.nb() , diagram.volume() / real_t(sites.nb()) );
 
   //mass = diagram.cell_volume();
-  diagram.optimize_weights_kmt( 20 , mass );
+  //diagram.optimize_weights_kmt( 20 , mass );
 
   diagram.accumulate();
   diagram.create_field();

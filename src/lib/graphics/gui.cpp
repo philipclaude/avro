@@ -216,7 +216,7 @@ GUI::draw() {
           window_.plot(i).compute_center();
         }
 
-        VertexAttributeObject& vao = window_.plot(i).active_vao();
+        VertexArrayObject& vao = window_.plot(i).active_vao();
 
         ImGui::SameLine();
         if (!window_.plot(i).hidden()) {

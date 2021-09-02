@@ -32,8 +32,6 @@ coord_t dim;
 real_t dt;
 
 gl_index vertex_array;
-
-std::vector< std::string > macros = {"#version 410"};
 std::shared_ptr<ShaderProgram> shader;
 
 void
@@ -45,8 +43,6 @@ draw( Window& window ) {
   shader->setUniform("u_ModelViewProjectionMatrix" , mvp );
 
   if (animating) {
-
-    printf("animate!\n");
 
     GL_CALL( glBindVertexArray(vertex_array) );
 
@@ -81,8 +77,7 @@ draw( Window& window ) {
     glClearColor(1.0,1.0,1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // draw the fluid particles
-    // if we don't use too much memory (maybe max 10k or 100k points with 1000 time steps ~ a few Gb), then maybe we can load everything into the same buffer
+    // draw the last frame of the fluid particles
     GL_CALL( glDrawArrays( GL_POINTS , 0 , nb_particles ) );
 
     glfwSwapBuffers( window.window() );
@@ -108,6 +103,7 @@ animate( int nb_input , const char** inputs )
   ProcessGPU::initialize();
 
   // use float instead of double to represent coordinates
+  // (we don't need a lot of accuracy, and we can save memory this way)
   using json_flt = nlohmann::basic_json<std::map, std::vector, std::string, bool,std::int64_t, std::uint64_t, float>;
 
   // read the json with the point data
@@ -123,7 +119,6 @@ animate( int nb_input , const char** inputs )
   dim = jin["dimension"];
 
   printf("--> reading animation data: nb_frames = %lu, nb_particles = %lu, dim = %u\n",nb_frames,nb_particles,dim);
-
   std::vector<float> data = jin["coordinates"];
   std::vector<float> properties = jin["properties"];
   std::vector<gl_float> density = jin["density"];
@@ -138,13 +133,19 @@ animate( int nb_input , const char** inputs )
       coordinates[ k * (3*nb_particles) + i * 3 + d ] = gl_float(data[j++]);
   }
 
-  // TODO process properties
+  // process any additional properties
+  // TODO
 
   // determine the time step from the optional arguments
   bool found = false;
   dt = 0.1;
   found = parse<real_t>(lookfor(options,nb_options,"dt"),dt);
-  printf("dt = %g\n",dt);
+
+  // determine the resolution of the particles
+  index_t nu_sphere = 6;
+  found = parse<index_t>(lookfor(options,nb_options,"resolution"),nu_sphere);
+  index_t nv_sphere = nu_sphere -1;
+  index_t nb_sphere = 2*3*nu_sphere*nv_sphere;
 
   // initialize the window
   int width = 600, height = width;
@@ -181,6 +182,13 @@ animate( int nb_input , const char** inputs )
   GL_CALL( glVertexAttribPointer( 1, 1, GL_FLOAT, GL_FALSE, 0, 0 ) ); // enable attribute in position 1 which holds density
   GL_CALL( glEnableVertexAttribArray(1) );
 
+  printf("nu_sphere = %lu, nv_sphere = %lu, nb_sphere = %lu\n",nu_sphere,nv_sphere,nb_sphere);
+  std::vector< std::string > macros = {
+    "#version 410",
+    "#define NU " + std::to_string(nu_sphere),
+    "#define NV " + std::to_string(nv_sphere),
+    "#define NP " + std::to_string(nb_sphere)
+  };
   shader = std::make_shared<ShaderProgram>("particles",false,macros);
   shader->use();
 

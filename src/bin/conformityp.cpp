@@ -1,5 +1,3 @@
-#include "unit_tester.hpp"
-
 #include "adaptation/adapt.h"
 #include "adaptation/metric.h"
 #include "adaptation/parallel.h"
@@ -7,6 +5,7 @@
 
 #include "common/mpi.hpp"
 #include "common/process.h"
+#include "programs.h"
 
 #include "geometry/egads/context.h"
 
@@ -27,38 +26,39 @@
 #include <fstream>
 #include <time.h>
 
-using namespace avro;
-
-UT_TEST_SUITE( adaptation_parallel_test_suite )
-
-#if AVRO_MPI
-
-UT_TEST_CASE( test1 )
+namespace avro
 {
 
-  bool analytic = true;
-  index_t iter = 6;
-  index_t nb_processors = 24;
-  real_t scale = 1.0;
+namespace programs
+{
 
-  std::string mesh_name;
-  std::string metric_name;
-
-  std::string root = "/home/pcaplan/";
-
-  //mesh_name = root + "/jobs/adapt/ccp2/mesh-adapt" + std::to_string(iter)+ "-pass1.avro";
-  //metric_name = "Polar2";
-
-  mesh_name = root + "/jobs/adapt/results/sw-p24/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
-  //metric_name = "RotatingBL-4d";
-
-  //mesh_name = root + "/Codes/geocl/avro/build/release_mpi/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
-  std::string base = "/home/pcaplan/jobs/adapt/results/sw-p24/";
-  //base = root + "/Codes/geocl/avro/build/release_mpi/";
-  //mesh_name = "/home/pcaplan/jobs/adapt/sw/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
-  metric_name = "discrete";
+int
+conformityp( int nb_input , const char** inputs ) {
 
   typedef Simplex type;
+  avro_assert( nb_input == 6 );
+
+  const char **options = inputs +3;
+  int nb_options = nb_input -3;
+
+  // read the base directory and metric name
+  std::string base(inputs[0]);
+  std::string metric_name(inputs[1]); // such as Polar2, "RotatingBL-4d" , "discrete"
+  std::string output(inputs[2]);
+
+  // read the adapt iter
+  index_t iter = 5, pass = 2, nb_processors = 1;
+  avro_assert( parse<index_t>(lookfor(options,nb_options,"adapt"),iter) );
+  avro_assert( parse<index_t>(lookfor(options,nb_options,"pass"),pass) );
+  avro_assert( parse<index_t>(lookfor(options,nb_options,"proc"),nb_processors) );
+
+  std::string mesh_name;
+  mesh_name = base + "/mesh-adapt" + std::to_string(iter) + "-pass" + std::to_string(pass) + ".avro";
+
+  bool analytic = true;
+  real_t scale;
+
+  if (metric_name == "discrete") analytic = false;
 
   // read in the mesh
   std::shared_ptr<TopologyBase> ptopology = nullptr;
@@ -68,7 +68,6 @@ UT_TEST_CASE( test1 )
   Topology<type>& topology = *static_cast<Topology<type>*>(ptopology.get());
   topology.orient();
 
-  topology.build_structures();
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
 
   index_t n = topology.number();
@@ -76,11 +75,12 @@ UT_TEST_CASE( test1 )
 
   // determine the metrics
   std::shared_ptr<MetricAttachment> attachment;
-  try {
-    attachment = library::get_metric( metric_name , topology.points() , analytic );
-    avro_assert( analytic );
+  if (analytic) {
 
     scale = std::pow( std::sqrt(2.0) , real_t(iter) );
+
+    attachment = library::get_metric( metric_name , topology.points() , analytic );
+    avro_assert( analytic );
 
     // we need to scale the attachment
     for (index_t k = 0; k < attachment->nb(); k++) {
@@ -90,9 +90,12 @@ UT_TEST_CASE( test1 )
           (*attachment)[k](i,j) *= scale;
       (*attachment)[k].calculate();
     }
-
   }
-  catch (...) {
+  else {
+
+    scale = 1.0;
+    //scale = std::pow( std::sqrt(2.0) , real_t(iter) );
+
 
    // we need to read the metrics for each processor
    std::vector< symd<real_t> > metrics( topology.points().nb() );
@@ -109,7 +112,6 @@ UT_TEST_CASE( test1 )
       std::vector<real_t> metrics_p = jm["metrics"];
       std::vector<real_t> global_p  = jm["global"];
 
-      if (!analytic) scale = 1.0;
 
       avro_assert( global_p.size() * nb_rank == metrics_p.size() );
 
@@ -131,16 +133,18 @@ UT_TEST_CASE( test1 )
     attachment = std::make_shared<MetricAttachment>( topology.points() , metrics );
   }
 
-
   // create the discrete metric field defined on the input mesh
   MetricField<Simplex> field( topology , *attachment );
 
   Properties properties( topology , field );
   properties.print( "metric conformity" );
 
+  properties.dump(output);
+
+  return 0;
+
 }
-UT_TEST_CASE_END( test1 )
 
-#endif
+} // programs
 
-UT_TEST_SUITE_END( adaptation_parallel_test_suite )
+} // avro

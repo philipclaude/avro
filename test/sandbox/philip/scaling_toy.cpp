@@ -124,7 +124,7 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
   params.set( "insertion volume factor" ,  -1.0 );
   params.set( "curved" , curved);
   params.set( "limit metric" , false );
-  params.set( "max parallel passes" , index_t(2) );
+  params.set( "max parallel passes" , index_t(3) );
   params.set( "elems per processor" , index_t(5000) );
   params.set( "has uv", true);
   params.set( "swapout" , false);
@@ -148,6 +148,14 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 
     params.set("adapt iter",index_t(iter));
 
+    if (topology.number() == 3 && iter <= 2 && mpi::size() > 16) {
+      params.set( "force partition count" , index_t(16) );
+    }
+    else if (topology.number() == 4 && iter <= 1 && mpi::size() > 4) {
+      params.set( "force partition count" , index_t(4) );
+    }
+    else params.set( "force partition count" , index_t( mpi::size() ) );
+
     if (rank == 0)
       printf("\n=== iteration %lu ===\n\n",iter);
 
@@ -158,6 +166,7 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
     metrics.resize( manager.topology().points().nb() );
     metrics = manager.metrics();
     real_t scale = sqrt(2.0);
+    //if (n < 4) scale = 2.0;
     if (analytic) {
       // we will scale the analytic metric, not the one from the previous adaptation
       scale = std::pow( scale , real_t(iter+1) );
@@ -219,9 +228,9 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 }
 
 // which test case to run?
-#define CASE_SL 1
+#define CASE_SL 0
 #define CASE_CC 0
-#define CASE_BL 0
+#define CASE_BL 1
 #define CASE_SW 0
 
 UT_TEST_CASE( test1 )
@@ -243,7 +252,7 @@ UT_TEST_CASE( test1 )
 
   #elif CASE_BL
 
-  std::string geometry_name = "tesseract-closingwall";
+  std::string geometry_name = "tesseract";
   std::string mesh_name = "/home/pcaplan/jobs/adapt/mbl-initial.avro";
   library::MetricField_Tesseract_RotatingBoundaryLayer metric_field;
 

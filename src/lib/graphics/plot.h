@@ -16,7 +16,7 @@ namespace graphics
 {
 
 class Plot;
-class VertexAttributeObject;
+class VertexArrayObject;
 
 class ClipPlane {
 public:
@@ -78,10 +78,10 @@ public:
   float length_scale() const { return length_scale_; }
 
   index_t nb_vao() const { return vao_.size(); }
-  VertexAttributeObject& vao( index_t k ) { return *vao_[k].get(); }
+  VertexArrayObject& vao( index_t k ) { return *vao_[k].get(); }
 
-  const VertexAttributeObject& active_vao() const { return *active_vao_; }
-  VertexAttributeObject& active_vao() { return *active_vao_; }
+  const VertexArrayObject& active_vao() const { return *active_vao_; }
+  VertexArrayObject& active_vao() { return *active_vao_; }
 	void set_active( index_t k ) { active_vao_ = vao_[k].get(); }
 
 	const std::vector<std::string>& vao_labels() const { return vao_labels_; }
@@ -93,7 +93,7 @@ public:
 private:
 
 	const TopologyBase& topology_;
-	VertexAttributeObject* active_vao_;
+	VertexArrayObject* active_vao_;
 	mat4 model_matrix_;
 
 	std::shared_ptr<ClipPlane> clip_;
@@ -101,7 +101,7 @@ private:
 	mat4 center_translation_;
 	mat4 inverse_center_translation_;
 
-  std::vector< std::shared_ptr<VertexAttributeObject> > vao_;
+  std::vector< std::shared_ptr<VertexArrayObject> > vao_;
 
   float length_scale_;
 

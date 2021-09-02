@@ -41,6 +41,7 @@ public:
 	void add( const TopologyBase& topology );
 
 	const Window& window() const { return window_; }
+	Window& window() { return window_; }
 
 private:
 	Window window_;

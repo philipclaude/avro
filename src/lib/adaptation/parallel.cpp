@@ -1127,6 +1127,7 @@ void
 AdaptationManager<type>::migrate_balance( index_t nb_part ) {
 
   index_t nb_rank = mpi::size();
+  //if (nb_rank == 1) return;
 
   // migrate the interface into the interior of the partitions
   // simultaneously performing a load balance

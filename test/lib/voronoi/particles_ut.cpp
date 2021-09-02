@@ -14,7 +14,7 @@ UT_TEST_SUITE( voronoi_particles_test_suite )
 
 UT_TEST_CASE( test_2d )
 {
-  index_t nb_particles = 1e2;
+  index_t nb_particles = 1e3;
 
   voronoi::ParticleSimulator particles( "CKF-2-2" , nb_particles );
 

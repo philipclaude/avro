@@ -36,7 +36,7 @@ Object::build_hierarchy()
 void
 Object::print( bool with_children ) const
 {
-  printf("PSC entity with number %hu at %p\n",number_,(void*)(this));
+  printf("PSC %s entity with number %hu at %p\n",name_.c_str(),number_,(void*)(this));
   if (!with_children) return;
   for (index_t k=0;k<nb_children();k++)
     child(k).print(with_children);
