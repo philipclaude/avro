@@ -49,8 +49,8 @@ UT_TEST_CASE( test1 )
   red.ka = {0.4,0.,0.};
   red.kd = {0.4,0.,0.};
   red.ks = {0.4,0.,0.};
-  Sphere sphere_b( {1.,1.,0.} , 1.0 , red );
-  //raytracer.scene().add( sphere_b );
+  Sphere sphere_b( {3.,1.,0.} , 1.0 , red );
+  raytracer.scene().add( sphere_b );
 
   // second sphere: ground
   Material ground;
@@ -76,10 +76,16 @@ UT_TEST_CASE( test1 )
   mater3.ka = {0.98,0.5,0.44};
   mater3.kd = mater3.ka;
   mater3.ks = mater3.kd;
-  Sphere sphere3( {0.,0.5,-0.5} , 0.5 , mater3 );
-  //raytracer.scene().add( sphere3 );
+  Sphere sphere3( {1.,0.5,-0.5} , 0.5 , mater3 );
+  raytracer.scene().add( sphere3 );
 
-  raytracer.scene().add( topology , mater3 , true );
+  // mesh
+  Material mater4;
+  mater4.type = 1; // reflective
+  mater4.ka = {0.98,0.5,0.44};
+  mater4.kd = mater4.ka;
+  mater4.ks = mater4.kd;
+  raytracer.scene().add( topology , mater4 , true );
 
   // point light source (white)
   Light light;

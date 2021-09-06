@@ -165,6 +165,21 @@ private:
   vec3 vertex_[3];
 };
 
+class CurvilinearTriangle : public Object {
+public:
+  CurvilinearTriangle( const Topology<Simplex>& topology , index_t k , const Material& material );
+
+  virtual bool intersect( const Ray& ray , Intersection& ixn , real_t tmin , real_t tmax ) const override;
+  virtual bool bounding_box( AABB& output_box ) const override {
+    avro_implement;
+    return false;
+  }
+
+private:
+  std::vector<vec3> vertex_;
+
+};
+
 class Scene {
 public:
 
@@ -177,7 +192,9 @@ public:
 
 private:
   std::vector<const Object*> objects_;
-  std::vector< std::shared_ptr<Triangle> > triangles_;
+  //std::vector< std::shared_ptr<Triangle> > triangles_;
+  std::vector< std::shared_ptr<Object> > items_;
+
   std::vector< std::shared_ptr<BVH_Node> > nodes_;
 };
 

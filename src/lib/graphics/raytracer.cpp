@@ -324,7 +324,7 @@ RayTracer::trace( index_t k ) {
   // initialize the color
   canvas_(i,j) = {0.,0.,0.};
 
-  index_t nb_samples_ = 8; // TODO make this a user parameter
+  index_t nb_samples_ = 32; // TODO make this a user parameter
   for (index_t s = 0; s < nb_samples_; s++) {
 
     // get the pixel coordinates in [0,1] x [0,1]
@@ -429,7 +429,6 @@ Triangle::Triangle( const Topology<Simplex>& triangles , index_t k , const Mater
       if (vertex_[j][d] > box_.max[d]) box_.max[d] = vertex_[j][d];
     }
   }
-
 }
 
 bool
@@ -473,6 +472,17 @@ Triangle::intersect( const Ray& ray , Intersection& hit , real_t tmin , real_t t
   return false;
 }
 
+CurvilinearTriangle::CurvilinearTriangle( const Topology<Simplex>& triangles , index_t k , const Material& material ) :
+  Object(material)
+{
+  avro_implement;
+}
+
+bool
+CurvilinearTriangle::intersect( const Ray& ray , Intersection& hit , real_t tmin , real_t tmax ) const {
+  avro_implement;
+}
+
 void
 Scene::add( const Topology<Simplex>& triangles , const Material& material , bool use_bvh ) {
 
@@ -480,26 +490,28 @@ Scene::add( const Topology<Simplex>& triangles , const Material& material , bool
   if (triangles.number() != 2) avro_implement;
   avro_assert( triangles.points().dim() == 3 );
 
-  std::vector<std::shared_ptr<Object>> objects;
+  index_t order = triangles.element().order();
+
+  index_t k0 = items_.size();
   for (index_t k = 0; k < triangles.nb(); k++) {
 
-    std::shared_ptr<Triangle> triangle = std::make_shared<Triangle>(triangles,k,material);
-    triangles_.push_back(triangle);
+    std::shared_ptr<Object> triangle;
+    if (order == 1) triangle = std::make_shared<Triangle>(triangles,k,material);
+    else triangle = std::make_shared<CurvilinearTriangle>(triangles,k,material);
+
+    items_.push_back(triangle);
     triangle->name() = "triangle " + std::to_string(k);
-    objects.push_back( triangle );
-    //objects_.push_back(triangle.get());
   }
 
   // compute BVH of all triangles
-  // should probably delay this calculation until all meshes have been added
   if (use_bvh) {
-    std::shared_ptr<BVH_Node> bvh = std::make_shared<BVH_Node>(material,objects,0,triangles.nb());
+    std::shared_ptr<BVH_Node> bvh = std::make_shared<BVH_Node>(material,items_,k0,items_.size());
     objects_.push_back(bvh.get());
     nodes_.push_back(bvh);
   }
   else {
-    for (index_t k = 0; k < objects.size(); k++)
-      objects_.push_back( objects[k].get() );
+    for (index_t k = k0; k < items_.size(); k++)
+      objects_.push_back( items_[k].get() );
   }
 }
 
@@ -528,15 +540,14 @@ box_z_compare (const std::shared_ptr<Object> a, const std::shared_ptr<Object> b)
 }
 
 AABB
-surrounding_box(AABB box0, AABB box1) {
-  using namespace std;
-  vec3 small = { fmin(box0.min[0], box1.min[0]),
-                 fmin(box0.min[1], box1.min[1]),
-                 fmin(box0.min[2], box1.min[2]) };
+surrounding_box(const AABB& box0, const AABB& box1) {
+  vec3 small = { std::fmin(box0.min[0], box1.min[0]),
+                 std::fmin(box0.min[1], box1.min[1]),
+                 std::fmin(box0.min[2], box1.min[2]) };
 
-  vec3 big  = { fmax(box0.max[0], box1.max[0]),
-                fmax(box0.max[1], box1.max[1]),
-                fmax(box0.max[2], box1.max[2]) };
+  vec3 big  = { std::fmax(box0.max[0], box1.max[0]),
+                std::fmax(box0.max[1], box1.max[1]),
+                std::fmax(box0.max[2], box1.max[2]) };
 
   AABB aabb;
   aabb.min = small;
