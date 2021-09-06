@@ -212,7 +212,7 @@ get_mesh( const std::string& name , std::shared_ptr<TopologyBase>& ptopology , c
 
     coord_t dim = jm["dim"];
     number = jm["number"];
-    std::shared_ptr<Mesh> pmesh  = std::make_shared<Mesh>(number,number);
+    std::shared_ptr<Mesh> pmesh  = std::make_shared<Mesh>(number,dim);
 
     index_t nb_ghost = 1;
     try {
