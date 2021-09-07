@@ -64,8 +64,6 @@ Canvas::draw_gl() {
   GL_CALL( glBindTexture( GL_TEXTURE_BUFFER , pixel_texture_ ) );
   GL_CALL( glTexBuffer( GL_TEXTURE_BUFFER , GL_RGB32F , pixel_buffer_ ) );
 
-  //glDisable(GL_PROGRAM_POINT_SIZE);
-
   // nothing is actually drawn here, we just rely on the interpolation to give (u,v) coordinates to then look up the texture value
   GL_CALL( glDrawArrays( GL_POINTS , 0 , 1 ) );
 }
@@ -87,58 +85,59 @@ Sphere::normal( const vec3& point ) const {
 }
 
 bool
-Sphere::intersect( const Ray& ray , Intersection& ixn , real_t tmin , real_t tmax ) const {
+Sphere::intersect( const Ray& ray , Intersection& hit , real_t tmin , real_t tmax ) const {
 
-  ixn.t = -1;
-  ixn.object = nullptr;
+  // initialize to no intersection
+  hit.t      = -1;
+  hit.object = nullptr;
 
+  // compute the coefficients in the quadratic equation for the intersection
   vec3 offset = ray.origin - center_;
-  real_t b = glm::dot( ray.direction , offset );
-  real_t c = glm::dot( offset , offset ) - radius_*radius_;
+  real_t b    = glm::dot( ray.direction , offset );
+  real_t c    = glm::dot( offset , offset ) - radius_*radius_;
+  real_t d    = b*b - c;
+  if (d < 0.0) return false;
 
-  real_t discriminant = b*b - c;
-  if (discriminant < 0.0) return false;
+  // compute both possible intersections
+  real_t t1 = -b - std::sqrt(d);
+  real_t t2 = -b + std::sqrt(d);
 
-  real_t t1 = -b - std::sqrt(discriminant);
-  real_t t2 = -b + std::sqrt(discriminant);
-
-  real_t t = -1.0;
-  if      (t1 > tmin && t1 < tmax) t = t1;
-  else if (t2 > tmin && t2 < tmax) t = t2;
+  // check if t1 is in the admissible range (it is smaller), otherwise check t2)
+  if      (t1 > tmin && t1 < tmax) hit.t = t1;
+  else if (t2 > tmin && t2 < tmax) hit.t = t2;
   else return false;
 
-  ixn.point  = ray.origin + t * ray.direction;
-  ixn.normal = normal(ixn.point);
-  ixn.t      = t;
-  ixn.object = this;
+  // save the intersection information
+  hit.point  = ray.origin + hit.t * ray.direction;
+  hit.normal = normal(hit.point);
+  hit.object = this;
 
   return true;
 }
 
 bool
-Scene::intersect( const Ray& ray , Intersection& ixn ) const {
+Scene::intersect( const Ray& ray , Intersection& hit ) const {
 
   real_t tmin = 1e-3;
   real_t tmax = 1e20;
 
   // default to no intersection
-  ixn.t = tmax;
+  hit.t = tmax;
 
-  // determine if we intersect an object in the bvh
-  // for now just check every object
+  // check every object in the scene
   bool intersected = false;
   for (index_t k = 0; k < objects_.size(); k++) {
 
     // check the intersection with this object
-    Intersection ixn_k;
-    if (objects_[k]->intersect( ray , ixn_k , tmin , tmax) ) {
+    Intersection hit_k;
+    if (objects_[k]->intersect( ray , hit_k , tmin , tmax) ) {
 
       // there is an intersection
       intersected = true;
 
       // is the intersection closer than the previous t value?
-      if (ixn_k.t < ixn.t) {
-        ixn = ixn_k;
+      if (hit_k.t < hit.t) {
+        hit = hit_k;
       }
     }
   }
@@ -174,12 +173,10 @@ Material::shade( const Ray& ray , const Intersection& hit , const Light& light )
   // compute h = (l + v) / | l + v | (v = opposite ray direction)
   vec3 h = glm::normalize( l - ray.direction );
 
-  // compute the fraction of light that is reflected due to the highlight
+  // compute the fraction of light that is reflected due to the specular highlight
   vec3 cs;
   if (shine > 0.0) {
     float specular = std::max( 0.0f , std::pow( glm::dot(hit.normal,h) , shine ) );
-
-  // compute the specular component of the color
     cs = light.Ls * specular;
   }
 
@@ -263,6 +260,12 @@ RayTracer::get_color( const Ray& ray , vec3& color , int depth ) {
     return;
   }
 
+  // check if we want to render the boundary (of a triangle)
+  if (hit.boundary > 0) {
+    color = {0.,0.,0.};
+    return;
+  }
+
   // initialize to color from ambient lighting
   color = hit.object->material().ka * ca_ * 0.5;
 
@@ -324,7 +327,7 @@ RayTracer::trace( index_t k ) {
   // initialize the color
   canvas_(i,j) = {0.,0.,0.};
 
-  index_t nb_samples_ = 32; // TODO make this a user parameter
+  index_t nb_samples_ = 8; // TODO make this a user parameter
   for (index_t s = 0; s < nb_samples_; s++) {
 
     // get the pixel coordinates in [0,1] x [0,1]
@@ -434,9 +437,9 @@ Triangle::Triangle( const Topology<Simplex>& triangles , index_t k , const Mater
 bool
 Triangle::intersect( const Ray& ray , Intersection& hit , real_t tmin , real_t tmax ) const {
 
+  // setup the system of equations to determine the intersection point
   mat3 M;
   vec3 B;
-
   for (coord_t d = 0; d < 3; d++) {
     M(d,0) = vertex_[0][d] - vertex_[2][d];
     M(d,1) = vertex_[1][d] - vertex_[2][d];
@@ -444,18 +447,21 @@ Triangle::intersect( const Ray& ray , Intersection& hit , real_t tmin , real_t t
     B(d)   = ray.origin(d) - vertex_[2][d];
   }
 
+  // solve the system
   mat3 Minv = glm::inverse(M);
   vec3 C = Minv * B;
 
+  // compute the barycentric coordinates
   float alpha = C(0);
   if (alpha < 0. || alpha > 1.) return false;
   float beta = C(1);
   if (beta < 0. || beta > 1.) return false;
   float gamma = 1.0 - alpha - beta;
   if (gamma < 0. || gamma > 1.) return false;
-  float t = C(2);
 
-  if (t > 0.) {
+  // check for an admissible intersection
+  float t = C(2);
+  if (t > tmin && t < tmax) {
 
     hit.point = ray.origin + t * ray.direction;
     vec3 u,v;
@@ -466,6 +472,11 @@ Triangle::intersect( const Ray& ray , Intersection& hit , real_t tmin , real_t t
     hit.normal = glm::normalize( glm::cross(u,v) );
     hit.t = t;
     hit.object = this;
+
+    // TODO calculate a tolerance that gives a constant thickness for the mesh edges
+    real_t tol = 1e-2;
+    hit.boundary = -1;
+    if (alpha < tol || beta < tol || gamma < tol) hit.boundary = 1;
 
     return true;
   }
@@ -565,7 +576,7 @@ BVH_Node::BVH_Node( const Material& material , const std::vector<std::shared_ptr
                                 : box_z_compare;
 
   index_t object_span = end - start;
-  if      (object_span == 1 ) {
+  if (object_span == 1 ) {
     left_ = right_ = objects[start];
   }
   else if (object_span == 2) {
@@ -582,7 +593,7 @@ BVH_Node::BVH_Node( const Material& material , const std::vector<std::shared_ptr
 
     std::sort( objects.begin() + start , objects.begin() + end , comparator );
 
-    auto mid = start + object_span/2;
+    index_t mid = start + object_span/2;
     left_  = std::make_shared<BVH_Node>(material,objects, start, mid);
     right_ = std::make_shared<BVH_Node>(material,objects, mid, end);
 

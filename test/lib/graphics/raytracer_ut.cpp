@@ -22,8 +22,8 @@ get_center(const Points& points) {
     for (coord_t d = 0; d < 3; d++)
       c[d] += points(i,d) / np;
   }
-  printf("center = \n");
-  c.print();
+  //printf("center = \n");
+  //c.print();
   return c;
 }
 
@@ -36,7 +36,7 @@ UT_TEST_CASE( test1 )
   std::shared_ptr<Mesh> pmesh = library::get_mesh(meshname,ptopology);
   Topology<Simplex>& topology = *static_cast<Topology<Simplex>*>(ptopology.get());
 
-  int width = 700, height = 0.4*width;
+  int width = 600, height = 0.6*width;
 
   RayTracer raytracer(width,height);
 
@@ -49,7 +49,7 @@ UT_TEST_CASE( test1 )
   red.ka = {0.4,0.,0.};
   red.kd = {0.4,0.,0.};
   red.ks = {0.4,0.,0.};
-  Sphere sphere_b( {3.,1.,0.} , 1.0 , red );
+  Sphere sphere_b( {4.,1.,2.} , 1.0 , red );
   raytracer.scene().add( sphere_b );
 
   // second sphere: ground
@@ -81,11 +81,11 @@ UT_TEST_CASE( test1 )
 
   // mesh
   Material mater4;
-  mater4.type = 1; // reflective
+  mater4.type = 0; // reflective
   mater4.ka = {0.98,0.5,0.44};
   mater4.kd = mater4.ka;
   mater4.ks = mater4.kd;
-  raytracer.scene().add( topology , mater4 , true );
+  raytracer.scene().add( topology , mater4 , true ); // true means use BVH
 
   // point light source (white)
   Light light;

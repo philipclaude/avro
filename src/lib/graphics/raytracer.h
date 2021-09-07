@@ -92,6 +92,7 @@ struct Intersection {
   vec3 point;
   vec3 normal;
   const Object* object;
+  int boundary = -1;
 };
 
 struct Light {
