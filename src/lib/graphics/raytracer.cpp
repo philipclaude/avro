@@ -35,7 +35,7 @@ Canvas::init_gl() {
   GL_CALL( glGenTextures( 1 , &pixel_texture_ ) );
 
   // initialize the shader
-  std::vector<std::string> macros = {"#version 410"};
+  std::vector<std::string> macros = {"#version 330"};
   shader_ = std::make_shared<ShaderProgram>("raytracer",false,macros);
   shader_->use();
 
