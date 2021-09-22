@@ -3,9 +3,9 @@
 
 <img width="60px" src="doc/fig/avro.svg"/>
 
-[![build status](https://gitlab.com/philip/avro/badges/master/pipeline.svg)](https://gitlab.com/philip/avro/badges/master/pipeline.svg)
+[![build status](https://gitlab.com/philipclaude/avro/badges/main/pipeline.svg)](https://gitlab.com/philipclaude/avro/badges/main/pipeline.svg)
 
-[![coverage](https://gitlab.com/philip/avro/badges/master/coverage.svg)](https://gitlab.com/philip/avro/badges/master/coverage.svg)
+[![coverage](https://gitlab.com/philip/avro/badges/main/coverage.svg)](https://gitlab.com/philip/avro/badges/main/coverage.svg)
 
 **avro** is an unstructured mesh adaptation library with the following capabilities:
 
