@@ -37,7 +37,7 @@ UT_TEST_CASE( test1 )
   typedef Simplex type;
 
   index_t nb_processors = 4;
-  std::string base = "/Users/pcaplan/Codes/geocl/avro/build/";
+  std::string base = "/Users/pcaplan/Codes/imaginelab/avro/build/";
 
   Colormap colormap;
   colormap.change_style("bwr");

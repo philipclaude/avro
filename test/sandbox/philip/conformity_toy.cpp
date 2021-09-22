@@ -61,9 +61,9 @@ UT_TEST_CASE( test1 )
   mesh_name = root + "/jobs/adapt/results/sw-p24/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
   //metric_name = "RotatingBL-4d";
 
-  //mesh_name = root + "/Codes/geocl/avro/build/release_mpi/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
+  //mesh_name = root + "/Codes/imaginelab/avro/build/release_mpi/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
   std::string base = "/home/pcaplan/jobs/adapt/results/sw-p24/";
-  //base = root + "/Codes/geocl/avro/build/release_mpi/";
+  //base = root + "/Codes/imaginelab/avro/build/release_mpi/";
   //mesh_name = "/home/pcaplan/jobs/adapt/sw/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
   metric_name = "discrete";
 
