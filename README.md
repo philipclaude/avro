@@ -40,12 +40,7 @@ Example 2: UGAWG Cube-Cylinder Polar 2 case
 $ avro -adapt ../data/cube-cylinder.mesh ../data/cube-cylinder.egads Polar2 ../tmp/ccp2.mesh
 ```
 
-Example 3: mesh adaptation from a metric in a .solb file
-```
-avro -adapt input.mesh input.egads input.sol tmp/output.mesh
-```
-
-Example 4: visualization of a mesh
+Example 3: visualization of a mesh
 ```
 avro -plot ../data/cube-cylinder.mesh
 ```
