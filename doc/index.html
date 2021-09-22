@@ -79,7 +79,7 @@
           <li>dimension-independent calculation of Voronoi diagrams (with exact geoemtric predicates up to 4d).</li>
         </ol>
         <p>
-          note: this is the <code>avro-2.0</code> version, which is a rewrite of the <a href="https://philipclaude.gitlab.io/avro/">original version</a> written by Philip for his PhD.
+          note: this is the <code>avro-2.0</code> version, which is a rewrite of the <a href="https://philipclaude.gitlab.io/avro-version1/">original version</a> written by Philip for his PhD.
         </p>
 
         <hr>
@@ -89,7 +89,7 @@
           These steps will guide you through downloading a fresh copy of <code>avro</code>, installing dependencies, and compiling the source code.
         </p>
         <p>
-          At the very least, <code>avro</code> depends on having the following on your computer:
+          <code>avro</code> depends on having the following on your computer (some may be omitted if you don't want certain features):
           <ul>
             <li> <code>git</code></li>
             <li><code>CMake</code> (2.8.8) for generating Makefiles and targets when compiling</li>
@@ -98,6 +98,7 @@
             <li><code>nlopt</code> 2.4.2+ for solving optimization problems</li>
             <li><code>OpenGL 3+</code></li>
             <li><code>LAPACK</code> for linear algebra</code></li>
+            <li><code>Eigen</code> for the Newton-based optimal transport solver</li>
           </ul>
         </p>
         <p>
@@ -116,14 +117,14 @@
         <p>Install dependencies:</p>
         <pre class="prettyprint lang-bsh" style="color: black">
 
-          $ brew install git cmake nlopt lapack
+          $ brew install git cmake nlopt lapack eigen
         </pre>
 
         <h4 class="mt-4">dependencies on Linux</h4>
         <p>Install dependencies:</p>
         <pre class="prettyprint lang-bsh" style="color: black">
 
-          $ sudo apt-get install git cmake cmake-curses-gui libnlopt-dev libblas-dev liblapack-dev xorg-dev
+          $ sudo apt-get install git cmake cmake-curses-gui libnlopt-dev libblas-dev liblapack-dev libeigen3-dev xorg-dev
         </pre>
 
         <h4 class="mt-4"><code>EngineeringSketchPad</code> (both Linux and OS X)</h4>
