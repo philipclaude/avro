@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -233,6 +233,8 @@ get_mesh( const std::string& name , std::shared_ptr<TopologyBase>& ptopology , c
 
       std::vector<index_t> simplices = jm["elements"];
       index_t nb_simplices = simplices.size()/(number+1);
+      printf("nb_simplices = %lu\n",nb_simplices);
+      printf("nb_vertices = %lu\n",pmesh->points().nb());
       for (index_t k = 0; k < nb_simplices; k++) {
         bool ghost = false;
         std::vector<index_t> simplex( simplices.data() + k*(number+1) , simplices.data() + (k+1)*(number+1) );
