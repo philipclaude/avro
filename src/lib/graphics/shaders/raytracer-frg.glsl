@@ -11,10 +11,13 @@ uniform int u_height;
 
 void main() {
 
-  float j = gl_FragCoord.x - 0.5;//v_Parameter.x * u_width;
-  float i = gl_FragCoord.y - 0.5;//v_Parameter.y * u_height;
+  int j = int( gl_FragCoord.x - 0.5)/2;
+  int i = int( gl_FragCoord.y - 0.5)/2;
 
-  int idx = int(i * u_width + j);
+  j = int(v_Parameter.x * u_width);
+  i = int(v_Parameter.y * u_height);
+
+  int idx = i * u_width + j;
   vec3 color = texelFetch( pixels , idx ).xyz;
 
   fragColor = vec4(color,1.0);

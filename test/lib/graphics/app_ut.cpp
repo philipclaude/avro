@@ -74,7 +74,7 @@ UT_TEST_CASE( simplices_2d_test )
   std::vector<real_t> lengths(number,1.0);
   EGADS::Cube geometry(&context,lengths);
 
-  std::vector<index_t> dims(number,10);
+  std::vector<index_t> dims(number,4);
   //dims[1] = 2;
   CKF_Triangulation topology( dims );
   topology.element().set_basis( BasisFunctionCategory_Lagrange );
@@ -108,7 +108,7 @@ UT_TEST_CASE( simplices_2d_test )
 
   OpenGL_Application app;
   app.add( curvilinear );
-  app.add( topology );
+//  app.add( topology );
 
   app.run(AVRO_FULL_UNIT_TEST);
 

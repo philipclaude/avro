@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -180,6 +180,7 @@ class mat4 rotate( const class mat4& m , float angle , const vec3& axis );
 class mat4 translate( const class mat4& m , const vec3& t );
 class mat4 scale( const class mat4& m , const vec3& s );
 class mat4 inverse( const class mat4& m );
+class mat3 inverse( const class mat3& m );
 class mat4 transpose( const class mat4& m );
 std::string to_string( const class mat4& m );
 class vec3 cross( const vec3& u , const vec3& v );
@@ -188,6 +189,9 @@ class vec3 normalize( const vec3& u );
 float dot( const vec3& u , const vec3& v);
 
 }
+
+// component-wise vector multiplication (use in ray tracing)
+vec3 operator* (const vec3& u , const vec3& v);
 
 #endif
 

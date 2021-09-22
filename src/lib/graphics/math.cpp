@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -222,6 +222,11 @@ inverse( const class mat4& a ) {
   return numerics::inverse(a);
 }
 
+class mat3
+inverse( const class mat3& a ) {
+  return numerics::inverse(a);
+}
+
 std::string
 to_string( const class mat4& m ) {
   std::string s = "{ ";
@@ -234,6 +239,10 @@ to_string( const class mat4& m ) {
 
 } // glm
 
+vec3
+operator* (const vec3& u , const vec3& v) {
+  return {u[0]*v[0],u[1]*v[1],u[2]*v[2]};
+}
 
 #endif
 
