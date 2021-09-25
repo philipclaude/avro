@@ -143,4 +143,6 @@ config_bool( AVRO_HEADLESS_GRAPHICS CMAKE_AVRO_HEADLESS_GRAPHICS )
 config_bool( AVRO_NO_ESP CMAKE_AVRO_NO_ESP )
 config_bool( AVRO_WITH_GL CMAKE_AVRO_WITH_GL )
 set( CMAKE_AVRO_CPU_THREAD_MANAGER ${AVRO_CPU_THREAD_MANAGER} )
-configure_file( "${CMAKE_SOURCE_DIR}/src/include/avro_config.h.in" "${CMAKE_BINARY_DIR}/include/avro_config.h" )
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/src/include/avro_config.h.in" "${CMAKE_BINARY_DIR}/include/avro_config.h" )
+
+include(cmake/targets.cmake)

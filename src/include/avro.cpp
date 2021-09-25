@@ -11,6 +11,10 @@
 #include "geometry/entity.h"
 #include "geometry/model.h"
 
+#include "geometry/egads/body.h"
+#include "geometry/egads/context.h"
+#include "geometry/egads/object.h"
+
 #include "graphics/application.h"
 
 #include "library/ckf.h"
@@ -24,8 +28,72 @@
 
 #include "voronoi/optimal_transport.h"
 
+#include <egads.h>
+
 namespace avro
 {
+
+EGADSGeneralGeometry::EGADSGeneralGeometry( coord_t number ) :
+  number_(number)
+{
+  context_ = std::make_shared<EGADS::Context>();
+}
+
+void
+EGADSGeneralGeometry::add_body( ego object ) {
+  std::shared_ptr<Body> body = std::make_shared<EGADS::Body>(*context_.get(),object);
+  ego2body_.insert( {object,body} );
+}
+
+void
+EGADSGeneralGeometry::add_object( ego body , ego object ) {
+
+  // only add the object if it doesn't exist yet
+  if (ego2entity_.find(object) == ego2entity_.end()) {
+
+    avro_assert( ego2body_.find(body) != ego2body_.end() );
+    EGADS::Body* b = static_cast<EGADS::Body*>(ego2body_.at(body).get());
+
+    std::shared_ptr<Entity> entity = std::make_shared<EGADS::Object>(&object,b);
+    ego2entity_.insert({object,entity});
+
+    // only add this entity as a child of the body if the topological dimension is correct
+    if (number_ == 2 && entity->number() == 1)
+      b->add(entity);
+    else if (number_ == 3 && entity->number() == 2)
+      b->add(entity);
+  }
+}
+
+void
+EGADSGeneralGeometry::add_child( ego parent , ego child ) {
+
+  // both parent and child objects should have been added already
+  avro_assert( ego2entity_.find(parent) != ego2entity_.end() );
+  avro_assert( ego2entity_.find(child)  != ego2entity_.end() );
+
+  std::shared_ptr<Entity> ep = ego2entity_.at(parent);
+  std::shared_ptr<Entity> ec = ego2entity_.at(child);
+
+  // no need to add the child if it was already added previously
+  if (ep->has_child( ec.get() )) return;
+  ep->add_child(ec);
+}
+
+void
+EGADSGeneralGeometry::set_interior( ego object ) {
+  avro_assert( ego2entity_.find(object) != ego2entity_.end() );
+  ego2entity_.at(object)->set_interior(true);
+}
+
+void
+EGADSGeneralGeometry::finalize() {
+
+  std::map<ego,std::shared_ptr<Body>>::iterator it;
+  for (it = ego2body_.begin(); it != ego2body_.end(); ++it) {
+    it->second->build_parents();
+  }
+}
 
 Context::Context( coord_t number , coord_t dim , coord_t udim ) :
   number_(number),
@@ -480,6 +548,14 @@ Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
 
   for (it = entity2index.begin(); it != entity2index.end(); ++it)
     geometry[it->second] = entity2id_.at(it->first);
+}
+
+ego
+Context::get_vertex_ego( index_t k ) const {
+  Entity* entity = points_->entity(k);
+  if (entity == nullptr) return nullptr;
+  avro_assert( entity->egads() );
+  return *static_cast<EGADS::Object*>(entity)->object();
 }
 
 #if 0
