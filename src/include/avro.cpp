@@ -11,6 +11,10 @@
 #include "geometry/entity.h"
 #include "geometry/model.h"
 
+#include "geometry/egads/body.h"
+#include "geometry/egads/context.h"
+#include "geometry/egads/object.h"
+
 #include "graphics/application.h"
 
 #include "library/ckf.h"
@@ -24,8 +28,82 @@
 
 #include "voronoi/optimal_transport.h"
 
+#include <egads.h>
+
 namespace avro
 {
+
+EGADSGeneralGeometry::EGADSGeneralGeometry( coord_t number ) :
+  number_(number)
+{
+  context_ = std::make_shared<EGADS::Context>();
+}
+
+void
+EGADSGeneralGeometry::add_body( ego object ) {
+  std::shared_ptr<Body> body = std::make_shared<EGADS::Body>(*context_.get(),object);
+  ego2body_.insert( {object,body} );
+}
+
+void
+EGADSGeneralGeometry::add_object( ego body , ego object ) {
+
+  // only add the object if it doesn't exist yet
+  if (ego2entity_.find(object) == ego2entity_.end()) {
+
+    avro_assert( ego2body_.find(body) != ego2body_.end() );
+    EGADS::Body* b = static_cast<EGADS::Body*>(ego2body_.at(body).get());
+
+    std::shared_ptr<Entity> entity = std::make_shared<EGADS::Object>(&object,b);
+    ego2entity_.insert({object,entity});
+
+    // only add this entity as a child of the body if the topological dimension is correct
+    if (number_ == 2 && entity->number() == 1)
+      b->add(entity);
+    else if (number_ == 3 && entity->number() == 2)
+      b->add(entity);
+  }
+}
+
+void
+EGADSGeneralGeometry::add_child( ego parent , ego child ) {
+
+  // both parent and child objects should have been added already
+  avro_assert( ego2entity_.find(parent) != ego2entity_.end() );
+  avro_assert( ego2entity_.find(child)  != ego2entity_.end() );
+
+  std::shared_ptr<Entity> ep = ego2entity_.at(parent);
+  std::shared_ptr<Entity> ec = ego2entity_.at(child);
+
+  // no need to add the child if it was already added previously
+  if (ep->has_child( ec.get() )) return;
+  ep->add_child(ec);
+}
+
+void
+EGADSGeneralGeometry::set_interior( ego object ) {
+  avro_assert( ego2entity_.find(object) != ego2entity_.end() );
+  ego2entity_.at(object)->set_interior(true);
+}
+
+void
+EGADSGeneralGeometry::finalize() {
+
+  std::map<ego,std::shared_ptr<Body>>::iterator it;
+  for (it = ego2body_.begin(); it != ego2body_.end(); ++it) {
+    it->second->build_parents();
+  }
+}
+
+std::map<ego,std::shared_ptr<Body>>&
+EGADSGeneralGeometry::ego2body() {
+  return ego2body_;
+}
+
+EGADS::Context*
+EGADSGeneralGeometry::context() {
+  return context_.get();
+}
 
 Context::Context( coord_t number , coord_t dim , coord_t udim ) :
   number_(number),
@@ -51,23 +129,21 @@ Context::Context( const Context& ctx ) :
 }
 
 index_t
-Context::nb_bodies() const
-{
+Context::nb_bodies() const {
   avro_assert( model_ != nullptr );
   return model_->nb_bodies();
 }
 
 int
-Context::facet_geometry( const index_t* v , index_t nv ) const
-{
+Context::facet_geometry( const index_t* v , index_t nv ) const {
   Entity* entity = BoundaryUtils::geometryFacet( *points_.get() , v , nv );
   avro_assert( entity != nullptr );
   return entity2id_.at(entity);
 }
 
 void
-Context::define_geometry( const std::string& geometry )
-{
+Context::define_geometry( const std::string& geometry ) {
+
   // load the model using the factory
   bool curved;
   model_ = library::get_geometry(geometry,curved);
@@ -78,43 +154,54 @@ Context::define_geometry( const std::string& geometry )
 }
 
 void
-Context::define_geometry( const Model& model )
-{
+Context::define_geometry( EGADSGeneralGeometry& egg ) {
+
+  model_ = std::make_shared<EGADS::Model>( egg.context() );
+
+  std::map<ego,std::shared_ptr<Body>>& ego2body = egg.ego2body();
+  std::map<ego,std::shared_ptr<Body>>::iterator it;
+  for (it = ego2body.begin(); it != ego2body.end(); ++it) {
+    model_->add_body( it->second );
+  }
+
+  import_model();
+}
+
+void
+Context::define_geometry( const Model& model ) {
   avro_implement;
 }
 
 void
-Context::import_model()
-{
+Context::import_model() {
+
   // save the entities
   std::vector<Entity*> entities;
   model_->get_entities(entities);
 
   index_t number = 0;
-  for (index_t k=0;k<entities.size();k++)
+  for (index_t k = 0; k < entities.size(); k++)
     number = (number > entities[k]->number()) ? number : entities[k]->number();
 
   std::vector<index_t> count(number+1,0);
-  for (index_t k=0;k<entities.size();k++)
+  for (index_t k = 0; k < entities.size(); k++)
     count[entities[k]->number()]++;
   //print_inline(count,"count");
 
   std::vector<index_t> offset(number+1,0);
-  for (index_t k=1;k<=number;k++)
+  for (index_t k = 1; k <= number; k++)
     offset[k] = offset[k-1] + count[k-1];
   //print_inline(offset,"offset");
 
   std::vector<index_t> ids(entities.size());
   std::vector<index_t> recount(number+1,0);
-  for (index_t k=0;k<entities.size();k++)
-  {
+  for (index_t k = 0; k < entities.size(); k++) {
     ids[k] = offset[entities[k]->number()] + recount[ entities[k]->number() ];
     recount[entities[k]->number()]++;
   }
   //print_inline(recount,"recount");
 
-  for (index_t k=0;k<entities.size();k++)
-  {
+  for (index_t k = 0; k < entities.size(); k++) {
     id2entity_.insert( {ids[k] , entities[k]} );
     entity2id_.insert( {entities[k],ids[k]} );
     //entities[k]->print_header();
@@ -123,8 +210,7 @@ Context::import_model()
 }
 
 void
-Context::define_mesh( const std::string& mesh )
-{
+Context::define_mesh( const std::string& mesh ) {
   coord_t number = number_;
   std::shared_ptr<Mesh> mesh_ptr;
   std::shared_ptr<TopologyBase> topology;
@@ -134,48 +220,45 @@ Context::define_mesh( const std::string& mesh )
 }
 
 void
-Context::attach_geometry()
-{
+Context::attach_geometry() {
   avro_assert( points_ != nullptr );
   avro_assert( model_ != nullptr );
   points_->attach(*model_.get());
 }
 
 void
-Context::load_mesh( const std::vector<real_t>& x , const std::vector<index_t>& s )
-{
+Context::load_mesh( const std::vector<real_t>& x , const std::vector<index_t>& s ) {
   load_coordinates(x);
   load_simplices(s);
 }
 
 void
-Context::load_coordinates( const std::vector<real_t>& x )
-{
+Context::load_coordinates( const std::vector<real_t>& x ) {
+
   index_t nb_points = x.size() / dim_;
   if (points_ != nullptr)
     points_->clear();
   points_ = std::make_shared<Points>(dim_,udim_);
 
-  for (index_t k=0;k<nb_points;k++)
+  for (index_t k = 0; k < nb_points; k++)
     points_->create( &x[k*dim_] );
 }
 
 void
-Context::load_simplices( const std::vector<index_t>& s )
-{
+Context::load_simplices( const std::vector<index_t>& s ) {
+
   index_t nb_simplices = s.size() / index_t(number_+1);
 
   if (topology_ != nullptr)
     topology_->clear();
   topology_ = std::make_shared<Topology<Simplex>>(*points_.get(),number_);
 
-  for (index_t k=0;k<nb_simplices;k++)
+  for (index_t k = 0; k < nb_simplices; k++)
     topology_->add( &s[(number_+1)*k] , number_+1 );
 }
 
 void
-Context::load_local2global( const std::vector<index_t>& local2global )
-{
+Context::load_local2global( const std::vector<index_t>& local2global ) {
   avro_assert( points_ != nullptr );
   avro_assert( points_->nb() == local2global.size() );
 
@@ -184,13 +267,12 @@ Context::load_local2global( const std::vector<index_t>& local2global )
 }
 
 Entity*
-Context::id2geometry( int id ) const
-{
+Context::id2geometry( int id ) const {
+
   if (id < 0) return nullptr;
-  if (id2entity_.find(id) == id2entity_.end())
-  {
-    for (std::map<int,Entity*>::const_iterator it=id2entity_.begin();it!=id2entity_.end();++it)
-    {
+  if (id2entity_.find(id) == id2entity_.end()) {
+
+    for (std::map<int,Entity*>::const_iterator it=id2entity_.begin();it!=id2entity_.end();++it) {
       it->second->print_header();
       printf("--> with id = %d\n",it->first);
     }
@@ -201,30 +283,28 @@ Context::id2geometry( int id ) const
 }
 
 void
-Context::get_geometry_ids( std::vector<int>& ids ) const
-{
+Context::get_geometry_ids( std::vector<int>& ids ) const {
   ids.clear();
   for (std::map<int,Entity*>::const_iterator it=id2entity_.begin();it!=id2entity_.end();++it)
     ids.push_back( it->first );
 }
 
 void
-Context::load_geometry( const std::vector<int>& g , const std::vector<real_t>& u )
-{
+Context::load_geometry( const std::vector<int>& g , const std::vector<real_t>& u ) {
+
   avro_assert( points_ != nullptr );
   avro_assert( g.size() == points_->nb() );
   avro_assert( u.size() == udim_*points_->nb() );
 
-  for (index_t k=0;k<g.size();k++)
-  {
+  for (index_t k = 0; k < g.size(); k++) {
     points_->set_entity( k , id2geometry(g[k]) );
     points_->set_param( k , &u[k*udim_] );
   }
 }
 
 int
-Context::adapt( const std::vector<real_t>& m )
-{
+Context::adapt( const std::vector<real_t>& m ) {
+
   avro_assert_msg( points_ != nullptr , "points are not defined" );
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
 
@@ -235,11 +315,10 @@ Context::adapt( const std::vector<real_t>& m )
   // save the metrics in the proper format
   std::vector<symd<real_t>> metric;
   index_t count = 0;
-  for (index_t k=0;k<nb_metric;k++)
-  {
+  for (index_t k = 0; k < nb_metric; k++) {
     symd<real_t> mk(number_);
-    for (index_t i=0;i<number_;i++)
-    for (index_t j=i;j<number_;j++)
+    for (index_t i = 0; i < number_; i++)
+    for (index_t j = i; j < number_; j++)
       mk(i,j) = m[count++];
     metric.push_back(mk);
   }
@@ -269,8 +348,7 @@ Context::adapt( const std::vector<real_t>& m )
 }
 
 int
-Context::adapt_parallel( const std::vector<real_t>& m )
-{
+Context::adapt_parallel( const std::vector<real_t>& m ) {
   #if AVRO_MPI
   avro_assert_msg( points_ != nullptr , "points are not defined" );
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
@@ -282,11 +360,10 @@ Context::adapt_parallel( const std::vector<real_t>& m )
   // save the metrics in the proper format
   std::vector<symd<real_t>> metric;
   index_t count = 0;
-  for (index_t k=0;k<nb_metric;k++)
-  {
+  for (index_t k = 0; k < nb_metric; k++) {
     symd<real_t> mk(number_);
-    for (index_t i=0;i<number_;i++)
-    for (index_t j=i;j<number_;j++)
+    for (index_t i = 0; i < number_; i++)
+    for (index_t j = i; j < number_; j++)
       mk(i,j) = m[count++];
     metric.push_back(mk);
   }
@@ -349,35 +426,33 @@ Context::partition() {
 }
 
 void
-Context::retrieve_mesh( std::vector<real_t>& x , std::vector<index_t>& s ) const
-{
+Context::retrieve_mesh( std::vector<real_t>& x , std::vector<index_t>& s ) const {
   avro_assert_msg( points_ != nullptr , "points are not defined" );
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
 
   x.resize( points_->nb()*points_->dim() );
   index_t i = 0;
-  for (index_t k=0;k<points_->nb();k++)
-  for (coord_t d=0;d<points_->dim();d++)
+  for (index_t k = 0; k < points_->nb(); k++)
+  for (coord_t d = 0; d < points_->dim(); d++)
     x[i++] = (*points_)(k,d);
 
   index_t nv = number_+1;
   s.resize( topology_->nb()*nv );
   i = 0;
-  for (index_t k=0;k<topology_->nb();k++)
-  for (index_t d=0;d<nv;d++)
+  for (index_t k = 0; k < topology_->nb(); k++)
+  for (index_t d = 0; d < nv; d++)
     s[i++] = (*topology_)(k,d);
 }
 
 void
-Context::retrieve_polytopes( std::vector<real_t>& x , std::vector<index_t>& elements , std::vector<index_t>& nv_per_elem ) const
-{
+Context::retrieve_polytopes( std::vector<real_t>& x , std::vector<index_t>& elements , std::vector<index_t>& nv_per_elem ) const {
   avro_assert_msg( points_ != nullptr , "points are not defined" );
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
 
   x.resize( points_->nb()*points_->dim() );
   index_t i = 0;
-  for (index_t k=0;k<points_->nb();k++)
-  for (coord_t d=0;d<points_->dim();d++)
+  for (index_t k = 0; k < points_->nb(); k++)
+  for (coord_t d = 0; d < points_->dim(); d++)
     x[i++] = (*points_)(k,d);
 
   elements.resize( topology_->data().size() );
@@ -391,8 +466,8 @@ Context::retrieve_polytopes( std::vector<real_t>& x , std::vector<index_t>& elem
 }
 
 void
-Context::retrieve_local2global( std::vector<index_t>& local2global ) const
-{
+Context::retrieve_local2global( std::vector<index_t>& local2global ) const {
+
   avro_assert_msg( points_ != nullptr , "points are not defined" );
 
   local2global.resize( points_->nb() );
@@ -401,26 +476,25 @@ Context::retrieve_local2global( std::vector<index_t>& local2global ) const
 }
 
 void
-Context::retrieve_geometry( std::vector<int>& g , std::vector<real_t>& u ) const
-{
+Context::retrieve_geometry( std::vector<int>& g , std::vector<real_t>& u ) const {
+
   avro_assert( points_ != nullptr );
 
   g.resize( points_->nb() , -1 );
   u.resize( udim_*points_->nb() , unset_value );
 
-  for (index_t k=0;k<points_->nb();k++)
-  {
+  for (index_t k = 0; k < points_->nb(); k++) {
     if (points_->entity(k) == nullptr) continue;
     g[k] = entity2id_.at(points_->entity(k));
-    for (coord_t d=0;d<udim_;d++)
+    for (coord_t d = 0; d < udim_; d++)
       u[k*udim_+d] = points_->u(k,d);
   }
 }
 
 void
 Context::retrieve_boundary( std::vector<std::vector<index_t>>& facets ,
-                            std::vector<int>& geometry , bool interior ) const
-{
+                            std::vector<int>& geometry , bool interior ) const {
+
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
   const Topology<Simplex>& topology = static_cast<const Topology<Simplex>&>(*topology_.get());
   Boundary<Simplex> boundary(topology);
@@ -428,14 +502,13 @@ Context::retrieve_boundary( std::vector<std::vector<index_t>>& facets ,
 
   facets.resize( boundary.nb_children() , std::vector<index_t>() );
   geometry.resize( boundary.nb_children() );
-  for (index_t k=0;k<boundary.nb_children();k++)
-  {
+  for (index_t k = 0; k < boundary.nb_children(); k++) {
     Entity* entity = boundary.entity(k);
     const Topology<Simplex>& bk = boundary.child(k);
     avro_assert( entity->number() == index_t(number_-1) );
     avro_assert( bk.number() == entity->number() );
-    for (index_t j=0;j<bk.nb();j++)
-    for (index_t i=0;i<bk.nv(j);i++)
+    for (index_t j = 0; j < bk.nb(); j++)
+    for (index_t i = 0; i < bk.nv(j); i++)
       facets[k].push_back( bk(j,i) );
     geometry[k] = entity2id_.at(entity);
   }
@@ -480,6 +553,32 @@ Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
 
   for (it = entity2index.begin(); it != entity2index.end(); ++it)
     geometry[it->second] = entity2id_.at(it->first);
+}
+
+void
+Context::build_structures() {
+  avro_assert( topology_->type_name() == "simplex" );
+  static_cast<Topology<Simplex>&>(*topology_.get()).build_structures();
+}
+
+ego
+Context::get_vertex_ego( index_t k ) const {
+  Entity* entity = points_->entity(k);
+  if (entity == nullptr) return nullptr;
+  avro_assert( entity->egads() );
+  return *static_cast<EGADS::Object*>(entity)->object();
+}
+
+int
+Context::get_neighbour( index_t k , index_t j ) const {
+  avro_assert( topology_->type_name() == "simplex" );
+  return static_cast<Topology<Simplex>&>(*topology_.get()).neighbours()(k,j);
+}
+
+void
+Context::get_elements_touching_vertex( index_t k , std::vector<index_t>& ball ) const {
+  avro_assert( topology_->type_name() == "simplex" );
+  static_cast<Topology<Simplex>&>(*topology_.get()).inverse().ball(k,ball);
 }
 
 #if 0
