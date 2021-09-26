@@ -97,8 +97,9 @@ public:
                                    std::vector<int>& geometry ) const;
 
   // some applications require an interface to the neighbours and inverse (e.g. SANS wake geometries)
-  void retrieve_neighbours( std::vector<int>& neighbours ) const;
-  void retrieve_inverse( std::vector<std::set<index_t>>& inverse ) const;
+  void build_structures();
+  int  get_neighbour( index_t k , index_t j ) const;
+  void get_elements_touching_vertex( index_t k , std::vector<index_t>& ball ) const;
   ego  get_vertex_ego( index_t k ) const;
 
   // polytopal mesh retrieval functions
