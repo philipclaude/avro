@@ -523,6 +523,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       }
 
       // check that we do not create valencies which are too large
+      #if 0
       bool high_valency = false;
       std::vector<index_t> surrounding;
       for (index_t j = 0; j < N.size(); j++) {
@@ -541,6 +542,7 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
         nb_high_valency++;
         continue;
       }
+      #endif
 
       // apply the insertion into the topology
       topology_.apply(inserter_);

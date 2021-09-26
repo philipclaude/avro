@@ -95,6 +95,16 @@ EGADSGeneralGeometry::finalize() {
   }
 }
 
+std::map<ego,std::shared_ptr<Body>>&
+EGADSGeneralGeometry::ego2body() {
+  return ego2body_;
+}
+
+EGADS::Context*
+EGADSGeneralGeometry::context() {
+  return context_.get();
+}
+
 Context::Context( coord_t number , coord_t dim , coord_t udim ) :
   number_(number),
   dim_(dim),
@@ -140,6 +150,20 @@ Context::define_geometry( const std::string& geometry ) {
   parameters_.set( "curved" , curved );
 
   // import the data from the model
+  import_model();
+}
+
+void
+Context::define_geometry( EGADSGeneralGeometry& egg ) {
+
+  model_ = std::make_shared<EGADS::Model>( egg.context() );
+
+  std::map<ego,std::shared_ptr<Body>>& ego2body = egg.ego2body();
+  std::map<ego,std::shared_ptr<Body>>::iterator it;
+  for (it = ego2body.begin(); it != ego2body.end(); ++it) {
+    model_->add_body( it->second );
+  }
+
   import_model();
 }
 

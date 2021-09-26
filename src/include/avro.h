@@ -43,6 +43,9 @@ public:
   void set_interior( ego object );
   void finalize();
 
+  EGADS::Context* context();
+  std::map<ego,std::shared_ptr<Body>>& ego2body();
+
 private:
   coord_t number_;
   std::map< ego , std::shared_ptr<Body> > ego2body_;
@@ -69,7 +72,7 @@ public:
   void define_geometry( const std::string& geometry );
   void define_geometry( const Model& model );
   void attach_geometry(); // only at the beginning
-  void define_geometry( const EGADSGeneralGeometry& geometry );
+  void define_geometry( EGADSGeneralGeometry& geometry );
 
   // these should be called anytime an adaptation problem needs to be defined
   void define_mesh( const std::string& mesh );
