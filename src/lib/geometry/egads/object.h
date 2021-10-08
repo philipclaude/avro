@@ -54,6 +54,7 @@ public:
   ego* object() const;
 
   ego egchild( index_t k ) const;
+  egoData& data() { return data_; }
 
   int object_class() const { return data_.object_class; }
   int member_type() const { return data_.member_type; }

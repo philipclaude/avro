@@ -66,7 +66,8 @@ public:
 
   int facet_geometry( const index_t* v , index_t nv ) const;
   void get_geometry_ids( std::vector<int>& ids ) const;
-  void get_geometry_idx2ego( std::map<int,ego*>& idx2ego );
+  //void get_geometry_idx2ego( std::map<int,ego*>& idx2ego );
+  void get_geometry_ids( std::map<int,int>& ids ) const;
 
   // this should be called once
   void define_geometry( const std::string& geometry );
@@ -98,6 +99,7 @@ public:
                           std::vector<int>& geometry , bool interior=false ) const;
   void retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
                                    std::vector<int>& geometry ) const;
+  void retrieve_boundary( const std::vector<int>& g , const std::vector<index_t>& s , std::vector<std::vector<index_t>>& faces , std::vector<int>& geometry , bool interior = false ) const;
 
   // some applications require an interface to the neighbours and inverse (e.g. SANS wake geometries)
   void build_structures();

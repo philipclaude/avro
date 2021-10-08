@@ -176,6 +176,7 @@ void
 Context::import_model() {
 
   // save the entities
+  printf("nb_bodies = %lu\n",model_->nb_bodies());
   std::vector<Entity*> entities;
   model_->get_entities(entities);
 
@@ -287,6 +288,16 @@ Context::get_geometry_ids( std::vector<int>& ids ) const {
   ids.clear();
   for (std::map<int,Entity*>::const_iterator it=id2entity_.begin();it!=id2entity_.end();++it)
     ids.push_back( it->first );
+}
+
+void
+Context::get_geometry_ids( std::map<int,int>& ids ) const {
+  ids.clear();
+  for (std::map<int,Entity*>::const_iterator it = id2entity_.begin(); it != id2entity_.end(); ++it) {
+    //ego* e = static_cast<EGADS::Object*>(it->second)->object();
+    //printf("ego = %p\n",(void*)e);
+    ids.insert( {it->second->identifier(),it->first} );
+  }
 }
 
 void
@@ -516,8 +527,8 @@ Context::retrieve_boundary( std::vector<std::vector<index_t>>& facets ,
 
 void
 Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
-                                     std::vector<int>& geometry ) const
-{
+                                     std::vector<int>& geometry ) const {
+
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
   const Topology<Simplex>& topology = static_cast<const Topology<Simplex>&>(*topology_.get());
 
@@ -553,6 +564,47 @@ Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
 
   for (it = entity2index.begin(); it != entity2index.end(); ++it)
     geometry[it->second] = entity2id_.at(it->first);
+}
+
+void
+Context::retrieve_boundary( const std::vector<int>& g , const std::vector<index_t>& elements , std::vector< std::vector<index_t> >& facets , std::vector<int>& geometry , bool interior ) const {
+
+  // create temporary points to hold the geometry entities
+  index_t nb_points = g.size();
+  std::vector<real_t> x(dim_,unset_value);
+  Points tmp_points( dim_ );
+  for (index_t k = 0; k < nb_points; k++) {
+    tmp_points.create(x.data());
+    if (g[k] < 0) {
+      tmp_points.set_entity(k,nullptr);
+      continue;
+    }
+    avro_assert( id2entity_.find(g[k]) != id2entity_.end() );
+    tmp_points.set_entity( k , id2entity_.at(g[k]) );
+  }
+
+  // create a topology to hold the elements
+  Topology<Simplex> topology( tmp_points , number_ );
+  index_t nb_simplices = elements.size()/index_t(number_+1);
+  for (index_t k = 0; k < nb_simplices; k++)
+    topology.add( elements.data() + (number_+1)*k , number_+1 );
+
+  // compute the boundary
+  Boundary<Simplex> boundary(topology);
+  boundary.extract(interior);
+
+  facets.resize( boundary.nb_children() , std::vector<index_t>() );
+  geometry.resize( boundary.nb_children() );
+  for (index_t k = 0; k < boundary.nb_children(); k++) {
+    Entity* entity = boundary.entity(k);
+    const Topology<Simplex>& bk = boundary.child(k);
+    avro_assert( entity->number() == index_t(number_-1) );
+    avro_assert( bk.number() == entity->number() );
+    for (index_t j = 0; j < bk.nb(); j++)
+    for (index_t i = 0; i < bk.nv(j); i++)
+      facets[k].push_back( bk(j,i) );
+    geometry[k] = entity2id_.at(entity);
+  }
 }
 
 void

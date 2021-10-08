@@ -523,24 +523,26 @@ AdaptThread<type>::split_edges( real_t lt, bool limitlength , bool swapout )
       }
 
       // check that we do not create valencies which are too large
-      #if 0
-      bool high_valency = false;
-      std::vector<index_t> surrounding;
-      for (index_t j = 0; j < N.size(); j++) {
-        if (N[j] < topology_.points().nb_ghost()) continue;
-        surrounding.clear();
-        topology_.inverse().ball( N[j] , surrounding );
-        if (surrounding.size() > MAX_VALENCY[topology_.number()]) {
-          high_valency = true;
-          break;
+      #if AVRO_MPI
+      if (mpi::size() > 1) {
+        bool high_valency = false;
+        std::vector<index_t> surrounding;
+        for (index_t j = 0; j < N.size(); j++) {
+          if (N[j] < topology_.points().nb_ghost()) continue;
+          surrounding.clear();
+          topology_.inverse().ball( N[j] , surrounding );
+          if (surrounding.size() > MAX_VALENCY[topology_.number()]) {
+            high_valency = true;
+            break;
+          }
         }
-      }
-      if (high_valency) {
-        topology_.points().remove(ns);
-        metric_.remove(ns);
-        topology_.inverse().remove(ns);
-        nb_high_valency++;
-        continue;
+        if (high_valency) {
+          topology_.points().remove(ns);
+          metric_.remove(ns);
+          topology_.inverse().remove(ns);
+          nb_high_valency++;
+          continue;
+        }
       }
       #endif
 
