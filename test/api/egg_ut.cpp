@@ -14,8 +14,11 @@
 #include "geometry/egads/object.h"
 
 #include "graphics/application.h"
+#include "graphics/math.h"
+
 #include "library/ckf.h"
 #include "numerics/geometry.h"
+#include "numerics/linear_algebra.h"
 
 #include "avro.h"
 #include "avro_config.h"
@@ -31,24 +34,40 @@ UT_TEST_SUITE(api_custom_geometry_test_suite)
 #if AVRO_NO_ESP == 0
 
 void
-add_children( EGADSGeneralGeometry& egg , Entity* entity ) {
+add_children( EGADSGeneralGeometry& egg , Entity* entity , std::map<ego,ego>& duplicates ) {
 
   ego e = static_cast<EGADS::Object*>(entity)->object();
+
+  // do not add the duplicate ego's into the geometry hierarchy
+  if (duplicates.find(e) != duplicates.end()) return;
+
+  // add the children of this entity
   for (index_t k = 0; k < entity->nb_children(); k++) {
     ego ek = static_cast<EGADS::Object*>(&entity->child(k))->object();
+
+    // again, do not add the duplicate ego's into the geometry hierarchy
+    if (duplicates.find(ek) != duplicates.end()) continue;
+
+    // add the child and recursively add its children as well
     egg.add_child(e,ek);
-    add_children(egg,&entity->child(k));
+    add_children(egg,&entity->child(k),duplicates);
   }
 }
 
 UT_TEST_CASE(test1)
 {
+  // this example glues two boxes together and tags the interior Face between them as an "interior"
+  // (note: interior Edges and Nodes on this Face are also tagged as interior)
+  // please follow the different steps outlined below to set up your own custom geometry
+  // (see the STEP ... and END STEP)
 
+  // STEP 1: initialize  the geometry and avro context
   const coord_t dim = 3;
   coord_t number = dim;
+  coord_t udim = dim -1;
   EGADSGeneralGeometry egg(number-1);
-
-  // this example glues two boxes together and tags the interior face between them as an "interior"
+  avro::Context adapter(dim,dim,udim);
+  // END STEP 1
 
   // create the first box
   ego box1;
@@ -80,6 +99,7 @@ UT_TEST_CASE(test1)
   b2.get_entities(entities2);
   printf("body2 has %lu entities\n",entities2.size());
 
+  // STEP 2: add the ego's to the geometry
   // add the ego's for each body (even if some are duplicates and won't be used)
   std::vector<Entity*> entities;
   for (index_t k = 0; k < entities1.size(); k++) {
@@ -94,9 +114,10 @@ UT_TEST_CASE(test1)
     entities.push_back( entities2[k] );
   }
   printf("--> added objects\n");
+  // END STEP 2
 
   // generate a mesh in each box
-  index_t N = 3;
+  index_t N = 5;
   CKF_Triangulation mesh1( {N,N,N} );
   CKF_Triangulation mesh2( {N,N,N} );
 
@@ -117,6 +138,7 @@ UT_TEST_CASE(test1)
   // there should be 1 face, 4 edges and 4 nodes which are duplicates
   // (see the topological number printed below)
   std::map<Entity*,Entity*> entity_map;
+  std::map<ego,ego> ego_map;
   for (index_t i = 0; i < entities1.size(); i++)
   for (index_t j = 0; j < entities2.size(); j++) {
 
@@ -131,6 +153,7 @@ UT_TEST_CASE(test1)
 
     // we will only keep entities1[i]
     entity_map.insert( {entities2[j],entities1[i]} );
+    ego_map.insert( {ej,ei} );
 
     // mark the entity as interior
     entities1[i]->set_interior(true);
@@ -144,19 +167,29 @@ UT_TEST_CASE(test1)
   }
   printf("--> number of duplicate entities = %lu\n",entity_map.size());
 
-  // set the interior entities for the egg
+  // STEP 3: set the interior entities for the egg
   for (index_t k = 0; k < entities1.size(); k++) {
     if (!entities1[k]->interior()) continue;
     ego e = static_cast<EGADS::Object*>(entities1[k])->object();
     egg.set_interior(e);
   }
+  // END STEP 3
 
+  // STEP 4: add the ego parent-child relationships
   // add the adjacency relationships
   for (index_t k = 0; k < entities.size(); k++) {
-    add_children(egg,entities[k]);
+    add_children(egg,entities[k],ego_map);
   }
   printf("--> adjacencies added\n");
+  // END STEP 4
 
+  // STEP 5: finalize the customized geometry and pass it to the context
+  egg.finalize();
+  adapter.define_geometry(egg);
+  // END STEP 5
+
+  // STEP 6: generate your mesh from the geometry
+  // (in general you might use TetGen and retain the ego's each vertex is on)
   // create one final mesh
   Points points(dim);
   Topology<Simplex> topology(points,number);
@@ -207,6 +240,7 @@ UT_TEST_CASE(test1)
     e->inverse( X , U );
     points.set_param( k , U.data() );
   }
+  // END STEP 6
 
   // check the number of points on geometry Nodes is 12 (8 + 8 - the 4 duplicates)
   index_t nb_nodes = 0;
@@ -226,12 +260,7 @@ UT_TEST_CASE(test1)
     topology.add( elem.data() , elem.size() );
   }
 
-  // finalize the customized geometry and pass it to the context
-  egg.finalize();
-  avro::Context adapter(dim,dim,dim-1);
-  adapter.define_geometry(egg);
-
-  // retrieve the association between ego's and the context's integer labels
+  // STEP 7: retrieve the association between ego's and the context's integer labels
   std::map<ego,int> ids;
   adapter.get_ego_ids(ids);
   printf("--> nb geometry ids = %lu\n",ids.size());
@@ -250,6 +279,7 @@ UT_TEST_CASE(test1)
     ego e = static_cast<EGADS::Object*>(entity)->object();
     geometry[k] = ids.at(e);
   }
+  // END STEP 7, then proceed to use the context as usual
 
   // send the mesh and geometry information to the context
   adapter.load_mesh( coordinates , topology.data() );
@@ -260,7 +290,7 @@ UT_TEST_CASE(test1)
   std::vector<real_t> metrics( nb_points * nb_rank , 0.0 );
 
   // constant diagonal metric requesting a size of h
-  real_t h = 0.15;
+  real_t h = 0.125;
   for (index_t k = 0; k < nb_points; k++) {
     index_t idx = k*nb_rank;
     for (index_t i = 0; i < number; i++) {
@@ -274,6 +304,58 @@ UT_TEST_CASE(test1)
 
   // perform the adaptation
   adapter.adapt(metrics);
+
+  // retrieve the mesh from the context
+  std::vector<index_t> elements;
+  adapter.retrieve_mesh( coordinates , elements );
+  nb_points = coordinates.size() / dim;
+  index_t nb_elements = elements.size() / (number+1);
+  printf("adapted mesh has %lu points and %lu elements\n",nb_points,nb_elements);
+
+  // retrieve the geometry metadata
+  std::vector<real_t> param;
+  std::vector<int> entity_idx;
+  adapter.retrieve_geometry( entity_idx , param );
+  assert( param.size() == udim*nb_points );
+  assert( entity_idx.size() == nb_points );
+  for (index_t k = 0; k < nb_points; k++) {
+    printf("\tpoint [%lu] (%g,%g,%g) on entity %d: u = ( ",k,coordinates[3*k],coordinates[3*k+1],coordinates[3*k+2],entity_idx[k]);
+    for (index_t j = 0; j < udim; j++)
+      printf("%g ",param[k*udim+j]);
+    printf(")\n");
+  }
+
+  // retrieve the boundary facets
+  std::vector<std::vector<index_t>> facets;
+
+  // either of the following two functions will work (the first uses the current mesh stored in the context, the second uses the geometry information of each vertex along with the mesh elements to infer the boundary)
+  // note that vertex coordinates are not required since this is a purely topological operation, which is why the second method does not require vertex coordinates
+  //context.retrieve_boundary( facets , geometry );
+  adapter.retrieve_boundary( entity_idx , elements , facets , geometry , true ); // true because we have interior entities
+
+  assert( facets.size() == geometry.size() );
+  std::vector<const real_t*> x(number);
+  real_t area = 0.0;
+  for (index_t bc = 0; bc < facets.size(); bc++) {
+    const std::vector<index_t>& facets_on_bc = facets[bc];
+    index_t nb_facets = facets_on_bc.size() / number;
+    printf("there are %lu facets on bc %lu with geometry id %d\n",nb_facets,bc,geometry[bc]);
+
+    for (index_t k = 0; k < nb_facets; k++) {
+
+
+      // calculate the area of the facet
+      for (index_t j = 0; j < number; j++)
+        x[j] = &coordinates[3*facets_on_bc[k*number+j]];
+
+      area += numerics::volume_nd( x , dim );
+    }
+  }
+
+  // we have 2 external 1x1 faces, 8 external 0.5x1 faces, 1 internal 1x1 face
+  printf("area = %g\n",area);
+  UT_ASSERT_NEAR( area , 7.0 , 1e-12 );
+
 }
 UT_TEST_CASE_END(test1)
 

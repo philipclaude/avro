@@ -22,7 +22,7 @@ UT_TEST_CASE(test1)
   EGADS::Context context;
   ego obj = nullptr;
   std::shared_ptr<EGADS::Object> prim;
-  UT_CATCH_EXCEPTION( prim = std::make_shared<EGADS::Object>(context,&obj) );
+  UT_CATCH_EXCEPTION( prim = std::make_shared<EGADS::Object>(context,obj) );
 }
 UT_TEST_CASE_END(test1)
 
