@@ -178,7 +178,6 @@ void
 Context::import_model() {
 
   // save the entities
-  printf("nb_bodies = %lu\n",model_->nb_bodies());
   std::vector<Entity*> entities;
   model_->get_entities(entities);
 
@@ -297,8 +296,6 @@ void
 Context::get_geometry_ids( std::map<int,int>& ids ) const {
   ids.clear();
   for (std::map<int,Entity*>::const_iterator it = id2entity_.begin(); it != id2entity_.end(); ++it) {
-    //ego* e = static_cast<EGADS::Object*>(it->second)->object();
-    //printf("ego = %p\n",(void*)e);
     ids.insert( {it->second->identifier(),it->first} );
   }
 }
@@ -309,7 +306,6 @@ Context::get_ego_ids( std::map<ego,int>& ids ) const {
   ids.clear();
   for (std::map<Entity*,int>::const_iterator it = entity2id_.begin(); it != entity2id_.end(); ++it) {
     ego e = static_cast<EGADS::Object*>(it->first)->object();
-    printf("ego = %p\n",(void*)e);
     ids.insert( {e,it->second} );
   }
 
@@ -326,8 +322,6 @@ Context::load_geometry( const std::vector<int>& g , const std::vector<real_t>& u
     points_->set_entity( k , id2geometry(g[k]) );
     points_->set_param( k , &u[k*udim_] );
   }
-
-  points_->print(true);
 }
 
 int
@@ -363,9 +357,6 @@ Context::adapt( const std::vector<real_t>& m ) {
   //params.write_conformity() = parameters_.get_param<bool>("write conformity");
   //params.write_mesh() = parameters_.get_param<bool>("write mesh");
   //params.output_redirect() = parameters_.get_param<std::string>("output redirect");
-
-  points_->print(true);
-  mesh_in.points().print(true);
 
   AdaptationProblem problem = {mesh_in,metric,params,mesh_out};
   int result = ::avro::adapt<Simplex>( problem );

@@ -14,12 +14,11 @@
 #include "geometry/egads/object.h"
 
 #include "graphics/application.h"
-
 #include "library/ckf.h"
-
 #include "numerics/geometry.h"
 
 #include "avro.h"
+#include "avro_config.h"
 
 #include <egads.h>
 
@@ -28,6 +27,8 @@
 using namespace avro;
 
 UT_TEST_SUITE(api_custom_geometry_test_suite)
+
+#if AVRO_NO_ESP == 0
 
 void
 add_children( EGADSGeneralGeometry& egg , Entity* entity ) {
@@ -42,7 +43,6 @@ add_children( EGADSGeneralGeometry& egg , Entity* entity ) {
 
 UT_TEST_CASE(test1)
 {
-//#ifndef AVRO_NO_ESP
 
   const coord_t dim = 3;
   coord_t number = dim;
@@ -226,7 +226,7 @@ UT_TEST_CASE(test1)
     topology.add( elem.data() , elem.size() );
   }
 
-  #if 1
+  // finalize the customized geometry and pass it to the context
   egg.finalize();
   avro::Context adapter(dim,dim,dim-1);
   adapter.define_geometry(egg);
@@ -234,30 +234,9 @@ UT_TEST_CASE(test1)
   // retrieve the association between ego's and the context's integer labels
   std::map<ego,int> ids;
   adapter.get_ego_ids(ids);
+  printf("--> nb geometry ids = %lu\n",ids.size());
 
-  /*
-  std::vector<ego> egos;
-  for (index_t k = 0; k < entities.size(); k++) {
-
-    ego e = static_cast<EGADS::Object*>(entities[k])->object();
-    for (std::map<ego,int>::iterator it = ids.begin(); it != ids.end() ; ++it) {
-      int same = EG_isSame( e , it->first );
-      //if (same == EGADS_SUCCESS) printf("same!\n");
-    }
-
-    try {
-      //avro_assert( ids.find(e) != ids.end() );
-    }
-    catch( ... ) {
-      printf("wtf");
-      //avro_assert_not_reached;
-    }
-  }
-  */
-
-  printf("nb geometry ids = %lu\n",ids.size());
-
-  // define the mesh into the avro context
+  // determine the geometry (integer) label for every vertex
   std::vector<real_t> coordinates( dim*points.nb() );
   std::vector<int> geometry( points.nb() , -1 );
   std::vector<real_t> parameters( points.nb() * (dim-1) , unset_value );
@@ -268,19 +247,11 @@ UT_TEST_CASE(test1)
     if (entity == nullptr) continue;
     parameters[2*k]   = points.u(k)[0];
     parameters[2*k+1] = points.u(k)[1];
-    ego e = nullptr;
-    try {
-      e = static_cast<EGADS::Object*>(entity)->object();
-      geometry[k] = ids.at(e);
-    }
-    catch (...) {
-      entity->print_header();
-      printf("ego pointer = %p\n",(void*)e);
-      points.print(k,true);
-      //avro_assert_not_reached;
-    }
+    ego e = static_cast<EGADS::Object*>(entity)->object();
+    geometry[k] = ids.at(e);
   }
-  //print_inline(geometry);return;
+
+  // send the mesh and geometry information to the context
   adapter.load_mesh( coordinates , topology.data() );
   adapter.load_geometry( geometry , parameters );
 
@@ -289,7 +260,7 @@ UT_TEST_CASE(test1)
   std::vector<real_t> metrics( nb_points * nb_rank , 0.0 );
 
   // constant diagonal metric requesting a size of h
-  real_t h = 0.1;
+  real_t h = 0.15;
   for (index_t k = 0; k < nb_points; k++) {
     index_t idx = k*nb_rank;
     for (index_t i = 0; i < number; i++) {
@@ -298,22 +269,14 @@ UT_TEST_CASE(test1)
     }
   }
 
-  //points.print(true);
-
+  //adapter.parameters().set( "output redirect" , "avro-output.txt" );
   adapter.parameters().set( "curved" , false );
 
   // perform the adaptation
   adapter.adapt(metrics);
-
-  #endif
-
-
-  graphics::Viewer viewer;
-  viewer.add( topology );
-  viewer.run(AVRO_FULL_UNIT_TEST);
-
-//#endif // AVRO_NO_ESP
 }
 UT_TEST_CASE_END(test1)
+
+#endif // AVRO_NO_ESP
 
 UT_TEST_SUITE_END(api_custom_geometry_test_suite)
