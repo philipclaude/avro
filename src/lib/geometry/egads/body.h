@@ -54,6 +54,7 @@ public:
 
   const Context& context() const { return context_; }
 
+  void build();
   void build_hierarchy();
 
   Entity_ptr child( index_t k );

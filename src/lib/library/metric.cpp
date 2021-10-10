@@ -78,11 +78,11 @@ MetricField_UniformGeometry<type>::eval_face( const Points& points , index_t p ,
 
   EGADS::Object* eg = (EGADS::Object*) entity;
   #ifndef AVRO_NO_ESP
-  EGADS_ENSURE_SUCCESS( EG_getArea( *eg->object() , NULL , &area ) );
+  EGADS_ENSURE_SUCCESS( EG_getArea( eg->object() , NULL , &area ) );
   #else
   area = 1.0;
   #endif
-  EGADS_ENSURE_SUCCESS( EG_getRange( *eg->object() , range , &periodic ) );
+  EGADS_ENSURE_SUCCESS( EG_getRange( eg->object() , range , &periodic ) );
 
   real_t lu = range[1] - range[0];
   real_t lv = range[3] - range[2];

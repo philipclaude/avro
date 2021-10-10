@@ -76,7 +76,12 @@ main( int argc , char** argv )
   // retrieve the boundary facets
   std::vector<std::vector<index_t>> facets;
   std::vector<int> geometry;
-  context.retrieve_boundary( facets , geometry );
+
+  // either of the following two functions will work (the first uses the current mesh stored in the context, the second uses the geometry information of each vertex along with the mesh elements to infer the boundary)
+  // note that vertex coordinates are not required since this is a purely topological operation, which is why the second method does not require vertex coordinates
+  //context.retrieve_boundary( facets , geometry );
+  context.retrieve_boundary( entity_idx , elements , facets , geometry );
+
   assert( facets.size() == geometry.size() );
   for (index_t bc = 0; bc < facets.size(); bc++) {
     const std::vector<index_t>& facets_on_bc = facets[bc];

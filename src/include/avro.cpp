@@ -54,13 +54,15 @@ EGADSGeneralGeometry::add_object( ego body , ego object ) {
     avro_assert( ego2body_.find(body) != ego2body_.end() );
     EGADS::Body* b = static_cast<EGADS::Body*>(ego2body_.at(body).get());
 
-    std::shared_ptr<Entity> entity = std::make_shared<EGADS::Object>(&object,b);
+    std::shared_ptr<Entity> entity = std::make_shared<EGADS::Object>(object,b);
+    //std::shared_ptr<Entity> entity = std::make_shared<EGADS::Object>(*context_.get(),&object);
+
     ego2entity_.insert({object,entity});
 
     // only add this entity as a child of the body if the topological dimension is correct
-    if (number_ == 2 && entity->number() == 1)
+    if (number_ == 1 && entity->number() == 1)
       b->add(entity);
-    else if (number_ == 3 && entity->number() == 2)
+    else if (number_ == 2 && entity->number() == 2)
       b->add(entity);
   }
 }
@@ -179,6 +181,7 @@ Context::import_model() {
   std::vector<Entity*> entities;
   model_->get_entities(entities);
 
+  // determine the topological number of the model
   index_t number = 0;
   for (index_t k = 0; k < entities.size(); k++)
     number = (number > entities[k]->number()) ? number : entities[k]->number();
@@ -205,7 +208,7 @@ Context::import_model() {
     id2entity_.insert( {ids[k] , entities[k]} );
     entity2id_.insert( {entities[k],ids[k]} );
     //entities[k]->print_header();
-    //printf("--> maps to id %lu\n",ids[k]);
+    //printf("--> maps to id %lu with identifier %lu\n",ids[k],entities[k]->identifier());
   }
 }
 
@@ -287,6 +290,25 @@ Context::get_geometry_ids( std::vector<int>& ids ) const {
   ids.clear();
   for (std::map<int,Entity*>::const_iterator it=id2entity_.begin();it!=id2entity_.end();++it)
     ids.push_back( it->first );
+}
+
+void
+Context::get_geometry_ids( std::map<int,int>& ids ) const {
+  ids.clear();
+  for (std::map<int,Entity*>::const_iterator it = id2entity_.begin(); it != id2entity_.end(); ++it) {
+    ids.insert( {it->second->identifier(),it->first} );
+  }
+}
+
+void
+Context::get_ego_ids( std::map<ego,int>& ids ) const {
+
+  ids.clear();
+  for (std::map<Entity*,int>::const_iterator it = entity2id_.begin(); it != entity2id_.end(); ++it) {
+    ego e = static_cast<EGADS::Object*>(it->first)->object();
+    ids.insert( {e,it->second} );
+  }
+
 }
 
 void
@@ -516,8 +538,8 @@ Context::retrieve_boundary( std::vector<std::vector<index_t>>& facets ,
 
 void
 Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
-                                     std::vector<int>& geometry ) const
-{
+                                     std::vector<int>& geometry ) const {
+
   avro_assert_msg( topology_ != nullptr , "topology is not defined" );
   const Topology<Simplex>& topology = static_cast<const Topology<Simplex>&>(*topology_.get());
 
@@ -556,6 +578,47 @@ Context::retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
 }
 
 void
+Context::retrieve_boundary( const std::vector<int>& g , const std::vector<index_t>& elements , std::vector< std::vector<index_t> >& facets , std::vector<int>& geometry , bool interior ) const {
+
+  // create temporary points to hold the geometry entities
+  index_t nb_points = g.size();
+  std::vector<real_t> x(dim_,unset_value);
+  Points tmp_points( dim_ );
+  for (index_t k = 0; k < nb_points; k++) {
+    tmp_points.create(x.data());
+    if (g[k] < 0) {
+      tmp_points.set_entity(k,nullptr);
+      continue;
+    }
+    avro_assert( id2entity_.find(g[k]) != id2entity_.end() );
+    tmp_points.set_entity( k , id2entity_.at(g[k]) );
+  }
+
+  // create a topology to hold the elements
+  Topology<Simplex> topology( tmp_points , number_ );
+  index_t nb_simplices = elements.size()/index_t(number_+1);
+  for (index_t k = 0; k < nb_simplices; k++)
+    topology.add( elements.data() + (number_+1)*k , number_+1 );
+
+  // compute the boundary
+  Boundary<Simplex> boundary(topology);
+  boundary.extract(interior);
+
+  facets.resize( boundary.nb_children() , std::vector<index_t>() );
+  geometry.resize( boundary.nb_children() );
+  for (index_t k = 0; k < boundary.nb_children(); k++) {
+    Entity* entity = boundary.entity(k);
+    const Topology<Simplex>& bk = boundary.child(k);
+    avro_assert( entity->number() == index_t(number_-1) );
+    avro_assert( bk.number() == entity->number() );
+    for (index_t j = 0; j < bk.nb(); j++)
+    for (index_t i = 0; i < bk.nv(j); i++)
+      facets[k].push_back( bk(j,i) );
+    geometry[k] = entity2id_.at(entity);
+  }
+}
+
+void
 Context::build_structures() {
   avro_assert( topology_->type_name() == "simplex" );
   static_cast<Topology<Simplex>&>(*topology_.get()).build_structures();
@@ -566,7 +629,7 @@ Context::get_vertex_ego( index_t k ) const {
   Entity* entity = points_->entity(k);
   if (entity == nullptr) return nullptr;
   avro_assert( entity->egads() );
-  return *static_cast<EGADS::Object*>(entity)->object();
+  return static_cast<EGADS::Object*>(entity)->object();
 }
 
 int

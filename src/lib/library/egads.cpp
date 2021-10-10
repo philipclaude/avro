@@ -75,7 +75,7 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
   {
     #ifndef AVRO_NO_ESP
     real_t data[6] = { x[0] , x[1] , x[2] , lens[0] , lens[1] , lens[2] };
-    EGADS_ENSURE_SUCCESS( EG_makeSolidBody( *context_.get() , BOX , data , &object_ ) );
+    EGADS_ENSURE_SUCCESS( EG_makeSolidBody( context_.get() , BOX , data , &object_ ) );
     #else
     printf("need full egads to make solid body\n");
     avro_assert_not_reached;
@@ -89,7 +89,7 @@ Cube::Cube( const Context* context , const std::vector<real_t>& lens , const rea
 void
 SolidBody::make()
 {
-  EGADS_CHECK_SUCCESS( EG_makeSolidBody( *context_.get() , type_ , data_ , &object_ ) );
+  EGADS_CHECK_SUCCESS( EG_makeSolidBody( context_.get() , type_ , data_ , &object_ ) );
   set_object(object_);
   build_hierarchy();
 }
@@ -154,7 +154,7 @@ Plane::Plane( const Context* context , std::vector<real_t*>& x , real_t* uv ) :
   double data[9] = { x[0][0],  x[0][1],  x[0][2],
                     u[0], u[1], u[2],
                     v[0], v[1], v[2] };
-  EGADS_CHECK_SUCCESS( EG_makeGeometry( *context->get() , SURFACE , PLANE , NULL , NULL , data , &object_ ) );
+  EGADS_CHECK_SUCCESS( EG_makeGeometry( context->get() , SURFACE , PLANE , NULL , NULL , data , &object_ ) );
 
   // TODO use a better range
   if (uv==NULL)
@@ -178,7 +178,7 @@ Spline::Spline( const Context* _context , const EndConditions end , const real_t
 {
   int sizes[2] = { (int)points.size()/3 , surface_ ? 1 : 0 };
 
-  int status = EG_approximate( *context_->get() , (int)end , tol , sizes , &points[0] , &object_ );
+  int status = EG_approximate( context_->get() , (int)end , tol , sizes , &points[0] , &object_ );
   if (status==EGADS_SUCCESS) ok_ = true;
   else ok_ = false;
   EGADS_CHECK_SUCCESS( status ); // for printing message;
@@ -279,7 +279,7 @@ Face3D::Face3D( const Context* context , int style ) :
 
   // make the face
   std::shared_ptr<Face> face = nullptr;
-  if (EG_isPlanar(*loop0.object()) == 0)
+  if (EG_isPlanar(loop0.object()) == 0)
   {
     face = std::make_shared<Face>(loop0,SFORWARD);
   }
@@ -293,7 +293,7 @@ Face3D::Face3D( const Context* context , int style ) :
       loop0.add_other( surface0 , k );
 
     // update the loop
-    loop0.make( *surface0.object() );
+    loop0.make( surface0.object() );
     surface0.set_object( surface0.object() );
 
     face = std::make_shared<Face>( context , surface0 , loop0 , SFORWARD );
@@ -359,13 +359,13 @@ NACA_Airfoil::add_wake( const Context* context , const real_t length , real_t* d
     xyzWake[d] = te_[d] +length*dir[d];
 
   // create the wake edge
-  Node teNode(context,&te);
+  Node teNode(context,te);
   Node wakeNode( context , xyzWake );
   Edge wake(context,teNode,wakeNode);
 
   // retrieve the airfoil edge
   //                   loop       edge
-  ego* airfoil_ego = static_cast<EGADS::Object*>(&this->child(0)->child(0))->object();
+  ego airfoil_ego = static_cast<EGADS::Object*>(&this->child(0)->child(0))->object();
   Edge airfoil(context,airfoil_ego);
 
   // create an open loop with both airfoil and wake edges
@@ -386,7 +386,7 @@ ego
 NACA_Airfoil::get_trailing_edge()
 {
   //     loop         edge     node
-  return *static_cast<EGADS::Object*>(&this->child(0)->child(0).child(0))->object();
+  return static_cast<EGADS::Object*>(&this->child(0)->child(0).child(0))->object();
 }
 
 Smiley::Smiley( const Context* context , real_t* x0 , real_t rf , real_t rm , real_t hm , real_t tm , real_t re , real_t de , real_t te ) :
@@ -453,9 +453,9 @@ Smiley::Smiley( const Context* context , real_t* x0 , real_t rf , real_t rm , re
 
   // define the face from the collection of loops
   ego face;
-  ego loops[4] = { *loop0.object() , *loop1.object() , *loop2.object() , *loop3.object() };
+  ego loops[4] = { loop0.object() , loop1.object() , loop2.object() , loop3.object() };
   int senses[4] = {1,-1,-1,-1};
-  EGADS_ENSURE_SUCCESS( EG_makeTopology( *context->get() , *plane.object() , FACE , SFORWARD , NULL , 4 , loops , senses , &face ) );
+  EGADS_ENSURE_SUCCESS( EG_makeTopology( context->get() , plane.object() , FACE , SFORWARD , NULL , 4 , loops , senses , &face ) );
 
   // create a body from the face
   FaceBody body(context,face);

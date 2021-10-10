@@ -22,16 +22,16 @@ class Context
 {
 public:
   Context();
-  Context( ego* context );
+  Context( ego context );
   ~Context();
 
-  ego* get();
-  const ego* get() const;
+  ego get();
+  const ego get() const;
 
   void print() const;
 
 private:
-  ego* context_;
+  ego  context_;
   bool mine_;
 };
 
