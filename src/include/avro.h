@@ -57,7 +57,7 @@ private:
 class Context
 {
 public:
-  Context( coord_t number , coord_t dim , coord_t udim );
+  Context( coord_t number , coord_t dim , coord_t udim , bool initialize = true );
   Context( const Context& context );
 
   coord_t number() const { return number_; }

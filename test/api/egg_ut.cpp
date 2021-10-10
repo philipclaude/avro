@@ -66,7 +66,7 @@ UT_TEST_CASE(test1)
   coord_t number = dim;
   coord_t udim = dim -1;
   EGADSGeneralGeometry egg(number-1);
-  avro::Context adapter(dim,dim,udim);
+  avro::Context adapter(dim,dim,udim,false);
   // END STEP 1
 
   // create the first box

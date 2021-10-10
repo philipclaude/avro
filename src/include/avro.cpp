@@ -107,7 +107,7 @@ EGADSGeneralGeometry::context() {
   return context_.get();
 }
 
-Context::Context( coord_t number , coord_t dim , coord_t udim ) :
+Context::Context( coord_t number , coord_t dim , coord_t udim , bool initialize ) :
   number_(number),
   dim_(dim),
   udim_(udim),
@@ -115,7 +115,8 @@ Context::Context( coord_t number , coord_t dim , coord_t udim ) :
   points_(nullptr),
   topology_(nullptr)
 {
-  initialize_avro();
+  if (initialize)
+    initialize_avro();
 }
 
 Context::Context( const Context& ctx ) :
