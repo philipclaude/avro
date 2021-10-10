@@ -54,13 +54,15 @@ EGADSGeneralGeometry::add_object( ego body , ego object ) {
     avro_assert( ego2body_.find(body) != ego2body_.end() );
     EGADS::Body* b = static_cast<EGADS::Body*>(ego2body_.at(body).get());
 
-    std::shared_ptr<Entity> entity = std::make_shared<EGADS::Object>(&object,b);
+    std::shared_ptr<Entity> entity = std::make_shared<EGADS::Object>(object,b);
+    //std::shared_ptr<Entity> entity = std::make_shared<EGADS::Object>(*context_.get(),&object);
+
     ego2entity_.insert({object,entity});
 
     // only add this entity as a child of the body if the topological dimension is correct
-    if (number_ == 2 && entity->number() == 1)
+    if (number_ == 1 && entity->number() == 1)
       b->add(entity);
-    else if (number_ == 3 && entity->number() == 2)
+    else if (number_ == 2 && entity->number() == 2)
       b->add(entity);
   }
 }
@@ -180,6 +182,7 @@ Context::import_model() {
   std::vector<Entity*> entities;
   model_->get_entities(entities);
 
+  // determine the topological number of the model
   index_t number = 0;
   for (index_t k = 0; k < entities.size(); k++)
     number = (number > entities[k]->number()) ? number : entities[k]->number();
@@ -206,7 +209,7 @@ Context::import_model() {
     id2entity_.insert( {ids[k] , entities[k]} );
     entity2id_.insert( {entities[k],ids[k]} );
     //entities[k]->print_header();
-    //printf("--> maps to id %lu\n",ids[k]);
+    //printf("--> maps to id %lu with identifier %lu\n",ids[k],entities[k]->identifier());
   }
 }
 
@@ -301,6 +304,18 @@ Context::get_geometry_ids( std::map<int,int>& ids ) const {
 }
 
 void
+Context::get_ego_ids( std::map<ego,int>& ids ) const {
+
+  ids.clear();
+  for (std::map<Entity*,int>::const_iterator it = entity2id_.begin(); it != entity2id_.end(); ++it) {
+    ego e = static_cast<EGADS::Object*>(it->first)->object();
+    printf("ego = %p\n",(void*)e);
+    ids.insert( {e,it->second} );
+  }
+
+}
+
+void
 Context::load_geometry( const std::vector<int>& g , const std::vector<real_t>& u ) {
 
   avro_assert( points_ != nullptr );
@@ -311,6 +326,8 @@ Context::load_geometry( const std::vector<int>& g , const std::vector<real_t>& u
     points_->set_entity( k , id2geometry(g[k]) );
     points_->set_param( k , &u[k*udim_] );
   }
+
+  points_->print(true);
 }
 
 int
@@ -346,6 +363,9 @@ Context::adapt( const std::vector<real_t>& m ) {
   //params.write_conformity() = parameters_.get_param<bool>("write conformity");
   //params.write_mesh() = parameters_.get_param<bool>("write mesh");
   //params.output_redirect() = parameters_.get_param<std::string>("output redirect");
+
+  points_->print(true);
+  mesh_in.points().print(true);
 
   AdaptationProblem problem = {mesh_in,metric,params,mesh_out};
   int result = ::avro::adapt<Simplex>( problem );
@@ -618,7 +638,7 @@ Context::get_vertex_ego( index_t k ) const {
   Entity* entity = points_->entity(k);
   if (entity == nullptr) return nullptr;
   avro_assert( entity->egads() );
-  return *static_cast<EGADS::Object*>(entity)->object();
+  return static_cast<EGADS::Object*>(entity)->object();
 }
 
 int

@@ -34,7 +34,7 @@ Model::Model( Context* context , const std::string& filename , bool split  ) :
   mine_(false)
 {
   int flag = (split) ? 1 : 2;
-  int status = EG_loadModel( *context_->get() , flag , filename.c_str() , &object_ );
+  int status = EG_loadModel( context_->get() , flag , filename.c_str() , &object_ );
   avro_assert( status==EGADS_SUCCESS );
 
   // get all bodies
@@ -61,7 +61,7 @@ Model::Model( const std::string& filename , bool split  ) :
   mine_    = true;
 
   int flag = (split) ? 1 : 2;
-  int status = EG_loadModel( *context_->get() , flag , filename.c_str() , &object_ );
+  int status = EG_loadModel( context_->get() , flag , filename.c_str() , &object_ );
   avro_assert( status==EGADS_SUCCESS );
 
   // get all bodies

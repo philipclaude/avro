@@ -27,7 +27,7 @@ UT_TEST_CASE(test1)
   ego obj = nullptr;
 
   std::shared_ptr<Object_t> prim;
-  UT_CATCH_EXCEPTION( prim = std::make_shared<Object_t>(context,&obj) );
+  UT_CATCH_EXCEPTION( prim = std::make_shared<Object_t>(context,obj) );
 
   std::shared_ptr<EGADS::Body> body_ptr;
   body_ptr = std::make_shared<EGADS::Body>( context , obj );

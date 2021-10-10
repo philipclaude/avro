@@ -68,6 +68,7 @@ public:
   void get_geometry_ids( std::vector<int>& ids ) const;
   //void get_geometry_idx2ego( std::map<int,ego*>& idx2ego );
   void get_geometry_ids( std::map<int,int>& ids ) const;
+  void get_ego_ids( std::map<ego,int>& ids ) const;
 
   // this should be called once
   void define_geometry( const std::string& geometry );

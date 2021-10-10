@@ -20,22 +20,23 @@ namespace EGADS
 Context::Context() :
   mine_(true)
 {
-	context_ = (ego*) malloc( sizeof(ego) );
-	EG_open( context_ );
+	//context_ = (ego) malloc( sizeof(ego) );
+	EG_open( &context_ );
+  //EG_setOutLevel( *context_  , 3 );
 }
 
-Context::Context( ego* _context ) :
+Context::Context( ego _context ) :
   context_( _context ),
   mine_(false)
 {}
 
-ego*
+ego
 Context::get()
 {
 	return context_;
 }
 
-const ego*
+const ego
 Context::get() const
 {
   return context_;
@@ -54,8 +55,8 @@ Context::~Context()
 {
   if (mine_)
   {
-	   EG_close(*context_);
-	    free(context_);
+	   EG_close(context_);
+	   //free(&context_);
   }
 }
 

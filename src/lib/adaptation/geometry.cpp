@@ -88,22 +88,22 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
           {
             int periodic;
             double trange[2];
-            EGADS_ENSURE_SUCCESS( EG_getRange(*edge->object(), trange, &periodic) );
+            EGADS_ENSURE_SUCCESS( EG_getRange(edge->object(), trange, &periodic) );
 
             #if FLIP_PERIODIC // see comments above
             if (periodic==1)
             {
-              if (edge->egchild(0) == *node->object()) t = trange[1];
-              if (edge->egchild(1) == *node->object()) t = trange[0];
+              if (edge->egchild(0) == node->object()) t = trange[1];
+              if (edge->egchild(1) == node->object()) t = trange[0];
             }
             else
             {
-              if (edge->egchild(0) == *node->object()) t = trange[0];
-              if (edge->egchild(1) == *node->object()) t = trange[1];
+              if (edge->egchild(0) == node->object()) t = trange[0];
+              if (edge->egchild(1) == node->object()) t = trange[1];
             }
             #else
-            if (edge->egchild(0) == *node->object()) t = trange[0];
-            if (edge->egchild(1) == *node->object()) t = trange[1];
+            if (edge->egchild(0) == node->object()) t = trange[0];
+            if (edge->egchild(1) == node->object()) t = trange[1];
             #endif
 
             break;
@@ -131,14 +131,14 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
       if (edge->sense_required())
       {
         // need to sort out which uv should be used later
-        EGADS_ENSURE_SUCCESS( EG_getEdgeUV( *face->object() , *edge->object() , -1 , t , uvm[k].data() ) );
-        EGADS_ENSURE_SUCCESS( EG_getEdgeUV( *face->object() , *edge->object() ,  1 , t , uvp[k].data() ) );
+        EGADS_ENSURE_SUCCESS( EG_getEdgeUV( face->object() , edge->object() , -1 , t , uvm[k].data() ) );
+        EGADS_ENSURE_SUCCESS( EG_getEdgeUV( face->object() , edge->object() ,  1 , t , uvp[k].data() ) );
       }
       else
       {
         // get the uv value from the edge t value. No need to worry about periodicity in uv
         double uv[2] = {0,0};
-        int status = EG_getEdgeUV( *face->object() , *edge->object() , 0 , t , uv );
+        int status = EG_getEdgeUV( face->object() , edge->object() , 0 , t , uv );
 
         // special treatment of interior edges that might not be connected to the face
         if (status == EGADS_NOTFOUND && edge->interior())
@@ -158,17 +158,17 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
           double* x = const_cast<double*>(points[ v[k] ]);
           if (foundGuess)
           {
-            EGADS_ENSURE_SUCCESS( EG_invEvaluateGuess( *face->object() , x , uv , x_inv ) );
+            EGADS_ENSURE_SUCCESS( EG_invEvaluateGuess( face->object() , x , uv , x_inv ) );
           }
           else
           {
-            EGADS_ENSURE_SUCCESS( EG_invEvaluate( *face->object() , x , uv , x_inv ) );
+            EGADS_ENSURE_SUCCESS( EG_invEvaluate( face->object() , x , uv , x_inv ) );
           }
 
           real_t d = numerics::distance2(x,x_inv,3);
           real_t tol_edge=0, tol_face=0;
-          EGADS_ENSURE_SUCCESS( EG_tolerance( *edge->object(), &tol_edge ) );
-          EGADS_ENSURE_SUCCESS( EG_getTolerance( *face->object(), &tol_face ) );
+          EGADS_ENSURE_SUCCESS( EG_tolerance( edge->object(), &tol_edge ) );
+          EGADS_ENSURE_SUCCESS( EG_getTolerance( face->object(), &tol_face ) );
           avro_assert_msg( d <= std::min(tol_edge,tol_face) ,
                            "d = %1.16e, tol_edge = %1.16e, tol_face = %1.16e" , d , tol_edge , tol_face );
         }
@@ -260,21 +260,21 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
 
         int periodic;
         double trange[2];
-        EGADS_ENSURE_SUCCESS( EG_getRange(*edge->object(), trange, &periodic) );
+        EGADS_ENSURE_SUCCESS( EG_getRange(edge->object(), trange, &periodic) );
         #if FLIP_PERIODIC // see comments above
         if (periodic==1)
         {
-          if (edge->egchild(0) == *node->object()) t = trange[1];
-          if (edge->egchild(1) == *node->object()) t = trange[0];
+          if (edge->egchild(0) == node->object()) t = trange[1];
+          if (edge->egchild(1) == node->object()) t = trange[0];
         }
         else
         {
-          if (edge->egchild(0) == *node->object()) t = trange[0];
-          if (edge->egchild(1) == *node->object()) t = trange[1];
+          if (edge->egchild(0) == node->object()) t = trange[0];
+          if (edge->egchild(1) == node->object()) t = trange[1];
         }
         #else
-        if (edge->egchild(0) == *node->object()) t = trange[0];
-        if (edge->egchild(1) == *node->object()) t = trange[1];
+        if (edge->egchild(0) == node->object()) t = trange[0];
+        if (edge->egchild(1) == node->object()) t = trange[1];
         #endif
 
         // set the parametric value
@@ -298,13 +298,13 @@ geometry_params( Entity* e0 , const Points& points , const index_t* v , const in
   {
     // evaluate the coordinates for the parameters we found
     double x_eval[18];
-    EGADS_ENSURE_SUCCESS( EG_evaluate( *e->object() , &params[k*udim] , x_eval ) );
+    EGADS_ENSURE_SUCCESS( EG_evaluate( e->object() , &params[k*udim] , x_eval ) );
 
     // check the evaluated coordinates are close to the true ones
     const real_t* x = points[ v[k] ];
     real_t d = numerics::distance2(x,x_eval,dim);
     real_t tol = 0;
-    EGADS_ENSURE_SUCCESS( EG_getTolerance( *e->object(), &tol ) );
+    EGADS_ENSURE_SUCCESS( EG_getTolerance( e->object(), &tol ) );
 
     if (d>tol)
     {

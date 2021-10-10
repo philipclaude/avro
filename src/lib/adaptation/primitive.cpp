@@ -322,7 +322,7 @@ GeometryInspector<type>::normal( index_t k , std::vector<real_t>& N )
 
   // evaluate the normal at the vertex using the stored parameter coordinates
   real_t result[18];
-  EGADS_ENSURE_SUCCESS( EG_evaluate( *entity->object() , u_[k] , result ) );
+  EGADS_ENSURE_SUCCESS( EG_evaluate( entity->object() , u_[k] , result ) );
   real_t dx_du[3],dx_dv[3];
   dx_du[0] = result[3];
   dx_du[1] = result[4];
@@ -336,7 +336,7 @@ GeometryInspector<type>::normal( index_t k , std::vector<real_t>& N )
   // flip the normal depending on the type of face (SFORWARD or SREVERSE)
   int oclass,mtype;
   ego ref,prev,next;
-  EGADS_ENSURE_SUCCESS( EG_getInfo(*entity->object(), &oclass, &mtype,&ref, &prev, &next) );
+  EGADS_ENSURE_SUCCESS( EG_getInfo(entity->object(), &oclass, &mtype,&ref, &prev, &next) );
   N[0] *= mtype;
   N[1] *= mtype;
   N[2] *= mtype;

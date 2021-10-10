@@ -33,8 +33,8 @@ class Context;
 class Object : public Entity
 {
 public:
-  Object( const Context& context , ego* object );
-  Object( ego* object , EGADS::Body* body );
+  Object( const Context& context , ego object );
+  Object( ego object , EGADS::Body* body );
   Object( const Context& context );
 
   void inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const;
@@ -43,15 +43,15 @@ public:
 
   void project( std::vector<real_t>& x , std::vector<real_t>& u ) const;
 
-  void set_object( ego* object );
-  void construct( ego* object );
+  void set_object( ego object );
+  void construct( ego object );
 
   void delete_object();
 
   void build_hierarchy();
 
-  ego* object();
-  ego* object() const;
+  ego object();
+  ego object() const;
 
   ego egchild( index_t k ) const;
   egoData& data() { return data_; }
@@ -65,7 +65,7 @@ public:
 protected:
   EGADS::Body* body_;
   const Context& context_;
-  ego* object_;
+  ego object_;
 
   egoData data_;
 
