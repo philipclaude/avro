@@ -32,7 +32,7 @@ protected:
   coord_t order_;
 };
 
-typedef struct
+typedef struct ElementIndices
 {
   std::vector<index_t> indices;
   coord_t dim;
