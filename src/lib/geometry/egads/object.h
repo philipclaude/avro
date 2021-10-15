@@ -48,6 +48,7 @@ public:
 
   void delete_object();
 
+  void build();
   void build_hierarchy();
 
   ego object();

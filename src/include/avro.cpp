@@ -105,8 +105,7 @@ EGADSGeneralGeometry::finalize() {
   // make sure the EGADS::Object data gets filled
   for (std::map<ego,std::shared_ptr<Entity>>::iterator it = ego2entity_.begin(); it != ego2entity_.end(); ++it) {
     Entity* e = it->second.get();
-    if (e->interior()) continue;
-    static_cast<EGADS::Object*>(e)->construct(it->first);
+    static_cast<EGADS::Object*>(e)->build();
   }
 }
 
