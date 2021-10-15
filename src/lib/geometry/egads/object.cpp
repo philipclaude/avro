@@ -110,11 +110,15 @@ Object::egchild( index_t k ) const {
 }
 
 void
-Object::build_hierarchy() {
-
+Object::build() {
   EG_getTopology( object_ , &data_.reference , &data_.object_class  , &data_.member_type ,
                   data_.data , &data_.nb_children , &data_.children , &data_.senses );
+}
 
+void
+Object::build_hierarchy() {
+
+  build();
   for (int k=0;k<data_.nb_children;k++)
   {
     // get the index of this child in the body's full list of children
