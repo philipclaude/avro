@@ -35,6 +35,7 @@ class Context;
 class EGADSGeneralGeometry {
 
 public:
+  EGADSGeneralGeometry( ego context , coord_t number );
   EGADSGeneralGeometry( coord_t number );
 
   void add_body( ego object );

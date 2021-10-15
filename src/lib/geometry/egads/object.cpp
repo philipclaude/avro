@@ -85,38 +85,33 @@ Object::construct( ego object )
 }
 
 void
-Object::set_object( ego object )
-{
+Object::set_object( ego object ) {
   object_ = object;
 }
 
 ego
-Object::object()
-{
+Object::object() {
   return object_;
 }
 
 ego
-Object::object() const
-{
+Object::object() const {
   return object_;
 }
 
 void
-Object::delete_object()
-{
+Object::delete_object() {
   EGADS_ENSURE_SUCCESS( EG_deleteObject(object_) );
 }
 
 ego
-Object::egchild( index_t k ) const
-{
+Object::egchild( index_t k ) const {
   return data_.children[k];
 }
 
 void
-Object::build_hierarchy()
-{
+Object::build_hierarchy() {
+
   EG_getTopology( object_ , &data_.reference , &data_.object_class  , &data_.member_type ,
                   data_.data , &data_.nb_children , &data_.children , &data_.senses );
 

@@ -61,11 +61,14 @@ UT_TEST_CASE(test1)
   // please follow the different steps outlined below to set up your own custom geometry
   // (see the STEP ... and END STEP)
 
+  // you can pass in an existing EGADS context if you want
+  EGADS::Context ctx;
+
   // STEP 1: initialize  the geometry and avro context
   const coord_t dim = 3;
   coord_t number = dim;
   coord_t udim = dim -1;
-  EGADSGeneralGeometry egg(number-1);
+  EGADSGeneralGeometry egg(ctx.get(),number-1);
   avro::Context adapter(dim,dim,udim,false);
   // END STEP 1
 
