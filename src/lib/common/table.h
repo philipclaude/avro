@@ -136,7 +136,7 @@ public:
   void add( type* x , index_t n )
   {
     if (layout_==TableLayout_Rectangular)
-      avro_assert( n == rank_ );
+      avro_assert_msg( n == rank_ , "adding %lu elements, but rank = %lu" , n , rank_ );
     if (layout_==TableLayout_Jagged)
       first_.push_back( data_.size() );
     for (index_t j=0;j<n;j++)

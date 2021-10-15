@@ -55,7 +55,7 @@ private:
 
   std::shared_ptr<TopologyBase> main_topology_;
 
-  std::map<int,index_t> ref_index_; // map from reference index to topology index
+  std::map< std::pair<coord_t,int> ,index_t> ref_index_; // map from reference index to topology index
 };
 
 } // library
