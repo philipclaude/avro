@@ -33,6 +33,12 @@
 namespace avro
 {
 
+  EGADSGeneralGeometry::EGADSGeneralGeometry( ego ctx , coord_t number ) :
+    number_(number)
+  {
+    context_ = std::make_shared<EGADS::Context>(ctx);
+  }
+
 EGADSGeneralGeometry::EGADSGeneralGeometry( coord_t number ) :
   number_(number)
 {
@@ -94,6 +100,13 @@ EGADSGeneralGeometry::finalize() {
   std::map<ego,std::shared_ptr<Body>>::iterator it;
   for (it = ego2body_.begin(); it != ego2body_.end(); ++it) {
     it->second->build_parents();
+  }
+
+  // make sure the EGADS::Object data gets filled
+  for (std::map<ego,std::shared_ptr<Entity>>::iterator it = ego2entity_.begin(); it != ego2entity_.end(); ++it) {
+    Entity* e = it->second.get();
+    if (e->interior()) continue;
+    static_cast<EGADS::Object*>(e)->construct(it->first);
   }
 }
 
