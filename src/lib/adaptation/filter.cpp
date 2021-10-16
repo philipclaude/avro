@@ -224,7 +224,7 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
 
         if (eg->egads()) {
 
-          if (topology.number() > 2) {
+          if (topology.number() > 2 || topology.element().parameter()) {
 
             v[0] = n0;
             v[1] = n1;
