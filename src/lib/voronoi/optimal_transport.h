@@ -201,7 +201,7 @@ private:
 };
 
 
-typedef struct
+struct SDOT_Properties
 {
   std::vector<real_t> mass_min;
   std::vector<real_t> mass_max;
@@ -229,9 +229,9 @@ typedef struct
     energy.clear();
     gradient.clear();
   }
-} SDOT_Properties;
+};
 
-typedef struct
+struct SDOT_Snapshot
 {
   coord_t dim;
   std::vector<real_t> weights;
@@ -246,7 +246,7 @@ typedef struct
     weights.clear();
     points.clear();
   }
-} SDOT_Snapshot;
+};
 
 class OptimalTransportBase
 {

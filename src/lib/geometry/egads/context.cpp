@@ -36,7 +36,7 @@ Context::get()
 	return context_;
 }
 
-const ego
+ego
 Context::get() const
 {
   return context_;
