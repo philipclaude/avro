@@ -36,7 +36,7 @@ namespace graphics
 
 #define BSP_TOL 1e-7
 
-typedef struct {
+struct BSPPlane {
 
   vec3 normal;
   vec3 center;
@@ -66,7 +66,7 @@ typedef struct {
     //avro_assert_msg( d >= -BSP_TOL && d <= (1.0+BSP_TOL) , "d = %g" , d );
     return p0 + d*(p1 - p0);
   }
-} BSPPlane;
+};
 
 class BSPTriangle {
 

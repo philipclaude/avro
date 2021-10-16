@@ -26,7 +26,7 @@ public:
   ~Context();
 
   ego get();
-  const ego get() const;
+  ego get() const;
 
   void print() const;
 
