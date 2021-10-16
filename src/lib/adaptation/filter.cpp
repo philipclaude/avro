@@ -22,15 +22,15 @@ namespace avro
 {
 
 static inline void
-prioritizeGeometry( std::vector<index_t>& edges0 , const Points& points , Insert<Simplex>& prim )
-{
+prioritize_geometry( std::vector<index_t>& edges0 , const Points& points , Insert<Simplex>& prim ) {
+
   index_t ne = edges0.size()/2;
   std::vector<bool> traversed( ne , false );
 
   std::vector<index_t> edges;
   edges.reserve( edges0.size() );
-  for (index_t k=0;k<ne;k++)
-  {
+  for (index_t k = 0; k < ne; k++) {
+
     // check if this is a geometry edge
     if (prim.geometry(edges0[2*k],edges0[2*k+1]))
       traversed[k] = true;
@@ -41,8 +41,8 @@ prioritizeGeometry( std::vector<index_t>& edges0 , const Points& points , Insert
   }
 
   // now add the remaining edges
-  for (index_t k=0;k<ne;k++)
-  {
+  for (index_t k = 0; k < ne; k++) {
+
     // check if this is a geometry edge
     if (traversed[k])
       continue;
@@ -54,8 +54,8 @@ prioritizeGeometry( std::vector<index_t>& edges0 , const Points& points , Insert
 }
 
 static inline void
-prioritizeLongest( std::vector<index_t>& edges0 , const Points& points , std::vector<real_t>& lengths0 , Insert<Simplex>& prim )
-{
+prioritize_longest( std::vector<index_t>& edges0 , const Points& points , std::vector<real_t>& lengths0 , Insert<Simplex>& prim ) {
+
   index_t ne = edges0.size()/2;
 	std::vector<bool> traversed( ne , false );
 
@@ -68,8 +68,8 @@ prioritizeLongest( std::vector<index_t>& edges0 , const Points& points , std::ve
 	std::vector<real_t> lengths;
   edges.reserve( edges0.size() );
   lengths.reserve( lengths0.size() );
-  for (index_t k=0;k<ne;k++)
-	{
+  for (index_t k = 0; k < ne; k++) {
+
 		// longest edge
 		index_t e = idx[ne-k-1];
 
@@ -85,9 +85,8 @@ prioritizeLongest( std::vector<index_t>& edges0 , const Points& points , std::ve
 	}
 
 	// go back through the remaining edges
+	for (index_t k = 0; k < ne; k++) {
 
-	for (index_t k=0;k<ne;k++)
-	{
 		index_t e = idx[ne-k-1];
 		if (traversed[e])
 			continue;
@@ -106,12 +105,10 @@ Filter::Filter( const coord_t dim ) :
   Points(dim),
   lmin_(0.),
   lmax_(0.)
-{
-}
+{}
 
 void
-Filter::createPermanent( const real_t* x )
-{
+Filter::createPermanent( const real_t* x ) {
   node0_.push_back(-1);
   node1_.push_back(-1);
   s_.push_back( -1. );
@@ -122,8 +119,7 @@ Filter::createPermanent( const real_t* x )
 void
 Filter::createCandidate( const index_t n0 , const index_t n1 ,
                          const real_t s , const real_t* x,
-                         Entity * e, const real_t* params )
-{
+                         Entity * e, const real_t* params ) {
   avro_assert( n0 < n1 );
   node0_.push_back(n0);
   node1_.push_back(n1);
@@ -137,8 +133,8 @@ Filter::createCandidate( const index_t n0 , const index_t n1 ,
 
 void
 Filter::generateCandidates( Topology<Simplex>& topology ,
-                            MetricField<Simplex>& metric , real_t lmax , Insert<Simplex>& inserter )
-{
+                            MetricField<Simplex>& metric , real_t lmax , Insert<Simplex>& inserter ) {
+
   // get all the edges
   clock_t TIME0, TIME1;
 
@@ -151,7 +147,7 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
 
 	// prioritize geometry edges
   TIME0 = clock();
-  prioritizeGeometry(edges,topology.points(),inserter);
+  prioritize_geometry(edges,topology.points(),inserter);
   TIME1 = clock();
   //printf("geometry prioritization time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
@@ -160,8 +156,8 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
   TIME0 = clock();
   index_t ne = edges.size()/2;
   std::vector<real_t> lengths( ne , -1. );
-  for (index_t k=0;k<ne;k++)
-  {
+  for (index_t k = 0; k < ne; k++) {
+
     index_t n0 = edges[2*k];
     index_t n1 = edges[2*k+1];
 
@@ -176,7 +172,7 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
 
 	// prioritize by longest length
   TIME0 = clock();
-	prioritizeLongest( edges , topology.points() , lengths , inserter );
+	prioritize_longest( edges , topology.points() , lengths , inserter );
   TIME1 = clock();
   //printf("length prioritization time = %g\n",real_t(TIME1-TIME0)/real_t(CLOCKS_PER_SEC));
 
@@ -191,25 +187,25 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
   std::vector<real_t> xs(std::max(coord_t(3),dim_)); // EGADS evaluations are always 3
 
   // loop through all edges and create candidates along long edges
-  for (index_t k=0;k<ne;k++)
-  {
+  for (index_t k = 0; k < ne; k++) {
+
     index_t n0 = edges[2*k];
     index_t n1 = edges[2*k+1];
 
     // do not create candidates on edges touching a ghost
-    if (n0<topology.points().nb_ghost() || n1<topology.points().nb_ghost() )
+    if (n0 < topology.points().nb_ghost() || n1 < topology.points().nb_ghost() )
       continue;
 
     real_t* x0 = topology.points()[n0];
     real_t* x1 = topology.points()[n1];
 
     real_t length = lengths[k];
-    if (length<lmax) continue;
+    if (length < lmax) continue;
     nb_long_++;
 
     // divide the edge
     index_t ns;
-    if (Lmax<2)
+    if (Lmax < 2)
       ns = ceil(length);
     else
       ns = floor(length);
@@ -217,30 +213,47 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
     real_t ds = 1./real_t(ns);
 
     // create candidates that will subdivide the edge
-    for (index_t j=1;j<ns;j++)
-    {
-      for (coord_t d=0;d<dim_;d++)
+    for (index_t j = 1; j < ns; j++) {
+
+      for (coord_t d = 0; d < dim_; d++)
         xs[d] = x0[d] +j*ds*( x1[d] -x0[d] );
 
       // determine if the coordinates need to be projected
       Entity* eg = inserter.geometry(n0,n1);
-      if (eg!=NULL && inserter.curved())
-      {
-        if (eg->egads())
-        //if (eg->tesseractGeometry())
-        //  eg->project( xs );
-        //else
-        {
-          v[0] = n0;
-          v[1] = n1;
-          geometry_params( eg , topology.points() , v , 2 , params.data() );
+      if (eg != NULL && inserter.curved()) {
 
-          // interpolate in parameter space
-          params[0] = params[0] +j*ds*( params[udim  ] -params[0] );
-          params[1] = params[1] +j*ds*( params[udim+1] -params[1] );
+        if (eg->egads()) {
 
-          // evaluate on the geometry
-          eg->evaluate( params, xs );
+          if (topology.number() > 2) {
+
+            v[0] = n0;
+            v[1] = n1;
+            geometry_params( eg , topology.points() , v , 2 , params.data() );
+
+            // interpolate in parameter space
+            params[0] = params[0] +j*ds*( params[udim  ] -params[0] );
+            params[1] = params[1] +j*ds*( params[udim+1] -params[1] );
+
+            // evaluate on the geometry
+            eg->evaluate( params, xs );
+          }
+          else if (topology.number() == 2) {
+
+            avro_assert( !topology.element().parameter() );
+            if (eg->number() == 1) {
+              params[0] = topology.points().u(n0,0) + j*ds*( topology.points().u(n1,0) - topology.points().u(n0,0) );
+              eg->evaluate( params , xs );
+            }
+            else if (eg->number() == 2) {
+              params[0] = Points::INFTY;
+              for (index_t d = 0; d < topology.points().dim(); d++)
+                xs[d] = topology.points()[n0][d] + j*ds*(topology.points()[n1][d] - topology.points()[n0][d]);
+            }
+            else
+              avro_assert_not_reached;
+          }
+          else
+            avro_assert_not_reached;
         }
       }
 
@@ -255,8 +268,8 @@ Filter::generateCandidates( Topology<Simplex>& topology ,
 }
 
 void
-Filter::accept( const index_t k , const index_t idx )
-{
+Filter::accept( const index_t k , const index_t idx ) {
+
   avro_assert_msg( node0_[k]>=0 && node1_[k]>=0 ,
       "node %lu is already active",k);
 
@@ -265,22 +278,20 @@ Filter::accept( const index_t k , const index_t idx )
   int n1 = node1_[k];
 
   // look for any other candidate which touches this edge
-  for (index_t i=0;i<nb();i++)
-  {
+  for (index_t i = 0; i < nb(); i++) {
+
     // permanent points do not get modified
     if (permanent(i)) continue;
 
-    if (node0_[i]!=n0) continue;
-    if (node1_[i]!=n1) continue;
+    if (node0_[i] != n0) continue;
+    if (node1_[i] != n1) continue;
 
     // check the s value for which node gets modified
-    if (s_[i]<s_[k])
-    {
+    if (s_[i] < s_[k]) {
       // node1 gets modified such that the edges is now [node0,idx]
       node1_[i] = idx;
     }
-    else
-    {
+    else {
       // node1 gets modified such that the edge is now [idx,node1]
       node0_[i] = idx;
     }
@@ -295,10 +306,10 @@ Filter::accept( const index_t k , const index_t idx )
 }
 
 void
-Filter::clearCandidates()
-{
-  for (int k=nb()-1;k>=0;k--)
-  {
+Filter::clearCandidates() {
+
+  for (int k = nb()-1; k >= 0; k--) {
+
     if (permanent(k)) continue;
 
     node0_.erase( node0_.begin() +k );
@@ -310,10 +321,9 @@ Filter::clearCandidates()
 }
 
 void
-Filter::print() const
-{
-  for (index_t k=0;k<nb_candidates();k++)
-  {
+Filter::print() const {
+
+  for (index_t k = 0; k < nb_candidates(); k++) {
     index_t idx = candidate(k);
     printf("candidate[%lu] = %lu, node0 = %d, node1 = %d, s = %g\n",
                               k,idx,node0_[idx],node1_[idx],s_[idx]);

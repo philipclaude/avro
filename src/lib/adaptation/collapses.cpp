@@ -30,9 +30,9 @@ Collapse<type>::Collapse( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge )
-{
-  avro_assert( g->number()==2 );
+Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge ) {
+
+  avro_assert( g->number() == 2 );
   if (!this->curved_) return true;
   if (g->interior()) return true;
 
@@ -41,14 +41,13 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
 
   // extract the geometry cavity
   this->extract_geometry( g, {p} );
-  avro_assert( this->geometry_topology_.nb()>0 );
+  avro_assert( this->geometry_topology_.nb() > 0 );
 
   // based on the type of face, we may need to flip the sign for the volume calculation
   this->geometry_cavity_.sign() = g->sign();
   if (this->topology_.element().parameter()) this->geometry_cavity_.sign() = 1;
 
-  if (this->topology_.element().parameter())
-  {
+  if (this->topology_.element().parameter()) {
     this->convert_to_parameter(g);
   }
 
@@ -56,8 +55,7 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
   bool accept = this->geometry_cavity_.compute( this->v2u_[p] , this->u_[this->v2u_[p]] , this->S_ );
   avro_assert( accept );
 
-  if (this->topology_.element().parameter())
-  {
+  if (this->topology_.element().parameter()) {
     this->convert_to_physical();
   }
 
@@ -67,38 +65,33 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
   avro_assert( s > 0 );
   avro_assert( this->geometry_inspector_.positive_volumes(this->geometry_cavity_,this->geometry_cavity_.sign()));
 
-  if (this->topology_.element().parameter())
-  {
+  if (this->topology_.element().parameter()) {
     this->convert_to_parameter(g);
   }
 
   // check visibility in the new configuration
   nb_parameter_tests_++;
   accept = this->geometry_cavity_.compute( this->v2u_[q] , this->u_[this->v2u_[q]] , this->S_ );
-  if (!accept)
-  {
+  if (!accept) {
     if (edge) nb_rej_vis_Edge_++;
     nb_parameter_rejections_++;
     return false;
   }
 
-  if (this->topology_.element().parameter())
-  {
+  if (this->topology_.element().parameter()) {
     this->convert_to_physical();
   }
 
   // check the normal orientations
   s = this->geometry_inspector_.signof( this->geometry_cavity_ );
-  if (s<0)
-  {
+  if (s < 0) {
     if (edge) nb_rej_sgn_Edge_++;
     return false;
   }
 
   // check the geometry topology can be extracted correctly
   if (this->geometry_inspector_.invalidates_geometry(this->geometry_cavity_) ||
-      this->geometry_inspector_.invalidates_geometry(this->boundary()))
-  {
+      this->geometry_inspector_.invalidates_geometry(this->boundary())) {
     if (edge) nb_rej_geo_Edge_++;
     nb_invalid_geometry_++;
     return false;
@@ -112,8 +105,8 @@ Collapse<type>::visible_geometry( index_t p , index_t q , Entity* g , bool edge 
 
 template<typename type>
 bool
-Collapse<type>::valid( const index_t p , const index_t q )
-{
+Collapse<type>::valid( const index_t p , const index_t q ) {
+
   if (this->topology_.points().fixed(p)) return false;
 
   // check if a lower dimensional geometry entity is collapsed to a higher
@@ -122,45 +115,44 @@ Collapse<type>::valid( const index_t p , const index_t q )
   Entity* e1 = this->topology_.points().entity(q);
 
   // check if the removed vertex is a volume one (always valid)
-  if (e0==NULL) return true;
+  if (e0 == NULL) return true;
 
-  if (e1==NULL)
-  {
+  if (e1 == NULL) {
     // e0 is has a non-null geometry, so e1 cannot be a volume point
     return false;
   }
 
   // e0 must be higher in the geometry hierarchy than e1
-  if (e0->above(e1))
-  {
-    if (this->geometry(p,q)==NULL) return false;
+  if (e0->above(e1)) {
+    if (this->geometry(p,q) == NULL) return false;
     return true;
   }
 
   // if the entities are not the same then we cannot collapse the edge
   // this also accounts for node-node collapses
-  if (e0!=e1) return false;
+  if (e0 != e1) return false;
 
   // check that the edge has a ghost
-  if (this->geometry(p,q)==NULL) return false;
+  if (this->geometry(p,q) == NULL) return false;
 
-  if (e0!=NULL && e1!=NULL)
-  {
+  if (e0 != NULL && e1 != NULL) {
+
     // check if the edge between the points contains a ghost
     bool contains = false;
     std::vector<index_t> shell;
 
     this->topology_.intersect( {p,q} , shell );
-    for (index_t k=0;k<shell.size();k++)
-    {
-      if (this->topology_.ghost(shell[k]))
-      {
+    for (index_t k = 0; k < shell.size(); k++) {
+      if (this->topology_.ghost(shell[k])) {
         contains = true;
         break;
       }
     }
     Entity* g = this->geometry(p,q);
-    if (!contains && !g->interior() && !this->topology().element().parameter()) return false;
+    if (!contains && !g->interior() && !this->topology().element().parameter()) {
+      // there is no ghost element attached to this edge on the boundary
+      return false;
+    }
   }
 
   return true;
@@ -168,8 +160,8 @@ Collapse<type>::valid( const index_t p , const index_t q )
 
 template<typename type>
 bool
-Collapse<type>::apply( const index_t p , const index_t q , bool delay )
-{
+Collapse<type>::apply( const index_t p , const index_t q , bool delay ) {
+
   this->check_visibility(true);
 
   // attempt to collapse p onto q
@@ -181,8 +173,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
 
   // count initial number of ghosts
   index_t nb_ghost0 = 0;
-  for (index_t k=0;k<this->C_.size();k++)
-  {
+  for (index_t k=0;k<this->C_.size();k++) {
     if (this->topology_.ghost(this->C_[k]))
       nb_ghost0++;
   }
@@ -191,24 +182,21 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
   Entity* g = this->geometry(p,q);
   this->set_entity(g);
 
-  if (this->topology_.element().parameter())
-  {
-    avro_assert( g!=nullptr );
+  if (this->topology_.element().parameter()) {
 
-    if (g->number()!=2)
-    {
-      avro_assert(g->number()==1);
+    avro_assert( g != nullptr );
+    if (g->number() != 2) {
+
+      avro_assert(g->number() == 1);
 
       // loop through the parents of this geometry Edge
-      for (index_t k=0;k<g->nb_parents();k++)
-      {
+      for (index_t k = 0; k < g->nb_parents(); k++) {
         if (g->parents(k)->number()!=2 || !g->parents(k)->tessellatable())
           continue;
 
         // determine all elements on this parent Face
         this->Cavity<type>::clear();
-        for (index_t j=0;j<this->C_.size();j++)
-        {
+        for (index_t j = 0; j < this->C_.size(); j++) {
           Entity* entityp = BoundaryUtils::geometryFacet( this->topology_.points() , this->topology_(this->C_[j]) , this->topology_.nv(this->C_[j]) );
           avro_assert( entityp!=nullptr );
           avro_assert( entityp->number()==2 );
@@ -217,8 +205,7 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
         }
 
         Entity* parent = g->parents(k);
-        if (!visible_geometry(p,q,parent,true)) // flag this is an edge for the counters
-        {
+        if (!visible_geometry(p,q,parent,true)) {
           nb_rejected_[g->number()]++;
           return false;
         }
@@ -237,13 +224,12 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
 
       return true;
     }
-    else
-    {
+    else {
+
       this->Cavity<type>::clear();
-      for (index_t j=0;j<this->C_.size();j++)
+      for (index_t j = 0; j < this->C_.size(); j++)
         this->add_cavity( this->C_[j] );
-      if (!visible_geometry(p,q,g,false))
-      {
+      if (!visible_geometry(p,q,g,false)) {
         nb_rejected_[g->number()]++;
         return false;
       }
@@ -263,19 +249,18 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
     }
 
     return true;
-  }
+
+  } // if parameter space
 
   // turn off enlarging
   this->enlarge_ = false;
   accept = this->compute( q , this->topology_.points()[q] , this->C_ );
-  if (!accept)
-  {
+  if (!accept) {
     // the point is not visible
     return false;
   }
 
-  if (!this->has_unique_elems())
-  {
+  if (!this->has_unique_elems()) {
     // we don't want duplicate elements! can happen with ghosted topologies..
     return false;
   }
@@ -285,25 +270,20 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
     return false;
 
   // determine if the receiving point is visible in the parameter space
-  if (g!=NULL && g->number()==2 && !visible_geometry(p,q,g))
-  {
+  if (g != NULL && g->number() == 2 && this->topology_.number() == 3 && !visible_geometry(p,q,g)) {
     nb_rejected_[g->number()]++;
     return false;
   }
 
   // determine if the point is visible on every face parenting the Edge
-  if (g!=NULL && this->topology_.number()==3 && g->number()==1 && this->curved_)
-  {
+  if (g != NULL && this->topology_.number() == 3 && g->number() == 1 && this->curved_) {
     // we need to check for visibility on all Faces that parent this Edge
-    for (index_t k=0;k<g->nb_parents();k++)
-    {
+    for (index_t k = 0; k < g->nb_parents(); k++) {
       Entity* parent = g->parents(k);
-      if (parent->number()!=2 || !parent->tessellatable())
-      {
+      if (parent->number() != 2 || !parent->tessellatable()) {
         continue;
       }
-      if (!visible_geometry(p,q,parent,true)) // flag this is an edge for the counters
-      {
+      if (!visible_geometry(p,q,parent,true)) {
         nb_rejected_[g->number()]++;
         return false;
       }
@@ -312,10 +292,8 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
 
   // check if only ghosts are created
   index_t only_ghost = true;
-  for (index_t k=0;k<this->nb();k++)
-  {
-    if (!this->ghost(k))
-    {
+  for (index_t k = 0; k < this->nb(); k++) {
+    if (!this->ghost(k)) {
       only_ghost = false;
       break;
     }
@@ -326,15 +304,15 @@ Collapse<type>::apply( const index_t p , const index_t q , bool delay )
   if (!delay)
     this->topology_.apply(*this);
 
-  if (g==NULL) nb_accepted_[this->topology_.number()]++;
+  if (g == NULL) nb_accepted_[this->topology_.number()]++;
   else nb_accepted_[g->number()]++;
   return true;
 }
 
 template<typename type>
 void
-AdaptThread<type>::collapse_edges( bool limitLength , bool swapout )
-{
+AdaptThread<type>::collapse_edges( bool limitLength , bool swapout ) {
+
   index_t pass = 0;
   index_t nb_candidates,nb_collapsed,nb_collapsed_total = 0;
   index_t nb_swaps;
