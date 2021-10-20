@@ -1,5 +1,6 @@
 if (avro_WITH_GL)
 
+  set(OpenGL_GL_PREFERENCE LEGACY) # or GLVND
   include(FindOpenGL CONFIG)
 
   set(CMAKE_THREAD_LIBS_INIT "-lpthread")
