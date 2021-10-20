@@ -9,6 +9,8 @@
 //
 #include "adaptation/geometry.h"
 
+#include <limits>
+
 namespace avro
 {
 

@@ -196,6 +196,7 @@ public:
   }
 
   std::vector<type> data() const { return data_; }
+  //const std::vector<type>& data() const { return data_; }
 
   void clear()
   {
