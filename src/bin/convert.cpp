@@ -7,6 +7,8 @@
 
 #include "graphics/application.h"
 
+#include "library/meshb.h"
+
 #include <stdio.h>
 
 #include <egads.h>
@@ -43,8 +45,7 @@ convert( int nb_input , const char** inputs )
 
   printf("ext's are %s -> %s\n",ext_input.c_str(),ext_output.c_str());
 
-  if (ext_input == "egads" && ext_output == "legads")
-  {
+  if (ext_input == "egads" && ext_output == "legads") {
     // convert to EGADS lite
     #ifndef AVRO_NO_ESP
     EGADS::Context context;
@@ -63,6 +64,13 @@ convert( int nb_input , const char** inputs )
     #else
     printf("cannot convert .egads to .legads without full ESP");
     #endif
+  }
+  else if ((ext_input == "mesh" || ext_input == "meshb") && (ext_output == "mesh" || ext_output == "meshb")) {
+    library::meshb meshb_in(filename_input);
+    meshb_in.write(meshb_in,filename_output,false);
+  }
+  else {
+    avro_assert_not_reached;
   }
 
 
