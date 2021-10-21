@@ -16,6 +16,7 @@ add_test_files( TEST_FILES "ut" api )
 
 # sandbox files should have _toy.cpp
 add_test_files( SBX_FILES "toy" sandbox/philip )
+add_test_files( SBX_FILES "toy" sandbox/hiro )
 
 set( unit_skip mesh/delaunay/vertex_ut.cpp )
 
