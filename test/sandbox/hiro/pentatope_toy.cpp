@@ -68,11 +68,13 @@ calculate_normal( const Points& points , const std::vector<index_t>& tet , std::
 
 UT_TEST_CASE( test1 )
 {
+  const real_t tol = 1e-10; // tolerance for floating point unit test assertions
 
   coord_t number = 4;   // topological number of the mesh
   coord_t dim = number; // ambient dimension of the mesh
 
   // this vector defines the number of points in each dimension of the mesh
+  // (feel free to change these)
   std::vector<index_t> sizes(number);
   sizes[0] = 2; // number of points in x-direction
   sizes[1] = 2; // number of points in y-direction
@@ -86,7 +88,7 @@ UT_TEST_CASE( test1 )
   // loop through the elements of the mesh and print them out
   for (index_t k = 0; k < mesh.nb(); k++) {
 
-    // mesh.nv(k) returns the number of vertices for element k
+    // note: mesh.nv(k) returns the number of vertices for element k
     UT_ASSERT( mesh.nv(k) == number+1 );
 
     printf("pentatope %lu = (%lu,%lu,%lu,%lu,%lu)\n", k , mesh(k,0), mesh(k,1) , mesh(k,2), mesh(k,3), mesh(k,4) );
@@ -108,12 +110,13 @@ UT_TEST_CASE( test1 )
   }
 
   // extract the boundary facets by traversing the mesh neighbours and looking for null neighbours
+  std::vector<real_t> volume( dim , 0.0 );
+  real_t S = 0.0;
   for (index_t k = 0; k < mesh.nb(); k++) {
 
     for (coord_t j = 0; j < number+1; j++) {
 
       int n = mesh.neighbours()(k,j);
-      if (n >= 0) continue; // not a boundary tetrahedron
 
       // extract the facet
       std::vector<index_t> tet;
@@ -121,9 +124,6 @@ UT_TEST_CASE( test1 )
         if (i == j) continue;
         tet.push_back(mesh(k,i));
       }
-      print_inline(tet,"boundary tet: ");
-
-      std::vector<real_t> point( mesh.points()[tet[0]] , mesh.points()[tet[0]]+dim );
 
       // compute the normal
       std::vector<real_t> normal(dim);
@@ -134,14 +134,29 @@ UT_TEST_CASE( test1 )
       for (coord_t d = 0; d < dim; d++)
         normal[d] *= sign;
 
+      // compute the absolute value of the volume of the tetrahedron
+      std::vector<const real_t*> X(number);
+      for (coord_t i = 0; i < number; i++)
+        X[i] = mesh.points()[tet[i]];
+      real_t v = numerics::volume_nd( X , dim );
+
+      // add the contribution to the total volume
+      for (coord_t d = 0; d < dim; d++)
+        volume[d] += v * normal[d];
+
+      // only perform the following checks for boundary tetrahedra
+      if (n >= 0) continue; // not a boundary tetrahedron
+
+      // add the contribution to the boundary volume
+      S += v;
+
+      print_inline(tet,"boundary tet: ");
       print_inline(normal,"\t normal: ");
-      print_inline(point,"\t point: ");
 
       // the mesh is defined within [0,1]^4
       //  so normal vectors that point in -x should be at x = 0
       // and normal vectors that point in +x should be at x = 1
       // (the same idea for other dimensions as well)
-      const real_t tol = 1e-12;
       coord_t D;
       real_t  value = 0.0;
       if      (fabs(normal[0] + 1.0) < tol) D = 0, value = 0.0;
@@ -158,6 +173,38 @@ UT_TEST_CASE( test1 )
         UT_ASSERT_NEAR( mesh.points()[tet[i]][D] , value , tol );
     }
   }
+
+  // the total signed volume should be zero
+  for (coord_t d = 0; d < dim; d++)
+    UT_ASSERT_NEAR( volume[d] , 0.0 , tol );
+
+  // the boundary volume should be 8 (8 cubes of unit volume bound this tesseract domain)
+  printf("boundary volume = %g\n",S);
+  UT_ASSERT_NEAR( S , 8.0 , tol );
+
+
+  // demo of how to compute the elements attached to an edge (shell)
+  std::vector<index_t> shell;
+  for (index_t k = 0; k < nb_edges; k++) {
+
+    // edge endpoint vertices
+    index_t p = edges[2*k];
+    index_t q = edges[2*k+1];
+
+    shell.clear();
+    mesh.intersect( {p,q} , shell );
+    print_inline( shell , "elements attached to edge " + std::to_string(k) );
+  }
+
+  // demo of how to compute the elements attached to a vertex (ball)
+  std::vector<index_t> ball;
+  for (index_t k = 0; k < mesh.points().nb(); k++) {
+
+    ball.clear();
+    mesh.intersect( {k} , ball );
+    print_inline( ball , "elements attached to vertex " + std::to_string(k) );
+  }
+
 }
 UT_TEST_CASE_END( test1 )
 
