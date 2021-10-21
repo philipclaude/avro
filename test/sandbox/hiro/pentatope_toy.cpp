@@ -153,6 +153,11 @@ UT_TEST_CASE( test1 )
       print_inline(tet,"boundary tet: ");
       print_inline(normal,"\t normal: ");
 
+      // demo of how to compute the centroid of the tetrahedron
+      std::vector<real_t> centroid(dim,0.0);
+      numerics::centroid( tet.data() , tet.size() , mesh.points() , centroid );
+      print_inline(centroid,"\t centroid: ");
+
       // the mesh is defined within [0,1]^4
       //  so normal vectors that point in -x should be at x = 0
       // and normal vectors that point in +x should be at x = 1
