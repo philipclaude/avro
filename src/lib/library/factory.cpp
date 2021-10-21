@@ -245,7 +245,8 @@ get_mesh( const std::string& name , std::shared_ptr<TopologyBase>& ptopology , c
       }
     }
     else {
-      printf("unsupported element type %s\n",std::string(jm["type"]).c_str());
+      std::string s = jm["type"];
+      printf("unsupported element type %s\n",s.c_str());
       avro_implement;
     }
 
