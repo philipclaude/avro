@@ -238,7 +238,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 ) {
     len = std::pow(len,exponent_);
     f = (1. -len)*std::exp(-len);
 
-    for (coord_t d=0;d<dim;d++)
+    for (coord_t d = 0; d < dim; d++)
       F[d] += -f*u[d];
   }
 
@@ -254,8 +254,8 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 ) {
   real_t delta_p = numerics::distance( x0.data() , x.data() , dim );
   delta_ += delta_p;
 
-  if (delta_p<delta_min_) delta_min_ = delta_p;
-  if (delta_p>delta_max_) delta_max_ = delta_p;
+  if (delta_p < delta_min_) delta_min_ = delta_p;
+  if (delta_p > delta_max_) delta_max_ = delta_p;
 
   if (this->topology_.element().parameter()) {
 
@@ -298,7 +298,6 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 ) {
     }
     return true;
   } // if parameter space adaptation
-
 
   // check if the cavity needs to be enlarged
   if (this->curved_) this->enlarge_ = true;
@@ -416,7 +415,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 ) {
       Entity* parent = ep->parents(k);
       if (parent->number() != 2 || !parent->tessellatable())
         continue;
-        
+
       if (!visible_geometry(p, x.data() , params.data() ,parent)) {
 
         // revert the physical coordinates
