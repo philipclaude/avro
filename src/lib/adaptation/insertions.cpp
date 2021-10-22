@@ -295,7 +295,9 @@ Insert<type>::apply( const index_t e0 , const index_t e1 , real_t* x , real_t* u
   return true;
 }
 
+#if AVRO_MPI
 static index_t MAX_VALENCY[5] = { 1 , 3 , 20 , 50 , 350 };
+#endif
 
 template<typename type>
 void

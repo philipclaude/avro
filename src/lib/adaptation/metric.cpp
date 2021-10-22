@@ -191,7 +191,7 @@ template<typename type>
 real_t
 MetricField<type>::volume( const Topology<type>& t ) {
   real_t v = 0.;
-  for (index_t k=0;k<t.nb();k++) {
+  for (index_t k = 0; k < t.nb(); k++) {
     if (t.ghost(k)) continue;
     v += volume(t,k);
   }
@@ -203,7 +203,6 @@ real_t
 MetricField<type>::quality( const Topology<type>& topology , index_t k ) {
 	const index_t *V = topology(k);
 	const index_t NV = topology.nv(k);
-	const Points& points = topology.points();
 	const coord_t num = topology.number();
 	const type& element = topology.element();
 
@@ -214,7 +213,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k ) {
 	real_t d = attachment_[V[jmax]].sqdet();
 	real_t dmax = d;
 	real_t dmin = d;
-	for (coord_t j=1;j<NV;j++) {
+	for (coord_t j = 1; j < NV; j++) {
 		d = attachment_[V[j]].sqdet();
 		if (d>dmax) {
 			dmax = d;

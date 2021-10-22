@@ -88,7 +88,7 @@ ParticleSimulator::set_density() {
 
     real_t density = 1.0;
 
-    real_t x,y,z = 0.0;
+    real_t x,y = 0.0;
     x = diagram_->sites()[k][0];
     y = diagram_->sites()[k][1];
     //if (dimension_ > 2) z = position_[k*(dimension_)+2];
