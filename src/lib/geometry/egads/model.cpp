@@ -88,6 +88,19 @@ Model::Model( coord_t number ) :
   mine_    = true;
 }
 
+void
+Model::build() {
+  #if AVRO_NO_ESP == 0
+  std::vector<ego> children( nb_bodies() );
+  for (index_t k = 0; k < nb_bodies(); k++) {
+    children[k] = static_cast<EGADS::Body&>(body(k)).object();
+  }
+  EGADS_ENSURE_SUCCESS( EG_makeTopology( context_->get() , NULL , MODEL , NOMTYPE , NULL , children.size() , children.data() , NULL , &object_ ) );
+  #else
+  avro_assert_not_reached;
+  #endif
+}
+
 Entity*
 Model::find_entity( index_t id , int object_class ) const
 {

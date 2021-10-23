@@ -43,6 +43,8 @@ public:
 
   ego object() { return object_; }
 
+  void build();
+
   void print() const;
 
 private:
