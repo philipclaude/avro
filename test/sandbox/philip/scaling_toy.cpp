@@ -152,7 +152,7 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
   index_t n = topology.number();
   index_t nb_metric_rank = n*(n+1)/2;
 
-  index_t niter = 10;
+  index_t niter = 14;//10;
   for (index_t iter = 0; iter <= niter; iter++) {
 
     params.set("adapt iter",index_t(iter));
@@ -239,8 +239,8 @@ adapt( const F& metric_field , const std::string& mesh_name , const std::string&
 // which test case to run?
 #define CASE_SL 0
 #define CASE_CC 0
-#define CASE_BL 1
-#define CASE_SW 0
+#define CASE_BL 0
+#define CASE_SW 1
 
 UT_TEST_CASE( test1 )
 {

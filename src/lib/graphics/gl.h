@@ -155,7 +155,7 @@ inline void glViewport( int , int , int , int ) { avro_assert_not_reached; }
 
 class ShaderProgram {
 public:
-  ShaderProgram( const std::string& , bool , const std::vector<std::string> );
+  ShaderProgram( const std::string& , bool , const std::vector<std::string> ) {}
   void use() {}
   template<typename T> void setUniform( const std::string& , const T& ) { avro_assert_not_reached; }
 
