@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2021, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #ifndef AVRO_LIB_GRAPHICS_BSP_H_
 #define AVRO_LIB_GRAPHICS_BSP_H_
 
@@ -27,7 +36,7 @@ namespace graphics
 
 #define BSP_TOL 1e-7
 
-typedef struct {
+struct BSPPlane {
 
   vec3 normal;
   vec3 center;
@@ -57,7 +66,7 @@ typedef struct {
     //avro_assert_msg( d >= -BSP_TOL && d <= (1.0+BSP_TOL) , "d = %g" , d );
     return p0 + d*(p1 - p0);
   }
-} BSPPlane;
+};
 
 class BSPTriangle {
 

@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -19,14 +19,14 @@ namespace avro
 namespace EGADS
 {
 
-Object::Object( const Context& context , ego* object ) :
+Object::Object( const Context& context , ego object ) :
   Entity(0),
   body_(nullptr),
   context_(context),
   object_(object)
 {
   std::fill( data_.data , data_.data+4 , 0.0 );
-  EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
+  EGADS_ENSURE_SUCCESS( EG_getInfo( object_ , &data_.object_class , &data_.member_type ,
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
   tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
@@ -38,14 +38,14 @@ Object::Object( const Context& context , ego* object ) :
   name_ = utilities::object_class_name( object_class() ) + "-" + utilities::member_type_name(object_class(),member_type());
 }
 
-Object::Object( ego* object , EGADS::Body* body ) :
+Object::Object( ego object , EGADS::Body* body ) :
   Entity(0),
   body_(body),
   context_(body->context()),
   object_(object)
 {
   std::fill( data_.data , data_.data+4 , 0.0 );
-  EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
+  EGADS_ENSURE_SUCCESS( EG_getInfo( object_ , &data_.object_class , &data_.member_type ,
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
   tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
@@ -53,7 +53,7 @@ Object::Object( ego* object , EGADS::Body* body ) :
   sense_required_ = false;
   egads_ = true;
 
-  identifier_ = EG_indexBodyTopo( body_->object() , *object_ );
+  identifier_ = EG_indexBodyTopo( body_->object() , object_ );
 
   if (data_.member_type == SREVERSE) sign_ = -1;
 
@@ -68,11 +68,11 @@ Object::Object( const Context& context ) :
 {}
 
 void
-Object::construct( ego* object )
+Object::construct( ego object )
 {
   set_object(object);
   std::fill( data_.data , data_.data+4 , 0.0 );
-  EGADS_ENSURE_SUCCESS( EG_getInfo( *object_ , &data_.object_class , &data_.member_type ,
+  EGADS_ENSURE_SUCCESS( EG_getInfo( object_ , &data_.object_class , &data_.member_type ,
                                     &data_.reference , &data_.previous , &data_.next ) );
   number_ = EGADS::utilities::topological_number(data_.object_class,data_.member_type);
   tessellatable_ = EGADS::utilities::object_tessellatable(data_.object_class,data_.member_type);
@@ -85,41 +85,40 @@ Object::construct( ego* object )
 }
 
 void
-Object::set_object( ego* object )
-{
+Object::set_object( ego object ) {
   object_ = object;
 }
 
-ego*
-Object::object()
-{
+ego
+Object::object() {
   return object_;
 }
 
-ego*
-Object::object() const
-{
+ego
+Object::object() const {
   return object_;
 }
 
 void
-Object::delete_object()
-{
-  EGADS_ENSURE_SUCCESS( EG_deleteObject(*object_) );
+Object::delete_object() {
+  EGADS_ENSURE_SUCCESS( EG_deleteObject(object_) );
 }
 
 ego
-Object::egchild( index_t k ) const
-{
+Object::egchild( index_t k ) const {
   return data_.children[k];
 }
 
 void
-Object::build_hierarchy()
-{
-  EG_getTopology( *object_ , &data_.reference , &data_.object_class  , &data_.member_type ,
+Object::build() {
+  EG_getTopology( object_ , &data_.reference , &data_.object_class  , &data_.member_type ,
                   data_.data , &data_.nb_children , &data_.children , &data_.senses );
+}
 
+void
+Object::build_hierarchy() {
+
+  build();
   for (int k=0;k<data_.nb_children;k++)
   {
     // get the index of this child in the body's full list of children
@@ -128,7 +127,7 @@ Object::build_hierarchy()
     if (entity == nullptr)
     {
       // the body was not aware of this entity, create a new one and add it to the body
-      entity = std::make_shared<EGADS::Object>( &data_.children[k] , body_ );
+      entity = std::make_shared<EGADS::Object>( data_.children[k] , body_ );
 
       // add the new entity to the body's full list
       body_->add_child( data_.children[k] , entity );
@@ -176,7 +175,7 @@ Object::inverse( std::vector<real_t>& x , std::vector<real_t>& u ) const
   avro_assert( x.size()==3 );
 
   real_t result[3];
-  EGADS_ENSURE_SUCCESS( EG_invEvaluate(*object_,x.data(),u.data(),result) );
+  EGADS_ENSURE_SUCCESS( EG_invEvaluate(object_,x.data(),u.data(),result) );
   for (coord_t d=0;d<3;d++)
     x[d] = result[d];
 }
@@ -198,7 +197,7 @@ Object::inverse_guess( std::vector<real_t>& x , std::vector<real_t>& u ) const
   avro_assert( x.size()==3 );
 
   real_t result[3];
-  EGADS_ENSURE_SUCCESS( EG_invEvaluateGuess(*object_,x.data(),u.data(),result) );
+  EGADS_ENSURE_SUCCESS( EG_invEvaluateGuess(object_,x.data(),u.data(),result) );
   for (coord_t d=0;d<3;d++)
     x[d] = result[d];
 }
@@ -215,7 +214,7 @@ Object::evaluate( const std::vector<real_t>& u , std::vector<real_t>& x ) const
   }
 
   real_t data[18];
-  EGADS_ENSURE_SUCCESS( EG_evaluate( *object_ , u.data() , data ) );
+  EGADS_ENSURE_SUCCESS( EG_evaluate( object_ , u.data() , data ) );
 
   for (coord_t d=0;d<3;d++)
     x[d] = data[d];

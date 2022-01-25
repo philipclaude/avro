@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -27,7 +27,7 @@ UT_TEST_CASE(test1)
   ego obj = nullptr;
 
   std::shared_ptr<Object_t> prim;
-  UT_CATCH_EXCEPTION( prim = std::make_shared<Object_t>(context,&obj) );
+  UT_CATCH_EXCEPTION( prim = std::make_shared<Object_t>(context,obj) );
 
   std::shared_ptr<EGADS::Body> body_ptr;
   body_ptr = std::make_shared<EGADS::Body>( context , obj );

@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -54,6 +54,7 @@ public:
 
   const Context& context() const { return context_; }
 
+  void build();
   void build_hierarchy();
 
   Entity_ptr child( index_t k );

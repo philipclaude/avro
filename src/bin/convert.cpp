@@ -7,6 +7,9 @@
 
 #include "graphics/application.h"
 
+#include "library/factory.h"
+#include "library/meshb.h"
+
 #include <stdio.h>
 
 #include <egads.h>
@@ -43,28 +46,45 @@ convert( int nb_input , const char** inputs )
 
   printf("ext's are %s -> %s\n",ext_input.c_str(),ext_output.c_str());
 
-  if (ext_input == "egads" && ext_output == "legads")
-  {
+  if (ext_output == "legads") {
+
     // convert to EGADS lite
-    #ifndef AVRO_NO_ESP
+    #if AVRO_NO_ESP == 0
+    #if 0
     EGADS::Context context;
     EGADS::Model model(&context,filename_input);
+
+    #else
+
+    // get the input geometry
+    bool curved;
+    std::string geometryname( filename_input );
+    std::shared_ptr<Model> pmodel;
+    pmodel = library::get_geometry( geometryname , curved );
+    EGADS::Model& model = *static_cast<EGADS::Model*>(pmodel.get());
+
+    #endif
 
     size_t nbytes;
     char *stream;
     EG_exportModel( model.object() , &nbytes , &stream );
 
-    FILE *fp;
-    fp = fopen(filename_output.c_str(),"wb");
-    avro_assert( fp!=nullptr );
+    FILE *fp = fopen(filename_output.c_str(),"wb");
+    avro_assert( fp != nullptr );
     fwrite(stream,sizeof(char),nbytes,fp);
     fclose(fp);
     EG_free(stream);
     #else
-    printf("cannot convert .egads to .legads without full ESP");
+    printf("cannot convert EGADS geometry to .legads without full ESP\n");
     #endif
   }
-
+  else if ((ext_input == "mesh" || ext_input == "meshb") && (ext_output == "mesh" || ext_output == "meshb")) {
+    library::meshb meshb_in(filename_input);
+    meshb_in.write(meshb_in,filename_output,false);
+  }
+  else {
+    avro_assert_not_reached;
+  }
 
   return 0;
 }

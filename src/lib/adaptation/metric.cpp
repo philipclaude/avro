@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -191,7 +191,7 @@ template<typename type>
 real_t
 MetricField<type>::volume( const Topology<type>& t ) {
   real_t v = 0.;
-  for (index_t k=0;k<t.nb();k++) {
+  for (index_t k = 0; k < t.nb(); k++) {
     if (t.ghost(k)) continue;
     v += volume(t,k);
   }
@@ -203,8 +203,6 @@ real_t
 MetricField<type>::quality( const Topology<type>& topology , index_t k ) {
 	const index_t *V = topology(k);
 	const index_t NV = topology.nv(k);
-	const Points& points = topology.points();
-	const coord_t dim = points.dim();
 	const coord_t num = topology.number();
 	const type& element = topology.element();
 
@@ -215,7 +213,7 @@ MetricField<type>::quality( const Topology<type>& topology , index_t k ) {
 	real_t d = attachment_[V[jmax]].sqdet();
 	real_t dmax = d;
 	real_t dmin = d;
-	for (coord_t j=1;j<NV;j++) {
+	for (coord_t j = 1; j < NV; j++) {
 		d = attachment_[V[j]].sqdet();
 		if (d>dmax) {
 			dmax = d;
@@ -447,7 +445,47 @@ MetricAttachment::MetricAttachment( Points& points , const std::vector<symd<real
 
 void
 MetricAttachment::from_solb( const std::string& filename ) {
-	avro_implement;
+
+	// open the file
+	int dim,status;
+	int nb_sol,numberType,solSize , TypTab[GmfMaxTyp];
+	float fvalues[GmfMaxTyp];
+	real_t dvalues[GmfMaxTyp];
+	int version; // 2 for 32-bit int, 64-bit real
+	int64_t fid;
+
+	fid = GmfOpenMesh(filename.c_str(),GmfRead,&version,&dim);
+	avro_assert_msg( fid , "could not open sol file %s ",filename.c_str() );
+
+	printf("version = %d, dimension = %d\n",version,dim);
+
+	// create a field whether this is attached at points or cells
+
+	nb_sol = GmfStatKwd( fid , GmfSolAtVertices , &numberType , &solSize , TypTab );
+	printf("nb_sol = %d, numberType = %d, solSize = %d\n",nb_sol,numberType,solSize);
+
+	avro_assert( nb_sol == int(this->points_.nb()) );
+	avro_assert( solSize == int(dim*(dim+1)/2) );
+
+	avro_assert( GmfGotoKwd( fid , GmfSolAtVertices ) > 0 );
+	for (int k = 0; k < nb_sol; k++) {
+
+		// read the metric
+		if (version == 1) {
+			status = GmfGetLin( fid , GmfSolAtVertices , fvalues );
+			for (index_t j=0;j<6;j++)
+				dvalues[j] = real_t(fvalues[j]);
+		}
+		else
+			status = GmfGetLin( fid , GmfSolAtVertices , dvalues );
+
+		avro_assert( status==1 );
+
+		std::vector<real_t> data(dvalues,dvalues+solSize);
+		symd<real_t> m(data);
+		this->add( m , 0 );
+	}
+
 }
 
 template<typename type>
@@ -639,7 +677,6 @@ MetricAttachment::from_solb( const std::string& filename ) {
 	printf("version = %d, dimension = %d\n",version,dim);
 
 	// create a field whether this is attached at points or cells
-	avro_implement;
 
 	nb_sol = GmfStatKwd( fid , GmfSolAtVertices , &numberType , &solSize , TypTab );
 	printf("nb_sol = %d, numberType = %d, solSize = %d\n",nb_sol,numberType,solSize);

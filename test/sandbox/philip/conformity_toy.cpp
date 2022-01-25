@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2021, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "adaptation/adapt.h"
@@ -52,9 +61,9 @@ UT_TEST_CASE( test1 )
   mesh_name = root + "/jobs/adapt/results/sw-p24/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
   //metric_name = "RotatingBL-4d";
 
-  //mesh_name = root + "/Codes/geocl/avro/build/release_mpi/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
+  //mesh_name = root + "/Codes/imaginelab/avro/build/release_mpi/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
   std::string base = "/home/pcaplan/jobs/adapt/results/sw-p24/";
-  //base = root + "/Codes/geocl/avro/build/release_mpi/";
+  //base = root + "/Codes/imaginelab/avro/build/release_mpi/";
   //mesh_name = "/home/pcaplan/jobs/adapt/sw/mesh-adapt" + std::to_string(iter) + "-pass1.avro";
   metric_name = "discrete";
 

@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -34,7 +34,7 @@ Model::Model( Context* context , const std::string& filename , bool split  ) :
   mine_(false)
 {
   int flag = (split) ? 1 : 2;
-  int status = EG_loadModel( *context_->get() , flag , filename.c_str() , &object_ );
+  int status = EG_loadModel( context_->get() , flag , filename.c_str() , &object_ );
   avro_assert( status==EGADS_SUCCESS );
 
   // get all bodies
@@ -61,7 +61,7 @@ Model::Model( const std::string& filename , bool split  ) :
   mine_    = true;
 
   int flag = (split) ? 1 : 2;
-  int status = EG_loadModel( *context_->get() , flag , filename.c_str() , &object_ );
+  int status = EG_loadModel( context_->get() , flag , filename.c_str() , &object_ );
   avro_assert( status==EGADS_SUCCESS );
 
   // get all bodies
@@ -86,6 +86,19 @@ Model::Model( coord_t number ) :
 {
   context_ = new Context;
   mine_    = true;
+}
+
+void
+Model::build() {
+  #if AVRO_NO_ESP == 0
+  std::vector<ego> children( nb_bodies() );
+  for (index_t k = 0; k < nb_bodies(); k++) {
+    children[k] = static_cast<EGADS::Body&>(body(k)).object();
+  }
+  EGADS_ENSURE_SUCCESS( EG_makeTopology( context_->get() , NULL , MODEL , NOMTYPE , NULL , children.size() , children.data() , NULL , &object_ ) );
+  #else
+  avro_assert_not_reached;
+  #endif
 }
 
 Entity*

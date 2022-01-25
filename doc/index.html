@@ -31,7 +31,7 @@
       <div>
         <div class="sidebar-heading">
           <img src="fig/avro.png" width="25%" display="block" margin="auto"/>
-          &nbsp;&nbsp;<b>geocl</b>
+          &nbsp;&nbsp;<b>avro</b>
         </div>
       </div>
       <div style="width:100%" class="list-group list-group-flush">
@@ -40,7 +40,7 @@
         <a href="usage.html" class="list-group-item list-group-item-action bg-light">usage</a>
         <a href="index.html#developing" class="list-group-item list-group-item-action bg-light">developing</a>
         <a href="index.html#testing" class="list-group-item list-group-item-action bg-light">testing</a>
-        <!--<a href="coverage_results" class="list-group-item list-group-item-action bg-light">coverage</a>-->
+        <a href="coverage_results" class="list-group-item list-group-item-action bg-light">coverage</a>
       </div>
     </div>
     <!-- /#sidebar-wrapper -->
@@ -53,16 +53,16 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
             <li class="nav-item">
-              <a class="nav-link" href="http:/geocl.gitlab.io/geocl">introduction</a>
+              <a class="nav-link" href="">introduction</a>
             </li>
             <li class="nav-item active">
-              <a class="nav-link" href="http://geocl.gitlab.io/avro">avro<span class="sr-only">(current)</span></a>
+              <a class="nav-link" href="https://philipclaude.gitlab.io/avro/">avro<span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="http://wazowski.middlebury.edu/library">library</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="http://gitlab.com/geocl">gitlab</a>
+              <a class="nav-link" href="http://gitlab.com/imaginelab">gitlab</a>
             </li>
           </ul>
         </div>
@@ -79,7 +79,7 @@
           <li>dimension-independent calculation of Voronoi diagrams (with exact geoemtric predicates up to 4d).</li>
         </ol>
         <p>
-          note: this is the <code>avro-2.0</code> version, which is a rewrite of the <a href="https://philipclaude.gitlab.io/avro/">original version</a> written by Philip for his PhD.
+          note: this is the <code>avro-2.0</code> version, which is a rewrite of the <a href="https://philipclaude.gitlab.io/avro-version1/">original version</a> written by Philip for his PhD.
         </p>
 
         <hr>
@@ -89,7 +89,7 @@
           These steps will guide you through downloading a fresh copy of <code>avro</code>, installing dependencies, and compiling the source code.
         </p>
         <p>
-          At the very least, <code>avro</code> depends on having the following on your computer:
+          <code>avro</code> depends on having the following on your computer (some may be omitted if you don't want certain features):
           <ul>
             <li> <code>git</code></li>
             <li><code>CMake</code> (2.8.8) for generating Makefiles and targets when compiling</li>
@@ -98,6 +98,7 @@
             <li><code>nlopt</code> 2.4.2+ for solving optimization problems</li>
             <li><code>OpenGL 3+</code></li>
             <li><code>LAPACK</code> for linear algebra</code></li>
+            <li><code>Eigen</code> for the Newton-based optimal transport solver</li>
           </ul>
         </p>
         <p>
@@ -116,14 +117,14 @@
         <p>Install dependencies:</p>
         <pre class="prettyprint lang-bsh" style="color: black">
 
-          $ brew install git cmake nlopt lapack
+          $ brew install git cmake nlopt lapack eigen
         </pre>
 
         <h4 class="mt-4">dependencies on Linux</h4>
         <p>Install dependencies:</p>
         <pre class="prettyprint lang-bsh" style="color: black">
 
-          $ sudo apt-get install git cmake cmake-curses-gui libnlopt-dev libblas-dev liblapack-dev xorg-dev
+          $ sudo apt-get install git cmake cmake-curses-gui libnlopt-dev libblas-dev liblapack-dev libeigen3-dev xorg-dev
         </pre>
 
         <h4 class="mt-4"><code>EngineeringSketchPad</code> (both Linux and OS X)</h4>
@@ -170,7 +171,7 @@
         <pre class="prettyprint lang-bsh" style="color: black">
 
           $ cd ~/Codes
-          $ git clone https://gitlab.com/mach-II/avro.git
+          $ git clone --recursive https://gitlab.com/philipclaude/avro.git
           $ git checkout [your branch name]
         </pre>
         ... and enter your GitLab username and password.
@@ -178,7 +179,6 @@
         This will switch you over to your branch - note that pushing to the main branch is not allowed.
 
         <p>
-        Navigate to the main <code>avro</code> directory, and create your <code>build</code> directory:
         </p>
         <pre class="prettyprint lang-bsh" style="color: black">
 
@@ -268,7 +268,7 @@
                   This directory directly parallels the structure of the <code>src/lib</code> directory.</li>
                 </li>
                 <li><code>library</code>: should only contain a few mesh and geometry files for simple testing.
-                  In general, meshes and geometries should be stored in our <a href="https://mach-ii.gitlab.io/mach-ii/#library">library</a>.</li>
+                  In general, meshes and geometries should be stored in our <a href="">library</a>.</li>
                 <li><code>regression</code>: contains nightly regression tests (currently the <a href="https://github.com/UGAWG">UGAWG</a> benchmark cases).</li>
                 <li><code>sandbox</code>: is a place where you can play with <code>avro</code>! Any tests written here will <b>not</b> be included in the <code>unit</code> target (so the pipelines will not fail).</li>
                 <li><code>third_party</code>: contains unit tests for some of the third-party libraries, notably for <code>tinymat</code>.</li>

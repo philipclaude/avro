@@ -55,7 +55,7 @@ private:
       const PowerDiagram& diagram = particles.diagram();
 
       for (index_t k = 0; k < diagram.nb(); k++) {
-        index_t p = diagram.polytope2site()[k];
+        //index_t p = diagram.polytope2site()[k];
         this->value(k) = particles.density()[k];
       }
     }

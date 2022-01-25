@@ -1,29 +1,25 @@
-**avro**: library for unstructured mesh adaptation
-(c) Philip Claude Caplan, 2017-2020
+**avro**
+
+(c) Philip Claude Caplan, 2017-2021
 
 <img width="60px" src="doc/fig/avro.svg"/>
 
-
-[![build status](https://gitlab.com/mach-II/avro/badges/master/pipeline.svg)](https://gitlab.com/mach-II/avro/badges/master/pipeline.svg)
-
-[![coverage](https://gitlab.com/mach-II/avro/badges/master/coverage.svg)](https://gitlab.com/mach-II/avro/badges/master/coverage.svg)
+[![build status](https://gitlab.com/philipclaude/avro/badges/main/pipeline.svg)](https://gitlab.com/philipclaude/avro/badges/main/pipeline.svg)
 
 **avro** is an unstructured mesh adaptation library with the following capabilities:
 
-* dimension-independent mesh adaptation given a (1) mesh, (2) geometry description and (3) a metric field
-* dimension-independent calculation of restricted Voronoi diagrams given (1) a set of sites and (2) a background mesh
-* visualization of 2d, 3d and 4d meshes via (1) OpenGL and (2) websockets and WebGL
+* parallel mesh adaptation in 2d, 3d and 4d, given a (1) mesh, (2) geometry description and (3) a metric field,
+* dimension-independent calculation of restricted Voronoi diagrams given (1) a set of sites and (2) a background mesh,
+* dimension-independent computation of a semi-discrete optimal transport map using a Newton-based method,
+* visualization of high-order solution fields on curved 2d, 3d and linear 4d meshes.
 
-current/future developments include:
-* parallel mesh adaptation using MPI
-* optimal mesh to minimize the interpolation error in representing a function
-* optimal mesh for representing a geometry (both static and time-dependent)
-* dimension-independent calculation of quadrature rules using the centroidal Voronoi tessellation
-* calculation of geometry-conforming Voronoi diagrams
-* Python wrapper with an interface to blender
-* curvilinear mesh adaptation
+documentation: https://philipclaude.gitlab.io/avro/
+coverage: https://philipclaude.gitlab.io/avro/coverage_results/
+
+quickstart (after installing dependencies described in documentation):
 
 ```
+git clone --recursive https://gitlab.com/philipclaude/avro.git
 cd avro
 mkdir build
 mkdir build/release
@@ -31,6 +27,8 @@ cd build/release
 cmake ../../
 make avro
 ```
+
+To compile avro without any external dependencies (some functionalities will be disabled), set the cmake variable avro_LITE = true.
 
 The libraries (**libavro.so** and **libavro.a** ) will be in **avro/build/release/lib**.
 
@@ -46,16 +44,12 @@ Example 2: UGAWG Cube-Cylinder Polar 2 case
 $ avro -adapt ../data/cube-cylinder.mesh ../data/cube-cylinder.egads Polar2 ../tmp/ccp2.mesh
 ```
 
-Example 3: mesh adaptation from a metric in a .solb file
+Example 3: visualization of a mesh
 ```
-avro -adapt input.mesh input.egads input.sol tmp/output.mesh
-```
-
-Example 4: visualization of a mesh (here, a 4d mesh from the Tesseract Wave case)
-```
-avro -plot wave.json
+avro -plot ../data/cube-cylinder.mesh
 ```
 
-Notes:
-* in ${EngSketchPad}/wvClient/WebViewer/wv-render.js, set 'preserveDrawingBuffer: true' so the canvas can be saved to png using toDataURL
-* for linux: install xorg-dev if building the OpenGL visualizer
+For any bugs or feature requests, please submit an issue in this GitLab project.
+
+If you use **avro**, I'd really like to hear from you!
+Please send me an email at pcaplan@middlebury.edu.

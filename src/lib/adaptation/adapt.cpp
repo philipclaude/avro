@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -150,7 +150,7 @@ call( Topology<type>& topology , Topology<type>& mesh_topology ,
         real_t d = numerics::distance2(x0,x_eval.data(),mesh_topology.points().dim() );
         real_t tol=0;
         EGADS::Object* e0 = (EGADS::Object*)e;
-        EGADS_ENSURE_SUCCESS( EG_getTolerance( *e0->object(), &tol ) );
+        EGADS_ENSURE_SUCCESS( EG_getTolerance( e0->object(), &tol ) );
 
         if (d>tol)
         {

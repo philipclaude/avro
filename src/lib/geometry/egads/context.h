@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -22,16 +22,16 @@ class Context
 {
 public:
   Context();
-  Context( ego* context );
+  Context( ego context );
   ~Context();
 
-  ego* get();
-  const ego* get() const;
+  ego get();
+  ego get() const;
 
   void print() const;
 
 private:
-  ego* context_;
+  ego  context_;
   bool mine_;
 };
 

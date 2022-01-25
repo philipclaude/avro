@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -92,9 +92,9 @@ Smooth<type>::Smooth( Topology<type>& _topology ) :
 
 template<typename type>
 bool
-Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity* ep )
-{
-  avro_assert( ep->number()==2 );
+Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity* ep ) {
+
+  avro_assert( ep->number() == 2 );
   if (!this->curved_) return true;
   if (ep->interior()) return true;
 
@@ -104,21 +104,19 @@ Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity*
   // extract the geometry cavity
   this->geometry_cavity_.set_entity(ep);
   this->extract_geometry( ep , {p} );
-  avro_assert( this->geometry_topology_.nb()>0 );
+  avro_assert( this->geometry_topology_.nb() > 0 );
   //avro_assert_msg( this->geometry_topology_.nb_real()==this->nb_ghost() , "|g| = %lu, |c| = %lu\n" , this->geometry_topology_.nb_real() , this->nb_ghost() );
 
-  for (coord_t d=0;d<2;d++)
+  for (coord_t d = 0; d < 2; d++)
     this->u_[this->v2u_[p]][d] = params[d];
 
   // the following assertion won't hold when p is on an Edge
-  if (this->topology_.points().entity(p)->number()==2 && !this->geometry_topology_.closed())
-  {
+  if (this->topology_.points().entity(p)->number()==2 && !this->geometry_topology_.closed()) {
     avro_assert_msg( this->geometry_topology_.nb()==this->nb_ghost() ,
                       "|G| = %lu, |smooth ghosts| = %lu" , this->geometry_topology_.nb() , this->nb_ghost() );
   }
 
-  if (this->topology_.element().parameter())
-  {
+  if (this->topology_.element().parameter()) {
     this->convert_to_parameter(ep);
     this->geometry_cavity_.sign() = 1; // volume calculation is already adjusted for the sign
   }
@@ -126,22 +124,19 @@ Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity*
   // check for visibility of the new coordinates
   nb_parameter_tests_++;
   bool accept = this->geometry_cavity_.compute( this->v2u_[p] , params , this->S_ );
-  if (!accept)
-  {
+  if (!accept) {
     nb_parameter_rejections_++;
     return false;
   }
 
-  if (this->topology_.element().parameter())
-  {
+  if (this->topology_.element().parameter()) {
     this->convert_to_physical();
   }
 
   // reset the geometry checker to this face (which also computes the normals at the vertices of the geometry topology)
   this->geometry_inspector_.reset( ep );
   int s = this->geometry_inspector_.signof( this->geometry_cavity_ );
-  if (s<0)
-  {
+  if (s < 0) {
     return false;
   }
 
@@ -153,8 +148,8 @@ Smooth<type>::visible_geometry( index_t p , real_t* x , real_t* params , Entity*
 
 template<typename type>
 bool
-Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
-{
+Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 ) {
+
   if (this->topology_.points().fixed(p)) return false;
 
   // compute the cavity around p
@@ -178,29 +173,24 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   std::set<index_t> Ns;
   index_t q;
   Entity* ep = this->topology_.points().entity(p);
-  if (ep!=NULL && ep->number()==0) return false; // don't move points on Nodes!
-  if (this->topology_.element().parameter() && ep!=NULL && ep->number()!=2) return false;
+  if (ep != NULL && ep->number() == 0) return false; // don't move points on Nodes!
+  if (this->topology_.element().parameter() && ep != NULL && ep->number() != 2) return false;
   Entity* eq;
-  for (index_t k=0;k<this->C_.size();k++)
-  {
-    for (index_t j=0;j<this->topology_.nv(this->C_[k]);j++)
-    {
+  for (index_t k = 0; k < this->C_.size(); k++) {
+    for (index_t j = 0; j < this->topology_.nv(this->C_[k]); j++) {
       q = this->topology_(this->C_[k],j);
-      if (q==p) continue;
-      if (q<this->topology_.points().nb_ghost()) continue;
+      if (q == p) continue;
+      if (q < this->topology_.points().nb_ghost()) continue;
       eq = this->topology_.points().entity(q);
-      if (ep!=NULL)
-      {
+      if (ep != NULL) {
         // for geometry points, the smoothing can only be affected by
         // geometry points which are equal to or higher in the hierarchy
         // than the geometry of the smoothed vertex
         // todo: use "geometryEdge"
-        if (eq==NULL) continue;
-        if (ep!=eq)
-        {
+        if (eq == NULL) continue;
+        if (ep != eq) {
           // the entities are different
-          if (!ep->above(eq))
-          {
+          if (!ep->above(eq)) {
             // ep must at least be higher in the topological hierarchy
             continue; // skip vertex q
           }
@@ -210,8 +200,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     }
   }
 
-  if (Ns.size()==0)
-  {
+  if (Ns.size() == 0) {
     // no points were found to do the smoothing
     // this really should not happen but just in case
     nb_zero_valency_++;
@@ -220,7 +209,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 
   // copy the set of points into the vector of points N
   std::vector<index_t> N;
-  for (std::set<index_t>::iterator it=Ns.begin();it!=Ns.end();++it)
+  for (std::set<index_t>::iterator it = Ns.begin(); it != Ns.end(); ++it)
     N.push_back(*it);
   Ntot_ += N.size();
 
@@ -228,8 +217,8 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   std::vector<real_t> lens0;
   real_t len;
   real_t f;
-  for (index_t k=0;k<N.size();k++)
-  {
+  for (index_t k = 0; k < N.size(); k++) {
+
     // compute the metric length
     len = metric.length(this->topology_.points(),p,N[k]);
     lens0.push_back(len);
@@ -249,84 +238,81 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     len = std::pow(len,exponent_);
     f = (1. -len)*std::exp(-len);
 
-    for (coord_t d=0;d<dim;d++)
+    for (coord_t d = 0; d < dim; d++)
       F[d] += -f*u[d];
   }
 
-  for (coord_t d=0;d<dim;d++)
+  for (coord_t d = 0; d < dim; d++)
     objective_ += std::pow( F[d] , 2. );
 
   // compute the new position of the vertex
   real_t omega = 0.2; // relaxation factor
-  for (index_t d=0;d<dim;d++)
-  {
+  for (index_t d = 0; d < dim; d++) {
     x0[d] = this->topology_.points()[p][d];
     x[d]  = this->topology_.points()[p][d] +omega*F[d];
   }
   real_t delta_p = numerics::distance( x0.data() , x.data() , dim );
   delta_ += delta_p;
 
-  if (delta_p<delta_min_) delta_min_ = delta_p;
-  if (delta_p>delta_max_) delta_max_ = delta_p;
+  if (delta_p < delta_min_) delta_min_ = delta_p;
+  if (delta_p > delta_max_) delta_max_ = delta_p;
 
-  if (this->topology_.element().parameter())
-  {
+  if (this->topology_.element().parameter()) {
+
     // skip smoothing along geometry Edges for now
-    avro_assert( ep->number()==2 );
+    avro_assert( ep->number() == 2 );
 
     // assign the cavity elements so we can extract the surface cavity
     this->Cavity<type>::clear();
     this->set_entity(ep);
-    for (index_t j=0;j<this->C_.size();j++)
+    for (index_t j = 0; j < this->C_.size(); j++)
       this->add_cavity( this->C_[j] );
 
     // assert the original point is visible
-    if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
-    {
+    if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep )) {
       printf("original vertex %lu not visible!\n",p);
       avro_assert_not_reached;
     }
 
     // save the original parameter coordinates
-    for (index_t d=0;d<udim;d++)
+    for (index_t d = 0; d < udim; d++)
       params0[d] = this->topology_.points().u(p,d);
 
     // update the parameter space and physical coordinates
-    for (coord_t d=0;d<udim;d++)
+    for (coord_t d = 0; d < udim; d++)
       this->topology_.points().u(p)[d] += omega*F[d];
     this->convert_to_physical({p});
 
-    if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep ))
-    {
+    if (!visible_geometry( p , this->topology_.points()[p] , this->topology_.points().u(p) , ep )) {
+
       // revert the physical coordinates
-      for (index_t d=0;d<dim;d++)
+      for (index_t d = 0; d < dim; d++)
         this->topology_.points()[p][d] = x0[d];
 
       // revert the parameter space coordinates
-      for (coord_t d=0;d<udim;d++)
+      for (coord_t d = 0; d < udim; d++)
         this->topology_.points().u(p,d) = params0[d];
 
       // signal the smoothing was not applied
       return false;
     }
     return true;
-  }
-
+  } // if parameter space adaptation
 
   // check if the cavity needs to be enlarged
   if (this->curved_) this->enlarge_ = true;
   else this->enlarge_ = false;
 
-  if (ep != nullptr)
-  {
-    for (index_t d=0;d<udim;d++)
+  if (ep != nullptr) {
+
+    for (index_t d = 0; d < udim; d++)
       params0[d] = params[d] = this->topology_.points().u(p,d);
 
     // use the previous parameter value as the initial guess of the projection
     if (!this->curved_)
       ep->inverse(x,params);
-    else
-    {
+    else {
+
       ep->inverse_guess(x,params);
 
       // check the re-evaluated parameter coordinates are close to the new x coordinates
@@ -346,8 +332,7 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     if (this->curved_) {
       std::vector<index_t> C0 = this->C_;
       this->find_geometry( x.data() , this->C_ );
-      if (this->C_.size()!=C0.size())
-      {
+      if (this->C_.size() != C0.size()) {
         nb_enlarged_rejections_++;
         return false;
       }
@@ -355,10 +340,8 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
       // there are more efficient ways of doing this but this is okay for now...
       std::sort( this->C_.begin() , this->C_.end() );
       std::sort( C0.begin() , C0.end() );
-      for (index_t j=0;j<C0.size();j++)
-      {
-        if (this->C_[j]!=C0[j])
-        {
+      for (index_t j = 0; j < C0.size(); j++) {
+        if (this->C_[j] != C0[j]) {
           nb_enlarged_rejections_++;
           return false;
         }
@@ -370,40 +353,36 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
 
   this->enlarge_ = false;
   bool accept = this->compute( p , x.data() , this->C_ );
-  if (this->nb_removed_nodes()>0)
-  {
+  if (this->nb_removed_nodes() > 0) {
     nb_removed_rejections_++;
     return false;
   }
-  if (!accept)
-  {
+  if (!accept) {
     // the point was not visible within the cavity
     nb_visibility_rejections_++;
     return false;
   }
 
   // apply the physical coordinates
-  for (coord_t d=0;d<dim;d++)
+  for (coord_t d = 0; d < dim; d++)
     this->topology_.points()[p][d] = x[d];
 
   // apply the parameter space coordinates if necessary
-  if (ep!=NULL)
-  {
-    for (coord_t d=0;d<udim;d++)
+  if (ep != NULL) {
+    for (coord_t d = 0; d < udim; d++)
       this->topology_.points().u(p,d) = params[d];
   }
 
   // check if all produce elements have a positive determinant of implied metric
-  if (!this->positive_implied_metrics())
-  {
+  if (!this->positive_implied_metrics()) {
     nb_implied_metric_rejections_++;
 
     // revert the physical coordinates
-    for (index_t d=0;d<dim;d++)
+    for (index_t d = 0; d < dim; d++)
       this->topology_.points()[p][d] = x0[d];
 
     // revert the parameter space coordinates
-    for (coord_t d=0;d<udim;d++)
+    for (coord_t d = 0; d < udim; d++)
       this->topology_.points().u(p,d) = params0[d];
 
     // signal the smoothing swas not applied
@@ -411,16 +390,16 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   }
 
   // check if the point is visible on the cavity boundary
-  if (ep!=NULL && ep->number()==2 && this->curved_)
-  {
-    if (!visible_geometry( p , x.data(), params.data() , ep ))
-    {
+  if (ep != NULL && this->topology_.number() == 3 && ep->number() == 2 && this->curved_) {
+
+    if (!visible_geometry( p , x.data(), params.data() , ep )) {
+
       // revert the physical coordinates
-      for (index_t d=0;d<dim;d++)
+      for (index_t d = 0; d < dim; d++)
         this->topology_.points()[p][d] = x0[d];
 
       // revert the parameter space coordinates
-      for (coord_t d=0;d<udim;d++)
+      for (coord_t d = 0; d < udim; d++)
         this->topology_.points().u(p,d) = params0[d];
 
       // signal the smoothing was not applied
@@ -428,22 +407,23 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
     }
   }
 
-  if (ep!=NULL && this->topology_.number()==3 && ep->number()==1 && this->curved_)
-  {
+  if (ep != NULL && this->topology_.number() == 3 && ep->number() == 1 && this->curved_) {
+
     // we need to check for visibility on all Faces that parent this Edge
-    for (index_t k=0;k<ep->nb_parents();k++)
-    {
+    for (index_t k = 0; k < ep->nb_parents(); k++) {
+
       Entity* parent = ep->parents(k);
-      if (parent->number()!=2 || !parent->tessellatable())
+      if (parent->number() != 2 || !parent->tessellatable())
         continue;
-      if (!visible_geometry(p, x.data() , params.data() ,parent))
-      {
+
+      if (!visible_geometry(p, x.data() , params.data() ,parent)) {
+
         // revert the physical coordinates
-        for (index_t d=0;d<dim;d++)
+        for (index_t d = 0; d < dim; d++)
           this->topology_.points()[p][d] = x0[d];
 
         // revert the parameter space coordinates
-        for (coord_t d=0;d<udim;d++)
+        for (coord_t d = 0; d < udim; d++)
           this->topology_.points().u(p,d) = params0[d];
 
         // signal the smoothing was not applied
@@ -455,24 +435,24 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   this->enlarge_ = false;
 
   // save the previous metric
-  for (index_t i=0;i<dim;i++)
-  for (index_t j=i;j<dim;j++)
+  for (index_t i = 0; i < dim; i++)
+  for (index_t j = i; j < dim; j++)
     M0_(i,j) = metric(this->topology_.points(),p)(i,j);
   index_t elem0 = metric.attachment()[p].elem();
 
   // recompute the metric at the new point
   bool success;
   success = metric.recompute( p , x.data() );
-  if (!success)
-  {
+  if (!success) {
+
     // unsuccessful metric interpolation, reset coordinates and previous metric
     nb_interpolated_outside_++;
 
-    for (index_t d=0;d<dim;d++)
+    for (index_t d = 0; d < dim; d++)
       this->topology_.points()[p][d] = x0[d];
 
     if (ep!=NULL)
-      for (coord_t d=0;d<udim;d++)
+      for (coord_t d = 0; d < udim; d++)
         this->topology_.points().u(p,d) = params0[d];
 
     metric.attachment().assign( p , M0_ , elem0 );
@@ -480,17 +460,17 @@ Smooth<type>::apply( const index_t p , MetricField<type>& metric , real_t Q0 )
   }
 
   // evaluate the new quality
-  if (Q0>0.0)
-  {
+  if (Q0 > 0.0) {
+
     this->cavity_quality_.resize( this->nb() );
-    if (worst_quality(*this,metric,this->cavity_quality_.data())<Q0)
-    {
+    if (worst_quality(*this,metric,this->cavity_quality_.data())<Q0) {
+
       // revert the coordinates and re-assign the metric
-      for (index_t d=0;d<dim;d++)
+      for (index_t d = 0; d < dim; d++)
         this->topology_.points()[p][d] = x0[d];
 
-      if (ep!=NULL)
-        for (coord_t d=0;d<udim;d++)
+      if (ep != NULL)
+        for (coord_t d = 0; d < udim; d++)
           this->topology_.points().u(p,d) = params0[d];
 
       metric.attachment().assign( p , M0_ , elem0 );

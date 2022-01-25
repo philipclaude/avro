@@ -4,9 +4,15 @@
 #include "avro_types.h"
 #include "avro_params.h"
 
+#include <map>
 #include <memory>
+#include <set>
 #include <vector>
 #include <iostream>
+
+// forward declaration of ego
+struct egObject;
+typedef egObject* ego;
 
 namespace avro
 {
@@ -16,19 +22,43 @@ static const real_t unset_value = 1e20;
 // forward declarations of the avro classes
 class Entity;
 class Model;
+class Body;
 class Simplex;
 template <typename type> class Topology;
 class TopologyBase;
 class Points;
 
-// forward declaration of ego
-struct egObject;
-typedef egObject* ego;
+namespace EGADS {
+class Context;
+}
+
+class EGADSGeneralGeometry {
+
+public:
+  EGADSGeneralGeometry( ego context , coord_t number );
+  EGADSGeneralGeometry( coord_t number );
+
+  void add_body( ego object );
+  void add_object( ego body , ego object );
+  void add_child( ego parent , ego child );
+  void set_interior( ego object );
+  void finalize();
+
+  EGADS::Context* context();
+  std::map<ego,std::shared_ptr<Body>>& ego2body();
+
+private:
+  coord_t number_;
+  std::map< ego , std::shared_ptr<Body> > ego2body_;
+  std::map< ego , std::shared_ptr<Entity> > ego2entity_;
+
+  std::shared_ptr<EGADS::Context> context_;
+};
 
 class Context
 {
 public:
-  Context( coord_t number , coord_t dim , coord_t udim );
+  Context( coord_t number , coord_t dim , coord_t udim , bool initialize = true );
   Context( const Context& context );
 
   coord_t number() const { return number_; }
@@ -37,12 +67,15 @@ public:
 
   int facet_geometry( const index_t* v , index_t nv ) const;
   void get_geometry_ids( std::vector<int>& ids ) const;
-  void get_geometry_idx2ego( std::map<int,ego*>& idx2ego );
+  //void get_geometry_idx2ego( std::map<int,ego*>& idx2ego );
+  void get_geometry_ids( std::map<int,int>& ids ) const;
+  void get_ego_ids( std::map<ego,int>& ids ) const;
 
   // this should be called once
   void define_geometry( const std::string& geometry );
   void define_geometry( const Model& model );
   void attach_geometry(); // only at the beginning
+  void define_geometry( EGADSGeneralGeometry& geometry );
 
   // these should be called anytime an adaptation problem needs to be defined
   void define_mesh( const std::string& mesh );
@@ -68,6 +101,13 @@ public:
                           std::vector<int>& geometry , bool interior=false ) const;
   void retrieve_boundary_parallel( std::vector<std::vector<index_t>>& faces ,
                                    std::vector<int>& geometry ) const;
+  void retrieve_boundary( const std::vector<int>& g , const std::vector<index_t>& s , std::vector<std::vector<index_t>>& faces , std::vector<int>& geometry , bool interior = false ) const;
+
+  // some applications require an interface to the neighbours and inverse (e.g. SANS wake geometries)
+  void build_structures();
+  int  get_neighbour( index_t k , index_t j ) const;
+  void get_elements_touching_vertex( index_t k , std::vector<index_t>& ball ) const;
+  ego  get_vertex_ego( index_t k ) const;
 
   // polytopal mesh retrieval functions
   void retrieve_polytopes( std::vector<real_t>& x , std::vector<index_t>& indices , std::vector<index_t>& nv_per_elem ) const;

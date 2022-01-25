@@ -343,9 +343,9 @@ if (GLFW_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-if (DOXYGEN_FOUND AND GLFW_BUILD_DOCS)
-    add_subdirectory(docs)
-endif()
+#if (DOXYGEN_FOUND AND GLFW_BUILD_DOCS)
+    #add_subdirectory(docs)
+#endif()
 
 #--------------------------------------------------------------------
 # Install files other than the library
@@ -376,4 +376,3 @@ if (GLFW_INSTALL)
         set_target_properties(uninstall PROPERTIES FOLDER "GLFW3")
     endif()
 endif()
-

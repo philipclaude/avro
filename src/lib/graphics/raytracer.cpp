@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2021, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "common/parallel_for.h"
 
 #include "graphics/gl.h"
@@ -26,6 +35,8 @@ Canvas::Canvas( int width , int height ) :
 void
 Canvas::init_gl() {
 
+  #if AVRO_WITH_GL
+
   // only do the following if opengl is supported
   GL_CALL( glGenVertexArrays( 1, &vertex_array_ ) );
   GL_CALL( glBindVertexArray(vertex_array_) );
@@ -46,10 +57,16 @@ Canvas::init_gl() {
   glActiveTexture(GL_TEXTURE0 + 0);
   GLint pixels_location = glGetUniformLocation(shader_->handle() , "pixels");
   glUniform1i(pixels_location, 0); // first sampler in fragment shader
+
+  #else
+  avro_assert_not_reached;
+  #endif
 }
 
 void
 Canvas::draw_gl() {
+
+  #if AVRO_WITH_GL
 
   // clear the screen
   glClearColor(1,1,1,0);
@@ -66,6 +83,10 @@ Canvas::draw_gl() {
 
   // nothing is actually drawn here, we just rely on the interpolation to give (u,v) coordinates to then look up the texture value
   GL_CALL( glDrawArrays( GL_POINTS , 0 , 1 ) );
+
+  #else
+  avro_assert_not_reached;
+  #endif
 }
 
 void
@@ -150,7 +171,9 @@ RayTracer::RayTracer( int width , int height ) :
   canvas_(width,height)
 {
   window_.init();
+  #if AVRO_WITH_GL
   canvas_.init_gl();
+  #endif
 
   window_.camera().set_lookat( {0.,0.,0.} );
   //window_.camera().set_eye( {0.,2.,10.} );
@@ -397,8 +420,11 @@ RayTracer::render() {
 
   // determine if we want to render to the OpenGL framebuffer, or to an image
   canvas_.convert();
+
+  #if AVRO_WITH_GL
   canvas_.draw_gl();
   glfwSwapBuffers(window_.window());
+  #endif
 
   #if 0
   // write a ppm file

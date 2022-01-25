@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -130,13 +130,13 @@ public:
                       e0[0], e0[1], e0[2],
                       e1[0], e1[1], e1[2] };
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeGeometry( *context->get() , SURFACE , PLANE , NULL , NULL , data , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeGeometry( context->get() , SURFACE , PLANE , NULL , NULL , data , &object_ ) );
     #else
     UNUSED(data);
     printf("need full EGADS to make geometry\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
   Plane( const Context* context , std::vector<real_t*>& x , real_t* uv=NULL );
@@ -158,17 +158,17 @@ public:
     for (coord_t d=0;d<3;d++)
       xyz_[d] = xyz[d];
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , NODE , 0 , xyz , 0 , NULL , NULL , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , NULL , NODE , 0 , xyz , 0 , NULL , NULL , &object_ ) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
-  Node( const Context* context , ego* node ) :
+  Node( const Context* context , ego node ) :
     Object(*context),
-    object_(*node)
+    object_(node)
   {
     xyz_[0] = xyz_[1] = xyz_[2] = 0.; // or from EG_getGeometry ?
     construct(node);
@@ -201,13 +201,13 @@ public:
   {
     double data[6] = { p0[0] , p0[1] , p0[2] , dx[0] , dx[1] , dx[2] };
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeGeometry(*context->get(), CURVE , LINE , NULL , NULL , data , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeGeometry(context->get(), CURVE , LINE , NULL , NULL , data , &object_ ) );
     #else
     UNUSED(data);
     printf("need full EGADS to make geometry\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
   // constructor from two nodes
@@ -216,13 +216,13 @@ public:
   {
     double data[6] = { n0[0] , n0[1] , n0[2] , n1[0]-n0[0] , n1[1]-n0[1] , n1[2]-n0[2] };
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeGeometry( *context->get() , CURVE , LINE , NULL , NULL , data , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeGeometry( context->get() , CURVE , LINE , NULL , NULL , data , &object_ ) );
     #else
     UNUSED(data);
     printf("need full EGADS to make geometry\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 };
 
@@ -243,8 +243,8 @@ public:
     dx_[0] = dx[0]; dx_[1] = dx[1]; dx_[2] = dx[2];
     dy_[0] = dy[0]; dy_[1] = dy[2]; dy_[2] = dy[2];
     r_ = r;
-    EGADS_CHECK_SUCCESS( EG_makeGeometry( *context->get() , CURVE , CIRCLE , NULL , NULL , prv , &object_ ) );
-    construct(&object_);
+    EGADS_CHECK_SUCCESS( EG_makeGeometry( context->get() , CURVE , CIRCLE , NULL , NULL , prv , &object_ ) );
+    construct(object_);
   }
 
   Circle( const Context* context , const real_t* x , const real_t r ) :
@@ -259,8 +259,8 @@ public:
     dx_[0] = dx[0]; dx_[1] = dx[1]; dx_[2] = dx[2];
     dy_[0] = dy[0]; dy_[1] = dy[2]; dy_[2] = dy[2];
     r_ = r;
-    EGADS_CHECK_SUCCESS( EG_makeGeometry( *context->get() , CURVE , CIRCLE , NULL , NULL , prv , &object_ ) );
-    construct(&object_);
+    EGADS_CHECK_SUCCESS( EG_makeGeometry( context->get() , CURVE , CIRCLE , NULL , NULL , prv , &object_ ) );
+    construct(object_);
   }
 
   void point( real_t* p ) const
@@ -314,18 +314,18 @@ public:
   {
     real_t dummy[3];
     Line line(context,n0,n1);
-    EGADS_CHECK_SUCCESS( EG_invEvaluate( *line.object() , n0.x() , &range_[0] , dummy ) );
-    EGADS_CHECK_SUCCESS( EG_invEvaluate( *line.object() , n1.x() , &range_[1] , dummy ) );
-    ego nodes[2] = {*n0.object(),*n1.object()};
+    EGADS_CHECK_SUCCESS( EG_invEvaluate( line.object() , n0.x() , &range_[0] , dummy ) );
+    EGADS_CHECK_SUCCESS( EG_invEvaluate( line.object() , n1.x() , &range_[1] , dummy ) );
+    ego nodes[2] = {n0.object(),n1.object()};
 
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *line.object() , EDGE , TWONODE , range_ , 2 , nodes , NULL , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , line.object() , EDGE , TWONODE , range_ , 2 , nodes , NULL , &object_ ) );
     #else
     UNUSED(nodes);
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
   // constructor from either an arc or a line
@@ -333,19 +333,19 @@ public:
     Object(*context)
   {
     real_t dummy[3];
-    EGADS_CHECK_SUCCESS( EG_invEvaluate( *curve.object() , n0.x() , &range_[0] , dummy ) );
-    EGADS_CHECK_SUCCESS( EG_invEvaluate( *curve.object() , n1.x() , &range_[1] , dummy ) );
+    EGADS_CHECK_SUCCESS( EG_invEvaluate( curve.object() , n0.x() , &range_[0] , dummy ) );
+    EGADS_CHECK_SUCCESS( EG_invEvaluate( curve.object() , n1.x() , &range_[1] , dummy ) );
     if (range_[1]<range_[0]) range_[1] = 2.*range_[0];
-    ego nodes[2] = {*n0.object(),*n1.object()};
+    ego nodes[2] = {n0.object(),n1.object()};
 
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *curve.object() , EDGE , TWONODE , range_ , 2 , nodes , NULL , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , curve.object() , EDGE , TWONODE , range_ , 2 , nodes , NULL , &object_ ) );
     #else
     UNUSED(nodes);
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
   // constructor from a full circle [0,2pi]
@@ -353,18 +353,19 @@ public:
     Object(*context)
   {
     int periodic;
-    EGADS_CHECK_SUCCESS( EG_getRange( *circle.object() , &range_[0] , &periodic ) );
+    EGADS_CHECK_SUCCESS( EG_getRange( circle.object() , &range_[0] , &periodic ) );
     avro_assert( periodic==1 );
     real_t p[3];
     circle.point(p);
     Node n0(context,p);
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *circle.object() , EDGE , ONENODE , &range_[0] , 1 , n0.object() , NULL , &object_ ) );
+    ego nodes[1] = {n0.object()};
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , circle.object() , EDGE , ONENODE , &range_[0] , 1 , nodes , NULL , &object_ ) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
   Edge( const Context* context , Circle& circle , Node& n0 , Node& n1 ) :
@@ -373,27 +374,27 @@ public:
     // constructor for an arc
     real_t xyz[3];
     real_t d;
-    EGADS_ENSURE_SUCCESS( EG_invEvaluate( *circle.object() , n0.x() , &range_[0] , xyz ) );
+    EGADS_ENSURE_SUCCESS( EG_invEvaluate( circle.object() , n0.x() , &range_[0] , xyz ) );
     d = numerics::distance( n0.x() , xyz , 3 );
     avro_assert( d < 1e-3 );
-    EGADS_ENSURE_SUCCESS( EG_invEvaluate( *circle.object() , n1.x() , &range_[1] , xyz ) );
+    EGADS_ENSURE_SUCCESS( EG_invEvaluate( circle.object() , n1.x() , &range_[1] , xyz ) );
     d = numerics::distance( n1.x() , xyz , 3 );
     avro_assert( d < 1e-3 );
-    ego nodes[2] = {*n0.object(),*n1.object()};
+    ego nodes[2] = {n0.object(),n1.object()};
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *circle.object() , EDGE , TWONODE , &range_[0] , 2 , nodes , NULL , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , circle.object() , EDGE , TWONODE , &range_[0] , 2 , nodes , NULL , &object_ ) );
     #else
     UNUSED(nodes);
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
   // constructor from a spline
   Edge( const Context* context , Spline& spline , real_t* x0=NULL ) :
     Object(*context),
-    object_(*spline.object())
+    object_(spline.object())
   {
 
     range_[0] = 0.;
@@ -403,7 +404,7 @@ public:
     if (x0!=NULL)
     {
       Node node0( context , x0 );
-      node = *node0.object();
+      node = node0.object();
     }
     else
     {
@@ -411,23 +412,23 @@ public:
       std::vector<real_t> U(range_,range_+2);
       spline.evaluate(U,X);
       Node node0( context , X.data() );
-      node = *node0.object();
+      node = node0.object();
     }
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *spline.object() , EDGE , ONENODE , range_ , 1 , &node , NULL , &object_ ) );
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , spline.object() , EDGE , ONENODE , range_ , 1 , &node , NULL , &object_ ) );
     #else
     UNUSED(node);
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
-  Edge( const Context *context , ego* object ) :
+  Edge( const Context *context , ego object ) :
     Object(*context),
-    object_(*object)
+    object_(object)
   {
-    construct(&object_);
+    construct(object_);
   }
 
   real_t range( const coord_t d ) const { return range_[d]; }
@@ -468,17 +469,17 @@ public:
   {
     //avro_assert( egos_.size() == senses_.size() );
     #ifndef AVRO_NO_ESP
-    EGADS_ENSURE_SUCCESS( EG_makeTopology(*context_->get(),ref,LOOP,data_.member_type,NULL, senses_.size()  , &egos_[0] , &senses_[0] , &object_ ) );
+    EGADS_ENSURE_SUCCESS( EG_makeTopology(context_->get(),ref,LOOP,data_.member_type,NULL, senses_.size()  , &egos_[0] , &senses_[0] , &object_ ) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
   void add( Edge& obj , const int sense )
   {
-    egos_.push_back( *obj.object() );
+    egos_.push_back( obj.object() );
     senses_.push_back(sense);
   }
 
@@ -492,7 +493,7 @@ public:
 
   std::vector<int>& senses() { return senses_; }
 
-  ego* operator[] ( const index_t k ) { return &egos_[k]; }
+  ego operator[] ( const index_t k ) { return egos_[k]; }
   int operator() ( const index_t k ) const { return senses_[k]; }
 
   const Context* context() const { return context_; }
@@ -510,8 +511,8 @@ public:
   Isocline( EdgeLoop& loop , int style ) :
     Surface(loop.context())
   {
-    EGADS_CHECK_SUCCESS( EG_isoCline(*loop.object(), style , 0. , &object_ ) );
-    construct(&object_);
+    EGADS_CHECK_SUCCESS( EG_isoCline(loop.object(), style , 0. , &object_ ) );
+    construct(object_);
   }
 };
 
@@ -522,22 +523,22 @@ public:
     Object( *loop.context() )
   {
     // the easy way for planar faces
-    EGADS_CHECK_SUCCESS( EG_makeFace( *loop.object() , memberType , NULL , &object_ ) );
-    construct(&object_);
+    EGADS_CHECK_SUCCESS( EG_makeFace( loop.object() , memberType , NULL , &object_ ) );
+    construct(object_);
   }
 
   Face( const Context* context , Spline& surface , int memberType ) :
     Object(*context)
   {
-    EGADS_CHECK_SUCCESS( EG_makeFace( *surface.object() , memberType , surface.range() , &object_ ) );
-    construct(&object_);
+    EGADS_CHECK_SUCCESS( EG_makeFace( surface.object() , memberType , surface.range() , &object_ ) );
+    construct(object_);
   }
 
   Face( const Context* context , Plane& plane , int memberType ) :
     Object(*context)
   {
-    EGADS_CHECK_SUCCESS( EG_makeFace( *plane.object() , memberType , plane.range() , &object_ ) );
-    construct(&object_);
+    EGADS_CHECK_SUCCESS( EG_makeFace( plane.object() , memberType , plane.range() , &object_ ) );
+    construct(object_);
   }
 
   Face( const Context* context , Isocline& surface , EdgeLoop& loop , int memberType ) :
@@ -545,12 +546,13 @@ public:
   {
     // the hard way for non-planar faces
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , *surface.object() , FACE , memberType , NULL , 1 , loop.object() , loop.senses().data() , &object_ ) );
+    ego child = loop.object();
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , surface.object() , FACE , memberType , NULL , 1 , &child , loop.senses().data() , &object_ ) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
-    construct(&object_);
+    construct(object_);
   }
 
 private:
@@ -561,14 +563,15 @@ class Shell : public Object
 {
 public:
   Shell( const Context* context , ego* face , index_t nface ) :
-    Object(*context,&object_)
+    Object(*context)
   {
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(), NULL, SHELL ,CLOSED, NULL, nface , face , NULL, &object_ ));
+    EGADS_CHECK_SUCCESS( EG_makeTopology(context->get(), NULL, SHELL ,CLOSED, NULL, nface , face , NULL, &object_ ));
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
     #endif
+    set_object(object_);
   }
 private:
   ego object_;
@@ -581,7 +584,8 @@ public:
     Body(*context)
   {
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , BODY, SHEETBODY , NULL , 1 , shell.object() , NULL, &object_) );
+    ego child = shell.object();
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , NULL , BODY, SHEETBODY , NULL , 1 , &child , NULL, &object_) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
@@ -600,7 +604,8 @@ public:
   {
     // face body from a single face
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , BODY, FACEBODY , NULL , 1 , face.object() , NULL, &object_) );
+    ego child = face.object();
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , NULL , BODY, FACEBODY , NULL , 1 , &child , NULL, &object_) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
@@ -613,7 +618,7 @@ public:
   {
     // face body from a single face
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology( *context->get() , NULL , BODY, FACEBODY , NULL , 1 , &face , NULL, &object_) );
+    EGADS_CHECK_SUCCESS( EG_makeTopology( context->get() , NULL , BODY, FACEBODY , NULL , 1 , &face , NULL, &object_) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
@@ -634,11 +639,12 @@ public:
     EdgeLoop loop(context,CLOSED);
     loop.add(edge,1);
     loop.make();
-    EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(),NULL, BODY , WIREBODY , NULL , 1 , loop.object() , NULL , &object_ ) );
+    ego child = loop.object();
+    EGADS_CHECK_SUCCESS( EG_makeTopology(context->get(),NULL, BODY , WIREBODY , NULL , 1 , &child , NULL , &object_ ) );
     set_object( object_ );
   }
 
-  WireBody( const Context* context , ego* edge , index_t nedge ) :
+  WireBody( const Context* context , ego edge , index_t nedge ) :
     Body(*context)
   {
     EdgeLoop loop(context,CLOSED);
@@ -649,7 +655,8 @@ public:
     }
     loop.make();
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(),NULL, BODY , WIREBODY , NULL , 1 , loop.object() , NULL , &object_ ) );
+    ego child = loop.object();
+    EGADS_CHECK_SUCCESS( EG_makeTopology(context->get(),NULL, BODY , WIREBODY , NULL , 1 , &child , NULL , &object_ ) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;
@@ -661,7 +668,8 @@ public:
     Body(*context)
   {
     #ifndef AVRO_NO_ESP
-    EGADS_CHECK_SUCCESS( EG_makeTopology(*context->get(),NULL, BODY , WIREBODY , NULL , 1 , loop.object() , NULL , &object_ ) );
+    ego child = loop.object();
+    EGADS_CHECK_SUCCESS( EG_makeTopology(context->get(),NULL, BODY , WIREBODY , NULL , 1 , &child , NULL , &object_ ) );
     #else
     printf("need full EGADS to make topology\n");
     avro_assert_not_reached;

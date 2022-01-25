@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -51,51 +51,48 @@ meshb::read_elements( int GmfType )
   index_t simplex[6] = {0,0,0,0,0};
 
   nb = index_t( GmfStatKwd( fid_ , GmfType ) );
-  printf("--> reading %lu %lu-elements\n",nb,nv(GmfType)-1);
-  for (index_t k=0;k<nb;k++)
-  {
+  int num = nv(GmfType) - 1;
+  printf("--> reading %lu %d-elements\n",nb,num);
+  for (index_t k = 0; k < nb; k++) {
+
     // read the element type
     int ref = -1;
-    if (GmfType==GmfTetrahedra)
-    {
+    if (GmfType == GmfTetrahedra) {
       status = GmfGetLin( fid_ , GmfTetrahedra , &indices[0] , &indices[1] , &indices[2] , &indices[3] , &indices[4] );
       ref = indices[4];
+      num = 3;
     }
-    else if (GmfType==GmfTriangles)
-    {
+    else if (GmfType == GmfTriangles) {
       status = GmfGetLin( fid_ , GmfTriangles , &indices[0] , &indices[1] , &indices[2] , &indices[3] );
       ref = indices[3];
+      num = 2;
     }
-    else if (GmfType==GmfEdges)
-    {
+    else if (GmfType == GmfEdges) {
       status = GmfGetLin( fid_ , GmfEdges , &indices[0] , &indices[1] , &indices[2] );
       ref = indices[2];
+      num = 1;
     }
-    else if (GmfType==GmfCorners)
-    {
+    else if (GmfType==GmfCorners) {
       status = GmfGetLin( fid_ , GmfCorners , &indices[0] );
       ref = 0;
+      num = 0;
     }
-    else if (GmfType==GmfVertices)
-    {
+    else if (GmfType == GmfVertices) {
       int domain = -1;
-      if (points_.dim()==2)
-      {
+      if (points_.dim()==2) {
         if (version_==1)
           status = GmfGetLin( fid_ , GmfVertices , &fvalues[0] , &fvalues[1] , &domain );
         else
           status = GmfGetLin( fid_ , GmfVertices , &dvalues[0] , &dvalues[1] , &domain  );
       }
-      else if (points_.dim()==3)
-      {
+      else if (points_.dim()==3) {
         if (version_==1)
           GmfGetLin( fid_ , GmfVertices , &fvalues[0] , &fvalues[1] , &fvalues[2] , &domain );
         else
           GmfGetLin( fid_ , GmfVertices , &dvalues[0] , &dvalues[1] , &dvalues[2] , &domain  );
       }
 
-      if (version_==1)
-      {
+      if (version_==1) {
         for (coord_t d=0;d<3;d++)
           dvalues[d] = real_t(fvalues[d]);
       }
@@ -107,32 +104,30 @@ meshb::read_elements( int GmfType )
 
     avro_assert( ref >= 0 );
     avro_assert( status==1 );
+    avro_assert( num >= 0 );
 
     for (index_t j=0;j<nv(GmfType);j++)
       simplex[j] = index_t(indices[j]-1); // 1-indexed
 
-    std::map<int,index_t>::iterator it = ref_index_.find(ref);
-    if (it==ref_index_.end())
-    {
+    std::map<std::pair<coord_t,int>,index_t>::iterator it = ref_index_.find({num,ref});
+    if (it == ref_index_.end() ) {
       // we need to create a new topology
       std::shared_ptr<Topology<type>> topology =
             std::make_shared<Topology<type>>(points_,nv(GmfType)-1);
 
-      ref_index_.insert( { ref , nb_topologies() } );
+      ref_index_.insert( { {num,ref} , nb_topologies() } );
       add( topology );
 
       topology->add(simplex, nv(GmfType) );
     }
-    else
-    {
+    else {
       retrieve<type>( it->second ).add( simplex , nv(GmfType) );
     }
   }
 }
 
 index_t
-meshb::nv( const int GmfType ) const
-{
+meshb::nv( const int GmfType ) const {
   if (GmfType==GmfVertices) return 1;
   if (GmfType==GmfTetrahedra) return 4;
   if (GmfType==GmfTriangles) return 3;
@@ -204,7 +199,7 @@ meshb::read()
     std::shared_ptr<Topology<Simplex>> corners = std::make_shared<Topology<Simplex>>(points_,0);
 
     // create the reference index for this topology to be looked up
-    ref_index_.insert( std::pair<int,index_t>(0,cornerTopologyIndex) );
+    ref_index_.insert( { {0,0} , cornerTopologyIndex } );
 
     // read the corners
     read_elements<Simplex>( GmfCorners );

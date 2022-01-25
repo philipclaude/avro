@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -36,19 +36,19 @@ namespace programs
 {
 
 int
-adapt( int nb_input , const char** inputs )
-{
+adapt( int nb_input , const char** inputs ) {
+
   // so far only simplex adaptation is supported
   typedef Simplex type;
 
-  if (nb_input<4 || nb_input==-1)
-  {
+  if (nb_input < 4 || nb_input == -1) {
     printf("\t\tadapt [input mesh] [geometry] [metric] [output prefix] [optional]\n");
     printf("\t\t--> optional can be:\n");
     printf("\t\t\tcurved=(bool, whether the geometry is curved)\n");
     printf("\t\t\tlimit=(bool, whether target metric is limited from implied mesh metric)\n");
     printf("\t\t\tnb_iter=(int, # iterations for analytic metric only)\n");
     printf("\t\t\thmin=(real, minimum size used by Tesseract Linear case only)\n");
+    printf("\t\t\tscale=(real, scale on the metric field entries)\n");
     return 1;
   }
 
@@ -68,13 +68,18 @@ adapt( int nb_input , const char** inputs )
     found = parse<bool>(lookfor(options,nb_options,"limit"),compute_implied);
 
   real_t href = 2.0;
-  if (nb_input>4)
+  if (nb_input > 4)
     found = parse<real_t>(lookfor(options,nb_options,"href"),href);
 
   // if the metric is analytic, iterate...
   index_t nb_iter = 10;
-  if (nb_input>4)
+  if (nb_input > 4)
     found = parse(lookfor(options,nb_options,"nb_iter"),nb_iter);
+
+  // if the metric is analytic, iterate...
+  real_t scale = 1.0;
+  if (nb_input > 4)
+    found = parse(lookfor(options,nb_options,"scale"),scale);
 
   // get the original input mesh
   std::string meshname( inputs[0] );
@@ -96,6 +101,9 @@ adapt( int nb_input , const char** inputs )
   std::shared_ptr<Model> pmodel;
   pmodel = library::get_geometry( geometryname , curved );
   Model& model = *pmodel;
+
+  // option to overwrite the curved geometry parameter
+  found = parse(lookfor(options,nb_options,"curved"),curved);
 
   // check the points are on the geometry...
   // option to project them
@@ -129,8 +137,7 @@ adapt( int nb_input , const char** inputs )
   std::vector<real_t> metric_params;
   if (metricname=="Uniform")
     metric_params.push_back(number);
-  if (nb_input>4)
-  {
+  if (nb_input > 4) {
     real_t hmin;
     found = parse(lookfor(options,nb_options,"hmin"),hmin);
     if (found) metric_params.push_back(hmin);
@@ -142,7 +149,7 @@ adapt( int nb_input , const char** inputs )
 
   // define the problem and adapt
   AdaptationParameters params;
-  params.set("curved", curved);
+  params.set("curved",curved);
   params.set("directory", "./" );
   params.set("write conformity", false);
   params.set("swapout" , false);
@@ -157,8 +164,8 @@ adapt( int nb_input , const char** inputs )
     params.set("insertion volume factor", -1.0 );
 
   clock_t TIME0 = clock();
-  for (index_t iter = 0; iter < nb_iter; iter++)
-  {
+  for (index_t iter = 0; iter < nb_iter; iter++) {
+
     // get the mesh and the metric field
     Mesh& mesh = *pmesh;
     pfld = library::get_metric(metricname,mesh.points(),analytic_metric,metric_params);
@@ -176,7 +183,7 @@ adapt( int nb_input , const char** inputs )
     // define the problem and adapt
     std::vector<symd<real_t>> metrics( pfld->nb() );
     for (index_t k=0;k<metrics.size();k++)
-      metrics[k] = (*pfld)[k];
+      metrics[k] = (*pfld)[k]*scale;
     AdaptationProblem problem = {*pmesh,metrics,params,*pmesh_out};
     ::avro::adapt<type>( problem );
 

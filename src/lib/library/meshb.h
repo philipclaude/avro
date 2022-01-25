@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -55,7 +55,7 @@ private:
 
   std::shared_ptr<TopologyBase> main_topology_;
 
-  std::map<int,index_t> ref_index_; // map from reference index to topology index
+  std::map< std::pair<coord_t,int> ,index_t> ref_index_; // map from reference index to topology index
 };
 
 } // library

@@ -1,3 +1,12 @@
+//
+// avro - Adaptive Voronoi Remesher
+//
+// Copyright 2017-2021, Philip Claude Caplan
+// All rights reserved
+//
+// Licensed under The GNU Lesser General Public License, version 2.1
+// See http://www.opensource.org/licenses/lgpl-2.1.php
+//
 #include "unit_tester.hpp"
 
 #include "graphics/raytracer.h"
@@ -36,7 +45,9 @@ UT_TEST_CASE( test1 )
   std::shared_ptr<Mesh> pmesh = library::get_mesh(meshname,ptopology);
   Topology<Simplex>& topology = *static_cast<Topology<Simplex>*>(ptopology.get());
 
-  int width = 600, height = 0.6*width;
+  int width = 600;
+  if (AVRO_FULL_UNIT_TEST) width = 100;
+  int height = 0.6*width;
 
   RayTracer raytracer(width,height);
 
@@ -100,6 +111,8 @@ UT_TEST_CASE( test1 )
   // initial draw, subsequent drawing will only be performed when a callback is invoked
   raytracer.render();
   while (true) {
+
+    if (AVRO_FULL_UNIT_TEST) break;
 
     // draw the scene
     //raytracer.render();

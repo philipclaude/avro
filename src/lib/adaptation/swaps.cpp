@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -23,22 +23,18 @@ void
 lengths_in_bounds( MetricField<type>& metric_ ,
                    Topology<type>& topology ,
                    std::vector<index_t>& edges ,
-                   real_t alpha=-1 )
-{
+                   real_t alpha=-1 ) {
   edges.clear();
   std::vector<index_t> edges0;
   topology.get_edges(edges0);
   std::vector<real_t> lengths( edges0.size()/2 );
-  for (index_t k=0;k<edges0.size()/2;k++)
-  {
+  for (index_t k = 0; k < edges0.size()/2; k++) {
     lengths[k] = metric_.length( edges0[2*k] , edges0[2*k+1] );
-    if (alpha<0)
-    {
+    if (alpha < 0) {
       edges.push_back( edges0[2*k] );
       edges.push_back( edges0[2*k+1] );
     }
-    if (lengths[k]<alpha || lengths[k]>1./alpha)
-    {
+    if (lengths[k]<alpha || lengths[k]>1./alpha) {
       edges.push_back( edges0[2*k] );
       edges.push_back( edges0[2*k+1] );
     }
@@ -47,8 +43,8 @@ lengths_in_bounds( MetricField<type>& metric_ ,
 
 template<typename type>
 bool
-AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 , real_t lmax0 )
-{
+AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 , real_t lmax0 ) {
+
   if (topology_.points().fixed(p) && topology_.points().fixed(q)) return false;
 
   // try edge swapping around the edge (p,q) such that the
@@ -77,8 +73,7 @@ AdaptThread<type>::swap_edge( index_t p , index_t q , real_t Q0 , real_t lmin0 ,
 
     // check if the swap is valid in terms of geometry topology
     bool accept = edge_swapper_.valid( candidates[j] , p , q );
-    if (!accept)
-    {
+    if (!accept) {
       continue;
     }
 
@@ -120,13 +115,11 @@ template<typename type>
 void
 AdaptThread<type>::swap_edges( real_t qt , index_t npass , bool lcheck )
 {
-  //swap_cells(qt,npass);return;
-
   index_t pass = 0;
 
   printf("-> performing edge swaps with target qt < %g:\n",qt);
-  while (true)
-  {
+  while (true) {
+
     if (pass > npass) break;
 
     clock_t TIME0,TIME1;
@@ -657,8 +650,8 @@ EdgeSwap<type>::valid( const index_t p , const index_t e0 , const index_t e1 )
 
 template<typename type>
 bool
-EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
-{
+EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 ) {
+
   // check if the swap is valid in terms of geometry
   if (!valid(p,e0,e1)) return false; // computes cavity C_
 
@@ -668,15 +661,14 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
 
   // compute the original number of ghost elements
   index_t nb_ghost0 = 0;
-  for (index_t j=0;j<this->C_.size();j++)
+  for (index_t j = 0; j < this->C_.size(); j++)
     if (this->topology_.ghost(this->C_[j]))
       nb_ghost0++;
 
   Entity* ge = this->geometry(e0,e1);
   this->set_entity(ge);
 
-  if (this->topology_.element().parameter())
-  {
+  if (this->topology_.element().parameter()) {
     avro_assert( ge!=nullptr );
     avro_assert( ge->number()==2 ); // otherwise this should have been caught by 'valid'
     avro_assert( this->C_.size()==2 );
@@ -684,13 +676,11 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     bool accept;
 
     this->Cavity<type>::clear();
-    for (index_t j=0;j<this->C_.size();j++)
-    {
+    for (index_t j = 0; j < this->C_.size(); j++) {
       this->add_cavity( this->C_[j] );
     }
 
-    if (!visible_geometry(p,e0,e1,ge))
-    {
+    if (!visible_geometry(p,e0,e1,ge)) {
       return false;
     }
 
@@ -712,10 +702,9 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
     return false;
 
   // check visibility in the parametric space
-  if (ge!=NULL && ge->number()==2)
-  {
-    if (!visible_geometry(p,e0,e1,ge))
-    {
+  if (ge != NULL && ge->number() == 2 && this->topology_.number() > 2) {
+
+    if (!visible_geometry(p,e0,e1,ge)) {
       //printf("swap not visible in parameter space!\n");
       return false;
     }
@@ -723,16 +712,14 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
 
   // count the resulting number of ghost elements
   index_t nb_ghost = 0;
-  for (index_t j=0;j<this->nb();j++)
+  for (index_t j = 0; j < this->nb(); j++)
     if (this->ghost(j))
       nb_ghost++;
 
   // check if only ghosts are created
   index_t only_ghost = true;
-  for (index_t k=0;k<this->nb();k++)
-  {
-    if (!this->ghost(k))
-    {
+  for (index_t k = 0; k < this->nb(); k++) {
+    if (!this->ghost(k)) {
       only_ghost = false;
       break;
     }
@@ -740,7 +727,7 @@ EdgeSwap<type>::apply( const index_t p , const index_t e0 , const index_t e1 )
   if (only_ghost) return false;
 
   // do not allow swaps which change the number of ghosts for 3-simplices
-  if (this->topology_.number()==3 && nb_ghost0!=nb_ghost)
+  if (this->topology_.number() == 3 && nb_ghost0 != nb_ghost)
     return false;
 
   if (!accept) return false;

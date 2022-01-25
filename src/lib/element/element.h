@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -32,7 +32,7 @@ protected:
   coord_t order_;
 };
 
-typedef struct
+typedef struct ElementIndices
 {
   std::vector<index_t> indices;
   coord_t dim;

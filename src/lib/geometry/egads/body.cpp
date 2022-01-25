@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -24,6 +24,14 @@ namespace EGADS
 {
 
 void
+Body::build() {
+  // get the topology of the associated ego with the children
+  EGADS_ENSURE_SUCCESS( EG_getTopology( object_ , &data_.reference , &data_.object_class ,
+                        &data_.member_type , data_.data , &data_.nb_children , &data_.children , &data_.senses ) );
+
+}
+
+void
 Body::build_hierarchy()
 {
   avro_assert( nb_entities()==0 );
@@ -38,7 +46,7 @@ Body::build_hierarchy()
   {
     // create the new entity
     std::shared_ptr<EGADS::Object> entity;
-    entity = std::make_shared<EGADS::Object>(&data_.children[k],this);
+    entity = std::make_shared<EGADS::Object>(data_.children[k],this);
     add(entity);
     add_child( data_.children[k] , entity );
 
@@ -87,7 +95,7 @@ Body::print() const
   for (index_t k=0;k<nb_entities();k++)
   {
     printf("\t");
-    entity_[k]->print();
+    entity_[k]->print(true);
   }
 }
 
@@ -192,7 +200,7 @@ get_tessellation_edge( ego body , ego egads_tess , const Object& edge , BodyTess
   int e00,e0,e1;
 
   // get the index of this object in the body
-  idx = EG_indexBodyTopo( body , *edge.object() );
+  idx = EG_indexBodyTopo( body , edge.object() );
 
   // get the object tessellation from the body tessellation
   status = EG_getTessEdge( egads_tess , idx , &nv , &x , &u );
@@ -267,7 +275,7 @@ get_tessellation_face( ego body , ego egads_tess , const Object& face , BodyTess
   int t0;
 
   // get the index of this object in the body
-  idx = EG_indexBodyTopo(body,*face.object());
+  idx = EG_indexBodyTopo(body,face.object());
 
   if (idx<0)
   {

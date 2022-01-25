@@ -1,7 +1,7 @@
 //
 // avro - Adaptive Voronoi Remesher
 //
-// Copyright 2017-2020, Philip Claude Caplan
+// Copyright 2017-2021, Philip Claude Caplan
 // All rights reserved
 //
 // Licensed under The GNU Lesser General Public License, version 2.1
@@ -42,6 +42,8 @@ public:
   Entity* find_entity( index_t id , int object_class ) const;
 
   ego object() { return object_; }
+
+  void build();
 
   void print() const;
 
