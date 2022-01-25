@@ -536,7 +536,7 @@ public:
     avro_assert( ewgt.size() == adjncy.size() );
 
     std::vector<PARM_REAL> tpwgts(ncon*nparts,1./nparts);
-    std::vector<PARM_REAL> ubvec(ncon,1.05);
+    std::vector<PARM_REAL> ubvec(ncon,1.001);//1.05); // 1.001 if segfault
     PARM_INT options[4];
     options[0] = 1;
     options[1] = 0;
